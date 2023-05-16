@@ -1,0 +1,73 @@
+{
+  "version": "3.4",
+  "log": [
+    {
+      "contracts/Greeter.sol:Greeter": {
+        "src": "contracts/Greeter.sol:6",
+        "version": {
+          "withMetadata": "d5ad9d5629e0efb25ba7d8cead88f2119966f9d2b38cd7a6155c6c8bb8769249",
+          "withoutMetadata": "d5ad9d5629e0efb25ba7d8cead88f2119966f9d2b38cd7a6155c6c8bb8769249",
+          "linkedWithoutMetadata": "d5ad9d5629e0efb25ba7d8cead88f2119966f9d2b38cd7a6155c6c8bb8769249"
+        },
+        "inherit": [],
+        "libraries": [
+          "hardhat/console.sol:console"
+        ],
+        "methods": [
+          "(string)",
+          "greet()",
+          "setGreeting(string)"
+        ],
+        "linkReferences": [],
+        "errors": [
+          {
+            "kind": "constructor",
+            "contract": "Greeter",
+            "src": "contracts/Greeter.sol:9"
+          }
+        ],
+        "layout": {
+          "storage": [
+            {
+              "label": "greeting",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_string_storage",
+              "contract": "Greeter",
+              "src": "contracts/Greeter.sol:7"
+            }
+          ],
+          "types": {
+            "t_string_storage": {
+              "label": "string",
+              "numberOfBytes": "32"
+            }
+          },
+          "layoutVersion": "1.2",
+          "flat": true
+        },
+        "solcVersion": "0.8.13"
+      },
+      "hardhat/console.sol:console": {
+        "src": "hardhat/console.sol:4",
+        "version": {
+          "withMetadata": "6b23b71a9aa9841033159498e8a83eabae7787b0278ddb8514647f6b2addfa3a",
+          "withoutMetadata": "08d24783a787f8a51dea0c166bb6f91a4f0865e02d03d749f102d332e6ead0ff",
+          "linkedWithoutMetadata": "08d24783a787f8a51dea0c166bb6f91a4f0865e02d03d749f102d332e6ead0ff"
+        },
+        "inherit": [],
+        "libraries": [],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.2",
+          "flat": false
+        },
+        "solcVersion": "0.8.13"
+      }
+    }
+  ]
+}
