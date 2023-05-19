@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.11;
+pragma solidity 0.8.17;
 
 interface PairsStorageInterfaceV6 {
     enum FeedCalculation {DEFAULT, INVERT, COMBINE}    // FEED 1, 1 / (FEED 1), (FEED 1)/(FEED 2)
+
     struct Feed {address feed1; address feed2; FeedCalculation feedCalculation; uint maxDeviationP;} // PRECISION (%)
-    function incrementCurrentOrderId() external returns (uint);
 
     function updateGroupCollateral(uint, uint, bool, bool) external;
 

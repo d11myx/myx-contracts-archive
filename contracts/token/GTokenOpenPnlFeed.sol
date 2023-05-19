@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 import '@chainlink/contracts/src/v0.8/ChainlinkClient.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 import '../interfaces/IGToken.sol';
-import '../interfaces/IOwnable.sol';
 import '../interfaces/IOpenTradesPnlFeed.sol';
 
 pragma solidity 0.8.17;
 
-contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
+contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed {
     using Chainlink for Chainlink.Request;
 
     // Constants
@@ -42,7 +42,7 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
     mapping(uint => Request) public requests;     // requestId => request
     mapping(uint => int[]) public requestAnswers; // requestId => open pnl (1e18)
 
-    struct Request{
+    struct Request {
         bool initiated;
         bool active;
         uint linkFeePerNode;
@@ -122,37 +122,37 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
     }
 
     // Modifiers
-    modifier onlyGTokenOwner { // 2-week timelock
-        require(msg.sender == IOwnable(address(gToken)).owner(), "ONLY_OWNER");
+    modifier onlyGTokenOwner {// 2-week timelock
+        require(msg.sender == Ownable(address(gToken)).owner(), "ONLY_OWNER");
         _;
     }
 
-    modifier onlyGTokenManager { // 3-day timelock
+    modifier onlyGTokenManager {// 3-day timelock
         require(msg.sender == gToken.manager(), "ONLY_MANAGER");
         _;
     }
 
-    modifier onlyGTokenAdmin { // bypasses timelock, emergency functions only
+    modifier onlyGTokenAdmin {// bypasses timelock, emergency functions only
         require(msg.sender == gToken.admin(), "ONLY_ADMIN");
         _;
     }
 
     // Manage parameters
-    function updateRequestsStart(uint newValue) public onlyGTokenOwner{
+    function updateRequestsStart(uint newValue) public onlyGTokenOwner {
         require(newValue >= MIN_REQUESTS_START, "BELOW_MIN");
         require(newValue <= MAX_REQUESTS_START, "ABOVE_MAX");
         requestsStart = newValue;
         emit NumberParamUpdated("requestsStart", newValue);
     }
 
-    function updateRequestsEvery(uint newValue) public onlyGTokenOwner{
+    function updateRequestsEvery(uint newValue) public onlyGTokenOwner {
         require(newValue >= MIN_REQUESTS_EVERY, "BELOW_MIN");
         require(newValue <= MAX_REQUESTS_EVERY, "ABOVE_MAX");
         requestsEvery = newValue;
         emit NumberParamUpdated("requestsEvery", newValue);
     }
 
-    function updateRequestsCount(uint newValue) public onlyGTokenOwner{
+    function updateRequestsCount(uint newValue) public onlyGTokenOwner {
         require(newValue >= MIN_REQUESTS_COUNT, "BELOW_MIN");
         require(newValue <= MAX_REQUESTS_COUNT, "ABOVE_MAX");
         requestsCount = newValue;
@@ -163,13 +163,13 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
         uint newRequestsStart,
         uint newRequestsEvery,
         uint newRequestsCount
-    ) external onlyGTokenOwner{
+    ) external onlyGTokenOwner {
         updateRequestsStart(newRequestsStart);
         updateRequestsEvery(newRequestsEvery);
         updateRequestsCount(newRequestsCount);
     }
 
-    function updateMinAnswers(uint newValue) external onlyGTokenManager{
+    function updateMinAnswers(uint newValue) external onlyGTokenManager {
         require(newValue >= MIN_ANSWERS, "BELOW_MIN");
         require(newValue % 2 == 1, "EVEN");
         require(newValue <= oracles.length / 2, "ABOVE_MAX");
@@ -177,27 +177,27 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
         emit NumberParamUpdated("minAnswers", newValue);
     }
 
-    function updateOracle(uint _index, address newValue) external onlyGTokenOwner{
+    function updateOracle(uint _index, address newValue) external onlyGTokenOwner {
         require(_index < oracles.length, "INDEX_TOO_BIG");
         require(newValue != address(0), "VALUE_0");
         oracles[_index] = newValue;
         emit OracleUpdated(_index, newValue);
     }
 
-    function updateOracles(address[] memory newValues) external onlyGTokenOwner{
+    function updateOracles(address[] memory newValues) external onlyGTokenOwner {
         require(newValues.length >= minAnswers * 2, "ARRAY_TOO_SMALL");
         oracles = newValues;
         emit OraclesUpdated(newValues);
     }
 
-    function updateJob(bytes32 newValue) external onlyGTokenManager{
+    function updateJob(bytes32 newValue) external onlyGTokenManager {
         require(newValue != bytes32(0), "VALUE_0");
         job = newValue;
         emit JobUpdated(newValue);
     }
 
     // Emergency function in case of oracle manipulation
-    function resetNextEpochValueRequests() external onlyGTokenAdmin{
+    function resetNextEpochValueRequests() external onlyGTokenAdmin {
         uint reqToResetCount = nextEpochValuesRequestCount;
         require(reqToResetCount > 0, "NO_REQUEST_TO_RESET");
 
@@ -206,7 +206,7 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
         nextEpochValuesRequestCount = 0;
         nextEpochValuesLastRequest = 0;
 
-        for(uint i; i < reqToResetCount; i++){
+        for (uint i; i < reqToResetCount; i++) {
             requests[lastRequestId - i].active = false;
         }
 
@@ -218,34 +218,34 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
 
     // Safety function that anyone can call in case the function above is used in an abusive manner,
     // which could theoretically delay withdrawals indefinitely since it prevents new epochs
-    function forceNewEpoch() external{
+    function forceNewEpoch() external {
         require(block.timestamp - gToken.currentEpochStart()
-            >= requestsStart + requestsEvery * requestsCount,"TOO_EARLY");
+            >= requestsStart + requestsEvery * requestsCount, "TOO_EARLY");
         uint newEpoch = startNewEpoch();
         emit NewEpochForced(newEpoch);
     }
 
     // Called by gToken contract
-    function newOpenPnlRequestOrEpoch() external{
+    function newOpenPnlRequestOrEpoch() external {
         bool firstRequest = nextEpochValuesLastRequest == 0;
 
-        if(firstRequest
-            && block.timestamp - gToken.currentEpochStart() >= requestsStart){
+        if (firstRequest
+            && block.timestamp - gToken.currentEpochStart() >= requestsStart) {
             makeOpenPnlRequest();
 
-        }else if(!firstRequest
-        && block.timestamp - nextEpochValuesLastRequest >= requestsEvery){
-            if(nextEpochValuesRequestCount < requestsCount){
+        } else if (!firstRequest
+        && block.timestamp - nextEpochValuesLastRequest >= requestsEvery) {
+            if (nextEpochValuesRequestCount < requestsCount) {
                 makeOpenPnlRequest();
 
-            }else if(nextEpochValues.length >= requestsCount){
+            } else if (nextEpochValues.length >= requestsCount) {
                 startNewEpoch();
             }
         }
     }
 
     // Create requests
-    function makeOpenPnlRequest() private{
+    function makeOpenPnlRequest() private {
         Chainlink.Request memory linkRequest = buildChainlinkRequest(
             job,
             address(this),
@@ -258,15 +258,15 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
         / oracles.length;
 
         requests[++lastRequestId] = Request({
-        initiated: true,
-        active: true,
-        linkFeePerNode: linkFeePerNode
+        initiated : true,
+        active : true,
+        linkFeePerNode : linkFeePerNode
         });
 
         nextEpochValuesRequestCount++;
         nextEpochValuesLastRequest = block.timestamp;
 
-        for(uint i; i < oracles.length; i ++){
+        for (uint i; i < oracles.length; i ++) {
             requestIds[sendChainlinkRequestTo(
                 oracles[i],
                 linkRequest,
@@ -287,7 +287,7 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
     function fulfill(
         bytes32 requestId,
         int value // 1e18
-    ) external recordChainlinkFulfillment(requestId){
+    ) external recordChainlinkFulfillment(requestId) {
 
         uint reqId = requestIds[requestId];
         delete requestIds[requestId];
@@ -305,14 +305,14 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
             r.linkFeePerNode
         );
 
-        if(!r.active){
+        if (!r.active) {
             return;
         }
 
         int[] storage answers = requestAnswers[reqId];
         answers.push(value);
 
-        if(answers.length == minAnswers){
+        if (answers.length == minAnswers) {
             int medianValue = median(answers);
             nextEpochValues.push(medianValue);
 
@@ -329,7 +329,7 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
     }
 
     // Increment epoch and update feed value
-    function startNewEpoch() private returns(uint newEpoch){
+    function startNewEpoch() private returns (uint newEpoch){
         nextEpochValuesRequestCount = 0;
         nextEpochValuesLastRequest = 0;
 
@@ -359,12 +359,12 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
     }
 
     // Median function
-    function swap(int[] memory array, uint i, uint j) private pure{
+    function swap(int[] memory array, uint i, uint j) private pure {
         (array[i], array[j]) = (array[j], array[i]);
     }
 
-    function sort(int[] memory array, uint begin, uint end) private pure{
-        if (begin >= end) { return; }
+    function sort(int[] memory array, uint begin, uint end) private pure {
+        if (begin >= end) {return;}
 
         uint j = begin;
         int pivot = array[j];
@@ -380,7 +380,7 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
         sort(array, j + 1, end);
     }
 
-    function median(int[] memory array) private pure returns(int){
+    function median(int[] memory array) private pure returns (int){
         sort(array, 0, array.length);
 
         return array.length % 2 == 0 ?
@@ -389,9 +389,9 @@ contract GTokenOpenPnlFeed is ChainlinkClient, IOpenTradesPnlFeed{
     }
 
     // Average function
-    function average(int[] memory array) private pure returns(int){
+    function average(int[] memory array) private pure returns (int){
         int sum;
-        for(uint i; i < array.length; i++){
+        for (uint i; i < array.length; i++) {
             sum += array[i];
         }
 

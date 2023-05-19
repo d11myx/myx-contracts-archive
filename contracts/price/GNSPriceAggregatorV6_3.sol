@@ -8,7 +8,7 @@ import '../interfaces/StorageInterfaceV5.sol';
 
 pragma solidity 0.8.17;
 
-contract GNSPriceAggregatorV6_3 is AggregatorInterfaceV6_2, ChainlinkClient, TWAPPriceGetter {
+contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     using Chainlink for Chainlink.Request;
 
     // Contracts (constant)
@@ -26,29 +26,11 @@ contract GNSPriceAggregatorV6_3 is AggregatorInterfaceV6_2, ChainlinkClient, TWA
     // Params (adjustable)
     uint public minAnswers;
 
-    // Custom data types
-    enum OrderType {
-        MARKET_OPEN,
-        MARKET_CLOSE,
-        LIMIT_OPEN,
-        LIMIT_CLOSE,
-        UPDATE_SL
-    }
-
     struct Order {
         uint pairIndex;
         OrderType orderType;
         uint linkFeePerNode;
         bool initiated;
-    }
-
-    struct PendingSl {
-        address trader;
-        uint pairIndex;
-        uint index;
-        uint openPrice;
-        bool buy;
-        uint newSl;
     }
 
     // State
@@ -58,7 +40,7 @@ contract GNSPriceAggregatorV6_3 is AggregatorInterfaceV6_2, ChainlinkClient, TWA
     mapping(bytes32 => uint) public orderIdByRequest;
     mapping(uint => uint[]) public ordersAnswers;
 
-    mapping(uint => PendingSl) public pendingSlOrders;
+    mapping(uint => PendingSl) private _pendingSlOrders;
 
     // Events
     event PairsStorageUpdated(address value);
@@ -338,14 +320,18 @@ contract GNSPriceAggregatorV6_3 is AggregatorInterfaceV6_2, ChainlinkClient, TWA
     }
 
     // Manage pending SL orders
+    function pendingSlOrders(uint orderId) external view override returns (PendingSl memory) {
+        return _pendingSlOrders[orderId];
+    }
+
     function storePendingSlOrder(uint orderId, PendingSl calldata p) external onlyTrading {
-        pendingSlOrders[orderId] = p;
+        _pendingSlOrders[orderId] = p;
     }
 
     function unregisterPendingSlOrder(uint orderId) external {
         require(msg.sender == storageT.callbacks(), "CALLBACKS_ONLY");
 
-        delete pendingSlOrders[orderId];
+        delete _pendingSlOrders[orderId];
     }
 
     // Claim back LINK tokens (if contract will be replaced for example)

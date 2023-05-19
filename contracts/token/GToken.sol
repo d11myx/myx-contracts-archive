@@ -164,20 +164,24 @@ contract GToken is ERC20Upgradeable, ERC4626Upgradeable, OwnableUpgradeable, IGT
         GnsPriceProvider gnsPriceProvider;
     }
 
+    struct ContractUnits{
+        uint _MIN_LOCK_DURATION;
+        uint _maxAccOpenPnlDelta;
+        uint _maxDailyAccPnlDelta;
+        uint _maxSupplyIncreaseDailyP;
+        uint _lossesBurnP;
+        uint _maxGnsSupplyMintDailyP;
+        uint _maxDiscountP;
+        uint _maxDiscountThresholdP;
+    }
+
     // Initializer function called when this contract is deployed
     function initialize(
         string memory _name,
         string memory _symbol,
         ContractAddresses memory _contractAddresses,
-        uint _MIN_LOCK_DURATION,
-        uint _maxAccOpenPnlDelta,
-        uint _maxDailyAccPnlDelta,
-        uint[2] memory _withdrawLockThresholdsP,
-        uint _maxSupplyIncreaseDailyP,
-        uint _lossesBurnP,
-        uint _maxGnsSupplyMintDailyP,
-        uint _maxDiscountP,
-        uint _maxDiscountThresholdP
+        ContractUnits memory _contractUnits,
+        uint[2] memory _withdrawLockThresholdsP
     ) external initializer {
 
         require(_contractAddresses.asset != address(0)
@@ -192,13 +196,13 @@ contract GToken is ERC20Upgradeable, ERC4626Upgradeable, OwnableUpgradeable, IGT
         && _contractAddresses.openTradesPnlFeed != address(0)
         && _contractAddresses.gnsPriceProvider.addr != address(0)
         && _contractAddresses.gnsPriceProvider.signature.length > 0
-        && _maxDailyAccPnlDelta >= MIN_DAILY_ACC_PNL_DELTA
+        && _contractUnits._maxDailyAccPnlDelta >= MIN_DAILY_ACC_PNL_DELTA
         && _withdrawLockThresholdsP[1] > _withdrawLockThresholdsP[0]
-        && _maxSupplyIncreaseDailyP <= MAX_SUPPLY_INCREASE_DAILY_P
-        && _lossesBurnP <= MAX_LOSSES_BURN_P
-        && _maxGnsSupplyMintDailyP <= MAX_GNS_SUPPLY_MINT_DAILY_P
-        && _maxDiscountP <= MAX_DISCOUNT_P
-            && _maxDiscountThresholdP >= 100 * PRECISION, "WRONG_PARAMS");
+        && _contractUnits._maxSupplyIncreaseDailyP <= MAX_SUPPLY_INCREASE_DAILY_P
+        && _contractUnits._lossesBurnP <= MAX_LOSSES_BURN_P
+        && _contractUnits._maxGnsSupplyMintDailyP <= MAX_GNS_SUPPLY_MINT_DAILY_P
+        && _contractUnits._maxDiscountP <= MAX_DISCOUNT_P
+        && _contractUnits._maxDiscountThresholdP >= 100 * PRECISION, "WRONG_PARAMS");
 
         __ERC20_init(_name, _symbol);
         __ERC4626_init(IERC20MetadataUpgradeable(_contractAddresses.asset));
@@ -212,16 +216,16 @@ contract GToken is ERC20Upgradeable, ERC4626Upgradeable, OwnableUpgradeable, IGT
         openTradesPnlFeed = IOpenTradesPnlFeed(_contractAddresses.openTradesPnlFeed);
         gnsPriceProvider = _contractAddresses.gnsPriceProvider;
 
-        MIN_LOCK_DURATION = _MIN_LOCK_DURATION;
+        MIN_LOCK_DURATION = _contractUnits._MIN_LOCK_DURATION;
 
-        maxAccOpenPnlDelta = _maxAccOpenPnlDelta;
-        maxDailyAccPnlDelta = _maxDailyAccPnlDelta;
+        maxAccOpenPnlDelta = _contractUnits._maxAccOpenPnlDelta;
+        maxDailyAccPnlDelta = _contractUnits._maxDailyAccPnlDelta;
         withdrawLockThresholdsP = _withdrawLockThresholdsP;
-        maxSupplyIncreaseDailyP = _maxSupplyIncreaseDailyP;
-        lossesBurnP = _lossesBurnP;
-        maxGnsSupplyMintDailyP = _maxGnsSupplyMintDailyP;
-        maxDiscountP = _maxDiscountP;
-        maxDiscountThresholdP = _maxDiscountThresholdP;
+        maxSupplyIncreaseDailyP = _contractUnits._maxSupplyIncreaseDailyP;
+        lossesBurnP = _contractUnits._lossesBurnP;
+        maxGnsSupplyMintDailyP = _contractUnits._maxGnsSupplyMintDailyP;
+        maxDiscountP = _contractUnits._maxDiscountP;
+        maxDiscountThresholdP = _contractUnits._maxDiscountThresholdP;
 
         shareToAssetsPrice = PRECISION;
         currentEpoch = 1;

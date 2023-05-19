@@ -1,0 +1,248 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_callbacks",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+        "name": "_type",
+        "type": "TradingCallbacksV6_3_1.TradeType"
+      }
+    ],
+    "name": "getTradeLastUpdated",
+    "outputs": [
+      {
+        "internalType": "contract TradingCallbacksV6_3_1",
+        "name": "",
+        "type": "TradingCallbacksV6_3_1"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "tp",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "sl",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "limit",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "created",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct TradingCallbacksV6_3_1.LastUpdated",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "trader",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "name": "tradeType",
+            "type": "TradingCallbacksV6_3_1.TradeType"
+          }
+        ],
+        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_callbacks",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "trader",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "name": "tradeType",
+            "type": "TradingCallbacksV6_3_1.TradeType"
+          }
+        ],
+        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "name": "id",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "isLimitInTimeout",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_callbacks",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "trader",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "name": "tradeType",
+            "type": "TradingCallbacksV6_3_1.TradeType"
+          }
+        ],
+        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "name": "id",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "isSlInTimeout",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_callbacks",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "trader",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "name": "tradeType",
+            "type": "TradingCallbacksV6_3_1.TradeType"
+          }
+        ],
+        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "name": "id",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "isTpInTimeout",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

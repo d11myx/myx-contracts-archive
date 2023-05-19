@@ -9,6 +9,8 @@ GNS Callbacks: 0x298a695906e16aea0a184a2815a76ead1a0b7522
 
 GNS PairStorage: 0xf67df2a4339ec1591615d94599081dd037960d4b
 
+PriceAggregator: 
+
 ### 交易流程
 
 #### 1. 质押 DAI

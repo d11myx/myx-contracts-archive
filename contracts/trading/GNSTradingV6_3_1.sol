@@ -13,10 +13,10 @@ contract GNSTradingV6_3_1 is Initializable {
     using TradeUtils for address;
 
     // Contracts (constant)
-    StorageInterfaceV5 public immutable storageT;
-    NftRewardsInterfaceV6_3_1 public immutable nftRewards;
-    GNSPairInfosInterfaceV6 public immutable pairInfos;
-    GNSReferralsInterfaceV6_2 public immutable referrals;
+    StorageInterfaceV5 public storageT;
+    NftRewardsInterfaceV6_3_1 public nftRewards;
+    GNSPairInfosInterfaceV6 public pairInfos;
+    GNSReferralsInterfaceV6_2 public referrals;
 
     // Params (constant)
     uint constant PRECISION = 1e10;
@@ -181,6 +181,10 @@ contract GNSTradingV6_3_1 is Initializable {
         isDone = !isDone;
 
         emit Done(isDone);
+    }
+
+    function _msgSender() internal view virtual returns (address) {
+        return msg.sender;
     }
 
     // Open new trade (MARKET/LIMIT)

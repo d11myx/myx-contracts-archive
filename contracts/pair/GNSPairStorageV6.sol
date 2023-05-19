@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import './interfaces/StorageInterfaceV5.sol';
-import './interfaces/PairsStorageInterfaceV6.sol';
-pragma solidity 0.8.11;
+import '../interfaces/StorageInterfaceV5.sol';
+import '../interfaces/PairsStorageInterfaceV6.sol';
+pragma solidity 0.8.17;
 
 contract GNSPairsStorageV6 is PairsStorageInterfaceV6 {
 
@@ -13,9 +13,6 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6 {
     uint constant MAX_LEVERAGE = 1000;
 
     // Custom data types
-    enum FeedCalculation {DEFAULT, INVERT, COMBINE}
-    struct Feed {address feed1; address feed2; FeedCalculation feedCalculation; uint maxDeviationP;} // PRECISION (%)
-
     struct Pair {
         string from;
         string to;

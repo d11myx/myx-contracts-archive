@@ -3,15 +3,20 @@ node_modules
 coverage
 coverage.json
 typechain
+typechain-types
 
 #Hardhat files
 cache
+cache-zk
 artifacts
+artifacts-zk
 
 #JetBrain
 *.iml
 .idea
+abi/@chainlink
 abi/@openzeppelin
+abi/@uniswap
 
 *MyTest.*
 *mytest.*

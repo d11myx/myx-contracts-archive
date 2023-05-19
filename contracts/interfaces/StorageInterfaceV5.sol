@@ -17,6 +17,7 @@ interface PausableInterfaceV5 {
 
 interface StorageInterfaceV5 {
     enum LimitOrder {TP, SL, LIQ, OPEN}
+
     struct Trade {
         address trader;
         uint pairIndex;
@@ -113,6 +114,8 @@ interface StorageInterfaceV5 {
 
     function openTradesInfo(address, uint, uint) external view returns (TradeInfo memory);
 
+    function openLimitOrders(uint) external view returns (OpenLimitOrder memory);
+
     function updateSl(address, uint, uint, uint) external;
 
     function updateTp(address, uint, uint, uint) external;
@@ -171,7 +174,7 @@ interface StorageInterfaceV5 {
 
     function nfts(uint) external view returns (NftInterfaceV5);
 
-    function fakeBlockNumber() external view returns (uint); // Testing
+//    function fakeBlockNumber() external view returns (uint); // Testing
 }
 
 interface IStateCopyUtils {
@@ -182,6 +185,7 @@ interface IStateCopyUtils {
 
 interface AggregatorInterfaceV6_2 {
     enum OrderType {MARKET_OPEN, MARKET_CLOSE, LIMIT_OPEN, LIMIT_CLOSE, UPDATE_SL}
+
     function pairsStorage() external view returns (PairsStorageInterfaceV6);
 
     function getPrice(uint, OrderType, uint) external returns (uint);
@@ -207,7 +211,9 @@ interface AggregatorInterfaceV6_3_1 is AggregatorInterfaceV6_2 {
 
 interface NftRewardsInterfaceV6_3_1 {
     struct TriggeredLimitId {address trader; uint pairIndex; uint index; StorageInterfaceV5.LimitOrder order;}
+
     enum OpenLimitOrderType{LEGACY, REVERSAL, MOMENTUM}
+
     function storeFirstToTrigger(TriggeredLimitId calldata, address, uint) external;
 
     function storeTriggerSameBlock(TriggeredLimitId calldata, address) external;
@@ -237,6 +243,7 @@ interface NftRewardsInterfaceV6_3_1 {
 
 interface TradingCallbacksV6_3_1 {
     enum TradeType {MARKET, LIMIT}
+
     struct SimplifiedTradeId {address trader; uint pairIndex; uint index; TradeType tradeType;}
 
     struct LastUpdated {uint32 tp; uint32 sl; uint32 limit; uint32 created;}

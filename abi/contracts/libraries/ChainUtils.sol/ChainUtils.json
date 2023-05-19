@@ -1,0 +1,41 @@
+[
+  {
+    "inputs": [],
+    "name": "ARBITRUM_GOERLI",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ARBITRUM_MAINNET",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ARB_SYS",
+    "outputs": [
+      {
+        "internalType": "contract IArbSys",
+        "name": "",
+        "type": "IArbSys"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

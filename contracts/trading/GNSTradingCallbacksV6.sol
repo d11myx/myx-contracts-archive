@@ -45,7 +45,7 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
     )
     )
     )
-    ) public tradeLastUpdated;   // Block numbers for last updated
+    ) private _tradeLastUpdated;   // Block numbers for last updated
 
     // Custom data types
     struct AggregatorAnswer {
@@ -66,24 +66,6 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
         uint reward1;
         uint reward2;
         uint reward3;
-    }
-
-    struct SimplifiedTradeId {
-        address trader;
-        uint pairIndex;
-        uint index;
-        TradeType tradeType;
-    }
-
-    struct LastUpdated {
-        uint32 tp;
-        uint32 sl;
-        uint32 limit;
-        uint32 created;
-    }
-
-    enum TradeType {
-        MARKET, LIMIT
     }
 
     // Events
@@ -673,7 +655,7 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
                 o.newSl >= a.price)
             ) {
                 storageT.updateSl(o.trader, o.pairIndex, o.index, o.newSl);
-                LastUpdated storage l = tradeLastUpdated[o.trader][o.pairIndex][o.index][TradeType.MARKET];
+                LastUpdated storage l = _tradeLastUpdated[o.trader][o.pairIndex][o.index][TradeType.MARKET];
                 l.sl = uint32(ChainUtils.getBlockNumber());
 
                 emit SlUpdated(
@@ -800,7 +782,7 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
         );
 
         // 7. Store tradeLastUpdated
-        LastUpdated storage lastUpdated = tradeLastUpdated[trade.trader][trade.pairIndex][trade.index][TradeType.MARKET];
+        LastUpdated storage lastUpdated = _tradeLastUpdated[trade.trader][trade.pairIndex][trade.index][TradeType.MARKET];
         uint32 currBlock = uint32(ChainUtils.getBlockNumber());
         lastUpdated.tp = currBlock;
         lastUpdated.sl = currBlock;
@@ -888,8 +870,12 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
     }
 
     // Utils (external)
+    function tradeLastUpdated(address trader, uint pairIndex, uint index, TradeType tradeType) external view returns (LastUpdated memory) {
+        return _tradeLastUpdated[trader][pairIndex][index][tradeType];
+    }
+
     function setTradeLastUpdated(SimplifiedTradeId calldata _id, LastUpdated memory _lastUpdated) external onlyTrading {
-        tradeLastUpdated[_id.trader][_id.pairIndex][_id.index][_id.tradeType] = _lastUpdated;
+        _tradeLastUpdated[_id.trader][_id.pairIndex][_id.index][_id.tradeType] = _lastUpdated;
     }
 
     // Utils (getters)
