@@ -2,10 +2,11 @@
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import '../interfaces/StorageInterfaceV5.sol';
+import '../interfaces/GNSReferralsInterfaceV6_2.sol';
 
 pragma solidity 0.8.17;
 
-contract GNSReferralsV6_2 is Initializable {
+contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
 
     // CONSTANTS
     uint constant PRECISION = 1e10;

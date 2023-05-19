@@ -2,9 +2,10 @@
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import '../interfaces/StorageInterfaceV5.sol';
+import "./interfaces/GNSPairInfosInterfaceV6.sol";
 pragma solidity 0.8.17;
 
-contract GNSPairInfosV6_1 is Initializable {
+contract GNSPairInfosV6_1 is GNSPairInfosInterfaceV6, Initializable {
 
     // Addresses
     StorageInterfaceV5 public storageT;

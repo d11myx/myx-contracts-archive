@@ -9,7 +9,7 @@ import '../libraries/ChainUtils.sol';
 
 pragma solidity 0.8.17;
 
-contract GNSTradingCallbacksV6_3_1 is Initializable {
+contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
 
     // Contracts (constant)
     StorageInterfaceV5 public storageT;

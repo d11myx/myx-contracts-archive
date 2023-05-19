@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 import '../interfaces/StorageInterfaceV5.sol';
 import '../interfaces/GNSPairInfosInterfaceV6.sol';
 import '../interfaces/GNSReferralsInterfaceV6_2.sol';
-import '../Delegatable.sol';
 import '../libraries/ChainUtils.sol';
 import '../libraries/TradeUtils.sol';
 
 pragma solidity 0.8.17;
 
-contract GNSTradingV6_3_1 is Delegatable {
+contract GNSTradingV6_3_1 is Initializable {
     using TradeUtils for address;
 
     // Contracts (constant)
@@ -103,14 +104,14 @@ contract GNSTradingV6_3_1 is Delegatable {
         uint index
     );
 
-    constructor(
+    function initialize(
         StorageInterfaceV5 _storageT,
         NftRewardsInterfaceV6_3_1 _nftRewards,
         GNSPairInfosInterfaceV6 _pairInfos,
         GNSReferralsInterfaceV6_2 _referrals,
         uint _maxPosDai,
         uint _marketOrdersTimeout
-    ) {
+    ) external initializer {
         require(address(_storageT) != address(0)
         && address(_nftRewards) != address(0)
         && address(_pairInfos) != address(0)
@@ -229,6 +230,7 @@ contract GNSTradingV6_3_1 is Delegatable {
         t.sl < t.openPrice :
         t.sl > t.openPrice), "WRONG_SL");
 
+        // 价格影响因子，上浮或下浮开仓价格
         (uint priceImpactP,) = pairInfos.getTradePriceImpact(
             0,
             t.pairIndex,
@@ -242,6 +244,7 @@ contract GNSTradingV6_3_1 is Delegatable {
         storageT.transferDai(sender, address(storageT), t.positionSizeDai);
 
         if (orderType != NftRewardsInterfaceV6_3_1.OpenLimitOrderType.LEGACY) {
+            // 限价单
             uint index = storageT.firstEmptyOpenLimitIndex(sender, t.pairIndex);
 
             storageT.storeOpenLimitOrder(
@@ -280,6 +283,7 @@ contract GNSTradingV6_3_1 is Delegatable {
             );
 
         } else {
+            // 市价单
             uint orderId = aggregator.getPrice(
                 t.pairIndex,
                 AggregatorInterfaceV6_2.OrderType.MARKET_OPEN,

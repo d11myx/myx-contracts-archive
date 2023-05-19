@@ -8,7 +8,7 @@ import '../interfaces/StorageInterfaceV5.sol';
 
 pragma solidity 0.8.17;
 
-contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
+contract GNSPriceAggregatorV6_3 is AggregatorInterfaceV6_2, ChainlinkClient, TWAPPriceGetter {
     using Chainlink for Chainlink.Request;
 
     // Contracts (constant)
@@ -35,14 +35,14 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         UPDATE_SL
     }
 
-    struct Order{
+    struct Order {
         uint pairIndex;
         OrderType orderType;
         uint linkFeePerNode;
         bool initiated;
     }
 
-    struct PendingSl{
+    struct PendingSl {
         address trader;
         uint pairIndex;
         uint index;
@@ -133,14 +133,15 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     }
 
     // Manage contracts
-    function updatePairsStorage(PairsStorageInterfaceV6 value) external onlyGov{
+    function updatePairsStorage(PairsStorageInterfaceV6 value) external onlyGov {
         require(address(value) != address(0), "VALUE_0");
 
         pairsStorage = value;
 
         emit PairsStorageUpdated(address(value));
     }
-    function updateLinkPriceFeed(ChainlinkFeedInterfaceV5 value) external onlyGov{
+
+    function updateLinkPriceFeed(ChainlinkFeedInterfaceV5 value) external onlyGov {
         require(address(value) != address(0), "VALUE_0");
 
         linkPriceFeed = value;
@@ -158,7 +159,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     }
 
     // Manage params
-    function updateMinAnswers(uint value) external onlyGov{
+    function updateMinAnswers(uint value) external onlyGov {
         require(value >= MIN_ANSWERS, "MIN_ANSWERS");
         require(value % 2 == 1, "EVEN");
 
@@ -168,11 +169,11 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     }
 
     // Manage nodes
-    function addNode(address a) external onlyGov{
+    function addNode(address a) external onlyGov {
         require(a != address(0), "VALUE_0");
         require(nodes.length < MAX_ORACLE_NODES, "MAX_ORACLE_NODES");
 
-        for(uint i = 0; i < nodes.length; i++){
+        for (uint i = 0; i < nodes.length; i++) {
             require(nodes[i] != a, "ALREADY_LISTED");
         }
 
@@ -180,7 +181,8 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
 
         emit NodeAdded(nodes.length - 1, a);
     }
-    function replaceNode(uint index, address a) external onlyGov{
+
+    function replaceNode(uint index, address a) external onlyGov {
         require(index < nodes.length, "WRONG_INDEX");
         require(a != address(0), "VALUE_0");
 
@@ -188,7 +190,8 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
 
         nodes[index] = a;
     }
-    function removeNode(uint index) external onlyGov{
+
+    function removeNode(uint index) external onlyGov {
         require(index < nodes.length, "WRONG_INDEX");
 
         emit NodeRemoved(index, nodes[index]);
@@ -202,7 +205,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         uint pairIndex,
         OrderType orderType,
         uint leveragedPosDai
-    ) external onlyTrading returns(uint){
+    ) external onlyTrading returns (uint){
 
         (string memory from, string memory to, bytes32 job, uint orderId) =
         pairsStorage.pairJob(pairIndex);
@@ -225,7 +228,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
             true
         );
 
-        for(uint i = 0; i < nodes.length; i ++){
+        for (uint i = 0; i < nodes.length; i ++) {
             orderIdByRequest[sendChainlinkRequestTo(
                 nodes[i],
                 linkRequest,
@@ -249,14 +252,14 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     function fulfill(
         bytes32 requestId,
         uint price
-    ) external recordChainlinkFulfillment(requestId){
+    ) external recordChainlinkFulfillment(requestId) {
 
         uint orderId = orderIdByRequest[requestId];
         Order memory r = orders[orderId];
 
         delete orderIdByRequest[requestId];
 
-        if(!r.initiated){
+        if (!r.initiated) {
             return;
         }
 
@@ -264,28 +267,28 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         uint feedPrice;
 
         PairsStorageInterfaceV6.Feed memory f = pairsStorage.pairFeed(r.pairIndex);
-        (, int feedPrice1, , , ) = ChainlinkFeedInterfaceV5(f.feed1).latestRoundData();
+        (, int feedPrice1, , ,) = ChainlinkFeedInterfaceV5(f.feed1).latestRoundData();
 
-        if(f.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.DEFAULT){
+        if (f.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.DEFAULT) {
             feedPrice = uint(feedPrice1 * int(PRECISION) / 1e8);
 
-        }else if(f.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.INVERT){
+        } else if (f.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.INVERT) {
             feedPrice = uint(int(PRECISION) * 1e8 / feedPrice1);
 
-        }else{
-            (, int feedPrice2, , , ) = ChainlinkFeedInterfaceV5(f.feed2).latestRoundData();
+        } else {
+            (, int feedPrice2, , ,) = ChainlinkFeedInterfaceV5(f.feed2).latestRoundData();
             feedPrice = uint(feedPrice1 * int(PRECISION) / feedPrice2);
         }
 
-        if(price == 0
+        if (price == 0
             || (price >= feedPrice ?
             price - feedPrice :
             feedPrice - price
-            ) * PRECISION * 100 / feedPrice <= f.maxDeviationP){
+            ) * PRECISION * 100 / feedPrice <= f.maxDeviationP) {
 
             answers.push(price);
 
-            if(answers.length == minAnswers){
+            if (answers.length == minAnswers) {
                 CallbacksInterfaceV6_2.AggregatorAnswer memory a;
 
                 a.orderId = orderId;
@@ -294,19 +297,19 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
 
                 CallbacksInterfaceV6_2 c = CallbacksInterfaceV6_2(storageT.callbacks());
 
-                if(r.orderType == OrderType.MARKET_OPEN){
+                if (r.orderType == OrderType.MARKET_OPEN) {
                     c.openTradeMarketCallback(a);
 
-                }else if(r.orderType == OrderType.MARKET_CLOSE){
+                } else if (r.orderType == OrderType.MARKET_CLOSE) {
                     c.closeTradeMarketCallback(a);
 
-                }else if(r.orderType == OrderType.LIMIT_OPEN){
+                } else if (r.orderType == OrderType.LIMIT_OPEN) {
                     c.executeNftOpenOrderCallback(a);
 
-                }else if(r.orderType == OrderType.LIMIT_CLOSE){
+                } else if (r.orderType == OrderType.LIMIT_CLOSE) {
                     c.executeNftCloseOrderCallback(a);
 
-                }else{
+                } else {
                     c.updateSlCallback(a);
                 }
 
@@ -327,36 +330,38 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     }
 
     // Calculate LINK fee for each request
-    function linkFee(uint pairIndex, uint leveragedPosDai) public view returns(uint){
-        (, int linkPriceUsd, , , ) = linkPriceFeed.latestRoundData();
+    function linkFee(uint pairIndex, uint leveragedPosDai) public view returns (uint){
+        (, int linkPriceUsd, , ,) = linkPriceFeed.latestRoundData();
 
         return pairsStorage.pairOracleFeeP(pairIndex)
         * leveragedPosDai * 1e8 / uint(linkPriceUsd) / PRECISION / 100;
     }
 
     // Manage pending SL orders
-    function storePendingSlOrder(uint orderId, PendingSl calldata p) external onlyTrading{
+    function storePendingSlOrder(uint orderId, PendingSl calldata p) external onlyTrading {
         pendingSlOrders[orderId] = p;
     }
-    function unregisterPendingSlOrder(uint orderId) external{
+
+    function unregisterPendingSlOrder(uint orderId) external {
         require(msg.sender == storageT.callbacks(), "CALLBACKS_ONLY");
 
         delete pendingSlOrders[orderId];
     }
 
     // Claim back LINK tokens (if contract will be replaced for example)
-    function claimBackLink() external onlyGov{
+    function claimBackLink() external onlyGov {
         TokenInterfaceV5 link = storageT.linkErc677();
 
         link.transfer(storageT.gov(), link.balanceOf(address(this)));
     }
 
     // Median function
-    function swap(uint[] memory array, uint i, uint j) private pure{
+    function swap(uint[] memory array, uint i, uint j) private pure {
         (array[i], array[j]) = (array[j], array[i]);
     }
-    function sort(uint[] memory array, uint begin, uint end) private pure{
-        if (begin >= end) { return; }
+
+    function sort(uint[] memory array, uint begin, uint end) private pure {
+        if (begin >= end) {return;}
 
         uint j = begin;
         uint pivot = array[j];
@@ -371,7 +376,8 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         sort(array, begin, j);
         sort(array, j + 1, end);
     }
-    function median(uint[] memory array) private pure returns(uint){
+
+    function median(uint[] memory array) private pure returns (uint){
         sort(array, 0, array.length);
 
         return array.length % 2 == 0 ?
@@ -380,7 +386,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     }
 
     // Storage v5 compatibility
-    function openFeeP(uint pairIndex) external view returns(uint){
+    function openFeeP(uint pairIndex) external view returns (uint){
         return pairsStorage.pairOpenFeeP(pairIndex);
     }
 }
