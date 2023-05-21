@@ -239,62 +239,62 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
     ) external recordChainlinkFulfillment(requestId) {
 
         uint orderId = orderIdByRequest[requestId];
-        Order memory r = orders[orderId];
+        Order memory order = orders[orderId];
 
         delete orderIdByRequest[requestId];
 
-        if (!r.initiated) {
+        if (!order.initiated) {
             return;
         }
 
         uint[] storage answers = ordersAnswers[orderId];
         uint feedPrice;
 
-        PairsStorageInterfaceV6.Feed memory f = pairsStorage.pairFeed(r.pairIndex);
-        (, int feedPrice1, , ,) = ChainlinkFeedInterfaceV5(f.feed1).latestRoundData();
+        // 获取feedPrice
+        PairsStorageInterfaceV6.Feed memory feed = pairsStorage.pairFeed(order.pairIndex);
+        (, int feedPrice1, , ,) = ChainlinkFeedInterfaceV5(feed.feed1).latestRoundData();
 
-        if (f.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.DEFAULT) {
+        if (feed.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.DEFAULT) {
             feedPrice = uint(feedPrice1 * int(PRECISION) / 1e8);
 
-        } else if (f.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.INVERT) {
+        } else if (feed.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.INVERT) {
             feedPrice = uint(int(PRECISION) * 1e8 / feedPrice1);
 
         } else {
-            (, int feedPrice2, , ,) = ChainlinkFeedInterfaceV5(f.feed2).latestRoundData();
+            (, int feedPrice2, , ,) = ChainlinkFeedInterfaceV5(feed.feed2).latestRoundData();
             feedPrice = uint(feedPrice1 * int(PRECISION) / feedPrice2);
         }
 
+        // 比对price与feedPrice 防止偏差过大
         if (price == 0
-            || (price >= feedPrice ?
-            price - feedPrice :
-            feedPrice - price
-            ) * PRECISION * 100 / feedPrice <= f.maxDeviationP) {
+            || (price >= feedPrice ? price - feedPrice : feedPrice - price)
+                * PRECISION * 100 / feedPrice <= feed.maxDeviationP) {
 
             answers.push(price);
 
             if (answers.length == minAnswers) {
-                CallbacksInterfaceV6_2.AggregatorAnswer memory a;
+                CallbacksInterfaceV6_2.AggregatorAnswer memory answer;
 
-                a.orderId = orderId;
-                a.price = median(answers);
-                a.spreadP = pairsStorage.pairSpreadP(r.pairIndex);
+                answer.orderId = orderId;
+                answer.price = median(answers);
+                answer.spreadP = pairsStorage.pairSpreadP(order.pairIndex);
 
-                CallbacksInterfaceV6_2 c = CallbacksInterfaceV6_2(storageT.callbacks());
+                CallbacksInterfaceV6_2 callback = CallbacksInterfaceV6_2(storageT.callbacks());
 
-                if (r.orderType == OrderType.MARKET_OPEN) {
-                    c.openTradeMarketCallback(a);
+                if (order.orderType == OrderType.MARKET_OPEN) {
+                    callback.openTradeMarketCallback(answer);
 
-                } else if (r.orderType == OrderType.MARKET_CLOSE) {
-                    c.closeTradeMarketCallback(a);
+                } else if (order.orderType == OrderType.MARKET_CLOSE) {
+                    callback.closeTradeMarketCallback(answer);
 
-                } else if (r.orderType == OrderType.LIMIT_OPEN) {
-                    c.executeNftOpenOrderCallback(a);
+                } else if (order.orderType == OrderType.LIMIT_OPEN) {
+                    callback.executeNftOpenOrderCallback(answer);
 
-                } else if (r.orderType == OrderType.LIMIT_CLOSE) {
-                    c.executeNftCloseOrderCallback(a);
+                } else if (order.orderType == OrderType.LIMIT_CLOSE) {
+                    callback.executeNftCloseOrderCallback(answer);
 
                 } else {
-                    c.updateSlCallback(a);
+                    callback.updateSlCallback(answer);
                 }
 
                 delete orders[orderId];
@@ -305,10 +305,10 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
                 requestId,
                 orderId,
                 msg.sender,
-                r.pairIndex,
+                order.pairIndex,
                 price,
                 feedPrice,
-                r.linkFeePerNode
+                order.linkFeePerNode
             );
         }
     }

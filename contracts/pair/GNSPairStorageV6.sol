@@ -166,7 +166,7 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
     }
 
     // Fetch relevant info for order (aggregator)
-    function pairJob(uint _pairIndex) external returns (string memory, string memory, bytes32, uint){
+    function pairJob(uint _pairIndex) external view returns (string memory, string memory, bytes32, uint){
         require(msg.sender == address(storageT.priceAggregator()), "AGGREGATOR_ONLY");
 
         Pair memory p = pairs[_pairIndex];

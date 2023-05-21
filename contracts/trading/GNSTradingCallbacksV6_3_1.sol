@@ -242,56 +242,57 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
         AggregatorAnswer memory a
     ) external onlyPriceAggregator notDone {
 
-        StorageInterfaceV5.PendingMarketOrder memory o = getPendingMarketOrder(a.orderId);
+        StorageInterfaceV5.PendingMarketOrder memory order = getPendingMarketOrder(a.orderId);
 
-        if (o.block == 0) {return;}
+        if (order.block == 0) {return;}
 
-        StorageInterfaceV5.Trade memory t = o.trade;
+        StorageInterfaceV5.Trade memory trade = order.trade;
 
+        // 上调/下调价格
         (uint priceImpactP, uint priceAfterImpact) = pairInfos.getTradePriceImpact(
-            marketExecutionPrice(a.price, a.spreadP, o.spreadReductionP, t.buy),
-            t.pairIndex,
-            t.buy,
-            t.positionSizeDai * t.leverage
+            marketExecutionPrice(a.price, a.spreadP, order.spreadReductionP, trade.buy),
+            trade.pairIndex,
+            trade.buy,
+            trade.positionSizeDai * trade.leverage
         );
 
-        t.openPrice = priceAfterImpact;
+        trade.openPrice = priceAfterImpact;
 
-        uint maxSlippage = o.wantedPrice * o.slippageP / 100 / PRECISION;
+        uint maxSlippage = order.wantedPrice * order.slippageP / 100 / PRECISION;
 
         if (isPaused || a.price == 0
-        || (t.buy ?
-        t.openPrice > o.wantedPrice + maxSlippage :
-        t.openPrice < o.wantedPrice - maxSlippage)
-        || (t.tp > 0 && (t.buy ?
-        t.openPrice >= t.tp :
-        t.openPrice <= t.tp))
-        || (t.sl > 0 && (t.buy ?
-        t.openPrice <= t.sl :
-        t.openPrice >= t.sl))
-            || !withinExposureLimits(t.pairIndex, t.buy, t.positionSizeDai, t.leverage)
-            || priceImpactP * t.leverage > pairInfos.maxNegativePnlOnOpenP()) {
+        || (trade.buy ?
+        trade.openPrice > order.wantedPrice + maxSlippage :
+        trade.openPrice < order.wantedPrice - maxSlippage)
+        || (trade.tp > 0 && (trade.buy ?
+        trade.openPrice >= trade.tp :
+        trade.openPrice <= trade.tp))
+        || (trade.sl > 0 && (trade.buy ?
+        trade.openPrice <= trade.sl :
+        trade.openPrice >= trade.sl))
+            || !withinExposureLimits(trade.pairIndex, trade.buy, trade.positionSizeDai, trade.leverage)
+            || priceImpactP * trade.leverage > pairInfos.maxNegativePnlOnOpenP()) {
 
             uint devGovFeesDai = storageT.handleDevGovFees(
-                t.pairIndex,
-                t.positionSizeDai * t.leverage,
+                trade.pairIndex,
+                trade.positionSizeDai * trade.leverage,
                 true,
                 true
             );
 
-            transferFromStorageToAddress(t.trader, t.positionSizeDai - devGovFeesDai);
+            transferFromStorageToAddress(trade.trader, trade.positionSizeDai - devGovFeesDai);
 
-            emit DevGovFeeCharged(t.trader, devGovFeesDai);
+            emit DevGovFeeCharged(trade.trader, devGovFeesDai);
 
             emit MarketOpenCanceled(
                 a.orderId,
-                t.trader,
-                t.pairIndex
+                trade.trader,
+                trade.pairIndex
             );
 
         } else {
             (StorageInterfaceV5.Trade memory finalTrade, uint tokenPriceDai) = registerTrade(
-                t, 1500, 0
+                trade, 1500, 0
             );
 
             emit MarketExecuted(
