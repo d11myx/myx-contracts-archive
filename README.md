@@ -9,7 +9,7 @@ GNS Callbacks: 0x298a695906e16aea0a184a2815a76ead1a0b7522
 
 GNS PairStorage: 0xf67df2a4339ec1591615d94599081dd037960d4b
 
-PriceAggregator: 
+PriceAggregator: 0xcef1C791CDd8c3EA92D6AB32399119Fd30E1Ff21
 
 ### 交易流程
 

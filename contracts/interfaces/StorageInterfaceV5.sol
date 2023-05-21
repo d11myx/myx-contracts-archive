@@ -20,15 +20,15 @@ interface StorageInterfaceV5 {
 
     struct Trade {
         address trader;
-        uint pairIndex;
-        uint index;
+        uint pairIndex;             // 币对index？
+        uint index;                 //
         uint initialPosToken;       // 1e18
-        uint positionSizeDai;       // 1e18
+        uint positionSizeDai;       // 1e18 保证金
         uint openPrice;             // PRECISION
-        bool buy;
-        uint leverage;
-        uint tp;                    // PRECISION
-        uint sl;                    // PRECISION
+        bool buy;                   // 多/空
+        uint leverage;              // 杠杆
+        uint tp;                    // PRECISION 止盈
+        uint sl;                    // PRECISION 止损
     }
 
     struct TradeInfo {

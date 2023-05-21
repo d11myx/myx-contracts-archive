@@ -19,7 +19,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
     uint public targetVolumeDai;    // DAI (to reach maximum referral system fee, eg. 1e8)
 
     // CUSTOM TYPES
-    struct AllyDetails{
+    struct AllyDetails {
         address[] referrersReferred;
         uint volumeReferredDai;    // 1e18
         uint pendingRewardsToken;  // 1e18
@@ -28,7 +28,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
         bool active;
     }
 
-    struct ReferrerDetails{
+    struct ReferrerDetails {
         address ally;
         address[] tradersReferred;
         uint volumeReferredDai;    // 1e18
@@ -123,28 +123,31 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
     }
 
     // MANAGE PARAMETERS
-    function updateAllyFeeP(uint value) external onlyGov{
+    function updateAllyFeeP(uint value) external onlyGov {
         require(value <= 50, "VALUE_ABOVE_50");
 
         allyFeeP = value;
 
         emit UpdatedAllyFeeP(value);
     }
-    function updateStartReferrerFeeP(uint value) external onlyGov{
+
+    function updateStartReferrerFeeP(uint value) external onlyGov {
         require(value <= 100, "VALUE_ABOVE_100");
 
         startReferrerFeeP = value;
 
         emit UpdatedStartReferrerFeeP(value);
     }
-    function updateOpenFeeP(uint value) external onlyGov{
+
+    function updateOpenFeeP(uint value) external onlyGov {
         require(value <= 50, "VALUE_ABOVE_50");
 
         openFeeP = value;
 
         emit UpdatedOpenFeeP(value);
     }
-    function updateTargetVolumeDai(uint value) external onlyGov{
+
+    function updateTargetVolumeDai(uint value) external onlyGov {
         require(value > 0, "VALUE_0");
 
         targetVolumeDai = value;
@@ -153,7 +156,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
     }
 
     // MANAGE ALLIES
-    function whitelistAlly(address ally) external onlyGov{
+    function whitelistAlly(address ally) external onlyGov {
         require(ally != address(0), "ADDRESS_0");
 
         AllyDetails storage a = allyDetails[ally];
@@ -163,7 +166,8 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
 
         emit AllyWhitelisted(ally);
     }
-    function unwhitelistAlly(address ally) external onlyGov{
+
+    function unwhitelistAlly(address ally) external onlyGov {
         AllyDetails storage a = allyDetails[ally];
         require(a.active, "ALREADY_UNACTIVE");
 
@@ -176,7 +180,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
     function whitelistReferrer(
         address referrer,
         address ally
-    ) external onlyGov{
+    ) external onlyGov {
 
         require(referrer != address(0), "ADDRESS_0");
 
@@ -185,7 +189,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
 
         r.active = true;
 
-        if(ally != address(0)){
+        if (ally != address(0)) {
             AllyDetails storage a = allyDetails[ally];
             require(a.active, "ALLY_NOT_ACTIVE");
 
@@ -195,7 +199,8 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
 
         emit ReferrerWhitelisted(referrer, ally);
     }
-    function unwhitelistReferrer(address referrer) external onlyGov{
+
+    function unwhitelistReferrer(address referrer) external onlyGov {
         ReferrerDetails storage r = referrerDetails[referrer];
         require(r.active, "ALREADY_UNACTIVE");
 
@@ -207,13 +212,13 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
     function registerPotentialReferrer(
         address trader,
         address referrer
-    ) external onlyTrading{
+    ) external onlyTrading {
 
         ReferrerDetails storage r = referrerDetails[referrer];
 
-        if(referrerByTrader[trader] != address(0)
+        if (referrerByTrader[trader] != address(0)
         || referrer == address(0)
-            || !r.active){
+            || !r.active) {
             return;
         }
 
@@ -229,12 +234,12 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
         uint volumeDai,
         uint pairOpenFeeP,
         uint tokenPriceDai
-    ) external onlyCallbacks returns(uint){
+    ) external onlyCallbacks returns (uint){
 
         address referrer = referrerByTrader[trader];
         ReferrerDetails storage r = referrerDetails[referrer];
 
-        if(!r.active){
+        if (!r.active) {
             return 0;
         }
 
@@ -252,7 +257,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
         uint allyRewardValueDai;
         uint allyRewardToken;
 
-        if(a.active){
+        if (a.active) {
             allyRewardValueDai = referrerRewardValueDai * allyFeeP / 100;
             allyRewardToken = referrerRewardToken * allyFeeP / 100;
 
@@ -290,7 +295,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
     }
 
     // REWARDS CLAIMING
-    function claimAllyRewards() external{
+    function claimAllyRewards() external {
         AllyDetails storage a = allyDetails[msg.sender];
         uint rewardsToken = a.pendingRewardsToken;
 
@@ -301,7 +306,8 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
 
         emit AllyRewardsClaimed(msg.sender, rewardsToken);
     }
-    function claimReferrerRewards() external{
+
+    function claimReferrerRewards() external {
         ReferrerDetails storage r = referrerDetails[msg.sender];
         uint rewardsToken = r.pendingRewardsToken;
 
@@ -317,7 +323,7 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
     function getReferrerFeeP(
         uint pairOpenFeeP,
         uint volumeReferredDai
-    ) public view returns(uint){
+    ) public view returns (uint){
 
         uint maxReferrerFeeP = pairOpenFeeP * 2 * openFeeP / 100;
         uint minFeeP = maxReferrerFeeP * startReferrerFeeP / 100;
@@ -330,13 +336,13 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
 
     function getPercentOfOpenFeeP(
         address trader
-    ) external view returns(uint){
+    ) external view returns (uint){
         return getPercentOfOpenFeeP_calc(referrerDetails[referrerByTrader[trader]].volumeReferredDai);
     }
 
     function getPercentOfOpenFeeP_calc(
         uint volumeReferredDai
-    ) public view returns(uint resultP){
+    ) public view returns (uint resultP){
         resultP = (openFeeP * (
         startReferrerFeeP * PRECISION +
         volumeReferredDai * PRECISION * (100 - startReferrerFeeP) / 1e18 / targetVolumeDai)
@@ -349,16 +355,18 @@ contract GNSReferralsV6_2 is GNSReferralsInterfaceV6_2, Initializable {
 
     function getTraderReferrer(
         address trader
-    ) external view returns(address){
+    ) external view returns (address){
         address referrer = referrerByTrader[trader];
 
         return referrerDetails[referrer].active ? referrer : address(0);
     }
+
     function getReferrersReferred(
         address ally
     ) external view returns (address[] memory){
         return allyDetails[ally].referrersReferred;
     }
+
     function getTradersReferred(
         address referred
     ) external view returns (address[] memory){

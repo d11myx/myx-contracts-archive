@@ -188,10 +188,11 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         OrderType orderType,
         uint leveragedPosDai
     ) external onlyTrading returns (uint){
-
+        // todo job ?
         (string memory from, string memory to, bytes32 job, uint orderId) =
         pairsStorage.pairJob(pairIndex);
 
+        // 构造chainlink 请求
         Chainlink.Request memory linkRequest = buildChainlinkRequest(
             job,
             address(this),
@@ -201,6 +202,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         linkRequest.add("from", from);
         linkRequest.add("to", to);
 
+        // chainlink 手续费
         uint linkFeePerNode = linkFee(pairIndex, leveragedPosDai) / nodes.length;
 
         orders[orderId] = Order(

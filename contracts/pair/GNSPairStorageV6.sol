@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 import '../interfaces/StorageInterfaceV5.sol';
 import '../interfaces/PairsStorageInterfaceV6.sol';
 pragma solidity 0.8.17;
 
-contract GNSPairsStorageV6 is PairsStorageInterfaceV6 {
+contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
 
     // Contracts (constant)
     StorageInterfaceV5 constant storageT = StorageInterfaceV5(0xaee4d11a16B2bc65EDD6416Fb626EB404a6D65BD);
@@ -65,7 +67,7 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6 {
     event FeeAdded(uint index, string name);
     event FeeUpdated(uint index);
 
-    constructor(uint _currentOrderId) {
+    function init(uint _currentOrderId) external initializer {
         require(_currentOrderId > 0, "ORDER_ID_0");
         currentOrderId = _currentOrderId;
     }

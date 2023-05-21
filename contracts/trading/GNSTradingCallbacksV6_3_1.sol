@@ -6,10 +6,11 @@ import '../interfaces/GNSPairInfosInterfaceV6.sol';
 import '../interfaces/GNSReferralsInterfaceV6_2.sol';
 import '../interfaces/GNSStakingInterfaceV6_2.sol';
 import '../libraries/ChainUtils.sol';
+import "../interfaces/CallbacksInterfaceV6_2.sol";
 
 pragma solidity 0.8.17;
 
-contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
+contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterfaceV6_2, PausableInterfaceV5, Initializable {
 
     // Contracts (constant)
     StorageInterfaceV5 public storageT;
@@ -35,17 +36,9 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, Initializable {
     bool public isDone;             // Prevent any interaction with the contract
     uint public canExecuteTimeout;  // How long an update to TP/SL/Limit has to wait before it is executable
 
-    // Last Updated State
-    mapping(
-    address => mapping(
-    uint => mapping(
-    uint => mapping(
-    // Market, Limit
-    TradeType => LastUpdated
-    )
-    )
-    )
-    ) private _tradeLastUpdated;   // Block numbers for last updated
+    // Block numbers for last updated
+    // trader -> pairIndex -> index -> tradeType => last updated
+    mapping(address => mapping(uint => mapping(uint => mapping(TradeType => LastUpdated)))) private _tradeLastUpdated;
 
     // Custom data types
     struct AggregatorAnswer {

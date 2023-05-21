@@ -5,7 +5,7 @@ import '../interfaces/StorageInterfaceV5.sol';
 
 pragma solidity 0.8.17;
 
-contract GNSTradingStorageV5 is StorageInterfaceV5, Initializable {
+contract GNSTradingStorageV5 is StorageInterfaceV5, IStateCopyUtils, Initializable {
 
     // Constants
     uint public constant PRECISION = 1e10;
@@ -52,10 +52,12 @@ contract GNSTradingStorageV5 is StorageInterfaceV5, Initializable {
     mapping(address => mapping(uint => uint)) public openTradesCount;
 
     // Limit orders mappings
+    // trader -> pairIndex -> index => limit order id
     mapping(address => mapping(uint => mapping(uint => uint))) public openLimitOrderIds;
+    // trader -> pairIndex => order counts
     mapping(address => mapping(uint => uint)) public openLimitOrdersCount;
 
-    // Stack too deep
+    // override view function, stack too deep
     OpenLimitOrder[] private _openLimitOrders;
 
     // Pending orders mappings
@@ -314,7 +316,7 @@ contract GNSTradingStorageV5 is StorageInterfaceV5, Initializable {
 
     // Manage open limit orders
     function storeOpenLimitOrder(OpenLimitOrder memory o) external onlyTrading {
-        o.index = firstEmptyOpenLimitIndex(o.trader, o.pairIndex);
+        o.index = firstEmptyOpenLimitIndex(o.trader, o.pairIndex); // 重复获取 todo
         o.block = block.number;
         _openLimitOrders.push(o);
         openLimitOrderIds[o.trader][o.pairIndex][o.index] = _openLimitOrders.length - 1;
@@ -453,10 +455,13 @@ contract GNSTradingStorageV5 is StorageInterfaceV5, Initializable {
         }
     }
 
+    // 第一个空缺的限价单index todo
     function firstEmptyOpenLimitIndex(address trader, uint pairIndex) public view returns (uint index){
         for (uint i = 0; i < maxTradesPerPair; i++) {
-            if (!hasOpenLimitOrder(trader, pairIndex, i)) {index = i;
-                break;}
+            if (!hasOpenLimitOrder(trader, pairIndex, i)) {
+                index = i;
+                break;
+            }
         }
     }
 

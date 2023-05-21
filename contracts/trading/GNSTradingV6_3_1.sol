@@ -9,7 +9,7 @@ import '../libraries/TradeUtils.sol';
 
 pragma solidity 0.8.17;
 
-contract GNSTradingV6_3_1 is Initializable {
+contract GNSTradingV6_3_1 is PausableInterfaceV5, Initializable {
     using TradeUtils for address;
 
     // Contracts (constant)
@@ -189,7 +189,7 @@ contract GNSTradingV6_3_1 is Initializable {
 
     // Open new trade (MARKET/LIMIT)
     function openTrade(
-        StorageInterfaceV5.Trade memory t,
+        StorageInterfaceV5.Trade memory trade,
         NftRewardsInterfaceV6_3_1.OpenLimitOrderType orderType, // LEGACY => market
         uint spreadReductionId,
         uint slippageP, // for market orders only
@@ -197,81 +197,84 @@ contract GNSTradingV6_3_1 is Initializable {
     ) external notContract notDone {
 
         require(!isPaused, "PAUSED");
-        require(t.openPrice * slippageP < type(uint256).max, "OVERFLOW");
+        require(trade.openPrice * slippageP < type(uint256).max, "OVERFLOW");
 
         AggregatorInterfaceV6_2 aggregator = storageT.priceAggregator();
         PairsStorageInterfaceV6 pairsStored = aggregator.pairsStorage();
 
         address sender = _msgSender();
 
-        require(storageT.openTradesCount(sender, t.pairIndex)
-        + storageT.pendingMarketOpenCount(sender, t.pairIndex)
-        + storageT.openLimitOrdersCount(sender, t.pairIndex)
+        // 是否超过每个币对最大交易数
+        require(storageT.openTradesCount(sender, trade.pairIndex)
+        + storageT.pendingMarketOpenCount(sender, trade.pairIndex)
+        + storageT.openLimitOrdersCount(sender, trade.pairIndex)
             < storageT.maxTradesPerPair(),
             "MAX_TRADES_PER_PAIR");
 
+        // 最大pending状态订单
         require(storageT.pendingOrderIdsCount(sender)
             < storageT.maxPendingMarketOrders(),
             "MAX_PENDING_ORDERS");
 
-        require(t.positionSizeDai <= maxPosDai, "ABOVE_MAX_POS");
-        require(t.positionSizeDai * t.leverage
-            >= pairsStored.pairMinLevPosDai(t.pairIndex), "BELOW_MIN_POS");
+        // 保证金及开仓价值大小
+        require(trade.positionSizeDai <= maxPosDai, "ABOVE_MAX_POS");
+        require(trade.positionSizeDai * trade.leverage
+            >= pairsStored.pairMinLevPosDai(trade.pairIndex), "BELOW_MIN_POS");
 
-        require(t.leverage > 0 && t.leverage >= pairsStored.pairMinLeverage(t.pairIndex)
-            && t.leverage <= pairsStored.pairMaxLeverage(t.pairIndex),
+        // 杠杆大小
+        require(trade.leverage > 0 && trade.leverage >= pairsStored.pairMinLeverage(trade.pairIndex)
+            && trade.leverage <= pairsStored.pairMaxLeverage(trade.pairIndex),
             "LEVERAGE_INCORRECT");
 
+        // nft相关
         require(spreadReductionId == 0
             || storageT.nfts(spreadReductionId - 1).balanceOf(sender) > 0,
             "NO_CORRESPONDING_NFT_SPREAD_REDUCTION");
 
-        require(t.tp == 0 || (t.buy ?
-        t.tp > t.openPrice :
-        t.tp < t.openPrice), "WRONG_TP");
+        // 做多时止盈价要大于开仓价 做空时止盈价小于开仓价
+        require(trade.tp == 0 || (trade.buy ? trade.tp > trade.openPrice : trade.tp < trade.openPrice), "WRONG_TP");
 
-        require(t.sl == 0 || (t.buy ?
-        t.sl < t.openPrice :
-        t.sl > t.openPrice), "WRONG_SL");
+        // 做多时止损价要小于开仓价 做空时止损价大于开仓价
+        require(trade.sl == 0 || (trade.buy ? trade.sl < trade.openPrice : trade.sl > trade.openPrice), "WRONG_SL");
 
-        // 价格影响因子，上浮或下浮开仓价格
+        // 价格影响因子，上浮或下浮开仓价格 todo 删除？
         (uint priceImpactP,) = pairInfos.getTradePriceImpact(
             0,
-            t.pairIndex,
-            t.buy,
-            t.positionSizeDai * t.leverage
+            trade.pairIndex,
+            trade.buy,
+            trade.positionSizeDai * trade.leverage
         );
 
-        require(priceImpactP * t.leverage
-            <= pairInfos.maxNegativePnlOnOpenP(), "PRICE_IMPACT_TOO_HIGH");
+        require(priceImpactP * trade.leverage <= pairInfos.maxNegativePnlOnOpenP(), "PRICE_IMPACT_TOO_HIGH");
 
-        storageT.transferDai(sender, address(storageT), t.positionSizeDai);
+        // 发送保证金 sender -> storage
+        storageT.transferDai(sender, address(storageT), trade.positionSizeDai);
 
         if (orderType != NftRewardsInterfaceV6_3_1.OpenLimitOrderType.LEGACY) {
             // 限价单
-            uint index = storageT.firstEmptyOpenLimitIndex(sender, t.pairIndex);
+            // 获取一个限价单index
+            uint index = storageT.firstEmptyOpenLimitIndex(sender, trade.pairIndex);
 
             storageT.storeOpenLimitOrder(
                 StorageInterfaceV5.OpenLimitOrder(
                     sender,
-                    t.pairIndex,
+                    trade.pairIndex,
                     index,
-                    t.positionSizeDai,
-                    spreadReductionId > 0 ?
-                    storageT.spreadReductionsP(spreadReductionId - 1) :
-                    0,
-                    t.buy,
-                    t.leverage,
-                    t.tp,
-                    t.sl,
-                    t.openPrice,
-                    t.openPrice,
+                    trade.positionSizeDai,
+                    spreadReductionId > 0 ? storageT.spreadReductionsP(spreadReductionId - 1) : 0,
+                    trade.buy,
+                    trade.leverage,
+                    trade.tp,
+                    trade.sl,
+                    trade.openPrice,
+                    trade.openPrice,
                     block.number,
                     0
                 )
             );
-
+            // nft? todo
             nftRewards.setOpenLimitOrderType(sender, t.pairIndex, index, orderType);
+            // TradeUtils.setTradeLastUpdated
             storageT.callbacks().setTradeLastUpdated(
                 sender,
                 t.pairIndex,
@@ -282,38 +285,37 @@ contract GNSTradingV6_3_1 is Initializable {
 
             emit OpenLimitPlaced(
                 sender,
-                t.pairIndex,
+                trade.pairIndex,
                 index
             );
 
         } else {
             // 市价单
+            // 发送获取价格请求到chainlink
             uint orderId = aggregator.getPrice(
-                t.pairIndex,
+                trade.pairIndex,
                 AggregatorInterfaceV6_2.OrderType.MARKET_OPEN,
-                t.positionSizeDai * t.leverage
+                trade.positionSizeDai * trade.leverage
             );
 
             storageT.storePendingMarketOrder(
                 StorageInterfaceV5.PendingMarketOrder(
                     StorageInterfaceV5.Trade(
                         sender,
-                        t.pairIndex,
+                        trade.pairIndex,
                         0,
                         0,
-                        t.positionSizeDai,
+                        trade.positionSizeDai,
                         0,
-                        t.buy,
-                        t.leverage,
-                        t.tp,
-                        t.sl
+                        trade.buy,
+                        trade.leverage,
+                        trade.tp,
+                        trade.sl
                     ),
                     0,
-                    t.openPrice,
+                    trade.openPrice,
                     slippageP,
-                    spreadReductionId > 0 ?
-                    storageT.spreadReductionsP(spreadReductionId - 1) :
-                    0,
+                    spreadReductionId > 0 ? storageT.spreadReductionsP(spreadReductionId - 1) : 0,
                     0
                 ), orderId, true
             );
@@ -321,11 +323,11 @@ contract GNSTradingV6_3_1 is Initializable {
             emit MarketOrderInitiated(
                 orderId,
                 sender,
-                t.pairIndex,
+                trade.pairIndex,
                 true
             );
         }
-
+        // 邀请返佣
         referrals.registerPotentialReferrer(sender, referrer);
     }
 

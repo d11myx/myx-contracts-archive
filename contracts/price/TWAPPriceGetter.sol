@@ -8,7 +8,7 @@ import '../interfaces/StorageInterfaceV5.sol';
 
 pragma solidity 0.8.17;
 
-abstract contract TWAPPriceGetter is AggregatorInterfaceV6_2 {
+abstract contract TWAPPriceGetter is AggregatorInterfaceV6_3_1 {
     // Constants
     uint32 constant MIN_TWAP_PERIOD = 1 hours / 2;
     uint32 constant MAX_TWAP_PERIOD = 4 hours;
