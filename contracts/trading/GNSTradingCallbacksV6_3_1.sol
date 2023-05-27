@@ -260,26 +260,28 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
 
         uint maxSlippage = order.wantedPrice * order.slippageP / 100 / PRECISION;
 
+        // 判断开仓价格是否在最大滑点价格内
         if (isPaused || a.price == 0
-        || (trade.buy ?
+        || (trade.buy ? // 开仓价格
         trade.openPrice > order.wantedPrice + maxSlippage :
         trade.openPrice < order.wantedPrice - maxSlippage)
-        || (trade.tp > 0 && (trade.buy ?
+        || (trade.tp > 0 && (trade.buy ? // 止盈价格
         trade.openPrice >= trade.tp :
         trade.openPrice <= trade.tp))
-        || (trade.sl > 0 && (trade.buy ?
+        || (trade.sl > 0 && (trade.buy ? // 止损价格
         trade.openPrice <= trade.sl :
         trade.openPrice >= trade.sl))
-            || !withinExposureLimits(trade.pairIndex, trade.buy, trade.positionSizeDai, trade.leverage)
+            || !withinExposureLimits(trade.pairIndex, trade.buy, trade.positionSizeDai, trade.leverage) // 判断开单量、保证金
             || priceImpactP * trade.leverage > pairInfos.maxNegativePnlOnOpenP()) {
-
+            // 取消订单
+            // 扣除手续费
             uint devGovFeesDai = storageT.handleDevGovFees(
                 trade.pairIndex,
                 trade.positionSizeDai * trade.leverage,
                 true,
                 true
             );
-
+            // 返还保证金
             transferFromStorageToAddress(trade.trader, trade.positionSizeDai - devGovFeesDai);
 
             emit DevGovFeeCharged(trade.trader, devGovFeesDai);
@@ -291,6 +293,7 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
             );
 
         } else {
+            // 开仓
             (StorageInterfaceV5.Trade memory finalTrade, uint tokenPriceDai) = registerTrade(
                 trade, 1500, 0
             );
@@ -311,89 +314,94 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
     }
 
     function closeTradeMarketCallback(
-        AggregatorAnswer memory a
+        AggregatorAnswer memory answer
     ) external onlyPriceAggregator notDone {
 
-        StorageInterfaceV5.PendingMarketOrder memory o = getPendingMarketOrder(a.orderId);
+        StorageInterfaceV5.PendingMarketOrder memory order = getPendingMarketOrder(answer.orderId);
 
-        if (o.block == 0) {return;}
+        if (order.block == 0) {return;}
 
-        StorageInterfaceV5.Trade memory t = getOpenTrade(
-            o.trade.trader, o.trade.pairIndex, o.trade.index
+        StorageInterfaceV5.Trade memory trade = getOpenTrade(
+            order.trade.trader, order.trade.pairIndex, order.trade.index
         );
 
-        if (t.leverage > 0) {
-            StorageInterfaceV5.TradeInfo memory i = storageT.openTradesInfo(
-                t.trader, t.pairIndex, t.index
+        if (trade.leverage > 0) {
+            StorageInterfaceV5.TradeInfo memory tradeInfo = storageT.openTradesInfo(
+                trade.trader, trade.pairIndex, trade.index
             );
 
             AggregatorInterfaceV6_2 aggregator = storageT.priceAggregator();
             PairsStorageInterfaceV6 pairsStorage = aggregator.pairsStorage();
 
-            Values memory v;
+            Values memory value;
 
-            v.levPosDai = t.initialPosToken * i.tokenPriceDai * t.leverage / PRECISION;
-            v.tokenPriceDai = aggregator.tokenPriceDai();
+            // 总仓位
+            value.levPosDai = trade.initialPosToken * tradeInfo.tokenPriceDai * trade.leverage / PRECISION;
+            value.tokenPriceDai = aggregator.tokenPriceDai();
 
-            if (a.price == 0) {
+            if (answer.price == 0) {
+                // 价格为0，没有拿到chainlink价格，需扣除用户手续费
 
                 // Dev / gov rewards to pay for oracle cost
                 // Charge in DAI if collateral in storage or token if collateral in vault
-                v.reward1 = t.positionSizeDai > 0 ?
+                // 手续费，保证金在storage中，使用DAI支付，保证金在vault中?，使用GNS支付
+                value.reward1 = trade.positionSizeDai > 0 ?
                 storageT.handleDevGovFees(
-                    t.pairIndex,
-                    v.levPosDai,
+                    trade.pairIndex,
+                    value.levPosDai,
                     true,
                     true
                 ) :
                 storageT.handleDevGovFees(
-                    t.pairIndex,
-                    v.levPosDai * PRECISION / v.tokenPriceDai,
+                    trade.pairIndex,
+                    value.levPosDai * PRECISION / value.tokenPriceDai,
                     false,
                     true
-                ) * v.tokenPriceDai / PRECISION;
+                ) * value.tokenPriceDai / PRECISION;
 
-                t.initialPosToken -= v.reward1 * PRECISION / i.tokenPriceDai;
-                storageT.updateTrade(t);
+                // 扣除保证金对应GNS？
+                trade.initialPosToken -= value.reward1 * PRECISION / tradeInfo.tokenPriceDai;
+                storageT.updateTrade(trade);
 
-                emit DevGovFeeCharged(t.trader, v.reward1);
+                emit DevGovFeeCharged(trade.trader, value.reward1);
 
                 emit MarketCloseCanceled(
-                    a.orderId,
-                    t.trader,
-                    t.pairIndex,
-                    t.index
+                    answer.orderId,
+                    trade.trader,
+                    trade.pairIndex,
+                    trade.index
                 );
 
             } else {
-                v.profitP = currentPercentProfit(t.openPrice, a.price, t.buy, t.leverage);
-                v.posDai = v.levPosDai / t.leverage;
+                // 盈利比例
+                value.profitP = currentPercentProfit(trade.openPrice, answer.price, trade.buy, trade.leverage);
+                value.posDai = value.levPosDai / trade.leverage;
 
-                v.daiSentToTrader = unregisterTrade(
-                    t,
+                value.daiSentToTrader = unregisterTrade(
+                    trade,
                     true,
-                    v.profitP,
-                    v.posDai,
-                    i.openInterestDai / t.leverage,
-                    v.levPosDai * pairsStorage.pairCloseFeeP(t.pairIndex) / 100 / PRECISION,
-                    v.levPosDai * pairsStorage.pairNftLimitOrderFeeP(t.pairIndex) / 100 / PRECISION,
-                    v.tokenPriceDai
+                    value.profitP,
+                    value.posDai,
+                    tradeInfo.openInterestDai / trade.leverage,
+                    value.levPosDai * pairsStorage.pairCloseFeeP(trade.pairIndex) / 100 / PRECISION,
+                    value.levPosDai * pairsStorage.pairNftLimitOrderFeeP(trade.pairIndex) / 100 / PRECISION,
+                    value.tokenPriceDai
                 );
 
                 emit MarketExecuted(
-                    a.orderId,
-                    t,
+                    answer.orderId,
+                    trade,
                     false,
-                    a.price,
+                    answer.price,
                     0,
-                    v.posDai,
-                    v.profitP,
-                    v.daiSentToTrader
+                    value.posDai,
+                    value.profitP,
+                    value.daiSentToTrader
                 );
             }
         }
 
-        storageT.unregisterPendingMarketOrder(a.orderId, false);
+        storageT.unregisterPendingMarketOrder(answer.orderId, false);
     }
 
     function executeNftOpenOrderCallback(
@@ -683,77 +691,77 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
         AggregatorInterfaceV6_2 aggregator = storageT.priceAggregator();
         PairsStorageInterfaceV6 pairsStored = aggregator.pairsStorage();
 
-        Values memory v;
+        Values memory values;
 
-        v.levPosDai = trade.positionSizeDai * trade.leverage;
-        v.tokenPriceDai = aggregator.tokenPriceDai();
+        values.levPosDai = trade.positionSizeDai * trade.leverage;
+        values.tokenPriceDai = aggregator.tokenPriceDai();
 
         // 1. Charge referral fee (if applicable) and send DAI amount to vault
         if (referrals.getTraderReferrer(trade.trader) != address(0)) {
 
             // Use this variable to store lev pos dai for dev/gov fees after referral fees
             // and before volumeReferredDai increases
-            v.posDai = v.levPosDai * (
+            values.posDai = values.levPosDai * (
             100 * PRECISION - referrals.getPercentOfOpenFeeP(trade.trader)
             ) / 100 / PRECISION;
 
-            v.reward1 = referrals.distributePotentialReward(
+            values.reward1 = referrals.distributePotentialReward(
                 trade.trader,
-                v.levPosDai,
+                values.levPosDai,
                 pairsStored.pairOpenFeeP(trade.pairIndex),
-                v.tokenPriceDai
+                values.tokenPriceDai
             );
 
-            sendToVault(v.reward1, trade.trader);
-            trade.positionSizeDai -= v.reward1;
+            sendToVault(values.reward1, trade.trader);
+            trade.positionSizeDai -= values.reward1;
 
-            emit ReferralFeeCharged(trade.trader, v.reward1);
+            emit ReferralFeeCharged(trade.trader, values.reward1);
         }
 
         // 2. Charge opening fee - referral fee (if applicable)
-        v.reward2 = storageT.handleDevGovFees(
+        values.reward2 = storageT.handleDevGovFees(
             trade.pairIndex,
-            (v.posDai > 0 ?
-        v.posDai :
-        v.levPosDai),
+            (values.posDai > 0 ?
+        values.posDai :
+        values.levPosDai),
             true,
             true
         );
 
-        trade.positionSizeDai -= v.reward2;
+        trade.positionSizeDai -= values.reward2;
 
-        emit DevGovFeeCharged(trade.trader, v.reward2);
+        emit DevGovFeeCharged(trade.trader, values.reward2);
 
-        // 3. Charge NFT / SSS fee
-        v.reward2 = v.levPosDai * pairsStored.pairNftLimitOrderFeeP(trade.pairIndex) / 100 / PRECISION;
-        trade.positionSizeDai -= v.reward2;
+        // 3. Charge NFT / SSS fee todo
+        values.reward2 = values.levPosDai * pairsStored.pairNftLimitOrderFeeP(trade.pairIndex) / 100 / PRECISION;
+        trade.positionSizeDai -= values.reward2;
 
-        // 3.1 Distribute NFT fee and send DAI amount to vault (if applicable)
+        // 3.1 Distribute NFT fee and send DAI amount to vault (if applicable) todo
         if (nftId < 1500) {
-            sendToVault(v.reward2, trade.trader);
+            sendToVault(values.reward2, trade.trader);
 
             // Convert NFT bot fee from DAI to token value
-            v.reward3 = v.reward2 * PRECISION / v.tokenPriceDai;
+            values.reward3 = values.reward2 * PRECISION / values.tokenPriceDai;
 
             nftRewards.distributeNftReward(
                 NftRewardsInterfaceV6_3_1.TriggeredLimitId(
                     trade.trader, trade.pairIndex, limitIndex, StorageInterfaceV5.LimitOrder.OPEN
                 ),
-                v.reward3,
-                v.tokenPriceDai
+                values.reward3,
+                values.tokenPriceDai
             );
-            storageT.increaseNftRewards(nftId, v.reward3);
+            storageT.increaseNftRewards(nftId, values.reward3);
 
-            emit NftBotFeeCharged(trade.trader, v.reward2);
+            emit NftBotFeeCharged(trade.trader, values.reward2);
 
             // 3.2 Distribute SSS fee (if applicable)
         } else {
-            distributeStakingReward(trade.trader, v.reward2);
+            distributeStakingReward(trade.trader, values.reward2);
         }
 
         // 4. Set trade final details
         trade.index = storageT.firstEmptyTradeIndex(trade.trader, trade.pairIndex);
-        trade.initialPosToken = trade.positionSizeDai * PRECISION / v.tokenPriceDai;
+        trade.initialPosToken = trade.positionSizeDai * PRECISION / values.tokenPriceDai;
 
         trade.tp = correctTp(trade.openPrice, trade.leverage, trade.tp, trade.buy);
         trade.sl = correctSl(trade.openPrice, trade.leverage, trade.sl, trade.buy);
@@ -767,7 +775,7 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
             trade,
             StorageInterfaceV5.TradeInfo(
                 0,
-                v.tokenPriceDai,
+                values.tokenPriceDai,
                 trade.positionSizeDai * trade.leverage,
                 0,
                 0,
@@ -782,7 +790,7 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
         lastUpdated.sl = currBlock;
         lastUpdated.created = currBlock;
 
-        return (trade, v.tokenPriceDai);
+        return (trade, values.tokenPriceDai);
     }
 
     function unregisterTrade(
@@ -808,37 +816,37 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
             closingFeeDai + nftFeeDai
         );
 
-        Values memory v;
+        Values memory values;
         IGToken vault = storageT.vault();
 
         // 2. LP reward
         if (lpFeeP > 0) {
-            v.reward1 = closingFeeDai * lpFeeP / 100;
-            storageT.distributeLpRewards(v.reward1 * PRECISION / tokenPriceDai);
+            values.reward1 = closingFeeDai * lpFeeP / 100;
+            storageT.distributeLpRewards(values.reward1 * PRECISION / tokenPriceDai);
 
-            emit LpFeeCharged(trade.trader, v.reward1);
+            emit LpFeeCharged(trade.trader, values.reward1);
         }
 
         // 3.1 If collateral in storage (opened after update)
         if (trade.positionSizeDai > 0) {
 
             // 3.1.1 DAI vault reward
-            v.reward2 = closingFeeDai * daiVaultFeeP / 100;
-            transferFromStorageToAddress(address(this), v.reward2);
-            vault.distributeReward(v.reward2);
+            values.reward2 = closingFeeDai * daiVaultFeeP / 100;
+            transferFromStorageToAddress(address(this), values.reward2);
+            vault.distributeReward(values.reward2);
 
-            emit DaiVaultFeeCharged(trade.trader, v.reward2);
+            emit DaiVaultFeeCharged(trade.trader, values.reward2);
 
             // 3.1.2 SSS reward
-            v.reward3 = marketOrder ?
+            values.reward3 = marketOrder ?
             nftFeeDai + closingFeeDai * sssFeeP / 100 :
             closingFeeDai * sssFeeP / 100;
 
-            distributeStakingReward(trade.trader, v.reward3);
+            distributeStakingReward(trade.trader, values.reward3);
 
             // 3.1.3 Take DAI from vault if winning trade
             // or send DAI to vault if losing trade
-            uint daiLeftInStorage = currentDaiPos - v.reward3 - v.reward2;
+            uint daiLeftInStorage = currentDaiPos - values.reward3 - values.reward2;
 
             if (daiSentToTrader > daiLeftInStorage) {
                 vault.sendAssets(daiSentToTrader - daiLeftInStorage, trade.trader);
@@ -882,9 +890,9 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
         PairsStorageInterfaceV6 pairsStored = getPairsStorage();
 
         return storageT.openInterestDai(pairIndex, buy ? 0 : 1)
-        + positionSizeDai * leverage <= storageT.openInterestDai(pairIndex, 2)
+        + positionSizeDai * leverage <= storageT.openInterestDai(pairIndex, 2)  // 已开仓量 + 新开仓量 <= 最大开仓量
         && pairsStored.groupCollateral(pairIndex, buy)
-        + positionSizeDai <= pairsStored.groupMaxCollateral(pairIndex);
+        + positionSizeDai <= pairsStored.groupMaxCollateral(pairIndex); // 保证金 + 新增保证金 <= 最大保证金
     }
 
     function currentPercentProfit(
@@ -892,15 +900,15 @@ contract GNSTradingCallbacksV6_3_1 is TradingCallbacksV6_3_1, CallbacksInterface
         uint currentPrice,
         bool buy,
         uint leverage
-    ) private pure returns (int p){
+    ) private pure returns (int profitP){
         int maxPnlP = int(MAX_GAIN_P) * int(PRECISION);
 
-        p = (buy ?
+        profitP = (buy ?
         int(currentPrice) - int(openPrice) :
         int(openPrice) - int(currentPrice)
         ) * 100 * int(PRECISION) * int(leverage) / int(openPrice);
 
-        p = p > maxPnlP ? maxPnlP : p;
+        profitP = profitP > maxPnlP ? maxPnlP : profitP;
     }
 
     function correctTp(

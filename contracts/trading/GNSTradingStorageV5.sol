@@ -447,7 +447,7 @@ contract GNSTradingStorageV5 is StorageInterfaceV5, IStateCopyUtils, Initializab
         linkErc677.transferFrom(_from, address(priceAggregator), priceAggregator.linkFee(_pairIndex, _leveragedPosDai));
     }
 
-    // View utils functions
+    // View utils functions todo
     function firstEmptyTradeIndex(address trader, uint pairIndex) public view returns (uint index){
         for (uint i = 0; i < maxTradesPerPair; i++) {
             if (_openTrades[trader][pairIndex][i].leverage == 0) {index = i;
