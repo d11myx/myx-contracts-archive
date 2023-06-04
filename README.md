@@ -22,7 +22,7 @@ GToken.makeWithdrawRequest （申请提取，等待提取周期）
 GToken.withdraw（提取）
 
 #### 3. 下单（市价、限价）
-user 申请下单 -> GNSTradingV6_3_1.openTrade -> ChainlinkClient.sendChainlinkRequestTo
+user 申请下单 -> GNSTradingV6_3_1.openTrade -> GNSPriceAggregatorV6_3.getPrice -> ChainlinkClient.sendChainlinkRequestTo
 中心化 执行订单 -> Oracle.fulfillOracleRequest(chainlink函数) -> GNSPriceAggregatorV6_3.fulfill
 
 #### 4. 关单

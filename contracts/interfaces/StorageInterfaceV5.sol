@@ -241,16 +241,29 @@ interface NftRewardsInterfaceV6_3_1 {
     function linkToTokenRewards(uint, uint) external view returns (uint);
 }
 
-interface TradingCallbacksV6_3_1 {
-    enum TradeType {MARKET, LIMIT}
-
-    struct SimplifiedTradeId {address trader; uint pairIndex; uint index; TradeType tradeType;}
-
-    struct LastUpdated {uint32 tp; uint32 sl; uint32 limit; uint32 created;}
+interface TradingCallbacksV6_3_2 {
+    enum TradeType {
+        MARKET,
+        LIMIT
+    }
+    struct SimplifiedTradeId {
+        address trader;
+        uint pairIndex;
+        uint index;
+        TradeType tradeType;
+    }
+    struct LastUpdated {
+        uint32 tp;
+        uint32 sl;
+        uint32 limit;
+        uint32 created;
+    }
 
     function tradeLastUpdated(address, uint, uint, TradeType) external view returns (LastUpdated memory);
 
     function setTradeLastUpdated(SimplifiedTradeId calldata, LastUpdated memory) external;
 
     function canExecuteTimeout() external view returns (uint);
+
+    function pairMaxLeverage(uint) external view returns (uint);
 }
