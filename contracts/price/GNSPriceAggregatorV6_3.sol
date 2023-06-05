@@ -16,7 +16,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
 
     // Contracts (adjustable)
     PairsStorageInterfaceV6 public pairsStorage;
-    ChainlinkFeedInterfaceV5 public linkPriceFeed;
+    IChainlinkPriceFeed public linkPriceFeed;
 
     // Params (constant)
     uint constant PRECISION = 1e10;
@@ -76,7 +76,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         uint32 _twapInterval,
         StorageInterfaceV5 _storageT,
         PairsStorageInterfaceV6 _pairsStorage,
-        ChainlinkFeedInterfaceV5 _linkPriceFeed,
+        IChainlinkPriceFeed _linkPriceFeed,
         uint _minAnswers,
         address[] memory _nodes
     ) TWAPPriceGetter(_tokenDaiLp, address(_storageT.token()), _twapInterval, PRECISION){
@@ -123,7 +123,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
         emit PairsStorageUpdated(address(value));
     }
 
-    function updateLinkPriceFeed(ChainlinkFeedInterfaceV5 value) external onlyGov {
+    function updateLinkPriceFeed(IChainlinkPriceFeed value) external onlyGov {
         require(address(value) != address(0), "VALUE_0");
 
         linkPriceFeed = value;
@@ -252,7 +252,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
 
         // 获取feedPrice
         PairsStorageInterfaceV6.Feed memory feed = pairsStorage.pairFeed(order.pairIndex);
-        (, int feedPrice1, , ,) = ChainlinkFeedInterfaceV5(feed.feed1).latestRoundData();
+        (, int feedPrice1, , ,) = IChainlinkPriceFeed(feed.feed1).latestRoundData();
 
         if (feed.feedCalculation == PairsStorageInterfaceV6.FeedCalculation.DEFAULT) {
             feedPrice = uint(feedPrice1 * int(PRECISION) / 1e8);
@@ -261,7 +261,7 @@ contract GNSPriceAggregatorV6_3 is ChainlinkClient, TWAPPriceGetter {
             feedPrice = uint(int(PRECISION) * 1e8 / feedPrice1);
 
         } else {
-            (, int feedPrice2, , ,) = ChainlinkFeedInterfaceV5(feed.feed2).latestRoundData();
+            (, int feedPrice2, , ,) = IChainlinkPriceFeed(feed.feed2).latestRoundData();
             feedPrice = uint(feedPrice1 * int(PRECISION) / feedPrice2);
         }
 
