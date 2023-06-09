@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import './TokenInterfaceV5.sol';
-import './NftInterfaceV5.sol';
-import './IGToken.sol';
-import './PairsStorageInterfaceV6.sol';
-import './ChainlinkFeedInterfaceV5.sol';
+import '../../token/interfaces/TokenInterfaceV5.sol';
+import '../../token/interfaces/NftInterfaceV5.sol';
+import '../../token/interfaces/IGToken.sol';
+import '../../pair/interfaces/PairsStorageInterfaceV6.sol';
+import '../../price/interfaces/ChainlinkFeedInterface.sol';
 
 pragma solidity 0.8.17;
 
@@ -180,7 +180,7 @@ interface StorageInterfaceV5 {
 interface IStateCopyUtils {
     function getOpenLimitOrders() external view returns (StorageInterfaceV5.OpenLimitOrder[] memory);
 
-    function nftRewards() external view returns (NftRewardsInterfaceV6_3_1);
+//    function nftRewards() external view returns (NftRewardsInterfaceV6_3_1);
 }
 
 interface AggregatorInterfaceV6_2 {
@@ -206,7 +206,7 @@ interface AggregatorInterfaceV6_2 {
 }
 
 interface AggregatorInterfaceV6_3_1 is AggregatorInterfaceV6_2 {
-    function linkPriceFeed() external view returns (ChainlinkFeedInterfaceV5);
+    function linkPriceFeed() external view returns (IChainlinkPriceFeed);
 }
 
 interface NftRewardsInterfaceV6_3_1 {
@@ -259,7 +259,7 @@ interface TradingCallbacksV6_3_2 {
         uint32 created;
     }
 
-    function tradeLastUpdated(address, uint, uint, TradeType) external view returns (LastUpdated memory);
+    function getTradeLastUpdated(address, uint, uint, TradeType) external view returns (LastUpdated memory);
 
     function setTradeLastUpdated(SimplifiedTradeId calldata, LastUpdated memory) external;
 

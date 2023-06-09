@@ -16,11 +16,11 @@ interface IGToken {
 
     struct LockedDeposit {
         address owner;
-        uint shares;          // 1e18
+        uint shares; // 1e18
         uint assetsDeposited; // 1e18
-        uint assetsDiscount;  // 1e18
-        uint atTimestamp;     // timestamp
-        uint lockDuration;    // timestamp
+        uint assetsDiscount; // 1e18
+        uint atTimestamp; // timestamp
+        uint lockDuration; // timestamp
     }
 
     function getLockedDeposit(uint depositId) external view returns (LockedDeposit memory);
@@ -32,4 +32,10 @@ interface IGToken {
     function distributeReward(uint assets) external;
 
     function currentBalanceDai() external view returns (uint);
+
+    function tvl() external view returns (uint);
+
+    function marketCap() external view returns (uint);
+
+    function getPendingAccBlockWeightedMarketCap(uint currentBlock) external view returns (uint);
 }

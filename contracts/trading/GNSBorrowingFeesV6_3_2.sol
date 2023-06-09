@@ -2,9 +2,10 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../interfaces/GNSBorrowingFeesInterfaceV6_3_2.sol";
-import "../interfaces/StorageInterfaceV5.sol";
-import "../interfaces/GNSPairInfosInterfaceV6.sol";
+
+import "./interfaces/GNSBorrowingFeesInterfaceV6_3_2.sol";
+import "../trading/interfaces/StorageInterfaceV5.sol";
+import "../pair/interfaces/GNSPairInfosInterfaceV6.sol";
 import "../libraries/ChainUtils.sol";
 
 contract GNSBorrowingFeesV6_3_2 is Initializable, GNSBorrowingFeesInterfaceV6_3_2 {
@@ -545,6 +546,6 @@ contract GNSBorrowingFeesV6_3_2 is Initializable, GNSBorrowingFeesInterfaceV6_3_
     returns (InitialAccFees memory borrowingFees, GNSPairInfosInterfaceV6.TradeInitialAccFees memory otherFees)
     {
         borrowingFees = initialAccFees[trader][pairIndex][index];
-        otherFees = pairInfos.tradeInitialAccFees(trader, pairIndex, index);
+        otherFees = pairInfos.getTradeInitialAccFees(trader, pairIndex, index);
     }
 }

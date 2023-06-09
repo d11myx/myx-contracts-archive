@@ -4,7 +4,7 @@ import "@uniswap/v3-core/contracts/libraries/FixedPoint96.sol";
 import "../uniswap/TickMath.sol";
 import "../uniswap/FullMath.sol";
 
-import '../interfaces/StorageInterfaceV5.sol';
+import '../trading/interfaces/StorageInterfaceV5.sol';
 
 pragma solidity 0.8.17;
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import '../interfaces/StorageInterfaceV5.sol';
-import '../interfaces/GNSPairInfosInterfaceV6.sol';
-import '../interfaces/GNSReferralsInterfaceV6_2.sol';
-import '../interfaces/GNSBorrowingFeesInterfaceV6_3_2.sol';
+import './interfaces/StorageInterfaceV5.sol';
+import './interfaces/GNSBorrowingFeesInterfaceV6_3_2.sol';
+import '../pair/interfaces/GNSPairInfosInterfaceV6.sol';
+import '../referrals/interfaces/GNSReferralsInterfaceV6_2.sol';
 import '../libraries/ChainUtils.sol';
 import '../libraries/TradeUtils.sol';
 
@@ -577,6 +577,10 @@ contract GNSTradingV6_3_2 is PausableInterfaceV5, Initializable {
     }
 
     // Helpers
+    function _msgSender() public view returns (address) {
+        return msg.sender;
+    }
+
     function checkNoPendingTrigger(
         address trader,
         uint pairIndex,

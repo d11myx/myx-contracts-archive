@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import '../interfaces/StorageInterfaceV5.sol';
+import './interfaces/StorageInterfaceV5.sol';
+import '../token/interfaces/TokenInterfaceV5.sol';
+import '../token/interfaces/NftInterfaceV5.sol';
+import '../token/interfaces/IGToken.sol';
 
 pragma solidity 0.8.17;
 

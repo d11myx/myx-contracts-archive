@@ -6,12 +6,14 @@ import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IFastPriceEvents.sol";
-import "../core/interfaces/IVaultPriceFeed.sol";
-import "../core/interfaces/IPositionRouter.sol";
+import "./interfaces/IVaultPriceFeed.sol";
+import "../access/Governable.sol";
 
-pragma solidity 0.6.12;
+//import "./interfaces/IPositionRouter.sol";
 
-contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, OwnableUpgradeable {
+pragma solidity 0.8.17;
+
+contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     using SafeMathUpgradeable for uint256;
 
     // fit data in a uint256 slot to save gas costs

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import '../interfaces/StorageInterfaceV5.sol';
-import '../interfaces/GNSReferralsInterfaceV6_2.sol';
+import '../trading/interfaces/StorageInterfaceV5.sol';
+import './interfaces/GNSReferralsInterfaceV6_2.sol';
 
 pragma solidity 0.8.17;
 

@@ -2,9 +2,10 @@
 import '@chainlink/contracts/src/v0.8/ChainlinkClient.sol';
 import './TWAPPriceGetter.sol';
 
-import '../interfaces/CallbacksInterfaceV6_2.sol';
-import '../interfaces/ChainlinkFeedInterfaceV5.sol';
-import '../interfaces/StorageInterfaceV5.sol';
+import './interfaces/ChainlinkFeedInterface.sol';
+import '../trading/interfaces/CallbacksInterfaceV6_2.sol';
+import '../trading/interfaces/StorageInterfaceV5.sol';
+import '../pair/interfaces/PairsStorageInterfaceV6.sol';
 
 pragma solidity 0.8.17;
 

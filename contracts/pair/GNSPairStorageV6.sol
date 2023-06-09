@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import '../interfaces/StorageInterfaceV5.sol';
-import '../interfaces/PairsStorageInterfaceV6.sol';
+import '../trading/interfaces/StorageInterfaceV5.sol';
+import './interfaces/PairsStorageInterfaceV6.sol';
+
 pragma solidity 0.8.17;
 
 contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {

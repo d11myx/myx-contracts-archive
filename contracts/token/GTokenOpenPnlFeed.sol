@@ -3,8 +3,8 @@ import '@chainlink/contracts/src/v0.8/ChainlinkClient.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
-import '../interfaces/IGToken.sol';
-import '../interfaces/IOpenTradesPnlFeed.sol';
+import './interfaces/IGToken.sol';
+import './interfaces/IOpenTradesPnlFeed.sol';
 
 pragma solidity 0.8.17;
 

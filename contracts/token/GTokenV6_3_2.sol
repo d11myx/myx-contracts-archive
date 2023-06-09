@@ -4,10 +4,10 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgrad
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "../interfaces/IGToken.sol";
-import "../interfaces/IGnsToken.sol";
-import "../interfaces/INft.sol";
-import "../interfaces/IOpenTradesPnlFeed.sol";
+import "./interfaces/IGToken.sol";
+import "./interfaces/IGnsToken.sol";
+import "./interfaces/INft.sol";
+import "./interfaces/IOpenTradesPnlFeed.sol";
 
 import "../libraries/ChainUtils.sol";
 

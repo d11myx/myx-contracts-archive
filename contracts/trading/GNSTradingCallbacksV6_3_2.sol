@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import '../interfaces/StorageInterfaceV5.sol';
-import '../interfaces/GNSPairInfosInterfaceV6.sol';
-import '../interfaces/GNSReferralsInterfaceV6_2.sol';
-import '../interfaces/GNSStakingInterfaceV6_2.sol';
+import '../trading/interfaces/StorageInterfaceV5.sol';
+import '../pair/interfaces/GNSPairInfosInterfaceV6.sol';
+import '../referrals/interfaces/GNSReferralsInterfaceV6_2.sol';
+import '../trading/interfaces/GNSStakingInterfaceV6_2.sol';
+import "../trading/interfaces/CallbacksInterfaceV6_2.sol";
+import "../trading/interfaces/GNSBorrowingFeesInterfaceV6_3_2.sol";
 import '../libraries/ChainUtils.sol';
-import "../interfaces/CallbacksInterfaceV6_2.sol";
-import "../interfaces/GNSBorrowingFeesInterfaceV6_3_2.sol";
 
 pragma solidity 0.8.17;
 
-contract GNSTradingCallbacksV6_3_2 is TradingCallbacksV6_3_1, CallbacksInterfaceV6_2, PausableInterfaceV5, Initializable {
+contract GNSTradingCallbacksV6_3_2 is TradingCallbacksV6_3_2, CallbacksInterfaceV6_2, PausableInterfaceV5, Initializable {
     // Contracts (constant)
     StorageInterfaceV5 public storageT;
     NftRewardsInterfaceV6_3_1 public nftRewards;
@@ -44,13 +44,6 @@ contract GNSTradingCallbacksV6_3_2 is TradingCallbacksV6_3_1, CallbacksInterface
 
     mapping(uint => uint) public pairMaxLeverage;
 
-    // Custom data types
-    struct AggregatorAnswer {
-        uint orderId;
-        uint price;
-        uint spreadP;
-    }
-
     // Useful to avoid stack too deep errors
     struct Values {
         uint posDai;
@@ -63,25 +56,6 @@ contract GNSTradingCallbacksV6_3_2 is TradingCallbacksV6_3_1, CallbacksInterface
         uint reward1;
         uint reward2;
         uint reward3;
-    }
-
-    struct SimplifiedTradeId {
-        address trader;
-        uint pairIndex;
-        uint index;
-        TradeType tradeType;
-    }
-
-    struct LastUpdated {
-        uint32 tp;
-        uint32 sl;
-        uint32 limit;
-        uint32 created;
-    }
-
-    enum TradeType {
-        MARKET,
-        LIMIT
     }
 
     enum CancelReason {
@@ -888,6 +862,10 @@ contract GNSTradingCallbacksV6_3_2 is TradingCallbacksV6_3_1, CallbacksInterface
     // Utils (external)
     function setTradeLastUpdated(SimplifiedTradeId calldata _id, LastUpdated memory _lastUpdated) external onlyTrading {
         tradeLastUpdated[_id.trader][_id.pairIndex][_id.index][_id.tradeType] = _lastUpdated;
+    }
+
+    function getTradeLastUpdated(address trader, uint pairIndex, uint index, TradeType tradeType) external override view returns (LastUpdated memory) {
+        return tradeLastUpdated[trader][pairIndex][index][tradeType];
     }
 
     // Utils (getters)

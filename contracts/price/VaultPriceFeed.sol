@@ -5,9 +5,10 @@ import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "./interfaces/IVaultPriceFeed.sol";
 import "./interfaces/IPriceFeed.sol";
 import "./interfaces/ISecondaryPriceFeed.sol";
-import './interfaces/ChainlinkFeedInterfaceV5.sol';
+import "./interfaces/IChainlinkFlags.sol";
+import "./interfaces/IPancakePair.sol";
 
-pragma solidity 0.6.12;
+pragma solidity 0.8.17;
 
 contract VaultPriceFeed is IVaultPriceFeed {
     using SafeMathUpgradeable for uint256;
@@ -275,7 +276,8 @@ contract VaultPriceFeed is IVaultPriceFeed {
         address priceFeedAddress = priceFeeds[_token];
         require(priceFeedAddress != address(0), "VaultPriceFeed: invalid price feed");
 
-        IChainlinkPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
+        // todo IChainlinkPriceFeed
+        IPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
 
         int256 price = priceFeed.latestAnswer();
         require(price > 0, "VaultPriceFeed: invalid price");
@@ -295,7 +297,8 @@ contract VaultPriceFeed is IVaultPriceFeed {
             }
         }
 
-        IChainlinkPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
+        // todo IChainlinkPriceFeed
+        IPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
 
         uint256 price = 0;
         uint80 roundId = priceFeed.latestRound();

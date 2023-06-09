@@ -2,11 +2,12 @@
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+import "../access/Governable.sol";
 import "./interfaces/IFastPriceEvents.sol";
 
-pragma solidity 0.6.12;
+pragma solidity 0.8.17;
 
-contract FastPriceEvents is IFastPriceEvents, OwnableUpgradeable {
+contract FastPriceEvents is IFastPriceEvents, Governable {
 
     mapping (address => bool) public isPriceFeed;
     event PriceUpdate(address token, uint256 price, address priceFeed);

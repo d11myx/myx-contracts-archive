@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import '../interfaces/StorageInterfaceV5.sol';
-import "../interfaces/GNSPairInfosInterfaceV6.sol";
+import '../trading/interfaces/StorageInterfaceV5.sol';
+import "./interfaces/GNSPairInfosInterfaceV6.sol";
+
 pragma solidity 0.8.17;
 
 contract GNSPairInfosV6_1 is GNSPairInfosInterfaceV6, Initializable {
@@ -44,13 +45,6 @@ contract GNSPairInfosV6_1 is GNSPairInfosInterfaceV6, Initializable {
     }
 
     mapping(uint => PairRolloverFees) public pairRolloverFees;
-
-    // Trade initial acc fees
-    struct TradeInitialAccFees {
-        uint rollover; // 1e18 (DAI)
-        int funding;   // 1e18 (DAI)
-        bool openedAfterUpdate;
-    }
 
     mapping(
     address => mapping(
@@ -578,4 +572,9 @@ contract GNSPairInfosV6_1 is GNSPairInfosInterfaceV6, Initializable {
     ) external view returns (bool){
         return tradeInitialAccFees[trader][pairIndex][index].openedAfterUpdate;
     }
+
+    function getTradeInitialAccFees(address trader, uint pairIndex, uint index) external view returns (TradeInitialAccFees memory) {
+        return tradeInitialAccFees[trader][pairIndex][index];
+    }
+
 }
