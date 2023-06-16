@@ -2,7 +2,7 @@
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "../access/Governable.sol";
+import "../libraries/access/Governable.sol";
 import "./interfaces/IFastPriceEvents.sol";
 
 pragma solidity 0.8.17;

@@ -7,7 +7,7 @@ import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IFastPriceEvents.sol";
 import "./interfaces/IVaultPriceFeed.sol";
-import "../access/Governable.sol";
+import "../libraries/access/Governable.sol";
 
 //import "./interfaces/IPositionRouter.sol";
 
