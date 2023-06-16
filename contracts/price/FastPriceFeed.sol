@@ -34,7 +34,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     // uint256(~0) is 256 bits of 1s
     // shift the 1s by (256 - 32) to get (256 - 32) 0s followed by 32 1s
-    uint256 constant public BITMASK_32 = uint256(~0) >> (256 - 32);
+    uint256 constant public BITMASK_32 = uint256(~uint256(0)) >> (256 - 32);
 
     uint256 public constant BASIS_POINTS_DIVISOR = 10000;
 

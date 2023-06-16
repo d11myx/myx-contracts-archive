@@ -2,13 +2,21 @@
 pragma solidity 0.8.17;
 
 interface PairsStorageInterfaceV6 {
-    enum FeedCalculation {DEFAULT, INVERT, COMBINE}    // FEED 1, 1 / (FEED 1), (FEED 1)/(FEED 2)
-
-    struct Feed {address feed1; address feed2; FeedCalculation feedCalculation; uint maxDeviationP;} // PRECISION (%)
+    enum FeedCalculation {
+        DEFAULT,
+        INVERT,
+        COMBINE
+    } // FEED 1, 1 / (FEED 1), (FEED 1)/(FEED 2)
+    struct Feed {
+        address feed1;
+        address feed2;
+        FeedCalculation feedCalculation;
+        uint maxDeviationP;
+    } // PRECISION (%)
 
     function updateGroupCollateral(uint, uint, bool, bool) external;
 
-    function pairJob(uint) external view returns (string memory, string memory, bytes32, uint);
+    function pairJob(uint) external returns (string memory, string memory, bytes32, uint);
 
     function pairFeed(uint) external view returns (Feed memory);
 
@@ -35,4 +43,6 @@ interface PairsStorageInterfaceV6 {
     function pairReferralFeeP(uint) external view returns (uint);
 
     function pairMinLevPosDai(uint) external view returns (uint);
+
+    function pairsCount() external view returns (uint);
 }

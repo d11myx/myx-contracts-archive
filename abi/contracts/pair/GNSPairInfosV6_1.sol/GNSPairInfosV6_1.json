@@ -662,6 +662,52 @@
         "type": "uint256"
       }
     ],
+    "name": "getTradeInitialAccFees",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "rollover",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "funding",
+            "type": "int256"
+          },
+          {
+            "internalType": "bool",
+            "name": "openedAfterUpdate",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct GNSPairInfosInterfaceV6.TradeInitialAccFees",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
     "name": "getTradeInitialAccFundingFeesPerOi",
     "outputs": [
       {

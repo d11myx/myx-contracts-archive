@@ -9,14 +9,13 @@ pragma solidity 0.8.17;
 contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
 
     // Contracts (constant)
-    StorageInterfaceV5 constant storageT = StorageInterfaceV5(0xaee4d11a16B2bc65EDD6416Fb626EB404a6D65BD);
+    StorageInterfaceV5 public storageT;
 
     // Params (constant)
     uint constant MIN_LEVERAGE = 2;
     uint constant MAX_LEVERAGE = 1000;
 
-    // Custom data types
-    struct Pair {
+    struct Pair{
         string from;
         string to;
         Feed feed;
@@ -24,16 +23,14 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
         uint groupIndex;
         uint feeIndex;
     }
-
-    struct Group {
+    struct Group{
         string name;
         bytes32 job;
         uint minLeverage;
         uint maxLeverage;
         uint maxCollateralP;        // % (of DAI vault current balance)
     }
-
-    struct Fee {
+    struct Fee{
         string name;
         uint openFeeP;              // PRECISION (% of leveraged pos)
         uint closeFeeP;             // PRECISION (% of leveraged pos)
@@ -68,14 +65,18 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
     event FeeAdded(uint index, string name);
     event FeeUpdated(uint index);
 
-    function init(uint _currentOrderId) external initializer {
-        require(_currentOrderId > 0, "ORDER_ID_0");
+    function initialize(
+        StorageInterfaceV5 _storageT,
+        uint _currentOrderId
+    ) external initializer {
+        require(address(_storageT) != address(0) && _currentOrderId > 0, "WRONG_PARAMS");
+
+        storageT = _storageT;
         currentOrderId = _currentOrderId;
     }
 
     // Modifiers
-    modifier onlyGov(){require(msg.sender == storageT.gov(), "GOV_ONLY");
-        _;}
+    modifier onlyGov(){ require(msg.sender == storageT.gov(), "GOV_ONLY"); _; }
 
     modifier groupListed(uint _groupIndex){
         require(groups[_groupIndex].minLeverage > 0, "GROUP_NOT_LISTED");
@@ -104,7 +105,7 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
     }
 
     // Manage pairs
-    function addPair(Pair calldata _pair) public onlyGov feedOk(_pair.feed) groupListed(_pair.groupIndex) feeListed(_pair.feeIndex) {
+    function addPair(Pair calldata _pair) public onlyGov feedOk(_pair.feed) groupListed(_pair.groupIndex) feeListed(_pair.feeIndex){
         require(!isPairListed[_pair.from][_pair.to], "PAIR_ALREADY_LISTED");
 
         pairs[pairsCount] = _pair;
@@ -112,14 +113,12 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
 
         emit PairAdded(pairsCount++, _pair.from, _pair.to);
     }
-
-    function addPairs(Pair[] calldata _pairs) external {
-        for (uint i = 0; i < _pairs.length; i++) {
+    function addPairs(Pair[] calldata _pairs) external{
+        for(uint i = 0; i < _pairs.length; i++){
             addPair(_pairs[i]);
         }
     }
-
-    function updatePair(uint _pairIndex, Pair calldata _pair) external onlyGov feedOk(_pair.feed) feeListed(_pair.feeIndex) {
+    function updatePair(uint _pairIndex, Pair calldata _pair) external onlyGov feedOk(_pair.feed) feeListed(_pair.feeIndex){
         Pair storage p = pairs[_pairIndex];
         require(isPairListed[p.from][p.to], "PAIR_NOT_LISTED");
 
@@ -131,43 +130,41 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
     }
 
     // Manage groups
-    function addGroup(Group calldata _group) external onlyGov groupOk(_group) {
+    function addGroup(Group calldata _group) external onlyGov groupOk(_group){
         groups[groupsCount] = _group;
         emit GroupAdded(groupsCount++, _group.name);
     }
-
-    function updateGroup(uint _id, Group calldata _group) external onlyGov groupListed(_id) groupOk(_group) {
+    function updateGroup(uint _id, Group calldata _group) external onlyGov groupListed(_id) groupOk(_group){
         groups[_id] = _group;
         emit GroupUpdated(_id);
     }
 
     // Manage fees
-    function addFee(Fee calldata _fee) external onlyGov feeOk(_fee) {
+    function addFee(Fee calldata _fee) external onlyGov feeOk(_fee){
         fees[feesCount] = _fee;
         emit FeeAdded(feesCount++, _fee.name);
     }
-
-    function updateFee(uint _id, Fee calldata _fee) external onlyGov feeListed(_id) feeOk(_fee) {
+    function updateFee(uint _id, Fee calldata _fee) external onlyGov feeListed(_id) feeOk(_fee){
         fees[_id] = _fee;
         emit FeeUpdated(_id);
     }
 
     // Update collateral open exposure for a group (callbacks)
-    function updateGroupCollateral(uint _pairIndex, uint _amount, bool _long, bool _increase) external {
+    function updateGroupCollateral(uint _pairIndex, uint _amount, bool _long, bool _increase) external{
         require(msg.sender == storageT.callbacks(), "CALLBACKS_ONLY");
 
         uint[2] storage collateralOpen = groupsCollaterals[pairs[_pairIndex].groupIndex];
         uint index = _long ? 0 : 1;
 
-        if (_increase) {
+        if(_increase){
             collateralOpen[index] += _amount;
-        } else {
+        }else{
             collateralOpen[index] = collateralOpen[index] > _amount ? collateralOpen[index] - _amount : 0;
         }
     }
 
     // Fetch relevant info for order (aggregator)
-    function pairJob(uint _pairIndex) external view returns (string memory, string memory, bytes32, uint){
+    function pairJob(uint _pairIndex) external returns(string memory, string memory, bytes32, uint){
         require(msg.sender == address(storageT.priceAggregator()), "AGGREGATOR_ONLY");
 
         Pair memory p = pairs[_pairIndex];
@@ -177,62 +174,50 @@ contract GNSPairsStorageV6 is PairsStorageInterfaceV6, Initializable {
     }
 
     // Getters (pairs & groups)
-    function pairFeed(uint _pairIndex) external view returns (Feed memory){
+    function pairFeed(uint _pairIndex) external view returns(Feed memory){
         return pairs[_pairIndex].feed;
     }
-
-    function pairSpreadP(uint _pairIndex) external view returns (uint){
+    function pairSpreadP(uint _pairIndex) external view returns(uint){
         return pairs[_pairIndex].spreadP;
     }
-
-    function pairMinLeverage(uint _pairIndex) external view returns (uint){
+    function pairMinLeverage(uint _pairIndex) external view returns(uint){
         return groups[pairs[_pairIndex].groupIndex].minLeverage;
     }
-
-    function pairMaxLeverage(uint _pairIndex) external view returns (uint){
+    function pairMaxLeverage(uint _pairIndex) external view returns(uint){
         return groups[pairs[_pairIndex].groupIndex].maxLeverage;
     }
-
-    function groupMaxCollateral(uint _pairIndex) external view returns (uint){
+    function groupMaxCollateral(uint _pairIndex) external view returns(uint){
         return groups[pairs[_pairIndex].groupIndex].maxCollateralP * storageT.vault().currentBalanceDai() / 100;
     }
-
-    function groupCollateral(uint _pairIndex, bool _long) external view returns (uint){
+    function groupCollateral(uint _pairIndex, bool _long) external view returns(uint){
         return groupsCollaterals[pairs[_pairIndex].groupIndex][_long ? 0 : 1];
     }
-
-    function guaranteedSlEnabled(uint _pairIndex) external view returns (bool){
-        return pairs[_pairIndex].groupIndex == 0;
-        // crypto only
+    function guaranteedSlEnabled(uint _pairIndex) external view returns(bool){
+        return pairs[_pairIndex].groupIndex == 0; // crypto only
     }
 
     // Getters (fees)
-    function pairOpenFeeP(uint _pairIndex) external view returns (uint){
+    function pairOpenFeeP(uint _pairIndex) external view returns(uint){
         return fees[pairs[_pairIndex].feeIndex].openFeeP;
     }
-
-    function pairCloseFeeP(uint _pairIndex) external view returns (uint){
+    function pairCloseFeeP(uint _pairIndex) external view returns(uint){
         return fees[pairs[_pairIndex].feeIndex].closeFeeP;
     }
-
-    function pairOracleFeeP(uint _pairIndex) external view returns (uint){
+    function pairOracleFeeP(uint _pairIndex) external view returns(uint){
         return fees[pairs[_pairIndex].feeIndex].oracleFeeP;
     }
-
-    function pairNftLimitOrderFeeP(uint _pairIndex) external view returns (uint){
+    function pairNftLimitOrderFeeP(uint _pairIndex) external view returns(uint){
         return fees[pairs[_pairIndex].feeIndex].nftLimitOrderFeeP;
     }
-
-    function pairReferralFeeP(uint _pairIndex) external view returns (uint){
+    function pairReferralFeeP(uint _pairIndex) external view returns(uint){
         return fees[pairs[_pairIndex].feeIndex].referralFeeP;
     }
-
-    function pairMinLevPosDai(uint _pairIndex) external view returns (uint){
+    function pairMinLevPosDai(uint _pairIndex) external view returns(uint){
         return fees[pairs[_pairIndex].feeIndex].minLevPosDai;
     }
 
     // Getters (backend)
-    function pairsBackend(uint _index) external view returns (Pair memory, Group memory, Fee memory){
+    function pairsBackend(uint _index) external view returns(Pair memory, Group memory, Fee memory){
         Pair memory p = pairs[_index];
         return (p, groups[p.groupIndex], fees[p.feeIndex]);
     }

@@ -22,17 +22,17 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+        "internalType": "enum TradingCallbacksV6_3_2.TradeType",
         "name": "_type",
-        "type": "TradingCallbacksV6_3_1.TradeType"
+        "type": "TradingCallbacksV6_3_2.TradeType"
       }
     ],
     "name": "getTradeLastUpdated",
     "outputs": [
       {
-        "internalType": "contract TradingCallbacksV6_3_1",
+        "internalType": "contract TradingCallbacksV6_3_2",
         "name": "",
-        "type": "TradingCallbacksV6_3_1"
+        "type": "TradingCallbacksV6_3_2"
       },
       {
         "components": [
@@ -57,7 +57,7 @@
             "type": "uint32"
           }
         ],
-        "internalType": "struct TradingCallbacksV6_3_1.LastUpdated",
+        "internalType": "struct TradingCallbacksV6_3_2.LastUpdated",
         "name": "",
         "type": "tuple"
       },
@@ -79,12 +79,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "internalType": "enum TradingCallbacksV6_3_2.TradeType",
             "name": "tradeType",
-            "type": "TradingCallbacksV6_3_1.TradeType"
+            "type": "TradingCallbacksV6_3_2.TradeType"
           }
         ],
-        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "internalType": "struct TradingCallbacksV6_3_2.SimplifiedTradeId",
         "name": "",
         "type": "tuple"
       }
@@ -117,12 +117,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "internalType": "enum TradingCallbacksV6_3_2.TradeType",
             "name": "tradeType",
-            "type": "TradingCallbacksV6_3_1.TradeType"
+            "type": "TradingCallbacksV6_3_2.TradeType"
           }
         ],
-        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "internalType": "struct TradingCallbacksV6_3_2.SimplifiedTradeId",
         "name": "id",
         "type": "tuple"
       },
@@ -168,12 +168,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "internalType": "enum TradingCallbacksV6_3_2.TradeType",
             "name": "tradeType",
-            "type": "TradingCallbacksV6_3_1.TradeType"
+            "type": "TradingCallbacksV6_3_2.TradeType"
           }
         ],
-        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "internalType": "struct TradingCallbacksV6_3_2.SimplifiedTradeId",
         "name": "id",
         "type": "tuple"
       },
@@ -219,12 +219,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum TradingCallbacksV6_3_1.TradeType",
+            "internalType": "enum TradingCallbacksV6_3_2.TradeType",
             "name": "tradeType",
-            "type": "TradingCallbacksV6_3_1.TradeType"
+            "type": "TradingCallbacksV6_3_2.TradeType"
           }
         ],
-        "internalType": "struct TradingCallbacksV6_3_1.SimplifiedTradeId",
+        "internalType": "struct TradingCallbacksV6_3_2.SimplifiedTradeId",
         "name": "id",
         "type": "tuple"
       },
