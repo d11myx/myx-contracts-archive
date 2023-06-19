@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
-
 import "./interfaces/IVaultPriceFeed.sol";
 import "./interfaces/IPriceFeed.sol";
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
 import "./interfaces/IPancakePair.sol";
+import "../libraries/SafeMath.sol";
 
 pragma solidity 0.8.17;
 
 contract VaultPriceFeed is IVaultPriceFeed {
-    using SafeMathUpgradeable for uint256;
+    using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
     uint256 public constant ONE_USD = PRICE_PRECISION;

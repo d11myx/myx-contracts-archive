@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 import "../libraries/access/Governable.sol";
 import "./interfaces/IFastPriceEvents.sol";
 

@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
-
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IFastPriceEvents.sol";
 import "./interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
+import "../libraries/SafeMath.sol";
 
 //import "./interfaces/IPositionRouter.sol";
 
 pragma solidity 0.8.17;
 
 contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
-    using SafeMathUpgradeable for uint256;
+    using SafeMath for uint256;
 
     // fit data in a uint256 slot to save gas costs
     struct PriceDataItem {

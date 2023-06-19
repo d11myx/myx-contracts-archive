@@ -1,0 +1,677 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "indexToken",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "stableToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "lpToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "PairAdded",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "indexToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "stableToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "pairToken",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "spreadP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "k",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxCollateralP",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "openFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "closeFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "oracleFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "nftLimitOrderFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "referralFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "minLevPosDai",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "depositFeeP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairStorage.Fee",
+            "name": "fee",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct IPairStorage.Pair",
+        "name": "_pair",
+        "type": "tuple"
+      }
+    ],
+    "name": "addPair",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPair",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "indexToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "stableToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "pairToken",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "spreadP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "k",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxCollateralP",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "openFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "closeFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "oracleFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "nftLimitOrderFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "referralFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "minLevPosDai",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "depositFeeP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairStorage.Fee",
+            "name": "fee",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct IPairStorage.Pair",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "isHandler",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isPairListed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "pairIndexes",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pairVault",
+    "outputs": [
+      {
+        "internalType": "contract IPairVault",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "pairs",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "indexToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "stableToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "pairToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "spreadP",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "k",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minLeverage",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxLeverage",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxCollateralP",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "openFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "closeFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "oracleFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nftLimitOrderFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "referralFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minLevPosDai",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "depositFeeP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairStorage.Fee",
+        "name": "fee",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pairsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_handler",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isHandler",
+        "type": "bool"
+      }
+    ],
+    "name": "setHandler",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPairVault",
+        "name": "_pairVault",
+        "type": "address"
+      }
+    ],
+    "name": "setPairVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "openFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "closeFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "oracleFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nftLimitOrderFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "referralFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minLevPosDai",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "depositFeeP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairStorage.Fee",
+        "name": "_fee",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "indexToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "stableToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "pairToken",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "spreadP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "k",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxCollateralP",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "openFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "closeFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "oracleFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "nftLimitOrderFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "referralFeeP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "minLevPosDai",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "depositFeeP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairStorage.Fee",
+            "name": "fee",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct IPairStorage.Pair",
+        "name": "_pair",
+        "type": "tuple"
+      }
+    ],
+    "name": "updatePair",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
