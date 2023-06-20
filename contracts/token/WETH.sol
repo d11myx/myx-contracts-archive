@@ -2,8 +2,8 @@
 
 pragma solidity 0.8.17;
 
-import "./interfaces/IERC20.sol";
-import "../libraries/SafeMath.sol";
+import "../openzeeplin/contracts/token/ERC20/IERC20.sol";
+import "../openzeeplin/contracts/utils/math/SafeMath.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.

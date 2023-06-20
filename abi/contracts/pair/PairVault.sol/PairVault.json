@@ -199,6 +199,30 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_stableAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "addLiquidityETH",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_funder",
         "type": "address"
@@ -239,12 +263,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token0",
+        "name": "indexToken",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "token1",
+        "name": "stableToken",
         "type": "address"
       }
     ],
@@ -260,10 +284,38 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "feeReceiver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract IPairStorage",
         "name": "_pairStorage",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_feeReceiver",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_slipReceiver",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_weth",
         "type": "address"
       }
     ],
@@ -320,6 +372,35 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeLiquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "receivedIndexAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "receivedStableAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_account",
         "type": "address"
@@ -340,36 +421,7 @@
         "type": "uint256"
       }
     ],
-    "name": "removeLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "removeLiquidity",
+    "name": "removeLiquidityForAccount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -426,6 +478,19 @@
   {
     "inputs": [
       {
+        "internalType": "contract IPairStorage",
+        "name": "_pairStorage",
+        "type": "address"
+      }
+    ],
+    "name": "setPairStorage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_slipReceiver",
         "type": "address"
@@ -434,6 +499,19 @@
     "name": "setSlipReceiver",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "slipReceiver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -450,11 +528,45 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "vaultPriceFeed",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "vaults",
     "outputs": [
       {
-        "internalType": "contract IVaultPriceFeed",
+        "internalType": "uint256",
+        "name": "indexTotalAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "indexReservedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stableTotalAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stableReservedAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "weth",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }

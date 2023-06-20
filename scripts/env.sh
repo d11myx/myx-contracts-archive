@@ -1,2 +1,2 @@
 hh run deployTokens.js
-hh run deployFastPriceFeed.js
+hh run deployPair.js

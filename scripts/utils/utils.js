@@ -2,7 +2,7 @@ const hre = require("hardhat");
 let fs = require('fs');
 const {expandDecimals} = require("./utilities");
 
-let path = __dirname + "/" + "../address_config.json";
+let path = __dirname + "/" + "../../address_config.json";
 
 function repeatString(str, num) {
   if (!num) {
@@ -45,14 +45,14 @@ function getConfirmBlock() {
 }
 
 async function mintWETH(eth, receiver, amount) {
-  const [user0, user1] = await ethers.getSigners();
+  const user = (await ethers.getSigners())[9];
   await network.provider.request({
     method: "hardhat_setBalance",
-    params: [user1.address, expandDecimals(amount + 1000, 18).toHexString().replace("0x0", "0x")],
+    params: [user.address, expandDecimals(amount + 1000, 18).toHexString().replace("0x0", "0x")],
   });
 
-  await eth.connect(user1).deposit({value: expandDecimals(amount, 18)})
-  await eth.connect(user1).transfer(receiver, expandDecimals(amount, 18))
+  await eth.connect(user).deposit({value: expandDecimals(amount, 18)})
+  await eth.connect(user).transfer(receiver, expandDecimals(amount, 18))
 }
 
 module.exports = {

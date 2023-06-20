@@ -7,11 +7,12 @@ interface IPairStorage {
         address indexToken;
         address stableToken;
         address pairToken;
-        uint spreadP;
+        uint256 spreadP;
         uint256 k;
         uint256 minLeverage;
         uint256 maxLeverage;
         uint256 maxCollateralP;
+        bool enable;
         Fee fee;
     }
 
@@ -29,7 +30,7 @@ interface IPairStorage {
 
     function getPair(uint256) external view returns(Pair memory);
 
-    function isPairListed(uint256) external view returns (bool);
+    function isPairListed(address, address) external view returns (bool);
 
     function pairsCount() external view returns (uint256);
 

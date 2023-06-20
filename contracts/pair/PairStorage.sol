@@ -8,7 +8,7 @@ import './interfaces/IPairVault.sol';
 
 pragma solidity 0.8.17;
 
-contract PairsStorage is IPairStorage, Handleable {
+contract PairStorage is IPairStorage, Handleable {
 
     // Params (constant)
     uint256 constant MIN_LEVERAGE = 2;
@@ -20,7 +20,7 @@ contract PairsStorage is IPairStorage, Handleable {
 
     mapping(uint256 => Pair) public pairs;
 
-    mapping(uint256 => bool) public isPairListed;
+    mapping(address => mapping(address => bool)) public isPairListed;
 
     uint256 public pairsCount;
 
@@ -32,31 +32,33 @@ contract PairsStorage is IPairStorage, Handleable {
         __Handleable_init();
     }
 
-    function setPairVault(IPairVault _pairVault) public onlyOwner {
+    function setPairVault(IPairVault _pairVault) external onlyHandler {
         pairVault = _pairVault;
     }
 
     // Manage pairs
-    function addPair(Pair calldata _pair) public onlyOwner {
+    function addPair(Pair calldata _pair) external onlyHandler {
         address indexToken = _pair.indexToken;
         address stableToken = _pair.stableToken;
 
         uint256 pairIndex = pairIndexes[indexToken][stableToken];
 
-        require(pairs[pairIndex].indexToken == address(0), 'pair existed');
+        require(!isPairListed[indexToken][stableToken], 'pair already listed');
 
-        pairs[pairsCount] = _pair;
+        pairIndexes[indexToken][stableToken] = pairsCount;
 
         require(indexToken != stableToken, 'identical address');
         require(indexToken != address(0) && stableToken != address(0), 'zero address');
-        isPairListed[pairsCount] = true;
+        isPairListed[indexToken][stableToken] = true;
 
         address pairToken = pairVault.createPair(indexToken, stableToken);
+        pairs[pairsCount] = _pair;
+        pairs[pairsCount].pairToken = pairToken;
 
         emit PairAdded(indexToken, stableToken, pairToken, pairsCount++);
     }
 
-    function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyOwner {
+    function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyHandler {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
 
@@ -65,9 +67,10 @@ contract PairsStorage is IPairStorage, Handleable {
         pair.minLeverage = _pair.minLeverage;
         pair.maxLeverage = _pair.maxLeverage;
         pair.maxCollateralP = _pair.maxCollateralP;
+        pair.enable = _pair.enable;
     }
 
-    function updateFee(uint256 _pairIndex, Fee calldata _fee) external onlyOwner {
+    function updateFee(uint256 _pairIndex, Fee calldata _fee) external onlyHandler {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
 

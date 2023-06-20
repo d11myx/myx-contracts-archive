@@ -163,6 +163,50 @@ async function deployContract(name, args, label, options) {
   return contract
 }
 
+async function deployUpgradeableContract(name, args, label, options) {
+  if (!options && typeof label === "object") {
+    label = null
+    options = label
+  }
+  // 获取当前账户信息
+  const users = await hre.ethers.getSigners();
+  const user = users[0];
+  let userAddr = await user.getAddress();
+  let userBalance = hre.ethers.utils.formatEther(await user.getBalance());
+  let chainId = await user.getChainId();
+  let trxCount = await user.getTransactionCount();
+
+  console.log(` chainId: ${chainId}\n pubkey: ${userAddr}\n balance: ${userBalance}\n trxs: ${trxCount}`)
+  console.log(`\n`)
+
+  const contractFactory = await hre.ethers.getContractFactory(name, options)
+
+  if (name === "FaucetToken") {
+    name += "-" + args[1]
+  } else if (name === "Token") {
+    name += "-" + args[0]
+  } else if (name === "PriceFeed") {
+    name += "-" + args[0]
+    args = []
+  } else if (name === "WETH") {
+    name = "Token-ETH"
+  } else {
+    if (label) { name = name + ":" + label }
+  }
+
+  let param = [...args]
+  console.log(`deploy [${name}], param: ${param}`)
+  let contract = await hre.upgrades.deployProxy(contractFactory, param)
+
+  const argStr = args.map((i) => `"${i}"`).join(" ")
+  console.info(`Deploying upgradeable ${name} ${contract.address} ${argStr}`)
+  await contract.deployed
+  console.info("... Completed!")
+  console.log(repeatString("-"))
+  await setConfig(name, contract.address, null)
+  return contract
+}
+
 async function contractAt(name, address, provider, options) {
   let contractFactory = await ethers.getContractFactory(name, options)
   if (provider) {
@@ -230,6 +274,7 @@ module.exports = {
   getFrameSigner,
   sendTxn,
   deployContract,
+  deployUpgradeableContract,
   contractAt,
   writeTmpAddresses,
   readTmpAddresses,

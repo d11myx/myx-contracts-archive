@@ -12,7 +12,7 @@ contract PairToken is IPairToken, ERC20 {
     address public vault;
 
 
-    constructor() ERC20("YMX LPs", "YMX-LP") {
+    constructor() ERC20("MYX LPs", "MYX-LP") {
         vault = msg.sender;
     }
 

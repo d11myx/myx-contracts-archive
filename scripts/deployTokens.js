@@ -16,7 +16,6 @@ async function main() {
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
   let btc = await deployContract("Token", ["BTC"])
-  let usdc = await deployContract("Token", ["USDC"])
   let usdt = await deployContract("Token", ["USDT"])
   let eth = await deployContract("WETH", ["WETH", "WETH", 18])
   // for (let user of [user0, user1, user2, user3]) {
