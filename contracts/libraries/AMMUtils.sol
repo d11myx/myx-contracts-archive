@@ -18,14 +18,14 @@ library AMMUtils {
         return (reserveA, reserveB);
     }
 
-    function quote(
-        uint256 amountA,
-        uint256 reserveA,
-        uint256 reserveB
-    ) internal view returns (uint256 amountB) {
-        require(amountA > 0, "Invalid amount");
-        require(reserveA > 0 && reserveB > 0, "Invalid reserve");
-        amountB = Math.mulDiv(amountA, reserveB, reserveA);
+    function getAmountOut(
+        uint256 amountIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) internal view returns (uint256 amountOut) {
+        require(amountIn > 0, "Invalid amount");
+        require(reserveIn > 0 && reserveOut > 0, "Invalid reserve");
+        amountOut = Math.mulDiv(amountIn, reserveOut, reserveIn + amountIn);
     }
 
 }

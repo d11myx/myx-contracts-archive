@@ -35,9 +35,10 @@ async function main() {
   console.log(`slip fee btc: ${await btc.balanceOf(user2.address)}, usdt: ${await usdt.balanceOf(user2.address)}`);
 
   // remove liquidity
-  await pairVault.removeLiquidity(pairIndex, lpAmount);
-  console.log(`balance of btc: ${await btc.balanceOf(user0.address)}, usdt: ${await usdt.balanceOf(user0.address)}`);
-
+  await pairVault.removeLiquidity(pairIndex, lpAmount.div(2));
+  console.log(`balance of btc: ${await btc.balanceOf(pairVault.address)}, usdt: ${await usdt.balanceOf(pairVault.address)}`);
+  lpAmount = await pairToken.balanceOf(user0.address);
+  console.log(`lp amount: ${lpAmount}`);
 }
 
 main()

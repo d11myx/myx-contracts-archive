@@ -40,22 +40,16 @@ contract PairVault is IPairVault, Handleable {
     event AddLiquidity(
         address indexed account,
         uint256 indexed pairIndex,
-        address indexToken,
-        address stableToken,
         uint256 indexAmount,
         uint256 stableAmount,
-        address pairToken,
         uint256 lpAmount
     );
 
     event RemoveLiquidity(
         address indexed account,
         uint256 indexed pairIndex,
-        address indexToken,
-        address stableToken,
         uint256 indexAmount,
         uint256 stableAmount,
-        address pairToken,
         uint256 lpAmount
     );
 
@@ -76,11 +70,8 @@ contract PairVault is IPairVault, Handleable {
         pairStorage = _pairStorage;
     }
 
-    function setFeeReceiver(address _feeReceiver) external onlyHandler {
+    function setReceiver(address _feeReceiver, address _slipReceiver) external onlyHandler {
         feeReceiver = _feeReceiver;
-    }
-
-    function setSlipReceiver(address _slipReceiver) external onlyHandler {
         slipReceiver = _slipReceiver;
     }
 
@@ -112,7 +103,7 @@ contract PairVault is IPairVault, Handleable {
 
     function removeLiquidity(uint256 _pairIndex, uint256 _amount) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, msg.sender, _pairIndex, _amount);
-        if (receivedIndexAmount > 0 && _isETH(_pairIndex)) {
+        if (receivedIndexAmount > 0 && pairStorage.getPair(_pairIndex).indexToken == weth) {
             WETH(weth).withdraw(receivedIndexAmount);
             Address.sendValue(payable(msg.sender), receivedIndexAmount);
         }
@@ -123,7 +114,7 @@ contract PairVault is IPairVault, Handleable {
         return _removeLiquidity(_account, _receiver, _pairIndex, _amount);
     }
 
-    function _addLiquidity(address _funder, address _account, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) private returns (uint256) {
+    function _addLiquidity(address _funder, address _account, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) private returns (uint256 mintAmount) {
         require(_indexAmount > 0 || _stableAmount > 0, "invalid amount");
 
         IPairStorage.Pair memory pair = pairStorage.getPair(_pairIndex);
@@ -149,7 +140,6 @@ contract PairVault is IPairVault, Handleable {
         }
 
         Vault storage vault = vaults[_pairIndex];
-        uint256 mintAmount;
         // usdt value of reserve
         {
             // todo
@@ -177,24 +167,23 @@ contract PairVault is IPairVault, Handleable {
                     // 40 - 30 -> 20 + 30
                     uint256 needSwapIndexDelta = (indexTotalDelta - stableTotalDelta) / 2;
                     uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
-                    slipDelta = swapIndexDelta - _getStableTokenOut(_getAmount(swapIndexDelta, price), pair.k, price, PRICE_PRECISION);
+                    slipDelta = swapIndexDelta - _getStableTokenOut(_getAmount(swapIndexDelta, price), pair.k, price);
 
                     uint256 slipAmount = _getAmount(slipDelta, price);
 
                     afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
                     IERC20(pair.indexToken).transfer(slipReceiver, slipAmount);
-
                 } else if (indexTotalDelta < stableTotalDelta) {
                     uint256 needSwapStableDelta = (stableTotalDelta - indexTotalDelta) / 2;
                     uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
-                    slipDelta = swapStableDelta - _getDelta(_getIndexTokenOut(swapStableDelta, pair.k, price, PRICE_PRECISION), price);
+                    slipDelta = swapStableDelta - _getDelta(_getIndexTokenOut(swapStableDelta, pair.k, price), price);
 
                     afterFeeStableAmount = afterFeeStableAmount - slipDelta;
                     IERC20(pair.stableToken).transfer(slipReceiver, slipDelta);
                 }
             }
             uint256 lpFairDelta = indexReserveDelta + vault.stableTotalAmount;
-            uint256 lpFairPrice = lpFairDelta > 0 ? Math.mulDiv(lpFairDelta, PRICE_PRECISION, IERC20(pair.pairToken).totalSupply()) : 1 * PRICE_PRECISION;
+            uint256 lpFairPrice = IERC20(pair.pairToken).totalSupply() > 0 ? Math.mulDiv(lpFairDelta, PRICE_PRECISION, IERC20(pair.pairToken).totalSupply()) : 1 * PRICE_PRECISION;
             // mint lp
             mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice);
         }
@@ -203,7 +192,7 @@ contract PairVault is IPairVault, Handleable {
         vault.indexTotalAmount = vault.indexTotalAmount + afterFeeIndexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount + afterFeeStableAmount;
 
-        emit AddLiquidity(_account, _pairIndex, pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, pair.pairToken, mintAmount);
+        emit AddLiquidity(_account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
 
         return mintAmount;
     }
@@ -239,16 +228,18 @@ contract PairVault is IPairVault, Handleable {
                 if (extraIndexReserveDelta > receiveDelta) {
                     receiveIndexTokenDelta = receiveIndexTokenDelta + receiveDelta;
                 } else {
-                    receiveIndexTokenDelta = receiveIndexTokenDelta + extraIndexReserveDelta / 2;
-                    receiveStableTokenDelta = receiveStableTokenDelta + extraIndexReserveDelta / 2;
+                    uint256 lastReceiveDelta = receiveDelta - extraIndexReserveDelta;
+                    receiveIndexTokenDelta = receiveIndexTokenDelta + extraIndexReserveDelta + lastReceiveDelta / 2;
+                    receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
                 }
             } else {
                 uint256 extraStableReserveDelta = stableReserveDelta - indexReserveDelta;
                 if (extraStableReserveDelta > receiveDelta) {
                     receiveStableTokenDelta = receiveStableTokenDelta + receiveDelta;
                 } else {
-                    receiveIndexTokenDelta = receiveIndexTokenDelta + extraStableReserveDelta / 2;
-                    receiveStableTokenDelta = receiveStableTokenDelta + extraStableReserveDelta / 2;
+                    uint256 lastReceiveDelta = receiveDelta - extraStableReserveDelta;
+                    receiveIndexTokenDelta = receiveIndexTokenDelta + lastReceiveDelta / 2;
+                    receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
                 }
             }
             receiveIndexTokenAmount = _getAmount(receiveIndexTokenDelta, price);
@@ -261,34 +252,32 @@ contract PairVault is IPairVault, Handleable {
         vault.indexTotalAmount = vault.indexTotalAmount - receiveIndexTokenAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - receiveStableTokenAmount;
 
+        IPairToken(pair.pairToken).burn(_account, _amount);
+
         IERC20(pair.indexToken).transfer(_receiver, receiveIndexTokenAmount);
         IERC20(pair.stableToken).transfer(_receiver, receiveStableTokenAmount);
 
-        emit RemoveLiquidity(_account, _pairIndex, pair.indexToken, pair.stableToken, receiveIndexTokenAmount, receiveStableTokenAmount, pair.pairToken, _amount);
+        emit RemoveLiquidity(_account, _pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount, _amount);
 
         return (receiveIndexTokenAmount, receiveStableTokenAmount);
     }
 
-    function _getDelta(uint256 amount, uint256 price) private returns(uint256) {
+    function _getDelta(uint256 amount, uint256 price) internal view returns(uint256) {
         return Math.mulDiv(amount, price, PRICE_PRECISION);
     }
 
-    function _getAmount(uint256 delta, uint256 price) private returns(uint256) {
+    function _getAmount(uint256 delta, uint256 price) internal view returns(uint256) {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
     }
 
-    function _getStableTokenOut(uint256 amountA, uint256 k, uint256 price, uint256 pricePrecision) private returns(uint256) {
+    function _getStableTokenOut(uint256 amountA, uint256 k, uint256 price) internal view returns(uint256) {
         (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(k, price, PRICE_PRECISION);
-        return AMMUtils.quote(amountA, reserveA, reserveB);
+        return AMMUtils.getAmountOut(amountA, reserveA, reserveB);
     }
 
-    function _getIndexTokenOut(uint256 amountB, uint256 k, uint256 price, uint256 pricePrecision) private returns(uint256) {
+    function _getIndexTokenOut(uint256 amountB, uint256 k, uint256 price) internal view returns(uint256) {
         (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(k, price, PRICE_PRECISION);
-        return AMMUtils.quote(amountB, reserveB, reserveA);
-    }
-
-    function _isETH(uint256 _pairIndex) private returns (bool) {
-        return pairStorage.getPair(_pairIndex).indexToken == weth;
+        return AMMUtils.getAmountOut(amountB, reserveB, reserveA);
     }
 
 }

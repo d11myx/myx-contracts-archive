@@ -10,13 +10,13 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairStorage = await deployContract("PairStorage", []);
-  await pairStorage.initialize();
+  let pairStorage = await deployUpgradeableContract("PairStorage", []);
+  // await pairStorage.initialize();
 
   let ethAddress = await getConfig("Token-ETH");
-  let pairVault = await deployContract("PairVault", []);
+  let pairVault = await deployUpgradeableContract("PairVault", [pairStorage.address, user1.address, user2.address, ethAddress]);
 
-  await pairVault.initialize(pairStorage.address, user1.address, user2.address, ethAddress);
+  // await pairVault.initialize(pairStorage.address, user1.address, user2.address, ethAddress);
 
   await pairVault.setHandler(pairStorage.address, true);
   await pairStorage.setPairVault(pairVault.address);

@@ -30,4 +30,9 @@ contract PairToken is IPairToken, ERC20 {
         _mint(to, amount);
     }
 
+    function burn(address account, uint256 amount) external onlyVault {
+        _burn(account, amount);
+    }
+
+
 }

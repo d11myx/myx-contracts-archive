@@ -24,7 +24,7 @@ async function main() {
       stableToken: usdt.address,
       pairToken: "0x0000000000000000000000000000000000000000",
       spreadP: 0,
-      k: 10000,
+      k: "100000000000000000000000000000000000000000000000000",
       minLeverage: 2,
       maxLeverage: 100,
       maxCollateralP: 0,
