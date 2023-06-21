@@ -130,12 +130,12 @@
                 "type": "uint256"
               }
             ],
-            "internalType": "struct IPairStorage.Fee",
+            "internalType": "struct IPairInfo.Fee",
             "name": "fee",
             "type": "tuple"
           }
         ],
-        "internalType": "struct IPairStorage.Pair",
+        "internalType": "struct IPairInfo.Pair",
         "name": "_pair",
         "type": "tuple"
       }
@@ -240,12 +240,12 @@
                 "type": "uint256"
               }
             ],
-            "internalType": "struct IPairStorage.Fee",
+            "internalType": "struct IPairInfo.Fee",
             "name": "fee",
             "type": "tuple"
           }
         ],
-        "internalType": "struct IPairStorage.Pair",
+        "internalType": "struct IPairInfo.Pair",
         "name": "",
         "type": "tuple"
       }
@@ -342,10 +342,10 @@
   },
   {
     "inputs": [],
-    "name": "pairVault",
+    "name": "pairLiquidity",
     "outputs": [
       {
-        "internalType": "contract IPairVault",
+        "internalType": "contract IPairLiquidity",
         "name": "",
         "type": "address"
       }
@@ -446,7 +446,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IPairStorage.Fee",
+        "internalType": "struct IPairInfo.Fee",
         "name": "fee",
         "type": "tuple"
       }
@@ -501,12 +501,12 @@
   {
     "inputs": [
       {
-        "internalType": "contract IPairVault",
-        "name": "_pairVault",
+        "internalType": "contract IPairLiquidity",
+        "name": "_pairLiquidity",
         "type": "address"
       }
     ],
-    "name": "setPairVault",
+    "name": "setPairLiquidity",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -556,7 +556,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IPairStorage.Fee",
+        "internalType": "struct IPairInfo.Fee",
         "name": "_fee",
         "type": "tuple"
       }
@@ -658,12 +658,12 @@
                 "type": "uint256"
               }
             ],
-            "internalType": "struct IPairStorage.Fee",
+            "internalType": "struct IPairInfo.Fee",
             "name": "fee",
             "type": "tuple"
           }
         ],
-        "internalType": "struct IPairStorage.Pair",
+        "internalType": "struct IPairInfo.Pair",
         "name": "_pair",
         "type": "tuple"
       }

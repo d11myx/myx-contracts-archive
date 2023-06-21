@@ -3,43 +3,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "pairIndex",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "indexAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "stableAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "lpAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "AddLiquidity",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "uint8",
         "name": "version",
@@ -50,66 +13,26 @@
     "type": "event"
   },
   {
-    "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": true,
         "internalType": "uint256",
-        "name": "pairIndex",
+        "name": "_pairIndex",
         "type": "uint256"
       },
       {
-        "indexed": false,
         "internalType": "uint256",
-        "name": "indexAmount",
+        "name": "_indexAmount",
         "type": "uint256"
       },
       {
-        "indexed": false,
         "internalType": "uint256",
-        "name": "stableAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "lpAmount",
+        "name": "_stableAmount",
         "type": "uint256"
       }
     ],
-    "name": "RemoveLiquidity",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "PRECISION",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "PRICE_PRECISION",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "decreaseReserveAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -130,14 +53,8 @@
         "type": "uint256"
       }
     ],
-    "name": "addLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "name": "decreaseTotalAmount",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -147,95 +64,36 @@
         "internalType": "uint256",
         "name": "_pairIndex",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_stableAmount",
-        "type": "uint256"
       }
     ],
-    "name": "addLiquidityETH",
+    "name": "getVault",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_funder",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_indexAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_stableAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "addLiquidityForAccount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "indexToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "stableToken",
-        "type": "address"
-      }
-    ],
-    "name": "createPair",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "feeReceiver",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "indexTotalAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "indexReservedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "stableTotalAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "stableReservedAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairVault.Vault",
+        "name": "vault",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -257,26 +115,51 @@
   {
     "inputs": [
       {
-        "internalType": "contract IPairStorage",
-        "name": "_pairStorage",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "_feeReceiver",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_indexAmount",
+        "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "_slipReceiver",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_weth",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_stableAmount",
+        "type": "uint256"
       }
     ],
+    "name": "increaseReserveAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_indexAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_stableAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "increaseTotalAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -299,87 +182,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pairStorage",
-    "outputs": [
-      {
-        "internalType": "contract IPairStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "removeLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "receivedIndexAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "receivedStableAmount",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_receiver",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "removeLiquidityForAccount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -416,45 +218,24 @@
   {
     "inputs": [
       {
-        "internalType": "contract IPairStorage",
-        "name": "_pairStorage",
-        "type": "address"
-      }
-    ],
-    "name": "setPairStorage",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
-        "name": "_feeReceiver",
+        "name": "token",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_slipReceiver",
+        "name": "to",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
-    "name": "setReceiver",
+    "name": "transferTokenTo",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "slipReceiver",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -486,19 +267,6 @@
         "internalType": "uint256",
         "name": "stableReservedAmount",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "weth",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",

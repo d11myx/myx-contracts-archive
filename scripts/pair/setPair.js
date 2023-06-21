@@ -10,14 +10,13 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairStorage = await contractAt("PairStorage", await getConfig("PairStorage"));
-  let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
+  let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
 
-  console.log(`pairStorage: ${pairStorage.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
+  console.log(`pairStorage: ${pairInfo.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
 
   let pair = {
       indexToken: btc.address,
@@ -41,16 +40,16 @@ async function main() {
     };
   console.log("pair0: ", pair);
 
-  await pairStorage.addPair(pair);
-  let pairIndex = await pairStorage.pairIndexes(pair.indexToken, pair.stableToken);
-  console.log(`pair0 index: ${pairIndex} pairToken: ${(await pairStorage.pairs(pairIndex)).pairToken}`);
+  await pairInfo.addPair(pair);
+  let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
+  console.log(`pair0 index: ${pairIndex} pairToken: ${(await pairInfo.pairs(pairIndex)).pairToken}`);
 
   //
   pair.indexToken = eth.address;
   console.log("pair1: ", pair);
-  await pairStorage.addPair(pair);
-  pairIndex = await pairStorage.pairIndexes(pair.indexToken, pair.stableToken);
-  console.log(`pair1 index: ${pairIndex} pairToken: ${(await pairStorage.pairs(pairIndex)).pairToken}`);
+  await pairInfo.addPair(pair);
+  pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
+  console.log(`pair1 index: ${pairIndex} pairToken: ${(await pairInfo.pairs(pairIndex)).pairToken}`);
 
 }
 

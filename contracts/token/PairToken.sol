@@ -9,28 +9,25 @@ contract PairToken is IPairToken, ERC20 {
     address public token0;
     address public token1;
 
-    address public vault;
+    address public liquidity;
 
 
-    constructor() ERC20("MYX LPs", "MYX-LP") {
-        vault = msg.sender;
+    constructor(address _token0, address _token1, address _liquidity) ERC20("MYX LPs", "MYX-LP") {
+        token0 = _token0;
+        token1 = _token1;
+        liquidity = _liquidity;
     }
 
-    modifier onlyVault() {
-        require(msg.sender == vault, 'forbidden');
+    modifier onlyLiquidity() {
+        require(msg.sender == liquidity, 'forbidden');
         _;
     }
 
-    function initialize(address _token0, address _token1) external onlyVault {
-        token0 = _token0;
-        token1 = _token1;
-    }
-
-    function mint(address to, uint256 amount) external onlyVault {
+    function mint(address to, uint256 amount) external onlyLiquidity {
         _mint(to, amount);
     }
 
-    function burn(address account, uint256 amount) external onlyVault {
+    function burn(address account, uint256 amount) external onlyLiquidity {
         _burn(account, amount);
     }
 

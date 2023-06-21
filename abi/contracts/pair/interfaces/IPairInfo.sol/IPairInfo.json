@@ -94,12 +94,12 @@
                 "type": "uint256"
               }
             ],
-            "internalType": "struct IPairStorage.Fee",
+            "internalType": "struct IPairInfo.Fee",
             "name": "fee",
             "type": "tuple"
           }
         ],
-        "internalType": "struct IPairStorage.Pair",
+        "internalType": "struct IPairInfo.Pair",
         "name": "",
         "type": "tuple"
       }

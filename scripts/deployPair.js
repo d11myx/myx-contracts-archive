@@ -2,6 +2,7 @@ const { deployContract, deployUpgradeableContract } = require("./utils/helpers")
 const { expandDecimals } = require("./utils/utilities");
 const hre = require("hardhat");
 const {mintWETH, getConfig} = require("./utils/utils");
+const {contractAt} = require("./utils/helpers");
 
 async function main() {
   const addresses = {}
@@ -10,16 +11,16 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairStorage = await deployUpgradeableContract("PairStorage", []);
-  // await pairStorage.initialize();
+  let eth = await contractAt("WETH", await getConfig("Token-ETH"))
 
-  let ethAddress = await getConfig("Token-ETH");
-  let pairVault = await deployUpgradeableContract("PairVault", [pairStorage.address, user1.address, user2.address, ethAddress]);
+  let pairInfo = await deployUpgradeableContract("PairInfo", []);
+  let pairVault = await deployUpgradeableContract("PairVault", []);
 
-  // await pairVault.initialize(pairStorage.address, user1.address, user2.address, ethAddress);
+  let pairLiquidity = await deployUpgradeableContract("PairLiquidity", [pairInfo.address, pairVault.address, user1.address, user2.address, eth.address]);
 
-  await pairVault.setHandler(pairStorage.address, true);
-  await pairStorage.setPairVault(pairVault.address);
+  await pairLiquidity.setHandler(pairInfo.address, true);
+  await pairVault.setHandler(pairLiquidity.address, true);
+  await pairInfo.setPairLiquidity(pairLiquidity.address);
 }
 
 main()

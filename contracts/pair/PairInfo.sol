@@ -3,18 +3,18 @@ import "../libraries/access/Handleable.sol";
 import '../trading/interfaces/StorageInterfaceV5.sol';
 import "../token/interfaces/IPairToken.sol";
 import "../token/PairToken.sol";
-import './interfaces/IPairStorage.sol';
-import './interfaces/IPairVault.sol';
+import './interfaces/IPairInfo.sol';
+import './interfaces/IPairLiquidity.sol';
 
 pragma solidity 0.8.17;
 
-contract PairStorage is IPairStorage, Handleable {
+contract PairInfo is IPairInfo, Handleable {
 
     // Params (constant)
     uint256 constant MIN_LEVERAGE = 2;
     uint256 constant MAX_LEVERAGE = 100;
 
-    IPairVault public pairVault;
+    IPairLiquidity public pairLiquidity;
 
     mapping(address => mapping(address => uint256)) public pairIndexes;
 
@@ -24,7 +24,6 @@ contract PairStorage is IPairStorage, Handleable {
 
     uint256 public pairsCount;
 
-
     // Events
     event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
 
@@ -32,8 +31,8 @@ contract PairStorage is IPairStorage, Handleable {
         __Handleable_init();
     }
 
-    function setPairVault(IPairVault _pairVault) external onlyHandler {
-        pairVault = _pairVault;
+    function setPairLiquidity(IPairLiquidity _pairLiquidity) external onlyHandler {
+        pairLiquidity = _pairLiquidity;
     }
 
     // Manage pairs
@@ -51,11 +50,21 @@ contract PairStorage is IPairStorage, Handleable {
         require(indexToken != address(0) && stableToken != address(0), 'zero address');
         isPairListed[indexToken][stableToken] = true;
 
-        address pairToken = pairVault.createPair(indexToken, stableToken);
+        address pairToken = _createPair(indexToken, stableToken);
         pairs[pairsCount] = _pair;
         pairs[pairsCount].pairToken = pairToken;
 
         emit PairAdded(indexToken, stableToken, pairToken, pairsCount++);
+    }
+
+    function _createPair(address indexToken, address stableToken) private returns (address) {
+        bytes memory bytecode = abi.encodePacked(type(PairToken).creationCode, abi.encode(indexToken, stableToken, address(pairLiquidity)));
+        bytes32 salt = keccak256(abi.encodePacked(indexToken, stableToken));
+        address pairToken;
+        assembly {
+            pairToken := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
+        return pairToken;
     }
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyHandler {
