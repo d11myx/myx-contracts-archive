@@ -40,7 +40,7 @@ const config: HardhatUserConfig = {
             }
         ]
     },
-    defaultNetwork: "local",
+    defaultNetwork: "remote",
     zksolc: {
       version: "1.3.8",
       compilerSource: "binary",
@@ -64,12 +64,15 @@ const config: HardhatUserConfig = {
             gasPrice: gasPrice,
             // zksync: true,
         },
-        goerli: {
-            url: "https://rpc.ankr.com/eth_goerli",
-            // accounts:
-            //     [GOERLI_DEPLOY_KEY],
-            gas: gas,
-            gasPrice: gasPrice,
+        remote: {
+          url: "http://18.166.30.91:8545/",
+          accounts:
+            [
+              LOCAL_PRIVATE_KEY1, LOCAL_PRIVATE_KEY2, LOCAL_PRIVATE_KEY3, LOCAL_PRIVATE_KEY4, LOCAL_PRIVATE_KEY5,
+              LOCAL_PRIVATE_KEY6, LOCAL_PRIVATE_KEY7, LOCAL_PRIVATE_KEY8, LOCAL_PRIVATE_KEY9, LOCAL_PRIVATE_KEY10,
+            ],
+          // gas: gas,
+          // gasPrice: gasPrice
         },
     },
     etherscan: {
