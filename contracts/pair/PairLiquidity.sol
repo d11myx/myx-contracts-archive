@@ -33,7 +33,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     // pairToken => user => amount
     mapping(address => mapping(address => uint256)) public userPairTokens;
 
-    mapping(uint256 => uint256) public indexTokenPrice; // for test
+    mapping(uint256 => uint256) public indexTokenPrice; // todo for test
 
     event AddLiquidity(
         address indexed account,
@@ -113,17 +113,31 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), "invalid pair");
 
+        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+
+        // init liquidity
+        if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
+            uint256 indexDesiredAmount = Math.mulDiv(_stableAmount, pair.initPairRatio, 100 * PRECISION);
+            uint256 stableDesiredAmount = Math.mulDiv(_indexAmount, 100 * PRECISION, pair.initPairRatio);
+            if (indexDesiredAmount <= _indexAmount) {
+                _indexAmount = indexDesiredAmount;
+            } else {
+                _stableAmount = stableDesiredAmount;
+            }
+        }
+
         // transfer token
         IERC20(pair.indexToken).transferFrom(_funder, address(this), _indexAmount);
         IERC20(pair.stableToken).transferFrom(_funder, address(this), _stableAmount);
+
 
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
         {
             // transfer fee
-            uint256 indexFeeAmount = Math.mulDiv(_indexAmount, pair.fee.depositFeeP, 100 * PRECISION);
-            uint256 stableFeeAmount = Math.mulDiv(_stableAmount, pair.fee.depositFeeP, 100 * PRECISION);
+            uint256 indexFeeAmount = Math.mulDiv(_indexAmount, pair.fee.addLpFeeP, 100 * PRECISION);
+            uint256 stableFeeAmount = Math.mulDiv(_stableAmount, pair.fee.addLpFeeP, 100 * PRECISION);
 
             IERC20(pair.indexToken).transfer(feeReceiver, indexFeeAmount);
             IERC20(pair.stableToken).transfer(feeReceiver, stableFeeAmount);
@@ -132,7 +146,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             afterFeeStableAmount = _stableAmount - stableFeeAmount;
         }
 
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
         // usdt value of reserve
         {
             // todo
@@ -156,7 +169,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 // reserve: 70 30
                 // deposit: 40 20
                 // total:  110 50
-                (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.k, price, PRICE_PRECISION);
+                (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
                 if (indexTotalDelta > stableTotalDelta) {
                     // 60 / 2 = 30
                     // 40 - 30 -> 20 + 30

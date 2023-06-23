@@ -10,12 +10,6 @@ pragma solidity 0.8.17;
 
 contract PairInfo is IPairInfo, Handleable {
 
-    // Params (constant)
-    uint256 constant MIN_LEVERAGE = 2;
-    uint256 constant MAX_LEVERAGE = 100;
-
-    IPairLiquidity public pairLiquidity;
-
     mapping(address => mapping(address => uint256)) public pairIndexes;
 
     mapping(uint256 => Pair) public pairs;
@@ -23,6 +17,8 @@ contract PairInfo is IPairInfo, Handleable {
     mapping(address => mapping(address => bool)) public isPairListed;
 
     uint256 public pairsCount;
+
+    IPairLiquidity public pairLiquidity;
 
     // Events
     event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
@@ -71,12 +67,9 @@ contract PairInfo is IPairInfo, Handleable {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
 
-        pair.spreadP = _pair.spreadP;
-        pair.k = _pair.k;
-        pair.minLeverage = _pair.minLeverage;
-        pair.maxLeverage = _pair.maxLeverage;
-        pair.maxCollateralP = _pair.maxCollateralP;
         pair.enable = _pair.enable;
+        pair.kOfSwap = _pair.kOfSwap;
+        pair.initPairRatio = _pair.initPairRatio;
     }
 
     function updateFee(uint256 _pairIndex, Fee calldata _fee) external onlyHandler {
@@ -86,10 +79,34 @@ contract PairInfo is IPairInfo, Handleable {
         pair.fee = _fee;
     }
 
+    function updateTradingFeeDistribute(uint256 _pairIndex, TradingFeeDistribute calldata _tradingFeeDistribute) external onlyHandler {
+        Pair storage pair = pairs[_pairIndex];
+        require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
+
+        pair.tradingFeeDistribute = _tradingFeeDistribute;
+    }
+
+    function updateFundingFeeDistribute(uint256 _pairIndex, FundingFeeDistribute calldata _fundingFeeDistribute) external onlyHandler {
+        Pair storage pair = pairs[_pairIndex];
+        require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
+
+        pair.fundingFeeDistribute = _fundingFeeDistribute;
+    }
 
     function getPair(uint256 _pairIndex) external view override returns(Pair memory) {
         return pairs[_pairIndex];
     }
 
+    function getFee(uint256 _pairIndex) external view override returns(Fee memory) {
+        return pairs[_pairIndex].fee;
+    }
+
+    function getTradingFeeDistribute(uint256 _pairIndex) external view override returns(TradingFeeDistribute memory) {
+        return pairs[_pairIndex].tradingFeeDistribute;
+    }
+
+    function getFundingFeeDistribute(uint256 _pairIndex) external view override returns(FundingFeeDistribute memory) {
+        return pairs[_pairIndex].fundingFeeDistribute;
+    }
 
 }

@@ -63,75 +63,89 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "spreadP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "k",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxCollateralP",
-            "type": "uint256"
-          },
-          {
             "internalType": "bool",
             "name": "enable",
             "type": "bool"
           },
           {
+            "internalType": "uint256",
+            "name": "kOfSwap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "initPairRatio",
+            "type": "uint256"
+          },
+          {
             "components": [
               {
                 "internalType": "uint256",
-                "name": "openFeeP",
+                "name": "takerFeeP",
                 "type": "uint256"
               },
               {
-                "internalType": "uint256",
-                "name": "closeFeeP",
-                "type": "uint256"
+                "internalType": "int256",
+                "name": "makerFeeP",
+                "type": "int256"
               },
               {
                 "internalType": "uint256",
-                "name": "oracleFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nftLimitOrderFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "referralFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "minLevPosDai",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "depositFeeP",
+                "name": "addLpFeeP",
                 "type": "uint256"
               }
             ],
             "internalType": "struct IPairInfo.Fee",
             "name": "fee",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "lpP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "keeperP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "treasuryP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "refererP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairInfo.TradingFeeDistribute",
+            "name": "tradingFeeDistribute",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "lpP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "userP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "treasuryP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairInfo.FundingFeeDistribute",
+            "name": "fundingFeeDistribute",
             "type": "tuple"
           }
         ],
@@ -143,6 +157,78 @@
     "name": "addPair",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFee",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "takerFeeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "makerFeeP",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "addLpFeeP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.Fee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFundingFeeDistribute",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "lpP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "userP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.FundingFeeDistribute",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -173,79 +259,134 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "spreadP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "k",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxCollateralP",
-            "type": "uint256"
-          },
-          {
             "internalType": "bool",
             "name": "enable",
             "type": "bool"
           },
           {
+            "internalType": "uint256",
+            "name": "kOfSwap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "initPairRatio",
+            "type": "uint256"
+          },
+          {
             "components": [
               {
                 "internalType": "uint256",
-                "name": "openFeeP",
+                "name": "takerFeeP",
                 "type": "uint256"
               },
               {
-                "internalType": "uint256",
-                "name": "closeFeeP",
-                "type": "uint256"
+                "internalType": "int256",
+                "name": "makerFeeP",
+                "type": "int256"
               },
               {
                 "internalType": "uint256",
-                "name": "oracleFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nftLimitOrderFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "referralFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "minLevPosDai",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "depositFeeP",
+                "name": "addLpFeeP",
                 "type": "uint256"
               }
             ],
             "internalType": "struct IPairInfo.Fee",
             "name": "fee",
             "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "lpP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "keeperP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "treasuryP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "refererP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairInfo.TradingFeeDistribute",
+            "name": "tradingFeeDistribute",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "lpP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "userP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "treasuryP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairInfo.FundingFeeDistribute",
+            "name": "fundingFeeDistribute",
+            "type": "tuple"
           }
         ],
         "internalType": "struct IPairInfo.Pair",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTradingFeeDistribute",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "lpP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "keeperP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "refererP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.TradingFeeDistribute",
         "name": "",
         "type": "tuple"
       }
@@ -379,75 +520,89 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "spreadP",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "k",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minLeverage",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxLeverage",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxCollateralP",
-        "type": "uint256"
-      },
-      {
         "internalType": "bool",
         "name": "enable",
         "type": "bool"
       },
       {
+        "internalType": "uint256",
+        "name": "kOfSwap",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "initPairRatio",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "uint256",
-            "name": "openFeeP",
+            "name": "takerFeeP",
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
-            "name": "closeFeeP",
-            "type": "uint256"
+            "internalType": "int256",
+            "name": "makerFeeP",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
-            "name": "oracleFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nftLimitOrderFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "referralFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minLevPosDai",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "depositFeeP",
+            "name": "addLpFeeP",
             "type": "uint256"
           }
         ],
         "internalType": "struct IPairInfo.Fee",
         "name": "fee",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "lpP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "keeperP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "refererP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.TradingFeeDistribute",
+        "name": "tradingFeeDistribute",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "lpP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "userP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.FundingFeeDistribute",
+        "name": "fundingFeeDistribute",
         "type": "tuple"
       }
     ],
@@ -522,37 +677,17 @@
         "components": [
           {
             "internalType": "uint256",
-            "name": "openFeeP",
+            "name": "takerFeeP",
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
-            "name": "closeFeeP",
-            "type": "uint256"
+            "internalType": "int256",
+            "name": "makerFeeP",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
-            "name": "oracleFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nftLimitOrderFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "referralFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minLevPosDai",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "depositFeeP",
+            "name": "addLpFeeP",
             "type": "uint256"
           }
         ],
@@ -562,6 +697,41 @@
       }
     ],
     "name": "updateFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "lpP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "userP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.FundingFeeDistribute",
+        "name": "_fundingFeeDistribute",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateFundingFeeDistribute",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -591,75 +761,89 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "spreadP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "k",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxCollateralP",
-            "type": "uint256"
-          },
-          {
             "internalType": "bool",
             "name": "enable",
             "type": "bool"
           },
           {
+            "internalType": "uint256",
+            "name": "kOfSwap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "initPairRatio",
+            "type": "uint256"
+          },
+          {
             "components": [
               {
                 "internalType": "uint256",
-                "name": "openFeeP",
+                "name": "takerFeeP",
                 "type": "uint256"
               },
               {
-                "internalType": "uint256",
-                "name": "closeFeeP",
-                "type": "uint256"
+                "internalType": "int256",
+                "name": "makerFeeP",
+                "type": "int256"
               },
               {
                 "internalType": "uint256",
-                "name": "oracleFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nftLimitOrderFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "referralFeeP",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "minLevPosDai",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "depositFeeP",
+                "name": "addLpFeeP",
                 "type": "uint256"
               }
             ],
             "internalType": "struct IPairInfo.Fee",
             "name": "fee",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "lpP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "keeperP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "treasuryP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "refererP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairInfo.TradingFeeDistribute",
+            "name": "tradingFeeDistribute",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "lpP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "userP",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "treasuryP",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IPairInfo.FundingFeeDistribute",
+            "name": "fundingFeeDistribute",
             "type": "tuple"
           }
         ],
@@ -669,6 +853,46 @@
       }
     ],
     "name": "updatePair",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "lpP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "keeperP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "refererP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.TradingFeeDistribute",
+        "name": "_tradingFeeDistribute",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateTradingFeeDistribute",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

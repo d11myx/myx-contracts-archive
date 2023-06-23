@@ -7,31 +7,45 @@ interface IPairInfo {
         address indexToken;
         address stableToken;
         address pairToken;
-        uint256 spreadP;
-        uint256 k;
-        uint256 minLeverage;
-        uint256 maxLeverage;
-        uint256 maxCollateralP;
         bool enable;
+        uint256 kOfSwap;
+        uint256 initPairRatio; // index / stable PRECISION 1% for 1e10
         Fee fee;
+        TradingFeeDistribute tradingFeeDistribute;
+        FundingFeeDistribute fundingFeeDistribute;
     }
 
     struct Fee {
-        uint256 openFeeP;              // PRECISION (% of leveraged pos)
-        uint256 closeFeeP;             // PRECISION (% of leveraged pos)
-        uint256 oracleFeeP;            // PRECISION (% of leveraged pos)
-        uint256 nftLimitOrderFeeP;     // PRECISION (% of leveraged pos)
-        uint256 referralFeeP;          // PRECISION (% of leveraged pos)
-        uint256 minLevPosDai;          // 1e18 (collateral x leverage, useful for min fee)
-        uint256 depositFeeP;
+        uint256 takerFeeP;
+        int256 makerFeeP;
+        uint256 addLpFeeP;
+    }
+
+    struct TradingFeeDistribute {
+        uint256 lpP;
+        uint256 keeperP;
+        uint256 treasuryP;
+        uint256 refererP;
+    }
+
+    struct FundingFeeDistribute {
+        uint256 lpP;
+        uint256 userP;
+        uint256 treasuryP;
     }
 
     function pairIndexes(address, address) external view returns(uint256);
 
-    function getPair(uint256) external view returns(Pair memory);
-
     function isPairListed(address, address) external view returns (bool);
 
     function pairsCount() external view returns (uint256);
+
+    function getPair(uint256) external view returns(Pair memory);
+
+    function getFee(uint256) external view returns(Fee memory);
+
+    function getTradingFeeDistribute(uint256) external view returns(TradingFeeDistribute memory);
+
+    function getFundingFeeDistribute(uint256) external view returns(FundingFeeDistribute memory);
 
 }

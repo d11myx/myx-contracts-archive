@@ -22,20 +22,24 @@ async function main() {
       indexToken: btc.address,
       stableToken: usdt.address,
       pairToken: "0x0000000000000000000000000000000000000000",
-      spreadP: 0,
-      k: "100000000000000000000000000000000000000000000000000",
-      minLeverage: 2,
-      maxLeverage: 100,
-      maxCollateralP: 0,
+      kOfSwap: "100000000000000000000000000000000000000000000000000",
       enable: true,
+      initPairRatio: 50*1e10,
       fee: {
-        openFeeP: 0,
-        closeFeeP: 0,
-        oracleFeeP: 0,
-        nftLimitOrderFeeP: 0,
-        referralFeeP: 0,
-        minLevPosDai: 0,
-        depositFeeP: 10000000000
+        takerFeeP: 0,
+        makerFeeP: 0,
+        addLpFeeP: 1e10
+      },
+      tradingFeeDistribute: {
+        lpP: 0,
+        keeperP: 0,
+        treasuryP: 0,
+        refererP: 0
+      },
+      fundingFeeDistribute: {
+        lpP: 0,
+        userP: 0,
+        treasuryP: 0
       }
     };
   console.log("pair0: ", pair);
