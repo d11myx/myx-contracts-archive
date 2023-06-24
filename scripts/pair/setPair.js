@@ -1,6 +1,6 @@
 const { deployContract, contractAt } = require("../utils/helpers");
 const { expandDecimals } = require("../utils/utilities");
-const {mintWETH, getConfig} = require("../utils/utils");
+const {mintWETH, getConfig, setConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
@@ -46,14 +46,18 @@ async function main() {
 
   await pairInfo.addPair(pair);
   let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-  console.log(`pair0 index: ${pairIndex} pairToken: ${(await pairInfo.pairs(pairIndex)).pairToken}`);
+  let pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
+  console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken}`);
+  await setConfig("Token-BTC-USDT", pairToken);
 
   //
   pair.indexToken = eth.address;
   console.log("pair1: ", pair);
   await pairInfo.addPair(pair);
   pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-  console.log(`pair1 index: ${pairIndex} pairToken: ${(await pairInfo.pairs(pairIndex)).pairToken}`);
+  pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
+  console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken}`);
+  await setConfig("Token-ETH-USDT", pairToken);
 
 }
 

@@ -148,7 +148,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // usdt value of reserve
         {
-            uint256 price = indexTokenPrice[_pairIndex];
+            uint256 price = _getPrice(_pairIndex);
             require(price > 0, "invalid price");
 
             uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
@@ -190,7 +190,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 }
             }
             // mint lp
-            mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex, price));
+            mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
         }
         IPairToken(pair.pairToken).mint(address(this), mintAmount);
         userPairTokens[pair.pairToken][_account] = userPairTokens[pair.pairToken][_account] + mintAmount;
@@ -233,10 +233,11 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         return (receiveIndexTokenAmount, receiveStableTokenAmount);
     }
 
-    function lpFairPrice(uint256 _pairIndex, uint256 _indexTokenPrice) public view returns(uint256) {
+    function lpFairPrice(uint256 _pairIndex) public view returns(uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
-        uint256 lpFairDelta = _getDelta(vault.indexTotalAmount, _indexTokenPrice) + vault.stableTotalAmount;
+        uint256 price = _getPrice(_pairIndex);
+        uint256 lpFairDelta = _getDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
         return lpFairDelta > 0 ? Math.mulDiv(lpFairDelta, PRICE_PRECISION, IERC20(pair.pairToken).totalSupply()) : 1 * PRICE_PRECISION;
     }
 
@@ -246,6 +247,10 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     function _getAmount(uint256 delta, uint256 price) internal view returns(uint256) {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
+    }
+
+    function _getPrice(uint256 _pairIndex) internal view returns(uint256) {
+        return indexTokenPrice[_pairIndex];
     }
 
     // calculate lp amount for add liquidity
@@ -279,7 +284,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             afterFeeIndexAmount = _indexAmount - indexFeeAmount;
             afterFeeStableAmount = _stableAmount - stableFeeAmount;
         }
-        uint256 price = indexTokenPrice[_pairIndex];
+        uint256 price = _getPrice(_pairIndex);
         require(price > 0, "invalid price");
 
         uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
@@ -319,7 +324,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             }
         }
         // mint lp
-        mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex, price));
+        mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
         return mintAmount;
     }
 
@@ -332,13 +337,13 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
         // usdt value of reserve
-        uint256 price = indexTokenPrice[_pairIndex];
+        uint256 price = _getPrice(_pairIndex);
         require(price > 0, "invalid price");
 
         uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
 
-        uint256 receiveDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex, price));
+        uint256 receiveDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex));
 
         // received delta of indexToken and stableToken
         uint256 receiveIndexTokenDelta;
