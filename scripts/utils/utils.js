@@ -2,7 +2,8 @@ const hre = require("hardhat");
 let fs = require('fs');
 const {expandDecimals} = require("./utilities");
 
-let path = __dirname + "/" + "../../address_config.json";
+let localPath = __dirname + "/" + "../config/local_config.json";
+let remotePath = __dirname + "/" + "../config/remote_config.json";
 
 function repeatString(str, num) {
   if (!num) {
@@ -25,6 +26,7 @@ async function getChainId() {
 }
 
 async function setConfig(key, val, chainId) {
+  let path = await getPath();
   key = (chainId || (await getChainId()) + "-" + key)
   let json = JSON.parse(fs.readFileSync(path))
   json[key] = val;
@@ -32,9 +34,18 @@ async function setConfig(key, val, chainId) {
 }
 
 async function getConfig(key, chainId) {
+  let path = await getPath();
   key = (chainId || (await getChainId()) + "-" + key)
   let json = JSON.parse(fs.readFileSync(path))
   return json[key];
+}
+
+async function getPath() {
+  if (hre.network.name == 'local') {
+      return localPath
+  } else if (hre.network.name == 'remote') {
+      return remotePath
+  }
 }
 
 function addDecimal(num) {
