@@ -148,8 +148,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // usdt value of reserve
         {
-            // todo
-//            uint256 price = vaultPriceFeed.getPrice(pair.indexToken, true, true, false);
             uint256 price = indexTokenPrice[_pairIndex];
             require(price > 0, "invalid price");
 
@@ -207,7 +205,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         return mintAmount;
     }
 
-    function _removeLiquidity(address _account, address _receiver, uint256 _pairIndex, uint256 _amount) private returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
+    function _removeLiquidity(address _account, address _receiver, uint256 _pairIndex, uint256 _amount) private
+    returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
         require(_amount > 0, "invalid amount");
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), "invalid pair");
@@ -216,42 +215,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
-        // usdt value of reserve todo
-//        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, false, true, false);
-        uint256 price = indexTokenPrice[_pairIndex];
-        require(price > 0, "invalid price");
-        // stack too deep
-        {
-            uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
-            uint256 stableReserveDelta = vault.stableTotalAmount;
-
-            uint256 receiveDelta = _getDelta(_amount, lpFairPrice(_pairIndex, price));
-
-            // received delta of indexToken and stableToken
-            uint256 receiveIndexTokenDelta;
-            uint256 receiveStableTokenDelta;
-            if (indexReserveDelta > stableReserveDelta) {
-                uint256 extraIndexReserveDelta = indexReserveDelta - stableReserveDelta;
-                if (extraIndexReserveDelta > receiveDelta) {
-                    receiveIndexTokenDelta = receiveIndexTokenDelta + receiveDelta;
-                } else {
-                    uint256 lastReceiveDelta = receiveDelta - extraIndexReserveDelta;
-                    receiveIndexTokenDelta = receiveIndexTokenDelta + extraIndexReserveDelta + lastReceiveDelta / 2;
-                    receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
-                }
-            } else {
-                uint256 extraStableReserveDelta = stableReserveDelta - indexReserveDelta;
-                if (extraStableReserveDelta > receiveDelta) {
-                    receiveStableTokenDelta = receiveStableTokenDelta + receiveDelta;
-                } else {
-                    uint256 lastReceiveDelta = receiveDelta - extraStableReserveDelta;
-                    receiveIndexTokenDelta = receiveIndexTokenDelta + lastReceiveDelta / 2;
-                    receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
-                }
-            }
-            receiveIndexTokenAmount = _getAmount(receiveIndexTokenDelta, price);
-            receiveStableTokenAmount = receiveStableTokenDelta;
-        }
+        (receiveIndexTokenAmount, receiveStableTokenAmount) = getReceivedAmount(_pairIndex, _amount);
 
         require(receiveIndexTokenAmount <= vault.indexTotalAmount - vault.indexReservedAmount, "insufficient indexToken amount");
         require(receiveStableTokenAmount <= vault.stableTotalAmount - vault.stableReservedAmount, "insufficient stableToken amount");
@@ -282,6 +246,125 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     function _getAmount(uint256 delta, uint256 price) internal view returns(uint256) {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
+    }
+
+    // calculate lp amount for add liquidity
+    function getMintLpAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external view returns(uint256 mintAmount) {
+        require(_indexAmount > 0 || _stableAmount > 0, "invalid amount");
+
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        require(pair.pairToken != address(0), "invalid pair");
+
+        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+
+        // init liquidity
+        if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
+            uint256 indexDesiredAmount = Math.mulDiv(_stableAmount, pair.initPairRatio, 100 * PRECISION);
+            uint256 stableDesiredAmount = Math.mulDiv(_indexAmount, 100 * PRECISION, pair.initPairRatio);
+            if (indexDesiredAmount <= _indexAmount) {
+                _indexAmount = indexDesiredAmount;
+            } else {
+                _stableAmount = stableDesiredAmount;
+            }
+        }
+
+        uint256 afterFeeIndexAmount;
+        uint256 afterFeeStableAmount;
+
+        {
+            // transfer fee
+            uint256 indexFeeAmount = Math.mulDiv(_indexAmount, pair.fee.addLpFeeP, 100 * PRECISION);
+            uint256 stableFeeAmount = Math.mulDiv(_stableAmount, pair.fee.addLpFeeP, 100 * PRECISION);
+
+            afterFeeIndexAmount = _indexAmount - indexFeeAmount;
+            afterFeeStableAmount = _stableAmount - stableFeeAmount;
+        }
+        uint256 price = indexTokenPrice[_pairIndex];
+        require(price > 0, "invalid price");
+
+        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+
+        // usdt value of deposit
+        uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
+
+        // calculate deposit usdt value without slippage
+        uint256 slipDelta;
+        if (indexReserveDelta + vault.stableTotalAmount > 0) {
+
+            // after deposit
+            uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
+            uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
+
+            // reserve: 70 30
+            // deposit: 40 20
+            // total:  110 50
+            (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
+            if (indexTotalDelta > stableTotalDelta) {
+                // 60 / 2 = 30
+                // 40 - 30 -> 20 + 30
+                uint256 needSwapIndexDelta = (indexTotalDelta - stableTotalDelta) / 2;
+                uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
+
+                slipDelta =  AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
+                uint256 slipAmount = _getAmount(slipDelta, price);
+
+                afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
+            } else if (indexTotalDelta < stableTotalDelta) {
+                uint256 needSwapStableDelta = (stableTotalDelta - indexTotalDelta) / 2;
+                uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
+
+                slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+
+                afterFeeStableAmount = afterFeeStableAmount - slipDelta;
+            }
+        }
+        // mint lp
+        mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex, price));
+        return mintAmount;
+    }
+
+    // calculate amount for remove liquidity
+    function getReceivedAmount(uint256 _pairIndex, uint256 _lpAmount) public view returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
+        require(_lpAmount > 0, "invalid amount");
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        require(pair.pairToken != address(0), "invalid pair");
+
+        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+
+        // usdt value of reserve
+        uint256 price = indexTokenPrice[_pairIndex];
+        require(price > 0, "invalid price");
+
+        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+        uint256 stableReserveDelta = vault.stableTotalAmount;
+
+        uint256 receiveDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex, price));
+
+        // received delta of indexToken and stableToken
+        uint256 receiveIndexTokenDelta;
+        uint256 receiveStableTokenDelta;
+        if (indexReserveDelta > stableReserveDelta) {
+            uint256 extraIndexReserveDelta = indexReserveDelta - stableReserveDelta;
+            if (extraIndexReserveDelta > receiveDelta) {
+                receiveIndexTokenDelta = receiveIndexTokenDelta + receiveDelta;
+            } else {
+                uint256 lastReceiveDelta = receiveDelta - extraIndexReserveDelta;
+                receiveIndexTokenDelta = receiveIndexTokenDelta + extraIndexReserveDelta + lastReceiveDelta / 2;
+                receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
+            }
+        } else {
+            uint256 extraStableReserveDelta = stableReserveDelta - indexReserveDelta;
+            if (extraStableReserveDelta > receiveDelta) {
+                receiveStableTokenDelta = receiveStableTokenDelta + receiveDelta;
+            } else {
+                uint256 lastReceiveDelta = receiveDelta - extraStableReserveDelta;
+                receiveIndexTokenDelta = receiveIndexTokenDelta + lastReceiveDelta / 2;
+                receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
+            }
+        }
+        receiveIndexTokenAmount = _getAmount(receiveIndexTokenDelta, price);
+        receiveStableTokenAmount = receiveStableTokenDelta;
+        return (receiveIndexTokenAmount, receiveStableTokenAmount);
     }
 
 }

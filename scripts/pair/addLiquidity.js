@@ -28,6 +28,7 @@ async function main() {
   await usdt.approve(pairLiquidity.address, expandDecimals(100, 18));
   let pairIndex = await pairInfo.pairIndexes(btc.address, usdt.address);
   await pairLiquidity.setIndexTokenPrice(pairIndex, expandDecimals(100, 30));
+  console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, expandDecimals(100, 18), expandDecimals(100, 18))}`)
   await pairLiquidity.addLiquidity(pairIndex, expandDecimals(100, 18), expandDecimals(100, 18));
 
   let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
@@ -38,6 +39,7 @@ async function main() {
 
   // remove liquidity
   await pairLiquidity.setIndexTokenPrice(pairIndex, expandDecimals(150, 30));
+  console.log(`calculate received amount: ${await pairLiquidity.getReceivedAmount(pairIndex, lpAmount.div(2))}`)
   await pairLiquidity.removeLiquidity(pairIndex, lpAmount.div(2));
   console.log(`balance of btc: ${await btc.balanceOf(pairVault.address)}, usdt: ${await usdt.balanceOf(pairVault.address)}`);
   lpAmount = await pairLiquidity.userPairTokens(pairToken.address, user0.address);
