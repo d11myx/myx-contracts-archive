@@ -29,6 +29,7 @@ async function main() {
   let pairIndex = await pairInfo.pairIndexes(btc.address, usdt.address);
   await pairLiquidity.setIndexTokenPrice(pairIndex, expandDecimals(100, 30));
   console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, expandDecimals(100, 18), expandDecimals(100, 18))}`)
+  console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, expandDecimals(100, 18))}`)
   await pairLiquidity.addLiquidity(pairIndex, expandDecimals(100, 18), expandDecimals(100, 18));
 
   let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);

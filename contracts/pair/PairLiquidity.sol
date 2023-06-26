@@ -328,6 +328,57 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         return mintAmount;
     }
 
+    // calculate deposit amount for add liquidity
+    function getDepositAmount(uint256 _pairIndex, uint256 _lpAmount) external view returns(uint256 depositIndexAmount, uint256 depositStableAmount) {
+        require(_lpAmount > 0, "invalid amount");
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        require(pair.pairToken != address(0), "invalid pair");
+
+        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+
+        uint256 price = _getPrice(_pairIndex);
+        require(price > 0, "invalid price");
+
+        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+        uint256 stableReserveDelta = vault.stableTotalAmount;
+
+        uint256 depositDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex));
+
+        uint256 depositIndexTokenDelta;
+        uint256 depositStableTokenDelta;
+
+        if (indexReserveDelta == stableReserveDelta) {
+            depositIndexTokenDelta = depositDelta / 2;
+            depositStableTokenDelta = depositDelta / 2;
+        } else if (indexReserveDelta > stableReserveDelta) {
+            uint256 extraIndexReserveDelta = indexReserveDelta - stableReserveDelta;
+            if (extraIndexReserveDelta >= depositDelta) {
+                depositIndexTokenDelta = depositDelta;
+            } else {
+                uint256 lastDepositDelta = depositDelta - extraIndexReserveDelta;
+                depositIndexTokenDelta = extraIndexReserveDelta + lastDepositDelta / 2;
+                depositStableTokenDelta = lastDepositDelta / 2;
+            }
+        } else {
+            uint256 extraStableReserveDelta = stableReserveDelta - indexReserveDelta;
+            if (extraStableReserveDelta >= depositDelta) {
+                depositStableTokenDelta = depositDelta;
+            } else {
+                uint256 lastDepositDelta = depositDelta - extraStableReserveDelta;
+                depositIndexTokenDelta = lastDepositDelta / 2;
+                depositStableTokenDelta = extraStableReserveDelta + depositDelta / 2;
+            }
+        }
+        depositIndexAmount = _getAmount(depositIndexTokenDelta, price);
+        depositStableAmount = depositStableTokenDelta;
+
+        // add fee
+        depositIndexAmount = Math.mulDiv(depositIndexAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
+        depositStableAmount = Math.mulDiv(depositStableAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
+
+        return (depositIndexAmount, depositStableAmount);
+    }
+
     // calculate amount for remove liquidity
     function getReceivedAmount(uint256 _pairIndex, uint256 _lpAmount) public view returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
         require(_lpAmount > 0, "invalid amount");
@@ -348,23 +399,27 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         // received delta of indexToken and stableToken
         uint256 receiveIndexTokenDelta;
         uint256 receiveStableTokenDelta;
-        if (indexReserveDelta > stableReserveDelta) {
+
+        if (indexReserveDelta == stableReserveDelta) {
+            receiveIndexTokenDelta = receiveDelta / 2;
+            receiveStableTokenDelta = receiveDelta / 2;
+        } else if (indexReserveDelta > stableReserveDelta) {
             uint256 extraIndexReserveDelta = indexReserveDelta - stableReserveDelta;
-            if (extraIndexReserveDelta > receiveDelta) {
-                receiveIndexTokenDelta = receiveIndexTokenDelta + receiveDelta;
+            if (extraIndexReserveDelta >= receiveDelta) {
+                receiveIndexTokenDelta = receiveDelta;
             } else {
                 uint256 lastReceiveDelta = receiveDelta - extraIndexReserveDelta;
-                receiveIndexTokenDelta = receiveIndexTokenDelta + extraIndexReserveDelta + lastReceiveDelta / 2;
-                receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
+                receiveIndexTokenDelta = extraIndexReserveDelta + lastReceiveDelta / 2;
+                receiveStableTokenDelta = lastReceiveDelta / 2;
             }
         } else {
             uint256 extraStableReserveDelta = stableReserveDelta - indexReserveDelta;
-            if (extraStableReserveDelta > receiveDelta) {
-                receiveStableTokenDelta = receiveStableTokenDelta + receiveDelta;
+            if (extraStableReserveDelta >= receiveDelta) {
+                receiveStableTokenDelta = receiveDelta;
             } else {
                 uint256 lastReceiveDelta = receiveDelta - extraStableReserveDelta;
-                receiveIndexTokenDelta = receiveIndexTokenDelta + lastReceiveDelta / 2;
-                receiveStableTokenDelta = receiveStableTokenDelta + lastReceiveDelta / 2;
+                receiveIndexTokenDelta = lastReceiveDelta / 2;
+                receiveStableTokenDelta = extraStableReserveDelta + lastReceiveDelta / 2;
             }
         }
         receiveIndexTokenAmount = _getAmount(receiveIndexTokenDelta, price);
