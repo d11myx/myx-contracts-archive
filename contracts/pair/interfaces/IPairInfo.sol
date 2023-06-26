@@ -10,6 +10,10 @@ interface IPairInfo {
         bool enable;
         uint256 kOfSwap;
         uint256 initPairRatio; // index / stable PRECISION 1% for 1e10
+        uint minLeverage;
+        uint maxLeverage;
+        uint256 minSize;
+        uint256 maxSize;
         Fee fee;
         TradingFeeDistribute tradingFeeDistribute;
         FundingFeeDistribute fundingFeeDistribute;
