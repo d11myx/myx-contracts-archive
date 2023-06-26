@@ -67,6 +67,10 @@ contract PairInfo is IPairInfo, Handleable {
         require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
 
         pair.enable = _pair.enable;
+        pair.minLeverage = _pair.minLeverage;
+        pair.maxLeverage = _pair.maxLeverage;
+        pair.minSize = _pair.minSize;
+        pair.maxSize = _pair.maxSize;
         pair.kOfSwap = _pair.kOfSwap;
         pair.initPairRatio = _pair.initPairRatio;
     }

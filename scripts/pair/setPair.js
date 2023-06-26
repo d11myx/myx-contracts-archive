@@ -24,6 +24,8 @@ async function main() {
       pairToken: "0x0000000000000000000000000000000000000000",
       kOfSwap: "100000000000000000000000000000000000000000000000000",
       enable: true,
+      minLeverage: 2,
+      maxLeverage: 100,
       initPairRatio: 50*1e10,
       fee: {
         takerFeeP: 0,
