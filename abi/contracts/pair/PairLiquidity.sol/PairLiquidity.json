@@ -270,6 +270,11 @@
         "internalType": "uint256",
         "name": "mintAmount",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "slipAmount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

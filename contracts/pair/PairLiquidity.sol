@@ -254,7 +254,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     // calculate lp amount for add liquidity
-    function getMintLpAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external view returns(uint256 mintAmount) {
+    function getMintLpAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external view returns(uint256 mintAmount, uint256 slipAmount) {
         require(_indexAmount > 0 || _stableAmount > 0, "invalid amount");
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
@@ -311,7 +311,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
 
                 slipDelta =  AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
-                uint256 slipAmount = _getAmount(slipDelta, price);
+                slipAmount = _getAmount(slipDelta, price);
 
                 afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
             } else if (indexTotalDelta < stableTotalDelta) {
@@ -319,13 +319,14 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
 
                 slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+                slipAmount = slipDelta;
 
-                afterFeeStableAmount = afterFeeStableAmount - slipDelta;
+                afterFeeStableAmount = afterFeeStableAmount - slipAmount;
             }
         }
         // mint lp
         mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
-        return mintAmount;
+        return (mintAmount, slipAmount);
     }
 
     // calculate deposit amount for add liquidity
