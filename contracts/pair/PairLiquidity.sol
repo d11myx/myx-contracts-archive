@@ -13,6 +13,7 @@ import "../libraries/AMMUtils.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 import "../token/WETH.sol";
+import "hardhat/console.sol";
 
 contract PairLiquidity is IPairLiquidity, Handleable {
 
@@ -117,15 +118,19 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
+            // 50
             uint256 indexDesiredAmount = Math.mulDiv(_stableAmount, pair.initPairRatio, 100 * PRECISION);
+            // 200
             uint256 stableDesiredAmount = Math.mulDiv(_indexAmount, 100 * PRECISION, pair.initPairRatio);
+            console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
+            // 50 <= 100
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
             } else {
                 _stableAmount = stableDesiredAmount;
             }
         }
-
+        console.log("_indexAmount", _indexAmount, "_stableAmount", _stableAmount);
         // transfer token
         IERC20(pair.indexToken).transferFrom(_funder, address(this), _indexAmount);
         IERC20(pair.stableToken).transferFrom(_funder, address(this), _stableAmount);
@@ -191,6 +196,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             }
             // mint lp
             mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
+            console.log("indexDepositDelta", indexDepositDelta, "afterFeeStableAmount", afterFeeStableAmount);
         }
         IPairToken(pair.pairToken).mint(address(this), mintAmount);
         userPairTokens[pair.pairToken][_account] = userPairTokens[pair.pairToken][_account] + mintAmount;
@@ -199,6 +205,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         IERC20(pair.indexToken).transfer(address(pairVault), afterFeeIndexAmount);
         IERC20(pair.stableToken).transfer(address(pairVault), afterFeeStableAmount);
+        console.log("afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
 
         emit AddLiquidity(_account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
 
@@ -254,7 +261,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     // calculate lp amount for add liquidity
-    function getMintLpAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external view returns(uint256 mintAmount, uint256 slipAmount) {
+    function getMintLpAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external view returns(uint256 mintAmount, address slipToken, uint256 slipAmount) {
         require(_indexAmount > 0 || _stableAmount > 0, "invalid amount");
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
@@ -271,7 +278,9 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             } else {
                 _stableAmount = stableDesiredAmount;
             }
+            console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
         }
+        console.log("_indexAmount", _indexAmount, "_stableAmount", _stableAmount);
 
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
@@ -284,49 +293,56 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             afterFeeIndexAmount = _indexAmount - indexFeeAmount;
             afterFeeStableAmount = _stableAmount - stableFeeAmount;
         }
+
         uint256 price = _getPrice(_pairIndex);
         require(price > 0, "invalid price");
 
-        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+        // calculate deposit usdt value without slippage
+        uint256 slipDelta;
 
         // usdt value of deposit
         uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
+        {
+            uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
 
-        // calculate deposit usdt value without slippage
-        uint256 slipDelta;
-        if (indexReserveDelta + vault.stableTotalAmount > 0) {
+            if (indexReserveDelta + vault.stableTotalAmount > 0) {
 
-            // after deposit
-            uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
-            uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
+                // after deposit
+                uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
+                uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
 
-            // reserve: 70 30
-            // deposit: 40 20
-            // total:  110 50
-            (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
-            if (indexTotalDelta > stableTotalDelta) {
-                // 60 / 2 = 30
-                // 40 - 30 -> 20 + 30
-                uint256 needSwapIndexDelta = (indexTotalDelta - stableTotalDelta) / 2;
-                uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
+                // reserve: 70 30
+                // deposit: 40 20
+                // total:  110 50
+                (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
+                if (indexTotalDelta > stableTotalDelta) {
+                    // 60 / 2 = 30
+                    // 40 - 30 -> 20 + 30
+                    uint256 needSwapIndexDelta = (indexTotalDelta - stableTotalDelta) / 2;
+                    uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
 
-                slipDelta =  AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
-                slipAmount = _getAmount(slipDelta, price);
+                    slipDelta =  AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
+                    slipAmount = _getAmount(slipDelta, price);
+                    slipToken = pair.indexToken;
 
-                afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-            } else if (indexTotalDelta < stableTotalDelta) {
-                uint256 needSwapStableDelta = (stableTotalDelta - indexTotalDelta) / 2;
-                uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
+                    afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
+                } else if (indexTotalDelta < stableTotalDelta) {
+                    uint256 needSwapStableDelta = (stableTotalDelta - indexTotalDelta) / 2;
+                    uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
 
-                slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
-                slipAmount = slipDelta;
+                    slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+                    slipAmount = slipDelta;
+                    slipToken = pair.stableToken;
 
-                afterFeeStableAmount = afterFeeStableAmount - slipAmount;
+                    afterFeeStableAmount = afterFeeStableAmount - slipAmount;
+                }
             }
         }
+        console.log("afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
         // mint lp
         mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
-        return (mintAmount, slipAmount);
+        console.log("indexDepositDelta", indexDepositDelta, "afterFeeStableAmount", afterFeeStableAmount);
+        return (mintAmount, slipToken, slipAmount);
     }
 
     // calculate deposit amount for add liquidity
@@ -372,10 +388,12 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         }
         depositIndexAmount = _getAmount(depositIndexTokenDelta, price);
         depositStableAmount = depositStableTokenDelta;
+        console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
 
         // add fee
         depositIndexAmount = Math.mulDiv(depositIndexAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
         depositStableAmount = Math.mulDiv(depositStableAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
+        console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
 
         return (depositIndexAmount, depositStableAmount);
     }

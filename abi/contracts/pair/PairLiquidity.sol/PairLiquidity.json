@@ -272,6 +272,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "slipToken",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "slipAmount",
         "type": "uint256"

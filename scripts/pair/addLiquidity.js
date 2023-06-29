@@ -28,18 +28,25 @@ async function main() {
   await usdt.approve(pairLiquidity.address, expandDecimals(100, 18));
   let pairIndex = await pairInfo.pairIndexes(btc.address, usdt.address);
   await pairLiquidity.setIndexTokenPrice(pairIndex, expandDecimals(100, 30));
+  console.log("lpFairPrice", await pairLiquidity.lpFairPrice(pairIndex));
   console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, expandDecimals(100, 18), expandDecimals(100, 18))}`)
   console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, expandDecimals(100, 18))}`)
   await pairLiquidity.addLiquidity(pairIndex, expandDecimals(100, 18), expandDecimals(100, 18));
+  console.log(`deposit btc: ${await btc.balanceOf(pairVault.address)}, usdt: ${await usdt.balanceOf(pairVault.address)}`);
+  console.log();
 
   let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
   let lpAmount = await pairLiquidity.userPairTokens(pairToken.address, user0.address);
   console.log(`lp supply: ${await pairToken.balanceOf(pairLiquidity.address)}, lp amount of user: ${lpAmount}`);
   console.log(`deposit fee btc: ${await btc.balanceOf(user1.address)}, usdt: ${await usdt.balanceOf(user1.address)}`);
   console.log(`slip fee btc: ${await btc.balanceOf(user2.address)}, usdt: ${await usdt.balanceOf(user2.address)}`);
+  console.log();
 
   // remove liquidity
   await pairLiquidity.setIndexTokenPrice(pairIndex, expandDecimals(150, 30));
+  console.log(`lpFairPrice, ${await pairLiquidity.lpFairPrice(pairIndex)}`);
+  console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, expandDecimals(1, 18), 0)}`)
+  console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, expandDecimals(100, 18))}`)
   console.log(`calculate received amount: ${await pairLiquidity.getReceivedAmount(pairIndex, lpAmount.div(2))}`)
   await pairLiquidity.removeLiquidity(pairIndex, lpAmount.div(2));
   console.log(`balance of btc: ${await btc.balanceOf(pairVault.address)}, usdt: ${await usdt.balanceOf(pairVault.address)}`);
