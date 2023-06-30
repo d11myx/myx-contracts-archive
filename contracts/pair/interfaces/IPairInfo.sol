@@ -9,7 +9,7 @@ interface IPairInfo {
         address pairToken;
         bool enable;
         uint256 kOfSwap;
-        uint256 initPairRatio; // index / stable PRECISION 1% for 1e10
+        uint256 initPairRatio; // index / stable 100 for 1%
         uint minLeverage;
         uint maxLeverage;
         uint256 minSize;

@@ -10,6 +10,7 @@ import "./interfaces/IPairLiquidity.sol";
 import "./interfaces/IPairVault.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/AMMUtils.sol";
+import "../libraries/PrecisionUtils.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 import "../token/WETH.sol";
@@ -17,7 +18,8 @@ import "hardhat/console.sol";
 
 contract PairLiquidity is IPairLiquidity, Handleable {
 
-    uint256 public constant PRECISION = 1e10;
+    using PrecisionUtils for uint256;
+
     uint256 public constant PRICE_PRECISION = 1e30;
 
     IPairInfo public pairInfo;
@@ -124,6 +126,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             uint256 stableDesiredAmount = Math.mulDiv(_indexAmount, 100 * PRECISION, pair.initPairRatio);
             console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
             // 50 <= 100
+            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
+            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
             } else {
@@ -135,14 +139,13 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         IERC20(pair.indexToken).transferFrom(_funder, address(this), _indexAmount);
         IERC20(pair.stableToken).transferFrom(_funder, address(this), _stableAmount);
 
-
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
         {
             // transfer fee
-            uint256 indexFeeAmount = Math.mulDiv(_indexAmount, pair.fee.addLpFeeP, 100 * PRECISION);
-            uint256 stableFeeAmount = Math.mulDiv(_stableAmount, pair.fee.addLpFeeP, 100 * PRECISION);
+            uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.fee.addLpFeeP);
+            uint256 stableFeeAmount = _stableAmount.divPercentage(pair.fee.addLpFeeP);
 
             IERC20(pair.indexToken).transfer(feeReceiver, indexFeeAmount);
             IERC20(pair.stableToken).transfer(feeReceiver, stableFeeAmount);
@@ -271,8 +274,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = Math.mulDiv(_stableAmount, pair.initPairRatio, 100 * PRECISION);
-            uint256 stableDesiredAmount = Math.mulDiv(_indexAmount, 100 * PRECISION, pair.initPairRatio);
+            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
+            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
             } else {
@@ -287,8 +290,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         {
             // transfer fee
-            uint256 indexFeeAmount = Math.mulDiv(_indexAmount, pair.fee.addLpFeeP, 100 * PRECISION);
-            uint256 stableFeeAmount = Math.mulDiv(_stableAmount, pair.fee.addLpFeeP, 100 * PRECISION);
+            uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.fee.addLpFeeP);
+            uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.fee.addLpFeeP);
 
             afterFeeIndexAmount = _indexAmount - indexFeeAmount;
             afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -391,9 +394,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
 
         // add fee
-        depositIndexAmount = Math.mulDiv(depositIndexAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
-        depositStableAmount = Math.mulDiv(depositStableAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
-        console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
+        depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.PRECISION - pair.fee.addLpFeeP);
+        depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.PRECISION - pair.fee.addLpFeeP);
 
         return (depositIndexAmount, depositStableAmount);
     }

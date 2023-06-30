@@ -7,12 +7,12 @@ import "../pair/interfaces/IPairInfo.sol";
 import "../openzeeplin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/ITradingVault.sol";
 import "../pair/interfaces/IPairVault.sol";
-import "../libraries/PriceUtils.sol";
+import "../libraries/PrecisionUtils.sol";
 
 contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
     using SafeERC20 for IERC20;
-    using PriceUtils for uint256;
+    using PrecisionUtils for uint256;
 
     enum TradeType {MARKET, LIMIT}
 
@@ -86,16 +86,16 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
 
     function createIncreasePosition(
-        TradeType tradeType,
+        TradeType tradeType,           // 0: MARKET, 1: LIMIT
         uint256 pairIndex,             // 币对index
         uint256 collateral,            // 1e18 保证金数量
         uint256 openPrice,             // 1e30 市价可接受价格/限价开仓价格
-        bool isLong,                     // 多/空
-        uint leverage,              // 杠杆
-        uint256 tpPrice,                    // PRECISION 止盈
-        uint256 tp,
-        uint256 slPrice,                    // 止损
-        uint256 sl
+        bool isLong,                   // 多/空
+        uint leverage,                 // 杠杆
+        uint256 tpPrice,               // 止盈价 1e30
+        uint256 tp,                    // 止盈数量
+        uint256 slPrice,               // 止损价 1e30
+        uint256 sl                     // 止损数量
     ) external nonReentrant returns(uint256 requestIndex) {
         address account = msg.sender;
 
@@ -201,26 +201,36 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
         // check reserve
         uint256 positionAmount = request.positionDelta.getAmount(price);
 
+        // trading fee
+        IPairInfo.Fee fee = pair.fee;
+        uint256 tradingFee;
+
         if (netExposureAmountChecker >= 0) {
             // 偏向多头
             if (request.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-
                 require(positionAmount <= availableIndex, "lp index token not enough");
+                // fee
+                tradingFee = request.positionDelta.mulPercentage(fee.takerFeeP);
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
                 require(positionAmount <= netExposureAmountChecker + availableStable.getAmount(price), "lp stable token not enough");
+                tradingFee = request.positionDelta.mulPercentage(fee.makerFeeP);
             }
         } else {
             // 偏向空头
             if (request.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
                 require(positionAmount <= - netExposureAmountChecker + availableIndex, "lp index token not enough");
+                tradingFee = request.positionDelta.mulPercentage(fee.makerFeeP);
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
                 require(positionAmount <= availableStable.getAmount(price), "lp stable token not enough");
+                tradingFee = request.positionDelta.mulPercentage(fee.takerFeeP);
             }
         }
+
+        uint256 afterFeePositionDelta = request.positionDelta - tradingFee;
 
         
     }
