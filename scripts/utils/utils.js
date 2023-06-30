@@ -41,9 +41,9 @@ async function getConfig(key, chainId) {
 }
 
 async function getPath() {
-  if (hre.network.name == 'local') {
+  if (hre.network.name === 'local') {
       return localPath
-  } else if (hre.network.name == 'remote') {
+  } else if (hre.network.name === 'remote') {
       return remotePath
   }
 }
