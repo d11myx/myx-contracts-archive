@@ -14,7 +14,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
 
-    enum TradeType {MARKET, LIMIT}
+    enum TradeType {MARKET, LIMIT, TP, SL}
 
     struct IncreasePositionRequest {
         address account;
@@ -31,7 +31,13 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
     }
 
     struct DecreasePositionRequest {
-
+        address account;
+        TradeType tradeType;
+        uint256 pairIndex;
+        uint256 collateral;
+        uint256 openPrice;
+        bool isLong;
+        uint256 positionDelta;
     }
 
     IPairInfo pairInfo;
@@ -49,6 +55,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
     mapping(uint256 => DecreasePositionRequest) public decreaseLimitRequests;
     uint256 public increaseLimitRequestsIndex;
     uint256 public decreaseLimitRequestsIndex;
+
+    address public tradingFeeReceiver;
 
     mapping(uint256 => uint256) public indexTokenPrice; // todo for test
 
@@ -231,8 +239,38 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
         }
 
         uint256 afterFeePositionDelta = request.positionDelta - tradingFee;
+        IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
 
-        
+        // 止盈
+        if (request.tp > 0) {
+            DecreasePositionRequest memory tpRequest = DecreasePositionRequest(
+                account,
+                TradeType.TP,
+                pairIndex,
+                collateral,
+                request.tpPrice,
+                isLong,
+                request.tp
+            );
+            decreaseLimitRequests[decreaseLimitRequestsIndex] = tpRequest;
+            decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
+        }
+        if (request.sl > 0) {
+            DecreasePositionRequest memory slRequest = DecreasePositionRequest(
+                account,
+                TradeType.SL,
+                pairIndex,
+                collateral,
+                request.slPrice,
+                isLong,
+                pair.sl
+            );
+            decreaseLimitRequests[decreaseLimitRequestsIndex] = request;
+            decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
+        }
+
+
+
     }
 
     function updateTpSl() {

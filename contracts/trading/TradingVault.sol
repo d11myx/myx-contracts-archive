@@ -2,8 +2,9 @@
 pragma solidity 0.8.17;
 
 import "./interfaces/ITradingVault.sol";
+import "../openzeeplin/contracts/security/ReentrancyGuard.sol";
 
-contract TradingVault is ITradingVault {
+contract TradingVault is ReentrancyGuard, ITradingVault {
 
     struct Position {
         address account;
@@ -20,5 +21,14 @@ contract TradingVault is ITradingVault {
     mapping(uint256 => int256) public override netExposureAmountChecker;
 
 
+    function increasePosition(
+        address _account,
+        uint256 _pairIndex,
+        uint256 _sizeDelta,
+        bool _isLong
+    ) external nonReentrant {
+
+
+    }
 
 }
