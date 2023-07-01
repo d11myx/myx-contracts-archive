@@ -8,6 +8,7 @@ import "../openzeeplin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/ITradingVault.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../libraries/PrecisionUtils.sol";
+import "../price/interfaces/IVaultPriceFeed.sol";
 
 contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
@@ -40,9 +41,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
         uint256 positionDelta;
     }
 
-    IPairInfo pairInfo;
-    IPairVault pairVault;
-    ITradingVault tradingVault;
+    IPairInfo public pairInfo;
+    IPairVault public pairVault;
+    ITradingVault public tradingVault;
+    IVaultPriceFeed public vaultPriceFeed;
 
     mapping(uint256 => IncreasePositionRequest) public increaseMarketRequests;
     mapping(uint256 => DecreasePositionRequest) public decreaseMarketRequests;
@@ -56,13 +58,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
     uint256 public increaseLimitRequestsIndex;
     uint256 public decreaseLimitRequestsIndex;
 
-    address public tradingFeeReceiver;
-
-    mapping(uint256 => uint256) public indexTokenPrice; // todo for test
-
-
     event IncreaseMarket(
         address account,
+        uint256 requestIndex,
         uint256 pairIndex,
         uint256 collateral,
         bool long,
@@ -79,6 +77,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
     event IncreaseLimit(
         address account,
+        uint256 requestIndex,
         uint256 pairIndex,
         uint256 collateral,
         uint256 openPrice,
@@ -139,6 +138,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
             emit IncreaseMarket(
                 account,
+                requestIndex,
                 pairIndex,
                 collateral,
                 isLong,
@@ -170,6 +170,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
             emit IncreaseLimitRequest(
                 account,
+                requestIndex,
                 pairIndex,
                 collateral,
                 openPrice,
@@ -196,8 +197,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
         IPairVault.Vault lpVault = pairVault.getVault(pairIndex);
 
-        int256 netExposureAmountChecker = tradingVault.netExposureAmountChecker(pairIndex);
-        uint256 price = _getPrice(pairIndex);
+        uint256 price = getPrice(pairIndex);
 
         // check price
         if (request.tradeType == TradeType.MARKET) {
@@ -206,40 +206,29 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
             require(request.isLong ? price >= request.openPrice : price <= request.openPrice, "not reach trigger price");
         }
 
-        // check reserve
-        uint256 positionAmount = request.positionDelta.getAmount(price);
-
         // trading fee
         IPairInfo.Fee fee = pair.fee;
         uint256 tradingFee;
-
-        if (netExposureAmountChecker >= 0) {
+        if (tradingVault.netExposureAmountChecker() >= 0) {
             // 偏向多头
             if (request.isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                require(positionAmount <= availableIndex, "lp index token not enough");
                 // fee
                 tradingFee = request.positionDelta.mulPercentage(fee.takerFeeP);
             } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                require(positionAmount <= netExposureAmountChecker + availableStable.getAmount(price), "lp stable token not enough");
                 tradingFee = request.positionDelta.mulPercentage(fee.makerFeeP);
             }
         } else {
             // 偏向空头
             if (request.isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                require(positionAmount <= - netExposureAmountChecker + availableIndex, "lp index token not enough");
                 tradingFee = request.positionDelta.mulPercentage(fee.makerFeeP);
             } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                require(positionAmount <= availableStable.getAmount(price), "lp stable token not enough");
                 tradingFee = request.positionDelta.mulPercentage(fee.takerFeeP);
             }
         }
+        require(position.collateral >= fee, "collateral not enough");
 
-        uint256 afterFeePositionDelta = request.positionDelta - tradingFee;
         IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
+
 
         // 止盈
         if (request.tp > 0) {
@@ -302,14 +291,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
     }
 
-    // todo for test
-    function setIndexTokenPrice(uint256 _pairToken, uint256 _price) external {
-        indexTokenPrice[_pairToken] = _price;
+    function getPrice(address _token, bool _isLong) public view returns (uint256) {
+        return vaultPriceFeed.getPrice(_token, _isLong ? true : false, false, false);
     }
-
-    // todo
-    function _getPrice(uint256 _pairIndex) internal view returns(uint256) {
-        return indexTokenPrice[_pairIndex];
-    }
-
 }

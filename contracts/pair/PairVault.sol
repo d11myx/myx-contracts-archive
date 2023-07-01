@@ -11,8 +11,11 @@ import "../libraries/AMMUtils.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 import "../token/WETH.sol";
+import "./interfaces/IPairInfo.sol";
 
 contract PairVault is IPairVault, Handleable {
+
+    IPairInfo public pairInfo;
 
     mapping(uint256 => Vault) public vaults;
 
@@ -50,6 +53,21 @@ contract PairVault is IPairVault, Handleable {
 
     function getVault(uint256 _pairIndex) external view returns(Vault memory vault) {
         return vaults[_pairIndex];
+    }
+
+    function updateAveragePrice(uint256 _averagePrice) external onlyHandler {
+        vaults[_pairIndex].averagePrice = _averagePrice;
+    }
+
+    function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyHandler {
+        vaults[_pairIndex].indexTotalAmount = vaults[_pairIndex].indexTotalAmount + _profit;
+        vaults[_pairIndex].realisedPnl = vaults[_pairIndex].realisedPnl + _profit;
+    }
+
+    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyHandler {
+        IERC20(pairInfo.getPair(_pairIndex).stableToken).transfer(msg.sender, _profit);
+        vaults[_pairIndex].indexTotalAmount = vaults[_pairIndex].indexTotalAmount - _profit;
+        vaults[_pairIndex].realisedPnl = vaults[_pairIndex].realisedPnl - _profit;
     }
 
 }
