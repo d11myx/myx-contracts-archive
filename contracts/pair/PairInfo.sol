@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import "../libraries/access/Handleable.sol";
-import '../trading/interfaces/StorageInterfaceV5.sol';
 import "../token/interfaces/IPairToken.sol";
 import "../token/PairToken.sol";
 import './interfaces/IPairInfo.sol';
