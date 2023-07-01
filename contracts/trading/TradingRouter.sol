@@ -16,6 +16,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
     using PrecisionUtils for uint256;
 
     enum TradeType {MARKET, LIMIT, TP, SL}
+    using PriceUtils for uint256;
 
     struct IncreasePositionRequest {
         address account;
@@ -257,9 +258,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
             decreaseLimitRequests[decreaseLimitRequestsIndex] = request;
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
         }
-
-
-
     }
 
     function updateTpSl() {
