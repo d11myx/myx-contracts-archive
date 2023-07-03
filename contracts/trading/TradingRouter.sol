@@ -18,9 +18,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
+    using PriceUtils for uint256;
 
     enum TradeType {MARKET, LIMIT, TP, SL}
-    using PriceUtils for uint256;
 
     struct IncreasePositionRequest {
         address account;
@@ -61,7 +61,13 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     );
 
     event DecreaseMarket(
-
+        address account,
+        TradeType tradeType,
+        uint256 pairIndex,
+        uint256 openPrice,
+        uint256 sizeDelta,
+        bool isLong,
+        bool abovePrice
     );
 
     // 限价开单
@@ -81,6 +87,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     event DecreaseLimit(
         address account,
+        uint256 requestIndex,
         TradeType tradeType,
         uint256 pairIndex,
         uint256 openPrice,
@@ -89,6 +96,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         bool abovePrice
     );
 
+    event ExecuteOrder(uint256 requestId, TradeType tradeType);
+    event CancelOrder(uint256 requestId, TradeType tradeType);
+
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
@@ -96,15 +106,17 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     address public tradingFeeReceiver;
 
+    // 市价请求
     mapping(uint256 => IncreasePositionRequest) public increaseMarketRequests;
     mapping(uint256 => DecreasePositionRequest) public decreaseMarketRequests;
-    // 当前市价开仓请求最新index
+    // 当前市价开仓请求最后index
     uint256 public increaseMarketRequestsIndex;
     uint256 public decreaseMarketRequestsIndex;
-    // 当前市价开仓请求最新index
+    // 当前市价开仓请求未执行订单起始index
     uint256 public increaseMarketRequestStartIndex;
     uint256 public decreaseMarketRequestStartIndex;
 
+    // 限价请求
     mapping(uint256 => IncreasePositionRequest) public increaseLimitRequests;
     mapping(uint256 => DecreasePositionRequest) public decreaseLimitRequests;
     uint256 public increaseLimitRequestsIndex;
@@ -133,7 +145,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         tradingFeeReceiver = _tradingFeeReceiver;
     }
 
-    function createIncreasePosition(IncreasePositionRequest memory request) external nonReentrant returns(uint256 requestIndex) {
+    function createIncreaseOrder(IncreasePositionRequest memory request) external nonReentrant returns(uint256 requestIndex) {
         address account = msg.sender;
         request.account = account;
 
@@ -221,7 +233,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
     }
 
-    function executeIncreaseMarkets(uint256 _endIndex) external onlyPositionKeeper {
+    function executeIncreaseMarketOrders(uint256 _endIndex) external onlyPositionKeeper {
         uint256 index = increaseMarketRequestStartIndex;
         uint256 length = increaseMarketRequestsIndex;
         if (index >= length) {
@@ -243,8 +255,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         increaseMarketRequestsIndex = index;
     }
 
-    function executeIncreaseOrder(uint256 _requestIndex, TradeType tradeType) public nonReentrant onlyPositionKeeper {
-        IncreasePositionRequest memory request = _getIncreaseRequest(_requestIndex, tradeType);
+    function executeIncreaseOrder(uint256 _requestIndex, TradeType _tradeType) public nonReentrant onlyPositionKeeper {
+        IncreasePositionRequest memory request = _getIncreaseRequest(_requestIndex, _tradeType);
 
         // 请求已执行或已取消
         if (request.account == address(0)) {
@@ -314,6 +326,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
             emit DecreaseLimit(
                 request.account,
+                _requestIndex,
                 TradeType.TP,
                 pairIndex,
                 request.tpPrice,
@@ -336,6 +349,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
             emit DecreaseLimit(
                 request.account,
+                _requestIndex,
                 TradeType.SL,
                 pairIndex,
                 request.slPrice,
@@ -344,11 +358,13 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 request.isLong ? false : true
             );
         }
-        if (tradeType == TradeType.MARKET) {
+        if (_tradeType == TradeType.MARKET) {
             delete increaseMarketRequests[_requestIndex];
-        } else if (tradeType == TradeType.LIMIT) {
+        } else if (_tradeType == TradeType.LIMIT) {
             delete increaseLimitRequests[_requestIndex];
         }
+
+        emit ExecuteOrder(_requestIndex, _tradeType);
     }
 
     function cancelIncreaseOrder(uint256 _requestIndex, TradeType _tradeType) public nonReentrant {
@@ -368,6 +384,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         } else if (_tradeType == TradeType.LIMIT) {
             delete increaseMarketRequests[_requestIndex];
         }
+
+        emit CancelOrder(_requestIndex, _tradeType);
     }
 
     function _getIncreaseRequest(uint256 _requestIndex, TradeType tradeType) internal returns(IncreasePositionRequest memory request) {

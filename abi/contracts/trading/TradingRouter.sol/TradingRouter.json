@@ -4,9 +4,34 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TradingRouter.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      }
+    ],
+    "name": "CancelOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "account",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "requestIndex",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -50,8 +75,70 @@
   },
   {
     "anonymous": false,
-    "inputs": [],
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TradingRouter.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "openPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "sizeDelta",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "abovePrice",
+        "type": "bool"
+      }
+    ],
     "name": "DecreaseMarket",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TradingRouter.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      }
+    ],
+    "name": "ExecuteOrder",
     "type": "event"
   },
   {
@@ -290,7 +377,7 @@
         "type": "tuple"
       }
     ],
-    "name": "createIncreasePosition",
+    "name": "createIncreaseOrder",
     "outputs": [
       {
         "internalType": "uint256",
@@ -446,7 +533,7 @@
         "type": "uint256"
       }
     ],
-    "name": "executeIncreaseMarkets",
+    "name": "executeIncreaseMarketOrders",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -460,7 +547,7 @@
       },
       {
         "internalType": "enum TradingRouter.TradeType",
-        "name": "tradeType",
+        "name": "_tradeType",
         "type": "uint8"
       }
     ],

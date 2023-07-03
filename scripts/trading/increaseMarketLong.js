@@ -36,7 +36,7 @@ async function main() {
     slPrice: expandDecimals(50, 30),
     sl: expandDecimals(200, 18)
   };
-  await tradingRouter.createIncreasePosition(request)
+  await tradingRouter.createIncreaseOrder(request)
 
   console.log(`request: ${await tradingRouter.increaseMarketRequests(0)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
@@ -49,7 +49,7 @@ async function main() {
 
   let startIndex = await tradingRouter.increaseMarketRequestsIndex();
   console.log("startIndex:", startIndex);
-  await tradingRouter.connect(user1).executeIncreaseMarkets(startIndex.add(5));
+  await tradingRouter.connect(user1).executeIncreaseMarketOrders(startIndex.add(5));
 
   console.log(`request: ${await tradingRouter.increaseMarketRequests(0)}`);
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
