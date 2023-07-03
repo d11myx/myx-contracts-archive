@@ -55,8 +55,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     mapping(uint256 => IncreasePositionRequest) public increaseMarketRequests;
     mapping(uint256 => DecreasePositionRequest) public decreaseMarketRequests;
+    // 当前市价开仓请求最新index
     uint256 public increaseMarketRequestsIndex;
     uint256 public decreaseMarketRequestsIndex;
+    // 当前市价开仓请求最新index
     uint256 public increaseMarketRequestStartIndex;
     uint256 public decreaseMarketRequestStartIndex;
 
@@ -220,10 +222,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         while (index < _endIndex) {
-            try this.executeIncreaseMarket(index) {
+            try this.executeIncreaseOrder(index, TradeType.MARKET) {
 
             } catch {
-                this.cancelIncrease(index, TradeType.MARKET);
+                this.cancelIncreaseOrder(index, TradeType.MARKET);
             }
             delete increaseMarketRequests[index];
             index++;
@@ -231,10 +233,14 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         increaseMarketRequestsIndex = index;
     }
 
-    function executeIncreaseMarket(uint256 _requestIndex) public nonReentrant onlyPositionKeeper {
-        IncreasePositionRequest memory request = increaseMarketRequests[_requestIndex];
+    function executeIncreaseOrder(uint256 _requestIndex, TradeType tradeType) public nonReentrant onlyPositionKeeper {
+        IncreasePositionRequest memory request = _getIncreaseRequest(_requestIndex, tradeType);
 
-        require(request.account != address(0), "request not exists");
+        // 请求已执行或已取消
+        if (request.account == address(0)) {
+            console.log("executeIncreaseOrder not exists", _requestIndex);
+            return;
+        }
 
         uint256 pairIndex = request.pairIndex;
 
@@ -310,10 +316,14 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             decreaseLimitRequests[decreaseLimitRequestsIndex] = slRequest;
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
         }
-        delete increaseMarketRequests[_requestIndex];
+        if (tradeType == TradeType.MARKET) {
+            delete increaseMarketRequests[_requestIndex];
+        } else if (tradeType == TradeType.LIMIT) {
+            delete increaseLimitRequests[_requestIndex];
+        }
     }
 
-    function cancelIncrease(uint256 _requestIndex, TradeType _tradeType) public nonReentrant {
+    function cancelIncreaseOrder(uint256 _requestIndex, TradeType _tradeType) public nonReentrant {
         IncreasePositionRequest memory request = _getIncreaseRequest(_requestIndex, _tradeType);
 
         if (request.account == address(0)) {

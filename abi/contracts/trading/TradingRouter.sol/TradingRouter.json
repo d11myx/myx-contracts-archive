@@ -177,7 +177,7 @@
         "type": "uint8"
       }
     ],
-    "name": "cancelIncrease",
+    "name": "cancelIncreaseOrder",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -399,11 +399,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_requestIndex",
+        "name": "_endIndex",
         "type": "uint256"
       }
     ],
-    "name": "executeIncreaseMarket",
+    "name": "executeIncreaseMarkets",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -412,11 +412,16 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_endIndex",
+        "name": "_requestIndex",
         "type": "uint256"
+      },
+      {
+        "internalType": "enum TradingRouter.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
       }
     ],
-    "name": "executeIncreaseMarkets",
+    "name": "executeIncreaseOrder",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

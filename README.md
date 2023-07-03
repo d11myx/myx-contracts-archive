@@ -42,7 +42,18 @@ struct IncreasePositionRequest {
 // 取消订单（前端用户）
 cancelIncrease(uint256 _requestIndex, TradeType _tradeType)
    
-// 批量执行开仓（keeper: Account 0 / Account 1）
+// 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
 executeIncreaseMarkets(uint256 _endIndex)
 
+// 执行限价砍仓(keeper)
+executeIncreaseOrder(uint256 _requestIndex, TradeType tradeType)
+
+// 当前市价开仓请求最新index
+uint256 public increaseMarketRequestsIndex;
+// 当前市价关仓请求最新index
+uint256 public decreaseMarketRequestsIndex;
+// 当前市价开仓请求未执行起始index
+uint256 public increaseMarketRequestStartIndex;
+// 当前市价关仓请求未执行起始index
+uint256 public decreaseMarketRequestStartIndex;
 ```
