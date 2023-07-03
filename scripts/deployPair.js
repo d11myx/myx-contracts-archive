@@ -13,10 +13,13 @@ async function main() {
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
 
+  let vaultPriceFeed = await deployUpgradeableContract("VaultPriceFeedTest", []);
+
   let pairInfo = await deployUpgradeableContract("PairInfo", []);
   let pairVault = await deployUpgradeableContract("PairVault", []);
 
-  let pairLiquidity = await deployUpgradeableContract("PairLiquidity", [pairInfo.address, pairVault.address, user1.address, user2.address, eth.address]);
+  let pairLiquidity = await deployUpgradeableContract("PairLiquidity",
+    [pairInfo.address, pairVault.address, vaultPriceFeed.address, user1.address, user2.address, eth.address]);
 
   await pairLiquidity.setHandler(pairInfo.address, true);
   await pairVault.setHandler(pairLiquidity.address, true);

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IVaultPriceFeed.sol";
 
-interface VaultPriceFeedTest is IVaultPriceFeed {
+contract VaultPriceFeedTest is IVaultPriceFeed {
 
     mapping(address => uint256) public tokenPrice;
 
@@ -31,4 +31,7 @@ interface VaultPriceFeedTest is IVaultPriceFeed {
         bool _isStrictStable
     ) external {}
 
+    function setPrice(address _token, uint256 _price) external {
+        tokenPrice[_token] = _price;
+    }
 }

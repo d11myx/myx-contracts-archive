@@ -3,6 +3,24 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_profit",
+        "type": "uint256"
+      }
+    ],
+    "name": "decreaseProfit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "_pairToken",
         "type": "uint256"
       },
@@ -49,7 +67,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_pariIndex",
+        "name": "_pairIndex",
         "type": "uint256"
       }
     ],
@@ -76,6 +94,16 @@
             "internalType": "uint256",
             "name": "stableReservedAmount",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "averagePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "realisedPnl",
+            "type": "int256"
           }
         ],
         "internalType": "struct IPairVault.Vault",
@@ -84,6 +112,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_profit",
+        "type": "uint256"
+      }
+    ],
+    "name": "increaseProfit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -151,6 +197,24 @@
       }
     ],
     "name": "transferTokenTo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_averagePrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateAveragePrice",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -168,9 +168,6 @@ contract Token is IERC20 {
      * `amount`.
      */
     function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
-        console.log("transferFrom, sender: %s, recipient: %s, allowance: %s, this: %s",
-            sender, recipient, _allowances[sender][_msgSender()]);
-        console.log("transferFrom, token: %s, _msgSender: %s", address(this), _msgSender());
         _transfer(sender, recipient, amount);
         _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
@@ -227,6 +224,10 @@ contract Token is IERC20 {
      * - `sender` must have a balance of at least `amount`.
      */
     function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+        console.log("transfer, sender: %s, recipient: %s, this: %s",
+            sender, recipient, amount);
+        console.log("transfer, token: %s, _msgSender: %s, allowance: %s", address(this), _msgSender(), _allowances[sender][_msgSender()]);
+
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 

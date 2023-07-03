@@ -34,26 +34,16 @@ const gasPrice = "auto";
 
 const config: HardhatUserConfig = {
     solidity: {
-        compilers: [
-            {
-                version: "0.8.17",
-            }
-        ]
+        version: "0.8.17",
+        settings: {
+        optimizer: {
+            enabled: true,
+            runs: 10,
+        },
+        viaIR: true,
+      },
     },
     defaultNetwork: "local",
-    zksolc: {
-      version: "1.3.8",
-      compilerSource: "binary",
-      settings: {
-        libraries: {}, // optional. References to non-inlinable libraries
-        isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-        forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-        optimizer: {
-          enabled: true, // optional. True by default
-          mode: '3' // optional. 3 by default, z to optimize bytecode size
-        }
-      }
-    },
     networks: {
         local: {
             url: "http://127.0.0.1:8545/",

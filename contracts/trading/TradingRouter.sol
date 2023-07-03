@@ -1,51 +1,57 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "./interfaces/ITradingRouter.sol";
 import "../openzeeplin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "../pair/interfaces/IPairInfo.sol";
 import "../openzeeplin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/ITradingRouter.sol";
+import "../pair/interfaces/IPairInfo.sol";
 import "./interfaces/ITradingVault.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
+import "../libraries/PriceUtils.sol";
+import "../libraries/access/Handleable.sol";
+import "hardhat/console.sol";
 
-contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
+contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
+    using Math for uint256;
 
     enum TradeType {MARKET, LIMIT, TP, SL}
     using PriceUtils for uint256;
 
     struct IncreasePositionRequest {
         address account;
-        TradeType tradeType;
-        uint256 pairIndex;
-        uint256 collateral;
-        uint256 openPrice;
-        bool isLong;
-        uint256 positionDelta;
-        uint256 tpPrice;
-        uint256 tp;
-        uint256 slPrice;
-        uint256 sl;
+        uint256 pairIndex;             // 币对index
+        TradeType tradeType;           // 0: MARKET, 1: LIMIT
+        uint256 collateral;            // 1e18 保证金数量
+        uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
+        bool isLong;                   // 多/空
+        uint256 sizeDelta;             // 仓位价值
+        uint256 tpPrice;               // 止盈价 1e30
+        uint256 tp;                    // 止盈数量
+        uint256 slPrice;               // 止损价 1e30
+        uint256 sl;                    // 止损数量
     }
 
     struct DecreasePositionRequest {
         address account;
         TradeType tradeType;
         uint256 pairIndex;
-        uint256 collateral;
         uint256 openPrice;
+        uint256 sizeDelta;
         bool isLong;
-        uint256 positionDelta;
+        bool abovePrice;
     }
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     IVaultPriceFeed public vaultPriceFeed;
+
+    address public tradingFeeReceiver;
 
     mapping(uint256 => IncreasePositionRequest) public increaseMarketRequests;
     mapping(uint256 => DecreasePositionRequest) public decreaseMarketRequests;
@@ -65,7 +71,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
         uint256 pairIndex,
         uint256 collateral,
         bool long,
-        uint256 positionSize,
+        uint256 sizeDelta,
         uint256 tpPrice,
         uint256 tpAmount,
         uint256 slPrice,
@@ -83,7 +89,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
         uint256 collateral,
         uint256 openPrice,
         bool long,
-        uint256 positionSize,
+        uint256 sizeDelta,
         uint256 tpPrice,
         uint256 tpAmount,
         uint256 slPrice,
@@ -92,113 +98,124 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
     event DecreaseLimit();
 
+    function initialize(
+        IPairInfo _pairInfo,
+        IPairVault _pairVault,
+        ITradingVault _tradingVault,
+        IVaultPriceFeed _vaultPriceFeed,
+        address _tradingFeeReceiver
+    ) external initializer {
+        __ReentrancyGuard_init();
+        __Handleable_init();
+        pairInfo = _pairInfo;
+        pairVault = _pairVault;
+        tradingVault = _tradingVault;
+        vaultPriceFeed = _vaultPriceFeed;
+        tradingFeeReceiver = _tradingFeeReceiver;
+    }
 
-    function createIncreasePosition(
-        TradeType tradeType,           // 0: MARKET, 1: LIMIT
-        uint256 pairIndex,             // 币对index
-        uint256 collateral,            // 1e18 保证金数量
-        uint256 openPrice,             // 1e30 市价可接受价格/限价开仓价格
-        bool isLong,                   // 多/空
-        uint leverage,                 // 杠杆
-        uint256 tpPrice,               // 止盈价 1e30
-        uint256 tp,                    // 止盈数量
-        uint256 slPrice,               // 止损价 1e30
-        uint256 sl                     // 止损数量
-    ) external nonReentrant returns(uint256 requestIndex) {
+    function createIncreasePosition(IncreasePositionRequest memory request) external nonReentrant returns(uint256 requestIndex) {
         address account = msg.sender;
+        request.account = account;
 
-        IPairInfo.Pair pair = pairInfo.getPair(pairIndex);
+        IPairInfo.Pair memory pair = pairInfo.getPair(request.pairIndex);
 
-        require(tradingVault.isFrozen(request.account), "account is frozen");
+        require(!tradingVault.isFrozen(account), "account is frozen");
         require(pair.enable, "trade pair not supported");
-        require(leverage >= pair.minLeverage && leverage <= pair.maxLeverage, "leverage incorrect");
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(request.pairIndex);
+        require(request.sizeDelta >= request.collateral * tradingConfig.minLeverage
+            && request.sizeDelta <= request.collateral * tradingConfig.maxLeverage, "leverage incorrect");
 
-        require(collateral > 0, "invalid collateral");
-        uint256 positionDelta = collateral * leverage;
-        require(tp <= positionDelta && sl <= positionDelta, "tp/sl exceeds max size");
-        require(positionDelta >= pair.minSize && positionDelta <= pair.maxSize, "invalid size");
+        require(request.collateral > 0, "invalid collateral");
+        require(request.tp <= request.sizeDelta && request.sl <= request.sizeDelta, "tp/sl exceeds max size");
+        require(request.sizeDelta >= tradingConfig.minSize && request.sizeDelta <= tradingConfig.maxSize, "invalid size");
 
-        IERC20(pair.stableToken).safeTransferFrom(account, address(this), collateral);
+        IERC20(pair.stableToken).safeTransferFrom(account, address(this), request.collateral);
 
-        if (tradeType == TradeType.MARKET) {
-            IncreasePositionRequest memory request = IncreasePositionRequest(
-                account,
-                pairIndex,
-                collateral,
-                openPrice,
-                isLong,
-                positionDelta,
-                tpPrice,
-                tp,
-                slPrice,
-                sl
-            );
+        if (request.tradeType == TradeType.MARKET) {
+            uint256 price = _getPrice(pair.indexToken, request.isLong);
+
+            require(request.tpPrice == 0 ||
+                (request.isLong ?
+                request.tpPrice > request.openPrice.max(price) :
+                request.tpPrice < request.openPrice.min(price)),
+                "wrong tp price");
+            require(request.slPrice == 0 ||
+                (request.isLong ?
+                request.slPrice < request.openPrice.min(price) :
+                request.slPrice > request.openPrice.max(price)),
+                "wrong sl price");
+
             increaseMarketRequests[increaseMarketRequestsIndex] = request;
             requestIndex = increaseMarketRequestsIndex;
             increaseMarketRequestsIndex = increaseMarketRequestsIndex + 1;
+            console.log("requestIndex", requestIndex, "increaseMarketRequestsIndex", increaseMarketRequestsIndex);
 
             emit IncreaseMarket(
                 account,
                 requestIndex,
-                pairIndex,
-                collateral,
-                isLong,
-                positionDelta,
-                tpPrice,
-                tp,
-                slPrice,
-                sl
+                request.pairIndex,
+                request.collateral,
+                request.isLong,
+                request.sizeDelta,
+                request.tpPrice,
+                request.tp,
+                request.slPrice,
+                request.sl
             );
             return requestIndex;
-        } else {
-            require(tpPrice == 0 || (isLong ? tpPrice > openPrice : tpPrice < openPrice), "wrong tp price");
-            require(slPrice == 0 || (isLong ? slPrice < openPrice : slPrice > openPrice), "wrong sl price");
-            IncreasePositionRequest memory request = IncreasePositionRequest(
-                account,
-                pairIndex,
-                collateral,
-                openPrice,
-                isLong,
-                positionDelta,
-                tpPrice,
-                tp,
-                slPrice,
-                sl
-            );
+        } else if (request.tradeType == TradeType.LIMIT) {
+            require(request.tpPrice == 0 || (request.isLong ? request.tpPrice > request.openPrice : request.tpPrice < request.openPrice), "wrong tp price");
+            require(request.slPrice == 0 || (request.isLong ? request.slPrice < request.openPrice : request.slPrice > request.openPrice), "wrong sl price");
+
             increaseLimitRequests[increaseLimitRequestsIndex] = request;
             requestIndex = increaseLimitRequestsIndex;
             increaseLimitRequestsIndex = increaseLimitRequestsIndex + 1;
+            console.log("requestIndex", requestIndex, "increaseLimitRequestsIndex", increaseLimitRequestsIndex);
 
-            emit IncreaseLimitRequest(
+            emit IncreaseLimit(
                 account,
                 requestIndex,
-                pairIndex,
-                collateral,
-                openPrice,
-                isLong,
-                positionDelta,
-                tpPrice,
-                tp,
-                slPrice,
-                sl
+                request.pairIndex,
+                request.collateral,
+                request.openPrice,
+                request.isLong,
+                request.sizeDelta,
+                request.tpPrice,
+                request.tp,
+                request.slPrice,
+                request.sl
             );
             return requestIndex;
+        } else {
+            revert("invalid trade type");
         }
     }
 
-    function executeIncreasePosition(uint256 requestIndex) {
-        IncreasePositionRequest memory request = increaseMarketRequests[requestIndex];
+    function executeIncreasePosition(uint256 _requestIndex, TradeType tradeType) public nonReentrant {
+        IncreasePositionRequest memory request;
+        if (tradeType == TradeType.MARKET) {
+            request = increaseMarketRequests[_requestIndex];
+        } else if (tradeType == TradeType.LIMIT) {
+            request = increaseLimitRequests[_requestIndex];
+        } else {
+            revert("invalid trade type");
+        }
+
+        require(request.account != address(0), "request not exists");
+
         uint256 pairIndex = request.pairIndex;
-        IPairInfo.Pair pair = pairInfo.getPair(pairIndex);
+
+        IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
 
         require(pair.enable, "trade pair not supported");
-        require(leverage >= pair.minLeverage && leverage <= pair.maxLeverage, "leverage incorrect");
+        require(request.sizeDelta >= request.collateral * tradingConfig.minLeverage
+            && request.sizeDelta <= request.collateral * tradingConfig.maxLeverage, "leverage incorrect");
 
-        require(tradingVault.isFrozen(request.account), "account is frozen");
+        require(!tradingVault.isFrozen(request.account), "account is frozen");
 
-        IPairVault.Vault lpVault = pairVault.getVault(pairIndex);
-
-        uint256 price = getPrice(pairIndex);
+        uint256 price = _getPrice(pair.indexToken, request.isLong);
 
         // check price
         if (request.tradeType == TradeType.MARKET) {
@@ -208,59 +225,69 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
         }
 
         // trading fee
-        IPairInfo.Fee fee = pair.fee;
+        IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(pairIndex);
         uint256 tradingFee;
-        if (tradingVault.netExposureAmountChecker() >= 0) {
+        if (tradingVault.netExposureAmountChecker(pairIndex) >= 0) {
             // 偏向多头
             if (request.isLong) {
                 // fee
-                tradingFee = request.positionDelta.mulPercentage(fee.takerFeeP);
+                tradingFee = request.collateral.mulPercentage(feeP.takerFeeP);
             } else {
-                tradingFee = request.positionDelta.mulPercentage(fee.makerFeeP);
+                tradingFee = request.collateral.mulPercentage(feeP.makerFeeP);
             }
         } else {
             // 偏向空头
             if (request.isLong) {
-                tradingFee = request.positionDelta.mulPercentage(fee.makerFeeP);
+                tradingFee = request.collateral.mulPercentage(feeP.makerFeeP);
             } else {
-                tradingFee = request.positionDelta.mulPercentage(fee.takerFeeP);
+                tradingFee = request.collateral.mulPercentage(feeP.takerFeeP);
             }
         }
-        require(position.collateral >= fee, "collateral not enough");
 
         IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
+        uint256 afterFeeCollateral = request.collateral - tradingFee;
+        IERC20(pair.stableToken).safeTransfer(address(tradingVault), afterFeeCollateral);
 
+        // trading vault
+        tradingVault.increasePosition(request.account, pairIndex, afterFeeCollateral, request.sizeDelta, request.isLong);
 
-        // 止盈
+        // 添加止盈止损
         if (request.tp > 0) {
             DecreasePositionRequest memory tpRequest = DecreasePositionRequest(
-                account,
+                request.account,
                 TradeType.TP,
                 pairIndex,
-                collateral,
                 request.tpPrice,
-                isLong,
-                request.tp
+                request.tp,
+                request.isLong,
+                request.isLong ? true : false
             );
             decreaseLimitRequests[decreaseLimitRequestsIndex] = tpRequest;
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
         }
         if (request.sl > 0) {
             DecreasePositionRequest memory slRequest = DecreasePositionRequest(
-                account,
+                request.account,
                 TradeType.SL,
                 pairIndex,
-                collateral,
                 request.slPrice,
-                isLong,
-                pair.sl
+                request.sl,
+                request.isLong,
+                request.isLong ? false : true
             );
-            decreaseLimitRequests[decreaseLimitRequestsIndex] = request;
+            decreaseLimitRequests[decreaseLimitRequestsIndex] = slRequest;
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
+        }
+        if (tradeType == TradeType.MARKET) {
+            delete increaseMarketRequests[_requestIndex];
+        } else if (tradeType == TradeType.LIMIT) {
+            delete increaseLimitRequests[_requestIndex];
+        } else {
+            revert("invalid trade type");
         }
     }
 
-    function updateTpSl() {
+    function updateTpSl() public {
 
     }
 
@@ -289,7 +316,23 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable {
 
     }
 
-    function getPrice(address _token, bool _isLong) public view returns (uint256) {
+    function setContract(
+        IPairInfo _pairInfo,
+        IPairVault _pairVault,
+        ITradingVault _tradingVault,
+        IVaultPriceFeed _vaultPriceFeed
+    ) external onlyGov {
+        pairInfo = _pairInfo;
+        pairVault = _pairVault;
+        tradingVault = _tradingVault;
+        vaultPriceFeed = _vaultPriceFeed;
+    }
+
+    function setTradingFeeReceiver(address _tradingFeeReceiver) external onlyGov {
+        tradingFeeReceiver = _tradingFeeReceiver;
+    }
+
+    function _getPrice(address _token, bool _isLong) internal view returns (uint256) {
         return vaultPriceFeed.getPrice(_token, _isLong ? true : false, false, false);
     }
 }

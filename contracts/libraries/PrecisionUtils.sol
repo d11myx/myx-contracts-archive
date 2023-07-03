@@ -24,4 +24,11 @@ library PrecisionUtils {
         return Math.mulDiv(amount, ONE_HUNDRED_PERCENTAGE, percentage);
     }
 
+    function oneHundredPercentage() internal view returns(uint256) {
+        return ONE_HUNDRED_PERCENTAGE;
+    }
+
+    function pricePrecision() internal view returns(uint256) {
+        return PRICE_PRECISION;
+    }
 }
