@@ -46,6 +46,49 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         bool abovePrice;
     }
 
+    // 市价开档
+    event IncreaseMarket(
+        address account,
+        uint256 requestIndex,
+        uint256 pairIndex,
+        uint256 collateral,
+        bool long,
+        uint256 sizeDelta,
+        uint256 tpPrice,
+        uint256 tpAmount,
+        uint256 slPrice,
+        uint256 slAmount
+    );
+
+    event DecreaseMarket(
+
+    );
+
+    // 限价开单
+    event IncreaseLimit(
+        address account,
+        uint256 requestIndex,
+        uint256 pairIndex,
+        uint256 collateral,
+        uint256 openPrice,
+        bool long,
+        uint256 sizeDelta,
+        uint256 tpPrice,
+        uint256 tpAmount,
+        uint256 slPrice,
+        uint256 slAmount
+    );
+
+    event DecreaseLimit(
+        address account,
+        TradeType tradeType,
+        uint256 pairIndex,
+        uint256 openPrice,
+        uint256 sizeDelta,
+        bool isLong,
+        bool abovePrice
+    );
+
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
@@ -73,39 +116,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(isPositionKeeper[msg.sender], "only position keeper");
         _;
     }
-
-    event IncreaseMarket(
-        address account,
-        uint256 requestIndex,
-        uint256 pairIndex,
-        uint256 collateral,
-        bool long,
-        uint256 sizeDelta,
-        uint256 tpPrice,
-        uint256 tpAmount,
-        uint256 slPrice,
-        uint256 slAmount
-    );
-
-    event DecreaseMarket(
-
-    );
-
-    event IncreaseLimit(
-        address account,
-        uint256 requestIndex,
-        uint256 pairIndex,
-        uint256 collateral,
-        uint256 openPrice,
-        bool long,
-        uint256 sizeDelta,
-        uint256 tpPrice,
-        uint256 tpAmount,
-        uint256 slPrice,
-        uint256 slAmount
-    );
-
-    event DecreaseLimit();
 
     function initialize(
         IPairInfo _pairInfo,
@@ -302,6 +312,15 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             );
             decreaseLimitRequests[decreaseLimitRequestsIndex] = tpRequest;
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
+            emit DecreaseLimit(
+                request.account,
+                TradeType.TP,
+                pairIndex,
+                request.tpPrice,
+                request.tp,
+                request.isLong,
+                request.isLong ? true : false
+            );
         }
         if (request.sl > 0) {
             DecreasePositionRequest memory slRequest = DecreasePositionRequest(
@@ -315,6 +334,15 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             );
             decreaseLimitRequests[decreaseLimitRequestsIndex] = slRequest;
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
+            emit DecreaseLimit(
+                request.account,
+                TradeType.SL,
+                pairIndex,
+                request.slPrice,
+                request.sl,
+                request.isLong,
+                request.isLong ? false : true
+            );
         }
         if (tradeType == TradeType.MARKET) {
             delete increaseMarketRequests[_requestIndex];
