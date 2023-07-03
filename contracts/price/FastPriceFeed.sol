@@ -115,6 +115,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         maxDeviationBasisPoints = _maxDeviationBasisPoints;
         fastPriceEvents = _fastPriceEvents;
         tokenManager = _tokenManager;
+        gov = msg.sender;
     }
 
     function initialize(uint256 _minAuthorizations, address[] memory _signers, address[] memory _updaters) public onlyGov {

@@ -7,6 +7,10 @@ pragma solidity 0.8.17;
 
 contract FastPriceEvents is IFastPriceEvents, Governable {
 
+    constructor() public {
+        gov = msg.sender;
+    }
+
     mapping (address => bool) public isPriceFeed;
     event PriceUpdate(address token, uint256 price, address priceFeed);
 
