@@ -267,6 +267,10 @@ async function updateTokensPerInterval(distributor, tokensPerInterval, label) {
   await sendTxn(distributor.setTokensPerInterval(tokensPerInterval, { gasLimit: 1000000 }), `${label}.setTokensPerInterval`)
 }
 
+function toChainLinkPrice(value) {
+  return parseInt(value * Math.pow(10, 8))
+}
+
 module.exports = {
   ARBITRUM,
   AVALANCHE,
@@ -281,5 +285,6 @@ module.exports = {
   callWithRetries,
   processBatch,
   updateTokensPerInterval,
-  sleep
+  sleep,
+  toChainLinkPrice
 }

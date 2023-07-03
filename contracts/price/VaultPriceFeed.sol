@@ -29,6 +29,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
     bool public isSecondaryPriceEnabled = true;
     bool public useV2Pricing = false;
     bool public favorPrimaryPrice = false;
+    // price round space
     uint256 public priceSampleSpace = 3;
     uint256 public maxStrictPriceDeviation = 0;
     address public secondaryPriceFeed;
@@ -284,6 +285,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
         return uint256(price);
     }
 
+    // _maximise: if get the max price in round
     function getPrimaryPrice(address _token, bool _maximise) public override view returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
         require(priceFeedAddress != address(0), "VaultPriceFeed: invalid price feed");
