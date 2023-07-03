@@ -65,6 +65,13 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     uint256 public increaseLimitRequestsIndex;
     uint256 public decreaseLimitRequestsIndex;
 
+    mapping (address => bool) public isPositionKeeper;
+
+    modifier onlyPositionKeeper() {
+        require(isPositionKeeper[msg.sender], "only position keeper");
+        _;
+    }
+
     event IncreaseMarket(
         address account,
         uint256 requestIndex,
@@ -165,8 +172,18 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             );
             return requestIndex;
         } else if (request.tradeType == TradeType.LIMIT) {
-            require(request.tpPrice == 0 || (request.isLong ? request.tpPrice > request.openPrice : request.tpPrice < request.openPrice), "wrong tp price");
-            require(request.slPrice == 0 || (request.isLong ? request.slPrice < request.openPrice : request.slPrice > request.openPrice), "wrong sl price");
+            require(request.tpPrice == 0 ||
+                (request.isLong ?
+                request.tpPrice > request.openPrice :
+                request.tpPrice < request.openPrice),
+                "wrong tp price");
+            require(request.slPrice == 0 ||
+                (request.isLong ?
+                request.slPrice <
+                request.openPrice :
+                request.slPrice >
+                request.openPrice),
+                "wrong sl price");
 
             increaseLimitRequests[increaseLimitRequestsIndex] = request;
             requestIndex = increaseLimitRequestsIndex;
@@ -192,15 +209,30 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
     }
 
-    function executeIncreasePosition(uint256 _requestIndex, TradeType tradeType) public nonReentrant {
-        IncreasePositionRequest memory request;
-        if (tradeType == TradeType.MARKET) {
-            request = increaseMarketRequests[_requestIndex];
-        } else if (tradeType == TradeType.LIMIT) {
-            request = increaseLimitRequests[_requestIndex];
-        } else {
-            revert("invalid trade type");
+    function executeIncreaseMarkets(uint256 _endIndex) external onlyPositionKeeper {
+        uint256 index = increaseMarketRequestStartIndex;
+        uint256 length = increaseMarketRequestsIndex;
+        if (index >= length) {
+            return;
         }
+        if (_endIndex > length) {
+            _endIndex = length;
+        }
+
+        while (index < _endIndex) {
+            try this.executeIncreaseMarket(index) {
+
+            } catch {
+                this.cancelIncrease(index, TradeType.MARKET);
+            }
+            delete increaseMarketRequests[index];
+            index++;
+        }
+        increaseMarketRequestsIndex = index;
+    }
+
+    function executeIncreaseMarket(uint256 _requestIndex) public nonReentrant onlyPositionKeeper {
+        IncreasePositionRequest memory request = increaseMarketRequests[_requestIndex];
 
         require(request.account != address(0), "request not exists");
 
@@ -278,13 +310,37 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             decreaseLimitRequests[decreaseLimitRequestsIndex] = slRequest;
             decreaseLimitRequestsIndex = decreaseLimitRequestsIndex + 1;
         }
-        if (tradeType == TradeType.MARKET) {
+        delete increaseMarketRequests[_requestIndex];
+    }
+
+    function cancelIncrease(uint256 _requestIndex, TradeType _tradeType) public nonReentrant {
+        IncreasePositionRequest memory request = _getIncreaseRequest(_requestIndex, _tradeType);
+
+        if (request.account == address(0)) {
+            return;
+        }
+        require(msg.sender == address(this) || msg.sender == request.account, "not request sender");
+
+        IPairInfo.Pair memory pair = pairInfo.getPair(request.pairIndex);
+
+        IERC20(pair.stableToken).safeTransfer(request.account, request.collateral);
+
+        if (_tradeType == TradeType.MARKET) {
             delete increaseMarketRequests[_requestIndex];
+        } else if (_tradeType == TradeType.LIMIT) {
+            delete increaseMarketRequests[_requestIndex];
+        }
+    }
+
+    function _getIncreaseRequest(uint256 _requestIndex, TradeType tradeType) internal returns(IncreasePositionRequest memory request) {
+        if (tradeType == TradeType.MARKET) {
+            request = increaseMarketRequests[_requestIndex];
         } else if (tradeType == TradeType.LIMIT) {
-            delete increaseLimitRequests[_requestIndex];
+            request = increaseLimitRequests[_requestIndex];
         } else {
             revert("invalid trade type");
         }
+        return request;
     }
 
     function updateTpSl() public {
@@ -326,6 +382,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         vaultPriceFeed = _vaultPriceFeed;
+    }
+
+    function setPositionKeeper(address _account, bool _enable) external onlyGov {
+        isPositionKeeper[_account] = _enable;
     }
 
     function setTradingFeeReceiver(address _tradingFeeReceiver) external onlyGov {

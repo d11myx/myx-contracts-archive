@@ -24,7 +24,7 @@ async function main() {
 
   await tradingVault.setHandler(tradingRouter.address, true);
   await pairVault.setHandler(tradingVault.address, true);
-
+  await tradingRouter.setPositionKeeper(user1.address, true);
 
 }
 

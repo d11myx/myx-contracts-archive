@@ -43,7 +43,9 @@ async function main() {
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   // market
-  await tradingRouter.executeIncreasePosition(requestIndex, 0)
+  let startIndex = await tradingRouter.increaseMarketRequestsIndex();
+  console.log("startIndex:", startIndex);
+  await tradingRouter.connect(user1).executeIncreaseMarkets(startIndex.add(5));
 
   console.log(`request: ${await tradingRouter.increaseMarketRequests(requestIndex)}`);
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
