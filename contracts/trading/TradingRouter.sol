@@ -140,6 +140,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     uint256 public increaseLimitOrdersIndex;
     uint256 public decreaseLimitOrdersIndex;
 
+    // 用户已委托减仓
+    mapping(address => mapping(uint256 => uint256)) public decreaseRequestSize;
+
     mapping (address => bool) public isPositionKeeper;
 
     modifier onlyPositionKeeper() {
