@@ -1,5 +1,5 @@
-const { deployContract, contractAt } = require("../utils/helpers");
-const { expandDecimals } = require("../utils/utilities");
+const {deployContract, contractAt} = require("../utils/helpers");
+const {expandDecimals} = require("../utils/utilities");
 const {mintWETH, getConfig, setConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
@@ -19,32 +19,38 @@ async function main() {
   console.log(`pairStorage: ${pairInfo.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
 
   let pair = {
-      indexToken: btc.address,
-      stableToken: usdt.address,
-      pairToken: "0x0000000000000000000000000000000000000000",
-      kOfSwap: "100000000000000000000000000000000000000000000000000",
-      enable: true,
-      initPairRatio: 50*1e10,
-      fee: {
-        takerFeeP: 0,
-        makerFeeP: 0,
-        addLpFeeP: 1e10
-      },
-      tradingFeeDistribute: {
-        lpP: 0,
-        keeperP: 0,
-        treasuryP: 0,
-        refererP: 0
-      },
-      fundingFeeDistribute: {
-        lpP: 0,
-        userP: 0,
-        treasuryP: 0
-      }
-    };
-  console.log("pair0: ", pair);
-
-  await pairInfo.addPair(pair);
+    indexToken: btc.address,
+    stableToken: usdt.address,
+    pairToken: "0x0000000000000000000000000000000000000000",
+    enable: true,
+    kOfSwap: "100000000000000000000000000000000000000000000000000",
+    initPairRatio: 1000,
+  };
+  let tradingConfig = {
+    minLeverage: 2,
+    maxLeverage: 100,
+    minSize: "1000000000000000000",
+    maxSize: "1000000000000000000000",
+  }
+  let feePercentage = {
+    takerFeeP: 100, // 1%
+    makerFeeP: 100,
+    addLpFeeP: 100
+  }
+  let tradingFeeDistribute = {
+    lpP: 0,
+    keeperP: 0,
+    treasuryP: 0,
+    refererP: 0
+  }
+  let fundingFeeDistribute = {
+    lpP: 0,
+    userP: 0,
+    treasuryP: 0
+  }
+  console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\nfeePercentage", feePercentage,
+    "\ntradingFeeDistribute", tradingFeeDistribute, "\nfundingFeeDistribute", fundingFeeDistribute);
+  await pairInfo.addPair(pair, tradingConfig, feePercentage, tradingFeeDistribute, fundingFeeDistribute);
   let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
   let pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken}`);
@@ -53,7 +59,7 @@ async function main() {
   //
   pair.indexToken = eth.address;
   console.log("pair1: ", pair);
-  await pairInfo.addPair(pair);
+  await pairInfo.addPair(pair, tradingConfig, feePercentage, tradingFeeDistribute, fundingFeeDistribute);
   pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
   pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken}`);

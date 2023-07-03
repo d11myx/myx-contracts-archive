@@ -88,19 +88,6 @@
   },
   {
     "inputs": [],
-    "name": "PRECISION",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "PRICE_PRECISION",
     "outputs": [
       {
@@ -330,32 +317,18 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "indexTokenPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "contract IPairInfo",
-        "name": "_pairStorage",
+        "name": "_pairInfo",
         "type": "address"
       },
       {
         "internalType": "contract IPairVault",
         "name": "_pairVault",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "_vaultPriceFeed",
         "type": "address"
       },
       {
@@ -563,24 +536,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_pairToken",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_price",
-        "type": "uint256"
-      }
-    ],
-    "name": "setIndexTokenPrice",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_feeReceiver",
         "type": "address"
@@ -628,6 +583,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vaultPriceFeed",
+    "outputs": [
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

@@ -34,13 +34,16 @@ const gasPrice = "auto";
 
 const config: HardhatUserConfig = {
     solidity: {
-        compilers: [
-            {
-                version: "0.8.17",
-            }
-        ]
+        version: "0.8.17",
+        settings: {
+        optimizer: {
+            enabled: true,
+            runs: 10,
+        },
+        viaIR: true,
+      },
     },
-    defaultNetwork: "remote",
+    defaultNetwork: "local",
     zksolc: {
       version: "1.3.8",
       compilerSource: "binary",

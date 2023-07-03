@@ -10,6 +10,7 @@ import "./interfaces/IPairLiquidity.sol";
 import "./interfaces/IPairVault.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/AMMUtils.sol";
+import "../libraries/PrecisionUtils.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 import "../token/WETH.sol";
@@ -17,13 +18,13 @@ import "hardhat/console.sol";
 
 contract PairLiquidity is IPairLiquidity, Handleable {
 
-    uint256 public constant PRECISION = 1e10;
+    using PrecisionUtils for uint256;
+
     uint256 public constant PRICE_PRECISION = 1e30;
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
-
-//    IVaultPriceFeed public vaultPriceFeed;
+    IVaultPriceFeed public vaultPriceFeed;
 
     address public feeReceiver;
 
@@ -33,8 +34,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     // pairToken => user => amount
     mapping(address => mapping(address => uint256)) public userPairTokens;
-
-    mapping(uint256 => uint256) public indexTokenPrice; // todo for test
 
     event AddLiquidity(
         address indexed account,
@@ -53,15 +52,17 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     );
 
     function initialize(
-        IPairInfo _pairStorage,
+        IPairInfo _pairInfo,
         IPairVault _pairVault,
+        IVaultPriceFeed _vaultPriceFeed,
         address _feeReceiver,
         address _slipReceiver,
         address _weth
     ) external initializer {
         __Handleable_init();
-        pairInfo = _pairStorage;
+        pairInfo = _pairInfo;
         pairVault = _pairVault;
+        vaultPriceFeed = _vaultPriceFeed;
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
         weth = _weth;
@@ -75,11 +76,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     function setReceiver(address _feeReceiver, address _slipReceiver) external onlyHandler {
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
-    }
-
-    // for test
-    function setIndexTokenPrice(uint256 _pairToken, uint256 _price) external {
-        indexTokenPrice[_pairToken] = _price;
     }
 
     function addLiquidity(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external returns (uint256) {
@@ -118,12 +114,9 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            // 50
-            uint256 indexDesiredAmount = Math.mulDiv(_stableAmount, pair.initPairRatio, 100 * PRECISION);
-            // 200
-            uint256 stableDesiredAmount = Math.mulDiv(_indexAmount, 100 * PRECISION, pair.initPairRatio);
+            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
+            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
             console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
-            // 50 <= 100
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
             } else {
@@ -135,14 +128,16 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         IERC20(pair.indexToken).transferFrom(_funder, address(this), _indexAmount);
         IERC20(pair.stableToken).transferFrom(_funder, address(this), _stableAmount);
 
-
+        // fee
+        IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
         {
             // transfer fee
-            uint256 indexFeeAmount = Math.mulDiv(_indexAmount, pair.fee.addLpFeeP, 100 * PRECISION);
-            uint256 stableFeeAmount = Math.mulDiv(_stableAmount, pair.fee.addLpFeeP, 100 * PRECISION);
+            uint256 indexFeeAmount = _indexAmount.mulPercentage(feeP.addLpFeeP);
+            uint256 stableFeeAmount = _stableAmount.mulPercentage(feeP.addLpFeeP);
+            console.log("indexFeeAmount", indexFeeAmount, "stableFeeAmount", stableFeeAmount);
 
             IERC20(pair.indexToken).transfer(feeReceiver, indexFeeAmount);
             IERC20(pair.stableToken).transfer(feeReceiver, stableFeeAmount);
@@ -153,7 +148,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // usdt value of reserve
         {
-            uint256 price = _getPrice(_pairIndex);
+            uint256 price = _getPrice(pair.indexToken);
             require(price > 0, "invalid price");
 
             uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
@@ -243,7 +238,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     function lpFairPrice(uint256 _pairIndex) public view returns(uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
-        uint256 price = _getPrice(_pairIndex);
+        uint256 price = _getPrice(pair.indexToken);
         uint256 lpFairDelta = _getDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
         return lpFairDelta > 0 ? Math.mulDiv(lpFairDelta, PRICE_PRECISION, IERC20(pair.pairToken).totalSupply()) : 1 * PRICE_PRECISION;
     }
@@ -254,10 +249,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     function _getAmount(uint256 delta, uint256 price) internal view returns(uint256) {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
-    }
-
-    function _getPrice(uint256 _pairIndex) internal view returns(uint256) {
-        return indexTokenPrice[_pairIndex];
     }
 
     // calculate lp amount for add liquidity
@@ -271,8 +262,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = Math.mulDiv(_stableAmount, pair.initPairRatio, 100 * PRECISION);
-            uint256 stableDesiredAmount = Math.mulDiv(_indexAmount, 100 * PRECISION, pair.initPairRatio);
+            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
+            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
             } else {
@@ -282,19 +273,20 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         }
         console.log("_indexAmount", _indexAmount, "_stableAmount", _stableAmount);
 
+        IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
         {
             // transfer fee
-            uint256 indexFeeAmount = Math.mulDiv(_indexAmount, pair.fee.addLpFeeP, 100 * PRECISION);
-            uint256 stableFeeAmount = Math.mulDiv(_stableAmount, pair.fee.addLpFeeP, 100 * PRECISION);
+            uint256 indexFeeAmount = _indexAmount.mulPercentage(feeP.addLpFeeP);
+            uint256 stableFeeAmount = _stableAmount.mulPercentage(feeP.addLpFeeP);
 
             afterFeeIndexAmount = _indexAmount - indexFeeAmount;
             afterFeeStableAmount = _stableAmount - stableFeeAmount;
         }
 
-        uint256 price = _getPrice(_pairIndex);
+        uint256 price = _getPrice(pair.indexToken);
         require(price > 0, "invalid price");
 
         // calculate deposit usdt value without slippage
@@ -353,7 +345,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
-        uint256 price = _getPrice(_pairIndex);
+        uint256 price = _getPrice(pair.indexToken);
         require(price > 0, "invalid price");
 
         uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
@@ -391,9 +383,9 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
 
         // add fee
-        depositIndexAmount = Math.mulDiv(depositIndexAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
-        depositStableAmount = Math.mulDiv(depositStableAmount, 100 * PRECISION, 100 * PRECISION - pair.fee.addLpFeeP);
-        console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
+        IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
+        depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - feeP.addLpFeeP);
+        depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - feeP.addLpFeeP);
 
         return (depositIndexAmount, depositStableAmount);
     }
@@ -407,7 +399,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
         // usdt value of reserve
-        uint256 price = _getPrice(_pairIndex);
+        uint256 price = _getPrice(pair.indexToken);
         require(price > 0, "invalid price");
 
         uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
@@ -446,4 +438,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         return (receiveIndexTokenAmount, receiveStableTokenAmount);
     }
 
+    function _getPrice(address _token) internal view returns (uint256) {
+        return vaultPriceFeed.getPrice(_token, true, false, false);
+    }
 }

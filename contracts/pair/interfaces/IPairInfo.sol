@@ -9,15 +9,19 @@ interface IPairInfo {
         address pairToken;
         bool enable;
         uint256 kOfSwap;
-        uint256 initPairRatio; // index / stable PRECISION 1% for 1e10
-        Fee fee;
-        TradingFeeDistribute tradingFeeDistribute;
-        FundingFeeDistribute fundingFeeDistribute;
+        uint256 initPairRatio; // index / stable 100 for 1%
     }
 
-    struct Fee {
+    struct TradingConfig {
+        uint256 minLeverage;
+        uint256 maxLeverage;
+        uint256 minSize;
+        uint256 maxSize;
+    }
+
+    struct FeePercentage {
         uint256 takerFeeP;
-        int256 makerFeeP;
+        uint256 makerFeeP;
         uint256 addLpFeeP;
     }
 
@@ -42,7 +46,9 @@ interface IPairInfo {
 
     function getPair(uint256) external view returns(Pair memory);
 
-    function getFee(uint256) external view returns(Fee memory);
+    function getTradingConfig(uint256 _pairIndex) external view returns(TradingConfig memory);
+
+    function getFeePercentage(uint256) external view returns(FeePercentage memory);
 
     function getTradingFeeDistribute(uint256) external view returns(TradingFeeDistribute memory);
 

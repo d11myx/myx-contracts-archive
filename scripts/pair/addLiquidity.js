@@ -11,6 +11,7 @@ async function main() {
   let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
   let pairLiquidity = await contractAt("PairLiquidity", await getConfig("PairLiquidity"));
+  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
@@ -27,7 +28,7 @@ async function main() {
   await btc.approve(pairLiquidity.address, expandDecimals(100, 18));
   await usdt.approve(pairLiquidity.address, expandDecimals(100, 18));
   let pairIndex = await pairInfo.pairIndexes(btc.address, usdt.address);
-  await pairLiquidity.setIndexTokenPrice(pairIndex, expandDecimals(100, 30));
+  await vaultPriceFeed.setPrice(btc.address, expandDecimals(100, 30));
   console.log("lpFairPrice", await pairLiquidity.lpFairPrice(pairIndex));
   console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, expandDecimals(100, 18), expandDecimals(100, 18))}`)
   console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, expandDecimals(100, 18))}`)
@@ -43,7 +44,7 @@ async function main() {
   console.log();
 
   // remove liquidity
-  await pairLiquidity.setIndexTokenPrice(pairIndex, expandDecimals(150, 30));
+  await vaultPriceFeed.setPrice(btc.address, expandDecimals(150, 30));
   console.log(`lpFairPrice, ${await pairLiquidity.lpFairPrice(pairIndex)}`);
   console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, expandDecimals(1, 18), 0)}`)
   console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, expandDecimals(100, 18))}`)
