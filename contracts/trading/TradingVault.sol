@@ -12,15 +12,6 @@ import "hardhat/console.sol";
 
 contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     using PrecisionUtils for uint256;
-    struct Position {
-        address account;
-        uint256 pairIndex;
-        bool isLong;
-        uint256 collateral;
-        uint256 positionAmount;
-        uint256 averagePrice;
-        uint256 entryFundingRate;
-    }
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
@@ -189,6 +180,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(_account, _pairIndex, _isLong));
+    }
+
+    function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns(Position memory) {
+        return positions[getPositionKey(_account, _pairIndex, _isLong)];
     }
 
     function _getPrice(address _token, bool _isLong) internal view returns (uint256) {
