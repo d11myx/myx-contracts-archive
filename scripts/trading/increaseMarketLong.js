@@ -30,11 +30,11 @@ async function main() {
     collateral: expandDecimals(100, 18),
     openPrice: expandDecimals(100, 30),
     isLong: true,
-    sizeDelta: expandDecimals(200, 18),
+    sizeAmount: expandDecimals(2, 18),
     tpPrice: expandDecimals(150, 30),
-    tp: expandDecimals(200, 18),
+    tp: expandDecimals(2, 18),
     slPrice: expandDecimals(50, 30),
-    sl: expandDecimals(200, 18)
+    sl: expandDecimals(2, 18)
   };
   await tradingRouter.createIncreaseOrder(request)
 

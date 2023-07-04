@@ -96,12 +96,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "minSize",
+            "name": "minOpenAmount",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "maxSize",
+            "name": "maxOpenAmount",
             "type": "uint256"
           }
         ],
@@ -391,12 +391,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "minSize",
+            "name": "minOpenAmount",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "maxSize",
+            "name": "maxOpenAmount",
             "type": "uint256"
           }
         ],
@@ -672,12 +672,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "minSize",
+        "name": "minOpenAmount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "maxSize",
+        "name": "maxOpenAmount",
         "type": "uint256"
       }
     ],

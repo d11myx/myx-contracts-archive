@@ -54,7 +54,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {
@@ -103,7 +103,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {
@@ -183,7 +183,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {
@@ -250,7 +250,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {
@@ -348,7 +348,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "sizeDelta",
+            "name": "sizeAmount",
             "type": "uint256"
           },
           {
@@ -420,7 +420,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {
@@ -495,7 +495,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {
@@ -611,7 +611,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {
@@ -706,7 +706,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "sizeDelta",
+        "name": "sizeAmount",
         "type": "uint256"
       },
       {

@@ -29,14 +29,14 @@ struct IncreasePositionRequest {
     address account;
     uint256 pairIndex;             // 币对index
     TradeType tradeType;           // 0: MARKET, 1: LIMIT
-    uint256 collateral;            // 1e18 保证金数量
+    uint256 collateral;            // 1e18 保证金数量（USDT）
     uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
     bool isLong;                   // 多/空
-    uint256 sizeDelta;             // 仓位价值
+    uint256 sizeAmount;            // 仓位数量 (保证金*价格*杠杆)
     uint256 tpPrice;               // 止盈价 1e30
-    uint256 tp;                    // 止盈数量
+    uint256 tp;                    // 止盈数量（币本位）
     uint256 slPrice;               // 止损价 1e30
-    uint256 sl;                    // 止损数量
+    uint256 sl;                    // 止损数量（币本位）
 }
 
 // 取消订单（前端用户）

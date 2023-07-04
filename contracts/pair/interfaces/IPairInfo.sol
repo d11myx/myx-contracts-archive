@@ -15,8 +15,8 @@ interface IPairInfo {
     struct TradingConfig {
         uint256 minLeverage;
         uint256 maxLeverage;
-        uint256 minSize;
-        uint256 maxSize;
+        uint256 minOpenAmount;
+        uint256 maxOpenAmount;
     }
 
     struct FeePercentage {

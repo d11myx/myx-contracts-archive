@@ -29,8 +29,8 @@ async function main() {
   let tradingConfig = {
     minLeverage: 2,
     maxLeverage: 100,
-    minSize: "1000000000000000000",
-    maxSize: "1000000000000000000000",
+    minOpenAmount: "1000000000000000000",
+    maxOpenAmount: "1000000000000000000000",
   }
   let feePercentage = {
     takerFeeP: 100, // 1%

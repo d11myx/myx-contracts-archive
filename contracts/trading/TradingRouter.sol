@@ -18,7 +18,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
-    using PriceUtils for uint256;
 
     enum TradeType {MARKET, LIMIT, TP, SL}
 
@@ -29,7 +28,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 collateral;            // 1e18 保证金数量
         uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
         bool isLong;                   // 多/空
-        uint256 sizeDelta;             // 仓位价值
+        uint256 sizeAmount;            // 仓位数量
         uint256 tpPrice;               // 止盈价 1e30
         uint256 tp;                    // 止盈数量
         uint256 slPrice;               // 止损价 1e30
@@ -40,20 +39,20 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         address account;
         TradeType tradeType;
         uint256 pairIndex;
-        uint256 openPrice;
-        uint256 sizeDelta;
+        uint256 openPrice;             // 限价触发价格
+        uint256 sizeAmount;            // 关单数量
         bool isLong;
-        bool abovePrice;
+        bool abovePrice;               // 高于或低于触发价格（止盈止损）
     }
 
-    // 市价开档
+    // 市价开仓
     event IncreaseMarket(
         address account,
         uint256 requestIndex,
         uint256 pairIndex,
         uint256 collateral,
         bool long,
-        uint256 sizeDelta,
+        uint256 sizeAmount,
         uint256 tpPrice,
         uint256 tpAmount,
         uint256 slPrice,
@@ -65,7 +64,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         TradeType tradeType,
         uint256 pairIndex,
         uint256 openPrice,
-        uint256 sizeDelta,
+        uint256 sizeAmount,
         bool isLong,
         bool abovePrice
     );
@@ -78,7 +77,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 collateral,
         uint256 openPrice,
         bool long,
-        uint256 sizeDelta,
+        uint256 sizeAmount,
         uint256 tpPrice,
         uint256 tpAmount,
         uint256 slPrice,
@@ -91,7 +90,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         TradeType tradeType,
         uint256 pairIndex,
         uint256 openPrice,
-        uint256 sizeDelta,
+        uint256 sizeAmount,
         bool isLong,
         bool abovePrice
     );
@@ -153,18 +152,20 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         require(!tradingVault.isFrozen(account), "account is frozen");
         require(pair.enable, "trade pair not supported");
+
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(request.pairIndex);
-        require(request.sizeDelta >= request.collateral * tradingConfig.minLeverage
-            && request.sizeDelta <= request.collateral * tradingConfig.maxLeverage, "leverage incorrect");
+        uint256 price = _getPrice(pair.indexToken, request.isLong);
+
+        require(request.sizeAmount >= request.collateral.getAmountByPrice(price) * tradingConfig.minLeverage
+            && request.sizeAmount <= request.collateral.getAmountByPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
 
         require(request.collateral > 0, "invalid collateral");
-        require(request.tp <= request.sizeDelta && request.sl <= request.sizeDelta, "tp/sl exceeds max size");
-        require(request.sizeDelta >= tradingConfig.minSize && request.sizeDelta <= tradingConfig.maxSize, "invalid size");
+        require(request.tp <= request.sizeAmount && request.sl <= request.sizeAmount, "tp/sl exceeds max size");
+        require(request.sizeAmount >= tradingConfig.minOpenAmount && request.sizeAmount <= tradingConfig.maxOpenAmount, "invalid size");
 
         IERC20(pair.stableToken).safeTransferFrom(account, address(this), request.collateral);
 
         if (request.tradeType == TradeType.MARKET) {
-            uint256 price = _getPrice(pair.indexToken, request.isLong);
 
             require(request.tpPrice == 0 ||
                 (request.isLong ?
@@ -188,7 +189,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 request.pairIndex,
                 request.collateral,
                 request.isLong,
-                request.sizeDelta,
+                request.sizeAmount,
                 request.tpPrice,
                 request.tp,
                 request.slPrice,
@@ -221,7 +222,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 request.collateral,
                 request.openPrice,
                 request.isLong,
-                request.sizeDelta,
+                request.sizeAmount,
                 request.tpPrice,
                 request.tp,
                 request.slPrice,
@@ -267,15 +268,14 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 pairIndex = request.pairIndex;
 
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
-
         require(pair.enable, "trade pair not supported");
-        require(request.sizeDelta >= request.collateral * tradingConfig.minLeverage
-            && request.sizeDelta <= request.collateral * tradingConfig.maxLeverage, "leverage incorrect");
 
-        require(!tradingVault.isFrozen(request.account), "account is frozen");
-
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
         uint256 price = _getPrice(pair.indexToken, request.isLong);
+
+        require(request.sizeAmount >= request.collateral.getAmountByPrice(price) * tradingConfig.minLeverage
+            && request.sizeAmount <= request.collateral.getAmountByPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        require(!tradingVault.isFrozen(request.account), "account is frozen");
 
         // check price
         if (request.tradeType == TradeType.MARKET) {
@@ -309,7 +309,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IERC20(pair.stableToken).safeTransfer(address(tradingVault), afterFeeCollateral);
 
         // trading vault
-        tradingVault.increasePosition(request.account, pairIndex, afterFeeCollateral, request.sizeDelta, request.isLong);
+        tradingVault.increasePosition(request.account, pairIndex, afterFeeCollateral, request.sizeAmount, request.isLong);
 
         // 添加止盈止损
         if (request.tp > 0) {

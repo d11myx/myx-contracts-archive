@@ -9,7 +9,7 @@ interface ITradingVault {
         address _account,
         uint256 _pairIndex,
         uint256 _collateral,
-        uint256 _sizeDelta,
+        uint256 _sizeAmount,
         bool _isLong
     ) external;
 }
