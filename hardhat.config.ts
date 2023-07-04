@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
         viaIR: true,
       },
     },
-    defaultNetwork: "local",
+    defaultNetwork: "remote",
     zksolc: {
       version: "1.3.8",
       compilerSource: "binary",

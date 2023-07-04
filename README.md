@@ -24,36 +24,36 @@ Account 4 : 0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
 ### 合约接口
 ```text
 // 开仓（前端用户)
-createIncreasePosition(IncreasePositionRequest memory request)
+createIncreaseOrder(IncreasePositionRequest memory request)
+
 struct IncreasePositionRequest {
-    address account;
     uint256 pairIndex;             // 币对index
     TradeType tradeType;           // 0: MARKET, 1: LIMIT
-    uint256 collateral;            // 1e18 保证金数量（USDT）
+    uint256 collateral;            // 1e18 保证金数量
     uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
     bool isLong;                   // 多/空
-    uint256 sizeAmount;            // 仓位数量 (保证金*价格*杠杆)
+    uint256 sizeAmount;            // 仓位数量
     uint256 tpPrice;               // 止盈价 1e30
-    uint256 tp;                    // 止盈数量（币本位）
+    uint256 tp;                    // 止盈数量
     uint256 slPrice;               // 止损价 1e30
-    uint256 sl;                    // 止损数量（币本位）
+    uint256 sl;                    // 止损数量
 }
 
 // 取消订单（前端用户）
-cancelIncrease(uint256 _requestIndex, TradeType _tradeType)
+cancelIncreaseOrder(uint256 _requestIndex, TradeType _tradeType)
    
 // 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
 executeIncreaseMarkets(uint256 _endIndex)
 
 // 执行限价砍仓(keeper)
-executeIncreaseOrder(uint256 _requestIndex, TradeType tradeType)
+executeIncreaseOrder(uint256 _orderId, TradeType tradeType)
 
 // 当前市价开仓请求最新index
-uint256 public increaseMarketRequestsIndex;
+uint256 public increaseMarketOrdersIndex;
 // 当前市价关仓请求最新index
-uint256 public decreaseMarketRequestsIndex;
+uint256 public decreaseMarketOrdersIndex;
 // 当前市价开仓请求未执行起始index
-uint256 public increaseMarketRequestStartIndex;
+uint256 public increaseMarketOrderStartIndex;
 // 当前市价关仓请求未执行起始index
-uint256 public decreaseMarketRequestStartIndex;
+uint256 public decreaseMarketOrderStartIndex;
 ```
