@@ -233,7 +233,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             orderId = increaseMarketOrdersIndex;
             increaseMarketOrdersIndex = increaseMarketOrdersIndex + 1;
             console.log("orderId", orderId, "increaseMarketOrdersIndex", increaseMarketOrdersIndex);
-            return orderId;
         } else if (request.tradeType == TradeType.LIMIT) {
             require(request.tpPrice == 0 ||
                 (request.isLong ?

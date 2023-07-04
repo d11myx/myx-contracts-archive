@@ -28,6 +28,39 @@ const LOCAL_PRIVATE_KEY9 = "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0
 const LOCAL_PRIVATE_KEY10 = "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6";
 
 // const GOERLI_DEPLOY_KEY = "";
+const abiDecoder = require('abi-decoder');
+
+task("decode-event", "decode trx event logs")
+    .addParam("hash", "trx hash")
+    .setAction(async (param, hre) => {
+        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
+        for (let fullName of fullNames) {
+            let contract = await hre.artifacts.readArtifact(fullName);
+            abiDecoder.addABI(contract.abi);
+        }
+        let receipt = await hre.ethers.provider.getTransactionReceipt(param.hash);
+        const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
+        for (let event of decodedLogs) {
+            console.log(event)
+        }
+    });
+
+task("encode-method", "get method artifact detail by method name")
+    .addParam("method", "method name")
+    .setAction(async (param, hre) => {
+        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
+        for (let fullName of fullNames) {
+            let contract = await hre.artifacts.readArtifact(fullName);
+            abiDecoder.addABI(contract.abi);
+        }
+        let methodObject = abiDecoder.getMethodIDs();
+        Object.keys(methodObject).forEach(function (methodId: string, index: number, arr: any) {
+            let method = methodObject[methodId];
+            if (method.name == param.method) {
+                console.log(`name: ${param.method}, methodId: ${methodId}, \ndetail:\n`, method)
+            }
+        })
+    });
 
 const gas = "auto";
 const gasPrice = "auto";
