@@ -40,7 +40,7 @@ struct IncreasePositionRequest {
 }
 
 // 取消订单（前端用户）
-cancelIncreaseOrder(uint256 _requestIndex, TradeType _tradeType)
+cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType)
    
 // 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
 executeIncreaseMarkets(uint256 _endIndex)

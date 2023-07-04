@@ -70,36 +70,12 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     }
 
     // 市价开仓
-    event IncreaseMarket(
+    event CreateIncreaseOrder(
         address account,
         uint256 orderId,
         uint256 pairIndex,
-        uint256 collateral,
-        bool long,
-        uint256 sizeAmount,
-        uint256 tpPrice,
-        uint256 tpAmount,
-        uint256 slPrice,
-        uint256 slAmount
-    );
-
-    event DecreaseMarket(
-        address account,
         TradeType tradeType,
-        uint256 pairIndex,
-        uint256 openPrice,
-        uint256 sizeAmount,
-        bool isLong,
-        bool abovePrice
-    );
-
-    // 限价开单
-    event IncreaseLimit(
-        address account,
-        uint256 orderId,
-        uint256 pairIndex,
         uint256 collateral,
-        uint256 openPrice,
         bool long,
         uint256 sizeAmount,
         uint256 tpPrice,
@@ -108,7 +84,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 slAmount
     );
 
-    event DecreaseLimit(
+    event CreateDecreaseOrder(
         address account,
         uint256 orderId,
         TradeType tradeType,
@@ -119,8 +95,25 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         bool abovePrice
     );
 
-    event ExecuteOrder(uint256 orderId, TradeType tradeType);
-    event CancelOrder(uint256 orderId, TradeType tradeType);
+    event ExecuteIncreaseOrder(
+        address account,
+        uint256 orderId,
+        uint256 pairIndex,
+        TradeType tradeType,
+        uint256 collateral,
+        bool isLong,
+        uint256 sizeAmount,
+        uint256 price
+    );
+    event ExecuteDecreaseOrder(
+        address account,
+        uint256 orderId,
+        TradeType tradeType,
+        bool isLong,
+        uint256 sizeAmount,
+        uint256 price
+    );
+    event CancelOrder(address account, uint256 orderId, TradeType tradeType);
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
@@ -240,19 +233,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             orderId = increaseMarketOrdersIndex;
             increaseMarketOrdersIndex = increaseMarketOrdersIndex + 1;
             console.log("orderId", orderId, "increaseMarketOrdersIndex", increaseMarketOrdersIndex);
-
-            emit IncreaseMarket(
-                account,
-                orderId,
-                request.pairIndex,
-                request.collateral,
-                request.isLong,
-                request.sizeAmount,
-                request.tpPrice,
-                request.tp,
-                request.slPrice,
-                request.sl
-            );
             return orderId;
         } else if (request.tradeType == TradeType.LIMIT) {
             require(request.tpPrice == 0 ||
@@ -272,24 +252,24 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             orderId = increaseLimitOrdersIndex;
             increaseLimitOrdersIndex = increaseLimitOrdersIndex + 1;
             console.log("orderId", orderId, "increaseLimitOrdersIndex", increaseLimitOrdersIndex);
-
-            emit IncreaseLimit(
-                account,
-                orderId,
-                request.pairIndex,
-                request.collateral,
-                request.openPrice,
-                request.isLong,
-                request.sizeAmount,
-                request.tpPrice,
-                request.tp,
-                request.slPrice,
-                request.sl
-            );
-            return orderId;
         } else {
             revert("invalid trade type");
         }
+
+        emit CreateIncreaseOrder(
+            account,
+            orderId,
+            request.pairIndex,
+            request.tradeType,
+            request.collateral,
+            request.isLong,
+            request.sizeAmount,
+            request.tpPrice,
+            request.tp,
+            request.slPrice,
+            request.sl
+        );
+        return orderId;
     }
 
     function executeIncreaseMarketOrders(uint256 _endIndex) external onlyPositionKeeper {
@@ -386,7 +366,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             );
             decreaseLimitOrders[decreaseLimitOrdersIndex] = tpOrder;
             decreaseLimitOrdersIndex = decreaseLimitOrdersIndex + 1;
-            emit DecreaseLimit(
+            emit CreateDecreaseOrder(
                 order.account,
                 _orderId,
                 TradeType.TP,
@@ -410,7 +390,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             );
             decreaseLimitOrders[decreaseLimitOrdersIndex] = slOrder;
             decreaseLimitOrdersIndex = decreaseLimitOrdersIndex + 1;
-            emit DecreaseLimit(
+            emit CreateDecreaseOrder(
                 order.account,
                 _orderId,
                 TradeType.SL,
@@ -427,7 +407,16 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             delete increaseLimitOrders[_orderId];
         }
 
-        emit ExecuteOrder(_orderId, _tradeType);
+        emit ExecuteIncreaseOrder(
+            order.account,
+            _orderId,
+            pairIndex,
+            _tradeType,
+            afterFeeCollateral,
+            order.isLong,
+            order.sizeAmount,
+            price
+        );
     }
 
     function cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
@@ -448,7 +437,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             delete increaseMarketOrders[_orderId];
         }
 
-        emit CancelOrder(_orderId, _tradeType);
+        emit CancelOrder(order.account, _orderId, _tradeType);
     }
 
     function _getIncreaseOrder(uint256 _orderId, TradeType tradeType) internal returns(IncreasePositionOrder memory order) {
