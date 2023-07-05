@@ -114,8 +114,14 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "openPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "bool",
-        "name": "long",
+        "name": "isLong",
         "type": "bool"
       },
       {
