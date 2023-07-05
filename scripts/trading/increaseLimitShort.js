@@ -26,7 +26,7 @@ async function main() {
   let request = {
     account: user0.address,
     pairIndex: 0,
-    tradeType: 0,
+    tradeType: 1,
     collateral: expandDecimals(50, 18),
     openPrice: expandDecimals(100, 30),
     isLong: false,
@@ -41,17 +41,17 @@ async function main() {
   let orderId = (await tradingRouter.increaseMarketOrdersIndex()).sub(1);
   console.log(`request: ${await tradingRouter.increaseMarketOrders(orderId)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
-
-  // execute
-  let startIndex = await tradingRouter.increaseMarketOrdersIndex();
-  console.log("startIndex:", startIndex);
-  await tradingRouter.connect(user1).executeIncreaseMarketOrders(startIndex.add(5));
-
-  console.log(`request: ${await tradingRouter.increaseMarketOrders(orderId)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
-  console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
+  //
+  // // execute
+  // let startIndex = await tradingRouter.increaseMarketOrdersIndex();
+  // console.log("startIndex:", startIndex);
+  // await tradingRouter.connect(user1).executeIncreaseMarketOrders(startIndex.add(5));
+  //
+  // console.log(`request: ${await tradingRouter.increaseMarketOrders(orderId)}`);
+  // console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
+  // console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
+  // console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
+  // console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
 
 }
 

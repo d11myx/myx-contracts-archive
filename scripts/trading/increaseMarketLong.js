@@ -15,7 +15,7 @@ async function main() {
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
 
-  // market
+  // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   await usdt.mint(user0.address, expandDecimals(100, 18))
@@ -41,7 +41,7 @@ async function main() {
   console.log(`request: ${await tradingRouter.increaseMarketOrders(0)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
-  // market
+  // execute
   await usdt.mint(user0.address, expandDecimals(100, 18))
   await vaultPriceFeed.setPrice(btc.address, expandDecimals(100, 30));
 
