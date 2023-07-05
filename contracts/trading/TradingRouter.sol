@@ -155,7 +155,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         IVaultPriceFeed _vaultPriceFeed,
-        address _tradingFeeReceiver
+        address _tradingFeeReceiver,
+        uint256 _maxTimeDelay
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();
@@ -164,6 +165,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         tradingVault = _tradingVault;
         vaultPriceFeed = _vaultPriceFeed;
         tradingFeeReceiver = _tradingFeeReceiver;
+        maxTimeDelay = _maxTimeDelay;
     }
 
     function setContract(
@@ -184,6 +186,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     function setTradingFeeReceiver(address _tradingFeeReceiver) external onlyGov {
         tradingFeeReceiver = _tradingFeeReceiver;
+    }
+
+    function setMaxTimeDelay(address _maxTimeDelay) external onlyGov {
+        maxTimeDelay = _maxTimeDelay;
     }
 
     // 创建加仓订单
@@ -311,10 +317,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         // expire
-        require(order.blockTime + maxTimeDelay <= block.timestamp, "order expired");
+        if (_tradeType == TradeType.MARKET) {
+            require(order.blockTime + maxTimeDelay <= block.timestamp, "order expired");
+        }
 
         uint256 pairIndex = order.pairIndex;
-
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
         require(pair.enable, "trade pair not supported");
 
@@ -324,6 +331,31 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(order.sizeAmount >= order.collateral.getAmountByPrice(price) * tradingConfig.minLeverage
             && order.sizeAmount <= order.collateral.getAmountByPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
         require(!tradingVault.isFrozen(order.account), "account is frozen");
+
+        int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
+        console.log("increasePosition preNetExposureAmountChecker",
+            preNetExposureAmountChecker > 0 ? uint256(preNetExposureAmountChecker) : uint256(-preNetExposureAmountChecker));
+        if (preNetExposureAmountChecker >= 0) {
+            // 偏向多头
+            if (order.isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                console.log("increasePosition sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                require(order.sizeAmount <= availableIndex, "lp index token not enough");
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                console.log("increasePosition sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                require(order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.getAmountByPrice(price), "lp stable token not enough");
+            }
+        } else {
+            // 偏向空头
+            if (order.isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                require(order.sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex, "lp index token not enough");
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                require(order.sizeAmount <= availableStable.getAmountByPrice(price), "lp stable token not enough");
+            }
+        }
 
         // check price
         if (order.tradeType == TradeType.MARKET) {
@@ -481,12 +513,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 request.collateral,
                 request.isLong,
                 request.sizeAmount,
-                request.tpPrice,
-                request.tp,
-                request.slPrice,
-                request.sl
+                request.abovePrice
             );
-            return orderId;
         } else if (request.tradeType == TradeType.LIMIT) {
             require(request.tpPrice == 0 ||
                 (request.isLong ?
@@ -513,18 +541,82 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 request.collateral,
                 request.openPrice,
                 request.isLong,
-                request.sizeAmount,
-                request.tpPrice,
-                request.tp,
-                request.slPrice,
-                request.sl
+                request.abovePrice
             );
-            return orderId;
         } else {
             revert("invalid trade type");
         }
 
         decreaseOrderTotalAmount[account][request.pairIndex] += request.sizeAmount;
+        return orderId;
+    }
+
+    // 执行减仓订单
+    function executeDecreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant onlyPositionKeeper {
+        DecreasePositionOrder memory order = _getDecreaseOrder(_orderId, _tradeType);
+
+        // 请求已执行或已取消
+        if (order.account == address(0)) {
+            console.log("executeDecreaseOrder not exists", _orderId);
+            return;
+        }
+
+        // expire
+        if (_tradeType == TradeType.MARKET) {
+            require(order.blockTime + maxTimeDelay <= block.timestamp, "order expired");
+        }
+
+        // todo 交易后的持仓量不小于0
+//        require(order.sizeAmount <=
+//            tradingVault.getPosition(account, order.pairIndex, order.isLong).positionAmount, "invalid decrease amount");
+
+        uint256 pairIndex = order.pairIndex;
+        IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
+
+        uint256 price = _getPrice(pair.indexToken, order.isLong);
+
+        // check price
+        if (order.tradeType == TradeType.MARKET) {
+            require(order.isLong ? price >= order.openPrice : price <= order.openPrice, "exceed acceptable price");
+        } else if (order.tradeType == TradeType.LIMIT) {
+            require(order.isLong ? price <= order.openPrice : price >= order.openPrice, "not reach trigger price");
+        } else {
+            revert("invalid trade type");
+        }
+
+        // 检查交易量 todo ADL
+        int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
+        console.log("increasePosition preNetExposureAmountChecker",
+            preNetExposureAmountChecker > 0 ? uint256(preNetExposureAmountChecker) : uint256(-preNetExposureAmountChecker));
+        if (preNetExposureAmountChecker >= 0) {
+            // 偏向多头
+            if (!order.isLong) {
+                // 关空单
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                console.log("increasePosition sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                require(order.sizeAmount <= availableIndex, "lp index token not enough");
+            } else {
+                // 关多单
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                console.log("increasePosition sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                require(order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.getAmountByPrice(price), "lp stable token not enough");
+            }
+        } else {
+            // 偏向空头
+            if (!order.isLong) {
+                // 关空单
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                require(order.sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex, "lp index token not enough");
+            } else {
+                // 关多单
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                require(order.sizeAmount <= availableStable.getAmountByPrice(price), "lp stable token not enough");
+            }
+        }
+
+
+
+
     }
 
     function _getIncreaseOrder(uint256 _orderId, TradeType tradeType) internal returns(IncreasePositionOrder memory order) {
@@ -532,6 +624,17 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             order = increaseMarketOrders[_orderId];
         } else if (tradeType == TradeType.LIMIT) {
             order = increaseLimitOrders[_orderId];
+        } else {
+            revert("invalid trade type");
+        }
+        return order;
+    }
+
+    function _getDecreaseOrder(uint256 _orderId, TradeType tradeType) internal returns(DecreasePositionOrder memory order) {
+        if (tradeType == TradeType.MARKET) {
+            order = decreaseMarketOrders[_orderId];
+        } else if (tradeType == TradeType.LIMIT) {
+            order = decreaseLimitOrders[_orderId];
         } else {
             revert("invalid trade type");
         }

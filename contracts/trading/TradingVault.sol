@@ -42,7 +42,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         uint256 _collateral,
         uint256 _sizeAmount,
         bool _isLong
-    ) external onlyHandler nonReentrant {
+    ) external nonReentrant onlyHandler {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.enable, "trade pair not supported");
 
@@ -54,32 +54,6 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         require(sizeDelta >= tradingConfig.minOpenAmount && sizeDelta <= tradingConfig.maxOpenAmount, "invalid size");
 
         IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
-
-        int256 preNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
-        netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
-        console.log("increasePosition preNetExposureAmountChecker",
-            preNetExposureAmountChecker > 0 ? uint256(preNetExposureAmountChecker) : uint256(-preNetExposureAmountChecker));
-        if (preNetExposureAmountChecker >= 0) {
-            // 偏向多头
-            if (_isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("increasePosition sizeAmount", _sizeAmount, "availableIndex", availableIndex);
-                require(_sizeAmount <= availableIndex, "lp index token not enough");
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("increasePosition sizeAmount", _sizeAmount, "availableStable", availableStable);
-                require(_sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.getAmountByPrice(price), "lp stable token not enough");
-            }
-        } else {
-            // 偏向空头
-            if (_isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                require(_sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex, "lp index token not enough");
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                require(_sizeAmount <= availableStable.getAmountByPrice(price), "lp stable token not enough");
-            }
-        }
 
         // get position
         bytes32 key = getPositionKey(_account, _pairIndex, _isLong);
@@ -100,6 +74,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         }
 
         // 修改多空头
+        netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
+
         int256 prevLongShortTracker = longShortTracker[_pairIndex];
         longShortTracker[_pairIndex] = prevLongShortTracker + (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
         console.log("increasePosition prevLongShortTracker", prevLongShortTracker > 0 ? uint256(prevLongShortTracker) : uint256(-prevLongShortTracker));
@@ -165,6 +141,17 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             }
         }
+    }
+
+    function decreasePosition(
+        address _account,
+        uint256 _pairIndex,
+        uint256 _sizeAmount,
+        bool _isLong
+    ) external onlyHandler nonReentrant {
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+
+
 
     }
 
