@@ -175,6 +175,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "enum TradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
@@ -284,6 +290,57 @@
     ],
     "name": "cancelIncreaseOrder",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum TradingRouter.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "openPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sizeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "abovePrice",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct TradingRouter.DecreasePositionRequest",
+        "name": "request",
+        "type": "tuple"
+      }
+    ],
+    "name": "createDecreaseOrder",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -503,6 +560,48 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "decreaseOrderTotalAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum TradingRouter.TradeType",
+        "name": "_tradeType",
+        "type": "uint8"
+      }
+    ],
+    "name": "executeDecreaseOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -759,9 +858,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_tradingFeeReceiver",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_maxTimeDelay",
+        "type": "uint256"
       }
     ],
     "name": "initialize",
@@ -908,6 +1007,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_maxTimeDelay",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMaxTimeDelay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_account",
         "type": "address"
@@ -921,32 +1033,6 @@
     "name": "setPositionKeeper",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_tradingFeeReceiver",
-        "type": "address"
-      }
-    ],
-    "name": "setTradingFeeReceiver",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tradingFeeReceiver",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

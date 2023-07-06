@@ -16,10 +16,10 @@ async function main() {
   let pairLiquidity = await contractAt("PairLiquidity", await getConfig("PairLiquidity"));
   let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
 
-  let args = [pairInfo.address, pairVault.address, vaultPriceFeed.address];
+  let args = [pairInfo.address, pairVault.address, vaultPriceFeed.address, user1.address];
   let tradingVault = await deployUpgradeableContract("TradingVault", args);
 
-  args = [pairInfo.address, pairVault.address, tradingVault.address, vaultPriceFeed.address, user1.address];
+  args = [pairInfo.address, pairVault.address, tradingVault.address, vaultPriceFeed.address, 60];
   let tradingRouter = await deployUpgradeableContract("TradingRouter", args);
 
   await tradingVault.setHandler(tradingRouter.address, true);

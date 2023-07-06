@@ -10,6 +10,7 @@ interface ITradingVault {
         uint256 positionAmount;
         uint256 averagePrice;
         uint256 entryFundingRate;
+        int256 releasedPnl;
     }
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns(Position memory);
     function isFrozen(address _account) external view returns(bool);
@@ -19,6 +20,12 @@ interface ITradingVault {
         address _account,
         uint256 _pairIndex,
         uint256 _collateral,
+        uint256 _sizeAmount,
+        bool _isLong
+    ) external;
+    function decreasePosition(
+        address _account,
+        uint256 _pairIndex,
         uint256 _sizeAmount,
         bool _isLong
     ) external;
