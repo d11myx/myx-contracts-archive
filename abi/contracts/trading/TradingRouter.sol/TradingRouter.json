@@ -298,14 +298,14 @@
       {
         "components": [
           {
-            "internalType": "enum TradingRouter.TradeType",
-            "name": "tradeType",
-            "type": "uint8"
-          },
-          {
             "internalType": "uint256",
             "name": "pairIndex",
             "type": "uint256"
+          },
+          {
+            "internalType": "enum TradingRouter.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
           },
           {
             "internalType": "uint256",

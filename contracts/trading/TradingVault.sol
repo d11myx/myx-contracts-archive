@@ -46,7 +46,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     IVaultPriceFeed public vaultPriceFeed;
     address public tradingFeeReceiver;
 
-    mapping (bytes32 => Position) public positions;
+    mapping(bytes32 => Position) public positions;
 
     mapping(address => bool) public override isFrozen;
 
@@ -88,6 +88,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         uint256 _sizeAmount,
         bool _isLong
     ) external nonReentrant onlyHandler {
+        console.log("increasePosition start");
+
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.enable, "trade pair not supported");
 
@@ -140,11 +142,12 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         }
 
         // 修改多空头
-        netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
+        netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? int256(_sizeAmount) : - int256(_sizeAmount));
 
         int256 prevLongShortTracker = longShortTracker[_pairIndex];
-        longShortTracker[_pairIndex] = prevLongShortTracker + (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
-        console.log("increasePosition prevLongShortTracker", prevLongShortTracker > 0 ? uint256(prevLongShortTracker) : uint256(-prevLongShortTracker));
+        longShortTracker[_pairIndex] = prevLongShortTracker + (_isLong ? int256(_sizeAmount) : - int256(_sizeAmount));
+        console.log("increasePosition prevLongShortTracker", prevLongShortTracker > 0 ? uint256(prevLongShortTracker) : uint256(- prevLongShortTracker));
+        console.log("increasePosition longShortTracker", longShortTracker[_pairIndex] > 0 ? uint256(longShortTracker[_pairIndex]) : uint256(- longShortTracker[_pairIndex]));
         console.log("increasePosition sizeAmount", _sizeAmount);
 
         // 修改LP资产冻结
@@ -169,7 +172,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.decreaseReserveAmount(_pairIndex, 0, sizeDelta);
             } else {
                 // 空头转化为多头
-                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(-prevLongShortTracker).getAmountByPrice(price));
+                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(- prevLongShortTracker).getAmountByPrice(price));
                 pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount + uint256(prevLongShortTracker)).getAmountByPrice(price));
             }
         } else {
@@ -183,39 +186,52 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // 修改LP仓位平均价格
         IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
+        console.log("increasePosition lp averagePrice", lpVault.averagePrice, "price", price);
         if (prevLongShortTracker > 0) {
-            if (_isLong) {
-                // BTO
+            if (_isLong || longShortTracker[_pairIndex] <= 0) {
+                // BTO 或 多空转化
                 uint256 averagePrice = (lpVault.averagePrice * uint256(prevLongShortTracker) + sizeDelta) / (uint256(prevLongShortTracker) + _sizeAmount);
+                console.log("increasePosition BTO or Long to Short update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
-            } else {
+            }
+            if (!_isLong) {
                 // STO
                 if (price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    console.log("increasePosition STO decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 } else {
                     uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
+                    console.log("increasePosition STO increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 }
+            }
+        } else if (prevLongShortTracker < 0) {
+            if (_isLong) {
+                // BTO
+                if (price > lpVault.averagePrice) {
+                    uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    console.log("increasePosition BTO increaseProfit", profit);
+                    IERC20(pair.stableToken).transfer(address(pairVault), profit);
+                    pairVault.increaseProfit(_pairIndex, profit);
+                } else {
+                    uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
+                    console.log("increasePosition BTO decreaseProfit", profit);
+                    pairVault.decreaseProfit(_pairIndex, profit);
+                }
+            }
+            if (!_isLong || longShortTracker[_pairIndex] >= 0) {
+                // STO 或 多空转化
+                uint256 averagePrice = (lpVault.averagePrice * uint256(- prevLongShortTracker) + sizeDelta) / (uint256(- prevLongShortTracker) + _sizeAmount);
+                console.log("increasePosition STO or Short to Long update averagePrice", averagePrice);
+                pairVault.updateAveragePrice(_pairIndex, averagePrice);
             }
         } else {
-            if (_isLong) {
-                // BTO
-                if (price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
-                    pairVault.increaseProfit(_pairIndex, profit);
-                } else {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
-                    IERC20(pair.stableToken).transfer(address(pairVault), profit);
-                    pairVault.decreaseProfit(_pairIndex, profit);
-                }
-            } else {
-                // STO
-                uint256 averagePrice = (lpVault.averagePrice * uint256(-prevLongShortTracker) + sizeDelta) / (uint256(-prevLongShortTracker) + _sizeAmount);
-                pairVault.updateAveragePrice(_pairIndex, averagePrice);
-            }
+            console.log("increasePosition update price", price);
+            pairVault.updateAveragePrice(_pairIndex, price);
         }
+        console.log("increase position finish");
 
         emit IncreasePosition(
             positionKey,
@@ -272,9 +288,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         position.positionAmount = position.positionAmount - _sizeAmount;
 
         // 修改多空头
-        netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
+        netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? - int256(_sizeAmount) : int256(_sizeAmount));
         int256 prevLongShortTracker = longShortTracker[_pairIndex];
-        longShortTracker[_pairIndex] = prevLongShortTracker + (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
+        longShortTracker[_pairIndex] = prevLongShortTracker + (_isLong ? - int256(_sizeAmount) : int256(_sizeAmount));
 
         // 修改LP资产冻结
         if (prevLongShortTracker > 0) {
@@ -298,7 +314,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.decreaseReserveAmount(_pairIndex, 0, sizeDelta);
             } else {
                 // 空头转化为多头
-                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(-prevLongShortTracker).getAmountByPrice(price));
+                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(- prevLongShortTracker).getAmountByPrice(price));
                 pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount + uint256(prevLongShortTracker)).getAmountByPrice(price));
             }
         } else {
@@ -313,37 +329,48 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         // 修改LP仓位平均价格
         IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
         if (prevLongShortTracker > 0) {
-            if (_isLong) {
+            if (_isLong || longShortTracker[_pairIndex] <= 0) {
                 // BTC
                 uint256 averagePrice = (lpVault.averagePrice * uint256(prevLongShortTracker) + sizeDelta) / (uint256(prevLongShortTracker) + _sizeAmount);
+                console.log("decreasePosition BTC or Long to Short update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
-            } else {
+            }
+            if (!_isLong) {
                 // STC
                 if (price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    console.log("decreasePosition STC decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 } else {
                     uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
+                    console.log("decreasePosition STC increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 }
             }
-        } else {
+        } else if (prevLongShortTracker < 0) {
             if (_isLong) {
                 // BTC
                 if (price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    console.log("decreasePosition BTC increaseProfit", profit);
+                    IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 } else {
                     uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
-                    IERC20(pair.stableToken).transfer(address(pairVault), profit);
+                    console.log("decreasePosition BTC increaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 }
-            } else {
+            }
+            if (!_isLong || longShortTracker[_pairIndex] >= 0) {
                 // STC
-                uint256 averagePrice = (lpVault.averagePrice * uint256(-prevLongShortTracker) + sizeDelta) / (uint256(-prevLongShortTracker) + _sizeAmount);
+                uint256 averagePrice = (lpVault.averagePrice * uint256(- prevLongShortTracker) + sizeDelta) / (uint256(- prevLongShortTracker) + _sizeAmount);
+                console.log("decreasePosition STC or Short to Long update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             }
+        } else {
+            console.log("decreasePosition update price", price);
+            pairVault.updateAveragePrice(_pairIndex, price);
         }
 
         // 结算用户Pnl
@@ -385,7 +412,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         return keccak256(abi.encodePacked(_account, _pairIndex, _isLong));
     }
 
-    function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns(Position memory) {
+    function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position memory) {
         return positions[getPositionKey(_account, _pairIndex, _isLong)];
     }
 

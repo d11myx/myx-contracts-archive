@@ -16,7 +16,7 @@ async function main() {
   let vaultPriceFeed = await deployUpgradeableContract("VaultPriceFeedTest", []);
 
   let pairInfo = await deployUpgradeableContract("PairInfo", []);
-  let pairVault = await deployUpgradeableContract("PairVault", []);
+  let pairVault = await deployUpgradeableContract("PairVault", [pairInfo.address]);
 
   let pairLiquidity = await deployUpgradeableContract("PairLiquidity",
     [pairInfo.address, pairVault.address, vaultPriceFeed.address, user1.address, user2.address, eth.address]);

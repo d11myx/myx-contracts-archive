@@ -20,8 +20,13 @@ contract PairVault is IPairVault, Handleable {
 
     mapping(uint256 => Vault) public vaults;
 
-    function initialize() external initializer {
+    function initialize(IPairInfo _pairInfo) external initializer {
         __Handleable_init();
+        pairInfo = _pairInfo;
+    }
+
+    function setPairInfo(IPairInfo _pairInfo) external onlyGov {
+        pairInfo = _pairInfo;
     }
 
     function increaseTotalAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler {
@@ -69,6 +74,7 @@ contract PairVault is IPairVault, Handleable {
     }
 
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyHandler {
+        console.log("updateAveragePrice _pairIndex", _pairIndex, "_averagePrice", _averagePrice);
         vaults[_pairIndex].averagePrice = _averagePrice;
     }
 
@@ -76,17 +82,21 @@ contract PairVault is IPairVault, Handleable {
         Vault storage vault = vaults[_pairIndex];
         console.log("increaseProfit _pairIndex", _pairIndex, "_profit", _profit);
         console.log("increaseProfit indexTotalAmount", vault.indexTotalAmount, "indexReservedAmount", vault.indexReservedAmount);
-        vault.indexTotalAmount = vault.indexTotalAmount + _profit;
-        vault.realisedPnl = vault.realisedPnl + int256(_profit);
+        console.log("increaseProfit indexToken balance", IERC20(pairInfo.getPair(_pairIndex).indexToken).balanceOf(address(this)),
+            "stableToken balance", IERC20(pairInfo.getPair(_pairIndex).stableToken).balanceOf(address(this)));
+        vault.stableTotalAmount += _profit;
+        vault.realisedPnl += int256(_profit);
     }
 
     function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyHandler {
         Vault storage vault = vaults[_pairIndex];
         console.log("decreaseProfit _pairIndex", _pairIndex, "_profit", _profit);
         console.log("decreaseProfit indexTotalAmount", vault.indexTotalAmount, "indexReservedAmount", vault.indexReservedAmount);
+        console.log("increaseProfit indexToken balance", IERC20(pairInfo.getPair(_pairIndex).indexToken).balanceOf(address(this)),
+            "stableToken balance", IERC20(pairInfo.getPair(_pairIndex).stableToken).balanceOf(address(this)));
         IERC20(pairInfo.getPair(_pairIndex).stableToken).transfer(msg.sender, _profit);
-        vault.indexTotalAmount = vault.indexTotalAmount - _profit;
-        vault.realisedPnl = vault.realisedPnl - int256(_profit);
+        vault.stableTotalAmount -= _profit;
+        vault.realisedPnl -= int256(_profit);
     }
 
 }

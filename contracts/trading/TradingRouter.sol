@@ -38,8 +38,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     }
 
     struct DecreasePositionRequest {
-        TradeType tradeType;
         uint256 pairIndex;
+        TradeType tradeType;
         uint256 openPrice;             // 限价触发价格
         uint256 sizeAmount;            // 关单数量
         bool isLong;
@@ -149,7 +149,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     mapping (address => bool) public isPositionKeeper;
 
     modifier onlyPositionKeeper() {
-        require(isPositionKeeper[msg.sender], "only position keeper");
+        require(msg.sender == address(this) || isPositionKeeper[msg.sender], "only position keeper");
         _;
     }
 
@@ -284,6 +284,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     function executeIncreaseMarketOrders(uint256 _endIndex) external onlyPositionKeeper {
         uint256 index = increaseMarketOrderStartIndex;
         uint256 length = increaseMarketOrdersIndex;
+        console.log("executeIncreaseMarketOrders index %s length %s endIndex %s", index, length, _endIndex);
         if (index >= length) {
             return;
         }
@@ -293,18 +294,21 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         while (index < _endIndex) {
             try this.executeIncreaseOrder(index, TradeType.MARKET) {
-
-            } catch {
+                console.log("executeIncreaseMarketOrder success index", index, "_endIndex", _endIndex);
+            } catch Error(string memory reason) {
+                console.log("executeIncreaseMarketOrder error ", reason);
                 this.cancelIncreaseOrder(index, TradeType.MARKET);
             }
             delete increaseMarketOrders[index];
             index++;
         }
-        increaseMarketOrdersIndex = index;
+        increaseMarketOrderStartIndex = index;
     }
 
     // 执行加仓订单
     function executeIncreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant onlyPositionKeeper {
+        console.log("executeIncreaseOrder _orderId", _orderId);
+
         IncreasePositionOrder memory order = _getIncreaseOrder(_orderId, _tradeType);
 
         // 请求已执行或已取消
@@ -315,7 +319,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         // expire
         if (_tradeType == TradeType.MARKET) {
-            require(order.blockTime + maxTimeDelay <= block.timestamp, "order expired");
+            console.log("executeIncreaseOrder blockTime", order.blockTime, "current timestamp", block.timestamp);
+            require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
         uint256 pairIndex = order.pairIndex;
@@ -358,6 +363,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         // check price
+        console.log("executeIncreaseOrder check price");
         if (order.tradeType == TradeType.MARKET) {
             require(order.isLong ? price <= order.openPrice : price >= order.openPrice, "exceed acceptable price");
         } else {
@@ -518,7 +524,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         // expire
         if (_tradeType == TradeType.MARKET) {
-            require(order.blockTime + maxTimeDelay <= block.timestamp, "order expired");
+            console.log("executeIncreaseOrder blockTime", order.blockTime, "current timestamp", block.timestamp);
+            require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
         require(tradingVault.getPosition(order.account, order.pairIndex, order.isLong).positionAmount > 0, "position closed");
