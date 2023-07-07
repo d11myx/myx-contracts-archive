@@ -8,11 +8,11 @@ library PrecisionUtils {
     uint256 public constant ONE_HUNDRED_PERCENTAGE = 10000;
     uint256 public constant PRICE_PRECISION = 1e30;
 
-    function getDeltaByPrice(uint256 amount, uint256 price) internal view returns(uint256) {
+    function mulPrice(uint256 amount, uint256 price) internal view returns(uint256) {
         return Math.mulDiv(amount, price, PRICE_PRECISION);
     }
 
-    function getAmountByPrice(uint256 delta, uint256 price) internal view returns(uint256) {
+    function divPrice(uint256 delta, uint256 price) internal view returns(uint256) {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
     }
 

@@ -36,7 +36,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         bool isLong,
         uint256 sizeAmount,
         uint256 price,
-        uint256 tradingFee
+        uint256 tradingFee,
+        int256 realisedPnl
     );
 
     using PrecisionUtils for uint256;
@@ -97,8 +98,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // check reserve
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
-        uint256 sizeDelta = _sizeAmount.getDeltaByPrice(price);
+        uint256 sizeDelta = _sizeAmount.mulPrice(price);
         require(sizeDelta >= tradingConfig.minOpenAmount && sizeDelta <= tradingConfig.maxOpenAmount, "invalid size");
+        console.log("increasePosition sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
 
         // trading fee
         IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
@@ -120,16 +122,13 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             }
         }
         uint256 afterFeeCollateral = _collateral - tradingFee;
-
         IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
+        console.log("increasePosition tradingFee", tradingFee);
 
-        // get position
+        // position
         bytes32 positionKey = getPositionKey(_account, _pairIndex, _isLong);
         Position storage position = positions[positionKey];
-        position.collateral = position.collateral + _collateral;
-        position.positionAmount = position.positionAmount + _sizeAmount;
 
-        // 修改价格
         if (position.positionAmount == 0) {
             position.account = _account;
             position.pairIndex = _pairIndex;
@@ -140,6 +139,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         if (position.positionAmount > 0 && sizeDelta > 0) {
             position.averagePrice = (position.positionAmount * position.averagePrice + sizeDelta) / (position.positionAmount + _sizeAmount);
         }
+
+        position.collateral = position.collateral + afterFeeCollateral;
+        position.positionAmount = position.positionAmount + _sizeAmount;
 
         // 修改多空头
         netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? int256(_sizeAmount) : - int256(_sizeAmount));
@@ -161,7 +163,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             } else {
                 // 多头转化为空头
                 pairVault.decreaseReserveAmount(_pairIndex, uint256(prevLongShortTracker), 0);
-                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(prevLongShortTracker)).getAmountByPrice(price));
+                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(prevLongShortTracker)).divPrice(price));
             }
         } else if (prevLongShortTracker < 0) {
             // 空头偏移增加
@@ -172,8 +174,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.decreaseReserveAmount(_pairIndex, 0, sizeDelta);
             } else {
                 // 空头转化为多头
-                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(- prevLongShortTracker).getAmountByPrice(price));
-                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount + uint256(prevLongShortTracker)).getAmountByPrice(price));
+                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(- prevLongShortTracker).divPrice(price));
+                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount + uint256(prevLongShortTracker)).divPrice(price));
             }
         } else {
             // 原有偏移为0
@@ -197,11 +199,11 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             if (!_isLong) {
                 // STO
                 if (price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
                     console.log("increasePosition STO decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 } else {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
+                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
                     console.log("increasePosition STO increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
@@ -211,12 +213,12 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             if (_isLong) {
                 // BTO
                 if (price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
                     console.log("increasePosition BTO increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 } else {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
+                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
                     console.log("increasePosition BTO decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 }
@@ -251,6 +253,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         uint256 _sizeAmount,
         bool _isLong
     ) external onlyHandler nonReentrant {
+        console.log("decreasePosition start");
+
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 price = _getPrice(pair.indexToken, _isLong);
 
@@ -259,7 +263,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         Position storage position = positions[positionKey];
 
         _sizeAmount = _sizeAmount.min(position.positionAmount);
-        uint256 sizeDelta = _sizeAmount.getDeltaByPrice(price);
+        uint256 sizeDelta = _sizeAmount.mulPrice(price);
+        console.log("decreasePosition sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
 
         // trading fee
         IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
@@ -281,10 +286,11 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             }
         }
         // todo 保证金不足以支付fee
-        uint256 afterFeeCollateral = position.collateral - tradingFee;
         IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
+        console.log("increasePosition tradingFee", tradingFee);
 
-        // 修改position size
+        // position size
+        position.collateral = position.collateral - tradingFee;
         position.positionAmount = position.positionAmount - _sizeAmount;
 
         // 修改多空头
@@ -303,7 +309,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             } else {
                 // 多头转化为空头
                 pairVault.decreaseReserveAmount(_pairIndex, uint256(prevLongShortTracker), 0);
-                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(prevLongShortTracker)).getAmountByPrice(price));
+                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(prevLongShortTracker)).divPrice(price));
             }
         } else if (prevLongShortTracker < 0) {
             // 空头偏移增加
@@ -314,8 +320,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.decreaseReserveAmount(_pairIndex, 0, sizeDelta);
             } else {
                 // 空头转化为多头
-                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(- prevLongShortTracker).getAmountByPrice(price));
-                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount + uint256(prevLongShortTracker)).getAmountByPrice(price));
+                pairVault.decreaseReserveAmount(_pairIndex, 0, uint256(- prevLongShortTracker).divPrice(price));
+                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount + uint256(prevLongShortTracker)).divPrice(price));
             }
         } else {
             // 原有偏移为0
@@ -338,11 +344,11 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             if (!_isLong) {
                 // STC
                 if (price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
                     console.log("decreasePosition STC decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 } else {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
+                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
                     console.log("decreasePosition STC increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
@@ -352,12 +358,12 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             if (_isLong) {
                 // BTC
                 if (price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(price - lpVault.averagePrice);
+                    uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
                     console.log("decreasePosition BTC increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 } else {
-                    uint256 profit = _sizeAmount.getDeltaByPrice(lpVault.averagePrice - price);
+                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
                     console.log("decreasePosition BTC increaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 }
@@ -374,24 +380,29 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         }
 
         // 结算用户Pnl
-        uint256 pnl;
+        int256 pnl;
         if (_isLong) {
             if (price > position.averagePrice) {
-                pnl = _sizeAmount * (price - position.averagePrice);
-                IERC20(pair.stableToken).transfer(address(position.account), pnl);
+                pnl = int256(_sizeAmount.mulPrice(price - position.averagePrice));
             } else {
-                pnl = _sizeAmount * (position.averagePrice - price);
-                position.collateral -= pnl;
+                pnl = -int256(_sizeAmount.mulPrice(position.averagePrice - price));
             }
         } else {
             if (position.averagePrice > price) {
-                pnl = _sizeAmount * (position.averagePrice - price);
-                IERC20(pair.stableToken).transfer(address(position.account), pnl);
+                pnl = int256(_sizeAmount.mulPrice(position.averagePrice - price));
             } else {
-                pnl = _sizeAmount * (price - position.averagePrice);
-                position.collateral -= pnl;
+                pnl = -int256(_sizeAmount.mulPrice(price - position.averagePrice));
             }
         }
+
+        if (pnl > 0) {
+            IERC20(pair.stableToken).transfer(position.account, uint256(pnl));
+        } else {
+            position.collateral -= position.collateral.min(uint256(- pnl));
+        }
+        position.releasedPnl += pnl;
+
+        // todo 保证金归零
 
         if (position.positionAmount == 0) {
             delete positions[positionKey];
@@ -404,7 +415,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             _isLong,
             _sizeAmount,
             price,
-            tradingFee
+            tradingFee,
+            pnl
         );
     }
 

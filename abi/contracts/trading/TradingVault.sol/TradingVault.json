@@ -43,6 +43,12 @@
         "internalType": "uint256",
         "name": "tradingFee",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "realisedPnl",
+        "type": "int256"
       }
     ],
     "name": "DecreasePosition",

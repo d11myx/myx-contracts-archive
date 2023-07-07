@@ -4,7 +4,8 @@ const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\nincreaseLimitLong")
+  console.log("\ndecreaseLimitShort")
+
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
@@ -17,34 +18,30 @@ async function main() {
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  await usdt.mint(user0.address, expandDecimals(100, 18))
-  await vaultPriceFeed.setPrice(btc.address, expandDecimals(100, 30));
+  await vaultPriceFeed.setPrice(btc.address, expandDecimals(110, 30));
 
-  await usdt.approve(tradingRouter.address, expandDecimals(100, 30));
+  console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
-  let orderId = await tradingRouter.increaseLimitOrdersIndex();
+  let orderId = await tradingRouter.decreaseMarketOrdersIndex();
   let request = {
     pairIndex: 0,
     tradeType: 1,
-    collateral: expandDecimals(100, 18),
-    openPrice: expandDecimals(100, 30),
-    isLong: true,
+    openPrice: expandDecimals(110, 30),
     sizeAmount: expandDecimals(2, 18),
-    tpPrice: expandDecimals(150, 30),
-    tp: expandDecimals(2, 18),
-    slPrice: expandDecimals(50, 30),
-    sl: expandDecimals(2, 18)
+    isLong: false,
+    abovePrice: true
   };
-  await tradingRouter.createIncreaseOrder(request)
+  await tradingRouter.createDecreaseOrder(request)
 
-  console.log(`order: ${await tradingRouter.increaseLimitOrders(orderId)}`)
+  console.log(`order: ${await tradingRouter.decreaseMarketOrders(orderId)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   // execute
-  console.log("orderId:", orderId);
-  await tradingRouter.connect(user1).executeIncreaseOrder(orderId, 1);
+  let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
+  console.log("startIndex:", startIndex);
+  await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 0);
 
-  console.log(`order after execute: ${await tradingRouter.increaseLimitOrders(orderId)}`);
+  console.log(`order: ${await tradingRouter.decreaseMarketOrders(0)}`);
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
   console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);

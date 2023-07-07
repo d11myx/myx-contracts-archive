@@ -4,7 +4,4 @@ hh run scripts/pair/setPair.js
 hh run scripts/pair/addLiquidity.js
 hh run scripts/deployTrading.js
 hh run scripts/mining.ts
-hh run scripts/trading/increaseMarketLong.js
-hh run scripts/trading/increaseMarketShort.js
-hh run scripts/trading/increaseLimitLong.js
-hh run scripts/trading/increaseLimitShort.js
+sh scripts/trading.sh

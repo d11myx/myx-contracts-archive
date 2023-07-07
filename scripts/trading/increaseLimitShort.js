@@ -26,10 +26,10 @@ async function main() {
   let request = {
     pairIndex: 0,
     tradeType: 1,
-    collateral: expandDecimals(50, 18),
+    collateral: expandDecimals(100, 18),
     openPrice: expandDecimals(100, 30),
     isLong: false,
-    sizeAmount: expandDecimals(1, 18),
+    sizeAmount: expandDecimals(4, 18),
     tpPrice: expandDecimals(50, 30),
     tp: expandDecimals(1, 18),
     slPrice: expandDecimals(150, 30),
