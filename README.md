@@ -22,8 +22,25 @@ Account 4 : 0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
 ```
 
 ### 合约接口
+
+#### event code
 ```text
-// 开仓（前端用户)
+// TradingRouter
+CreateIncreaseOrder: e401f3643c085fcc483af85cb3d881f021e1e70c14822e020b6cd40a818fc509
+CreateDecreaseOrder: 240a7e91666f2fb3e907c7db7dd66e21040249b32b8628e4bb9f23b87445e9ab
+ExecuteIncreaseOrder: 9be92c13b352d3051c2f3fcb8f1010048a2055b1bd840f3fba594e564482d1c8
+ExecuteDecreaseOrder: e78cfcfe88eb475b10f4f4f99cc1addb06e25054e8e3a84071621e179db3d511
+CancelIncreaseOrder: 7e93a6b00cb3caacf000d7018943b12e2b4ad29e7849df14ebd51caf4fd739b8,
+CancelDecreaseOrder: b225fd6bcccad9342bc10ccc7e25ef77175b77348c8393d669ac2dbc98a1ae29,
+
+// TradingVault
+IncreasePosition: dbab60fb9559e424fb3f4b5d1d1589bd0c174abedb3f0273928b28c5b28f57fe,
+DecreasePosition: bd7ee4b394cd100896d9636764480e465e9f68c184a5b176ac7d49331e383195,
+```
+
+#### 开仓
+```text
+// 创建开仓请求（前端用户)
 createIncreaseOrder(IncreasePositionRequest memory request)
 
 struct IncreasePositionRequest {
@@ -56,11 +73,35 @@ uint256 public decreaseMarketOrdersIndex;
 uint256 public increaseMarketOrderStartIndex;
 // 当前市价关仓请求未执行起始index
 uint256 public decreaseMarketOrderStartIndex;
+// 当前限价开仓请求最新index
+uint256 public increaseLimitOrdersIndex;
+// 当前限价关仓请求最新index
+uint256 public decreaseLimitOrdersIndex;
 
+```
 
-CreateIncreaseOrder: e401f3643c085fcc483af85cb3d881f021e1e70c14822e020b6cd40a818fc509
-CreateDecreaseOrder: 240a7e91666f2fb3e907c7db7dd66e21040249b32b8628e4bb9f23b87445e9ab
-ExecuteIncreaseOrder: 9be92c13b352d3051c2f3fcb8f1010048a2055b1bd840f3fba594e564482d1c8
-ExecuteDecreaseOrder: e78cfcfe88eb475b10f4f4f99cc1addb06e25054e8e3a84071621e179db3d511
-CancelOrder: 31708a730b6b7e62338eb5313200bd0460cf2c4470b7392f9b4da01291145fb0
+#### 关仓
+```text
+// 创建关仓请求（前端用户)
+createIncreaseOrder(IncreasePositionRequest memory request)
+
+// 请求体
+struct DecreasePositionRequest {
+    uint256 pairIndex;
+    TradeType tradeType;
+    uint256 openPrice;             // 限价触发价格
+    uint256 sizeAmount;            // 关单数量
+    bool isLong;
+    bool abovePrice;               // 高于或低于触发价格（止盈止损）
+}
+
+// 取消订单（前端用户）
+cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType)
+   
+// 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
+executeDecreaseMarkets(uint256 _endIndex)
+
+// 执行限价砍仓(keeper)
+executeDecreaseOrder(uint256 _orderId, TradeType tradeType)
+
 ```
