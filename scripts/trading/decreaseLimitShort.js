@@ -37,15 +37,15 @@ async function main() {
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   // execute
-  let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
-  console.log("startIndex:", startIndex);
-  await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 0);
-
-  console.log(`order: ${await tradingRouter.decreaseMarketOrders(0)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
-  console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
+  // let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
+  // console.log("startIndex:", startIndex);
+  // await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 0);
+  //
+  // console.log(`order: ${await tradingRouter.decreaseMarketOrders(0)}`);
+  // console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
+  // console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
+  // console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
+  // console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
 
 }
 
