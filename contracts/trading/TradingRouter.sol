@@ -308,7 +308,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 执行加仓订单
     function executeIncreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant onlyPositionKeeper {
-        console.log("executeIncreaseOrder _orderId", _orderId);
+        console.log("executeIncreaseOrder _orderId", _orderId, "_tradeType", uint8(_tradeType));
 
         IncreasePositionOrder memory order = _getIncreaseOrder(_orderId, _tradeType);
 
@@ -444,6 +444,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 取消加仓订单
     function cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
+        console.log("cancelIncreaseOrder _orderId", _orderId, "_tradeType", uint8(_tradeType));
+
         IncreasePositionOrder memory order = _getIncreaseOrder(_orderId, _tradeType);
 
         if (order.account == address(0)) {
@@ -540,6 +542,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 执行减仓订单
     function executeDecreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant onlyPositionKeeper {
+        console.log("executeDecreaseOrder _orderId", _orderId, "_tradeType", uint8(_tradeType));
+
         DecreasePositionOrder memory order = _getDecreaseOrder(_orderId, _tradeType);
 
         // 请求已执行或已取消
@@ -622,6 +626,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 取消减仓订单
     function cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
+        console.log("cancelDecreaseOrder _orderId", _orderId, "_tradeType", uint8(_tradeType));
+
         DecreasePositionOrder memory order = _getDecreaseOrder(_orderId, _tradeType);
 
         if (order.account == address(0)) {
