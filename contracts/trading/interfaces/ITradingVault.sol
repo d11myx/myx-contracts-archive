@@ -12,6 +12,7 @@ interface ITradingVault {
         uint256 entryFundingRate;
         int256 releasedPnl;
     }
+    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns(Position memory);
     function isFrozen(address _account) external view returns(bool);
     function netExposureAmountChecker(uint256 _pairIndex) external view returns(int256);

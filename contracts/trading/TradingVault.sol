@@ -40,6 +40,13 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         int256 realisedPnl
     );
 
+    event ClosePosition(
+        bytes32 positionKey,
+        address account,
+        uint256 pairIndex,
+        bool isLong
+    );
+
     using PrecisionUtils for uint256;
 
     IPairInfo public pairInfo;
@@ -316,6 +323,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         // position size
         position.collateral = position.collateral - tradingFee;
         position.positionAmount = position.positionAmount - _sizeAmount;
+        console.log("decreasePosition position collateral", position.collateral, "positionAmount", position.positionAmount);
 
         // 修改多空头
         netExposureAmountChecker[_pairIndex] = netExposureAmountChecker[_pairIndex] + (_isLong ? - int256(_sizeAmount) : int256(_sizeAmount));
@@ -334,7 +342,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 console.log("decreasePosition STC long increase");
                 pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 uint256 averagePrice = (uint256(prevLongShortTracker).mulPrice(lpVault.averagePrice) + sizeDelta)
-                    .calculatePrice(uint256(prevLongShortTracker) - _sizeAmount);
+                    .calculatePrice(uint256(prevLongShortTracker) + _sizeAmount);
                 console.log("increasePosition STC update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             } else if (longShortTracker[_pairIndex] > 0) {
@@ -344,11 +352,11 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 // 结算pnl
                 if (price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
-                    console.log("increasePosition BTC decreaseProfit", profit);
+                    console.log("decreasePosition BTC decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 } else {
                     uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
-                    console.log("increasePosition BTC increaseProfit", profit);
+                    console.log("decreasePosition BTC increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 }
@@ -359,16 +367,16 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 // 结算pnl
                 if (price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
-                    console.log("increasePosition BTC decreaseProfit", profit);
+                    console.log("decreasePosition BTC decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 } else {
                     uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
-                    console.log("increasePosition BTC increaseProfit", profit);
+                    console.log("decreasePosition BTC increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 }
                 pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(prevLongShortTracker)).divPrice(price));
-                console.log("increasePosition BTC Long to Short update averagePrice", price);
+                console.log("decreasePosition BTC Long to Short update averagePrice", price);
                 pairVault.updateAveragePrice(_pairIndex, price);
             }
         } else if (prevLongShortTracker < 0) {
@@ -377,9 +385,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 console.log("decreasePosition BTC short increase");
                 pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
                 // 修改lp均价
-                uint256 averagePrice = (uint256(- prevLongShortTracker).mulPrice(lpVault.averagePrice) - sizeDelta)
+                uint256 averagePrice = (uint256(- prevLongShortTracker).mulPrice(lpVault.averagePrice) + sizeDelta)
                     .calculatePrice(uint256(- prevLongShortTracker) + _sizeAmount);
-                console.log("increasePosition BTC update averagePrice", averagePrice);
+                console.log("decreasePosition BTC update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             } else if (longShortTracker[_pairIndex] < 0) {
                 // 空头偏移减少，且未转化为多头
@@ -388,11 +396,11 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 // 结算pnl
                 if (price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
-                    console.log("increasePosition STC decreaseProfit", profit);
+                    console.log("decreasePosition STC decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 } else {
                     uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
-                    console.log("increasePosition STC increaseProfit", profit);
+                    console.log("decreasePosition STC increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 }
@@ -403,16 +411,16 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 // 结算pnl
                 if (price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.mulPrice(price - lpVault.averagePrice);
-                    console.log("increasePosition STC increaseProfit", profit);
+                    console.log("decreasePosition STC increaseProfit", profit);
                     IERC20(pair.stableToken).transfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 } else {
                     uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - price);
-                    console.log("increasePosition STC decreaseProfit", profit);
+                    console.log("decreasePosition STC decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit);
                 }
                 pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(- prevLongShortTracker)).divPrice(price));
-                console.log("increasePosition STC Long to Short update averagePrice", price);
+                console.log("decreasePosition STC Long to Short update averagePrice", price);
                 pairVault.updateAveragePrice(_pairIndex, price);
             }
         } else {
@@ -453,7 +461,14 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         // todo 保证金归零
 
         if (position.positionAmount == 0) {
+            console.log("decreasePosition position close");
             delete positions[positionKey];
+            emit ClosePosition(
+                positionKey,
+                _account,
+                _pairIndex,
+                _isLong
+            );
         }
 
         emit DecreasePosition(

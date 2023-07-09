@@ -9,7 +9,6 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
@@ -18,7 +17,7 @@ async function main() {
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  await usdt.mint(user0.address, expandDecimals(100, 18))
+  // await usdt.mint(user0.address, expandDecimals(100, 18))
   await vaultPriceFeed.setPrice(btc.address, expandDecimals(100, 30));
 
   await usdt.approve(tradingRouter.address, expandDecimals(100, 30));
@@ -30,11 +29,11 @@ async function main() {
     collateral: expandDecimals(100, 18),
     openPrice: expandDecimals(100, 30),
     isLong: true,
-    sizeAmount: expandDecimals(2, 18),
-    tpPrice: expandDecimals(150, 30),
-    tp: expandDecimals(2, 18),
-    slPrice: expandDecimals(50, 30),
-    sl: expandDecimals(2, 18)
+    sizeAmount: expandDecimals(5, 18),
+    tpPrice: expandDecimals(110, 30),
+    tp: expandDecimals(1, 18),
+    slPrice: expandDecimals(90, 30),
+    sl: expandDecimals(1, 18)
   };
   await tradingRouter.createIncreaseOrder(request)
 
@@ -52,8 +51,7 @@ async function main() {
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
 
-  let pair = await pairInfo.getPair(0);
-  let vault = await pairVault.vaults(pair.pairIndex);
+  let vault = await pairVault.getVault(0);
   console.log(`reserve of btc: ${vault.indexReservedAmount}`);
   console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
 }
