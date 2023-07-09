@@ -387,11 +387,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 order.isLong ? true : false,
                 block.timestamp
             );
-            decreaseLimitOrders[decreaseLimitOrdersIndex] = tpOrder;
-            decreaseLimitOrdersIndex = decreaseLimitOrdersIndex + 1;
+            uint256 tpOrderId = decreaseLimitOrdersIndex;
+            decreaseLimitOrders[decreaseLimitOrdersIndex++] = tpOrder;
             emit CreateDecreaseOrder(
                 order.account,
-                _orderId,
+                tpOrderId,
                 TradeType.TP,
                 pairIndex,
                 order.tpPrice,
@@ -411,11 +411,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 order.isLong ? false : true,
                 block.timestamp
             );
-            decreaseLimitOrders[decreaseLimitOrdersIndex] = slOrder;
-            decreaseLimitOrdersIndex = decreaseLimitOrdersIndex + 1;
+            uint256 slOrderId = decreaseLimitOrdersIndex;
+            decreaseLimitOrders[decreaseLimitOrdersIndex++] = slOrder;
             emit CreateDecreaseOrder(
                 order.account,
-                _orderId,
+                slOrderId,
                 TradeType.SL,
                 pairIndex,
                 order.slPrice,

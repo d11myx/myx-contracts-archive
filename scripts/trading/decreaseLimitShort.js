@@ -22,7 +22,7 @@ async function main() {
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
-  let orderId = await tradingRouter.decreaseMarketOrdersIndex();
+  let orderId = await tradingRouter.decreaseLimitOrdersIndex();
   let request = {
     pairIndex: 0,
     tradeType: 1,
@@ -33,7 +33,7 @@ async function main() {
   };
   await tradingRouter.createDecreaseOrder(request)
 
-  console.log(`order: ${await tradingRouter.decreaseMarketOrders(orderId)}`)
+  console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   // execute
