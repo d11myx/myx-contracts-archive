@@ -9,6 +9,7 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
+  let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
@@ -50,8 +51,10 @@ async function main() {
   console.log(`order after execute: ${await tradingRouter.increaseMarketOrders(orderId)}`);
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
-  console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
+
+  let pair = pairInfo.getPair(0);
+  console.log(`reserve of btc: ${await pairVault.vaults(pair.pairIndex).indexReservedAmount}`);
+  console.log(`reserve of usdt: ${await pairVault.vaults(pair.pairIndex).stableReservedAmount}`);
 
 }
 

@@ -16,6 +16,10 @@ library PrecisionUtils {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
     }
 
+    function calculatePrice(uint256 delta, uint256 amount) internal view returns(uint256) {
+        return Math.mulDiv(delta, PRICE_PRECISION, amount);
+    }
+
     function mulPercentage(uint256 amount, uint256 percentage) internal view returns(uint256) {
         return Math.mulDiv(amount, percentage, ONE_HUNDRED_PERCENTAGE);
     }
