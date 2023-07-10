@@ -26,10 +26,9 @@ async function main() {
   let request = {
     pairIndex: 0,
     tradeType: 1,
-    openPrice: expandDecimals(110, 30),
+    triggerPrice: expandDecimals(110, 30),
     sizeAmount: expandDecimals(2, 18),
-    isLong: false,
-    abovePrice: true
+    isLong: false
   };
   await tradingRouter.createDecreaseOrder(request)
 
@@ -37,15 +36,15 @@ async function main() {
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   // execute
-  // let startIndex = await tradingRouter.decreaseLimitOrdersIndex();
-  // console.log("startIndex:", startIndex);
-  // await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 1);
-  //
-  // console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`);
-  // console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
-  // console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
-  // console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
-  // console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
+  let startIndex = await tradingRouter.decreaseLimitOrdersIndex();
+  console.log("startIndex:", startIndex);
+  await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 1);
+
+  console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`);
+  console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
+  console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
+  console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
+  console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
 
 }
 

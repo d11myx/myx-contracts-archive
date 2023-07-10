@@ -89,14 +89,9 @@ createIncreaseOrder(IncreasePositionRequest memory request)
 struct DecreasePositionRequest {
     uint256 pairIndex;
     TradeType tradeType;
-    uint256 openPrice;             // 限价触发价格
+    uint256 triggerPrice;          // 限价触发价格
     uint256 sizeAmount;            // 关单数量
     bool isLong;
-    bool abovePrice;               // 高于或低于触发价格
-                                   // 市价单：开多 true 空 false
-                                   // 限价单：开多 false 空 true
-                                   // 多单 止盈：false 止损：true
-                                   // 空单 止盈：true 止损：false
 }
 
 // 取消订单（前端用户）

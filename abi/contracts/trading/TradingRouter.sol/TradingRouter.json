@@ -352,7 +352,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "openPrice",
+            "name": "triggerPrice",
             "type": "uint256"
           },
           {
@@ -363,11 +363,6 @@
           {
             "internalType": "bool",
             "name": "isLong",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "abovePrice",
             "type": "bool"
           }
         ],

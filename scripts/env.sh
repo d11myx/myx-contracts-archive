@@ -1,7 +1,7 @@
-hh run scripts/deployTokens.js
-hh run scripts/deployPair.js
-hh run scripts/pair/setPair.js
-hh run scripts/pair/addLiquidity.js
-hh run scripts/deployTrading.js
-hh run scripts/mining.ts
-sh scripts/trading.sh
+hh run scripts/deployTokens.js --network $1
+hh run scripts/deployPair.js --network $1
+hh run scripts/pair/setPair.js --network $1
+hh run scripts/pair/addLiquidity.js --network $1
+hh run scripts/deployTrading.js --network $1
+hh run scripts/mining.ts --network $1
+sh scripts/trading.sh $1

@@ -50,9 +50,10 @@ async function main() {
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
 
-  let pair = pairInfo.getPair(0);
-  console.log(`reserve of btc: ${await pairVault.vaults(pair.pairIndex).indexReservedAmount}`);
-  console.log(`reserve of usdt: ${await pairVault.vaults(pair.pairIndex).stableReservedAmount}`);
+  let pair = await pairInfo.getPair(0);
+  let vault = await pairVault.vaults(pair.pairIndex);
+  console.log(`reserve of btc: ${vault.indexReservedAmount}`);
+  console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
 
 }
 

@@ -40,10 +40,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     struct DecreasePositionRequest {
         uint256 pairIndex;
         TradeType tradeType;
-        uint256 openPrice;             // 限价触发价格
+        uint256 triggerPrice;          // 限价触发价格
         uint256 sizeAmount;            // 关单数量
         bool isLong;
-        bool abovePrice;               // 高于或低于触发价格（止盈止损）
     }
 
     struct IncreasePositionOrder {
@@ -65,10 +64,14 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         address account;
         TradeType tradeType;
         uint256 pairIndex;
-        uint256 triggerPrice;             // 限价触发价格
-        uint256 sizeAmount;            // 关单数量
+        uint256 triggerPrice;           // 限价触发价格
+        uint256 sizeAmount;             // 关单数量
         bool isLong;
-        bool abovePrice;               // 高于或低于触发价格（止盈止损）
+        bool abovePrice;                // 高于或低于触发价格
+                                        // 市价单：开多 true 空 false
+                                        // 限价单：开多 false 空 true
+                                        // 止盈：多单 false 空单 true
+                                        // 止损：多单 true 空单 false
         uint256 blockTime;
     }
 
@@ -480,10 +483,12 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             account,
             request.tradeType,
             request.pairIndex,
-            request.openPrice,
+            request.triggerPrice,
             request.sizeAmount,
             request.isLong,
-            false,
+            // 市价单：开多 true 空 false
+            // 限价单：开多 false 空 true
+            request.tradeType == TradeType.MARKET ? request.isLong : !request.isLong,
             block.timestamp
         );
 
@@ -506,10 +511,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             orderId,
             request.tradeType,
             request.pairIndex,
-            request.openPrice,
+            request.triggerPrice,
             request.sizeAmount,
             request.isLong,
-            request.abovePrice
+            order.abovePrice
         );
         return orderId;
     }
