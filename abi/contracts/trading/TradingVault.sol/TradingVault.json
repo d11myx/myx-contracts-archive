@@ -255,6 +255,67 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getPositionByKey",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "collateral",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "positionAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "averagePrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryFundingRate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "releasedPnl",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct ITradingVault.Position",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_account",
         "type": "address"

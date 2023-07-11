@@ -460,7 +460,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // todo 保证金归零
 
+        // 关仓
         if (position.positionAmount == 0) {
+            IERC20(pair.stableToken).transfer(position.account, position.collateral);
+
             console.log("decreasePosition position close");
             delete positions[positionKey];
             emit ClosePosition(
@@ -489,6 +492,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position memory) {
         return positions[getPositionKey(_account, _pairIndex, _isLong)];
+    }
+
+    function getPositionByKey(bytes32 key) public view returns (Position memory) {
+        return positions[key];
     }
 
     function _getPrice(address _token, bool _isLong) internal view returns (uint256) {

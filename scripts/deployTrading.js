@@ -19,13 +19,17 @@ async function main() {
   let args = [pairInfo.address, pairVault.address, vaultPriceFeed.address, user1.address];
   let tradingVault = await deployUpgradeableContract("TradingVault", args);
 
-  args = [pairInfo.address, pairVault.address, tradingVault.address, vaultPriceFeed.address, 60];
+  args = [pairInfo.address, pairVault.address, tradingVault.address, vaultPriceFeed.address];
   let tradingRouter = await deployUpgradeableContract("TradingRouter", args);
 
-  await tradingVault.setHandler(tradingRouter.address, true);
+  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, vaultPriceFeed.address, 60];
+  let executeRouter = await deployUpgradeableContract("ExecuteRouter", args);
+
   await pairVault.setHandler(tradingVault.address, true);
-  await tradingRouter.setPositionKeeper(user0.address, true);
-  await tradingRouter.setPositionKeeper(user1.address, true);
+  await tradingVault.setHandler(executeRouter.address, true);
+  await tradingRouter.setHandler(executeRouter.address, true);
+  await executeRouter.setPositionKeeper(user0.address, true);
+  await executeRouter.setPositionKeeper(user1.address, true);
 
 }
 

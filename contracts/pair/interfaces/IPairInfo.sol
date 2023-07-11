@@ -17,6 +17,7 @@ interface IPairInfo {
         uint256 maxLeverage;
         uint256 minOpenAmount;
         uint256 maxOpenAmount;
+        uint256 maintainMarginRate; // 100 for 1%
     }
 
     struct FeePercentage {

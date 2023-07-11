@@ -13,6 +13,7 @@ async function main() {
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
+  let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
 
   // create
@@ -38,7 +39,7 @@ async function main() {
   // execute
   let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
   console.log("startIndex:", startIndex);
-  await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 0);
+  await executeRouter.executeDecreaseOrder(orderId, 0);
 
   console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)

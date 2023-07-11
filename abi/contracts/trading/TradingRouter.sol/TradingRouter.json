@@ -16,7 +16,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       }
@@ -41,7 +41,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       }
@@ -66,7 +66,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -127,7 +127,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -188,110 +188,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "orderId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "pairIndex",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum TradingRouter.TradeType",
-        "name": "tradeType",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isLong",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "sizeAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      }
-    ],
-    "name": "ExecuteDecreaseOrder",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "orderId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "pairIndex",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum TradingRouter.TradeType",
-        "name": "tradeType",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "collateral",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isLong",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "sizeAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      }
-    ],
-    "name": "ExecuteIncreaseOrder",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint8",
         "name": "version",
         "type": "uint8"
@@ -303,12 +199,85 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isIncrease",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum ITradingRouter.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "orderId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sizeAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ITradingRouter.PositionOrder",
+        "name": "_order",
+        "type": "tuple"
+      }
+    ],
+    "name": "addOrderToPosition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      }
+    ],
+    "name": "cancelAllPositionOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_orderId",
         "type": "uint256"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       }
@@ -326,7 +295,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       }
@@ -346,7 +315,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum TradingRouter.TradeType",
+            "internalType": "enum ITradingRouter.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -366,7 +335,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct TradingRouter.DecreasePositionRequest",
+        "internalType": "struct ITradingRouter.DecreasePositionRequest",
         "name": "_request",
         "type": "tuple"
       }
@@ -392,7 +361,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum TradingRouter.TradeType",
+            "internalType": "enum ITradingRouter.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -437,7 +406,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct TradingRouter.IncreasePositionRequest",
+        "internalType": "struct ITradingRouter.IncreasePositionRequest",
         "name": "_request",
         "type": "tuple"
       }
@@ -457,6 +426,11 @@
     "inputs": [
       {
         "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
           {
             "internalType": "uint256",
             "name": "pairIndex",
@@ -488,8 +462,8 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct TradingRouter.CreateTpSlRequest",
-        "name": "request",
+        "internalType": "struct ITradingRouter.CreateTpSlRequest",
+        "name": "_request",
         "type": "tuple"
       }
     ],
@@ -530,7 +504,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -615,7 +589,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -670,13 +644,71 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_endIndex",
+        "name": "_orderId",
         "type": "uint256"
+      },
+      {
+        "internalType": "enum ITradingRouter.TradeType",
+        "name": "_tradeType",
+        "type": "uint8"
       }
     ],
-    "name": "executeDecreaseMarketOrders",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "getDecreaseOrder",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "orderId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ITradingRouter.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "triggerPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sizeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "abovePrice",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ITradingRouter.DecreasePositionOrder",
+        "name": "order",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -687,56 +719,98 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       }
     ],
-    "name": "executeDecreaseOrder",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+    "name": "getIncreaseOrder",
+    "outputs": [
       {
-        "internalType": "uint256",
-        "name": "_endIndex",
-        "type": "uint256"
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "orderId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ITradingRouter.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "collateral",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "openPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sizeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tpPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "slPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sl",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ITradingRouter.IncreasePositionOrder",
+        "name": "order",
+        "type": "tuple"
       }
     ],
-    "name": "executeIncreaseMarketOrders",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_orderId",
-        "type": "uint256"
+        "internalType": "bool",
+        "name": "_isIncrease",
+        "type": "bool"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
-        "name": "_tradeType",
-        "type": "uint8"
-      }
-    ],
-    "name": "executeIncreaseOrder",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       },
@@ -755,6 +829,62 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getPositionOrders",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isIncrease",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum ITradingRouter.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "orderId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sizeAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ITradingRouter.PositionOrder[]",
+        "name": "orders",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -796,7 +926,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -901,7 +1031,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -988,11 +1118,6 @@
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxTimeDelay",
-        "type": "uint256"
       }
     ],
     "name": "initialize",
@@ -1014,38 +1139,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "isPositionKeeper",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxTimeDelay",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1083,94 +1176,6 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "positionDecreaseOrderIndex",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "positionDecreaseOrders",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "orderId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "enum TradingRouter.TradeType",
-        "name": "tradeType",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "triggerPrice",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sizeAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "isLong",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "abovePrice",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "blockTime",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "name": "positionDecreaseTotalAmount",
@@ -1192,7 +1197,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum TradingRouter.TradeType",
+        "internalType": "enum ITradingRouter.TradeType",
         "name": "",
         "type": "uint8"
       }
@@ -1206,6 +1211,186 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "positionOrderIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "positionOrders",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isIncrease",
+        "type": "bool"
+      },
+      {
+        "internalType": "enum ITradingRouter.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "sizeAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeFromDecreaseLimitOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeFromDecreaseMarketOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeFromIncreaseLimitOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeFromIncreaseMarketOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isIncrease",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum ITradingRouter.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "orderId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sizeAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ITradingRouter.PositionOrder",
+        "name": "_order",
+        "type": "tuple"
+      }
+    ],
+    "name": "removeOrderFromPosition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1232,6 +1417,19 @@
       }
     ],
     "name": "setContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "setDecreaseMarketOrderStartIndex",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1271,11 +1469,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_maxTimeDelay",
+        "name": "index",
         "type": "uint256"
       }
     ],
-    "name": "setMaxTimeDelay",
+    "name": "setIncreaseMarketOrderStartIndex",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1283,17 +1481,22 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "enum ITradingRouter.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
       },
       {
         "internalType": "bool",
-        "name": "_enable",
+        "name": "has",
         "type": "bool"
       }
     ],
-    "name": "setPositionKeeper",
+    "name": "setPositionHasTpSl",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1309,6 +1512,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferToVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

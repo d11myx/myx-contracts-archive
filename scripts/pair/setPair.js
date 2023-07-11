@@ -31,6 +31,7 @@ async function main() {
     maxLeverage: 100,
     minOpenAmount: "1000000000000000000",
     maxOpenAmount: "1000000000000000000000",
+    maintainMarginRate: 1000,
   }
   let feePercentage = {
     takerFeeP: 100, // 1%

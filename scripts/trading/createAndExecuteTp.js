@@ -13,6 +13,7 @@ async function main() {
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
+  let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
 
   // create
@@ -26,11 +27,12 @@ async function main() {
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   // execute
-  await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 2);
+  await executeRouter.executeDecreaseOrder(orderId, 2);
 
   // create
   orderId = await tradingRouter.decreaseLimitOrdersIndex();
   let request = {
+    account: user0.address,
     pairIndex: 0,
     isLong: true,
     tpPrice: expandDecimals(90, 30),
@@ -41,7 +43,7 @@ async function main() {
   await tradingRouter.createTpSl(request)
 
   // execute
-  await tradingRouter.connect(user1).executeDecreaseOrder(orderId, 2);
+  await executeRouter.executeDecreaseOrder(orderId, 2);
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);

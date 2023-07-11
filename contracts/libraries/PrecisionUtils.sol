@@ -28,6 +28,10 @@ library PrecisionUtils {
         return Math.mulDiv(amount, ONE_HUNDRED_PERCENTAGE, percentage);
     }
 
+    function calculatePercentage(uint256 amount0, uint256 amount1) internal view returns(uint256) {
+        return Math.mulDiv(amount0, ONE_HUNDRED_PERCENTAGE, amount1);
+    }
+
     function oneHundredPercentage() internal view returns(uint256) {
         return ONE_HUNDRED_PERCENTAGE;
     }

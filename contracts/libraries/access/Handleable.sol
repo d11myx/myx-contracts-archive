@@ -7,7 +7,7 @@ abstract contract Handleable is Governable {
     mapping(address => bool) public isHandler;
 
     modifier onlyHandler() {
-        require(isHandler[msg.sender], "Handleable: forbidden");
+        require(msg.sender == address(this) || isHandler[msg.sender], "Handleable: forbidden");
         _;
     }
 

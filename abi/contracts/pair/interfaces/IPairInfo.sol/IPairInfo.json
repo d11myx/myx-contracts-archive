@@ -153,6 +153,11 @@
             "internalType": "uint256",
             "name": "maxOpenAmount",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maintainMarginRate",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IPairInfo.TradingConfig",
