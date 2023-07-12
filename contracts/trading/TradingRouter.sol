@@ -333,9 +333,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(msg.sender == address(this) || isHandler[msg.sender] || msg.sender == account, "not order sender or handler");
 
         bytes32 key = tradingVault.getPositionKey(account, pairIndex, isLong);
-        uint256 length = positionOrders[key].length;
-        for (uint256 i = 0; i < length; i++) {
-            ITradingRouter.PositionOrder memory positionOrder = positionOrders[key][i];
+
+        while(positionOrders[key].length > 0) {
+            uint256 lastIndex = positionOrders[key].length - 1;
+            ITradingRouter.PositionOrder memory positionOrder = positionOrders[key][lastIndex];
             if (positionOrder.isIncrease) {
                 this.cancelIncreaseOrder(positionOrder.orderId, positionOrder.tradeType);
             } else {
@@ -377,7 +378,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             positionHasTpSl[key][TradeType.TP] = true;
             addOrderToPosition(
                 PositionOrder(
-                    _request.account,
+                    tpOrder.account,
                     tpOrder.pairIndex,
                     tpOrder.isLong,
                     false,
@@ -414,7 +415,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             positionHasTpSl[key][TradeType.SL] = true;
             addOrderToPosition(
                 PositionOrder(
-                    _request.account,
+                    slOrder.account,
                     slOrder.pairIndex,
                     slOrder.isLong,
                     false,
@@ -485,14 +486,22 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         bytes32 orderKey = getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
 
         uint256 index = positionOrderIndex[positionKey][orderKey];
-        PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-        bytes32 lastOrderKey = getOrderKey(lastOrder.isIncrease, lastOrder.tradeType, lastOrder.orderId);
+        uint256 lastIndex = positionOrders[positionKey].length - 1;
 
-        positionOrders[positionKey][index] = lastOrder;
-        positionOrderIndex[positionKey][lastOrderKey] = index;
+        if (index < lastIndex) {
+            // swap last order
+            PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
+            bytes32 lastOrderKey = getOrderKey(lastOrder.isIncrease, lastOrder.tradeType, lastOrder.orderId);
+
+            positionOrders[positionKey][index] = lastOrder;
+            positionOrderIndex[positionKey][lastOrderKey] = index;
+
+            delete positionOrderIndex[positionKey][lastOrderKey];
+        } else {
+            delete positionOrderIndex[positionKey][orderKey];
+        }
 
         positionOrders[positionKey].pop();
-        delete positionOrderIndex[positionKey][lastOrderKey];
 
         if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
             positionDecreaseTotalAmount[positionKey] -= _order.sizeAmount;

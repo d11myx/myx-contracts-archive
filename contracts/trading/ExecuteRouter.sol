@@ -40,7 +40,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         ITradingRouter.TradeType tradeType,
         bool isLong,
         uint256 sizeAmount,
-        uint256 price
+        uint256 price,
+        int256 pnl
     );
     event LiquidatePosition(
         address account,
@@ -48,8 +49,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         bool isLong,
         uint256 sizeAmount,
         uint256 collateral,
-        int256 pnl,
-        uint256 price
+        uint256 price,
+        int256 pnl
     );
 
     IPairInfo public pairInfo;
@@ -349,7 +350,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             }
         }
 
-        tradingVault.decreasePosition(order.account, pairIndex, order.sizeAmount, order.isLong);
+        int256 pnl = tradingVault.decreasePosition(order.account, pairIndex, order.sizeAmount, order.isLong);
 
         bytes32 key = tradingVault.getPositionKey(order.account, order.pairIndex, order.isLong);
 
@@ -387,7 +388,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             _tradeType,
             order.isLong,
             order.sizeAmount,
-            price
+            price,
+            pnl
         );
     }
 
@@ -441,8 +443,13 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             uint256 riskRate = position.positionAmount.mulPrice(_indexPrice).mulPercentage(tradingConfig.maintainMarginRate)
             .calculatePercentage(uint256(exposureAsset));
             needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
+            console.log("increasePosition riskRate", riskRate);
         }
         console.log("increasePosition needLiquidate", needLiquidate);
+
+        if (!needLiquidate) {
+            return;
+        }
 
         // 检查交易量 todo ADL
         IPairVault.Vault memory lpVault = pairVault.getVault(position.pairIndex);
@@ -476,7 +483,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             }
         }
 
-        tradingVault.decreasePosition(position.account, position.pairIndex, position.positionAmount, position.isLong);
+        int256 pnl = tradingVault.decreasePosition(position.account, position.pairIndex, position.positionAmount, position.isLong);
 
         // 仓位清零后 取消所有减仓委托
         tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
@@ -487,8 +494,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             position.isLong,
             position.positionAmount,
             position.collateral,
-            unrealizedPnl,
-            price
+            price,
+            pnl
         );
     }
 
