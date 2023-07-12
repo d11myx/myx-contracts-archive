@@ -23,7 +23,13 @@
       }
     ],
     "name": "decreasePosition",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "pnl",
+        "type": "int256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

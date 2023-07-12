@@ -23,10 +23,7 @@ async function main() {
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
-  let orderId = 1;
-
-  await vaultPriceFeed.setPrice(btc.address, expandDecimals(105, 30));
-  console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`)
+  await vaultPriceFeed.setPrice(btc.address, expandDecimals(120, 30));
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   let key = await tradingVault.getPositionKey(user0.address, 0, false);
@@ -35,7 +32,7 @@ async function main() {
 
   // execute
   let positionKeys = [key];
-  let prices = [expandDecimals(105, 30)];
+  let prices = [expandDecimals(120, 30)];
   await executeRouter.liquidatePositions(positionKeys, prices);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)

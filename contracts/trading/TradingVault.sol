@@ -26,6 +26,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         bool isLong,
         uint256 sizeAmount,
         uint256 price,
+        uint256 averagePrice,   // 仓位平均价格
         uint256 tradingFee
     );
 
@@ -34,8 +35,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         address account,
         uint256 pairIndex,
         bool isLong,
+        uint256 collateral,
         uint256 sizeAmount,
         uint256 price,
+        uint256 averagePrice,   // 仓位平均价格
         uint256 tradingFee,
         int256 realisedPnl
     );
@@ -273,6 +276,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             _isLong,
             _sizeAmount,
             price,
+            position.averagePrice,
             tradingFee
         );
         console.log("increase position finish");
@@ -283,7 +287,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         uint256 _pairIndex,
         uint256 _sizeAmount,
         bool _isLong
-    ) external onlyHandler nonReentrant {
+    ) external onlyHandler nonReentrant returns(int256 pnl) {
         console.log("decreasePosition start");
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
@@ -436,7 +440,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         }
 
         // 结算用户Pnl
-        int256 pnl;
+        pnl;
         if (_isLong) {
             if (price > position.averagePrice) {
                 pnl = int256(_sizeAmount.mulPrice(price - position.averagePrice));
@@ -451,11 +455,13 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             }
         }
 
+        uint256 decreaseCollateral;
         if (pnl > 0) {
             IERC20(pair.stableToken).transfer(position.account, uint256(pnl));
         } else {
-            position.collateral -= position.collateral.min(uint256(- pnl));
+            decreaseCollateral = position.collateral.min(uint256(- pnl));
         }
+        position.collateral -= decreaseCollateral;
         position.releasedPnl += pnl;
 
         // todo 保证金归零
@@ -479,11 +485,14 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             _account,
             _pairIndex,
             _isLong,
+            decreaseCollateral,
             _sizeAmount,
             price,
+            position.averagePrice,
             tradingFee,
             pnl
         );
+        return pnl;
     }
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {

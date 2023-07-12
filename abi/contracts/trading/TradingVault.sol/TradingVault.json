@@ -60,6 +60,12 @@
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "collateral",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "sizeAmount",
         "type": "uint256"
       },
@@ -67,6 +73,12 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "price",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "averagePrice",
         "type": "uint256"
       },
       {
@@ -133,6 +145,12 @@
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "averagePrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "tradingFee",
         "type": "uint256"
       }
@@ -177,7 +195,13 @@
       }
     ],
     "name": "decreasePosition",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "pnl",
+        "type": "int256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

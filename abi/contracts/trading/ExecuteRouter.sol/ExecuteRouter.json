@@ -43,6 +43,12 @@
         "internalType": "uint256",
         "name": "price",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "pnl",
+        "type": "int256"
       }
     ],
     "name": "ExecuteDecreaseOrder",
@@ -151,15 +157,15 @@
       },
       {
         "indexed": false,
-        "internalType": "int256",
-        "name": "pnl",
-        "type": "int256"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "price",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "pnl",
+        "type": "int256"
       }
     ],
     "name": "LiquidatePosition",

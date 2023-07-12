@@ -30,7 +30,7 @@ async function main() {
     collateral: expandDecimals(100, 18),
     openPrice: expandDecimals(100, 30),
     isLong: true,
-    sizeAmount: expandDecimals(5, 18),
+    sizeAmount: expandDecimals(10, 18),
     tpPrice: expandDecimals(110, 30),
     tp: expandDecimals(1, 18),
     slPrice: expandDecimals(90, 30),

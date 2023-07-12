@@ -30,5 +30,5 @@ interface ITradingVault {
         uint256 _pairIndex,
         uint256 _sizeAmount,
         bool _isLong
-    ) external;
+    ) external returns(int256 pnl);
 }
