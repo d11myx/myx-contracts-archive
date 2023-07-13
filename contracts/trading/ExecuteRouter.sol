@@ -393,11 +393,11 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         );
     }
 
-    function liquidatePositions(bytes32[] memory _positionKeys, uint256[] memory _indexPrice) external nonReentrant onlyPositionKeeper {
-        require(_positionKeys.length == _indexPrice.length, "length not match");
+    function liquidatePositions(bytes32[] memory _positionKeys, uint256[] memory _indexPrices) external nonReentrant onlyPositionKeeper {
+        require(_positionKeys.length == _indexPrices.length, "length not match");
 
         for (uint256 i = 0; i < _positionKeys.length; i++) {
-            _liquidatePosition(_positionKeys[i], _indexPrice[i]);
+            _liquidatePosition(_positionKeys[i], _indexPrices[i]);
         }
     }
 

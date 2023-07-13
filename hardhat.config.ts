@@ -57,7 +57,7 @@ task("encode-method", "get method artifact detail by method name")
         Object.keys(methodObject).forEach(function (methodId: string, index: number, arr: any) {
             let method = methodObject[methodId];
             if (method.name == param.method) {
-                console.log(`name: ${param.method}, methodId: ${methodId}, \ndetail:\n`, method)
+                console.log(`name: ${param.method} methodId: ${methodId} \ndetail:\n`, method)
             }
         })
     });
