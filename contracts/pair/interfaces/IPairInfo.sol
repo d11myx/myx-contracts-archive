@@ -9,7 +9,8 @@ interface IPairInfo {
         address pairToken;
         bool enable;
         uint256 kOfSwap;
-        uint256 initPairRatio; // index / stable 100 for 1%
+        uint256 initPairRatio; // index / stable 10000 for 100%
+        uint256 addLpFeeP;
     }
 
     struct TradingConfig {
@@ -17,26 +18,31 @@ interface IPairInfo {
         uint256 maxLeverage;
         uint256 minOpenAmount;
         uint256 maxOpenAmount;
-        uint256 maintainMarginRate; // 100 for 1%
+        uint256 maintainMarginRate; // 10000 for 100%
     }
 
-    struct FeePercentage {
+    struct TradingFeeConfig {
+        // fee
         uint256 takerFeeP;
         uint256 makerFeeP;
-        uint256 addLpFeeP;
+        // Distribute
+        uint256 lpDistributeP;
+        uint256 keeperDistributeP;
+        uint256 treasuryDistributeP;
+        uint256 refererDistributeP;
     }
 
-    struct TradingFeeDistribute {
-        uint256 lpP;
-        uint256 keeperP;
-        uint256 treasuryP;
-        uint256 refererP;
-    }
-
-    struct FundingFeeDistribute {
-        uint256 lpP;
-        uint256 userP;
-        uint256 treasuryP;
+    struct FundingFeeConfig {
+        // factor
+        uint256 minFundingRate;             // 最小资金费率   1000000 for 100%
+        uint256 maxFundingRate;             // 最大资金费率   1000000 for 100%
+        uint256 fundingWeightFactor;        // 多空双方资金费率权重系数 10000 for 100%
+        uint256 liquidityPremiumFactor;     // 流动性对于溢价的系数  10000 for 100%
+        uint256 interest;
+        // Distribute
+        uint256 lpDistributeP;
+        uint256 userDistributeP;
+        uint256 treasuryDistributeP;
     }
 
     function pairIndexes(address, address) external view returns(uint256);
@@ -49,10 +55,8 @@ interface IPairInfo {
 
     function getTradingConfig(uint256 _pairIndex) external view returns(TradingConfig memory);
 
-    function getFeePercentage(uint256) external view returns(FeePercentage memory);
+    function getTradingFeeConfig(uint256) external view returns(TradingFeeConfig memory);
 
-    function getTradingFeeDistribute(uint256) external view returns(TradingFeeDistribute memory);
-
-    function getFundingFeeDistribute(uint256) external view returns(FundingFeeDistribute memory);
+    function getFundingFeeConfig(uint256) external view returns(FundingFeeConfig memory);
 
 }

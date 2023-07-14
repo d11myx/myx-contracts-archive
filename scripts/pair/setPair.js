@@ -25,6 +25,7 @@ async function main() {
     enable: true,
     kOfSwap: "100000000000000000000000000000000000000000000000000",
     initPairRatio: 1000,
+    addLpFeeP: 100
   };
   let tradingConfig = {
     minLeverage: 2,
@@ -33,25 +34,27 @@ async function main() {
     maxOpenAmount: "1000000000000000000000",
     maintainMarginRate: 1000,
   }
-  let feePercentage = {
+  let tradingFeeConfig = {
     takerFeeP: 100, // 1%
     makerFeeP: 100,
-    addLpFeeP: 100
+    lpDistributeP: 0,
+    keeperDistributeP: 0,
+    treasuryDistributeP: 0,
+    refererDistributeP: 0
   }
-  let tradingFeeDistribute = {
-    lpP: 0,
-    keeperP: 0,
-    treasuryP: 0,
-    refererP: 0
+  let fundingFeeConfig = {
+    minFundingRate: 100,
+    maxFundingRate: 10000,
+    fundingWeightFactor: 100,
+    liquidityPremiumFactor: 10000,
+    interest: 0,
+    lpDistributeP: 0,
+    userDistributeP: 0,
+    treasuryDistributeP: 0
   }
-  let fundingFeeDistribute = {
-    lpP: 0,
-    userP: 0,
-    treasuryP: 0
-  }
-  console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\nfeePercentage", feePercentage,
-    "\ntradingFeeDistribute", tradingFeeDistribute, "\nfundingFeeDistribute", fundingFeeDistribute);
-  await pairInfo.addPair(pair, tradingConfig, feePercentage, tradingFeeDistribute, fundingFeeDistribute);
+  console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\ntradingFeeConfig", tradingFeeConfig,
+    "\nfundingFeeConfig", fundingFeeConfig);
+  await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
   let pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken}`);
@@ -60,7 +63,7 @@ async function main() {
   //
   pair.indexToken = eth.address;
   console.log("pair1: ", pair);
-  await pairInfo.addPair(pair, tradingConfig, feePercentage, tradingFeeDistribute, fundingFeeDistribute);
+  await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
   pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken}`);

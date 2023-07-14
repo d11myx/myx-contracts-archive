@@ -78,14 +78,14 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "averagePrice",
+        "name": "tradingFee",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "tradingFee",
-        "type": "uint256"
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -145,14 +145,14 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "averagePrice",
+        "name": "tradingFee",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "tradingFee",
-        "type": "uint256"
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
       }
     ],
     "name": "IncreasePosition",
@@ -170,6 +170,117 @@
     ],
     "name": "Initialized",
     "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "fundingRate",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "lastFundingTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdateFundingRate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "positionKey",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "collateral",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "positionAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "averagePrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "entryFundingRate",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "realisedPnl",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdatePosition",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "cumulativeFundingRates",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -203,6 +314,77 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fundingInterval",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCurrentFundingRate",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "_increase",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_sizeAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_positionAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "_entryFundingRate",
+        "type": "int256"
+      }
+    ],
+    "name": "getFundingFee",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -258,13 +440,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "entryFundingRate",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "int256",
-            "name": "releasedPnl",
+            "name": "realisedPnl",
             "type": "int256"
           }
         ],
@@ -319,13 +501,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "entryFundingRate",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "int256",
-            "name": "releasedPnl",
+            "name": "realisedPnl",
             "type": "int256"
           }
         ],
@@ -486,12 +668,50 @@
         "type": "uint256"
       }
     ],
-    "name": "longShortTracker",
+    "name": "lastFundingRates",
     "outputs": [
       {
         "internalType": "int256",
         "name": "",
         "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "lastFundingTimes",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "longTracker",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -583,13 +803,13 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "entryFundingRate",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "int256",
-        "name": "releasedPnl",
+        "name": "realisedPnl",
         "type": "int256"
       }
     ],
@@ -664,6 +884,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "shortTracker",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "tradingFeeReceiver",
     "outputs": [
@@ -674,6 +913,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCumulativeFundingRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

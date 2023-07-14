@@ -19,11 +19,9 @@ contract PairInfo is IPairInfo, Handleable {
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
 
-    mapping(uint256 => FeePercentage) public feePercentages;
+    mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
 
-    mapping(uint256 => TradingFeeDistribute) public tradingFeeDistributes;
-
-    mapping(uint256 => FundingFeeDistribute) public fundingFeeDistributes;
+    mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
     mapping(address => mapping(address => bool)) public isPairListed;
 
@@ -43,9 +41,8 @@ contract PairInfo is IPairInfo, Handleable {
     function addPair(
         Pair calldata _pair,
         TradingConfig calldata _tradingConfig,
-        FeePercentage calldata _feePercentage,
-        TradingFeeDistribute calldata _tradingFeeDistribute,
-        FundingFeeDistribute calldata _fundingFeeDistribute
+        TradingFeeConfig calldata _tradingFeeConfig,
+        FundingFeeConfig calldata _fundingFeeConfig
     ) external onlyHandler {
         address indexToken = _pair.indexToken;
         address stableToken = _pair.stableToken;
@@ -65,9 +62,8 @@ contract PairInfo is IPairInfo, Handleable {
         pairs[pairsCount].pairToken = pairToken;
 
         tradingConfigs[pairsCount] = _tradingConfig;
-        feePercentages[pairsCount] = _feePercentage;
-        tradingFeeDistributes[pairsCount] = _tradingFeeDistribute;
-        fundingFeeDistributes[pairsCount] = _fundingFeeDistribute;
+        tradingFeeConfigs[pairsCount] = _tradingFeeConfig;
+        fundingFeeConfigs[pairsCount] = _fundingFeeConfig;
 
         emit PairAdded(indexToken, stableToken, pairToken, pairsCount++);
     }
@@ -91,16 +87,16 @@ contract PairInfo is IPairInfo, Handleable {
         pair.initPairRatio = _pair.initPairRatio;
     }
 
-    function updateFeePercentage(uint256 _pairIndex, FeePercentage calldata _feePercentage) external onlyHandler {
-        feePercentages[_pairIndex] = _feePercentage;
+    function updateFeePercentage(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyHandler {
+        tradingConfigs[_pairIndex] = _tradingConfig;
     }
 
-    function updateTradingFeeDistribute(uint256 _pairIndex, TradingFeeDistribute calldata _tradingFeeDistribute) external onlyHandler {
-        tradingFeeDistributes[_pairIndex] = _tradingFeeDistribute;
+    function updateTradingFeeConfig(uint256 _pairIndex, TradingFeeConfig calldata _tradingFeeConfig) external onlyHandler {
+        tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updateFundingFeeDistribute(uint256 _pairIndex, FundingFeeDistribute calldata _fundingFeeDistribute) external onlyHandler {
-        fundingFeeDistributes[_pairIndex] = _fundingFeeDistribute;
+    function updateFundingFeeDistribute(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeDistribute) external onlyHandler {
+        fundingFeeConfigs[_pairIndex] = _fundingFeeDistribute;
     }
 
     function getPair(uint256 _pairIndex) external view override returns(Pair memory) {
@@ -111,16 +107,12 @@ contract PairInfo is IPairInfo, Handleable {
         return tradingConfigs[_pairIndex];
     }
 
-    function getFeePercentage(uint256 _pairIndex) external view override returns(FeePercentage memory) {
-        return feePercentages[_pairIndex];
+    function getTradingFeeConfig(uint256 _pairIndex) external view override returns(TradingFeeConfig memory) {
+        return tradingFeeConfigs[_pairIndex];
     }
 
-    function getTradingFeeDistribute(uint256 _pairIndex) external view override returns(TradingFeeDistribute memory) {
-        return tradingFeeDistributes[_pairIndex];
-    }
-
-    function getFundingFeeDistribute(uint256 _pairIndex) external view override returns(FundingFeeDistribute memory) {
-        return fundingFeeDistributes[_pairIndex];
+    function getFundingFeeConfig(uint256 _pairIndex) external view override returns(FundingFeeConfig memory) {
+        return fundingFeeConfigs[_pairIndex];
     }
 
 }

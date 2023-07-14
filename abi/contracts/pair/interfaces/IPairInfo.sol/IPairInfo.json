@@ -7,63 +7,52 @@
         "type": "uint256"
       }
     ],
-    "name": "getFeePercentage",
+    "name": "getFundingFeeConfig",
     "outputs": [
       {
         "components": [
           {
             "internalType": "uint256",
-            "name": "takerFeeP",
+            "name": "minFundingRate",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "makerFeeP",
+            "name": "maxFundingRate",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "addLpFeeP",
+            "name": "fundingWeightFactor",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "liquidityPremiumFactor",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "interest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpDistributeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "userDistributeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryDistributeP",
             "type": "uint256"
           }
         ],
-        "internalType": "struct IPairInfo.FeePercentage",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "getFundingFeeDistribute",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "lpP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "userP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "treasuryP",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IPairInfo.FundingFeeDistribute",
+        "internalType": "struct IPairInfo.FundingFeeConfig",
         "name": "",
         "type": "tuple"
       }
@@ -111,6 +100,11 @@
           {
             "internalType": "uint256",
             "name": "initPairRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "addLpFeeP",
             "type": "uint256"
           }
         ],
@@ -176,32 +170,42 @@
         "type": "uint256"
       }
     ],
-    "name": "getTradingFeeDistribute",
+    "name": "getTradingFeeConfig",
     "outputs": [
       {
         "components": [
           {
             "internalType": "uint256",
-            "name": "lpP",
+            "name": "takerFeeP",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "keeperP",
+            "name": "makerFeeP",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "treasuryP",
+            "name": "lpDistributeP",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "refererP",
+            "name": "keeperDistributeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "treasuryDistributeP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "refererDistributeP",
             "type": "uint256"
           }
         ],
-        "internalType": "struct IPairInfo.TradingFeeDistribute",
+        "internalType": "struct IPairInfo.TradingFeeConfig",
         "name": "",
         "type": "tuple"
       }

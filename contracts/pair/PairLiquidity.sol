@@ -129,14 +129,13 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         IERC20(pair.stableToken).transferFrom(_funder, address(this), _stableAmount);
 
         // fee
-        IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
         {
             // transfer fee
-            uint256 indexFeeAmount = _indexAmount.mulPercentage(feeP.addLpFeeP);
-            uint256 stableFeeAmount = _stableAmount.mulPercentage(feeP.addLpFeeP);
+            uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
+            uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
             console.log("indexFeeAmount", indexFeeAmount, "stableFeeAmount", stableFeeAmount);
 
             IERC20(pair.indexToken).transfer(feeReceiver, indexFeeAmount);
@@ -273,14 +272,13 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         }
         console.log("_indexAmount", _indexAmount, "_stableAmount", _stableAmount);
 
-        IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
         {
             // transfer fee
-            uint256 indexFeeAmount = _indexAmount.mulPercentage(feeP.addLpFeeP);
-            uint256 stableFeeAmount = _stableAmount.mulPercentage(feeP.addLpFeeP);
+            uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
+            uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
 
             afterFeeIndexAmount = _indexAmount - indexFeeAmount;
             afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -383,9 +381,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
 
         // add fee
-        IPairInfo.FeePercentage memory feeP = pairInfo.getFeePercentage(_pairIndex);
-        depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - feeP.addLpFeeP);
-        depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - feeP.addLpFeeP);
+        depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - pair.addLpFeeP);
+        depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - pair.addLpFeeP);
 
         return (depositIndexAmount, depositStableAmount);
     }

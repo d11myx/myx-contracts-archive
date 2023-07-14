@@ -36,6 +36,64 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCurrentFundingRate",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "_increase",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_sizeAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_positionAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "_entryFundingRate",
+        "type": "int256"
+      }
+    ],
+    "name": "getFundingFee",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_account",
         "type": "address"
@@ -86,13 +144,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "entryFundingRate",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "int256",
-            "name": "releasedPnl",
+            "name": "realisedPnl",
             "type": "int256"
           }
         ],
@@ -147,13 +205,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "entryFundingRate",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "int256",
-            "name": "releasedPnl",
+            "name": "realisedPnl",
             "type": "int256"
           }
         ],
@@ -254,12 +312,12 @@
         "type": "uint256"
       }
     ],
-    "name": "longShortTracker",
+    "name": "longTracker",
     "outputs": [
       {
-        "internalType": "int256",
+        "internalType": "uint256",
         "name": "",
-        "type": "int256"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -279,6 +337,25 @@
         "internalType": "int256",
         "name": "",
         "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "shortTracker",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

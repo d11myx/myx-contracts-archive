@@ -45,19 +45,22 @@ task("decode-event", "decode trx event logs")
         }
     });
 
-task("encode-method", "get method artifact detail by method name")
-    .addParam("method", "method name")
+task("encode-event", "get method artifact detail by method name")
+    .addOptionalParam("contract", "contract name")
     .setAction(async (param, hre) => {
         const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
         for (let fullName of fullNames) {
-            let contract = await hre.artifacts.readArtifact(fullName);
+          let contract = await hre.artifacts.readArtifact(fullName);
+          if (contract.contractName == param.contract) {
+            console.log(`contract:`, contract.contractName)
             abiDecoder.addABI(contract.abi);
+          }
         }
         let methodObject = abiDecoder.getMethodIDs();
         Object.keys(methodObject).forEach(function (methodId: string, index: number, arr: any) {
             let method = methodObject[methodId];
-            if (method.name == param.method) {
-                console.log(`name: ${param.method} methodId: ${methodId} \ndetail:\n`, method)
+            if (method.type == 'event') {
+              console.log(`event: ${method.name} id: ${methodId}`);
             }
         })
     });
@@ -71,25 +74,25 @@ const config: HardhatUserConfig = {
         settings: {
         optimizer: {
             enabled: true,
-            runs: 10,
+            runs: 20,
         },
         viaIR: true,
       },
     },
     defaultNetwork: "local",
-    zksolc: {
-      version: "1.3.8",
-      compilerSource: "binary",
-      settings: {
-        libraries: {}, // optional. References to non-inlinable libraries
-        isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-        forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-        optimizer: {
-          enabled: true, // optional. True by default
-          mode: '3' // optional. 3 by default, z to optimize bytecode size
-        }
-      }
-    },
+    // zksolc: {
+    //   version: "1.3.8",
+    //   compilerSource: "binary",
+    //   settings: {
+    //     libraries: {}, // optional. References to non-inlinable libraries
+    //     isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
+    //     forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
+    //     optimizer: {
+    //       enabled: true, // optional. True by default
+    //       mode: '3' // optional. 3 by default, z to optimize bytecode size
+    //     }
+    //   }
+    // },
     networks: {
         local: {
             url: "http://127.0.0.1:8545/",
