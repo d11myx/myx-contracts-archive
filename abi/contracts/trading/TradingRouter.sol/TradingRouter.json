@@ -537,6 +537,11 @@
         "internalType": "uint256",
         "name": "blockTime",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "needADL",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -622,6 +627,11 @@
         "internalType": "uint256",
         "name": "blockTime",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "needADL",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -701,6 +711,11 @@
             "internalType": "uint256",
             "name": "blockTime",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "needADL",
+            "type": "bool"
           }
         ],
         "internalType": "struct ITradingRouter.DecreasePositionOrder",
@@ -1474,6 +1489,29 @@
       }
     ],
     "name": "setIncreaseMarketOrderStartIndex",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ITradingRouter.TradeType",
+        "name": "_tradeType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "_needADL",
+        "type": "bool"
+      }
+    ],
+    "name": "setOrderNeedADL",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

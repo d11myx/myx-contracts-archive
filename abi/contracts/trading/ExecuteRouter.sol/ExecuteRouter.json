@@ -49,6 +49,12 @@
         "internalType": "int256",
         "name": "pnl",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "needADL",
+        "type": "bool"
       }
     ],
     "name": "ExecuteDecreaseOrder",
@@ -127,6 +133,12 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "positionKey",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -163,13 +175,47 @@
       },
       {
         "indexed": false,
-        "internalType": "int256",
-        "name": "pnl",
-        "type": "int256"
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "needADL",
+        "type": "bool"
       }
     ],
     "name": "LiquidatePosition",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_positionKeys",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_sizeAmounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ITradingRouter.TradeType",
+        "name": "_tradeType",
+        "type": "uint8"
+      }
+    ],
+    "name": "executeADLAndDecreaseOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [

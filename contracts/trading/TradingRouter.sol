@@ -128,7 +128,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         require(_request.collateral > 0, "invalid collateral");
         require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
-        require(_request.sizeAmount >= tradingConfig.minOpenAmount && _request.sizeAmount <= tradingConfig.maxOpenAmount, "invalid size");
+        require(_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         bytes32 key = tradingVault.getPositionKey(account, _request.pairIndex, _request.isLong);
         require(_request.tp == 0 || !positionHasTpSl[key][TradeType.TP], "tp already exists");
@@ -251,7 +251,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         // 市价单：开多 true 空 false
         // 限价单：开多 false 空 true
             _request.tradeType == TradeType.MARKET ? _request.isLong : !_request.isLong,
-            block.timestamp
+            block.timestamp,
+            false
         );
 
         if (_request.tradeType == TradeType.MARKET) {
@@ -371,7 +372,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 _request.tp,
                 _request.isLong,
                 _request.isLong ? true : false,
-                block.timestamp
+                block.timestamp,
+                false
             );
             tpOrderId = decreaseLimitOrdersIndex;
             decreaseLimitOrders[decreaseLimitOrdersIndex++] = tpOrder;
@@ -408,7 +410,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 _request.sl,
                 _request.isLong,
                 _request.isLong ? false : true,
-                block.timestamp
+                block.timestamp,
+                false
             );
             slOrderId = decreaseLimitOrdersIndex;
             decreaseLimitOrders[decreaseLimitOrdersIndex++] = slOrder;
@@ -543,6 +546,17 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     function transferToVault(address token, uint256 amount) external onlyHandler {
         IERC20(token).safeTransfer(address(tradingVault), amount);
+    }
+
+    function setOrderNeedADL(uint256 _orderId, TradeType _tradeType, bool _needADL) external onlyHandler {
+        DecreasePositionOrder storage order;
+        if (_tradeType == TradeType.MARKET) {
+            order = decreaseMarketOrders[_orderId];
+        } else {
+            order = decreaseLimitOrders[_orderId];
+            require(order.tradeType == _tradeType, "trade type not match");
+        }
+        order.needADL = _needADL;
     }
 
     function _getPrice(address _token, bool _isLong) internal view returns (uint256) {

@@ -128,7 +128,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         // check reserve
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
-        require(sizeDelta >= tradingConfig.minOpenAmount && sizeDelta <= tradingConfig.maxOpenAmount, "invalid size");
+        require(sizeDelta >= tradingConfig.minTradeAmount && sizeDelta <= tradingConfig.maxTradeAmount, "invalid size");
         console.log("increasePosition sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
 
         // get position
@@ -210,10 +210,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             shortTracker[_pairIndex] += _sizeAmount;
         }
 
-//        console.log("increasePosition prevNetExposureAmountChecker", prevNetExposureAmountChecker > 0 ? uint256(prevNetExposureAmountChecker) : uint256(- prevNetExposureAmountChecker));
-//        console.log("increasePosition netExposureAmountChecker", netExposureAmountChecker[_pairIndex] > 0 ? uint256(netExposureAmountChecker[_pairIndex]) : uint256(- netExposureAmountChecker[_pairIndex]));
-//        console.log("increasePosition prevNetExposureAmountChecker bigger than zero", prevNetExposureAmountChecker > 0, "netExposureAmountChecker bigger than zero", netExposureAmountChecker[_pairIndex] > 0);
-//        console.log("increasePosition longTracker", longTracker[_pairIndex], "shortTracker", shortTracker[_pairIndex]);
+        console.log("increasePosition prevNetExposureAmountChecker", prevNetExposureAmountChecker > 0 ? uint256(prevNetExposureAmountChecker) : uint256(- prevNetExposureAmountChecker));
+        console.log("increasePosition netExposureAmountChecker", netExposureAmountChecker[_pairIndex] > 0 ? uint256(netExposureAmountChecker[_pairIndex]) : uint256(- netExposureAmountChecker[_pairIndex]));
+        console.log("increasePosition prevNetExposureAmountChecker bigger than zero", prevNetExposureAmountChecker > 0, "netExposureAmountChecker bigger than zero", netExposureAmountChecker[_pairIndex] > 0);
+        console.log("increasePosition longTracker", longTracker[_pairIndex], "shortTracker", shortTracker[_pairIndex]);
 
         // 修改LP资产冻结及平均价格
         IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
@@ -430,10 +430,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             shortTracker[_pairIndex] -= _sizeAmount;
         }
 
-//        console.log("decreasePosition prevNetExposureAmountChecker", prevNetExposureAmountChecker > 0 ? uint256(prevNetExposureAmountChecker) : uint256(- prevNetExposureAmountChecker));
-//        console.log("decreasePosition netExposureAmountChecker", netExposureAmountChecker[_pairIndex] > 0 ? uint256(netExposureAmountChecker[_pairIndex]) : uint256(- netExposureAmountChecker[_pairIndex]));
-//        console.log("decreasePosition prevNetExposureAmountChecker bigger than zero", prevNetExposureAmountChecker > 0, "netExposureAmountChecker bigger than zero", netExposureAmountChecker[_pairIndex] > 0);
-//        console.log("decreasePosition longTracker", longTracker[_pairIndex], "shortTracker", shortTracker[_pairIndex]);
+        console.log("decreasePosition prevNetExposureAmountChecker", prevNetExposureAmountChecker > 0 ? uint256(prevNetExposureAmountChecker) : uint256(- prevNetExposureAmountChecker));
+        console.log("decreasePosition netExposureAmountChecker", netExposureAmountChecker[_pairIndex] > 0 ? uint256(netExposureAmountChecker[_pairIndex]) : uint256(- netExposureAmountChecker[_pairIndex]));
+        console.log("decreasePosition prevNetExposureAmountChecker bigger than zero", prevNetExposureAmountChecker > 0, "netExposureAmountChecker bigger than zero", netExposureAmountChecker[_pairIndex] > 0);
+        console.log("decreasePosition longTracker", longTracker[_pairIndex], "shortTracker", shortTracker[_pairIndex]);
 
         // 修改LP资产冻结
         IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);

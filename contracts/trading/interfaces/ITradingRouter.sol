@@ -66,6 +66,7 @@ interface ITradingRouter {
                                         // 止盈：多单 false 空单 true
                                         // 止损：多单 true 空单 false
         uint256 blockTime;
+        bool needADL;
     }
 
     struct PositionOrder {
@@ -87,7 +88,9 @@ interface ITradingRouter {
 
     function positionHasTpSl(bytes32 positionKey, TradeType tradeType) external returns (bool);
 
+    function createIncreaseOrder(IncreasePositionRequest memory _request) external returns (uint256 orderId);
     function cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType) external;
+    function createDecreaseOrder(DecreasePositionRequest memory _request) external returns (uint256 orderId);
     function cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType) external;
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
 
@@ -107,4 +110,5 @@ interface ITradingRouter {
     function removeFromDecreaseMarketOrders(uint256 orderId) external;
     function removeFromDecreaseLimitOrders(uint256 orderId) external;
     function transferToVault(address token, uint256 amount) external;
+    function setOrderNeedADL(uint256 _orderId, TradeType _tradeType, bool _needADL) external;
 }

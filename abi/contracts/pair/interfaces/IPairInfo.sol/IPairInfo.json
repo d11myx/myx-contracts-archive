@@ -140,12 +140,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "minOpenAmount",
+            "name": "minTradeAmount",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "maxOpenAmount",
+            "name": "maxTradeAmount",
             "type": "uint256"
           },
           {
