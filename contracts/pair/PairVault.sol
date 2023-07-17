@@ -10,7 +10,7 @@ import "../libraries/access/Handleable.sol";
 import "../libraries/AMMUtils.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
-import "../token/WETH.sol";
+import "../interfaces/IWETH.sol";
 import "./interfaces/IPairInfo.sol";
 import "hardhat/console.sol";
 
