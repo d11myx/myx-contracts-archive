@@ -5,6 +5,7 @@ import "../openzeeplin/contracts/token/ERC20/IERC20.sol";
 import "../openzeeplin/contracts/utils/math/Math.sol";
 import "../openzeeplin/contracts/utils/Address.sol";
 
+import "../interfaces/IWETH.sol";
 import "./interfaces/IPairInfo.sol";
 import "./interfaces/IPairLiquidity.sol";
 import "./interfaces/IPairVault.sol";
@@ -13,7 +14,7 @@ import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
-import "../token/WETH.sol";
+
 import "hardhat/console.sol";
 
 contract PairLiquidity is IPairLiquidity, Handleable {
@@ -83,7 +84,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
-        WETH(weth).deposit{value: msg.value}();
+        IWETH(weth).deposit{value: msg.value}();
         return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
     }
 
@@ -94,7 +95,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     function removeLiquidity(uint256 _pairIndex, uint256 _amount) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, msg.sender, _pairIndex, _amount);
         if (receivedIndexAmount > 0 && pairInfo.getPair(_pairIndex).indexToken == weth) {
-            WETH(weth).withdraw(receivedIndexAmount);
+            IWETH(weth).withdraw(receivedIndexAmount);
             Address.sendValue(payable(msg.sender), receivedIndexAmount);
         }
         return (receivedIndexAmount, receivedStableAmount);
