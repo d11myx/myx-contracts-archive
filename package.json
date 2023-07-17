@@ -32,6 +32,8 @@
         "hardhat-contract-sizer": "^2.8.0",
         "hardhat-gas-reporter": "^1.0.9",
         "solidity-coverage": "^0.8.2",
-        "typescript": "^5.0.4"
+        "typescript": "^5.0.4",
+        "decimal.js": "^10.4.3",
+        "mocha-chai-jest-snapshot": "^1.1.0"
     }
 }
