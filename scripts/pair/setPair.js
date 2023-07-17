@@ -30,8 +30,8 @@ async function main() {
   let tradingConfig = {
     minLeverage: 2,
     maxLeverage: 100,
-    minOpenAmount: "1000000000000000000",
-    maxOpenAmount: "1000000000000000000000",
+    minTradeAmount: "1000000000000000000",
+    maxTradeAmount: "100000000000000000000000",
     maintainMarginRate: 1000,
   }
   let tradingFeeConfig = {

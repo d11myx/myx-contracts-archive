@@ -14,6 +14,10 @@ function expandDecimals(n, decimals) {
   return bigNumberify(n).mul(bigNumberify(10).pow(decimals))
 }
 
+function reduceDecimals(n, decimals) {
+  return bigNumberify(n) / bigNumberify(10).pow(decimals)
+}
+
 async function send(provider, method, params = []) {
   await provider.send(method, params)
 }
@@ -193,6 +197,7 @@ module.exports = {
   maxUint256,
   bigNumberify,
   expandDecimals,
+  reduceDecimals,
   mineBlock,
   increaseTime,
   gasUsed,

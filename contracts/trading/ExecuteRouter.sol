@@ -428,6 +428,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
     function _liquidatePosition(bytes32 _positionKey, uint256 _indexPrice) internal {
         console.log("liquidatePosition start");
+        console.logBytes32(_positionKey);
         ITradingVault.Position memory position = tradingVault.getPositionByKey(_positionKey);
 
         // 仓位已关闭
@@ -517,6 +518,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         // 挂单
         uint256 orderId = tradingRouter.createDecreaseOrder(
             ITradingRouter.DecreasePositionRequest(
+                position.account,
                 position.pairIndex,
                 ITradingRouter.TradeType.MARKET,
                 position.isLong ? price.mulPercentage(10000 + 100) : price.mulPercentage(10000 - 100),
@@ -544,7 +546,12 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         );
     }
 
-    function executeADLAndDecreaseOrder(bytes32[] memory _positionKeys, uint256[] memory _sizeAmounts, uint256 _orderId, ITradingRouter.TradeType _tradeType) external nonReentrant onlyPositionKeeper {
+    function executeADLAndDecreaseOrder(
+        bytes32[] memory _positionKeys,
+        uint256[] memory _sizeAmounts,
+        uint256 _orderId,
+        ITradingRouter.TradeType _tradeType
+    ) external nonReentrant onlyPositionKeeper {
         console.log("executeADLAndDecreaseOrder");
 
         require(_positionKeys.length == _sizeAmounts.length, "length not match");
@@ -570,6 +577,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         for (uint256 i = 0; i < adlPositions.length; i++) {
             ITradingVault.Position memory adlPosition = adlPositions[i];
             tradingVault.decreasePosition(adlPosition.account, adlPosition.pairIndex, adlPosition.positionAmount, adlPosition.isLong);
+            console.log("executeADLAndDecreaseOrder usdt balance of vault", IERC20(pairInfo.getPair(adlPosition.pairIndex).stableToken).balanceOf(address(tradingVault)));
+            console.log();
         }
         _executeDecreaseOrder(_orderId, _tradeType);
     }
