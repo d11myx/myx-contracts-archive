@@ -1,33 +1,37 @@
 {
-  "name": "myx",
-  "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "devDependencies": {
-    "hardhat": "^2.14.0",
-    "ts-node": "^10.9.1"
-  },
-  "dependencies": {
-    "@chainlink/contracts": "^0.6.1",
-    "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
-    "@matterlabs/hardhat-zksync-solc": "^0.3.17",
-    "@matterlabs/hardhat-zksync-verify": "^0.1.7",
-    "@nomiclabs/hardhat-etherscan": "^3.1.7",
-    "@nomiclabs/hardhat-waffle": "^2.0.6",
-    "@openzeppelin/contracts": "^4.8.3",
-    "@openzeppelin/contracts-upgradeable": "^4.8.3",
-    "@openzeppelin/hardhat-upgrades": "^1.26.0",
-    "@typechain/hardhat": "^6.1.6",
-    "@uniswap/v3-core": "^1.0.1",
-    "abi-decoder": "^2.4.0",
-    "csv-parse": "^5.4.0",
-    "dotenv": "^16.0.3",
-    "hardhat-abi-exporter": "^2.10.1",
-    "hardhat-contract-sizer": "^2.8.0",
-    "hardhat-gas-reporter": "^1.0.9",
-    "solidity-coverage": "^0.8.2",
-    "typescript": "^5.0.4"
-  }
+    "name": "myx",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "compile": "hardhat compile"
+    },
+    "devDependencies": {
+        "@nomiclabs/hardhat-ethers": "^2.2.3",
+        "@types/sinon-chai": "^3.2.9",
+        "ethereum-waffle": "^4.0.10",
+        "hardhat": "^2.14.0",
+        "ts-node": "^10.9.1"
+    },
+    "dependencies": {
+        "@chainlink/contracts": "^0.6.1",
+        "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
+        "@matterlabs/hardhat-zksync-solc": "^0.3.17",
+        "@matterlabs/hardhat-zksync-verify": "^0.1.7",
+        "@nomiclabs/hardhat-etherscan": "^3.1.7",
+        "@nomiclabs/hardhat-waffle": "^2.0.6",
+        "@openzeppelin/contracts": "^4.8.3",
+        "@openzeppelin/contracts-upgradeable": "^4.8.3",
+        "@openzeppelin/hardhat-upgrades": "^1.26.0",
+        "@typechain/hardhat": "^6.1.6",
+        "@uniswap/v3-core": "^1.0.1",
+        "abi-decoder": "^2.4.0",
+        "csv-parse": "^5.4.0",
+        "dotenv": "^16.0.3",
+        "hardhat-abi-exporter": "^2.10.1",
+        "hardhat-contract-sizer": "^2.8.0",
+        "hardhat-gas-reporter": "^1.0.9",
+        "solidity-coverage": "^0.8.2",
+        "typescript": "^5.0.4"
+    }
 }
