@@ -7,9 +7,9 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import '@openzeppelin/hardhat-upgrades';
-import "@matterlabs/hardhat-zksync-deploy";
-import "@matterlabs/hardhat-zksync-solc";
-import "@matterlabs/hardhat-zksync-verify";
+// import "@matterlabs/hardhat-zksync-deploy";
+// import "@matterlabs/hardhat-zksync-solc";
+// import "@matterlabs/hardhat-zksync-verify";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-abi-exporter";
 import "hardhat-contract-sizer";
@@ -79,7 +79,7 @@ const config: HardhatUserConfig = {
         viaIR: true,
       },
     },
-    defaultNetwork: "local",
+    // defaultNetwork: "local",
     // zksolc: {
     //   version: "1.3.8",
     //   compilerSource: "binary",
