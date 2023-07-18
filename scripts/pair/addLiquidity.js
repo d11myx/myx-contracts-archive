@@ -53,6 +53,18 @@ async function main() {
   console.log(`balance of btc: ${await btc.balanceOf(pairVault.address)}, usdt: ${await usdt.balanceOf(pairVault.address)}`);
   lpAmount = await pairLiquidity.userPairTokens(pairToken.address, user0.address);
   console.log(`lp supply: ${await pairToken.balanceOf(pairLiquidity.address)}, lp amount of user: ${lpAmount}`);
+
+  // add liquidity for eth
+  await eth.approve(pairLiquidity.address, expandDecimals(100, 18));
+  await usdt.approve(pairLiquidity.address, expandDecimals(100000, 18));
+  pairIndex = await pairInfo.pairIndexes(eth.address, usdt.address);
+  await vaultPriceFeed.setPrice(eth.address, expandDecimals(100, 30));
+  console.log("lpFairPrice", await pairLiquidity.lpFairPrice(pairIndex));
+  console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, expandDecimals(100, 18), expandDecimals(10000, 18))}`)
+  console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, expandDecimals(100, 18))}`)
+  await pairLiquidity.addLiquidity(pairIndex, expandDecimals(100, 18), expandDecimals(10000, 18));
+  console.log(`deposit eth: ${await eth.balanceOf(pairVault.address)}, usdt: ${await usdt.balanceOf(pairVault.address)}`);
+  console.log();
 }
 
 main()

@@ -249,6 +249,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "entryFundingTime",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "int256",
         "name": "realisedPnl",
         "type": "int256"
@@ -374,6 +380,11 @@
         "internalType": "int256",
         "name": "_entryFundingRate",
         "type": "int256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_entryFundingTime",
+        "type": "uint256"
       }
     ],
     "name": "getFundingFee",
@@ -445,6 +456,11 @@
             "type": "int256"
           },
           {
+            "internalType": "uint256",
+            "name": "entryFundingTime",
+            "type": "uint256"
+          },
+          {
             "internalType": "int256",
             "name": "realisedPnl",
             "type": "int256"
@@ -504,6 +520,11 @@
             "internalType": "int256",
             "name": "entryFundingRate",
             "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryFundingTime",
+            "type": "uint256"
           },
           {
             "internalType": "int256",
@@ -806,6 +827,11 @@
         "internalType": "int256",
         "name": "entryFundingRate",
         "type": "int256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "entryFundingTime",
+        "type": "uint256"
       },
       {
         "internalType": "int256",

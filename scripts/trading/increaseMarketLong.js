@@ -25,6 +25,7 @@ async function main() {
 
   let orderId = await tradingRouter.increaseMarketOrdersIndex();
   let request = {
+    account: user0.address,
     pairIndex: 0,
     tradeType: 0,
     collateral: expandDecimals(100, 18),

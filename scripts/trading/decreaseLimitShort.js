@@ -25,6 +25,7 @@ async function main() {
 
   let orderId = await tradingRouter.decreaseLimitOrdersIndex();
   let request = {
+    account: user0.address,
     pairIndex: 0,
     tradeType: 1,
     triggerPrice: expandDecimals(110, 30),

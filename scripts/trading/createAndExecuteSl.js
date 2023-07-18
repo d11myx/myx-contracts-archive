@@ -49,10 +49,8 @@ async function main() {
   await executeRouter.executeDecreaseOrder(orderId, 3);
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
-  console.log(`reserve of btc: ${await usdt.balanceOf(pairVault.address)}`);
-  console.log(`balance of usdt: ${await usdt.balanceOf(pairVault.address)}`);
+  console.log(`reserve of btc: ${vault.indexReservedAmount}`);
+  console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
 
 }
 

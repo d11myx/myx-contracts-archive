@@ -53,6 +53,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         uint256 positionAmount,
         uint256 averagePrice,
         int256 entryFundingRate,
+        uint256 entryFundingTime,
         int256 realisedPnl,
         uint256 price
     );
@@ -127,8 +128,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // check reserve
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        require(_sizeAmount >= tradingConfig.minTradeAmount && _sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
+
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
-        require(sizeDelta >= tradingConfig.minTradeAmount && sizeDelta <= tradingConfig.maxTradeAmount, "invalid size");
         console.log("increasePosition sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
 
         // get position
@@ -162,29 +164,36 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // funding fee
         updateCumulativeFundingRate(_pairIndex);
-        int256 fundingFee = getFundingFee(true, _pairIndex, _sizeAmount, position.positionAmount, position.entryFundingRate);
+        int256 fundingFee = getFundingFee(true, _pairIndex, _sizeAmount, position.positionAmount, position.entryFundingRate, position.entryFundingTime);
+        console.log("increasePosition lastFundingTimes", lastFundingTimes[_pairIndex]);
+        console.log("increasePosition cumulativeFundingRates", cumulativeFundingRates[_pairIndex] >= 0 ?
+            uint256(cumulativeFundingRates[_pairIndex]) : uint256(- cumulativeFundingRates[_pairIndex]));
+        console.log("increasePosition fundingFee", fundingFee >= 0 ? uint256(fundingFee) : uint256(- fundingFee));
+        console.log("increasePosition cumulativeFundingRates >= 0 ", cumulativeFundingRates[_pairIndex] >= 0, "fundingFee >= 0", fundingFee >= 0);
 
         // todo distribute
         if (fundingFee >= 0) {
             uint256 absFundingRate = uint256(fundingFee);
             if (_isLong) {
-                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
-                position.collateral = position.collateral - tradingFee;
-            } else {
                 require(position.collateral >= tradingFee + absFundingRate, "collateral not enough for fee");
                 position.collateral = position.collateral - tradingFee - absFundingRate;
+                console.log("increasePosition long pay funding fee");
+            } else {
+                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
+                position.collateral = position.collateral - tradingFee;
+                console.log("increasePosition long take funding fee");
             }
-            console.log("increasePosition fundingFee", absFundingRate);
         } else {
             uint256 absFundingRate = uint256(- fundingFee);
             if (!_isLong) {
-                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
-                position.collateral = position.collateral - tradingFee;
-            } else {
                 require(position.collateral >= tradingFee + absFundingRate, "collateral not enough for fee");
                 position.collateral = position.collateral - tradingFee - absFundingRate;
+                console.log("increasePosition short pay funding fee");
+            } else {
+                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
+                position.collateral = position.collateral - tradingFee;
+                console.log("increasePosition short take funding fee");
             }
-            console.log("increasePosition fundingFee", absFundingRate);
         }
 
         if (position.positionAmount == 0) {
@@ -200,6 +209,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         position.positionAmount = position.positionAmount + _sizeAmount;
         position.entryFundingRate = cumulativeFundingRates[_pairIndex];
+        position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // 修改多空头
         int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
@@ -341,6 +351,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             position.positionAmount,
             position.averagePrice,
             position.entryFundingRate,
+            position.entryFundingTime,
             position.realisedPnl,
             price
         );
@@ -391,35 +402,43 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // funding fee
         updateCumulativeFundingRate(_pairIndex);
-        int256 fundingFee = getFundingFee(false, _pairIndex, _sizeAmount, position.positionAmount, position.entryFundingRate);
+        int256 fundingFee = getFundingFee(false, _pairIndex, _sizeAmount, position.positionAmount, position.entryFundingRate, position.entryFundingTime);
+        console.log("increasePosition lastFundingTimes", lastFundingTimes[_pairIndex]);
+        console.log("increasePosition cumulativeFundingRates", cumulativeFundingRates[_pairIndex] >= 0 ?
+            uint256(cumulativeFundingRates[_pairIndex]) : uint256(- cumulativeFundingRates[_pairIndex]));
+        console.log("increasePosition fundingFee", fundingFee >= 0 ? uint256(fundingFee) : uint256(- fundingFee));
+        console.log("increasePosition cumulativeFundingRates >= 0 ", cumulativeFundingRates[_pairIndex] >= 0, "fundingFee >= 0", fundingFee >= 0);
 
         // todo distribute
         if (fundingFee >= 0) {
             uint256 absFundingRate = uint256(fundingFee);
             if (_isLong) {
-                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
-                position.collateral = position.collateral - tradingFee;
-            } else {
                 require(position.collateral >= tradingFee + absFundingRate, "collateral not enough for fee");
                 position.collateral = position.collateral - tradingFee - absFundingRate;
+                console.log("increasePosition long pay funding fee");
+            } else {
+                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
+                position.collateral = position.collateral - tradingFee;
+                console.log("increasePosition short take funding fee");
             }
-            console.log("decreasePosition fundingFee", absFundingRate);
         } else {
             uint256 absFundingRate = uint256(- fundingFee);
             if (!_isLong) {
-                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
-                position.collateral = position.collateral - tradingFee;
-            } else {
                 require(position.collateral >= tradingFee + absFundingRate, "collateral not enough for fee");
                 position.collateral = position.collateral - tradingFee - absFundingRate;
+                console.log("increasePosition short pay funding fee");
+            } else {
+                IERC20(pair.stableToken).safeTransfer(_account, absFundingRate);
+                position.collateral = position.collateral - tradingFee;
+                console.log("increasePosition short take funding fee");
             }
-            console.log("decreasePosition fundingFee", absFundingRate);
         }
 
         // position size
         position.positionAmount = position.positionAmount - _sizeAmount;
         console.log("decreasePosition position collateral", position.collateral, "positionAmount", position.positionAmount);
         position.entryFundingRate = cumulativeFundingRates[_pairIndex];
+        position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // 修改多空头
         int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
@@ -551,6 +570,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pnl = - int256(_sizeAmount.mulPrice(price - position.averagePrice));
             }
         }
+        console.log("decreasePosition pnl", pnl >= 0 ? uint256(pnl) : uint256(- pnl));
+        console.log("pnl bigger than zero", pnl >= 0);
 
         uint256 decreaseCollateral;
         if (pnl > 0) {
@@ -600,6 +621,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             position.positionAmount,
             position.averagePrice,
             position.entryFundingRate,
+            position.entryFundingTime,
             position.realisedPnl,
             price
         );
@@ -612,7 +634,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             return;
         }
 
-        if (lastFundingTimes[_pairIndex] + fundingInterval > block.timestamp) {
+        if (block.timestamp - lastFundingTimes[_pairIndex] < fundingInterval) {
+            console.log("updateCumulativeFundingRate no need update");
             return;
         }
 
@@ -626,14 +649,32 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         emit UpdateFundingRate(_pairIndex, cumulativeFundingRates[_pairIndex], lastFundingTimes[_pairIndex]);
     }
 
-    function getFundingFee(bool _increase, uint256 _pairIndex, uint256 _sizeAmount, uint256 _positionAmount, int256 _entryFundingRate) public override view returns (int256) {
-        uint256 interval = block.timestamp - lastFundingTimes[_pairIndex];
-        if (interval < fundingInterval && !_increase) {
-            int256 fundingRate = lastFundingRates[_pairIndex] * int256(interval) / int256(fundingInterval);
-            return int256(_sizeAmount) * fundingRate / int256(PrecisionUtils.fundingRatePrecision());
+    function getFundingFee(
+        bool _increase,
+        uint256 _pairIndex,
+        uint256 _sizeAmount,
+        uint256 _positionAmount,
+        int256 _entryFundingRate,
+        uint256 _entryFundingTime
+    ) public override view returns (int256) {
+        uint256 interval = block.timestamp - _entryFundingTime;
+        console.log("getFundingFee interval", interval);
+        if (interval < fundingInterval) {
+            if (!_increase) {
+                int256 fundingRate = lastFundingRates[_pairIndex] * int256(interval) / int256(fundingInterval);
+                console.log("getFundingFee lastFundingRates", lastFundingRates[_pairIndex] >= 0 ? uint256(lastFundingRates[_pairIndex]) : uint256(- lastFundingRates[_pairIndex]));
+                console.log("getFundingFee lastFundingRates >= 0 ", lastFundingRates[_pairIndex] >= 0);
+                console.log("getFundingFee sizeAmount", _sizeAmount);
+                return int256(_sizeAmount) * fundingRate / int256(PrecisionUtils.fundingRatePrecision());
+            }
         }
 
         int256 fundingRate = cumulativeFundingRates[_pairIndex] - _entryFundingRate;
+        console.log("getFundingFee cumulativeFundingRates", cumulativeFundingRates[_pairIndex] >= 0 ?
+            uint256(cumulativeFundingRates[_pairIndex]) : uint256(- cumulativeFundingRates[_pairIndex]));
+        console.log("getFundingFee entryFundingRate", _entryFundingRate >= 0 ? uint256(_entryFundingRate) : uint256(- _entryFundingRate));
+        console.log("getFundingFee cumulativeFundingRates >= 0 ", cumulativeFundingRates[_pairIndex] >= 0, "entryFundingRate >= 0", _entryFundingRate >= 0);
+        console.log("getFundingFee positionAmount", _positionAmount);
         return int256(_positionAmount) * fundingRate / int256(PrecisionUtils.fundingRatePrecision());
     }
 
