@@ -10,6 +10,7 @@ import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/PriceUtils.sol";
+import "../libraries/Int256Utils.sol";
 import "../libraries/access/Handleable.sol";
 
 import "./interfaces/ITradingRouter.sol";
@@ -21,6 +22,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
+    using Int256Utils for int256;
 
     // 市价开仓
     event CreateIncreaseOrder(
@@ -28,7 +30,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 orderId,
         uint256 pairIndex,
         TradeType tradeType,
-        uint256 collateral,
+        int256 collateral,
         uint256 openPrice,
         bool isLong,
         uint256 sizeAmount,
@@ -124,18 +126,31 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
         uint256 price = _getPrice(pair.indexToken, _request.isLong);
 
-        require(_request.sizeAmount >= _request.collateral.divPrice(price) * tradingConfig.minLeverage
-            && _request.sizeAmount <= _request.collateral.divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
-
-        require(_request.collateral > 0, "invalid collateral");
-        require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
+        // check increase size
         require(_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
+        // check leverage
+        ITradingVault.Position memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
+
+        uint256 afterPosition = position.positionAmount + _request.sizeAmount;
+        int256 totalCollateral = int256(position.collateral) + _request.collateral;
+        require(totalCollateral >= 0, "collateral not enough for decrease");
+        totalCollateral += tradingVault.getUnrealizedPnl();
+
+        require(totalCollateral >= 0, "collateral not enough for pnl");
+        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+
+        // check tp sl
+        require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
         bytes32 key = tradingVault.getPositionKey(account, _request.pairIndex, _request.isLong);
         require(_request.tp == 0 || !positionHasTpSl[key][TradeType.TP], "tp already exists");
         require(_request.sl == 0 || !positionHasTpSl[key][TradeType.SL], "sl already exists");
 
-        IERC20(pair.stableToken).safeTransferFrom(account, address(this), _request.collateral);
+        // transfer collateral
+        if (_request.collateral > 0) {
+            IERC20(pair.stableToken).safeTransferFrom(account, address(this), _request.collateral.abs());
+        }
 
         IncreasePositionOrder memory order = IncreasePositionOrder(
             increaseMarketOrdersIndex,
@@ -207,7 +222,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
-        IERC20(pair.stableToken).safeTransfer(order.account, order.collateral);
+        // transfer collateral
+        if (order.collateral > 0) {
+            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+        }
 
         removeOrderFromPosition(
             PositionOrder(
@@ -239,17 +257,34 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_request.pairIndex);
 
+        // check decrease size
         ITradingVault.Position memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
         bytes32 positionKey = tradingVault.getPositionKey(account, _request.pairIndex, _request.isLong);
-        console.logBytes32(positionKey);
         console.log("createDecreaseOrder sizeAmount %s positionAmount %s positionDecreaseTotalAmount %s",
             _request.sizeAmount, position.positionAmount, positionDecreaseTotalAmount[positionKey]);
         require(_request.sizeAmount <= position.positionAmount - positionDecreaseTotalAmount[positionKey], "decrease amount exceed position");
+
+        // check leverage
+        uint256 afterPosition = position.positionAmount + _request.sizeAmount;
+        int256 totalCollateral = int256(position.collateral) + _request.collateral;
+        require(totalCollateral >= 0, "collateral not enough for decrease");
+        totalCollateral += tradingVault.getUnrealizedPnl();
+
+        require(totalCollateral >= 0, "collateral not enough for pnl");
+        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+
+        // transfer collateral
+        if (_request.collateral > 0) {
+            IERC20(pair.stableToken).safeTransferFrom(account, address(this), _request.collateral.abs());
+        }
+
         DecreasePositionOrder memory order = DecreasePositionOrder(
             decreaseMarketOrdersIndex,
             account,
-            _request.tradeType,
             _request.pairIndex,
+            _request.tradeType,
+            _request.collateral,
             _request.triggerPrice,
             _request.sizeAmount,
             _request.isLong,
@@ -311,6 +346,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
         bytes32 key = tradingVault.getPositionKey(order.account, order.pairIndex, order.isLong);
+
+        if (order.collateral > 0) {
+            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+        }
 
         removeOrderFromPosition(
             PositionOrder(

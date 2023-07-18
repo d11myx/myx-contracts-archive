@@ -6,6 +6,7 @@ import "../openzeeplin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../libraries/access/Handleable.sol";
 import "../libraries/PrecisionUtils.sol";
+import "../libraries/Int256Utils.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
@@ -21,6 +22,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
+    using Int256Utils for int256;
 
 
     event ExecuteIncreaseOrder(
@@ -28,7 +30,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 orderId,
         uint256 pairIndex,
         ITradingRouter.TradeType tradeType,
-        uint256 collateral,
+        int256 collateral,
         bool isLong,
         uint256 sizeAmount,
         uint256 price
@@ -50,7 +52,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 pairIndex,
         bool isLong,
         uint256 sizeAmount,
-        uint256 collateral,
+        int256 collateral,
         uint256 price,
         uint256 orderId,
         bool needADL
@@ -160,43 +162,58 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
         require(pair.enable, "trade pair not supported");
 
+        // check account enable
+        require(!tradingVault.isFrozen(order.account), "account is frozen");
+
+        // check trading amount
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, order.isLong, false, false);
+        require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // check price
-        console.log("executeIncreaseOrder check price");
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, order.isLong, false, false);
         if (order.tradeType == ITradingRouter.TradeType.MARKET) {
             require(order.isLong ? price <= order.openPrice : price >= order.openPrice, "exceed acceptable price");
         } else {
             require(order.isLong ? price >= order.openPrice : price <= order.openPrice, "not reach trigger price");
         }
 
-        // check
-        require(order.sizeAmount >= order.collateral.divPrice(price) * tradingConfig.minLeverage
-            && order.sizeAmount <= order.collateral.divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
-        require(!tradingVault.isFrozen(order.account), "account is frozen");
+        // get position
+        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
 
-        bytes32 key = tradingVault.getPositionKey(order.account, order.pairIndex, order.isLong);
-        require(order.tp == 0 || !tradingRouter.positionHasTpSl(key, ITradingRouter.TradeType.TP), "tp already exists");
-        require(order.sl == 0 || !tradingRouter.positionHasTpSl(key, ITradingRouter.TradeType.SL), "sl already exists");
+        // check position and leverage
+        uint256 sizeDelta = order.sizeAmount.mulPrice(price);
+        console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
+
+        uint256 afterPosition = position.positionAmount + order.sizeAmount;
+        int256 totalCollateral = int256(position.collateral) + order.collateral;
+        require(totalCollateral >= 0, "collateral not enough for decrease");
+
+        totalCollateral += tradingVault.getUnrealizedPnl(order.account, order.pairIndex, order.isLong, order.sizeAmount);
+        require(totalCollateral >= 0, "collateral not enough for pnl");
+        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+
+        // check tp sl
+        require(order.tp == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.TP), "tp already exists");
+        require(order.sl == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.SL), "sl already exists");
 
         // 检查交易量
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log("increasePosition preNetExposureAmountChecker",
+        console.log("executeIncreaseOrder preNetExposureAmountChecker",
             preNetExposureAmountChecker > 0 ? uint256(preNetExposureAmountChecker) : uint256(- preNetExposureAmountChecker));
         if (preNetExposureAmountChecker >= 0) {
             // 偏向多头
             if (order.isLong) {
                 // 买入单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("increasePosition sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
                 require(order.sizeAmount <= availableIndex, "lp index token not enough");
             } else {
                 // 卖出单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("increasePosition sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
                 require(order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.divPrice(price), "lp stable token not enough");
             }
         } else {
@@ -204,16 +221,20 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             if (order.isLong) {
                 // 卖出单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
                 require(order.sizeAmount <= uint256(- preNetExposureAmountChecker) + availableIndex, "lp index token not enough");
             } else {
                 // 买入单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
                 require(order.sizeAmount <= availableStable.divPrice(price), "lp stable token not enough");
             }
         }
 
-        // trading vault
-        tradingRouter.transferToVault(pair.stableToken, order.collateral);
+        // transfer collateral
+        if (order.collateral > 0) {
+            tradingRouter.transferToVault(pair.stableToken, order.collateral);
+        }
         tradingVault.increasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
 
         tradingRouter.removeOrderFromPosition(
@@ -240,6 +261,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             )
         );
 
+        // delete order
         if (_tradeType == ITradingRouter.TradeType.MARKET) {
             tradingRouter.removeFromIncreaseMarketOrders(_orderId);
         } else if (_tradeType == ITradingRouter.TradeType.LIMIT) {
@@ -307,25 +329,41 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
-        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
-        if (position.account == address(0)) {
-            console.log("position is closed");
-            return;
-        }
+        // check trading amount
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
+        require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
+        // get pair
         uint256 pairIndex = order.pairIndex;
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
 
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, order.isLong, false, false);
-
         // check price
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, order.isLong, false, false);
         require(order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice, "not reach trigger price");
+
+        // get position
+        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        require(position.account == address(0), "position already closed");
+
+        // check position and leverage
+        uint256 sizeDelta = _sizeAmount.mulPrice(price);
+        console.log("executeDecreaseOrder sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
+
+        require(order.sizeAmount <= position.positionAmount, "decrease amount exceed position");
+        uint256 afterPosition = position.positionAmount - order.sizeAmount;
+        int256 totalCollateral = int256(position.collateral) + order.collateral;
+        require(totalCollateral >= 0, "collateral not enough for decrease");
+
+        totalCollateral += tradingVault.getUnrealizedPnl(order.account, order.pairIndex, order.isLong, order.sizeAmount);
+        require(totalCollateral >= 0, "collateral not enough for pnl");
+        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
 
         // 检查交易量
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log("decreasePosition preNetExposureAmountChecker",
+        console.log("executeDecreaseOrder preNetExposureAmountChecker",
             preNetExposureAmountChecker > 0 ? uint256(preNetExposureAmountChecker) : uint256(- preNetExposureAmountChecker));
         bool needADL;
         if (preNetExposureAmountChecker >= 0) {
@@ -333,12 +371,12 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             if (!order.isLong) {
                 // 关空单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("decreasePosition sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
                 needADL = order.sizeAmount > availableIndex;
             } else {
                 // 关多单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("decreasePosition sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
                 needADL = order.sizeAmount > uint256(preNetExposureAmountChecker) + availableStable.divPrice(price);
             }
         } else {
@@ -346,18 +384,18 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             if (!order.isLong) {
                 // 关空单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("decreasePosition sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
                 needADL = order.sizeAmount > uint256(- preNetExposureAmountChecker) + availableIndex;
             } else {
                 // 关多单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("decreasePosition sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
                 needADL = order.sizeAmount > availableStable.divPrice(price);
             }
         }
 
         if (needADL) {
-            console.log("decreasePosition needADL");
+            console.log("executeDecreaseOrder needADL");
             tradingRouter.setOrderNeedADL(_orderId, _tradeType, needADL);
 
             emit ExecuteDecreaseOrder(
@@ -374,16 +412,19 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             return;
         }
 
-        int256 pnl = tradingVault.decreasePosition(order.account, pairIndex, order.sizeAmount, order.isLong);
+        // transfer collateral
+        if (order.collateral > 0) {
+            tradingRouter.transferToVault(pair.stableToken, order.collateral);
+        }
+        int256 pnl = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
 
-        bytes32 key = tradingVault.getPositionKey(order.account, order.pairIndex, order.isLong);
-
+        // delete order
         if (_tradeType == ITradingRouter.TradeType.MARKET) {
             tradingRouter.removeFromDecreaseMarketOrders(_orderId);
         } else if (_tradeType == ITradingRouter.TradeType.LIMIT) {
             tradingRouter.removeFromDecreaseLimitOrders(_orderId);
         } else {
-            tradingRouter.setPositionHasTpSl(key, _tradeType, false);
+            tradingRouter.setPositionHasTpSl(position.key, _tradeType, false);
             tradingRouter.removeFromDecreaseLimitOrders(_orderId);
         }
 
