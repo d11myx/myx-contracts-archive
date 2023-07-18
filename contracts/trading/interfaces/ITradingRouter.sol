@@ -6,6 +6,7 @@ interface ITradingRouter {
     enum TradeType {MARKET, LIMIT, TP, SL}
 
     struct IncreasePositionRequest {
+        address account;
         uint256 pairIndex;             // 币对index
         TradeType tradeType;           // 0: MARKET, 1: LIMIT
         uint256 collateral;            // 1e18 保证金数量
@@ -19,6 +20,7 @@ interface ITradingRouter {
     }
 
     struct DecreasePositionRequest {
+        address account;
         uint256 pairIndex;
         TradeType tradeType;
         uint256 triggerPrice;          // 限价触发价格

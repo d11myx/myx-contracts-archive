@@ -99,8 +99,8 @@ const config: HardhatUserConfig = {
             accounts:
                 [LOCAL_PRIVATE_KEY1, LOCAL_PRIVATE_KEY2, LOCAL_PRIVATE_KEY3, LOCAL_PRIVATE_KEY4, LOCAL_PRIVATE_KEY5,
                     LOCAL_PRIVATE_KEY6, LOCAL_PRIVATE_KEY7, LOCAL_PRIVATE_KEY8, LOCAL_PRIVATE_KEY9, LOCAL_PRIVATE_KEY10],
-            gas: gas,
-            gasPrice: gasPrice,
+            gas: 4000000,
+            gasPrice: 20000000000,
             // zksync: true,
         },
         remote: {

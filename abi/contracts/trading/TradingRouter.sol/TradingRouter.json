@@ -310,6 +310,11 @@
       {
         "components": [
           {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
             "name": "pairIndex",
             "type": "uint256"
@@ -355,6 +360,11 @@
     "inputs": [
       {
         "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
           {
             "internalType": "uint256",
             "name": "pairIndex",

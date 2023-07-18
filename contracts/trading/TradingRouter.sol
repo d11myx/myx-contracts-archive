@@ -110,10 +110,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 创建加仓订单
     function createIncreaseOrder(IncreasePositionRequest memory _request) external nonReentrant returns (uint256 orderId) {
-        console.log("createIncreaseOrder account", msg.sender);
+        console.log("createIncreaseOrder sender", msg.sender, "account", _request.account);
         console.log("createIncreaseOrder pairIndex", _request.pairIndex, "tradeType", uint8(_request.tradeType));
+        require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
 
-        address account = msg.sender;
+        address account = _request.account;
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_request.pairIndex);
 
@@ -230,16 +231,20 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 创建减仓订单
     function createDecreaseOrder(DecreasePositionRequest memory _request) external nonReentrant returns (uint256 orderId) {
-        console.log("createDecreaseOrder account", msg.sender);
+        console.log("createDecreaseOrder sender", msg.sender, "account", _request.account);
         console.log("createDecreaseOrder pairIndex", _request.pairIndex, "tradeType", uint8(_request.tradeType));
-        address account = msg.sender;
+        require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
+
+        address account = _request.account;
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_request.pairIndex);
 
         ITradingVault.Position memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
         bytes32 positionKey = tradingVault.getPositionKey(account, _request.pairIndex, _request.isLong);
+        console.logBytes32(positionKey);
+        console.log("createDecreaseOrder sizeAmount %s positionAmount %s positionDecreaseTotalAmount %s",
+            _request.sizeAmount, position.positionAmount, positionDecreaseTotalAmount[positionKey]);
         require(_request.sizeAmount <= position.positionAmount - positionDecreaseTotalAmount[positionKey], "decrease amount exceed position");
-
         DecreasePositionOrder memory order = DecreasePositionOrder(
             decreaseMarketOrdersIndex,
             account,
@@ -348,9 +353,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 创建止盈止损
     function createTpSl(CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId) {
-        console.log("createTpSl account", _request.account);
+        console.log("createTpSl sender", msg.sender, "account", _request.account);
         console.log("createTpSl pairIndex", _request.pairIndex, "createTpSl isLong", _request.isLong);
-
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
 
         // check
@@ -480,6 +484,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
             positionDecreaseTotalAmount[positionKey] += _order.sizeAmount;
+            console.log("addOrderToPosition positionDecreaseTotalAmount", positionDecreaseTotalAmount[positionKey]);
         }
     }
 
@@ -502,7 +507,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
             positionOrders[positionKey][index] = lastOrder;
             positionOrderIndex[positionKey][lastOrderKey] = index;
-            console.log("removeOrderFromPosition", 1);
         }
         delete positionOrderIndex[positionKey][orderKey];
         console.log("removeOrderFromPosition delete index", index);
@@ -511,8 +515,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("removeOrderFromPosition positionOrders.length", positionOrders[positionKey].length);
 
         if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
-            console.log("removeOrderFromPosition", 4);
             positionDecreaseTotalAmount[positionKey] -= _order.sizeAmount;
+            console.log("removeOrderFromPosition positionDecreaseTotalAmount", positionDecreaseTotalAmount[positionKey]);
         }
     }
 
@@ -562,4 +566,5 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     function _getPrice(address _token, bool _isLong) internal view returns (uint256) {
         return vaultPriceFeed.getPrice(_token, _isLong ? true : false, false, false);
     }
+
 }
