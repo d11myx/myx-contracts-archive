@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { PairVault } from "../typechain-types/PairVault";
+import { PairVault, PairInfo } from "../typechain-types/";
 import { expect } from "./shared/expect";
 import { Decimal } from "decimal.js";
 
@@ -11,17 +11,20 @@ const Q128 = BigNumber.from(2).pow(128);
 
 Decimal.config({ toExpNeg: -500, toExpPos: 500 });
 
-describe("FullMath", () => {
+describe("pair vault", () => {
     let pairVault: PairVault;
+    let pairInfo: PairInfo;
     before("deploy FullMathTest", async () => {
-        const factory = await ethers.getContractFactory("FullMathTest");
-        fullMath = (await factory.deploy()) as FullMathTest;
+        const PairVaultContract = await ethers.getContractFactory("PairVault");
+        pairVault = (await PairVaultContract.deploy()) as PairVault;
+        const ParirInfoContract = await ethers.getContractFactory("PairInfo");
+        pairInfo = (await ParirInfoContract.deploy()) as PairInfo;
+        await pairVault.initialize(pairInfo.address);
     });
 
-    describe("#mulDiv", () => {
-        it("reverts if denominator is 0", async () => {
-            await expect(fullMath.mulDiv(Q128, 5, 0)).to.be.reverted;
+    describe("pair info", () => {
+        it("test pair info", async () => {
+            expect(await pairVault.pairInfo()).to.be.eq(pairInfo.address);
         });
-       
     });
 });
