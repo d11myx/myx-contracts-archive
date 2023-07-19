@@ -14,6 +14,7 @@ async function main() {
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
@@ -41,7 +42,7 @@ async function main() {
   // ADL
   console.log("\n execute ADL")
   let pairIndex = 1;
-  let positionKey = await tradingVault.getPositionKey(user0.address, pairIndex, true);
+  let positionKey = await tradingUtils.getPositionKey(user0.address, pairIndex, true);
   let position = await tradingVault.getPosition(user0.address, pairIndex, false);
   console.log(`position before ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
   console.log(`position collateral: ${reduceDecimals(position.collateral, 18)} amount: ${reduceDecimals(position.positionAmount, 18)}`);
@@ -101,6 +102,7 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
       account: user.address,
       pairIndex: pairIndex,
       tradeType: 0,
+      collateral: collateral,
       triggerPrice: expandDecimals(100, 30),
       sizeAmount: sizeAmount,
       isLong: isLong
