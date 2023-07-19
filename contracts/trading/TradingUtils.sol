@@ -10,6 +10,7 @@ import "../price/interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/PrecisionUtils.sol";
+import "hardhat/console.sol";
 
 contract TradingUtils is ITradingUtils, Governable {
     using Int256Utils for int256;
@@ -21,20 +22,8 @@ contract TradingUtils is ITradingUtils, Governable {
     ITradingRouter public tradingRouter;
     IVaultPriceFeed public vaultPriceFeed;
 
-    function initialize(
-        IPairInfo _pairInfo,
-        IPairVault _pairVault,
-        ITradingVault _tradingVault,
-        ITradingRouter _tradingRouter,
-        IVaultPriceFeed _vaultPriceFeed,
-        uint256 _maxTimeDelay
-    ) external initializer {
+    function initialize() external initializer {
         __Governable_init();
-        pairInfo = _pairInfo;
-        pairVault = _pairVault;
-        tradingVault = _tradingVault;
-        tradingRouter = _tradingRouter;
-        vaultPriceFeed = _vaultPriceFeed;
     }
 
     function setContract(
@@ -64,6 +53,29 @@ contract TradingUtils is ITradingUtils, Governable {
         return vaultPriceFeed.getPrice(pair.indexToken, _isLong ? true : false, false, false);
     }
 
+    function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
+        ITradingVault.Position memory position = tradingVault.getPosition(_account, _pairIndex, _isLong);
+
+        uint256 price = getPrice(_pairIndex, _isLong);
+        if (price == position.averagePrice) {return 0;}
+
+        if (_isLong) {
+            if (price > position.averagePrice) {
+                pnl = int256(_sizeAmount.mulPrice(price - position.averagePrice));
+            } else {
+                pnl = - int256(_sizeAmount.mulPrice(position.averagePrice - price));
+            }
+        } else {
+            if (position.averagePrice > price) {
+                pnl = int256(_sizeAmount.mulPrice(position.averagePrice - price));
+            } else {
+                pnl = - int256(_sizeAmount.mulPrice(price - position.averagePrice));
+            }
+        }
+        console.log("getUnrealizedPnl", pnl >= 0 ? "": "-", pnl.abs());
+        return pnl;
+    }
+
     function validLeverage(bytes32 key, int256 _collateral, uint256 _sizeAmount, bool _increase) public {
         ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
         uint256 price = getPrice(position.pairIndex, position.isLong);
@@ -74,12 +86,16 @@ contract TradingUtils is ITradingUtils, Governable {
 
         uint256 afterPosition = _increase ? position.positionAmount + _sizeAmount : position.positionAmount - _sizeAmount;
         int256 totalCollateral = int256(position.collateral) + _collateral;
+        console.log("validLeverage collateral", _collateral >= 0 ? "": "-", _collateral.abs());
         require(totalCollateral >= 0, "collateral not enough for decrease");
-        totalCollateral += tradingVault.getUnrealizedPnl(position.account, position.pairIndex, position.isLong, _sizeAmount);
+        totalCollateral += getUnrealizedPnl(position.account, position.pairIndex, position.isLong, position.positionAmount);
+        console.log("validLeverage totalCollateral", totalCollateral >= 0 ? "": "-", totalCollateral.abs());
 
         require(totalCollateral >= 0, "collateral not enough for pnl");
-        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        if (afterPosition > 0) {
+            require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+                && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        }
     }
 
 }

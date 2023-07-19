@@ -568,40 +568,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isLong",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_sizeAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "getUnrealizedPnl",
-    "outputs": [
-      {
-        "internalType": "int256",
-        "name": "pnl",
-        "type": "int256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "gov",
     "outputs": [

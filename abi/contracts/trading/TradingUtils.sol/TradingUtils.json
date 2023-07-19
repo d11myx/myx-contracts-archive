@@ -95,6 +95,40 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_sizeAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUnrealizedPnl",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "pnl",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "gov",
     "outputs": [
@@ -108,38 +142,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "contract IPairInfo",
-        "name": "_pairInfo",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IPairVault",
-        "name": "_pairVault",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ITradingVault",
-        "name": "_tradingVault",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ITradingRouter",
-        "name": "_tradingRouter",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxTimeDelay",
-        "type": "uint256"
-      }
-    ],
+    "inputs": [],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
