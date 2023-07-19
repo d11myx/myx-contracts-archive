@@ -101,6 +101,7 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
       account: user.address,
       pairIndex: pairIndex,
       tradeType: 0,
+      collateral: collateral,
       triggerPrice: expandDecimals(100, 30),
       sizeAmount: sizeAmount,
       isLong: isLong

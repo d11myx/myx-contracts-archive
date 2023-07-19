@@ -397,7 +397,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         // get position
         bytes32 positionKey = tradingUtils.getPositionKey(_account, _pairIndex, _isLong);
         Position storage position = positions[positionKey];
-        require(position.account == address(0), "position already closed");
+        require(position.account != address(0), "position already closed");
 
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
         console.log("decreasePosition sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
@@ -594,7 +594,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         }
 
         // 结算用户Pnl
-        pnl = getUnrealizedPnl(position.account, position.pairIndex, position.isLong, _sizeAmount);
+        pnl = tradingUtils.getUnrealizedPnl(position.account, position.pairIndex, position.isLong, _sizeAmount);
         console.log("decreasePosition pnl", pnl.abs());
         console.log("pnl bigger than zero", pnl >= 0);
 
@@ -734,28 +734,6 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         console.log("getCurrentFundingRate fundingRate", fundingRate);
 
         return netExposureAmountChecker[_pairIndex] >= 0 ? int256(fundingRate) : - int256(fundingRate);
-    }
-
-    function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
-        Position memory position = getPosition(_account, _pairIndex, _isLong);
-
-        uint256 price = tradingUtils.getPrice(_pairIndex, _isLong);
-        if (price == position.averagePrice) {return 0;}
-
-        if (_isLong) {
-            if (price > position.averagePrice) {
-                pnl = int256(_sizeAmount.mulPrice(price - position.averagePrice));
-            } else {
-                pnl = - int256(_sizeAmount.mulPrice(position.averagePrice - price));
-            }
-        } else {
-            if (position.averagePrice > price) {
-                pnl = int256(_sizeAmount.mulPrice(position.averagePrice - price));
-            } else {
-                pnl = - int256(_sizeAmount.mulPrice(price - position.averagePrice));
-            }
-        }
-        return pnl;
     }
 
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position memory) {

@@ -341,7 +341,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // get position
         ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
-        require(position.account == address(0), "position already closed");
+        require(position.account != address(0), "position already closed");
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
@@ -551,7 +551,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 position.account,
                 position.pairIndex,
                 ITradingRouter.TradeType.MARKET,
-                - int256(position.collateral),
+                0,
                 position.isLong ? price.mulPercentage(10000 + 100) : price.mulPercentage(10000 - 100),
                 position.positionAmount,
                 position.isLong
@@ -570,7 +570,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             position.pairIndex,
             position.isLong,
             position.positionAmount,
-            - int256(position.collateral),
+            0,
             price,
             orderId,
             needADL
