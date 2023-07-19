@@ -856,35 +856,6 @@
   {
     "inputs": [
       {
-        "internalType": "bool",
-        "name": "_isIncrease",
-        "type": "bool"
-      },
-      {
-        "internalType": "enum ITradingRouter.TradeType",
-        "name": "_tradeType",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_orderId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getOrderKey",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "key",
         "type": "bytes32"
@@ -1168,6 +1139,11 @@
       {
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
         "type": "address"
       }
     ],
@@ -1465,6 +1441,11 @@
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
         "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
+        "type": "address"
       }
     ],
     "name": "setContract",
@@ -1573,6 +1554,19 @@
     "name": "setPositionHasTpSl",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tradingUtils",
+    "outputs": [
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

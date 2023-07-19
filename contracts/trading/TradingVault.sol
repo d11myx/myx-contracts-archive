@@ -13,6 +13,7 @@ import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../price/interfaces/IVaultPriceFeed.sol";
 import "hardhat/console.sol";
+import "./interfaces/ITradingUtils.sol";
 
 contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     using SafeERC20 for IERC20;
@@ -71,6 +72,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     IVaultPriceFeed public vaultPriceFeed;
+    ITradingUtils public tradingUtils;
     address public tradingFeeReceiver;
 
     mapping(bytes32 => Position) public positions;
@@ -93,6 +95,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         IVaultPriceFeed _vaultPriceFeed,
+        ITradingUtils _tradingUtils,
         address _tradingFeeReceiver
     ) external initializer {
         __ReentrancyGuard_init();
@@ -100,17 +103,20 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         vaultPriceFeed = _vaultPriceFeed;
+        tradingUtils = _tradingUtils;
         tradingFeeReceiver = _tradingFeeReceiver;
     }
 
     function setContract(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        IVaultPriceFeed _vaultPriceFeed
+        IVaultPriceFeed _vaultPriceFeed,
+        ITradingUtils _tradingUtils
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         vaultPriceFeed = _vaultPriceFeed;
+        tradingUtils = _tradingUtils;
     }
 
     function setTradingFeeReceiver(address _tradingFeeReceiver) external onlyGov {
@@ -128,10 +134,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.enable, "trade pair not supported");
 
-        uint256 price = _getPrice(pair.indexToken, _isLong);
+        uint256 price = tradingUtils.getPrice(_pairIndex, _isLong);
 
         // get position
-        bytes32 positionKey = getPositionKey(_account, _pairIndex, _isLong);
+        bytes32 positionKey = tradingUtils.getPositionKey(_account, _pairIndex, _isLong);
         Position storage position = positions[positionKey];
         position.key = positionKey;
 
@@ -382,14 +388,14 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     ) external onlyHandler nonReentrant returns (int256 pnl) {
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = _getPrice(pair.indexToken, _isLong);
+        uint256 price = tradingUtils.getPrice(_pairIndex, _isLong);
 
         // check trading amount
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
         require(_sizeAmount >= tradingConfig.minTradeAmount && _sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // get position
-        bytes32 positionKey = getPositionKey(_account, _pairIndex, _isLong);
+        bytes32 positionKey = tradingUtils.getPositionKey(_account, _pairIndex, _isLong);
         Position storage position = positions[positionKey];
         require(position.account == address(0), "position already closed");
 
@@ -711,7 +717,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         uint256 k = fundingFeeConfig.liquidityPremiumFactor;
 
         IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
-        uint256 price = _getPrice(pairInfo.getPair(_pairIndex).indexToken, true);
+        uint256 price = tradingUtils.getPrice(_pairIndex, true);
         uint256 l = (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(price) + (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
 
 //        console.log("getCurrentFundingRate netExposureAmountChecker", absNetExposure, "bigger than zero", netExposureAmountChecker[_pairIndex] >= 0);
@@ -733,7 +739,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
         Position memory position = getPosition(_account, _pairIndex, _isLong);
 
-        uint256 price = _getPrice(pairInfo.getPair(_pairIndex).indexToken, _isLong);
+        uint256 price = tradingUtils.getPrice(_pairIndex, _isLong);
         if (price == position.averagePrice) {return 0;}
 
         if (_isLong) {
@@ -752,23 +758,15 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         return pnl;
     }
 
-    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_account, _pairIndex, _isLong));
-    }
-
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position memory) {
-        Position memory position = positions[getPositionKey(_account, _pairIndex, _isLong)];
+        Position memory position = positions[tradingUtils.getPositionKey(_account, _pairIndex, _isLong)];
         if (position.account == address(0)) {
-            position.key = getPositionKey(_account, _pairIndex, _isLong);
+            position.key = tradingUtils.getPositionKey(_account, _pairIndex, _isLong);
         }
         return position;
     }
 
     function getPositionByKey(bytes32 key) public view returns (Position memory) {
         return positions[key];
-    }
-
-    function _getPrice(address _token, bool _isLong) internal view returns (uint256) {
-        return vaultPriceFeed.getPrice(_token, _isLong ? true : false, false, false);
     }
 }
