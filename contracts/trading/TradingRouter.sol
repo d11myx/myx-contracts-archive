@@ -9,7 +9,6 @@ import "../price/interfaces/IVaultPriceFeed.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../libraries/PriceUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/access/Handleable.sol";
 
@@ -44,6 +43,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         address account,
         uint256 orderId,
         TradeType tradeType,
+        int256 collateral,
         uint256 pairIndex,
         uint256 openPrice,
         uint256 sizeAmount,
@@ -135,11 +135,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 afterPosition = position.positionAmount + _request.sizeAmount;
         int256 totalCollateral = int256(position.collateral) + _request.collateral;
         require(totalCollateral >= 0, "collateral not enough for decrease");
-        totalCollateral += tradingVault.getUnrealizedPnl();
+        totalCollateral += tradingVault.getUnrealizedPnl(_request.account, _request.pairIndex, _request.isLong, _request.sizeAmount);
 
         require(totalCollateral >= 0, "collateral not enough for pnl");
-        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
 
         // check tp sl
         require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
@@ -256,6 +256,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         address account = _request.account;
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_request.pairIndex);
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
+
+        uint256 price = _getPrice(pair.indexToken, _request.isLong);
 
         // check decrease size
         ITradingVault.Position memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
@@ -268,11 +271,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 afterPosition = position.positionAmount + _request.sizeAmount;
         int256 totalCollateral = int256(position.collateral) + _request.collateral;
         require(totalCollateral >= 0, "collateral not enough for decrease");
-        totalCollateral += tradingVault.getUnrealizedPnl();
+        totalCollateral += tradingVault.getUnrealizedPnl(_request.account, _request.pairIndex, _request.isLong, _request.sizeAmount);
 
         require(totalCollateral >= 0, "collateral not enough for pnl");
-        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
 
         // transfer collateral
         if (_request.collateral > 0) {
@@ -323,6 +326,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             account,
             orderId,
             _request.tradeType,
+            _request.collateral,
             _request.pairIndex,
             _request.triggerPrice,
             _request.sizeAmount,
@@ -409,8 +413,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             DecreasePositionOrder memory tpOrder = DecreasePositionOrder(
                 decreaseLimitOrdersIndex,
                 _request.account,
-                TradeType.TP,
                 _request.pairIndex,
+                TradeType.TP,
+                0,
                 _request.tpPrice,
                 _request.tp,
                 _request.isLong,
@@ -436,6 +441,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 _request.account,
                 tpOrderId,
                 TradeType.TP,
+                0,
                 _request.pairIndex,
                 _request.tpPrice,
                 _request.tp,
@@ -447,8 +453,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             DecreasePositionOrder memory slOrder = DecreasePositionOrder(
                 decreaseLimitOrdersIndex,
                 _request.account,
-                TradeType.SL,
                 _request.pairIndex,
+                TradeType.SL,
+                0,
                 _request.slPrice,
                 _request.sl,
                 _request.isLong,
@@ -474,6 +481,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 _request.account,
                 slOrderId,
                 TradeType.SL,
+                0,
                 _request.pairIndex,
                 _request.slPrice,
                 _request.sl,

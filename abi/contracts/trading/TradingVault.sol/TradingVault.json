@@ -59,9 +59,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -92,6 +92,12 @@
         "internalType": "int256",
         "name": "realisedPnl",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "transferOut",
+        "type": "uint256"
       }
     ],
     "name": "DecreasePosition",
@@ -120,9 +126,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -153,6 +159,12 @@
         "internalType": "int256",
         "name": "fundingFee",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "transferOut",
+        "type": "uint256"
       }
     ],
     "name": "IncreasePosition",
@@ -301,6 +313,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "int256",
+        "name": "_collateral",
+        "type": "int256"
+      },
+      {
         "internalType": "uint256",
         "name": "_sizeAmount",
         "type": "uint256"
@@ -421,6 +438,11 @@
       {
         "components": [
           {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "account",
             "type": "address"
@@ -486,6 +508,11 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
           {
             "internalType": "address",
             "name": "account",
@@ -570,6 +597,40 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_sizeAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUnrealizedPnl",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "pnl",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "gov",
     "outputs": [
@@ -595,9 +656,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "_collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -793,6 +854,11 @@
     ],
     "name": "positions",
     "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
       {
         "internalType": "address",
         "name": "account",

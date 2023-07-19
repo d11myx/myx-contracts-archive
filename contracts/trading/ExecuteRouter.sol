@@ -190,8 +190,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         totalCollateral += tradingVault.getUnrealizedPnl(order.account, order.pairIndex, order.isLong, order.sizeAmount);
         require(totalCollateral >= 0, "collateral not enough for pnl");
-        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
 
         // check tp sl
         require(order.tp == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.TP), "tp already exists");
@@ -233,7 +233,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // transfer collateral
         if (order.collateral > 0) {
-            tradingRouter.transferToVault(pair.stableToken, order.collateral);
+            tradingRouter.transferToVault(pair.stableToken, order.collateral.abs());
         }
         tradingVault.increasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
 
@@ -329,13 +329,13 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
-        // check trading amount
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
-        require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
-
         // get pair
         uint256 pairIndex = order.pairIndex;
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
+
+        // check trading amount
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
+        require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // check price
         uint256 price = vaultPriceFeed.getPrice(pair.indexToken, order.isLong, false, false);
@@ -346,8 +346,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(position.account == address(0), "position already closed");
 
         // check position and leverage
-        uint256 sizeDelta = _sizeAmount.mulPrice(price);
-        console.log("executeDecreaseOrder sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
+        uint256 sizeDelta = order.sizeAmount.mulPrice(price);
+        console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
         require(order.sizeAmount <= position.positionAmount, "decrease amount exceed position");
         uint256 afterPosition = position.positionAmount - order.sizeAmount;
@@ -356,8 +356,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         totalCollateral += tradingVault.getUnrealizedPnl(order.account, order.pairIndex, order.isLong, order.sizeAmount);
         require(totalCollateral >= 0, "collateral not enough for pnl");
-        require(afterPosition >= afterCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= afterCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
 
         // 检查交易量
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
@@ -414,7 +414,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // transfer collateral
         if (order.collateral > 0) {
-            tradingRouter.transferToVault(pair.stableToken, order.collateral);
+            tradingRouter.transferToVault(pair.stableToken, order.collateral.abs());
         }
         int256 pnl = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
 
@@ -562,6 +562,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 position.account,
                 position.pairIndex,
                 ITradingRouter.TradeType.MARKET,
+                - int256(position.collateral),
                 position.isLong ? price.mulPercentage(10000 + 100) : price.mulPercentage(10000 - 100),
                 position.positionAmount,
                 position.isLong
@@ -580,7 +581,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             position.pairIndex,
             position.isLong,
             position.positionAmount,
-            position.collateral,
+            - int256(position.collateral),
             price,
             orderId,
             needADL
@@ -614,11 +615,18 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         require(sumAmount == order.sizeAmount, "ADL position amount not match decrease order");
+        IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             ITradingVault.Position memory adlPosition = adlPositions[i];
-            tradingVault.decreasePosition(adlPosition.account, adlPosition.pairIndex, adlPosition.positionAmount, adlPosition.isLong);
-            console.log("executeADLAndDecreaseOrder usdt balance of vault", IERC20(pairInfo.getPair(adlPosition.pairIndex).stableToken).balanceOf(address(tradingVault)));
+            tradingVault.decreasePosition(
+                adlPosition.account,
+                adlPosition.pairIndex,
+                0,
+                adlPosition.positionAmount,
+                adlPosition.isLong
+            );
+            console.log("executeADLAndDecreaseOrder usdt balance of vault", IERC20(pair.stableToken).balanceOf(address(tradingVault)));
             console.log();
         }
         _executeDecreaseOrder(_orderId, _tradeType);
