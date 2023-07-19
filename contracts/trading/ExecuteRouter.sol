@@ -16,6 +16,7 @@ import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
+import "./interfaces/ITradingUtils.sol";
 
 contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable {
 
@@ -23,7 +24,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
-
 
     event ExecuteIncreaseOrder(
         address account,
@@ -63,6 +63,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     ITradingVault public tradingVault;
     ITradingRouter public tradingRouter;
     IVaultPriceFeed public vaultPriceFeed;
+    ITradingUtils public tradingUtils;
 
     uint256 public maxTimeDelay;
 
@@ -79,6 +80,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
         IVaultPriceFeed _vaultPriceFeed,
+        ITradingUtils _tradingUtils,
         uint256 _maxTimeDelay
     ) external initializer {
         __ReentrancyGuard_init();
@@ -88,6 +90,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         tradingVault = _tradingVault;
         tradingRouter = _tradingRouter;
         vaultPriceFeed = _vaultPriceFeed;
+        tradingUtils = _tradingUtils;
         maxTimeDelay = _maxTimeDelay;
     }
 
@@ -96,13 +99,15 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
-        IVaultPriceFeed _vaultPriceFeed
+        IVaultPriceFeed _vaultPriceFeed,
+        ITradingUtils _tradingUtils
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         tradingRouter = _tradingRouter;
         vaultPriceFeed = _vaultPriceFeed;
+        tradingUtils = _tradingUtils;
     }
 
     function setPositionKeeper(address _account, bool _enable) external onlyGov {
@@ -170,7 +175,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // check price
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, order.isLong, false, false);
+        uint256 price = tradingUtils.getPrice(pairIndex, order.isLong);
         if (order.tradeType == ITradingRouter.TradeType.MARKET) {
             require(order.isLong ? price <= order.openPrice : price >= order.openPrice, "exceed acceptable price");
         } else {
@@ -180,18 +185,11 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         // get position
         ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
 
-        // check position and leverage
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
-        uint256 afterPosition = position.positionAmount + order.sizeAmount;
-        int256 totalCollateral = int256(position.collateral) + order.collateral;
-        require(totalCollateral >= 0, "collateral not enough for decrease");
-
-        totalCollateral += tradingVault.getUnrealizedPnl(order.account, order.pairIndex, order.isLong, order.sizeAmount);
-        require(totalCollateral >= 0, "collateral not enough for pnl");
-        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        // check position and leverage
+        tradingUtils.validLeverage(position.key, order.collateral, order.sizeAmount, true);
 
         // check tp sl
         require(order.tp == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.TP), "tp already exists");
@@ -338,26 +336,18 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // check price
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, order.isLong, false, false);
+        uint256 price = tradingUtils.getPrice(pairIndex, order.isLong);
         require(order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice, "not reach trigger price");
 
         // get position
         ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
         require(position.account == address(0), "position already closed");
 
-        // check position and leverage
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
-        require(order.sizeAmount <= position.positionAmount, "decrease amount exceed position");
-        uint256 afterPosition = position.positionAmount - order.sizeAmount;
-        int256 totalCollateral = int256(position.collateral) + order.collateral;
-        require(totalCollateral >= 0, "collateral not enough for decrease");
-
-        totalCollateral += tradingVault.getUnrealizedPnl(order.account, order.pairIndex, order.isLong, order.sizeAmount);
-        require(totalCollateral >= 0, "collateral not enough for pnl");
-        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        // check position and leverage
+        tradingUtils.validLeverage(position.key, order.collateral, order.sizeAmount, false);
 
         // 检查交易量
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
@@ -414,6 +404,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // transfer collateral
         if (order.collateral > 0) {
+            IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
             tradingRouter.transferToVault(pair.stableToken, order.collateral.abs());
         }
         int256 pnl = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
@@ -478,10 +469,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             return;
         }
 
-        IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-
         // 预言机价格
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, position.isLong, false, false);
+        uint256 price = tradingUtils.getPrice(position.pairIndex, position.isLong);
         require(_indexPrice >= price.mulPercentage(10000 - 50) && _indexPrice <= price.mulPercentage(10000 + 50), "index price exceed max offset");
 
         // 仓位pnl

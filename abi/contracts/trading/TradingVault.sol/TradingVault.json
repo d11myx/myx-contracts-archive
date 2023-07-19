@@ -583,35 +583,6 @@
         "internalType": "bool",
         "name": "_isLong",
         "type": "bool"
-      }
-    ],
-    "name": "getPositionKey",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isLong",
-        "type": "bool"
       },
       {
         "internalType": "uint256",
@@ -691,6 +662,11 @@
       {
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
         "type": "address"
       },
       {
@@ -924,6 +900,11 @@
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
         "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
+        "type": "address"
       }
     ],
     "name": "setContract",
@@ -1000,6 +981,19 @@
     "outputs": [
       {
         "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tradingUtils",
+    "outputs": [
+      {
+        "internalType": "contract ITradingUtils",
         "name": "",
         "type": "address"
       }

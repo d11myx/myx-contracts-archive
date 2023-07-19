@@ -31,7 +31,6 @@ interface ITradingVault {
         bool _isLong
     ) external returns(int256 pnl);
 
-    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns(Position memory);
     function getPositionByKey(bytes32 key) external view returns(Position memory);
     function getFundingFee(bool _increase, uint256 _pairIndex, uint256 _sizeAmount, uint256 _positionAmount, int256 _entryFundingRate, uint256 _entryFundingTime) external view returns (int256);
