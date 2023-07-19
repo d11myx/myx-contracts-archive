@@ -3,12 +3,6 @@ import { PairVault, PairInfo } from "../typechain-types/";
 import { expect } from "./shared/expect";
 import { Decimal } from "decimal.js";
 
-const {
-    BigNumber,
-    constants: { MaxUint256 },
-} = ethers;
-const Q128 = BigNumber.from(2).pow(128);
-
 Decimal.config({ toExpNeg: -500, toExpPos: 500 });
 
 describe("pair vault", () => {
