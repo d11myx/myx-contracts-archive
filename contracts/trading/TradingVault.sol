@@ -24,7 +24,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         bytes32 positionKey,
         address account,
         uint256 pairIndex,
-        uint256 collateral,
+        int256 collateral,
         bool isLong,
         uint256 sizeAmount,
         uint256 price,
@@ -38,7 +38,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         address account,
         uint256 pairIndex,
         bool isLong,
-        uint256 collateral,
+        int256 collateral,
         uint256 sizeAmount,
         uint256 price,
         uint256 tradingFee,
@@ -131,14 +131,15 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         uint256 price = _getPrice(pair.indexToken, _isLong);
 
         // get position
-        Position storage position = getPosition(_account, _pairIndex, _isLong);
+        bytes32 positionKey = getPositionKey(_account, _pairIndex, _isLong);
+        Position storage position = positions[positionKey];
+        position.key = positionKey;
 
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
         console.log("increasePosition sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
 
         // 修改仓位
         if (position.positionAmount == 0) {
-            position.key = getPositionKey(_account, _pairIndex, _isLong);
             position.account = _account;
             position.pairIndex = _pairIndex;
             position.isLong = _isLong;
@@ -388,7 +389,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         require(_sizeAmount >= tradingConfig.minTradeAmount && _sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // get position
-        Position storage position = getPosition(_account, _pairIndex, _isLong);
+        bytes32 positionKey = getPositionKey(_account, _pairIndex, _isLong);
+        Position storage position = positions[positionKey];
+        require(position.account == address(0), "position already closed");
 
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
         console.log("decreasePosition sizeAmount", _sizeAmount, "sizeDelta", sizeDelta);
@@ -730,7 +733,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
         Position memory position = getPosition(_account, _pairIndex, _isLong);
 
-        uint256 price = _getPrice(_pairIndex, _isLong);
+        uint256 price = _getPrice(pairInfo.getPair(_pairIndex).indexToken, _isLong);
         if (price == position.averagePrice) {return 0;}
 
         if (_isLong) {
