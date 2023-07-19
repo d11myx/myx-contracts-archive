@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import {IERC20WithPermit} from '@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol';
+import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol';
 
 /**
  * @title ERC20Mintable
  * @dev ERC20 minting logic
  */
-contract ERC20Faucet is IERC20WithPermit, ERC20 {
+contract ERC20Faucet is IERC20Permit, ERC20 {
     bytes public constant EIP712_REVISION = bytes('1');
     bytes32 internal constant EIP712_DOMAIN =
         keccak256(
@@ -38,7 +38,7 @@ contract ERC20Faucet is IERC20WithPermit, ERC20 {
         );
     }
 
-    /// @inheritdoc IERC20WithPermit
+    
     function permit(
         address owner,
         address spender,
