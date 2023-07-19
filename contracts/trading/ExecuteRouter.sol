@@ -44,7 +44,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 sizeAmount,
         uint256 price,
         int256 pnl,
-        bool needADL
+        bool needADL            // 需要执行ADL
     );
     event LiquidatePosition(
         bytes32 positionKey,
@@ -55,7 +55,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         int256 collateral,
         uint256 price,
         uint256 orderId,
-        bool needADL
+        bool needADL            // 需要执行ADL
     );
 
     IPairInfo public pairInfo;
