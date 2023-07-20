@@ -41,16 +41,16 @@ describe('PairInfo: Edge cases', () => {
 
     it('check pair info', async () => {
       const { pairInfo, btc, usdt } = testEnv;
-
+    
       const pairIndex = 0;
       // console.log(await pairInfo.pairs(pairIndex));
       // console.log(await pairInfo.getPair(pairIndex));
-
+    
       expect(await pairInfo.pairs(pairIndex)).deep.be.eq(await pairInfo.getPair(pairIndex));
       expect(await pairInfo.tradingConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingConfig(pairIndex));
       expect(await pairInfo.tradingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingFeeConfig(pairIndex));
       expect(await pairInfo.fundingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getFundingFeeConfig(pairIndex));
-
+    
       const btcPair = pairConfigs['BTC_USDT'];
       const pair = await pairInfo.getPair(pairIndex);
       expect(pair.indexToken).to.be.eq(btc.address);
@@ -59,7 +59,22 @@ describe('PairInfo: Edge cases', () => {
     });
   });
 
-  describe('test updatePair', async () => {
-    it('check updated pair', async () => {});
+  describe('test updatePair', async ()=>{
+    it('check update pair', async ()=>{
+      const { pairInfo, btc, usdt } = testEnv;
+
+      const btcPair = pairConfigs['BTC_USDT'];
+      const pair = btcPair.pair;
+
+      console.log('update before', pair);
+      pair.enable = false;
+      pair.kOfSwap = 99999999999999;
+      pair.initPairRatio = 999;
+      console.log('update after', pair)
+
+      expect(await pair.enable).to.be.eq(false);
+      expect(await pair.kOfSwap).to.be.eq(99999999999999);
+      expect(await pair.initPairRatio).to.be.eq(999);
+    });
   });
 });

@@ -4,6 +4,7 @@ coverage
 coverage.json
 typechain
 typechain-types
+types
 package-lock.json
 local_config.json
 
