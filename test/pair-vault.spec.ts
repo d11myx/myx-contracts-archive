@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { PairVault, PairInfo } from '../typechain-types/';
+import { PairVault, PairInfo } from '../types/ethers-contracts';
 import { expect } from './shared/expect';
 import { Decimal } from 'decimal.js';
 
@@ -10,9 +10,9 @@ describe('pair vault', () => {
   let pairInfo: PairInfo;
   before('deploy FullMathTest', async () => {
     const PairVaultContract = await ethers.getContractFactory('PairVault');
-    pairVault = (await PairVaultContract.deploy()) as PairVault;
+    pairVault = (await PairVaultContract.deploy()) as any as PairVault;
     const ParirInfoContract = await ethers.getContractFactory('PairInfo');
-    pairInfo = (await ParirInfoContract.deploy()) as PairInfo;
+    pairInfo = (await ParirInfoContract.deploy()) as any as PairInfo;
     await pairVault.initialize(pairInfo.address);
   });
 
