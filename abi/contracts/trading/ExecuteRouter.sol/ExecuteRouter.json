@@ -89,9 +89,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -163,9 +163,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -320,6 +320,11 @@
         "type": "address"
       },
       {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_maxTimeDelay",
         "type": "uint256"
@@ -451,6 +456,11 @@
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
         "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
+        "type": "address"
       }
     ],
     "name": "setContract",
@@ -526,6 +536,19 @@
     "outputs": [
       {
         "internalType": "contract ITradingRouter",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tradingUtils",
+    "outputs": [
+      {
+        "internalType": "contract ITradingUtils",
         "name": "",
         "type": "address"
       }
