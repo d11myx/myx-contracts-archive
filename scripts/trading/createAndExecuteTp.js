@@ -22,7 +22,7 @@ async function main() {
 
   let orderId = 0
 
-  await vaultPriceFeed.setPrice(btc.address, expandDecimals(90, 30));
+  await vaultPriceFeed.setPrice(btc.address, expandDecimals(110, 30));
   console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`)
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
@@ -35,9 +35,9 @@ async function main() {
     account: user0.address,
     pairIndex: 0,
     isLong: true,
-    tpPrice: expandDecimals(90, 30),
+    tpPrice: expandDecimals(110, 30),
     tp: expandDecimals(1, 18),
-    slPrice: expandDecimals(110, 30),
+    slPrice: expandDecimals(90, 30),
     sl: expandDecimals(0, 18)
   };
   await tradingRouter.createTpSl(request)
@@ -46,6 +46,7 @@ async function main() {
   await executeRouter.executeDecreaseOrder(orderId, 2);
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
+  let vault = await pairVault.getVault(0);
   console.log(`reserve of btc: ${vault.indexReservedAmount}`);
   console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
 

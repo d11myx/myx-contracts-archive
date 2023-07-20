@@ -12,6 +12,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "int256",
+        "name": "_collateral",
+        "type": "int256"
+      },
+      {
         "internalType": "uint256",
         "name": "_sizeAmount",
         "type": "uint256"
@@ -119,6 +124,11 @@
       {
         "components": [
           {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "account",
             "type": "address"
@@ -185,6 +195,11 @@
       {
         "components": [
           {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "account",
             "type": "address"
@@ -251,38 +266,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bool",
-        "name": "_isLong",
-        "type": "bool"
-      }
-    ],
-    "name": "getPositionKey",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "_collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
