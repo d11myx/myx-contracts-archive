@@ -15,6 +15,7 @@ async function main() {
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
@@ -26,7 +27,7 @@ async function main() {
   await vaultPriceFeed.setPrice(btc.address, expandDecimals(120, 30));
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
-  let key = await tradingVault.getPositionKey(user0.address, 0, false);
+  let key = await tradingUtils.getPositionKey(user0.address, 0, false);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
 
@@ -36,6 +37,8 @@ async function main() {
   await executeRouter.liquidatePositions(positionKeys, prices);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
+
+  let vault = await pairVault.getVault(0);
   console.log(`reserve of btc: ${vault.indexReservedAmount}`);
   console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
 
