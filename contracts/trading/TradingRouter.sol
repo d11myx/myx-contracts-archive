@@ -9,18 +9,20 @@ import "../price/interfaces/IVaultPriceFeed.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../libraries/PriceUtils.sol";
+import "../libraries/Int256Utils.sol";
 import "../libraries/access/Handleable.sol";
 
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
+import "./interfaces/ITradingUtils.sol";
 
 contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
+    using Int256Utils for int256;
 
     // 市价开仓
     event CreateIncreaseOrder(
@@ -28,7 +30,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 orderId,
         uint256 pairIndex,
         TradeType tradeType,
-        uint256 collateral,
+        int256 collateral,
         uint256 openPrice,
         bool isLong,
         uint256 sizeAmount,
@@ -42,6 +44,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         address account,
         uint256 orderId,
         TradeType tradeType,
+        int256 collateral,
         uint256 pairIndex,
         uint256 openPrice,
         uint256 sizeAmount,
@@ -56,6 +59,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     IVaultPriceFeed public vaultPriceFeed;
+    ITradingUtils public tradingUtils;
 
     // 市价请求
     mapping(uint256 => IncreasePositionOrder) public increaseMarketOrders;
@@ -86,7 +90,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed
+        IVaultPriceFeed _vaultPriceFeed,
+        ITradingUtils _tradingUtils
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();
@@ -94,18 +99,21 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         vaultPriceFeed = _vaultPriceFeed;
+        tradingUtils = _tradingUtils;
     }
 
     function setContract(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed
+        IVaultPriceFeed _vaultPriceFeed,
+        ITradingUtils _tradingUtils
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         vaultPriceFeed = _vaultPriceFeed;
+        tradingUtils = _tradingUtils;
     }
 
     // 创建加仓订单
@@ -122,20 +130,24 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(pair.enable, "trade pair not supported");
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
-        uint256 price = _getPrice(pair.indexToken, _request.isLong);
+        uint256 price = tradingUtils.getPrice(_request.pairIndex, _request.isLong);
 
-        require(_request.sizeAmount >= _request.collateral.divPrice(price) * tradingConfig.minLeverage
-            && _request.sizeAmount <= _request.collateral.divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
-
-        require(_request.collateral > 0, "invalid collateral");
-        require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
+        // check increase size
         require(_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
-        bytes32 key = tradingVault.getPositionKey(account, _request.pairIndex, _request.isLong);
+        // check leverage
+        bytes32 key = tradingUtils.getPositionKey(account, _request.pairIndex, _request.isLong);
+        tradingUtils.validLeverage(key, _request.collateral, _request.sizeAmount, true);
+
+        // check tp sl
+        require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
         require(_request.tp == 0 || !positionHasTpSl[key][TradeType.TP], "tp already exists");
         require(_request.sl == 0 || !positionHasTpSl[key][TradeType.SL], "sl already exists");
 
-        IERC20(pair.stableToken).safeTransferFrom(account, address(this), _request.collateral);
+        // transfer collateral
+        if (_request.collateral > 0) {
+            IERC20(pair.stableToken).safeTransferFrom(account, address(this), _request.collateral.abs());
+        }
 
         IncreasePositionOrder memory order = IncreasePositionOrder(
             increaseMarketOrdersIndex,
@@ -207,7 +219,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
-        IERC20(pair.stableToken).safeTransfer(order.account, order.collateral);
+        // transfer collateral
+        if (order.collateral > 0) {
+            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+        }
 
         removeOrderFromPosition(
             PositionOrder(
@@ -238,18 +253,31 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         address account = _request.account;
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_request.pairIndex);
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
 
+        uint256 price = tradingUtils.getPrice(_request.pairIndex, _request.isLong);
+
+        // check decrease size
         ITradingVault.Position memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
-        bytes32 positionKey = tradingVault.getPositionKey(account, _request.pairIndex, _request.isLong);
-        console.logBytes32(positionKey);
+        bytes32 positionKey = tradingUtils.getPositionKey(account, _request.pairIndex, _request.isLong);
         console.log("createDecreaseOrder sizeAmount %s positionAmount %s positionDecreaseTotalAmount %s",
             _request.sizeAmount, position.positionAmount, positionDecreaseTotalAmount[positionKey]);
         require(_request.sizeAmount <= position.positionAmount - positionDecreaseTotalAmount[positionKey], "decrease amount exceed position");
+
+        // check leverage
+        tradingUtils.validLeverage(position.key, _request.collateral, _request.sizeAmount, false);
+
+        // transfer collateral
+        if (_request.collateral > 0) {
+            IERC20(pair.stableToken).safeTransferFrom(account, address(this), _request.collateral.abs());
+        }
+
         DecreasePositionOrder memory order = DecreasePositionOrder(
             decreaseMarketOrdersIndex,
             account,
-            _request.tradeType,
             _request.pairIndex,
+            _request.tradeType,
+            _request.collateral,
             _request.triggerPrice,
             _request.sizeAmount,
             _request.isLong,
@@ -288,6 +316,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             account,
             orderId,
             _request.tradeType,
+            _request.collateral,
             _request.pairIndex,
             _request.triggerPrice,
             _request.sizeAmount,
@@ -310,7 +339,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(msg.sender == address(this) || isHandler[msg.sender] || msg.sender == order.account, "not order sender or handler");
 
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
-        bytes32 key = tradingVault.getPositionKey(order.account, order.pairIndex, order.isLong);
+        bytes32 key = tradingUtils.getPositionKey(order.account, order.pairIndex, order.isLong);
+
+        if (order.collateral > 0) {
+            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+        }
 
         removeOrderFromPosition(
             PositionOrder(
@@ -338,7 +371,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external {
         require(msg.sender == address(this) || isHandler[msg.sender] || msg.sender == account, "not order sender or handler");
 
-        bytes32 key = tradingVault.getPositionKey(account, pairIndex, isLong);
+        bytes32 key = tradingUtils.getPositionKey(account, pairIndex, isLong);
 
         while (positionOrders[key].length > 0) {
             uint256 lastIndex = positionOrders[key].length - 1;
@@ -362,7 +395,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         require(_request.tp <= position.positionAmount && _request.sl <= position.positionAmount, "tp/sl exceeds max size");
 
-        bytes32 key = tradingVault.getPositionKey(_request.account, _request.pairIndex, _request.isLong);
+        bytes32 key = tradingUtils.getPositionKey(_request.account, _request.pairIndex, _request.isLong);
         require(_request.tp == 0 || !positionHasTpSl[key][TradeType.TP], "tp already exists");
         require(_request.sl == 0 || !positionHasTpSl[key][TradeType.SL], "sl already exists");
 
@@ -370,8 +403,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             DecreasePositionOrder memory tpOrder = DecreasePositionOrder(
                 decreaseLimitOrdersIndex,
                 _request.account,
-                TradeType.TP,
                 _request.pairIndex,
+                TradeType.TP,
+                0,
                 _request.tpPrice,
                 _request.tp,
                 _request.isLong,
@@ -397,6 +431,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 _request.account,
                 tpOrderId,
                 TradeType.TP,
+                0,
                 _request.pairIndex,
                 _request.tpPrice,
                 _request.tp,
@@ -408,8 +443,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             DecreasePositionOrder memory slOrder = DecreasePositionOrder(
                 decreaseLimitOrdersIndex,
                 _request.account,
-                TradeType.SL,
                 _request.pairIndex,
+                TradeType.SL,
+                0,
                 _request.slPrice,
                 _request.sl,
                 _request.isLong,
@@ -435,6 +471,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 _request.account,
                 slOrderId,
                 TradeType.SL,
+                0,
                 _request.pairIndex,
                 _request.slPrice,
                 _request.sl,
@@ -467,18 +504,14 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         return order;
     }
 
-    function getOrderKey(bool _isIncrease, TradeType _tradeType, uint256 _orderId) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_isIncrease, _tradeType, _orderId));
-    }
-
     function getPositionOrders(bytes32 key) external returns (PositionOrder[] memory orders) {
         return positionOrders[key];
     }
 
     function addOrderToPosition(PositionOrder memory _order) public onlyHandler {
         console.log("addOrderToPosition orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
-        bytes32 positionKey = tradingVault.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
-        bytes32 orderKey = getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
+        bytes32 positionKey = tradingUtils.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
+        bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
         positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(_order);
 
@@ -490,10 +523,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     function removeOrderFromPosition(PositionOrder memory _order) public onlyHandler {
         console.log("removeOrderFromPosition orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
-        bytes32 positionKey = tradingVault.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
+        bytes32 positionKey = tradingUtils.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
         console.logBytes32(positionKey);
 
-        bytes32 orderKey = getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
+        bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
         console.logBytes32(orderKey);
 
         uint256 index = positionOrderIndex[positionKey][orderKey];
@@ -503,7 +536,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         if (index < lastIndex) {
             // swap last order
             PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-            bytes32 lastOrderKey = getOrderKey(lastOrder.isIncrease, lastOrder.tradeType, lastOrder.orderId);
+            bytes32 lastOrderKey = tradingUtils.getOrderKey(lastOrder.isIncrease, lastOrder.tradeType, lastOrder.orderId);
 
             positionOrders[positionKey][index] = lastOrder;
             positionOrderIndex[positionKey][lastOrderKey] = index;
@@ -561,10 +594,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             require(order.tradeType == _tradeType, "trade type not match");
         }
         order.needADL = _needADL;
-    }
-
-    function _getPrice(address _token, bool _isLong) internal view returns (uint256) {
-        return vaultPriceFeed.getPrice(_token, _isLong ? true : false, false, false);
     }
 
 }
