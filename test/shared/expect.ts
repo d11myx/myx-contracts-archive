@@ -5,6 +5,7 @@ import { jestSnapshotPlugin } from 'mocha-chai-jest-snapshot';
 use(solidity);
 use(jestSnapshotPlugin());
 
+// @ts-ignore
 BigInt.prototype.toJSON = function () {
   return this.toString();
 };
