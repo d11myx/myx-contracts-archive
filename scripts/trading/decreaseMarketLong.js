@@ -28,6 +28,7 @@ async function main() {
     account: user0.address,
     pairIndex: 0,
     tradeType: 0,
+    collateral: expandDecimals(-10, 18),
     triggerPrice: expandDecimals(110, 30),
     sizeAmount: expandDecimals(1, 18),
     isLong: true

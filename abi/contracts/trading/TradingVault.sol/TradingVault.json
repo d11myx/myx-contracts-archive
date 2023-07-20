@@ -59,9 +59,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -92,6 +92,12 @@
         "internalType": "int256",
         "name": "realisedPnl",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "transferOut",
+        "type": "uint256"
       }
     ],
     "name": "DecreasePosition",
@@ -120,9 +126,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -153,6 +159,12 @@
         "internalType": "int256",
         "name": "fundingFee",
         "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "transferOut",
+        "type": "uint256"
       }
     ],
     "name": "IncreasePosition",
@@ -301,6 +313,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "int256",
+        "name": "_collateral",
+        "type": "int256"
+      },
+      {
         "internalType": "uint256",
         "name": "_sizeAmount",
         "type": "uint256"
@@ -421,6 +438,11 @@
       {
         "components": [
           {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "account",
             "type": "address"
@@ -487,6 +509,11 @@
       {
         "components": [
           {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "account",
             "type": "address"
@@ -541,35 +568,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isLong",
-        "type": "bool"
-      }
-    ],
-    "name": "getPositionKey",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "gov",
     "outputs": [
@@ -595,9 +593,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "_collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -630,6 +628,11 @@
       {
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
         "type": "address"
       },
       {
@@ -794,6 +797,11 @@
     "name": "positions",
     "outputs": [
       {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -857,6 +865,11 @@
       {
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
         "type": "address"
       }
     ],
@@ -934,6 +947,19 @@
     "outputs": [
       {
         "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tradingUtils",
+    "outputs": [
+      {
+        "internalType": "contract ITradingUtils",
         "name": "",
         "type": "address"
       }

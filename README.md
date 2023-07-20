@@ -28,23 +28,20 @@ Account 4 : 0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
 contract: TradingRouter
 event: CancelDecreaseOrder id: b225fd6bcccad9342bc10ccc7e25ef77175b77348c8393d669ac2dbc98a1ae29
 event: CancelIncreaseOrder id: 7e93a6b00cb3caacf000d7018943b12e2b4ad29e7849df14ebd51caf4fd739b8
-event: CreateDecreaseOrder id: 240a7e91666f2fb3e907c7db7dd66e21040249b32b8628e4bb9f23b87445e9ab
-event: CreateIncreaseOrder id: e6823eabfaf51436458e4cb04c825180fdb8fd51e72dfb0ad5b4ce9997a60113
-event: Initialized id: 7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb3847402498
+event: CreateDecreaseOrder id: e71a68544c2c9cf2a006d283baa849468003198fa8d8026335170198a30349dd
+event: CreateIncreaseOrder id: e83629b11df9fcc6b9ebc666eb284c939d1710576a8d3eac23474d70fae8d478
 
 contract: ExecuteRouter
-event: ExecuteDecreaseOrder id: 9f3c33fd03495d1596e0a478a5bba66bbf00156695a90929fb38a4aba7191f57
-event: ExecuteIncreaseOrder id: 9be92c13b352d3051c2f3fcb8f1010048a2055b1bd840f3fba594e564482d1c8
-event: Initialized id: 7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb3847402498
-event: LiquidatePosition id: e1febbdcc803d95366f46812f494fac1e36dce8da68a2c217faef524356e8c4a
+event: ExecuteDecreaseOrder id: a2583fde29c52f573bd99f8a9bcce4d7df1382057cf9b8ffbbcf801b97134f1f
+event: ExecuteIncreaseOrder id: b9ebfde3cada370575ed2066fed4b06f6463f74f311e6aa3d95e642c9b170c31
+event: LiquidatePosition id: 049204c9e9ec04d0e94364bedd6208e6e59072f12f8aa5a45cdcb423cfbc3d80
 
 contract: TradingVault
 event: ClosePosition id: 1ffb81f32d2d371994fb39b875fbe035d34386083d2a85a3cf2894709c4581a2
-event: DecreasePosition id: 62795973d742bdaf9fd1de818e338161d24339032ae04cf0420949325c3cfdae
-event: IncreasePosition id: 40ade253e754e3746462b670f057f2ea521746ba0011c4f5753f9c8f57449998
-event: Initialized id: 7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb3847402498
+event: DecreasePosition id: f1d296a817e8ecfa2709fcd52c61a6dddc7e87ed697b3ba601e88dbee8849c20
+event: IncreasePosition id: 07777c9f149d310fb8670fb9752de106d0ebc29093eb6df2be370406a7d742a3
 event: UpdateFundingRate id: 30ee8c76a6febcb0400fb07183d873b5c18cf9e5ca6a47104676795b989c606d
-event: UpdatePosition id: 8ea8e63c641084715d661096cbd2ef37b340a8cdcd6c2d70e0b1e0ac235bc0f1
+event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a639ef285ad
 ```
 
 #### 开仓
@@ -57,9 +54,10 @@ createIncreaseOrder(IncreasePositionRequest memory request)
 TradingRouter.cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType)
    
 struct IncreasePositionRequest {
+    address account;               // 当前用户
     uint256 pairIndex;             // 币对index
     TradeType tradeType;           // 0: MARKET, 1: LIMIT
-    uint256 collateral;            // 1e18 保证金数量
+    int256 collateral;             // 1e18 保证金数量，负数表示减仓
     uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
     bool isLong;                   // 多/空
     uint256 sizeAmount;            // 仓位数量
@@ -88,11 +86,11 @@ uint256 public decreaseLimitOrdersIndex;
 // 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
 executeIncreaseMarkets(uint256 _endIndex)
 
-// 执行限价砍仓(keeper)
+// 执行限价开仓(keeper)
 executeIncreaseOrder(uint256 _orderId, TradeType tradeType)
 ```
 
-#### 关仓
+#### 减仓
 - TradingRouter
 ```text
 // 创建关仓请求（前端用户)
@@ -100,8 +98,10 @@ createIncreaseOrder(IncreasePositionRequest memory request)
 
 // 请求体
 struct DecreasePositionRequest {
+    address account;               // 当前用户
     uint256 pairIndex;
     TradeType tradeType;
+    int256 collateral;             // 1e18 保证金数量，负数表示减仓
     uint256 triggerPrice;          // 限价触发价格
     uint256 sizeAmount;            // 关单数量
     bool isLong;
@@ -142,4 +142,15 @@ struct CreateTpSlRequest {
 ```text
 // _positionKeys 仓位key数组，_indexPrices 指数价格（与仓位一一对应）
 function liquidatePositions(bytes32[] memory _positionKeys, uint256[] memory _indexPrices)
+```
+
+#### ADL
+- ExecuteRouter
+```text
+function executeADLAndDecreaseOrder(
+    bytes32[] memory _positionKeys,         // 待执行ADL仓位key
+    uint256[] memory _sizeAmounts,          // 待执行ADL仓位数量
+    uint256 _orderId,                       // 待执行订单
+    ITradingRouter.TradeType _tradeType
+)
 ```
