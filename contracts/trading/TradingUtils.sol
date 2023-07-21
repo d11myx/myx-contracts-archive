@@ -50,6 +50,8 @@ contract TradingUtils is ITradingUtils, Governable {
 
     function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        console.log("getPrice pairIndex", _pairIndex);
+        console.log("getPrice indexToken", pair.indexToken);
         return vaultPriceFeed.getPrice(pair.indexToken, _isLong ? true : false, false, false);
     }
 
@@ -76,26 +78,39 @@ contract TradingUtils is ITradingUtils, Governable {
         return pnl;
     }
 
-    function validLeverage(bytes32 key, int256 _collateral, uint256 _sizeAmount, bool _increase) public {
+    function validLeverage(address account, uint256 pairIndex, bool isLong, int256 _collateral, uint256 _sizeAmount, bool _increase) public {
+        bytes32 key = getPositionKey(account, pairIndex, isLong);
         ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
-        uint256 price = getPrice(position.pairIndex, position.isLong);
+        uint256 price = getPrice(pairIndex, isLong);
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
-
+        // position >= decrease size
         require(_increase ? true : position.positionAmount >= _sizeAmount, "decrease amount exceed position");
 
         uint256 afterPosition = _increase ? position.positionAmount + _sizeAmount : position.positionAmount - _sizeAmount;
+
+        // close position
+        if (afterPosition == 0) {
+            return;
+        }
+
+        // check collateral
         int256 totalCollateral = int256(position.collateral) + _collateral;
         console.log("validLeverage collateral", _collateral >= 0 ? "": "-", _collateral.abs());
         require(totalCollateral >= 0, "collateral not enough for decrease");
-        totalCollateral += getUnrealizedPnl(position.account, position.pairIndex, position.isLong, position.positionAmount);
+
+        // pnl
+        if (position.positionAmount > 0) {
+            totalCollateral += getUnrealizedPnl(account, pairIndex, isLong, position.positionAmount);
+        }
+
         console.log("validLeverage totalCollateral", totalCollateral >= 0 ? "": "-", totalCollateral.abs());
 
         require(totalCollateral >= 0, "collateral not enough for pnl");
-        if (afterPosition > 0) {
-            require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-                && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
-        }
+        console.log("validLeverage price", price);
+        console.log("validLeverage afterPosition", afterPosition, "collateralDelta", totalCollateral.abs().divPrice(price));
+        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+          && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
     }
 
 }
