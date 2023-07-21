@@ -74,7 +74,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "initPairRatio",
+            "name": "initPrice",
             "type": "uint256"
           },
           {
@@ -363,7 +363,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "initPairRatio",
+            "name": "initPrice",
             "type": "uint256"
           },
           {
@@ -614,7 +614,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "initPairRatio",
+        "name": "initPrice",
         "type": "uint256"
       },
       {
@@ -907,7 +907,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "initPairRatio",
+            "name": "initPrice",
             "type": "uint256"
           },
           {

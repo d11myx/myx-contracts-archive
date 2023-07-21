@@ -25,10 +25,10 @@ async function main() {
   await vaultPriceFeed.setTokenConfig(usdt.address, usdtPriceFeed.address, 8, false)
   await vaultPriceFeed.setPriceSampleSpace(1);
 
-  await ethPriceFeed.setLatestAnswer(toChainLinkPrice(1900))
+  await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
   await ethPriceFeed.setAdmin(user1.address, true)
 
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(31000))
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
   await btcPriceFeed.setAdmin(user1.address, true)
 
   await usdtPriceFeed.setLatestAnswer(toChainLinkPrice(1))

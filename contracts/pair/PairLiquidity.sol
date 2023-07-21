@@ -115,8 +115,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
-            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
+            uint256 indexDesiredAmount = _stableAmount.divPrice(pair.initPrice);
+            uint256 stableDesiredAmount = _indexAmount.mulPrice(pair.initPrice);
             console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
@@ -262,8 +262,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
-            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
+            uint256 indexDesiredAmount = _stableAmount.divPrice(pair.initPrice);
+            uint256 stableDesiredAmount = _indexAmount.mulPrice(pair.initPrice);
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
             } else {
