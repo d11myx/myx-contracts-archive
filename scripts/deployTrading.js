@@ -13,7 +13,7 @@ async function main() {
 
   let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"));
 
   let tradingUtils = await deployUpgradeableContract("TradingUtils", []);
 

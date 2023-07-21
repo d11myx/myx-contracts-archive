@@ -33,7 +33,8 @@ interface ITradingVault {
 
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns(Position memory);
     function getPositionByKey(bytes32 key) external view returns(Position memory);
-    function getFundingFee(bool _increase, uint256 _pairIndex, uint256 _sizeAmount, uint256 _positionAmount, int256 _entryFundingRate, uint256 _entryFundingTime) external view returns (int256);
+    function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (uint256 tradingFee);
+    function getFundingFee(bool _increase, address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (int256);
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
     function isFrozen(address _account) external view returns(bool);
     function netExposureAmountChecker(uint256 _pairIndex) external view returns(int256);

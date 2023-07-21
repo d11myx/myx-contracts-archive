@@ -1,5 +1,5 @@
-const { deployContract, contractAt } = require("../utils/helpers");
-const { expandDecimals } = require("../utils/utilities");
+const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
+const { expandDecimals, formatBalance} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
@@ -14,12 +14,12 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  await vaultPriceFeed.setPrice(btc.address, expandDecimals(110, 30));
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(31000))
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
@@ -28,15 +28,15 @@ async function main() {
     account: user0.address,
     pairIndex: 0,
     tradeType: 0,
-    collateral: expandDecimals(-10, 18),
-    triggerPrice: expandDecimals(110, 30),
+    collateral: expandDecimals(-3000, 18),
+    triggerPrice: expandDecimals(31000, 30),
     sizeAmount: expandDecimals(1, 18),
     isLong: true
   };
   await tradingRouter.createDecreaseOrder(request)
 
   console.log(`order: ${await tradingRouter.decreaseMarketOrders(orderId)}`)
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
+  console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
 
   // execute
   let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
@@ -45,11 +45,11 @@ async function main() {
 
   console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
+  console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(0);
-  console.log(`reserve of btc: ${vault.indexReservedAmount}`);
-  console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
+  console.log(`total btc: ${formatBalance(vault.indexTotalAmount)} reserve of btc: ${formatBalance(vault.indexReservedAmount)}`);
+  console.log(`total usdt: ${formatBalance(vault.stableTotalAmount)}  reserve of usdt: ${formatBalance(vault.stableReservedAmount)}`);
 
 }
 
