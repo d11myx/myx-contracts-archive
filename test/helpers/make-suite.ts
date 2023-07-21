@@ -48,13 +48,8 @@ export async function setupTestEnv() {
     });
   }
 
-  console.log('111111');
   const weth = await deployWETH();
-  console.log('22222');
-
   const btc = await deployMockToken('BTC');
-  console.log('3333333');
-
   const usdt = await deployMockToken('USDT');
 
   testEnv.deployer = deployer;
@@ -62,18 +57,10 @@ export async function setupTestEnv() {
   testEnv.btc = btc;
   testEnv.usdt = usdt;
 
-  console.log('44444');
-
-  let vaultPriceFeed = (await deployUpgradeableContract('VaultPriceFeedTest', [])) as any as VaultPriceFeedTest;
-  console.log('555555');
-
-  let pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
-  console.log('666666');
-
-  let pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
-  console.log('777777');
-
-  let pairLiquidity = (await deployUpgradeableContract('PairLiquidity', [
+  const vaultPriceFeed = (await deployUpgradeableContract('VaultPriceFeedTest', [])) as any as VaultPriceFeedTest;
+  const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
+  const pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
+  const pairLiquidity = (await deployUpgradeableContract('PairLiquidity', [
     pairInfo.address,
     pairVault.address,
     vaultPriceFeed.address,
