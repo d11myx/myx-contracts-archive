@@ -2,6 +2,7 @@ const {deployContract, contractAt} = require("../utils/helpers");
 const {expandDecimals} = require("../utils/utilities");
 const {mintWETH, getConfig, setConfig} = require("../utils/utils");
 const hre = require("hardhat");
+const {BigNumber} = require("ethers");
 
 async function main() {
   const addresses = {}
@@ -23,8 +24,8 @@ async function main() {
     stableToken: usdt.address,
     pairToken: "0x0000000000000000000000000000000000000000",
     enable: true,
-    kOfSwap: "100000000000000000000000000000000000000000000000000",
-    initPairRatio: 1000,
+    kOfSwap: expandDecimals(1, 50),
+    initPrice: expandDecimals(30000, 30),
     addLpFeeP: 100
   };
   let tradingConfig = {
@@ -35,8 +36,8 @@ async function main() {
     maintainMarginRate: 1000,
   }
   let tradingFeeConfig = {
-    takerFeeP: 100, // 1%
-    makerFeeP: 100,
+    takerFeeP: 10, // 0.1%
+    makerFeeP: 10,
     lpDistributeP: 0,
     keeperDistributeP: 0,
     treasuryDistributeP: 0,
@@ -54,14 +55,16 @@ async function main() {
   }
   console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\ntradingFeeConfig", tradingFeeConfig,
     "\nfundingFeeConfig", fundingFeeConfig);
+  // btc - usdt
   await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
   let pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken}`);
   await setConfig("Token-BTC-USDT", pairToken);
 
-  //
+  // eth - usdt
   pair.indexToken = eth.address;
+  pair.initPrice = expandDecimals(2000, 30);
   console.log("pair1: ", pair);
   await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);

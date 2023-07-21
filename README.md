@@ -47,12 +47,12 @@ event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a
 #### 开仓
 - TradingRouter
 ```text
-// 创建开仓请求（前端用户) 
+// 创建开仓请求（前端用户)
 createIncreaseOrder(IncreasePositionRequest memory request)
 
 // 取消订单（前端用户）
 TradingRouter.cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType)
-   
+
 struct IncreasePositionRequest {
     address account;               // 当前用户
     uint256 pairIndex;             // 币对index
@@ -152,5 +152,21 @@ function executeADLAndDecreaseOrder(
     uint256[] memory _sizeAmounts,          // 待执行ADL仓位数量
     uint256 _orderId,                       // 待执行订单
     ITradingRouter.TradeType _tradeType
+)
+```
+
+#### 手续费
+- TradingVault
+```text
+// 获取交易手续费
+function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount)
+
+// 获取资金费率
+function getFundingFee(
+    bool _increase,         // 加仓true，减仓false
+    address _account,
+    uint256 _pairIndex,
+    bool _isLong,
+    uint256 _sizeAmount     // 待修改仓位数
 )
 ```
