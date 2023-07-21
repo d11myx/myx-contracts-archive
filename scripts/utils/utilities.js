@@ -1,4 +1,5 @@
 const BN = require('bn.js')
+const hre = require("hardhat");
 
 const maxUint256 = ethers.constants.MaxUint256
 
@@ -15,7 +16,11 @@ function expandDecimals(n, decimals) {
 }
 
 function reduceDecimals(n, decimals) {
-  return bigNumberify(n) / bigNumberify(10).pow(decimals)
+  return hre.ethers.utils.formatUnits(bigNumberify(n), decimals)
+}
+
+function formatBalance(n) {
+  return hre.ethers.utils.formatEther(bigNumberify(n));
 }
 
 async function send(provider, method, params = []) {
@@ -198,6 +203,7 @@ module.exports = {
   bigNumberify,
   expandDecimals,
   reduceDecimals,
+  formatBalance,
   mineBlock,
   increaseTime,
   gasUsed,

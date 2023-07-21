@@ -189,7 +189,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
         // check position and leverage
-        tradingUtils.validLeverage(position.key, order.collateral, order.sizeAmount, true);
+        tradingUtils.validLeverage(order.account, order.pairIndex, order.isLong, order.collateral, order.sizeAmount, true);
 
         // check tp sl
         require(order.tp == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.TP), "tp already exists");
@@ -341,13 +341,13 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // get position
         ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
-        require(position.account != address(0), "position already closed");
+        require(position.positionAmount != 0, "position already closed");
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
         // check position and leverage
-        tradingUtils.validLeverage(position.key, order.collateral, order.sizeAmount, false);
+        tradingUtils.validLeverage(position.account, position.pairIndex, position.isLong, order.collateral, order.sizeAmount, false);
 
         // 检查交易量
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
@@ -464,7 +464,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         ITradingVault.Position memory position = tradingVault.getPositionByKey(_positionKey);
 
         // 仓位已关闭
-        if (position.account == address(0)) {
+        if (position.positionAmount == 0) {
             console.log("position not exists");
             return;
         }

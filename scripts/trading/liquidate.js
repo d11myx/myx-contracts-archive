@@ -1,5 +1,5 @@
-const { deployContract, contractAt } = require("../utils/helpers");
-const { expandDecimals } = require("../utils/utilities");
+const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
+const { expandDecimals, formatBalance} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
@@ -14,17 +14,16 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
   let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  await vaultPriceFeed.setPrice(btc.address, expandDecimals(100, 30));
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
-  await vaultPriceFeed.setPrice(btc.address, expandDecimals(120, 30));
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(40000))
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   let key = await tradingUtils.getPositionKey(user0.address, 0, false);
@@ -33,14 +32,15 @@ async function main() {
 
   // execute
   let positionKeys = [key];
-  let prices = [expandDecimals(120, 30)];
+  let prices = [expandDecimals(40000, 30)];
   await executeRouter.liquidatePositions(positionKeys, prices);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
+  console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(0);
-  console.log(`reserve of btc: ${vault.indexReservedAmount}`);
-  console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
+  console.log(`total btc: ${formatBalance(vault.indexTotalAmount)} reserve of btc: ${formatBalance(vault.indexReservedAmount)}`);
+  console.log(`total usdt: ${formatBalance(vault.stableTotalAmount)}  reserve of usdt: ${formatBalance(vault.stableReservedAmount)}`);
 
 }
 
