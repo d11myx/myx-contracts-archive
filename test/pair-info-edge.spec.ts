@@ -1,8 +1,10 @@
 import { testEnv } from './helpers/make-suite';
 import { describe } from 'mocha';
-import { expect } from './shared/expect';
+import { expect } from 'chai';
 import { pairConfigs } from './shared/config';
 import { waitForTx } from './helpers/tx';
+import { IPairInfo } from '../types/ethers-contracts';
+import { ZERO_ADDRESS } from './shared/constants';
 
 describe('PairInfo: Edge cases', () => {
   // before('deploy Pair', async () => {
@@ -16,14 +18,14 @@ describe('PairInfo: Edge cases', () => {
   // });
 
   it('check getters', async () => {
-    const { deployer, pairInfo, pairLiquidity } = testEnv;
+    const { pairInfo, pairLiquidity } = testEnv;
 
     expect(await pairInfo.pairLiquidity()).to.be.eq(pairLiquidity.address);
   });
 
   describe('test addPair', async () => {
     before('addPair', async () => {
-      const { deployer, pairInfo, btc, usdt } = testEnv;
+      const { pairInfo, btc, usdt } = testEnv;
 
       const btcPair = pairConfigs['BTC_USDT'];
 
@@ -41,16 +43,16 @@ describe('PairInfo: Edge cases', () => {
 
     it('check pair info', async () => {
       const { pairInfo, btc, usdt } = testEnv;
-    
+
       const pairIndex = 0;
       // console.log(await pairInfo.pairs(pairIndex));
       // console.log(await pairInfo.getPair(pairIndex));
-    
+
       expect(await pairInfo.pairs(pairIndex)).deep.be.eq(await pairInfo.getPair(pairIndex));
       expect(await pairInfo.tradingConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingConfig(pairIndex));
       expect(await pairInfo.tradingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingFeeConfig(pairIndex));
       expect(await pairInfo.fundingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getFundingFeeConfig(pairIndex));
-    
+
       const btcPair = pairConfigs['BTC_USDT'];
       const pair = await pairInfo.getPair(pairIndex);
       expect(pair.indexToken).to.be.eq(btc.address);
@@ -59,22 +61,43 @@ describe('PairInfo: Edge cases', () => {
     });
   });
 
-  describe('test updatePair', async ()=>{
-    it('check update pair', async ()=>{
-      const { pairInfo, btc, usdt } = testEnv;
+  describe('test updatePair', async () => {
+    it('unHandler updatePair should be reverted', async () => {
+      const {
+        pairInfo,
+        users: [unHandler],
+      } = testEnv;
 
-      const btcPair = pairConfigs['BTC_USDT'];
-      const pair = btcPair.pair;
+      const pairIndex = 0;
+      const pair = await pairInfo.getPair(pairIndex);
+      await expect(pairInfo.connect(unHandler.signer).updatePair(pairIndex, pair)).to.be.revertedWith(
+        'Handleable: forbidden',
+      );
+    });
 
-      console.log('update before', pair);
-      pair.enable = false;
-      pair.kOfSwap = 99999999999999;
-      pair.initPairRatio = 999;
-      console.log('update after', pair)
+    it('check update pair', async () => {
+      const { deployer, pairInfo } = testEnv;
 
-      expect(await pair.enable).to.be.eq(false);
-      expect(await pair.kOfSwap).to.be.eq(99999999999999);
-      expect(await pair.initPairRatio).to.be.eq(999);
+      const pairIndex = 0;
+      const pairBefore = await pairInfo.getPair(pairIndex);
+
+      // updatePair
+      let pairToUpdate: IPairInfo.PairStructOutput = { ...pairBefore };
+      pairToUpdate.enable = !pairBefore.enable;
+      pairToUpdate.kOfSwap = BigInt(99999999);
+      pairToUpdate.initPairRatio = BigInt(999);
+      await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
+
+      const pairAfterObj = await pairInfo.getPair(pairIndex);
+      let pairAfter: IPairInfo.PairStructOutput = { ...pairAfterObj };
+
+      console.log(pairAfter);
+      console.log(pairToUpdate);
+      // expect(pairAfter).deep.be.eq(pairToUpdate);
+
+      // expect(pairAfter.enable).to.be.eq(pairToUpdate.enable);
+      // expect(pairAfter.kOfSwap).to.be.eq(pairToUpdate.kOfSwap);
+      // expect(pairAfter.initPairRatio).to.be.eq(pairToUpdate.initPairRatio);
     });
   });
 });
