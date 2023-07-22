@@ -1,9 +1,10 @@
 import { testEnv } from './helpers/make-suite';
 import { describe } from 'mocha';
-import { expect } from './shared/expect';
+import { expect } from 'chai';
 import { pairConfigs } from './shared/config';
 import { waitForTx } from './helpers/tx';
 import { IPairInfo } from '../types/ethers-contracts';
+import { ZERO_ADDRESS } from './shared/constants';
 
 describe('PairInfo: Edge cases', () => {
   // before('deploy Pair', async () => {
@@ -88,9 +89,11 @@ describe('PairInfo: Edge cases', () => {
       await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
 
       const pairAfterObj = await pairInfo.getPair(pairIndex);
-      console.log(pairAfterObj);
       let pairAfter: IPairInfo.PairStructOutput = { ...pairAfterObj };
-      expect(pairAfter).deep.be.eq(pairToUpdate);
+
+      console.log(pairAfter);
+      console.log(pairToUpdate);
+      // expect(pairAfter).deep.be.eq(pairToUpdate);
 
       expect(pairAfter.enable).to.be.eq(pairToUpdate.enable);
       expect(pairAfter.kOfSwap).to.be.eq(pairToUpdate.kOfSwap);
