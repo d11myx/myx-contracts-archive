@@ -169,23 +169,23 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         console.log("increasePosition fundingFee", fundingFee.toString());
 
         if (fundingFee >= 0) {
-            uint256 absFundingRate = uint256(fundingFee);
+            uint256 absFundingFee = uint256(fundingFee);
             if (_isLong) {
-                require(position.collateral >= absFundingRate, "collateral not enough for funding fee");
-                position.collateral -= absFundingRate;
+                require(position.collateral >= absFundingFee, "collateral not enough for funding fee");
+                position.collateral -= absFundingFee;
                 console.log("increasePosition long pay funding fee");
             } else {
-                transferOut += absFundingRate;  // todo distribute
+                transferOut += absFundingFee;  // todo distribute
                 console.log("increasePosition long take funding fee");
             }
         } else {
-            uint256 absFundingRate = uint256(- fundingFee);
+            uint256 absFundingFee = uint256(- fundingFee);
             if (!_isLong) {
-                require(position.collateral >= absFundingRate, "collateral not enough for funding fee");
-                position.collateral = position.collateral - absFundingRate;
+                require(position.collateral >= absFundingFee, "collateral not enough for funding fee");
+                position.collateral = position.collateral - absFundingFee;
                 console.log("increasePosition short pay funding fee");
             } else {
-                transferOut += absFundingRate;  // todo distribute
+                transferOut += absFundingFee;  // todo distribute
                 console.log("increasePosition short take funding fee");
             }
         }
@@ -403,23 +403,23 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         console.log("increasePosition fundingFee", fundingFee.toString());
 
         if (fundingFee >= 0) {
-            uint256 absFundingRate = uint256(fundingFee);
+            uint256 absFundingFee = uint256(fundingFee);
             if (_isLong) {
-                require(position.collateral >= absFundingRate, "collateral not enough for funding fee");
-                position.collateral -= absFundingRate;
+                require(position.collateral >= absFundingFee, "collateral not enough for funding fee");
+                position.collateral -= absFundingFee;
                 console.log("increasePosition long pay funding fee");
             } else {
-                transferOut += absFundingRate;  // todo distribute
+                transferOut += absFundingFee;  // todo distribute
                 console.log("increasePosition long take funding fee");
             }
         } else {
-            uint256 absFundingRate = uint256(- fundingFee);
+            uint256 absFundingFee = uint256(- fundingFee);
             if (!_isLong) {
-                require(position.collateral >= absFundingRate, "collateral not enough for funding fee");
-                position.collateral = position.collateral - absFundingRate;
+                require(position.collateral >= absFundingFee, "collateral not enough for funding fee");
+                position.collateral = position.collateral - absFundingFee;
                 console.log("increasePosition short pay funding fee");
             } else {
-                transferOut += absFundingRate;  // todo distribute
+                transferOut += absFundingFee;  // todo distribute
                 console.log("increasePosition short take funding fee");
             }
         }
