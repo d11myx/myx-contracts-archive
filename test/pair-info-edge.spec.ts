@@ -1,10 +1,9 @@
 import { testEnv } from './helpers/make-suite';
 import { describe } from 'mocha';
 import { expect } from 'chai';
-import { pairConfigs } from './shared/config';
 import { waitForTx } from './helpers/tx';
 import { IPairInfo } from '../types/ethers-contracts';
-import { ZERO_ADDRESS } from './shared/constants';
+import { loadPairConfig } from './helpers/market-config-helper';
 
 describe('PairInfo: Edge cases', () => {
   // before('deploy Pair', async () => {
@@ -27,7 +26,7 @@ describe('PairInfo: Edge cases', () => {
     before('addPair', async () => {
       const { pairInfo, btc, usdt } = testEnv;
 
-      const btcPair = pairConfigs['BTC_USDT'];
+      const btcPair = loadPairConfig('USDT', 'BTC');
 
       const pair = btcPair.pair;
       pair.indexToken = btc.address;
@@ -53,7 +52,7 @@ describe('PairInfo: Edge cases', () => {
       expect(await pairInfo.tradingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingFeeConfig(pairIndex));
       expect(await pairInfo.fundingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getFundingFeeConfig(pairIndex));
 
-      const btcPair = pairConfigs['BTC_USDT'];
+      const btcPair = loadPairConfig('USDT', 'BTC');
       const pair = await pairInfo.getPair(pairIndex);
       expect(pair.indexToken).to.be.eq(btc.address);
       expect(pair.stableToken).to.be.eq(usdt.address);
