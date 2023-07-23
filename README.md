@@ -34,7 +34,7 @@ event: CreateIncreaseOrder id: e83629b11df9fcc6b9ebc666eb284c939d1710576a8d3eac2
 contract: ExecuteRouter
 event: ExecuteDecreaseOrder id: a2583fde29c52f573bd99f8a9bcce4d7df1382057cf9b8ffbbcf801b97134f1f
 event: ExecuteIncreaseOrder id: b9ebfde3cada370575ed2066fed4b06f6463f74f311e6aa3d95e642c9b170c31
-event: LiquidatePosition id: 049204c9e9ec04d0e94364bedd6208e6e59072f12f8aa5a45cdcb423cfbc3d80
+event: LiquidatePosition id: aac40228c5d58dfc6360c331165fa5a8fa13f51c87a6124cb1999a4c6117bb79
 
 contract: TradingVault
 event: ClosePosition id: 1ffb81f32d2d371994fb39b875fbe035d34386083d2a85a3cf2894709c4581a2
