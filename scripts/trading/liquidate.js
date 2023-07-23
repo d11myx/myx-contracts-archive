@@ -36,6 +36,7 @@ async function main() {
   await executeRouter.liquidatePositions(positionKeys, prices);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
+  console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
   console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(0);

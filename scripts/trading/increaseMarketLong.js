@@ -50,6 +50,7 @@ async function main() {
   // await tradingRouter.connect(user1).executeIncreaseMarketOrders(orderId.add(1));
   console.log(`order after execute: ${await tradingRouter.increaseMarketOrders(orderId)}`);
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
+  console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
   console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(0);
