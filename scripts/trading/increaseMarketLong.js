@@ -1,5 +1,5 @@
-const { deployContract, contractAt } = require("../utils/helpers");
-const { expandDecimals } = require("../utils/utilities");
+const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
+const { expandDecimals, formatBalance } = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
@@ -13,34 +13,34 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  // await usdt.mint(user0.address, expandDecimals(100, 18))
-  await vaultPriceFeed.setPrice(btc.address, expandDecimals(100, 30));
+  await usdt.mint(user0.address, expandDecimals(30000, 18))
+  await usdt.approve(tradingRouter.address, expandDecimals(30000, 30));
 
-  await usdt.approve(tradingRouter.address, expandDecimals(100, 30));
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
 
   let orderId = await tradingRouter.increaseMarketOrdersIndex();
   let request = {
     account: user0.address,
     pairIndex: 0,
     tradeType: 0,
-    collateral: expandDecimals(100, 18),
-    openPrice: expandDecimals(100, 30),
+    collateral: expandDecimals(30000, 18),
+    openPrice: expandDecimals(30000, 30),
     isLong: true,
     sizeAmount: expandDecimals(10, 18),
-    tpPrice: expandDecimals(110, 30),
+    tpPrice: expandDecimals(31000, 30),
     tp: expandDecimals(1, 18),
-    slPrice: expandDecimals(90, 30),
+    slPrice: expandDecimals(29000, 30),
     sl: expandDecimals(1, 18)
   };
   await tradingRouter.createIncreaseOrder(request)
 
   console.log(`order: ${await tradingRouter.increaseMarketOrders(orderId)}`)
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
+  console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
 
   // execute
   let startIndex = await tradingRouter.increaseMarketOrderStartIndex();
@@ -50,11 +50,13 @@ async function main() {
   // await tradingRouter.connect(user1).executeIncreaseMarketOrders(orderId.add(1));
   console.log(`order after execute: ${await tradingRouter.increaseMarketOrders(orderId)}`);
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
-  console.log(`balance of usdt: ${await usdt.balanceOf(tradingVault.address)}`);
+  console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
+  console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(0);
-  console.log(`reserve of btc: ${vault.indexReservedAmount}`);
-  console.log(`reserve of usdt: ${vault.stableReservedAmount}`);
+  console.log(`reserve of btc: ${formatBalance(vault.indexReservedAmount)}`);
+  console.log(`reserve of usdt: ${formatBalance(vault.stableReservedAmount)}`);
+
 }
 
 main()

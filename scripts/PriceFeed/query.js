@@ -1,8 +1,9 @@
 const { deployContract, deployUpgradeableContract, toChainLinkPrice} = require("../utils/helpers");
-const { expandDecimals } = require("../utils/utilities");
+const { expandDecimals, reduceDecimals } = require("../utils/utilities");
 const hre = require("hardhat");
 const {mintWETH, getConfig, repeatString} = require("../utils/utils");
 const {contractAt} = require("../utils/helpers");
+const {BigNumber} = require("ethers");
 
 const BTC_PRICE = 60000;
 const BNB_PRICE = 300;
@@ -26,14 +27,16 @@ async function main() {
   for (let symbol of tokens) {
     console.log(repeatString('-'))
     console.log(symbol)
+    let token = await getConfig("Token-" + symbol);
     let priceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-" + symbol))
-    let decimals = await vaultPriceFeed.priceDecimals(await getConfig("Token-" + symbol));
+    let decimals = await vaultPriceFeed.priceDecimals(token);
     let latestAnswer = await priceFeed.latestAnswer()
     console.log(`decimals: ${decimals}`)
     console.log(`latestRound: ${await priceFeed.latestRound()}`)
     console.log(`latestAnswer: ${latestAnswer} ${hre.ethers.utils.formatUnits(latestAnswer, decimals)}`)
-    console.log(`getLatestPrimaryPrice: ${await vaultPriceFeed.getLatestPrimaryPrice(await getConfig("Token-" + symbol))}`)
-    console.log(`getPrimaryPrice: ${hre.ethers.utils.formatEther(await vaultPriceFeed.getPrimaryPrice(await getConfig("Token-" + symbol), false))}`)
+    console.log(`getLatestPrimaryPrice: ${await vaultPriceFeed.getLatestPrimaryPrice(token)}`)
+    console.log(`getPrimaryPrice: ${hre.ethers.utils.formatEther(await vaultPriceFeed.getPrimaryPrice(token, false))}`)
+    console.log(`vaultPriceFeed price: ${hre.ethers.utils.formatUnits(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
   }
 }
 

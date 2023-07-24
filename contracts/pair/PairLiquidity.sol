@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
+import "../openzeeplin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../openzeeplin/contracts/token/ERC20/IERC20.sol";
 import "../openzeeplin/contracts/utils/math/Math.sol";
 import "../openzeeplin/contracts/utils/Address.sol";
@@ -20,6 +21,7 @@ import "hardhat/console.sol";
 contract PairLiquidity is IPairLiquidity, Handleable {
 
     using PrecisionUtils for uint256;
+    using SafeERC20 for IERC20;
 
     uint256 public constant PRICE_PRECISION = 1e30;
 
@@ -115,8 +117,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
-            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
+            uint256 indexDesiredAmount = _stableAmount.divPrice(pair.initPrice);
+            uint256 stableDesiredAmount = _indexAmount.mulPrice(pair.initPrice);
             console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
@@ -126,8 +128,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         }
         console.log("_indexAmount", _indexAmount, "_stableAmount", _stableAmount);
         // transfer token
-        IERC20(pair.indexToken).transferFrom(_funder, address(this), _indexAmount);
-        IERC20(pair.stableToken).transferFrom(_funder, address(this), _stableAmount);
+        IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), _indexAmount);
+        IERC20(pair.stableToken).safeTransferFrom(_funder, address(this), _stableAmount);
 
         // fee
         uint256 afterFeeIndexAmount;
@@ -139,8 +141,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
             console.log("indexFeeAmount", indexFeeAmount, "stableFeeAmount", stableFeeAmount);
 
-            IERC20(pair.indexToken).transfer(feeReceiver, indexFeeAmount);
-            IERC20(pair.stableToken).transfer(feeReceiver, stableFeeAmount);
+            IERC20(pair.indexToken).safeTransfer(feeReceiver, indexFeeAmount);
+            IERC20(pair.stableToken).safeTransfer(feeReceiver, stableFeeAmount);
 
             afterFeeIndexAmount = _indexAmount - indexFeeAmount;
             afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -178,7 +180,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                     uint256 slipAmount = _getAmount(slipDelta, price);
 
                     afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                    IERC20(pair.indexToken).transfer(slipReceiver, slipAmount);
+                    IERC20(pair.indexToken).safeTransfer(slipReceiver, slipAmount);
                 } else if (indexTotalDelta < stableTotalDelta) {
                     uint256 needSwapStableDelta = (stableTotalDelta - indexTotalDelta) / 2;
                     uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
@@ -186,7 +188,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                     slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
 
                     afterFeeStableAmount = afterFeeStableAmount - slipDelta;
-                    IERC20(pair.stableToken).transfer(slipReceiver, slipDelta);
+                    IERC20(pair.stableToken).safeTransfer(slipReceiver, slipDelta);
                 }
             }
             // mint lp
@@ -198,8 +200,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         pairVault.increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
-        IERC20(pair.indexToken).transfer(address(pairVault), afterFeeIndexAmount);
-        IERC20(pair.stableToken).transfer(address(pairVault), afterFeeStableAmount);
+        IERC20(pair.indexToken).safeTransfer(address(pairVault), afterFeeIndexAmount);
+        IERC20(pair.stableToken).safeTransfer(address(pairVault), afterFeeStableAmount);
         console.log("afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
 
         emit AddLiquidity(_account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
@@ -262,8 +264,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // init liquidity
         if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = _stableAmount.mulPercentage(pair.initPairRatio);
-            uint256 stableDesiredAmount = _indexAmount.divPercentage(pair.initPairRatio);
+            uint256 indexDesiredAmount = _stableAmount.divPrice(pair.initPrice);
+            uint256 stableDesiredAmount = _indexAmount.mulPrice(pair.initPrice);
             if (indexDesiredAmount <= _indexAmount) {
                 _indexAmount = indexDesiredAmount;
             } else {

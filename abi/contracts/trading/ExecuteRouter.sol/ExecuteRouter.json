@@ -163,9 +163,9 @@
       },
       {
         "indexed": false,
-        "internalType": "int256",
+        "internalType": "uint256",
         "name": "collateral",
-        "type": "int256"
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -178,12 +178,6 @@
         "internalType": "uint256",
         "name": "orderId",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "needADL",
-        "type": "bool"
       }
     ],
     "name": "LiquidatePosition",

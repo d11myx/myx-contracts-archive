@@ -118,7 +118,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 创建加仓订单
     function createIncreaseOrder(IncreasePositionRequest memory _request) external nonReentrant returns (uint256 orderId) {
-        console.log("createIncreaseOrder sender", msg.sender, "account", _request.account);
         console.log("createIncreaseOrder pairIndex", _request.pairIndex, "tradeType", uint8(_request.tradeType));
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
 
@@ -137,7 +136,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         // check leverage
         bytes32 key = tradingUtils.getPositionKey(account, _request.pairIndex, _request.isLong);
-        tradingUtils.validLeverage(key, _request.collateral, _request.sizeAmount, true);
+        tradingUtils.validLeverage(_request.account, _request.pairIndex, _request.isLong, _request.collateral, _request.sizeAmount, true);
 
         // check tp sl
         require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
@@ -207,7 +206,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 取消加仓订单
     function cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
-        console.log("cancelIncreaseOrder sender", msg.sender);
         console.log("cancelIncreaseOrder orderId", _orderId, "tradeType", uint8(_tradeType));
 
         IncreasePositionOrder memory order = getIncreaseOrder(_orderId, _tradeType);
@@ -246,7 +244,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 创建减仓订单
     function createDecreaseOrder(DecreasePositionRequest memory _request) external nonReentrant returns (uint256 orderId) {
-        console.log("createDecreaseOrder sender", msg.sender, "account", _request.account);
         console.log("createDecreaseOrder pairIndex", _request.pairIndex, "tradeType", uint8(_request.tradeType));
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
 
@@ -265,7 +262,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(_request.sizeAmount <= position.positionAmount - positionDecreaseTotalAmount[positionKey], "decrease amount exceed position");
 
         // check leverage
-        tradingUtils.validLeverage(position.key, _request.collateral, _request.sizeAmount, false);
+        tradingUtils.validLeverage(position.account, position.pairIndex, position.isLong, _request.collateral, _request.sizeAmount, false);
 
         // transfer collateral
         if (_request.collateral > 0) {
@@ -328,7 +325,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 取消减仓订单
     function cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
-        console.log("cancelDecreaseOrder sender", msg.sender);
         console.log("cancelDecreaseOrder orderId", _orderId, "tradeType", uint8(_tradeType));
 
         DecreasePositionOrder memory order = getDecreaseOrder(_orderId, _tradeType);
@@ -386,7 +382,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 创建止盈止损
     function createTpSl(CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId) {
-        console.log("createTpSl sender", msg.sender, "account", _request.account);
         console.log("createTpSl pairIndex", _request.pairIndex, "createTpSl isLong", _request.isLong);
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
 
@@ -509,7 +504,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     }
 
     function addOrderToPosition(PositionOrder memory _order) public onlyHandler {
-        console.log("addOrderToPosition orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
         bytes32 positionKey = tradingUtils.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
         bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
         positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
@@ -517,21 +511,16 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
             positionDecreaseTotalAmount[positionKey] += _order.sizeAmount;
-            console.log("addOrderToPosition positionDecreaseTotalAmount", positionDecreaseTotalAmount[positionKey]);
         }
     }
 
     function removeOrderFromPosition(PositionOrder memory _order) public onlyHandler {
-        console.log("removeOrderFromPosition orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
         bytes32 positionKey = tradingUtils.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
-        console.logBytes32(positionKey);
 
         bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
-        console.logBytes32(orderKey);
 
         uint256 index = positionOrderIndex[positionKey][orderKey];
         uint256 lastIndex = positionOrders[positionKey].length - 1;
-        console.log("removeOrderFromPosition index", index, "lastIndex", lastIndex);
 
         if (index < lastIndex) {
             // swap last order
@@ -542,14 +531,10 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             positionOrderIndex[positionKey][lastOrderKey] = index;
         }
         delete positionOrderIndex[positionKey][orderKey];
-        console.log("removeOrderFromPosition delete index", index);
-        console.log("removeOrderFromPosition positionOrders.length", positionOrders[positionKey].length);
         positionOrders[positionKey].pop();
-        console.log("removeOrderFromPosition positionOrders.length", positionOrders[positionKey].length);
 
         if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
             positionDecreaseTotalAmount[positionKey] -= _order.sizeAmount;
-            console.log("removeOrderFromPosition positionDecreaseTotalAmount", positionDecreaseTotalAmount[positionKey]);
         }
     }
 

@@ -285,6 +285,24 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "buyIndexToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -379,28 +397,23 @@
         "type": "bool"
       },
       {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_pairIndex",
         "type": "uint256"
       },
       {
+        "internalType": "bool",
+        "name": "_isLong",
+        "type": "bool"
+      },
+      {
         "internalType": "uint256",
         "name": "_sizeAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_positionAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "int256",
-        "name": "_entryFundingRate",
-        "type": "int256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_entryFundingTime",
         "type": "uint256"
       }
     ],
@@ -562,6 +575,35 @@
         "internalType": "struct ITradingVault.Position",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_sizeAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTradingFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
