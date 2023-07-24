@@ -163,13 +163,31 @@ struct CreateTpSlRequest {
 #### 清算
 - ExecuteRouter
 ```text
-// _positionKeys 仓位key数组，_indexPrices 指数价格（与仓位一一对应）
-function liquidatePositions(bytes32[] memory _positionKeys, uint256[] memory _indexPrices)
+// 设置price并执行清算
+setPricesWithBitsAndLiquidatePositions(
+    uint256 _priceBits,
+    uint256 _timestamp,
+    bytes32[] memory _positionKeys
+)
+
+// _positionKeys 仓位key数组
+function liquidatePositions(bytes32[] memory _positionKeys)
 ```
 
 #### ADL
 - ExecuteRouter
 ```text
+// 设置price并执行ADL
+setPricesWithBitsAndExecuteADL(
+    uint256 _priceBits,
+    uint256 _timestamp,
+    bytes32[] memory _positionKeys,
+    uint256[] memory _sizeAmounts,
+    uint256 _orderId,
+    ITradingRouter.TradeType _tradeType
+)
+
+// 执行ADL及减仓订单
 function executeADLAndDecreaseOrder(
     bytes32[] memory _positionKeys,         // 待执行ADL仓位key
     uint256[] memory _sizeAmounts,          // 待执行ADL仓位数量

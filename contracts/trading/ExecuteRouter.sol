@@ -515,10 +515,10 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         bytes32[] memory _positionKeys
     ) external nonReentrant onlyPositionKeeper {
         fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
-        liquidatePositions(_positionKeys);
+        this.liquidatePositions(_positionKeys);
     }
 
-    function liquidatePositions(bytes32[] memory _positionKeys) public nonReentrant onlyPositionKeeper {
+    function liquidatePositions(bytes32[] memory _positionKeys) external nonReentrant onlyPositionKeeper {
         for (uint256 i = 0; i < _positionKeys.length; i++) {
             _liquidatePosition(_positionKeys[i]);
         }
@@ -599,6 +599,18 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             price,
             orderId
         );
+    }
+
+    function setPricesWithBitsAndExecuteADL(
+        uint256 _priceBits,
+        uint256 _timestamp,
+        bytes32[] memory _positionKeys,
+        uint256[] memory _sizeAmounts,
+        uint256 _orderId,
+        ITradingRouter.TradeType _tradeType
+    ) external nonReentrant onlyPositionKeeper {
+        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+        this.executeADLAndDecreaseOrder(_positionKeys, _sizeAmounts, _orderId, _tradeType);
     }
 
     function executeADLAndDecreaseOrder(
