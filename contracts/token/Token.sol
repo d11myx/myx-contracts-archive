@@ -73,7 +73,8 @@ contract Token is IERC20 {
     function withdraw(uint256 amount) public {
         require(_balances[msg.sender] >= amount, "Token: insufficient balance");
         _burn(msg.sender, amount);
-        payable(msg.sender).transfer(amount);
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "unable to withdraw");
     }
 
     /**

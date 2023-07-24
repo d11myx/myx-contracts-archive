@@ -22,6 +22,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
+    using Address for address payable;
 
     uint256 public constant PRICE_PRECISION = 1e30;
 
@@ -98,7 +99,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, msg.sender, _pairIndex, _amount);
         if (receivedIndexAmount > 0 && pairInfo.getPair(_pairIndex).indexToken == weth) {
             IWETH(weth).withdraw(receivedIndexAmount);
-            Address.sendValue(payable(msg.sender), receivedIndexAmount);
+            payable(msg.sender).sendValue(receivedIndexAmount);
         }
         return (receivedIndexAmount, receivedStableAmount);
     }
