@@ -1,9 +1,10 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Contract, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import { PairInfo, PairLiquidity, PairVault, Token, VaultPriceFeedTest, WETH } from '../../types/ethers-contracts';
 import { deployMockToken, deployWETH } from './contract-deployments';
 import { deployUpgradeableContract, waitForTx } from './tx';
+import { loadReserveConfig } from './market-config-helper';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -48,13 +49,8 @@ export async function setupTestEnv() {
     });
   }
 
-  console.log('111111');
   const weth = await deployWETH();
-  console.log('22222');
-
   const btc = await deployMockToken('BTC');
-  console.log('3333333');
-
   const usdt = await deployMockToken('USDT');
 
   testEnv.deployer = deployer;
@@ -62,18 +58,25 @@ export async function setupTestEnv() {
   testEnv.btc = btc;
   testEnv.usdt = usdt;
 
-  console.log('44444');
+  const vaultPriceFeed = (await deployUpgradeableContract('VaultPriceFeedTest', [])) as any as VaultPriceFeedTest;
 
-  let vaultPriceFeed = (await deployUpgradeableContract('VaultPriceFeedTest', [])) as any as VaultPriceFeedTest;
-  console.log('555555');
+  const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
 
-  let pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
-  console.log('666666');
+  testEnv.pairInfo = pairInfo;
+  testEnv.pairLiquidity = pairLiquidity;
+  testEnv.pairVault = pairVault;
+}
 
-  let pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
-  console.log('777777');
+export async function deployPrice() {
+  const reserves = loadReserveConfig('USDT');
+  reserves.PairAssets;
+  const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
+}
 
-  let pairLiquidity = (await deployUpgradeableContract('PairLiquidity', [
+export async function deployPair(vaultPriceFeed: VaultPriceFeedTest, deployer: SignerWithAddress, weth: WETH) {
+  const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
+  const pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
+  const pairLiquidity = (await deployUpgradeableContract('PairLiquidity', [
     pairInfo.address,
     pairVault.address,
     vaultPriceFeed.address,
@@ -86,7 +89,5 @@ export async function setupTestEnv() {
   await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
   await waitForTx(await pairInfo.setPairLiquidity(pairLiquidity.address));
 
-  testEnv.pairInfo = pairInfo;
-  testEnv.pairLiquidity = pairLiquidity;
-  testEnv.pairVault = pairVault;
+  return { pairInfo, pairLiquidity, pairVault };
 }
