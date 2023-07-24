@@ -19,6 +19,7 @@ interface IPairInfo {
         uint256 minTradeAmount;
         uint256 maxTradeAmount;
         uint256 maintainMarginRate; // 10000 for 100%
+        uint256 priceSlipP;
     }
 
     struct TradingFeeConfig {

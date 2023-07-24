@@ -42,7 +42,7 @@ async function main() {
   let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
   console.log("startIndex:", startIndex);
   await executeRouter.executeDecreaseOrder(orderId, 0);
-
+  // await executeRouter.executeDecreaseMarketOrders(orderId.add(1));
   console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
   console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);

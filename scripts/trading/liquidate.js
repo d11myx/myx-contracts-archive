@@ -32,8 +32,7 @@ async function main() {
 
   // execute
   let positionKeys = [key];
-  let prices = [expandDecimals(40000, 30)];
-  await executeRouter.liquidatePositions(positionKeys, prices);
+  await executeRouter.liquidatePositions(positionKeys);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
   console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);

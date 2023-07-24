@@ -83,8 +83,27 @@ uint256 public decreaseLimitOrdersIndex;
 ```
 - ExecuteRouter
 ```text
+// 设置price并执行市价订单
+setPricesWithBitsAndExecuteMarketOrders(
+    uint256 _priceBits,
+    uint256 _timestamp,
+    uint256 _increaseEndIndex,  // 开仓市价单终止index
+    uint256 _decreaseEndIndex   // 减仓市价单终止index
+)
+
+// 设置price并执行限价订单
+setPricesWithBitsAndExecuteLimitOrders(
+    uint256 _priceBits,
+    uint256 _timestamp,
+    uint256[] memory _increaseOrderIds,
+    uint256[] memory _decreaseOrderIds
+)
+
 // 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
 executeIncreaseMarkets(uint256 _endIndex)
+
+// 批量执行限价开仓
+executeIncreaseLimitOrders(uint256[] memory _orderIds)
 
 // 执行限价开仓(keeper)
 executeIncreaseOrder(uint256 _orderId, TradeType tradeType)
@@ -93,7 +112,7 @@ executeIncreaseOrder(uint256 _orderId, TradeType tradeType)
 #### 减仓
 - TradingRouter
 ```text
-// 创建关仓请求（前端用户)
+// 创建减仓请求（前端用户)
 createIncreaseOrder(IncreasePositionRequest memory request)
 
 // 请求体
@@ -113,8 +132,12 @@ cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType)
 
 - ExecuteRouter
 ```text
-// 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
+
+// 批量执行市价减仓（keeper: Account 0 / Account 1）, endIndex: 终止index
 executeDecreaseMarkets(uint256 _endIndex)
+
+// 批量执行限价减仓
+executeDecreaseLimitOrders(uint256[] memory _orderIds)
 
 // 执行限价砍仓(keeper)
 executeDecreaseOrder(uint256 _orderId, TradeType tradeType)

@@ -44,6 +44,19 @@
     "type": "event"
   },
   {
+    "inputs": [],
+    "name": "PERCENTAGE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
@@ -112,6 +125,11 @@
           {
             "internalType": "uint256",
             "name": "maintainMarginRate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "priceSlipP",
             "type": "uint256"
           }
         ],
@@ -416,6 +434,11 @@
             "internalType": "uint256",
             "name": "maintainMarginRate",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "priceSlipP",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IPairInfo.TradingConfig",
@@ -717,6 +740,11 @@
         "internalType": "uint256",
         "name": "maintainMarginRate",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "priceSlipP",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -777,51 +805,6 @@
         "components": [
           {
             "internalType": "uint256",
-            "name": "minLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minTradeAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxTradeAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maintainMarginRate",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IPairInfo.TradingConfig",
-        "name": "_tradingConfig",
-        "type": "tuple"
-      }
-    ],
-    "name": "updateFeePercentage",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
             "name": "minFundingRate",
             "type": "uint256"
           },
@@ -862,7 +845,7 @@
           }
         ],
         "internalType": "struct IPairInfo.FundingFeeConfig",
-        "name": "_fundingFeeDistribute",
+        "name": "_fundingFeeConfig",
         "type": "tuple"
       }
     ],
@@ -922,6 +905,56 @@
       }
     ],
     "name": "updatePair",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "minLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxLeverage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minTradeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxTradeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maintainMarginRate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "priceSlipP",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPairInfo.TradingConfig",
+        "name": "_tradingConfig",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateTradingConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
