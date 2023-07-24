@@ -58,7 +58,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
-    IVaultPriceFeed public vaultPriceFeed;
     ITradingUtils public tradingUtils;
 
     // 市价请求
@@ -90,7 +89,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed,
         ITradingUtils _tradingUtils
     ) external initializer {
         __ReentrancyGuard_init();
@@ -98,7 +96,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
-        vaultPriceFeed = _vaultPriceFeed;
         tradingUtils = _tradingUtils;
     }
 
@@ -106,13 +103,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed,
         ITradingUtils _tradingUtils
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
-        vaultPriceFeed = _vaultPriceFeed;
         tradingUtils = _tradingUtils;
     }
 
@@ -149,7 +144,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         IncreasePositionOrder memory order = IncreasePositionOrder(
-            increaseMarketOrdersIndex,
+            0,
             account,
             _request.pairIndex,
             _request.tradeType,
@@ -165,13 +160,13 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         );
 
         if (_request.tradeType == TradeType.MARKET) {
-            orderId = increaseMarketOrdersIndex;
+            order.orderId = increaseMarketOrdersIndex;
             increaseMarketOrders[increaseMarketOrdersIndex++] = order;
-            console.log("orderId", orderId, "increaseMarketOrdersIndex", increaseMarketOrdersIndex);
+            console.log("orderId", order.orderId, "increaseMarketOrdersIndex", increaseMarketOrdersIndex);
         } else if (_request.tradeType == TradeType.LIMIT) {
-            orderId = increaseLimitOrdersIndex;
+            order.orderId = increaseLimitOrdersIndex;
             increaseLimitOrders[increaseLimitOrdersIndex++] = order;
-            console.log("orderId", orderId, "increaseLimitOrdersIndex", increaseLimitOrdersIndex);
+            console.log("orderId", order.orderId, "increaseLimitOrdersIndex", increaseLimitOrdersIndex);
         } else {
             revert("invalid trade type");
         }
@@ -270,7 +265,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         DecreasePositionOrder memory order = DecreasePositionOrder(
-            decreaseMarketOrdersIndex,
+            0,
             account,
             _request.pairIndex,
             _request.tradeType,
@@ -286,13 +281,13 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         );
 
         if (_request.tradeType == TradeType.MARKET) {
-            orderId = decreaseMarketOrdersIndex;
+            order.orderId = decreaseMarketOrdersIndex;
             decreaseMarketOrders[decreaseMarketOrdersIndex++] = order;
-            console.log("orderId", orderId, "decreaseMarketOrdersIndex", decreaseMarketOrdersIndex);
+            console.log("orderId", order.orderId, "decreaseMarketOrdersIndex", decreaseMarketOrdersIndex);
         } else if (_request.tradeType == TradeType.LIMIT) {
-            orderId = decreaseLimitOrdersIndex;
+            order.orderId = decreaseLimitOrdersIndex;
             decreaseLimitOrders[decreaseLimitOrdersIndex++] = order;
-            console.log("orderId", orderId, "decreaseLimitOrdersIndex", decreaseLimitOrdersIndex);
+            console.log("orderId", order.orderId, "decreaseLimitOrdersIndex", decreaseLimitOrdersIndex);
         } else {
             revert("invalid trade type");
         }
@@ -325,9 +320,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     // 取消减仓订单
     function cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
-        console.log("cancelDecreaseOrder orderId", _orderId, "tradeType", uint8(_tradeType));
-
         DecreasePositionOrder memory order = getDecreaseOrder(_orderId, _tradeType);
+        console.log("cancelDecreaseOrder orderId", _orderId, "tradeType", uint8(order.tradeType));
+        console.log("cancelDecreaseOrder account", order.account);
 
         if (order.account == address(0)) {
             return;
@@ -352,16 +347,16 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
                 order.sizeAmount
             ));
 
-        if (_tradeType == TradeType.MARKET) {
+        if (order.tradeType == TradeType.MARKET) {
             delete decreaseMarketOrders[_orderId];
-        } else if (_tradeType == TradeType.LIMIT) {
+        } else if (order.tradeType == TradeType.LIMIT) {
             delete decreaseLimitOrders[_orderId];
         } else {
             positionHasTpSl[key][order.tradeType] = false;
             delete decreaseLimitOrders[_orderId];
         }
 
-        emit CancelDecreaseOrder(order.account, _orderId, _tradeType);
+        emit CancelDecreaseOrder(order.account, _orderId, order.tradeType);
     }
 
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external {
@@ -371,7 +366,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         while (positionOrders[key].length > 0) {
             uint256 lastIndex = positionOrders[key].length - 1;
-            ITradingRouter.PositionOrder memory positionOrder = positionOrders[key][lastIndex];
+            PositionOrder memory positionOrder = positionOrders[key][lastIndex];
+            console.log("positionOrder lastIndex", lastIndex, "orderId", positionOrder.orderId);
+            console.log("positionOrder tradeType", uint8(positionOrder.tradeType), "isIncrease", positionOrder.isIncrease);
             if (positionOrder.isIncrease) {
                 this.cancelIncreaseOrder(positionOrder.orderId, positionOrder.tradeType);
             } else {
@@ -494,7 +491,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             order = decreaseMarketOrders[_orderId];
         } else {
             order = decreaseLimitOrders[_orderId];
-            require(order.tradeType == _tradeType, "trade type not match");
         }
         return order;
     }
@@ -508,6 +504,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
         positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(_order);
+        console.log("positionOrders add orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
 
         if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
             positionDecreaseTotalAmount[positionKey] += _order.sizeAmount;
@@ -515,8 +512,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     }
 
     function removeOrderFromPosition(PositionOrder memory _order) public onlyHandler {
+        console.log("removeOrderFromPosition account %s orderId %s tradeType %s ", _order.account, _order.orderId, uint8(_order.tradeType));
         bytes32 positionKey = tradingUtils.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
-
         bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
 
         uint256 index = positionOrderIndex[positionKey][orderKey];
@@ -532,6 +529,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
         delete positionOrderIndex[positionKey][orderKey];
         positionOrders[positionKey].pop();
+        console.log("positionOrders remove orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
 
         if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
             positionDecreaseTotalAmount[positionKey] -= _order.sizeAmount;

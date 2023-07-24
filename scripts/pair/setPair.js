@@ -34,13 +34,14 @@ async function main() {
     minTradeAmount: "1000000000000000000",
     maxTradeAmount: "100000000000000000000000",
     maintainMarginRate: 1000,
+    priceSlipP: 100
   }
   let tradingFeeConfig = {
     takerFeeP: 10, // 0.1%
     makerFeeP: 10,
     lpDistributeP: 0,
     keeperDistributeP: 0,
-    treasuryDistributeP: 0,
+    treasuryDistributeP: 10000,
     refererDistributeP: 0
   }
   let fundingFeeConfig = {
@@ -50,7 +51,7 @@ async function main() {
     liquidityPremiumFactor: 10000,
     interest: 0,
     lpDistributeP: 0,
-    userDistributeP: 0,
+    userDistributeP: 10000,
     treasuryDistributeP: 0
   }
   console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\ntradingFeeConfig", tradingFeeConfig,

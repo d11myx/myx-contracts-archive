@@ -214,6 +214,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint256[]",
+        "name": "_orderIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "executeDecreaseLimitOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_endIndex",
         "type": "uint256"
@@ -238,6 +251,19 @@
       }
     ],
     "name": "executeDecreaseOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "_orderIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "executeIncreaseLimitOrders",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -271,6 +297,19 @@
     "name": "executeIncreaseOrder",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fastPriceFeed",
+    "outputs": [
+      {
+        "internalType": "contract IFastPriceFeed",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -309,8 +348,8 @@
         "type": "address"
       },
       {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
+        "internalType": "contract IFastPriceFeed",
+        "name": "_fastPriceFeed",
         "type": "address"
       },
       {
@@ -373,11 +412,6 @@
         "internalType": "bytes32[]",
         "name": "_positionKeys",
         "type": "bytes32[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_indexPrices",
-        "type": "uint256[]"
       }
     ],
     "name": "liquidatePositions",
@@ -447,8 +481,8 @@
         "type": "address"
       },
       {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
+        "internalType": "contract IFastPriceFeed",
+        "name": "_fastPriceFeed",
         "type": "address"
       },
       {
@@ -525,6 +559,85 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_priceBits",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_increaseOrderIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_decreaseOrderIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "setPricesWithBitsAndExecuteLimitOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_priceBits",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_increaseEndIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_decreaseEndIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPricesWithBitsAndExecuteMarketOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_priceBits",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "_positionKeys",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "setPricesWithBitsAndLiquidatePositions",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "tradingRouter",
     "outputs": [
@@ -556,19 +669,6 @@
     "outputs": [
       {
         "internalType": "contract ITradingVault",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vaultPriceFeed",
-    "outputs": [
-      {
-        "internalType": "contract IVaultPriceFeed",
         "name": "",
         "type": "address"
       }
