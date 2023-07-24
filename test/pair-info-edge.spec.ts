@@ -1,6 +1,6 @@
 import { testEnv } from './helpers/make-suite';
 import { describe } from 'mocha';
-import { expect } from 'chai';
+import { expect } from './shared/expect';
 import { waitForTx } from './helpers/tx';
 import { IPairInfo } from '../types/ethers-contracts';
 import { loadPairConfig } from './helpers/market-config-helper';
@@ -8,7 +8,7 @@ import { BigNumber } from 'ethers';
 
 describe('PairInfo: Edge cases', () => {
   before('addPair', async () => {
-    const { pairInfo, btc, usdt } = testEnv;
+    const { deployer, pairInfo, btc, usdt } = testEnv;
 
     const btcPair = loadPairConfig('USDT', 'BTC');
     console.log('===========1');
@@ -25,7 +25,11 @@ describe('PairInfo: Edge cases', () => {
     console.log(tradingConfig);
     console.log(tradingFeeConfig);
     console.log(fundingFeeConfig);
-    await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
+    await waitForTx(
+      await pairInfo
+        .connect(deployer.signer)
+        .addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig, { from: deployer.address }),
+    );
 
     console.log('===========3');
     console.log(await pairInfo.pairsCount());
