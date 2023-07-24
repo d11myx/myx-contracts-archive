@@ -9,6 +9,8 @@ pragma solidity 0.8.17;
 
 contract PairInfo is IPairInfo, Handleable {
 
+    uint256 public constant PERCENTAGE = 10000;
+
     IPairLiquidity public pairLiquidity;
 
     uint256 public pairsCount;
@@ -61,6 +63,10 @@ contract PairInfo is IPairInfo, Handleable {
         pairs[pairsCount] = _pair;
         pairs[pairsCount].pairToken = pairToken;
 
+        require(_tradingFeeConfig.lpDistributeP + _tradingFeeConfig.keeperDistributeP + _tradingFeeConfig.treasuryDistributeP
+            + _tradingFeeConfig.refererDistributeP == PERCENTAGE, "percentage exceed 100%");
+        require(_fundingFeeConfig.lpDistributeP + _fundingFeeConfig.userDistributeP + _fundingFeeConfig.treasuryDistributeP == PERCENTAGE,
+            "percentage exceed 100%");
         tradingConfigs[pairsCount] = _tradingConfig;
         tradingFeeConfigs[pairsCount] = _tradingFeeConfig;
         fundingFeeConfigs[pairsCount] = _fundingFeeConfig;
@@ -87,16 +93,20 @@ contract PairInfo is IPairInfo, Handleable {
         pair.initPrice = _pair.initPrice;
     }
 
-    function updateFeePercentage(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyHandler {
+    function updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyHandler {
         tradingConfigs[_pairIndex] = _tradingConfig;
     }
 
     function updateTradingFeeConfig(uint256 _pairIndex, TradingFeeConfig calldata _tradingFeeConfig) external onlyHandler {
+        require(_tradingFeeConfig.lpDistributeP + _tradingFeeConfig.keeperDistributeP + _tradingFeeConfig.treasuryDistributeP
+            + _tradingFeeConfig.refererDistributeP == PERCENTAGE, "percentage exceed 100%");
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updateFundingFeeDistribute(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeDistribute) external onlyHandler {
-        fundingFeeConfigs[_pairIndex] = _fundingFeeDistribute;
+    function updateFundingFeeDistribute(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig) external onlyHandler {
+        require(_fundingFeeConfig.lpDistributeP + _fundingFeeConfig.userDistributeP + _fundingFeeConfig.treasuryDistributeP == PERCENTAGE,
+            "percentage exceed 100%");
+        fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
     }
 
     function getPair(uint256 _pairIndex) external view override returns(Pair memory) {

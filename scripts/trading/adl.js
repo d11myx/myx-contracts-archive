@@ -40,24 +40,24 @@ async function main() {
   let orderId = await executeOrder(false, user0, false, 0, expandDecimals(60, 18));
 
   // ADL
-  console.log("\n execute ADL")
-  let pairIndex = 1;
-  let positionKey = await tradingUtils.getPositionKey(user0.address, pairIndex, true);
-  let position = await tradingVault.getPosition(user0.address, pairIndex, false);
-  console.log(`position before ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
-  console.log(`position collateral: ${formatBalance(position.collateral)} amount: ${formatBalance(position.positionAmount)}`);
-  await executeRouter.executeADLAndDecreaseOrder([positionKey], [expandDecimals(60, 18)], orderId, 0);
-  console.log(`position after ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
-  console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
-
-  console.log(`position after execute: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
-
-  console.log(`eth balance: ${formatBalance(await eth.balanceOf(tradingVault.address))}`,
-              `usdt balance: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
-
-  let vault = await pairVault.getVault(pairIndex);
-  console.log(`eth totalAmount: ${formatBalance(vault.indexTotalAmount)} indexReservedAmount ${formatBalance(vault.indexReservedAmount)} `);
-  console.log(`usdt totalAmount: ${formatBalance(vault.stableTotalAmount)} stableReservedAmount ${formatBalance(vault.stableReservedAmount)} `);
+  // console.log("\n execute ADL")
+  // let pairIndex = 1;
+  // let positionKey = await tradingUtils.getPositionKey(user0.address, pairIndex, true);
+  // let position = await tradingVault.getPosition(user0.address, pairIndex, false);
+  // console.log(`position before ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
+  // console.log(`position collateral: ${formatBalance(position.collateral)} amount: ${formatBalance(position.positionAmount)}`);
+  // await executeRouter.executeADLAndDecreaseOrder([positionKey], [expandDecimals(60, 18)], orderId, 0);
+  // console.log(`position after ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
+  // console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
+  //
+  // console.log(`position after execute: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
+  //
+  // console.log(`eth balance: ${formatBalance(await eth.balanceOf(tradingVault.address))}`,
+  //             `usdt balance: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
+  //
+  // let vault = await pairVault.getVault(pairIndex);
+  // console.log(`eth totalAmount: ${formatBalance(vault.indexTotalAmount)} indexReservedAmount ${formatBalance(vault.indexReservedAmount)} `);
+  // console.log(`usdt totalAmount: ${formatBalance(vault.stableTotalAmount)} stableReservedAmount ${formatBalance(vault.stableReservedAmount)} `);
 
 }
 

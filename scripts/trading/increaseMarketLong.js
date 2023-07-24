@@ -46,8 +46,7 @@ async function main() {
   let startIndex = await tradingRouter.increaseMarketOrderStartIndex();
   console.log("startIndex:", startIndex, "orderId:", orderId);
   await executeRouter.executeIncreaseOrder(orderId, 0);
-
-  // await tradingRouter.connect(user1).executeIncreaseMarketOrders(orderId.add(1));
+  // await executeRouter.executeIncreaseMarketOrders(orderId.add(1));
   console.log(`order after execute: ${await tradingRouter.increaseMarketOrders(orderId)}`);
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
   console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
