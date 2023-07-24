@@ -21,7 +21,7 @@ describe('PairInfo: Edge cases', () => {
 
     await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
 
-    expect(await pairInfo.pairsCount()).to.be.eq(1);
+    expect(await pairInfo.pairsCount()).to.be.eq('1');
   });
 
   it('check getters', async () => {
