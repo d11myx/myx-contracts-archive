@@ -571,6 +571,44 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes32[]",
+        "name": "_positionKeys",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_sizeAmounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ITradingRouter.TradeType",
+        "name": "_tradeType",
+        "type": "uint8"
+      }
+    ],
+    "name": "setPricesWithBitsAndExecuteADL",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_priceBits",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_timestamp",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint256[]",
         "name": "_increaseOrderIds",
         "type": "uint256[]"
