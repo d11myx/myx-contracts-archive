@@ -4,17 +4,25 @@ import { expect } from 'chai';
 import { waitForTx } from './helpers/tx';
 import { IPairInfo } from '../types/ethers-contracts';
 import { loadPairConfig } from './helpers/market-config-helper';
+import { BigNumber } from 'ethers';
 
 describe('PairInfo: Edge cases', () => {
-  // before('deploy Pair', async () => {
-  //   const { deployer } = testEnv;
-  //   console.log(`deployer address:`, deployer.address);
-  //
-  //   const pairInfoFactory = await ethers.getContractFactory('PairInfo', deployer.signer);
-  //   const pairInfo = await pairInfoFactory.deploy();
-  //
-  //   console.log(`pairInfo address:`, pairInfo.address);
-  // });
+  before('addPair', async () => {
+    const { pairInfo, btc, usdt } = testEnv;
+
+    const btcPair = loadPairConfig('USDT', 'BTC');
+
+    const pair = btcPair.pair;
+    pair.indexToken = btc.address;
+    pair.stableToken = usdt.address;
+    const tradingConfig = btcPair.tradingConfig;
+    const tradingFeeConfig = btcPair.tradingFeeConfig;
+    const fundingFeeConfig = btcPair.fundingFeeConfig;
+
+    await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
+
+    expect(await pairInfo.pairsCount()).to.be.eq(1);
+  });
 
   it('check getters', async () => {
     const { pairInfo, pairLiquidity } = testEnv;
@@ -23,29 +31,11 @@ describe('PairInfo: Edge cases', () => {
   });
 
   describe('test addPair', async () => {
-    before('addPair', async () => {
-      const { pairInfo, btc, usdt } = testEnv;
-
-      const btcPair = loadPairConfig('USDT', 'BTC');
-
-      const pair = btcPair.pair;
-      pair.indexToken = btc.address;
-      pair.stableToken = usdt.address;
-      const tradingConfig = btcPair.tradingConfig;
-      const tradingFeeConfig = btcPair.tradingFeeConfig;
-      const fundingFeeConfig = btcPair.fundingFeeConfig;
-
-      await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
-
-      expect(await pairInfo.pairsCount()).to.be.eq(1);
-    });
 
     it('check pair info', async () => {
       const { pairInfo, btc, usdt } = testEnv;
 
-      const pairIndex = 0;
-      // console.log(await pairInfo.pairs(pairIndex));
-      // console.log(await pairInfo.getPair(pairIndex));
+      const pairIndex = BigNumber.from(0);
 
       expect(await pairInfo.pairs(pairIndex)).deep.be.eq(await pairInfo.getPair(pairIndex));
       expect(await pairInfo.tradingConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingConfig(pairIndex));
