@@ -21,6 +21,10 @@ describe('PairInfo: Edge cases', () => {
 
     console.log('===========2');
 
+    console.log(pair);
+    console.log(tradingConfig);
+    console.log(tradingFeeConfig);
+    console.log(fundingFeeConfig);
     await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
 
     console.log('===========3');
