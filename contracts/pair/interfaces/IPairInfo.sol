@@ -9,7 +9,7 @@ interface IPairInfo {
         address pairToken;
         bool enable;
         uint256 kOfSwap;
-        uint256 initPairRatio; // index / stable 10000 for 100%
+        uint256 initPrice; // index / stable 10000 for 100%
         uint256 addLpFeeP;
     }
 

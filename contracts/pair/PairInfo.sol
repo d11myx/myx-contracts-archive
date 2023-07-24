@@ -84,7 +84,7 @@ contract PairInfo is IPairInfo, Handleable {
 
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
-        pair.initPairRatio = _pair.initPairRatio;
+        pair.initPrice = _pair.initPrice;
     }
 
     function updateFeePercentage(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyHandler {
