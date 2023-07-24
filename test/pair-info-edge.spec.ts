@@ -11,7 +11,7 @@ describe('PairInfo: Edge cases', () => {
     const { pairInfo, btc, usdt } = testEnv;
 
     const btcPair = loadPairConfig('USDT', 'BTC');
-
+    console.log('===========1');
     const pair = btcPair.pair;
     pair.indexToken = btc.address;
     pair.stableToken = usdt.address;
@@ -19,19 +19,26 @@ describe('PairInfo: Edge cases', () => {
     const tradingFeeConfig = btcPair.tradingFeeConfig;
     const fundingFeeConfig = btcPair.fundingFeeConfig;
 
+    console.log('===========2');
+
     await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
 
+    console.log('===========3');
+    console.log(await pairInfo.pairsCount());
     expect(await pairInfo.pairsCount()).to.be.eq('1');
+    console.log('===========4');
   });
 
   it('check getters', async () => {
+    console.log('11111111');
     const { pairInfo, pairLiquidity } = testEnv;
+    console.log('2222222');
 
     expect(await pairInfo.pairLiquidity()).to.be.eq(pairLiquidity.address);
+    console.log('3333333333');
   });
 
   describe('test addPair', async () => {
-
     it('check pair info', async () => {
       const { pairInfo, btc, usdt } = testEnv;
 
