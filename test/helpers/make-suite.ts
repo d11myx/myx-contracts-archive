@@ -32,7 +32,7 @@ export interface TestEnv {
   btc: Token;
   usdt: Token;
   pairTokens: SymbolMap<Token>;
-  pairInfo: Contract;
+  pairInfo: PairInfo;
   pairLiquidity: PairLiquidity;
   pairVault: PairVault;
   vaultPriceFeed: VaultPriceFeed;
@@ -51,7 +51,7 @@ export const testEnv: TestEnv = {
   btc: {} as Token,
   usdt: {} as Token,
   pairTokens: {} as SymbolMap<Token>,
-  pairInfo: {} as Contract,
+  pairInfo: {} as PairInfo,
   pairLiquidity: {} as PairLiquidity,
   pairVault: {} as PairVault,
   vaultPriceFeed: {} as VaultPriceFeed,
