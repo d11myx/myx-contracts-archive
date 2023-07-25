@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { PairVault, PairInfo } from '../types/ethers-contracts';
+import { PairVault, PairInfo } from '../types';
 import { expect } from './shared/expect';
 import { Decimal } from 'decimal.js';
 
