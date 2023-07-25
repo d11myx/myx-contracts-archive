@@ -13,6 +13,7 @@ import '@openzeppelin/hardhat-upgrades';
 import '@nomiclabs/hardhat-ethers';
 import 'hardhat-abi-exporter';
 import 'hardhat-contract-sizer';
+import 'solidity-coverage';
 
 dotenv.config();
 
