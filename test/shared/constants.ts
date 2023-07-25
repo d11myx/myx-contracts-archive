@@ -1,6 +1,5 @@
-import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
 export const ONE_ETHER = ethers.utils.parseEther('1');
 export const MAX_UINT_AMOUNT = ethers.constants.MaxUint256;
@@ -14,6 +13,13 @@ export enum eEthereumNetwork {
 export enum eBscNetwork {
   main = 'mainnet',
   test = 'testnet',
+}
+
+export enum TradeType {
+  MARKET = 0,
+  LIMIT = 1,
+  TP = 2,
+  SL = 3,
 }
 
 export type eNetwork = eEthereumNetwork | eBscNetwork;
