@@ -1,5 +1,5 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Contract, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
   ExecuteRouter,
@@ -15,7 +15,8 @@ import {
   WETH,
 } from '../../types';
 import { SymbolMap } from '../shared/types';
-import { deployPair, deployPrice, deployToken, deployTrading } from './init-helper';
+import { deployPair, deployPrice, deployToken, deployTrading } from './contract-deployments';
+import { initPairs } from './init-helper';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -100,11 +101,19 @@ export async function setupTestEnv() {
   testEnv.pairVault = pairVault;
 
   // setup trading
-  const { tradingUtils, tradingVault, tradingRouter, executeRouter } = await deployTrading(deployer);
+  const { tradingUtils, tradingVault, tradingRouter, executeRouter } = await deployTrading(
+    deployer,
+    pairVault,
+    pairInfo,
+    vaultPriceFeed,
+    fastPriceFeed,
+  );
   testEnv.tradingUtils = tradingUtils;
   testEnv.tradingVault = tradingVault;
   testEnv.tradingRouter = tradingRouter;
   testEnv.executeRouter = executeRouter;
+
+  await initPairs(deployer, tokens, usdt, pairInfo);
 }
 
 export async function getPairToken(pair: string): Promise<Token> {
