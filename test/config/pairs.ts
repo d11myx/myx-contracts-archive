@@ -1,5 +1,6 @@
 import { PairInfoConfig } from '../shared/types';
 import { ZERO_ADDRESS } from '../shared/constants';
+import { ethers } from 'ethers';
 
 export const btcPairInfo: PairInfoConfig = {
   pair: {
@@ -7,8 +8,8 @@ export const btcPairInfo: PairInfoConfig = {
     stableToken: ZERO_ADDRESS,
     pairToken: ZERO_ADDRESS,
     enable: true,
-    kOfSwap: '100000000000000000000000000000000000000000000000000',
-    initPairRatio: 1000,
+    kOfSwap: ethers.utils.parseUnits('1', 50),
+    initPrice: ethers.utils.parseUnits('30000', 30),
     addLpFeeP: 100,
   },
   tradingConfig: {
@@ -17,13 +18,14 @@ export const btcPairInfo: PairInfoConfig = {
     minTradeAmount: '1000000000000000000',
     maxTradeAmount: '100000000000000000000000',
     maintainMarginRate: 1000,
+    priceSlipP: 100,
   },
   tradingFeeConfig: {
-    takerFeeP: 100, // 1%
-    makerFeeP: 100,
+    takerFeeP: 10, // 0.1%
+    makerFeeP: 10,
     lpDistributeP: 0,
     keeperDistributeP: 0,
-    treasuryDistributeP: 0,
+    treasuryDistributeP: 10000,
     refererDistributeP: 0,
   },
   fundingFeeConfig: {
@@ -33,7 +35,7 @@ export const btcPairInfo: PairInfoConfig = {
     liquidityPremiumFactor: 10000,
     interest: 0,
     lpDistributeP: 0,
-    userDistributeP: 0,
+    userDistributeP: 10000,
     treasuryDistributeP: 0,
   },
 };
@@ -44,8 +46,8 @@ export const ethPairInfo: PairInfoConfig = {
     stableToken: ZERO_ADDRESS,
     pairToken: ZERO_ADDRESS,
     enable: true,
-    kOfSwap: '100000000000000000000000000000000000000000000000000',
-    initPairRatio: 1000,
+    kOfSwap: ethers.utils.parseUnits('1', 50),
+    initPrice: ethers.utils.parseUnits('2000', 30),
     addLpFeeP: 100,
   },
   tradingConfig: {
@@ -54,13 +56,14 @@ export const ethPairInfo: PairInfoConfig = {
     minTradeAmount: '1000000000000000000',
     maxTradeAmount: '100000000000000000000000',
     maintainMarginRate: 1000,
+    priceSlipP: 100,
   },
   tradingFeeConfig: {
-    takerFeeP: 100, // 1%
-    makerFeeP: 100,
+    takerFeeP: 10, // 0.1%
+    makerFeeP: 10,
     lpDistributeP: 0,
     keeperDistributeP: 0,
-    treasuryDistributeP: 0,
+    treasuryDistributeP: 10000,
     refererDistributeP: 0,
   },
   fundingFeeConfig: {
@@ -70,7 +73,7 @@ export const ethPairInfo: PairInfoConfig = {
     liquidityPremiumFactor: 10000,
     interest: 0,
     lpDistributeP: 0,
-    userDistributeP: 0,
+    userDistributeP: 10000,
     treasuryDistributeP: 0,
   },
 };
