@@ -7,7 +7,8 @@
     "format:fix": "prettier --write \"./**/*.ts\" README.md",
     "generate-types": "typechain --target=ethers-v6 'abi/**/*.json'",
     "test": "hardhat test",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "coverage":"hardhat coverage"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
@@ -47,7 +48,7 @@
     "hardhat-abi-exporter": "^2.10.1",
     "hardhat-contract-sizer": "^2.8.0",
     "hardhat-gas-reporter": "^1.0.9",
-    "solidity-coverage": "^0.8.2",
+    "solidity-coverage": "^0.8.4",
     "typechain": "^8.3.0",
     "typescript": "^5.0.4"
   }
