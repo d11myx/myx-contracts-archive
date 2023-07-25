@@ -4,23 +4,27 @@ import { loadPairConfigs } from './helpers/market-config-helper';
 import { expect } from './shared/expect';
 import { IPairInfo } from '../types';
 import { BigNumber } from 'ethers';
+import { deployMockToken } from './helpers/contract-deployments';
 
 describe('PairInfo: Edge cases', () => {
   before('addPair', async () => {
-    const { pairInfo, btc, usdt } = testEnv;
+    const { pairInfo, usdt } = testEnv;
 
+    const token = await deployMockToken('Test');
     const btcPair = loadPairConfigs('USDT')['BTC'];
 
     const pair = btcPair.pair;
-    pair.indexToken = btc.address;
+    pair.indexToken = token.address;
     pair.stableToken = usdt.address;
     const tradingConfig = btcPair.tradingConfig;
     const tradingFeeConfig = btcPair.tradingFeeConfig;
     const fundingFeeConfig = btcPair.fundingFeeConfig;
 
+    const countBefore = await pairInfo.pairsCount();
     await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
 
-    expect(await pairInfo.pairsCount()).to.be.eq(1);
+    const countAfter = await pairInfo.pairsCount();
+    expect(countAfter).to.be.eq(countBefore.add(1));
   });
 
   it('check pair info', async () => {
