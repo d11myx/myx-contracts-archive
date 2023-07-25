@@ -25,7 +25,7 @@ async function main() {
 
   let orderId = await tradingRouter.decreaseMarketOrdersIndex();
   let request = {
-    account: user0.address,
+    account: user3.address,
     pairIndex: 0,
     tradeType: 0,
     collateral: expandDecimals(-3000, 18),
@@ -33,7 +33,7 @@ async function main() {
     sizeAmount: expandDecimals(1, 18),
     isLong: true
   };
-  await tradingRouter.createDecreaseOrder(request)
+  await tradingRouter.connect(user3).createDecreaseOrder(request)
 
   console.log(`order: ${await tradingRouter.decreaseMarketOrders(orderId)}`)
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);

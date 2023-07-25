@@ -18,14 +18,14 @@ async function main() {
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  await usdt.mint(user0.address, expandDecimals(100, 18))
+  await usdt.mint(user3.address, expandDecimals(30000, 18))
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
 
-  await usdt.approve(tradingRouter.address, expandDecimals(30000, 30));
+  await usdt.connect(user3).approve(tradingRouter.address, expandDecimals(30000, 30));
 
   let orderId = await tradingRouter.increaseLimitOrdersIndex();
   let request = {
-    account: user0.address,
+    account: user3.address,
     pairIndex: 0,
     tradeType: 1,
     collateral: expandDecimals(30000, 18),
@@ -37,7 +37,7 @@ async function main() {
     slPrice: expandDecimals(31000, 30),
     sl: expandDecimals(1, 18)
   };
-  await tradingRouter.createIncreaseOrder(request);
+  await tradingRouter.connect(user3).createIncreaseOrder(request);
 
   console.log(`order: ${await tradingRouter.increaseMarketOrders(orderId)}`)
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
