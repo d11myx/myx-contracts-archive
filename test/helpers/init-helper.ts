@@ -95,7 +95,7 @@ export async function deployPrice(deployer: SignerWithAddress) {
 export async function deployPair(vaultPriceFeed: VaultPriceFeed, deployer: SignerWithAddress, weth: WETH) {
   console.log(` - setup pairs`);
 
-  const pairInfo = await deployUpgradeableContract('PairInfo', []);
+  const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
   console.log(`deployed PairInfo at ${pairInfo.address}`);
 
   const pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
