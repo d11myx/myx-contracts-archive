@@ -50,9 +50,9 @@ contract TradingUtils is ITradingUtils, Governable {
 
     function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        console.log("getPrice pairIndex", _pairIndex);
-        console.log("getPrice indexToken", pair.indexToken);
-        return vaultPriceFeed.getPrice(pair.indexToken, _isLong ? true : false, false, false);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, _isLong ? true : false, false, false);
+        console.log("getPrice pairIndex %s isLong %s price %s", _pairIndex, _isLong, price);
+        return price;
     }
 
     function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {

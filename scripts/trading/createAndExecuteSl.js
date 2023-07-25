@@ -35,7 +35,7 @@ async function main() {
   // create
   orderId = await tradingRouter.decreaseLimitOrdersIndex();
   let request = {
-    account: user0.address,
+    account: user3.address,
     pairIndex: 0,
     isLong: true,
     tpPrice: expandDecimals(29000, 30),
@@ -43,7 +43,7 @@ async function main() {
     slPrice: expandDecimals(31000, 30),
     sl: expandDecimals(1, 18)
   };
-  await tradingRouter.createTpSl(request)
+  await tradingRouter.connect(user3).createTpSl(request)
 
   // execute
   await executeRouter.executeDecreaseOrder(orderId, 3);
