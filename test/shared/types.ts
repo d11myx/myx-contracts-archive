@@ -1,4 +1,4 @@
-import { IPairInfo } from '../../types/ethers-contracts';
+import { IPairInfo } from '../../types';
 import { eNetwork } from './constants';
 
 export interface SymbolMap<T> {
