@@ -9,7 +9,7 @@ export const btcPairInfo: PairInfoConfig = {
     pairToken: ZERO_ADDRESS,
     enable: true,
     kOfSwap: ethers.utils.parseUnits('1', 50),
-    initPrice: ethers.utils.parseUnits('30000', 30),
+    initPrice: ethers.utils.parseUnits('20000', 30),
     addLpFeeP: 100,
   },
   tradingConfig: {
