@@ -182,9 +182,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     // 执行加仓订单
     function executeIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) public nonReentrant onlyPositionKeeper {
         console.log("executeIncreaseOrder account", msg.sender);
-
+        console.log("executeIncreaseOrder orderId", _orderId, "tradeType", uint8(_tradeType));
         ITradingRouter.IncreasePositionOrder memory order = tradingRouter.getIncreaseOrder(_orderId, _tradeType);
-        console.log("executeIncreaseOrder orderId", _orderId, "tradeType", uint8(order.tradeType));
 
         // 请求已执行或已取消
         if (order.account == address(0)) {
