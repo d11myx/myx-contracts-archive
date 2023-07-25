@@ -1684,7 +1684,7 @@
     lodash "^4.17.15"
     ts-essentials "^7.0.1"
 
-"@typechain/ethers-v6@^0.4.2":
+"@typechain/ethers-v6@^0.4.3":
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/@typechain/ethers-v6/-/ethers-v6-0.4.3.tgz#badd99f88d5a1f1a2f42590f298e20cc62618e59"
   integrity sha512-TrxBsyb4ryhaY9keP6RzhFCviWYApcLCIRMPyWaKp2cZZrfaM3QBoxXTnw/eO4+DAY3l+8O0brNW0WgeQeOiDA==
