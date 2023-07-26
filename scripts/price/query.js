@@ -24,20 +24,25 @@ async function main() {
 
   let tokens = ["BTC", "ETH"]
   let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
+  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+
   for (let symbol of tokens) {
     console.log(repeatString('-'))
     console.log(symbol)
     let token = await getConfig("Token-" + symbol);
     let priceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-" + symbol))
     let decimals = await vaultPriceFeed.priceDecimals(token);
-    let latestAnswer = await priceFeed.latestAnswer()
+    let lastRound = await priceFeed.latestRound();
     console.log(`decimals: ${decimals}`)
-    console.log(`latestRound: ${await priceFeed.latestRound()}`)
-    console.log(`latestAnswer: ${latestAnswer} ${reduceDecimals(latestAnswer, decimals)}`)
-    console.log(`getLatestPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getLatestPrimaryPrice(token), 8)}`);
-    console.log(`getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, false), 30)}`)
-    console.log(`vaultPriceFeed max price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
-    console.log(`vaultPriceFeed min price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, false, false, false), 30)}`)
+    console.log(`oracle latestRound: ${lastRound} latestAnswer: ${reduceDecimals(await priceFeed.latestAnswer(), decimals)}`)
+    if (lastRound >= 3) {
+      console.log(`oracle round: ${lastRound - 1} latestAnswer: ${reduceDecimals((await priceFeed.getRoundData(lastRound - 1))[1], decimals)}`)
+      console.log(`oracle round: ${lastRound - 2} latestAnswer: ${reduceDecimals((await priceFeed.getRoundData(lastRound - 2))[1], decimals)}`)
+    }
+    console.log(`fastPriceFeed price: ${reduceDecimals(await fastPriceFeed.prices(token), 30)}`);
+    console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, true), 30)}`)
+    console.log(`vaultPriceFeed getSecondaryPrice: ${reduceDecimals(await vaultPriceFeed.getSecondaryPrice(token, 0, true), 30)}`)
+    console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
   }
 }
 
