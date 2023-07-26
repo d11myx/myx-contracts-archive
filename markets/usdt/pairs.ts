@@ -1,5 +1,5 @@
-import { PairInfoConfig } from '../shared/types';
-import { ZERO_ADDRESS } from '../shared/constants';
+import { PairInfoConfig } from '../../helpers/types';
+import { ZERO_ADDRESS } from '../../helpers/constants';
 import { ethers } from 'ethers';
 
 export const btcPairInfo: PairInfoConfig = {

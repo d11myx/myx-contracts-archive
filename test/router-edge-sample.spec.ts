@@ -1,7 +1,7 @@
 import { testEnv } from './helpers/make-suite';
 import { ethers } from 'ethers';
-import { waitForTx } from './helpers/tx';
-import { MAX_UINT_AMOUNT, TradeType } from './shared/constants';
+import { waitForTx } from '../helpers/utilities/tx';
+import { MAX_UINT_AMOUNT, TradeType } from '../helpers/constants';
 import { ITradingRouter } from '../types';
 import { expect } from './shared/expect';
 

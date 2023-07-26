@@ -2,6 +2,9 @@
   "name": "myx",
   "version": "1.0.0",
   "description": "",
+  "types": "dist/types/helpers/index.d.ts",
+  "author": "themis",
+  "main": "dist/helpers/index.js",
   "scripts": {
     "format": "prettier --check \"./**/*.ts\" README.md",
     "format:fix": "prettier --write \"./**/*.ts\" README.md",
@@ -9,7 +12,8 @@
     "clean": "rm -rf artifacts/ types/ cache/",
     "compile": "SKIP_LOAD=true npx hardhat compile",
     "test": "npm run compile && npx hardhat test",
-    "coverage":"hardhat coverage"
+    "deploy": "npx hardhat deploy",
+    "coverage": "hardhat coverage"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
@@ -24,6 +28,7 @@
     "eslint-plugin-prettier": "3.4.0",
     "ethereum-waffle": "^4.0.10",
     "hardhat": "^2.17.0",
+    "hardhat-deploy": "^0.11.34",
     "mocha": "^10.2.0",
     "mocha-chai-jest-snapshot": "^1.1.4",
     "prettier": "2.4.1",

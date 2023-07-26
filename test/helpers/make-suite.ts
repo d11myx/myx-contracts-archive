@@ -14,9 +14,9 @@ import {
   VaultPriceFeed,
   WETH,
 } from '../../types';
-import { SymbolMap } from '../shared/types';
-import { deployPair, deployPrice, deployToken, deployTrading } from './contract-deployments';
-import { initPairs } from './init-helper';
+import { SymbolMap } from '../../helpers/types';
+import { deployPair, deployPrice, deployToken, deployTrading } from '../../helpers/contract-deployments';
+import { initPairs } from '../../helpers/init-helper';
 
 declare var hre: HardhatRuntimeEnvironment;
 

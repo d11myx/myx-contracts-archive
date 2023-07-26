@@ -1,9 +1,10 @@
-import { PairInfo, Token } from '../../types';
-import { loadPairConfigs } from './market-config-helper';
-import { waitForTx } from './tx';
-import { SignerWithAddress } from './make-suite';
-import { getMarketSymbol } from '../shared/constants';
-import { SymbolMap } from '../shared/types';
+import { PairInfo, Token } from '../types';
+import { loadReserveConfig } from './market-config-helper';
+import { waitForTx } from './utilities/tx';
+import { SignerWithAddress } from '../test/helpers/make-suite';
+import { getMarketSymbol } from './constants';
+import { SymbolMap } from './types';
+import { MARKET_NAME } from './env';
 
 export async function initPairs(
   deployer: SignerWithAddress,
@@ -12,7 +13,7 @@ export async function initPairs(
   pairInfo: PairInfo,
 ) {
   console.log(`Initializing pairs`);
-  const pairConfigs = loadPairConfigs(getMarketSymbol());
+  const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
   for (let symbol of Object.keys(pairConfigs)) {
     const pairConfig = pairConfigs[symbol];
