@@ -24,7 +24,7 @@ async function main() {
   let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
   let ethPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-ETH"));
 
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(29000))
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(29250))
   await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
 
   let tokens = ["BTC", "ETH"]
