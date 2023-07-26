@@ -4,7 +4,7 @@ const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\ndecreaseLimitShort")
+  console.log("\n decreaseLimitShort")
 
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 

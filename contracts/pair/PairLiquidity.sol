@@ -88,7 +88,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
         IWETH(weth).deposit{value: msg.value}();
-        return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
+        IWETH(weth).transfer(msg.sender, msg.value);
+        return _addLiquidity(msg.sender, msg.sender, _pairIndex, msg.value, _stableAmount);
     }
 
     function addLiquidityForAccount(address _funder, address _account, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler returns (uint256) {
