@@ -23,7 +23,7 @@ async function main() {
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(40000))
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(35000))
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   let key = await tradingUtils.getPositionKey(user0.address, 0, false);

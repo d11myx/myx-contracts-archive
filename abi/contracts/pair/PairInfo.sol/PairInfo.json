@@ -131,6 +131,11 @@
             "internalType": "uint256",
             "name": "priceSlipP",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPriceDeviationP",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IPairInfo.TradingConfig",
@@ -439,6 +444,11 @@
             "internalType": "uint256",
             "name": "priceSlipP",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPriceDeviationP",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IPairInfo.TradingConfig",
@@ -745,6 +755,11 @@
         "internalType": "uint256",
         "name": "priceSlipP",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxPriceDeviationP",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -946,6 +961,11 @@
           {
             "internalType": "uint256",
             "name": "priceSlipP",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPriceDeviationP",
             "type": "uint256"
           }
         ],

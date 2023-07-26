@@ -36,7 +36,8 @@ async function main() {
     console.log(`latestAnswer: ${latestAnswer} ${reduceDecimals(latestAnswer, decimals)}`)
     console.log(`getLatestPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getLatestPrimaryPrice(token), 8)}`);
     console.log(`getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, false), 30)}`)
-    console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
+    console.log(`vaultPriceFeed max price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
+    console.log(`vaultPriceFeed min price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, false, false, false), 30)}`)
   }
 }
 

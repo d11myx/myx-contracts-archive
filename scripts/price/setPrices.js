@@ -16,6 +16,14 @@ async function main() {
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
   const provider = await hre.ethers.provider
 
+  // set oracle price
+  let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
+  let ethPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-ETH"));
+
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
+  await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
+
+  // set keeper price
   let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
   let blockTime = await getBlockTime(provider)
   console.log(`lastUpdatedAt: ${await fastPriceFeed.lastUpdatedAt()}`)
@@ -24,28 +32,34 @@ async function main() {
   console.log(`maxTimeDeviation: ${await fastPriceFeed.maxTimeDeviation()}`)
   console.log(`gov: ${await fastPriceFeed.gov()}`)
 
-  await fastPriceFeed.setMaxTimeDeviation(300);
+  // await fastPriceFeed.setMaxTimeDeviation(300);
 
   console.log(`btc: ${await fastPriceFeed.prices(await getConfig("Token-BTC"))}`)
   console.log(`eth: ${await fastPriceFeed.prices(await getConfig("Token-ETH"))}`)
 
-  let setPriceTrx =await fastPriceFeed.connect(user1).setPrices(
+  await fastPriceFeed.connect(user1).setPrices(
     [await getConfig("Token-BTC"), await getConfig("Token-ETH")],
-    [expandDecimals(29900, 30), expandDecimals(1990, 30)],
+    [expandDecimals(29990, 30), expandDecimals(1995, 30)],
     blockTime + 100)
 
-  console.log(`setPrices: ${setPriceTrx.hash}`)
-  console.log(`btc: ${reduceDecimals(await fastPriceFeed.prices(await getConfig("Token-BTC")), 30)}`);
-  console.log(`eth: ${reduceDecimals(await fastPriceFeed.prices(await getConfig("Token-ETH")), 30)}`);
-
-  // await expect(fastPriceFeed.connect(updater0).setPrices([btc.address, eth.address, bnb.address],
-  //   [expandDecimals(60000, 30), expandDecimals(5000, 30), expandDecimals(700, 30)], blockTime + 100))
-  //   .to.be.revertedWith("FastPriceFeed: _timestamp exceeds allowed range")
-
-  // await fastPriceFeed.setMaxTimeDeviation(200)
-  //
-  // await fastPriceFeed.connect(updater0).setPrices([btc.address, eth.address, bnb.address], [expandDecimals(60000, 30), expandDecimals(5000, 30), expandDecimals(700, 30)], blockTime + 100)
-  // const blockNumber0 = await provider.getBlockNumber()
+  let tokens = ["BTC", "ETH"]
+  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
+  for (let symbol of tokens) {
+    console.log(repeatString('-'))
+    console.log(symbol)
+    let token = await getConfig("Token-" + symbol);
+    let priceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-" + symbol))
+    let decimals = await vaultPriceFeed.priceDecimals(token);
+    let latestAnswer = await priceFeed.latestAnswer()
+    console.log(`decimals: ${decimals}`)
+    console.log(`oracle latestRound: ${await priceFeed.latestRound()}`)
+    console.log(`oracle latestAnswer: ${latestAnswer} ${reduceDecimals(latestAnswer, decimals)}`)
+    console.log(`fastPriceFeed price: ${reduceDecimals(await fastPriceFeed.prices(token), 30)}`);
+    console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, true), 30)}`)
+    console.log(`vaultPriceFeed getSecondaryPrice: ${reduceDecimals(await vaultPriceFeed.getSecondaryPrice(token, 0, true), 30)}`)
+    console.log(`vaultPriceFeed max price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
+    console.log(`vaultPriceFeed min price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, false, false, false), 30)}`)
+  }
 
 }
 
