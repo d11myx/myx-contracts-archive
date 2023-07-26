@@ -180,8 +180,8 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
         if (isSecondaryPriceEnabled) {
             price = getSecondaryPrice(_token, price, _maximise);
+            console.log("getPriceV1 getSecondaryPrice", price);
         }
-        console.log("getPriceV1 getSecondaryPrice", price);
 
         if (strictStableTokens[_token]) {
             uint256 delta = price > ONE_USD ? price.sub(ONE_USD) : ONE_USD.sub(price);

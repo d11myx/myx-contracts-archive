@@ -120,6 +120,35 @@
         "internalType": "address",
         "name": "_token",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_referencePrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_maximise",
+        "type": "bool"
+      }
+    ],
+    "name": "getSecondaryPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
       }
     ],
     "name": "isAdjustmentAdditive",
