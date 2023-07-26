@@ -48,7 +48,7 @@ async function main() {
   await fastPriceFeed.initialize(2, [user0.address, user1.address], [user0.address, user1.address])
   await fastPriceFeed.setTokens([btc.address, eth.address], [10, 10])
   await fastPriceFeed.connect(user0).setPriceDataInterval(300)
-  await fastPriceFeed.setMaxTimeDeviation(10000)
+  await fastPriceFeed.setMaxTimeDeviation(300)
   await fastPriceFeed.setUpdater(user0.address, true)
   await fastPriceFeed.setUpdater(user1.address, true)
   await fastPriceEvents.setIsPriceFeed(fastPriceFeed.address, true)

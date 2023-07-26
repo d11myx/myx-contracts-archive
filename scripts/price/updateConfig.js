@@ -11,9 +11,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 async function main() {
   console.log("\n updateConfig")
-  const [user0, user1, user2, user3] = await hre.ethers.getSigners()
-
-  console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
+  const signers = await hre.ethers.getSigners()
 
   let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
   let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
@@ -21,6 +19,11 @@ async function main() {
   await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
   await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
   await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
+
+  for (let i = 10; i < signers.length; i++) {
+      await fastPriceFeed.setUpdater(signers[i].address, true)
+      console.log("set updater:", signers[i].address)
+  }
 
 }
 
