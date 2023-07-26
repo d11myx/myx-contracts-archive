@@ -13,12 +13,13 @@ import {
   TradingVault,
   VaultPriceFeed,
   WETH,
-} from '../../types';
-import { deployContract, deployUpgradeableContract, waitForTx } from './tx';
-import { getMarketSymbol, MOCK_PRICES } from '../shared/constants';
-import { loadCurrentPairConfigs } from './market-config-helper';
-import { SymbolMap } from '../shared/types';
-import { getPairToken, SignerWithAddress, testEnv } from './make-suite';
+} from '../types';
+import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
+import { getMarketSymbol, MOCK_PRICES } from './constants';
+import { loadReserveConfig } from './market-config-helper';
+import { SymbolMap } from './types';
+import { getPairToken, SignerWithAddress, testEnv } from '../test/helpers/make-suite';
+import { MARKET_NAME } from './env';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -41,7 +42,7 @@ export async function deployToken() {
   console.log(`deployed WETH at ${weth.address}`);
 
   // pairs token
-  const pairConfigs = loadCurrentPairConfigs();
+  const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
   const tokens: SymbolMap<Token> = {};
   for (let pair of Object.keys(pairConfigs)) {
@@ -56,7 +57,7 @@ export async function deployToken() {
 export async function deployPrice(deployer: SignerWithAddress) {
   console.log(` - setup price`);
 
-  const pairConfigs = loadCurrentPairConfigs();
+  const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
   const vaultPriceFeed = (await deployContract('VaultPriceFeed', [])) as any as VaultPriceFeed;
   console.log(`deployed VaultPriceFeed at ${vaultPriceFeed.address}`);
