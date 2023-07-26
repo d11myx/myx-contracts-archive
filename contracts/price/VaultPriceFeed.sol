@@ -308,6 +308,8 @@ contract VaultPriceFeed is IVaultPriceFeed {
         uint80 roundId = priceFeed.latestRound();
 
         for (uint80 i = 0; i < priceSampleSpace; i++) {
+            console.log("getPrimaryPrice i %s priceSampleSpace %s roundId %s", i, priceSampleSpace, roundId);
+
             if (roundId <= i) { break; }
             uint256 p;
 
@@ -320,6 +322,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
                 require(_p > 0, "VaultPriceFeed: invalid price");
                 p = uint256(_p);
             }
+            console.log("getPrimaryPrice i %s price %s p %s", i, price, p);
 
             if (price == 0) {
                 price = p;
