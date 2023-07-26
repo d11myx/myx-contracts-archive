@@ -211,12 +211,9 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // check price
         uint256 price = tradingUtils.getPrice(pairIndex, order.isLong);
-        if (order.tradeType == ITradingRouter.TradeType.MARKET) {
+        if (order.tradeType == ITradingRouter.TradeType.MARKET || order.tradeType == ITradingRouter.TradeType.LIMIT) {
             require(order.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.openPrice
-                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice, "exceed acceptable price");
-        } else if (order.tradeType == ITradingRouter.TradeType.LIMIT) {
-            require(order.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice
-                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.openPrice, "not reach trigger price");
+                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice, "not reach trigger price");
         } else {
             require(order.isLong ? price >= order.openPrice : price <= order.openPrice, "not reach trigger price");
         }
