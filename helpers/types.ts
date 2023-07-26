@@ -1,4 +1,4 @@
-import { IPairInfo } from '../../types';
+import { IPairInfo } from '../types';
 import { eNetwork } from './constants';
 
 export interface SymbolMap<T> {
@@ -16,11 +16,8 @@ export interface PairInfoConfig {
   fundingFeeConfig: IPairInfo.FundingFeeConfigStruct;
 }
 
-export interface MarketConfiguration {
-  [symbol: string]: ReserveConfiguration;
-}
-
 export interface ReserveConfiguration {
+  TokenSymbol: string;
   TokenName: string;
   TokenAddress: ParamsPerNetwork<string>;
   PairsConfig: SymbolMap<PairInfoConfig>;

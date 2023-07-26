@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import { ethers } from 'ethers';
 import { BaseContract, Contract, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
@@ -10,7 +10,7 @@ export const deployContract = async <ContractType extends Contract>(
   contract: string,
   args?: any,
 ): Promise<ContractType> => {
-  const [deployer] = await ethers.getSigners();
+  const [deployer] = await hre.ethers.getSigners();
 
   const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
   const contractDeployed = await contractFactory.deploy(...args);
@@ -22,7 +22,7 @@ export const deployUpgradeableContract = async <ContractType extends Contract>(
   contract: string,
   args?: any,
 ): Promise<ContractType> => {
-  const [deployer] = await ethers.getSigners();
+  const [deployer] = await hre.ethers.getSigners();
 
   const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
   let contractDeployed = await hre.upgrades.deployProxy(contractFactory, [...args]);
@@ -37,8 +37,28 @@ export const getContractAt = async <ContractType extends BaseContract>(
   return (await hre.ethers.getContractAt(contract, address)) as any as ContractType;
 };
 
+interface AccountItem {
+  name: string;
+  account: string;
+  balance: string;
+}
+
+export const getWalletBalances = async () => {
+  const accounts = await hre.getNamedAccounts();
+
+  const acc: AccountItem[] = [];
+  for (let accKey of Object.keys(accounts)) {
+    acc.push({
+      name: accKey,
+      account: accounts[accKey],
+      balance: ethers.utils.formatEther(await hre.ethers.provider.getBalance(accounts[accKey])),
+    });
+  }
+  return acc;
+};
+
 export const latestBlockNumber = async (): Promise<number> => {
-  const block = await ethers.provider.getBlock('latest');
+  const block = await hre.ethers.provider.getBlock('latest');
   if (!block) {
     throw `latestBlockNumber: missing block`;
   }
@@ -47,13 +67,13 @@ export const latestBlockNumber = async (): Promise<number> => {
 
 export const getBlockTimestamp = async (blockNumber?: number): Promise<number> => {
   if (!blockNumber) {
-    const block = await ethers.provider.getBlock('latest');
+    const block = await hre.ethers.provider.getBlock('latest');
     if (!block) {
       throw `getBlockTimestamp: missing block number ${blockNumber}`;
     }
     return block.timestamp;
   }
-  const block = await ethers.provider.getBlock(blockNumber);
+  const block = await hre.ethers.provider.getBlock(blockNumber);
   if (!block) {
     throw `getBlockTimestamp: missing block number ${blockNumber}`;
   }
