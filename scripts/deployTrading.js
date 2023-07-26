@@ -35,6 +35,7 @@ async function main() {
   await executeRouter.setPositionKeeper(user0.address, true);
   await executeRouter.setPositionKeeper(user1.address, true);
 
+  await fastPriceFeed.setUpdater(executeRouter.address, true);
 }
 
 main()

@@ -6,6 +6,7 @@ import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
 import "./interfaces/IPancakePair.sol";
 import "../libraries/SafeMath.sol";
+import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
@@ -163,6 +164,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
     function getPriceV1(address _token, bool _maximise, bool _includeAmmPrice) public view returns (uint256) {
         uint256 price = getPrimaryPrice(_token, _maximise);
+        console.log("getPriceV1 getPrimaryPrice", price);
 
         if (_includeAmmPrice && isAmmEnabled) {
             uint256 ammPrice = getAmmPrice(_token);
@@ -179,6 +181,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
         if (isSecondaryPriceEnabled) {
             price = getSecondaryPrice(_token, price, _maximise);
         }
+        console.log("getPriceV1 getSecondaryPrice", price);
 
         if (strictStableTokens[_token]) {
             uint256 delta = price > ONE_USD ? price.sub(ONE_USD) : ONE_USD.sub(price);

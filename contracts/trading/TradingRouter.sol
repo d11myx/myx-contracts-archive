@@ -506,7 +506,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         positionOrders[positionKey].push(_order);
         console.log("positionOrders add orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
 
-        if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
+        if (!_order.isIncrease && (_order.tradeType == TradeType.MARKET || _order.tradeType == TradeType.LIMIT)) {
             positionDecreaseTotalAmount[positionKey] += _order.sizeAmount;
         }
     }
@@ -531,7 +531,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         positionOrders[positionKey].pop();
         console.log("positionOrders remove orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
 
-        if (!_order.isIncrease && _order.tradeType == TradeType.MARKET && _order.tradeType == TradeType.LIMIT) {
+        if (!_order.isIncrease && (_order.tradeType == TradeType.MARKET || _order.tradeType == TradeType.LIMIT)) {
             positionDecreaseTotalAmount[positionKey] -= _order.sizeAmount;
         }
     }

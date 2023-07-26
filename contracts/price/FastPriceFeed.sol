@@ -7,7 +7,7 @@ import "./interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 import "../libraries/SafeMath.sol";
 
-//import "./interfaces/IPositionRouter.sol";
+import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
@@ -339,6 +339,9 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         // or if watchers have flagged an issue with the fast price
         bool hasSpread = !favorFastPrice(_token) || diffBasisPoints > maxDeviationBasisPoints;
 
+        console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
+        console.log("getPrice diffBasisPoints %s maxDeviationBasisPoints %s hasSpread %s", diffBasisPoints, maxDeviationBasisPoints, hasSpread);
+
         if (hasSpread) {
             // return the higher of the two prices
             if (_maximise) {
@@ -401,6 +404,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     function _setPrice(address _token, uint256 _price, address _vaultPriceFeed, address _fastPriceEvents) private {
+        console.log("setPrice token %s price %s", _token, _price);
         if (_vaultPriceFeed != address(0)) {
             uint256 refPrice = IVaultPriceFeed(_vaultPriceFeed).getLatestPrimaryPrice(_token);
             uint256 fastPrice = prices[_token];
@@ -424,7 +428,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
             if (cumulativeFastDelta > cumulativeRefDelta && cumulativeFastDelta.sub(cumulativeRefDelta) > maxCumulativeDeltaDiffs[_token]) {
                 emit MaxCumulativeDeltaDiffExceeded(_token, refPrice, fastPrice, cumulativeRefDelta, cumulativeFastDelta);
             }
-
+            console.log("setPrice refPrice %s cumulativeRefDelta %s cumulativeFastDelta %s", refPrice, cumulativeRefDelta, cumulativeFastDelta);
             _setPriceData(_token, refPrice, cumulativeRefDelta, cumulativeFastDelta);
             emit PriceData(_token, refPrice, fastPrice, cumulativeRefDelta, cumulativeFastDelta);
         }
