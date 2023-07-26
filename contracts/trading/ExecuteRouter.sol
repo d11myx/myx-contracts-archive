@@ -210,7 +210,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // check price
-        uint256 price = tradingUtils.getPrice(pairIndex, order.isLong);
+        uint256 price = tradingUtils.getValidPrice(pairIndex, order.isLong);
         if (order.tradeType == ITradingRouter.TradeType.MARKET || order.tradeType == ITradingRouter.TradeType.LIMIT) {
             require(order.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.openPrice
                 : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice, "not reach trigger price");
@@ -386,7 +386,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // check price
-        uint256 price = tradingUtils.getPrice(pairIndex, order.isLong);
+        uint256 price = tradingUtils.getValidPrice(pairIndex, order.isLong);
         if (order.tradeType == ITradingRouter.TradeType.MARKET || order.tradeType == ITradingRouter.TradeType.LIMIT) {
             require(order.abovePrice ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.triggerPrice
                 : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.triggerPrice, "not reach trigger price");
@@ -531,7 +531,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         // 预言机价格
-        uint256 price = tradingUtils.getPrice(position.pairIndex, position.isLong);
+        uint256 price = tradingUtils.getValidPrice(position.pairIndex, position.isLong);
 
         // 仓位pnl
         int256 unrealizedPnl;
