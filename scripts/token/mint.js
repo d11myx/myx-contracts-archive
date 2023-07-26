@@ -4,6 +4,7 @@ const hre = require("hardhat");
 const {mintWETH, getConfig} = require("../utils/utils");
 
 async function main() {
+  console.log("\n mint token")
 
   const [user0, user1, user2, user3, user4] = await hre.ethers.getSigners()
 

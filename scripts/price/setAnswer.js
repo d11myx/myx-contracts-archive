@@ -10,12 +10,13 @@ const BNB_PRICE = 300;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 async function main() {
+  console.log("\n setAnswer")
+
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
   console.log(`start...`)
-
 
   let eth = await contractAt("Token", await getConfig("Token-ETH"))
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
@@ -38,10 +39,10 @@ async function main() {
     let latestAnswer = await priceFeed.latestAnswer()
     console.log(`decimals: ${decimals}`)
     console.log(`latestRound: ${await priceFeed.latestRound()}`)
-    console.log(`latestAnswer: ${latestAnswer} ${hre.ethers.utils.formatUnits(latestAnswer, decimals)}`)
-    console.log(`getLatestPrimaryPrice: ${await vaultPriceFeed.getLatestPrimaryPrice(token)}`)
-    console.log(`getPrimaryPrice: ${hre.ethers.utils.formatEther(await vaultPriceFeed.getPrimaryPrice(token, false))}`)
-    console.log(`vaultPriceFeed price: ${hre.ethers.utils.formatUnits(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
+    console.log(`latestAnswer: ${latestAnswer} ${reduceDecimals(latestAnswer, decimals)}`)
+    console.log(`getLatestPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getLatestPrimaryPrice(token), 8)}`);
+    console.log(`getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, false), 30)}`)
+    console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true, false, false), 30)}`)
   }
 }
 

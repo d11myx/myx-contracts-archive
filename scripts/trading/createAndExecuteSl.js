@@ -4,7 +4,7 @@ const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\ncreateAndExecuteSl")
+  console.log("\n createAndExecuteSl")
 
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
