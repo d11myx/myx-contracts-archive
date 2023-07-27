@@ -4,7 +4,7 @@ const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\nliquidate")
+  console.log("\n liquidate")
 
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
@@ -23,7 +23,7 @@ async function main() {
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(40000))
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(35000))
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
   let key = await tradingUtils.getPositionKey(user0.address, 0, false);

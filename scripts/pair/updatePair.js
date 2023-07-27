@@ -34,8 +34,7 @@ async function main() {
     minTradeAmount: "1000000000000000",
     maxTradeAmount: "100000000000000000000000",
     maintainMarginRate: 1000,
-    priceSlipP: 100,
-    maxPriceDeviationP: 50
+    priceSlipP: 100
   }
   let tradingFeeConfig = {
     takerFeeP: 10, // 0.1%
@@ -58,8 +57,10 @@ async function main() {
   console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\ntradingFeeConfig", tradingFeeConfig,
     "\nfundingFeeConfig", fundingFeeConfig);
   // btc - usdt
-  await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
+  await pairInfo.updateTradingConfig(pairIndex, tradingConfig);
+  await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
+  await pairInfo.updateFundingFeeDistribute(pairIndex, fundingFeeConfig);
   let pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken}`);
   await setConfig("Token-BTC-USDT", pairToken);
@@ -67,9 +68,12 @@ async function main() {
   // eth - usdt
   pair.indexToken = eth.address;
   pair.initPrice = expandDecimals(2000, 30);
-  console.log("pair1: ", pair);
-  await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
+  console.log("pair1: ", pair);
+  await pairInfo.updateTradingConfig(pairIndex, tradingConfig);
+  await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
+  await pairInfo.updateFundingFeeDistribute(pairIndex, fundingFeeConfig);
+
   pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken}`);
   await setConfig("Token-ETH-USDT", pairToken);
