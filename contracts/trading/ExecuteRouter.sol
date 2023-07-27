@@ -546,6 +546,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 unrealizedPnl = - int256(position.positionAmount.mulPrice(price - position.averagePrice));
             }
         }
+        console.log("liquidatePosition position.averagePrice %s unrealizedPnl %s", position.averagePrice, unrealizedPnl.toString());
 
         int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
@@ -554,10 +555,12 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         if (exposureAsset <= 0) {
             needLiquidate = true;
         } else {
-            uint256 riskRate = position.positionAmount.mulPrice(price).mulPercentage(tradingConfig.maintainMarginRate)
-            .calculatePercentage(uint256(exposureAsset));
+            uint256 riskRate = position.positionAmount.mulPrice(price)
+                .mulPercentage(tradingConfig.maintainMarginRate)
+                .calculatePercentage(uint256(exposureAsset));
             needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
             console.log("liquidatePosition riskRate", riskRate);
+            console.log("liquidatePosition position.positionAmount %s exposureAsset %s", position.positionAmount, exposureAsset.toString());
         }
         console.log("liquidatePosition needLiquidate", needLiquidate);
 
