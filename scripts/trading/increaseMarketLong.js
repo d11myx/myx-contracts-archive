@@ -4,7 +4,7 @@ const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\nincreaseMarketLong")
+  console.log("\n increaseMarketLong")
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
@@ -18,14 +18,14 @@ async function main() {
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  await usdt.mint(user0.address, expandDecimals(30000, 18))
-  await usdt.approve(tradingRouter.address, expandDecimals(30000, 30));
+  await usdt.mint(user3.address, expandDecimals(30000, 18))
+  await usdt.connect(user3).approve(tradingRouter.address, expandDecimals(30000, 30));
 
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
 
   let orderId = await tradingRouter.increaseMarketOrdersIndex();
   let request = {
-    account: user0.address,
+    account: user3.address,
     pairIndex: 0,
     tradeType: 0,
     collateral: expandDecimals(30000, 18),
@@ -37,7 +37,7 @@ async function main() {
     slPrice: expandDecimals(29000, 30),
     sl: expandDecimals(1, 18)
   };
-  await tradingRouter.createIncreaseOrder(request)
+  await tradingRouter.connect(user3).createIncreaseOrder(request)
 
   console.log(`order: ${await tradingRouter.increaseMarketOrders(orderId)}`)
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);

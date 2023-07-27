@@ -1,10 +1,10 @@
 const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
-const { expandDecimals, formatBalance} = require("../utils/utilities");
+const { expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\ncreateAndExecuteTp")
+  console.log("\n createAndExecuteTp")
 
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
@@ -15,6 +15,7 @@ async function main() {
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
+  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
@@ -23,6 +24,10 @@ async function main() {
   let orderId = 0
 
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(31000))
+  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
+    [expandDecimals(30950, 30)],
+    await getBlockTime(await hre.ethers.provider) + 100)
+
   console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`)
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
 
@@ -32,7 +37,7 @@ async function main() {
   // create
   orderId = await tradingRouter.decreaseLimitOrdersIndex();
   let request = {
-    account: user0.address,
+    account: user3.address,
     pairIndex: 0,
     isLong: true,
     tpPrice: expandDecimals(31000, 30),
@@ -40,7 +45,7 @@ async function main() {
     slPrice: expandDecimals(29000, 30),
     sl: expandDecimals(0, 18)
   };
-  await tradingRouter.createTpSl(request)
+  await tradingRouter.connect(user3).createTpSl(request)
 
   // execute
   await executeRouter.executeDecreaseOrder(orderId, 2);

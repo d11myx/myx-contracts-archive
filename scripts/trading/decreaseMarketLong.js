@@ -1,10 +1,10 @@
 const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
-const { expandDecimals, formatBalance} = require("../utils/utilities");
+const { expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\ndecreaseMarketLong")
+  console.log("\n decreaseMarketLong")
 
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
@@ -15,17 +15,21 @@ async function main() {
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
+  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(31000))
+  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
+    [expandDecimals(30950, 30)],
+    await getBlockTime(await hre.ethers.provider) + 100)
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
   let orderId = await tradingRouter.decreaseMarketOrdersIndex();
   let request = {
-    account: user0.address,
+    account: user3.address,
     pairIndex: 0,
     tradeType: 0,
     collateral: expandDecimals(-3000, 18),
@@ -33,7 +37,7 @@ async function main() {
     sizeAmount: expandDecimals(1, 18),
     isLong: true
   };
-  await tradingRouter.createDecreaseOrder(request)
+  await tradingRouter.connect(user3).createDecreaseOrder(request)
 
   console.log(`order: ${await tradingRouter.decreaseMarketOrders(orderId)}`)
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);

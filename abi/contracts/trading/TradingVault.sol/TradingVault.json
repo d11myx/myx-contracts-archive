@@ -349,6 +349,16 @@
     "name": "decreasePosition",
     "outputs": [
       {
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
+      },
+      {
         "internalType": "int256",
         "name": "pnl",
         "type": "int256"
@@ -651,7 +661,18 @@
       }
     ],
     "name": "increasePosition",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
