@@ -96,7 +96,7 @@ contract TradingUtils is ITradingUtils, Governable {
         return pnl;
     }
 
-    function validLeverage(address account, uint256 pairIndex, bool isLong, int256 _collateral, uint256 _sizeAmount, bool _increase) public {
+    function validLeverage(address account, uint256 pairIndex, bool isLong, int256 _collateral, uint256 _sizeAmount, bool _increase) public  view{
         bytes32 key = getPositionKey(account, pairIndex, isLong);
         ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
         uint256 price = getPrice(pairIndex, isLong);
