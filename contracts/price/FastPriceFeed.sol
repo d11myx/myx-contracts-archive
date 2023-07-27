@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IFastPriceEvents.sol";
 import "./interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
-import "../libraries/SafeMath.sol";
 
 import "hardhat/console.sol";
 
