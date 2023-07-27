@@ -374,8 +374,17 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 pairIndex = order.pairIndex;
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
 
+        // get position
+        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        if (position.positionAmount == 0) {
+            console.log("position already closed", _orderId);
+            return;
+        }
+
         // check trading amount
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
+
+        order.sizeAmount = order.sizeAmount.min(position.positionAmount);
         require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // check price
@@ -386,10 +395,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         } else {
             require(order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice, "not reach trigger price");
         }
-
-        // get position
-        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
-        require(position.positionAmount != 0, "position already closed");
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
@@ -482,10 +487,10 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 order.sizeAmount
             ));
 
-
         position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+
         if (position.positionAmount == 0) {
-            tradingRouter.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
+            tradingRouter.cancelOrders(order.account, order.pairIndex, order.isLong, false);
         }
 
         emit ExecuteDecreaseOrder(

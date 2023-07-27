@@ -20,20 +20,15 @@ async function main() {
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
-  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
-    [expandDecimals(30050, 30)],
-    await getBlockTime(await hre.ethers.provider) + 100)
-
-  console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
   let orderId = 1;
 
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(31000))
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(28500))
   await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
-    [expandDecimals(30950, 30)],
+    [expandDecimals(28500, 30)],
     await getBlockTime(await hre.ethers.provider) + 100)
 
+  console.log(`position: ${await tradingVault.getPosition(user3.address, 0, true)}`)
   console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`)
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
 
@@ -56,7 +51,7 @@ async function main() {
   // execute
   await executeRouter.executeDecreaseOrder(orderId, 3);
   // await executeRouter.executeDecreaseLimitOrders([orderId]);
-  console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
+  console.log(`position: ${await tradingVault.getPosition(user3.address, 0, true)}`)
   console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
   console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
