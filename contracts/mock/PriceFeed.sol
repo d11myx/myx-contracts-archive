@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.17;
 
-import "./interfaces/IPriceFeed.sol";
+import "../interfaces/IPriceFeed.sol";
 
 contract PriceFeed is IPriceFeed {
     int256 public answer;
@@ -17,7 +17,7 @@ contract PriceFeed is IPriceFeed {
     mapping (uint80 => int256) public answers;
     mapping (address => bool) public isAdmin;
 
-    constructor() public {
+    constructor()  {
         gov = msg.sender;
         isAdmin[msg.sender] = true;
     }

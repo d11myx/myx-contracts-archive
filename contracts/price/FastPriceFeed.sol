@@ -108,7 +108,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
       uint256 _maxDeviationBasisPoints,
       address _fastPriceEvents,
       address _tokenManager
-    ) public {
+    )  {
         require(_priceDuration <= MAX_PRICE_DURATION, "FastPriceFeed: invalid _priceDuration");
         priceDuration = _priceDuration;
         maxPriceUpdateDelay = _maxPriceUpdateDelay;

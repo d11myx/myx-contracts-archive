@@ -7,7 +7,7 @@ pragma solidity 0.8.17;
 
 contract FastPriceEvents is IFastPriceEvents, Governable {
 
-    constructor() public {
+    constructor()  {
         gov = msg.sender;
     }
 
