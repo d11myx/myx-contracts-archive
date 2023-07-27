@@ -14,9 +14,9 @@ async function main() {
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   let eth = await contractAt("Token", await getConfig("Token-ETH"))
 
-  let btcPriceFeed = await deployContract("PriceFeed", ['BTC'])
-  let usdtPriceFeed = await deployContract("PriceFeed", ['USDT'])
-  let ethPriceFeed = await deployContract("PriceFeed", ['ETH'])
+  let btcPriceFeed = await deployContract("MockPriceFeed", ['BTC'])
+  let usdtPriceFeed = await deployContract("MockPriceFeed", ['USDT'])
+  let ethPriceFeed = await deployContract("MockPriceFeed", ['ETH'])
 
   let vaultPriceFeed = await deployContract("VaultPriceFeed", [])
 

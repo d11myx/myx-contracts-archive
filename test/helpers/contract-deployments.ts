@@ -6,7 +6,7 @@ import {
   PairInfo,
   PairLiquidity,
   PairVault,
-  PriceFeed,
+  MockPriceFeed,
   Token,
   TradingRouter,
   TradingUtils,
@@ -65,8 +65,8 @@ export async function deployPrice(deployer: SignerWithAddress) {
   const pairTokenAddresses = [];
   const pairTokenPrices = [];
   for (let pair of Object.keys(pairConfigs)) {
-    const priceFeed = (await deployContract('PriceFeed', [])) as any as PriceFeed;
-    console.log(`deployed PriceFeed with ${pair} at ${priceFeed.address}`);
+    const priceFeed = (await deployContract('MockPriceFeed', [])) as any as MockPriceFeed;
+    console.log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
 
     await priceFeed.connect(deployer.signer).setLatestAnswer(MOCK_PRICES[pair]);
     await priceFeed.connect(deployer.signer).setAdmin(deployer.address, true);
