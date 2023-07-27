@@ -9,7 +9,7 @@ export const btcPairInfo: PairInfoConfig = {
     pairToken: ZERO_ADDRESS,
     enable: true,
     kOfSwap: ethers.utils.parseUnits('1', 50),
-    initPrice: ethers.utils.parseUnits('20000', 30),
+    initPrice: ethers.utils.parseUnits('30000', 30),
     addLpFeeP: 100,
   },
   tradingConfig: {
@@ -19,6 +19,7 @@ export const btcPairInfo: PairInfoConfig = {
     maxTradeAmount: '100000000000000000000000',
     maintainMarginRate: 1000,
     priceSlipP: 100,
+    maxPriceDeviationP: 50,
   },
   tradingFeeConfig: {
     takerFeeP: 10, // 0.1%
@@ -57,6 +58,7 @@ export const ethPairInfo: PairInfoConfig = {
     maxTradeAmount: '100000000000000000000000',
     maintainMarginRate: 1000,
     priceSlipP: 100,
+    maxPriceDeviationP: 50,
   },
   tradingFeeConfig: {
     takerFeeP: 10, // 0.1%
