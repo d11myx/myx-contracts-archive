@@ -53,7 +53,7 @@ export async function deployToken() {
   return { usdt, weth, tokens };
 }
 
-export async function deployPrice(deployer: SignerWithAddress) {
+export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWithAddress) {
   console.log(` - setup price`);
 
   const pairConfigs = loadCurrentPairConfigs();
@@ -67,8 +67,8 @@ export async function deployPrice(deployer: SignerWithAddress) {
     const priceFeed = (await deployContract('MockPriceFeed', [])) as any as MockPriceFeed;
     console.log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
 
-    await priceFeed.connect(deployer.signer).setLatestAnswer(MOCK_PRICES[pair]);
-    await priceFeed.connect(deployer.signer).setAdmin(deployer.address, true);
+    await priceFeed.connect(deployer.signer).setAdmin(keeper.address, true);
+    await priceFeed.connect(keeper.signer).setLatestAnswer(MOCK_PRICES[pair]);
 
     const pairTokenAddress = (await getPairToken(pair)).address;
     if (!pairTokenAddress) {
