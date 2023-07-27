@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../openzeeplin/contracts/utils/math/Math.sol";
-import "../openzeeplin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 library Int256Utils {
 
