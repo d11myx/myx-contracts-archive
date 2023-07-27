@@ -21,7 +21,7 @@ interface ITradingVault {
         int256 _collateral,
         uint256 _sizeAmount,
         bool _isLong
-    ) external;
+    ) external returns (uint256 tradingFee, int256 fundingFee);
 
     function decreasePosition(
         address _account,
@@ -29,16 +29,24 @@ interface ITradingVault {
         int256 _collateral,
         uint256 _sizeAmount,
         bool _isLong
-    ) external returns(int256 pnl);
+    ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
-    function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns(Position memory);
-    function getPositionByKey(bytes32 key) external view returns(Position memory);
+    function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns (Position memory);
+
+    function getPositionByKey(bytes32 key) external view returns (Position memory);
+
     function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (uint256 tradingFee);
+
     function getFundingFee(bool _increase, address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (int256);
+
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
-    function isFrozen(address _account) external view returns(bool);
-    function netExposureAmountChecker(uint256 _pairIndex) external view returns(int256);
-    function longTracker(uint256 _pairIndex) external view returns(uint256);
-    function shortTracker(uint256 _pairIndex) external view returns(uint256);
+
+    function isFrozen(address _account) external view returns (bool);
+
+    function netExposureAmountChecker(uint256 _pairIndex) external view returns (int256);
+
+    function longTracker(uint256 _pairIndex) external view returns (uint256);
+
+    function shortTracker(uint256 _pairIndex) external view returns (uint256);
 
 }

@@ -123,7 +123,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         int256 _collateral,
         uint256 _sizeAmount,
         bool _isLong
-    ) external nonReentrant onlyHandler {
+    ) external nonReentrant onlyHandler returns (uint256 tradingFee, int256 fundingFee) {
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.enable, "trade pair not supported");
@@ -157,7 +157,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // funding fee
         updateCumulativeFundingRate(_pairIndex);
-        int256 fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
+        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         console.log("increasePosition lastFundingTimes", lastFundingTimes[_pairIndex]);
         console.log("increasePosition cumulativeFundingRates", cumulativeFundingRates[_pairIndex].toString());
         console.log("increasePosition fundingFee", fundingFee.toString());
@@ -188,7 +188,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
-        uint256 tradingFee = getTradingFee(_pairIndex, _isLong, _sizeAmount);
+        tradingFee = getTradingFee(_pairIndex, _isLong, _sizeAmount);
         require(position.collateral + transferOut >= tradingFee, "collateral not enough for trading fee");
 
         if (transferOut >= tradingFee) {
@@ -361,7 +361,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         int256 _collateral,
         uint256 _sizeAmount,
         bool _isLong
-    ) external onlyHandler nonReentrant returns (int256 pnl) {
+    ) external onlyHandler nonReentrant returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 price = tradingUtils.getPrice(_pairIndex, _isLong);
@@ -391,7 +391,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // funding fee
         updateCumulativeFundingRate(_pairIndex);
-        int256 fundingFee = getFundingFee(false, _account, _pairIndex, _isLong, _sizeAmount);
+        fundingFee = getFundingFee(false, _account, _pairIndex, _isLong, _sizeAmount);
         console.log("decreasePosition lastFundingTimes", lastFundingTimes[_pairIndex]);
         console.log("decreasePosition cumulativeFundingRates", cumulativeFundingRates[_pairIndex].toString());
         console.log("decreasePosition fundingFee", fundingFee.toString());
@@ -422,7 +422,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
-        uint256 tradingFee = getTradingFee(_pairIndex, _isLong, _sizeAmount);
+        tradingFee = getTradingFee(_pairIndex, _isLong, _sizeAmount);
         require(position.collateral + transferOut >= tradingFee, "collateral not enough for trading fee");
 
         if (transferOut >= tradingFee) {
@@ -612,7 +612,6 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             position.realisedPnl,
             price
         );
-        return pnl;
     }
 
     function updateCumulativeFundingRate(uint256 _pairIndex) public {
