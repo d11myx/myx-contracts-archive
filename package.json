@@ -9,7 +9,7 @@
     "clean": "rm -rf artifacts/ types/ cache/",
     "compile": "SKIP_LOAD=true npx hardhat compile",
     "test": "npm run compile && npx hardhat test",
-    "coverage":"hardhat coverage"
+    "coverage": "hardhat coverage"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
