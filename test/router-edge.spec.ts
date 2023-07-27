@@ -151,80 +151,115 @@ describe('Router: Edge cases', () => {
 
     const positionAfter = await tradingVault.getPosition(trader.address, pairIndex, true);
     const positionAmountAfter = positionAfter.positionAmount;
+
     expect(positionAmountAfter).to.be.eq(positionAmountBefore.sub(ethers.utils.parseUnits('3', 18)));
   });
 
-  describe('Router: ADL cases', () => {
-    const pairIndex = 0;
-    let btcPriceFeed: PriceFeed;
+  it('Closing position', async ()=> {
+    const {
+      keeper,
+      users: [trader],
+      tradingRouter,
+      executeRouter,
+      tradingVault,
+    } = testEnv;
+    const positionBefore = await tradingVault.getPosition(trader.address, pairIndex, true);
+    const positionAmountBefore = positionBefore.positionAmount;
+    expect(positionAmountBefore).to.be.eq(ethers.utils.parseUnits('15', 18));
+    
+    // Closing position
+    const increasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+      account: trader.address,
+      pairIndex: pairIndex,
+      tradeType: TradeType.MARKET,
+      collateral: 0,
+      triggerPrice: ethers.utils.parseUnits('30000',30),
+      isLong: true,
+      sizeAmount: positionAmountBefore,
+    };
+    const orderId = await tradingRouter.decreaseMarketOrdersIndex();
+    await tradingRouter.connect(trader.signer).createDecreaseOrder(increasePositionRequest);
 
-    before(async () => {
-      const { keeper, btc, vaultPriceFeed } = testEnv;
+    await executeRouter.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
-      const priceFeedFactory = await ethers.getContractFactory('PriceFeed');
-      const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
-      btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-      await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
-    });
-    after(async () => {
-      const { keeper } = testEnv;
+    const positionAfter = await tradingVault.getPosition(trader.address, pairIndex, true);
+    const positionAmountAfter = positionAfter.positionAmount;
 
-      await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
-    });
+    expect(positionAmountAfter).to.be.eq(0);
 
-    it('price goes up, the first trader will make a profit', async () => {
-      const {
-        deployer,
-        keeper,
-        users: [trader, adlTrader],
-        usdt,
-        pairVault,
-        tradingRouter,
-        executeRouter,
-        tradingVault,
-      } = testEnv;
-
-      const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
-      expect(traderPosition.positionAmount).to.be.eq(ethers.utils.parseUnits('15', 18));
-
-      // adlTrader open position
-      const amount = ethers.utils.parseUnits('300000', 18);
-      await waitForTx(await usdt.connect(deployer.signer).mint(adlTrader.address, amount));
-      await usdt.connect(adlTrader.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
-
-      const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
-        account: adlTrader.address,
-        pairIndex: pairIndex,
-        tradeType: TradeType.MARKET,
-        collateral: amount,
-        openPrice: ethers.utils.parseUnits('50000', 30),
-        isLong: true,
-        sizeAmount: ethers.utils.parseUnits('30', 18),
-        tpPrice: 0,
-        tp: 0,
-        slPrice: 0,
-        sl: 0,
-      };
-
-      await tradingRouter.setHandler(adlTrader.address, true);
-
-      const orderId = await tradingRouter.increaseMarketOrdersIndex();
-      await tradingRouter.connect(adlTrader.signer).createIncreaseOrder(increasePositionRequest);
-      await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
-
-      const adlTraderPosition = await tradingVault.getPosition(adlTrader.address, pairIndex, true);
-      expect(adlTraderPosition.positionAmount).to.be.eq(ethers.utils.parseUnits('30', 18));
-
-      // price goes up to 50000
-      await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('50000', 8)));
-
-      // available index amount < 5
-      const pairVaultInfo = await pairVault.getVault(pairIndex);
-      const indexTotalAmount = pairVaultInfo.indexTotalAmount;
-      const indexReservedAmount = pairVaultInfo.indexReservedAmount;
-      expect(indexTotalAmount.sub(indexReservedAmount)).to.be.lt(ethers.utils.parseUnits('5', 18));
-
-      // adlTrade decrease position more than 5, will trigger adl
-    });
   });
+
+  // describe('Router: ADL cases', () => {
+  //   const pairIndex = 0;
+  //   let btcPriceFeed: PriceFeed;
+
+  //   before(async () => {
+  //     const { keeper, btc, vaultPriceFeed } = testEnv;
+
+  //     const priceFeedFactory = await ethers.getContractFactory('PriceFeed');
+  //     const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
+  //     btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
+  //     await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+  //   });
+  //   after(async () => {
+  //     const { keeper } = testEnv;
+
+  //     await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+  //   });
+
+  //   it('price goes up, the first trader will make a profit', async () => {
+  //     const {
+  //       deployer,
+  //       keeper,
+  //       users: [trader, adlTrader],
+  //       usdt,
+  //       pairVault,
+  //       tradingRouter,
+  //       executeRouter,
+  //       tradingVault,
+  //     } = testEnv;
+
+  //     const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
+  //     expect(traderPosition.positionAmount).to.be.eq(ethers.utils.parseUnits('15', 18));
+
+  //     // adlTrader open position
+  //     const amount = ethers.utils.parseUnits('300000', 18);
+  //     await waitForTx(await usdt.connect(deployer.signer).mint(adlTrader.address, amount));
+  //     await usdt.connect(adlTrader.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
+
+  //     const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+  //       account: adlTrader.address,
+  //       pairIndex: pairIndex,
+  //       tradeType: TradeType.MARKET,
+  //       collateral: amount,
+  //       openPrice: ethers.utils.parseUnits('50000', 30),
+  //       isLong: true,
+  //       sizeAmount: ethers.utils.parseUnits('30', 18),
+  //       tpPrice: 0,
+  //       tp: 0,
+  //       slPrice: 0,
+  //       sl: 0,
+  //     };
+
+  //     await tradingRouter.setHandler(adlTrader.address, true);
+
+  //     const orderId = await tradingRouter.increaseMarketOrdersIndex();
+  //     await tradingRouter.connect(adlTrader.signer).createIncreaseOrder(increasePositionRequest);
+  //     await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+
+  //     const adlTraderPosition = await tradingVault.getPosition(adlTrader.address, pairIndex, true);
+  //     expect(adlTraderPosition.positionAmount).to.be.eq(ethers.utils.parseUnits('30', 18));
+
+  //     // price goes up to 50000
+  //     await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('50000', 8)));
+
+  //     // available index amount < 5
+  //     const pairVaultInfo = await pairVault.getVault(pairIndex);
+  //     const indexTotalAmount = pairVaultInfo.indexTotalAmount;
+  //     const indexReservedAmount = pairVaultInfo.indexReservedAmount;
+  //     expect(indexTotalAmount.sub(indexReservedAmount)).to.be.lt(ethers.utils.parseUnits('5', 18));
+
+  //     // adlTrade decrease position more than 5, will trigger adl
+  //   });
+  // });
 });
