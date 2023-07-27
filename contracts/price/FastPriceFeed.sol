@@ -42,7 +42,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     bool public isSpreadEnabled = false;
 
     address public vaultPriceFeed;
-    address public fastPriceEvents;
+
 
     address public tokenManager;
 
@@ -106,7 +106,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
       uint256 _maxPriceUpdateDelay,
       uint256 _minBlockInterval,
       uint256 _maxDeviationBasisPoints,
-      address _fastPriceEvents,
       address _tokenManager
     )  {
         require(_priceDuration <= MAX_PRICE_DURATION, "FastPriceFeed: invalid _priceDuration");
@@ -114,7 +113,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
         minBlockInterval = _minBlockInterval;
         maxDeviationBasisPoints = _maxDeviationBasisPoints;
-        fastPriceEvents = _fastPriceEvents;
         tokenManager = _tokenManager;
         gov = msg.sender;
     }
@@ -142,10 +140,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     function setUpdater(address _account, bool _isActive) external override onlyGov {
         isUpdater[_account] = _isActive;
-    }
-
-    function setFastPriceEvents(address _fastPriceEvents) external onlyGov {
-      fastPriceEvents = _fastPriceEvents;
     }
 
     function setVaultPriceFeed(address _vaultPriceFeed) external override onlyGov {
@@ -218,12 +212,12 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
         if (shouldUpdate) {
-            address _fastPriceEvents = fastPriceEvents;
+            
             address _vaultPriceFeed = vaultPriceFeed;
 
             for (uint256 i = 0; i < _tokens.length; i++) {
                 address token = _tokens[i];
-                _setPrice(token, _prices[i], _vaultPriceFeed, _fastPriceEvents);
+                _setPrice(token, _prices[i], _vaultPriceFeed);
             }
         }
     }
@@ -232,7 +226,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
         if (shouldUpdate) {
-            address _fastPriceEvents = fastPriceEvents;
             address _vaultPriceFeed = vaultPriceFeed;
 
             for (uint256 i = 0; i < _priceBitArray.length; i++) {
@@ -249,7 +242,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
                     uint256 tokenPrecision = tokenPrecisions[i * 8 + j];
                     uint256 adjustedPrice = price.mul(PRICE_PRECISION).div(tokenPrecision);
 
-                    _setPrice(token, adjustedPrice, _vaultPriceFeed, _fastPriceEvents);
+                    _setPrice(token, adjustedPrice, _vaultPriceFeed);
                 }
             }
         }
@@ -392,7 +385,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
         if (shouldUpdate) {
-            address _fastPriceEvents = fastPriceEvents;
+            
             address _vaultPriceFeed = vaultPriceFeed;
 
             for (uint256 j = 0; j < 8; j++) {
@@ -406,12 +399,12 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
                 uint256 tokenPrecision = tokenPrecisions[j];
                 uint256 adjustedPrice = price.mul(PRICE_PRECISION).div(tokenPrecision);
 
-                _setPrice(token, adjustedPrice, _vaultPriceFeed, _fastPriceEvents);
+                _setPrice(token, adjustedPrice, _vaultPriceFeed);
             }
         }
     }
 
-    function _setPrice(address _token, uint256 _price, address _vaultPriceFeed, address _fastPriceEvents) private {
+    function _setPrice(address _token, uint256 _price, address _vaultPriceFeed) private {
         console.log("setPrice token %s price %s vaultPriceFeed %s", _token, _price, _vaultPriceFeed);
         if (_vaultPriceFeed != address(0)) {
             uint256 refPrice = IVaultPriceFeed(_vaultPriceFeed).getLatestPrimaryPrice(_token);
@@ -442,7 +435,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         }
 
         prices[_token] = _price;
-        _emitPriceEvent(_fastPriceEvents, _token, _price);
+        _emitPriceEvent( _token, _price);
     }
 
     function _setPriceData(address _token, uint256 _refPrice, uint256 _cumulativeRefDelta, uint256 _cumulativeFastDelta) private {
@@ -459,10 +452,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         );
     }
 
-    function _emitPriceEvent(address _fastPriceEvents, address _token, uint256 _price) private {
-        if (_fastPriceEvents == address(0)) {
-            return;
-        }
+    function _emitPriceEvent( address _token, uint256 _price) private {
+        
         emit PriceUpdate(_token, _price, msg.sender);
     }
 
