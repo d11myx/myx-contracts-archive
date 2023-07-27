@@ -90,7 +90,7 @@ export async function setupTestEnv() {
   testEnv.btc = tokens['BTC'];
 
   // setup price
-  const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer);
+  const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper);
   testEnv.vaultPriceFeed = vaultPriceFeed;
   testEnv.fastPriceFeed = fastPriceFeed;
 
