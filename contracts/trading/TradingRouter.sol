@@ -495,7 +495,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         return order;
     }
 
-    function getPositionOrders(bytes32 key) external returns (PositionOrder[] memory orders) {
+    function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory orders) {
         return positionOrders[key];
     }
 

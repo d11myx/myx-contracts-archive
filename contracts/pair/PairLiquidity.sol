@@ -247,11 +247,11 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         return lpFairDelta > 0 ? Math.mulDiv(lpFairDelta, PRICE_PRECISION, IERC20(pair.pairToken).totalSupply()) : 1 * PRICE_PRECISION;
     }
 
-    function _getDelta(uint256 amount, uint256 price) internal view returns(uint256) {
+    function _getDelta(uint256 amount, uint256 price) internal pure returns(uint256) {
         return Math.mulDiv(amount, price, PRICE_PRECISION);
     }
 
-    function _getAmount(uint256 delta, uint256 price) internal view returns(uint256) {
+    function _getAmount(uint256 delta, uint256 price) internal pure returns(uint256) {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
     }
 
