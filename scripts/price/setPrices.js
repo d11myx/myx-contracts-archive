@@ -17,8 +17,8 @@ async function main() {
   const provider = await hre.ethers.provider
 
   // set oracle price
-  let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
-  let ethPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-ETH"));
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
+  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
 
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
   await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
@@ -48,7 +48,7 @@ async function main() {
     console.log(repeatString('-'))
     console.log(symbol)
     let token = await getConfig("Token-" + symbol);
-    let priceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-" + symbol))
+    let priceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-" + symbol))
     let decimals = await vaultPriceFeed.priceDecimals(token);
     let latestAnswer = await priceFeed.latestAnswer()
     console.log(`decimals: ${decimals}`)
