@@ -4,10 +4,10 @@ pragma solidity 0.8.17;
 
 import "../interfaces/IPriceFeed.sol";
 
-contract PriceFeed is IPriceFeed {
+contract MockPriceFeed is IPriceFeed {
     int256 public answer;
     uint80 public roundId;
-    string public override description = "PriceFeed";
+    string public override description = "MockPriceFeed";
     address public override aggregator;
 
     uint256 public decimals;
