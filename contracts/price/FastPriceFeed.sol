@@ -4,7 +4,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
-import "./interfaces/IFastPriceEvents.sol";
 import "./interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 
@@ -81,6 +80,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     // should be 10 ** 3
     uint256[] public tokenPrecisions;
 
+    event PriceUpdate(address token, uint256 price, address priceFeed);
     event DisableFastPrice(address signer);
     event EnableFastPrice(address signer);
     event PriceData(address token, uint256 refPrice, uint256 fastPrice, uint256 cumulativeRefDelta, uint256 cumulativeFastDelta);
@@ -463,8 +463,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         if (_fastPriceEvents == address(0)) {
             return;
         }
-
-        IFastPriceEvents(_fastPriceEvents).emitPriceEvent(_token, _price);
+        emit PriceUpdate(_token, _price, msg.sender);
     }
 
     function _setLastUpdatedValues(uint256 _timestamp) private returns (bool) {
