@@ -23,11 +23,6 @@
       },
       {
         "internalType": "address",
-        "name": "_fastPriceEvents",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_tokenManager",
         "type": "address"
       }
@@ -146,6 +141,31 @@
       }
     ],
     "name": "PriceData",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "priceFeed",
+        "type": "address"
+      }
+    ],
+    "name": "PriceUpdate",
     "type": "event"
   },
   {
@@ -296,19 +316,6 @@
     "name": "enableFastPrice",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "fastPriceEvents",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -696,19 +703,6 @@
       }
     ],
     "name": "setCompactedPrices",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_fastPriceEvents",
-        "type": "address"
-      }
-    ],
-    "name": "setFastPriceEvents",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

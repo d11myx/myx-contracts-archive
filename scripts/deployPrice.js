@@ -14,9 +14,9 @@ async function main() {
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   let eth = await contractAt("Token", await getConfig("Token-ETH"))
 
-  let btcPriceFeed = await deployContract("PriceFeed", ['BTC'])
-  let usdtPriceFeed = await deployContract("PriceFeed", ['USDT'])
-  let ethPriceFeed = await deployContract("PriceFeed", ['ETH'])
+  let btcPriceFeed = await deployContract("MockPriceFeed", ['BTC'])
+  let usdtPriceFeed = await deployContract("MockPriceFeed", ['USDT'])
+  let ethPriceFeed = await deployContract("MockPriceFeed", ['ETH'])
 
   let vaultPriceFeed = await deployContract("VaultPriceFeed", [])
 
@@ -35,13 +35,12 @@ async function main() {
   await usdtPriceFeed.setAdmin(user1.address, true)
 
 
-  let fastPriceEvents = await deployContract("FastPriceEvents", [])
+
   let fastPriceFeed = await deployContract("FastPriceFeed", [
     5 * 60, // _priceDuration
     120 * 60, // _maxPriceUpdateDelay
     2, // _minBlockInterval
     50, // _maxDeviationBasisPoints
-    fastPriceEvents.address, // _fastPriceEvents
     user0.address // _tokenManager
   ])
   console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`)
@@ -51,7 +50,7 @@ async function main() {
   await fastPriceFeed.setMaxTimeDeviation(300)
   await fastPriceFeed.setUpdater(user0.address, true)
   await fastPriceFeed.setUpdater(user1.address, true)
-  await fastPriceEvents.setIsPriceFeed(fastPriceFeed.address, true)
+  
 }
 
 main()
