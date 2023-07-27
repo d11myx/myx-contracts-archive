@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "./interfaces/IVaultPriceFeed.sol";
 import "./interfaces/IPriceFeed.sol";
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
 import "./interfaces/IPancakePair.sol";
-import "../libraries/SafeMath.sol";
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
