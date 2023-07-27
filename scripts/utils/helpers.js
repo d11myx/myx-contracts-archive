@@ -127,7 +127,7 @@ async function deployContract(name, args, label, options) {
     name += "-" + args[1]
   } else if (name === "Token") {
     name += "-" + args[0]
-  } else if (name === "PriceFeed") {
+  } else if (name === "MockPriceFeed") {
     name += "-" + args[0]
     args = []
   } else if (name === "WETH") {
@@ -185,7 +185,7 @@ async function deployUpgradeableContract(name, args, label, options) {
     name += "-" + args[1]
   } else if (name === "Token") {
     name += "-" + args[0]
-  } else if (name === "PriceFeed") {
+  } else if (name === "MockPriceFeed") {
     name += "-" + args[0]
     args = []
   } else if (name === "WETH") {
