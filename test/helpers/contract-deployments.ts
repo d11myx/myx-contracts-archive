@@ -14,11 +14,12 @@ import {
   VaultPriceFeed,
   WETH,
 } from '../../types';
-import { deployContract, deployUpgradeableContract, waitForTx } from './tx';
+import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './tx';
 import { getMarketSymbol, MOCK_PRICES } from '../shared/constants';
 import { loadCurrentPairConfigs } from './market-config-helper';
 import { SymbolMap } from '../shared/types';
 import { getPairToken, SignerWithAddress, testEnv } from './make-suite';
+import { ethers } from 'ethers';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -62,6 +63,7 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
   console.log(`deployed VaultPriceFeed at ${vaultPriceFeed.address}`);
 
   const pairTokenAddresses = [];
+  const pairTokenPrices = [];
   for (let pair of Object.keys(pairConfigs)) {
     const priceFeed = (await deployContract('PriceFeed', [])) as any as PriceFeed;
     console.log(`deployed PriceFeed with ${pair} at ${priceFeed.address}`);
@@ -76,6 +78,9 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     await vaultPriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8, false);
 
     pairTokenAddresses.push(pairTokenAddress);
+    pairTokenPrices.push(
+      ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
+    );
   }
   await vaultPriceFeed.setPriceSampleSpace(1);
 
@@ -98,6 +103,11 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
   await fastPriceFeed.setMaxTimeDeviation(10000);
   await fastPriceFeed.setUpdater(deployer.address, true);
   await fastPriceEvents.setIsPriceFeed(fastPriceFeed.address, true);
+  await fastPriceFeed.setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
+
+  await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
+  await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
+  await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
 
   return { vaultPriceFeed, fastPriceFeed, fastPriceEvents };
 }
