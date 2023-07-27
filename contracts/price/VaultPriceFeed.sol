@@ -6,6 +6,7 @@ import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
 import "./interfaces/IPancakePair.sol";
 import "../libraries/SafeMath.sol";
+import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
@@ -163,6 +164,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
     function getPriceV1(address _token, bool _maximise, bool _includeAmmPrice) public view returns (uint256) {
         uint256 price = getPrimaryPrice(_token, _maximise);
+        console.log("getPriceV1 getPrimaryPrice", price);
 
         if (_includeAmmPrice && isAmmEnabled) {
             uint256 ammPrice = getAmmPrice(_token);
@@ -178,6 +180,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
         if (isSecondaryPriceEnabled) {
             price = getSecondaryPrice(_token, price, _maximise);
+            console.log("getPriceV1 getSecondaryPrice", price);
         }
 
         if (strictStableTokens[_token]) {
@@ -305,6 +308,8 @@ contract VaultPriceFeed is IVaultPriceFeed {
         uint80 roundId = priceFeed.latestRound();
 
         for (uint80 i = 0; i < priceSampleSpace; i++) {
+            console.log("getPrimaryPrice i %s priceSampleSpace %s roundId %s", i, priceSampleSpace, roundId);
+
             if (roundId <= i) { break; }
             uint256 p;
 
@@ -317,6 +322,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
                 require(_p > 0, "VaultPriceFeed: invalid price");
                 p = uint256(_p);
             }
+            console.log("getPrimaryPrice i %s price %s p %s", i, price, p);
 
             if (price == 0) {
                 price = p;

@@ -7,7 +7,7 @@ import "./interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 import "../libraries/SafeMath.sol";
 
-//import "./interfaces/IPositionRouter.sol";
+import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
@@ -314,6 +314,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     // - in case the cumulativeFastDelta exceeds the cumulativeRefDelta by the maxCumulativeDeltaDiff
     function getPrice(address _token, uint256 _refPrice, bool _maximise) external override view returns (uint256) {
         if (block.timestamp > lastUpdatedAt.add(maxPriceUpdateDelay)) {
+            console.log("getPrice block.timestamp %s lastUpdatedAt %s maxPriceUpdateDelay %s", block.timestamp, lastUpdatedAt, maxPriceUpdateDelay);
             if (_maximise) {
                 return _refPrice.mul(BASIS_POINTS_DIVISOR.add(spreadBasisPointsIfChainError)).div(BASIS_POINTS_DIVISOR);
             }
@@ -322,6 +323,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         }
 
         if (block.timestamp > lastUpdatedAt.add(priceDuration)) {
+            console.log("getPrice block.timestamp %s lastUpdatedAt %s priceDuration %s", block.timestamp, lastUpdatedAt, priceDuration);
             if (_maximise) {
                 return _refPrice.mul(BASIS_POINTS_DIVISOR.add(spreadBasisPointsIfInactive)).div(BASIS_POINTS_DIVISOR);
             }
@@ -330,7 +332,10 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         }
 
         uint256 fastPrice = prices[_token];
+        console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
+
         if (fastPrice == 0) { return _refPrice; }
+        if (_refPrice == 0) { return fastPrice; }
 
         uint256 diffBasisPoints = _refPrice > fastPrice ? _refPrice.sub(fastPrice) : fastPrice.sub(_refPrice);
         diffBasisPoints = diffBasisPoints.mul(BASIS_POINTS_DIVISOR).div(_refPrice);
@@ -338,6 +343,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         // create a spread between the _refPrice and the fastPrice if the maxDeviationBasisPoints is exceeded
         // or if watchers have flagged an issue with the fast price
         bool hasSpread = !favorFastPrice(_token) || diffBasisPoints > maxDeviationBasisPoints;
+
+        console.log("getPrice diffBasisPoints %s maxDeviationBasisPoints %s hasSpread %s", diffBasisPoints, maxDeviationBasisPoints, hasSpread);
 
         if (hasSpread) {
             // return the higher of the two prices
@@ -358,12 +365,15 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         }
 
         if (disableFastPriceVoteCount >= minAuthorizations) {
+            console.log("favorFastPrice disableFastPriceVoteCount %s minAuthorizations %s", disableFastPriceVoteCount, minAuthorizations);
             // force a spread if watchers have flagged an issue with the fast price
             return false;
         }
 
         (/* uint256 prevRefPrice */, /* uint256 refTime */, uint256 cumulativeRefDelta, uint256 cumulativeFastDelta) = getPriceData(_token);
         if (cumulativeFastDelta > cumulativeRefDelta && cumulativeFastDelta.sub(cumulativeRefDelta) > maxCumulativeDeltaDiffs[_token]) {
+            console.log("favorFastPrice cumulativeFastDelta %s cumulativeRefDelta %s", cumulativeFastDelta, cumulativeRefDelta);
+            console.log("favorFastPrice cumulativeDelta diff %s maxCumulativeDeltaDiffs %s", cumulativeFastDelta.sub(cumulativeRefDelta), maxCumulativeDeltaDiffs[_token]);
             // force a spread if the cumulative delta for the fast price feed exceeds the cumulative delta
             // for the Chainlink price feed by the maxCumulativeDeltaDiff allowed
             return false;
@@ -401,6 +411,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     function _setPrice(address _token, uint256 _price, address _vaultPriceFeed, address _fastPriceEvents) private {
+        console.log("setPrice token %s price %s vaultPriceFeed %s", _token, _price, _vaultPriceFeed);
         if (_vaultPriceFeed != address(0)) {
             uint256 refPrice = IVaultPriceFeed(_vaultPriceFeed).getLatestPrimaryPrice(_token);
             uint256 fastPrice = prices[_token];
@@ -424,7 +435,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
             if (cumulativeFastDelta > cumulativeRefDelta && cumulativeFastDelta.sub(cumulativeRefDelta) > maxCumulativeDeltaDiffs[_token]) {
                 emit MaxCumulativeDeltaDiffExceeded(_token, refPrice, fastPrice, cumulativeRefDelta, cumulativeFastDelta);
             }
-
+            console.log("setPrice refPrice %s cumulativeRefDelta %s cumulativeFastDelta %s", refPrice, cumulativeRefDelta, cumulativeFastDelta);
             _setPriceData(_token, refPrice, cumulativeRefDelta, cumulativeFastDelta);
             emit PriceData(_token, refPrice, fastPrice, cumulativeRefDelta, cumulativeFastDelta);
         }
