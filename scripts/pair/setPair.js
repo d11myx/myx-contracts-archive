@@ -29,7 +29,7 @@ async function main() {
     addLpFeeP: 100
   };
   let tradingConfig = {
-    minLeverage: 2,
+    minLeverage: 0,
     maxLeverage: 100,
     minTradeAmount: "1000000000000000",
     maxTradeAmount: "100000000000000000000000",
