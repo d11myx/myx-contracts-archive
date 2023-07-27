@@ -11,7 +11,7 @@ describe('Router: Edge cases', () => {
   before(async () => {
     const { btc, vaultPriceFeed } = testEnv;
 
-    const priceFeedFactory = await ethers.getContractFactory('PriceFeed');
+    const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
     const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
     const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
     await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
