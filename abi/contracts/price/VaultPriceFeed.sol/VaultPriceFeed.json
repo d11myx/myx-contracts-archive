@@ -213,54 +213,6 @@
         "type": "address"
       }
     ],
-    "name": "getAmmPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_primaryPrice",
-        "type": "uint256"
-      }
-    ],
-    "name": "getAmmPriceV2",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      }
-    ],
     "name": "getLatestPrimaryPrice",
     "outputs": [
       {
@@ -307,16 +259,6 @@
         "internalType": "bool",
         "name": "_maximise",
         "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "_includeAmmPrice",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "name": "getPrice",
@@ -341,11 +283,6 @@
         "internalType": "bool",
         "name": "_maximise",
         "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "_includeAmmPrice",
-        "type": "bool"
       }
     ],
     "name": "getPriceV1",
@@ -369,11 +306,6 @@
       {
         "internalType": "bool",
         "name": "_maximise",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "_includeAmmPrice",
         "type": "bool"
       }
     ],
@@ -653,19 +585,6 @@
       }
     ],
     "name": "setGov",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_isEnabled",
-        "type": "bool"
-      }
-    ],
-    "name": "setIsAmmEnabled",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
