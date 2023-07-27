@@ -55,6 +55,18 @@
         "internalType": "bool",
         "name": "needADL",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
       }
     ],
     "name": "ExecuteDecreaseOrder",
@@ -110,6 +122,18 @@
         "internalType": "uint256",
         "name": "price",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
       }
     ],
     "name": "ExecuteIncreaseOrder",

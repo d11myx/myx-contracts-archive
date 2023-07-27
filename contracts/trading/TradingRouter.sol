@@ -238,7 +238,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     }
 
     // 创建减仓订单
-    function createDecreaseOrder(DecreasePositionRequest memory _request) external nonReentrant returns (uint256 orderId) {
+    function createDecreaseOrder(DecreasePositionRequest memory _request) external nonReentrant returns (uint256) {
         console.log("createDecreaseOrder pairIndex", _request.pairIndex, "tradeType", uint8(_request.tradeType));
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
 
@@ -306,7 +306,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         emit CreateDecreaseOrder(
             account,
-            orderId,
+            order.orderId,
             _request.tradeType,
             _request.collateral,
             _request.pairIndex,
@@ -315,7 +315,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             _request.isLong,
             order.abovePrice
         );
-        return orderId;
+        return order.orderId;
     }
 
     // 取消减仓订单
