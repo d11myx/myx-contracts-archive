@@ -645,6 +645,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 price = tradingUtils.getValidPrice(order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
+            console.log();
             ITradingVault.Position memory adlPosition = adlPositions[i];
             uint256 orderId = tradingRouter.createDecreaseOrder(
                 ITradingRouter.DecreasePositionRequest(
