@@ -30,7 +30,7 @@ async function main() {
     console.log(repeatString('-'))
     console.log(symbol)
     let token = await getConfig("Token-" + symbol);
-    let priceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-" + symbol))
+    let priceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-" + symbol))
     let decimals = await vaultPriceFeed.priceDecimals(token);
     let lastRound = await priceFeed.latestRound();
     console.log(`decimals: ${decimals}`)
