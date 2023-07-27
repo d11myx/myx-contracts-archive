@@ -51,14 +51,14 @@ contract TradingUtils is ITradingUtils, Governable {
 
     function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, _isLong, false, false);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, _isLong);
         console.log("getPrice pairIndex %s isLong %s price %s", _pairIndex, _isLong, price);
         return price;
     }
 
     function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken, _isLong, false, false);
+        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken, _isLong);
         console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
 
         uint256 indexPrice = vaultPriceFeed.getSecondaryPrice(pair.indexToken, 0, _isLong);
@@ -96,7 +96,7 @@ contract TradingUtils is ITradingUtils, Governable {
         return pnl;
     }
 
-    function validLeverage(address account, uint256 pairIndex, bool isLong, int256 _collateral, uint256 _sizeAmount, bool _increase) public {
+    function validLeverage(address account, uint256 pairIndex, bool isLong, int256 _collateral, uint256 _sizeAmount, bool _increase) public  view{
         bytes32 key = getPositionKey(account, pairIndex, isLong);
         ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
         uint256 price = getPrice(pairIndex, isLong);

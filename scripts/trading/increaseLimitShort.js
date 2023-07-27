@@ -13,7 +13,7 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
