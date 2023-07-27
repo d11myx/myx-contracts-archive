@@ -6,7 +6,6 @@ import "./interfaces/IVaultPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
-import "./interfaces/IPancakePair.sol";
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
@@ -89,7 +88,8 @@ contract VaultPriceFeed is IVaultPriceFeed {
     function setUseV2Pricing(bool _useV2Pricing) external override onlyGov {
         useV2Pricing = _useV2Pricing;
     }
-    
+
+
     function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyGov {
         isSecondaryPriceEnabled = _isEnabled;
     }
@@ -163,6 +163,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
         uint256 price = getPrimaryPrice(_token, _maximise);
         console.log("getPriceV1 getPrimaryPrice", price);
 
+    
         if (isSecondaryPriceEnabled) {
             price = getSecondaryPrice(_token, price, _maximise);
             console.log("getPriceV1 getSecondaryPrice", price);
@@ -308,15 +309,5 @@ contract VaultPriceFeed is IVaultPriceFeed {
         return ISecondaryPriceFeed(secondaryPriceFeed).getPrice(_token, _referencePrice, _maximise);
     }
 
-    // if divByReserve0: calculate price as reserve1 / reserve0
-    // if !divByReserve1: calculate price as reserve0 / reserve1
-    function getPairPrice(address _pair, bool _divByReserve0) public view returns (uint256) {
-        (uint256 reserve0, uint256 reserve1, ) = IPancakePair(_pair).getReserves();
-        if (_divByReserve0) {
-            if (reserve0 == 0) { return 0; }
-            return reserve1.mul(PRICE_PRECISION).div(reserve0);
-        }
-        if (reserve1 == 0) { return 0; }
-        return reserve0.mul(PRICE_PRECISION).div(reserve1);
-    }
+  
 }
