@@ -485,7 +485,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                     IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
                     pairVault.increaseProfit(_pairIndex, profit);
                 }
-                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(prevNetExposureAmountChecker)).divPrice(price));
+                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(prevNetExposureAmountChecker)).mulPrice(price));
                 console.log("decreasePosition BTC Long to Short update averagePrice", price);
                 pairVault.updateAveragePrice(_pairIndex, price);
             }
@@ -527,7 +527,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                     console.log("decreasePosition STC decreaseProfit", profit);
                     pairVault.decreaseProfit(_pairIndex, profit, price);
                 }
-                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(- prevNetExposureAmountChecker)).divPrice(price));
+                pairVault.increaseReserveAmount(_pairIndex, 0, (_sizeAmount - uint256(- prevNetExposureAmountChecker)).mulPrice(price));
                 console.log("decreasePosition STC Long to Short update averagePrice", price);
                 pairVault.updateAveragePrice(_pairIndex, price);
             }

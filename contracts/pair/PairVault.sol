@@ -37,38 +37,38 @@ contract PairVault is IPairVault, Handleable {
 
     function increaseTotalAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler {
         Vault storage vault = vaults[_pairIndex];
-        console.log("increaseTotalAmount indexTotalAmount", vault.indexTotalAmount, "indexReservedAmount", vault.indexReservedAmount);
-        console.log("increaseTotalAmount stableTotalAmount", vault.stableTotalAmount, "stableReservedAmount", vault.stableReservedAmount);
+        console.log("increaseTotalAmount before indexTotalAmount", vault.indexTotalAmount, "stableTotalAmount", vault.stableTotalAmount);
         console.log("increaseTotalAmount _indexAmount", _indexAmount, "_stableAmount", _stableAmount);
         vault.indexTotalAmount = vault.indexTotalAmount + _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount + _stableAmount;
+        console.log("increaseTotalAmount after indexTotalAmount", vault.indexTotalAmount, "stableTotalAmount", vault.stableTotalAmount);
     }
 
     function decreaseTotalAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler {
         Vault storage vault = vaults[_pairIndex];
-        console.log("decreaseTotalAmount indexTotalAmount", vault.indexTotalAmount, "indexReservedAmount", vault.indexReservedAmount);
-        console.log("decreaseTotalAmount stableTotalAmount", vault.stableTotalAmount, "stableReservedAmount", vault.stableReservedAmount);
+        console.log("decreaseTotalAmount before indexTotalAmount", vault.indexTotalAmount, "stableTotalAmount", vault.stableTotalAmount);
         console.log("decreaseTotalAmount _indexAmount", _indexAmount, "_stableAmount", _stableAmount);
         vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
+        console.log("decreaseTotalAmount after indexTotalAmount", vault.indexTotalAmount, "stableTotalAmount", vault.stableTotalAmount);
     }
 
     function increaseReserveAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler {
         Vault storage vault = vaults[_pairIndex];
-        console.log("increaseReserveAmount indexTotalAmount", vault.indexTotalAmount, "indexReservedAmount", vault.indexReservedAmount);
-        console.log("increaseReserveAmount stableTotalAmount", vault.stableTotalAmount, "stableReservedAmount", vault.stableReservedAmount);
+        console.log("increaseReserveAmount before indexReservedAmount", vault.indexReservedAmount, "stableReservedAmount", vault.stableReservedAmount);
         console.log("increaseReserveAmount _indexAmount", _indexAmount, "_stableAmount", _stableAmount);
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
+        console.log("increaseReserveAmount after indexReservedAmount", vault.indexReservedAmount, "stableReservedAmount", vault.stableReservedAmount);
     }
 
     function decreaseReserveAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler {
         Vault storage vault = vaults[_pairIndex];
-        console.log("decreaseReserveAmount indexTotalAmount", vault.indexTotalAmount, "indexReservedAmount", vault.indexReservedAmount);
-        console.log("decreaseReserveAmount stableTotalAmount", vault.stableTotalAmount, "stableReservedAmount", vault.stableReservedAmount);
+        console.log("decreaseReserveAmount before indexReservedAmount", vault.indexReservedAmount, "stableReservedAmount", vault.stableReservedAmount);
         console.log("decreaseReserveAmount _indexAmount", _indexAmount, "_stableAmount", _stableAmount);
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
+        console.log("decreaseReserveAmount after indexReservedAmount", vault.indexReservedAmount, "stableReservedAmount", vault.stableReservedAmount);
     }
 
     function transferTokenTo(address token, address to, uint256 amount) external onlyHandler {
