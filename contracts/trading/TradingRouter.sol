@@ -24,7 +24,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     using Math for uint256;
     using Int256Utils for int256;
 
-    // 市价开仓
+
     event CreateIncreaseOrder(
         address account,
         uint256 orderId,
@@ -60,29 +60,29 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     ITradingVault public tradingVault;
     ITradingUtils public tradingUtils;
 
-    // 市价请求
+    
     mapping(uint256 => IncreasePositionOrder) public increaseMarketOrders;
     mapping(uint256 => DecreasePositionOrder) public decreaseMarketOrders;
-    // 当前市价开仓请求最后index
+    
     uint256 public increaseMarketOrdersIndex;
     uint256 public decreaseMarketOrdersIndex;
-    // 当前市价开仓请求未执行订单起始index
+    
     uint256 public increaseMarketOrderStartIndex;
     uint256 public decreaseMarketOrderStartIndex;
 
-    // 限价请求
+    
     mapping(uint256 => IncreasePositionOrder) public increaseLimitOrders;
     mapping(uint256 => DecreasePositionOrder) public decreaseLimitOrders;
     uint256 public increaseLimitOrdersIndex;
     uint256 public decreaseLimitOrdersIndex;
 
-    // 用户订单列表
+    
     mapping(bytes32 => PositionOrder[]) public positionOrders;
-    // 仓位订单index
+    
     mapping(bytes32 => mapping(bytes32 => uint256)) public positionOrderIndex;
-    // 用户已委托减仓总额
+    
     mapping(bytes32 => uint256) public positionDecreaseTotalAmount;
-    // 仓位是否已委托TP/SL
+    
     mapping(bytes32 => mapping(TradeType => bool)) public positionHasTpSl;
 
     function initialize(
@@ -111,7 +111,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         tradingUtils = _tradingUtils;
     }
 
-    // 创建加仓订单
+    
     function createIncreaseOrder(IncreasePositionRequest memory _request) external nonReentrant returns (uint256) {
         console.log("createIncreaseOrder pairIndex", _request.pairIndex, "tradeType", uint8(_request.tradeType));
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
@@ -199,7 +199,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         return order.orderId;
     }
 
-    // 取消加仓订单
+
     function cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
         console.log("cancelIncreaseOrder orderId", _orderId, "tradeType", uint8(_tradeType));
 
@@ -237,7 +237,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         emit CancelIncreaseOrder(order.account, _orderId, _tradeType);
     }
 
-    // 创建减仓订单
+
     function createDecreaseOrder(DecreasePositionRequest memory _request) external nonReentrant returns (uint256) {
         console.log("createDecreaseOrder pairIndex", _request.pairIndex, "tradeType", uint8(_request.tradeType));
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
@@ -273,8 +273,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             _request.triggerPrice,
             _request.sizeAmount,
             _request.isLong,
-        // 市价单：开多 true 空 false
-        // 限价单：开多 false 空 true
+    
             _request.tradeType == TradeType.MARKET ? _request.isLong : !_request.isLong,
             block.timestamp,
             false
@@ -318,7 +317,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         return order.orderId;
     }
 
-    // 取消减仓订单
+    
     function cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType) public nonReentrant {
         DecreasePositionOrder memory order = getDecreaseOrder(_orderId, _tradeType);
         console.log("cancelDecreaseOrder orderId", _orderId, "tradeType", uint8(order.tradeType));
@@ -377,7 +376,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         }
     }
 
-    // 创建止盈止损
+
     function createTpSl(CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId) {
         console.log("createTpSl pairIndex", _request.pairIndex, "createTpSl isLong", _request.isLong);
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
