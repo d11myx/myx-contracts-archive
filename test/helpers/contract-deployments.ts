@@ -1,12 +1,11 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
   ExecuteRouter,
-  FastPriceEvents,
   FastPriceFeed,
   PairInfo,
   PairLiquidity,
   PairVault,
-  PriceFeed,
+  MockPriceFeed,
   Token,
   TradingRouter,
   TradingUtils,
@@ -65,8 +64,8 @@ export async function deployPrice(deployer: SignerWithAddress) {
   const pairTokenAddresses = [];
   const pairTokenPrices = [];
   for (let pair of Object.keys(pairConfigs)) {
-    const priceFeed = (await deployContract('PriceFeed', [])) as any as PriceFeed;
-    console.log(`deployed PriceFeed with ${pair} at ${priceFeed.address}`);
+    const priceFeed = (await deployContract('MockPriceFeed', [])) as any as MockPriceFeed;
+    console.log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
 
     await priceFeed.connect(deployer.signer).setLatestAnswer(MOCK_PRICES[pair]);
     await priceFeed.connect(deployer.signer).setAdmin(deployer.address, true);
@@ -84,15 +83,13 @@ export async function deployPrice(deployer: SignerWithAddress) {
   }
   await vaultPriceFeed.setPriceSampleSpace(1);
 
-  const fastPriceEvents = (await deployContract('FastPriceEvents', [])) as any as FastPriceEvents;
-  console.log(`deployed FastPriceEvents at ${fastPriceEvents.address}`);
-
+  
   const fastPriceFeed = (await deployContract('FastPriceFeed', [
     5 * 60, // _priceDuration
     120 * 60, // _maxPriceUpdateDelay
     2, // _minBlockInterval
     250, // _maxDeviationBasisPoints
-    fastPriceEvents.address, // _fastPriceEvents
+  
     deployer.address, // _tokenManager
   ])) as any as FastPriceFeed;
   console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
@@ -102,14 +99,14 @@ export async function deployPrice(deployer: SignerWithAddress) {
   await fastPriceFeed.connect(deployer.signer).setPriceDataInterval(300);
   await fastPriceFeed.setMaxTimeDeviation(10000);
   await fastPriceFeed.setUpdater(deployer.address, true);
-  await fastPriceEvents.setIsPriceFeed(fastPriceFeed.address, true);
+  
   await fastPriceFeed.setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
   await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
   await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
   await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
 
-  return { vaultPriceFeed, fastPriceFeed, fastPriceEvents };
+  return { vaultPriceFeed, fastPriceFeed};
 }
 
 export async function deployPair(vaultPriceFeed: VaultPriceFeed, deployer: SignerWithAddress, weth: WETH) {

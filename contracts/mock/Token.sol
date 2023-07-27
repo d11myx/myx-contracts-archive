@@ -2,8 +2,10 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import "hardhat/console.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -29,17 +31,18 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract WETH is IERC20 {
+contract Token is IERC20 {
     using SafeMath for uint256;
+
+    mapping (address => uint256) private _balances;
+
+    mapping (address => mapping (address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
 
     string private _name;
     string private _symbol;
     uint8 private _decimals;
-
-    mapping (address => uint256) private _balances;
-    mapping (address => mapping (address => uint256)) private _allowances;
 
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
@@ -50,23 +53,27 @@ contract WETH is IERC20 {
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint8 decimals
-    ) public {
+    constructor(string memory name) public {
         _name = name;
-        _symbol = symbol;
-        _decimals = decimals;
+        _symbol = name;
+        _decimals = 18;
+    }
+
+    function mint(address account, uint256 amount) public {
+        _mint(account, amount);
+    }
+
+    function withdrawToken(address token, address account, uint256 amount) public {
+        IERC20(token).transfer(account, amount);
     }
 
     function deposit() public payable {
-        _balances[msg.sender] = _balances[msg.sender].add(msg.value);
+        _mint(msg.sender, msg.value);
     }
 
     function withdraw(uint256 amount) public {
-        require(_balances[msg.sender] >= amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
+        require(_balances[msg.sender] >= amount, "Token: insufficient balance");
+        _burn(msg.sender, amount);
         (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "unable to withdraw");
     }
@@ -219,6 +226,10 @@ contract WETH is IERC20 {
      * - `sender` must have a balance of at least `amount`.
      */
     function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+        console.log("transfer, sender: %s, recipient: %s, this: %s",
+            sender, recipient, amount);
+        console.log("transfer, token: %s, _msgSender: %s, balance: %s", address(this), _msgSender(), balanceOf(sender));
+
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
