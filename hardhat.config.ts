@@ -90,7 +90,7 @@ const config: HardhatUserConfig = {
       viaIR: true,
     },
   },
-  defaultNetwork: "local",
+  // defaultNetwork: 'local',
   // zksolc: {
   //   version: "1.3.8",
   //   compilerSource: "binary",
@@ -127,7 +127,7 @@ const config: HardhatUserConfig = {
         LOCAL_PRIVATE_KEY17,
         LOCAL_PRIVATE_KEY18,
         LOCAL_PRIVATE_KEY19,
-        LOCAL_PRIVATE_KEY20
+        LOCAL_PRIVATE_KEY20,
       ],
       gas: 4000000,
       gasPrice: 20000000000,
@@ -155,7 +155,7 @@ const config: HardhatUserConfig = {
         LOCAL_PRIVATE_KEY17,
         LOCAL_PRIVATE_KEY18,
         LOCAL_PRIVATE_KEY19,
-        LOCAL_PRIVATE_KEY20
+        LOCAL_PRIVATE_KEY20,
       ],
       // gas: gas,
       // gasPrice: gasPrice
