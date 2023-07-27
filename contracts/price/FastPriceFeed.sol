@@ -252,33 +252,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
-//    function setPricesWithBitsAndExecute(
-//        address _positionRouter,
-//        uint256 _priceBits,
-//        uint256 _timestamp,
-//        uint256 _endIndexForIncreasePositions,
-//        uint256 _endIndexForDecreasePositions,
-//        uint256 _maxIncreasePositions,
-//        uint256 _maxDecreasePositions
-//    ) external onlyUpdater {
-//        _setPricesWithBits(_priceBits, _timestamp);
-//
-//        IPositionRouter positionRouter = IPositionRouter(_positionRouter);
-//        uint256 maxEndIndexForIncrease = positionRouter.increasePositionRequestKeysStart().add(_maxIncreasePositions);
-//        uint256 maxEndIndexForDecrease = positionRouter.decreasePositionRequestKeysStart().add(_maxDecreasePositions);
-//
-//        if (_endIndexForIncreasePositions > maxEndIndexForIncrease) {
-//            _endIndexForIncreasePositions = maxEndIndexForIncrease;
-//        }
-//
-//        if (_endIndexForDecreasePositions > maxEndIndexForDecrease) {
-//            _endIndexForDecreasePositions = maxEndIndexForDecrease;
-//        }
-//
-//        positionRouter.executeIncreasePositions(_endIndexForIncreasePositions, payable(msg.sender));
-//        positionRouter.executeDecreasePositions(_endIndexForDecreasePositions, payable(msg.sender));
-//    }
-
     function disableFastPrice() external onlySigner {
         require(!disableFastPriceVotes[msg.sender], "FastPriceFeed: already voted");
         disableFastPriceVotes[msg.sender] = true;
