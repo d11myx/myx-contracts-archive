@@ -16,14 +16,11 @@ async function main() {
   let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
   let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
 
-  // create
+  // create increase
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   await usdt.mint(user3.address, expandDecimals(30000, 18))
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
-  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
-    [expandDecimals(30000, 30)],
-    await getBlockTime(await hre.ethers.provider) + 100)
 
   await usdt.connect(user3).approve(tradingRouter.address, expandDecimals(30000, 30));
 
@@ -32,14 +29,14 @@ async function main() {
     account: user3.address,
     pairIndex: 0,
     tradeType: 1,
-    collateral: expandDecimals(30000, 18),
+    collateral: expandDecimals(300000, 18),
     openPrice: expandDecimals(30000, 30),
     isLong: false,
-    sizeAmount: expandDecimals(5, 18),
-    tpPrice: expandDecimals(29000, 30),
-    tp: expandDecimals(1, 18),
-    slPrice: expandDecimals(31000, 30),
-    sl: expandDecimals(1, 18)
+    sizeAmount: expandDecimals(10, 18),
+    tpPrice: expandDecimals(0, 30),
+    tp: expandDecimals(0, 18),
+    slPrice: expandDecimals(0, 30),
+    sl: expandDecimals(0, 18)
   };
   await tradingRouter.connect(user3).createIncreaseOrder(request);
 
@@ -56,6 +53,41 @@ async function main() {
   console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(0);
+  console.log(`total btc: ${formatBalance(vault.indexTotalAmount)} reserve of btc: ${formatBalance(vault.indexReservedAmount)}`);
+  console.log(`total usdt: ${formatBalance(vault.stableTotalAmount)}  reserve of usdt: ${formatBalance(vault.stableReservedAmount)}`);
+
+  // create decrease
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(35000))
+  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
+    [expandDecimals(35000, 30)],
+    await getBlockTime(await hre.ethers.provider) + 100)
+
+  console.log(`position: ${await tradingVault.getPosition(user3.address, 0, true)}`)
+
+  orderId = await tradingRouter.decreaseLimitOrdersIndex();
+  request = {
+    account: user3.address,
+    pairIndex: 0,
+    tradeType: 1,
+    collateral: expandDecimals(0, 18),
+    triggerPrice: expandDecimals(35000, 30),
+    sizeAmount: expandDecimals(9, 18),
+    isLong: false
+  };
+  await tradingRouter.connect(user3).createDecreaseOrder(request)
+
+  console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`)
+  console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
+
+  // execute
+  await executeRouter.executeDecreaseOrder(orderId, 1);
+  // await executeRouter.executeDecreaseLimitOrders([orderId]);
+  console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`);
+  console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
+  console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
+  console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
+
+  vault = await pairVault.getVault(0);
   console.log(`total btc: ${formatBalance(vault.indexTotalAmount)} reserve of btc: ${formatBalance(vault.indexReservedAmount)}`);
   console.log(`total usdt: ${formatBalance(vault.stableTotalAmount)}  reserve of usdt: ${formatBalance(vault.stableReservedAmount)}`);
 

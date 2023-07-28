@@ -207,6 +207,17 @@ async function deployUpgradeableContract(name, args, label, options) {
   return contract
 }
 
+async function updateContract(name, address, options) {
+  const contractFactory = await hre.ethers.getContractFactory(name, options)
+
+  console.log(`Update [${name}] starting`)
+  let contract = await hre.upgrades.upgradeProxy(address, contractFactory)
+  let adminAddr = await hre.upgrades.erc1967.getAdminAddress(address);
+  let implAddr = await hre.upgrades.erc1967.getImplementationAddress(address);
+  console.log(`upgrade success: ${contract.address}, adminAddr: ${adminAddr}, implAddr: ${implAddr}`);
+  console.log(repeatString("-"))
+}
+
 async function contractAt(name, address, provider, options) {
   let contractFactory = await ethers.getContractFactory(name, options)
   if (provider) {
@@ -286,5 +297,6 @@ module.exports = {
   processBatch,
   updateTokensPerInterval,
   sleep,
-  toChainLinkPrice
+  toChainLinkPrice,
+  updateContract
 }

@@ -16,11 +16,13 @@ import "../interfaces/IWETH.sol";
 import "./interfaces/IPairInfo.sol";
 import "./interfaces/IPairVault.sol";
 import "hardhat/console.sol";
+import "../libraries/Int256Utils.sol";
 
 contract PairVault is IPairVault, Handleable {
 
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
+    using Int256Utils for int256;
 
     IPairInfo public pairInfo;
 
@@ -92,6 +94,7 @@ contract PairVault is IPairVault, Handleable {
             "stableToken balance", IERC20(pairInfo.getPair(_pairIndex).stableToken).balanceOf(address(this)));
         vault.stableTotalAmount += _profit;
         vault.realisedPnl += int256(_profit);
+        console.log("decreaseReserveAmount after stableTotalAmount", vault.stableTotalAmount, "realisedPnl", vault.realisedPnl.toString());
     }
 
     function decreaseProfit(uint256 _pairIndex, uint256 _profit, uint256 _price) external onlyHandler {
@@ -113,6 +116,8 @@ contract PairVault is IPairVault, Handleable {
             vault.indexTotalAmount -= diffIndexAmount;
         }
         vault.realisedPnl -= int256(_profit);
+        console.log("decreaseReserveAmount after stableTotalAmount %s indexTotalAmount %s realisedPnl %s",
+            vault.stableTotalAmount, vault.indexTotalAmount, vault.realisedPnl.toString());
     }
 
 }
