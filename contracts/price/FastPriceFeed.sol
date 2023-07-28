@@ -48,7 +48,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     uint256 public override lastUpdatedAt;
     uint256 public override lastUpdatedBlock;
 
-    uint256 public priceDuration;
+    
     uint256 public maxPriceUpdateDelay;
     
     uint256 public minBlockInterval;
@@ -100,14 +100,13 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     constructor(
-      uint256 _priceDuration,
+      
       uint256 _maxPriceUpdateDelay,
       uint256 _minBlockInterval,
       uint256 _maxDeviationBasisPoints,
       address _tokenManager
     )  {
-        require(_priceDuration <= MAX_PRICE_DURATION, "FastPriceFeed: invalid _priceDuration");
-        priceDuration = _priceDuration;
+        
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
         minBlockInterval = _minBlockInterval;
         maxDeviationBasisPoints = _maxDeviationBasisPoints;
@@ -142,11 +141,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyGov {
         maxTimeDeviation = _maxTimeDeviation;
-    }
-
-    function setPriceDuration(uint256 _priceDuration) external override onlyGov {
-        require(_priceDuration <= MAX_PRICE_DURATION, "FastPriceFeed: invalid _priceDuration");
-        priceDuration = _priceDuration;
     }
 
     function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyGov {
@@ -248,29 +242,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         uint256 diffBasisPoints = _refPrice > fastPrice ? _refPrice.sub(fastPrice) : fastPrice.sub(_refPrice);
         diffBasisPoints = diffBasisPoints.mul(BASIS_POINTS_DIVISOR).div(_refPrice);
 
-        // create a spread between the _refPrice and the fastPrice if the maxDeviationBasisPoints is exceeded
-        // or if watchers have flagged an issue with the fast price
-        bool hasSpread = !favorFastPrice(_token) || diffBasisPoints > maxDeviationBasisPoints;
-
-        console.log("getPrice diffBasisPoints %s maxDeviationBasisPoints %s hasSpread %s", diffBasisPoints, maxDeviationBasisPoints, hasSpread);
-
-        if (hasSpread) {
-            // return the higher of the two prices
-            if (_maximise) {
-                return _refPrice > fastPrice ? _refPrice : fastPrice;
-            }
-
-            // return the lower of the two prices
-            return _refPrice < fastPrice ? _refPrice : fastPrice;
-        }
-
         return fastPrice;
-    }
-
-    function favorFastPrice(address _token) public view returns (bool) {
-    
-
-        return true;
     }
 
     function getPriceData(address _token) public view returns (uint256, uint256) {

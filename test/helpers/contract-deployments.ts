@@ -84,7 +84,7 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     await vaultPriceFeed.setPriceSampleSpace(1);
 
     const fastPriceFeed = (await deployContract('FastPriceFeed', [
-        5 * 60, // _priceDuration
+    
         120 * 60, // _maxPriceUpdateDelay
         2, // _minBlockInterval
         250, // _maxDeviationBasisPoints
