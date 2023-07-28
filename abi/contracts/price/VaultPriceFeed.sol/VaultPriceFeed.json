@@ -281,19 +281,6 @@
   },
   {
     "inputs": [],
-    "name": "isAmmEnabled",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "isSecondaryPriceEnabled",
     "outputs": [
       {
@@ -523,37 +510,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_spreadBasisPoints",
-        "type": "uint256"
-      }
-    ],
-    "name": "setSpreadBasisPoints",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_spreadThresholdBasisPoints",
-        "type": "uint256"
-      }
-    ],
-    "name": "setSpreadThresholdBasisPoints",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      },
-      {
         "internalType": "address",
         "name": "_priceFeed",
         "type": "address"
@@ -583,19 +539,6 @@
       }
     ],
     "name": "spreadBasisPoints",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "spreadThresholdBasisPoints",
     "outputs": [
       {
         "internalType": "uint256",

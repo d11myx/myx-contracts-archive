@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./interfaces/IVaultPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
@@ -26,7 +27,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
     address public gov;
     address public chainlinkFlags;
 
-    bool public isAmmEnabled = true;
     bool public isSecondaryPriceEnabled = true;
 
     bool public favorPrimaryPrice = false;
@@ -34,7 +34,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
     uint256 public priceSampleSpace = 3;
     uint256 public maxStrictPriceDeviation = 0;
     address public secondaryPriceFeed;
-    uint256 public spreadThresholdBasisPoints = 30;
 
     mapping (address => address) public priceFeeds;
     mapping (address => uint256) public priceDecimals;
@@ -84,15 +83,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
     function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyGov {
         secondaryPriceFeed = _secondaryPriceFeed;
-    }
-
-    function setSpreadBasisPoints(address _token, uint256 _spreadBasisPoints) external override onlyGov {
-        require(_spreadBasisPoints <= MAX_SPREAD_BASIS_POINTS, "VaultPriceFeed: invalid _spreadBasisPoints");
-        spreadBasisPoints[_token] = _spreadBasisPoints;
-    }
-
-    function setSpreadThresholdBasisPoints(uint256 _spreadThresholdBasisPoints) external override onlyGov {
-        spreadThresholdBasisPoints = _spreadThresholdBasisPoints;
     }
 
     function setFavorPrimaryPrice(bool _favorPrimaryPrice) external override onlyGov {
@@ -164,13 +154,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
             return ONE_USD;
         }
 
-        uint256 _spreadBasisPoints = spreadBasisPoints[_token];
-
-        if (_maximise) {
-            return price.mul(BASIS_POINTS_DIVISOR.add(_spreadBasisPoints)).div(BASIS_POINTS_DIVISOR);
-        }
-
-        return price.mul(BASIS_POINTS_DIVISOR.sub(_spreadBasisPoints)).div(BASIS_POINTS_DIVISOR);
+        return price;
     }
    
 
