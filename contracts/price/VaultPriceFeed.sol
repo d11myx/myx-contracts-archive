@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/IVaultPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
@@ -11,7 +11,7 @@ import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract VaultPriceFeed is IVaultPriceFeed {
+contract VaultPriceFeed is Ownable, IVaultPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -24,7 +24,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
     // Identifier of the Sequencer offline flag on the Flags contract
     address constant private FLAG_ARBITRUM_SEQ_OFFLINE = address(bytes20(bytes32(uint256(keccak256("chainlink.flags.arbitrum-seq-offline")) - 1)));
 
-    address public gov;
+
     address public chainlinkFlags;
 
     bool public isSecondaryPriceEnabled = true;
@@ -49,24 +49,13 @@ contract VaultPriceFeed is IVaultPriceFeed {
     mapping (address => bool) public override isAdjustmentAdditive;
     mapping (address => uint256) public lastAdjustmentTimings;
 
-    modifier onlyGov() {
-        require(msg.sender == gov, "VaultPriceFeed: forbidden");
-        _;
-    }
-
-    constructor()  {
-        gov = msg.sender;
-    }
-
-    function setGov(address _gov) external onlyGov {
-        gov = _gov;
-    }
-
-    function setChainlinkFlags(address _chainlinkFlags) external onlyGov {
+   
+   
+    function setChainlinkFlags(address _chainlinkFlags) external onlyOwner {
         chainlinkFlags = _chainlinkFlags;
     }
 
-    function setAdjustment(address _token, bool _isAdditive, uint256 _adjustmentBps) external override onlyGov {
+    function setAdjustment(address _token, bool _isAdditive, uint256 _adjustmentBps) external override onlyOwner {
         require(
             lastAdjustmentTimings[_token].add(MAX_ADJUSTMENT_INTERVAL) < block.timestamp,
             "VaultPriceFeed: adjustment frequency exceeded"
@@ -77,24 +66,24 @@ contract VaultPriceFeed is IVaultPriceFeed {
         lastAdjustmentTimings[_token] = block.timestamp;
     }
 
-    function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyGov {
+    function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyOwner {
         isSecondaryPriceEnabled = _isEnabled;
     }
 
-    function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyGov {
+    function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyOwner {
         secondaryPriceFeed = _secondaryPriceFeed;
     }
 
-    function setFavorPrimaryPrice(bool _favorPrimaryPrice) external override onlyGov {
+    function setFavorPrimaryPrice(bool _favorPrimaryPrice) external override onlyOwner {
         favorPrimaryPrice = _favorPrimaryPrice;
     }
 
-    function setPriceSampleSpace(uint256 _priceSampleSpace) external override onlyGov {
+    function setPriceSampleSpace(uint256 _priceSampleSpace) external override onlyOwner {
         require(_priceSampleSpace > 0, "VaultPriceFeed: invalid _priceSampleSpace");
         priceSampleSpace = _priceSampleSpace;
     }
 
-    function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external override onlyGov {
+    function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external override onlyOwner {
         maxStrictPriceDeviation = _maxStrictPriceDeviation;
     }
 
@@ -103,7 +92,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
         address _priceFeed,
         uint256 _priceDecimals,
         bool _isStrictStable
-    ) external override onlyGov {
+    ) external override onlyOwner {
         priceFeeds[_token] = _priceFeed;
         priceDecimals[_token] = _priceDecimals;
         strictStableTokens[_token] = _isStrictStable;
