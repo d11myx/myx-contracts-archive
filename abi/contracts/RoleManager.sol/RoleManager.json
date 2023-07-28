@@ -100,7 +100,7 @@
   },
   {
     "inputs": [],
-    "name": "EMERGENCY_ADMIN_ROLE",
+    "name": "KEEPER_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -113,7 +113,7 @@
   },
   {
     "inputs": [],
-    "name": "KEEPER_ROLE",
+    "name": "RISK_ADMIN_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
