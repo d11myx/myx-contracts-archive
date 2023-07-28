@@ -103,85 +103,7 @@
   },
   {
     "inputs": [],
-    "name": "bnb",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "bnbBusd",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "btc",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "btcBnb",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "chainlinkFlags",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "eth",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "ethBnb",
     "outputs": [
       {
         "internalType": "address",
@@ -594,29 +516,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_bnbBusd",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_ethBnb",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_btcBnb",
-        "type": "address"
-      }
-    ],
-    "name": "setPairs",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "_priceSampleSpace",
         "type": "uint256"
@@ -695,29 +594,6 @@
       }
     ],
     "name": "setTokenConfig",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_btc",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_eth",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_bnb",
-        "type": "address"
-      }
-    ],
-    "name": "setTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
