@@ -1,9 +1,11 @@
 ### 合约地址
-- [remote config](./scripts/config/remote_config.json)
-- RPC: http://18.166.30.91:8545/
-- ChainId: 31337
+
+-   [remote config](./scripts/config/remote_config.json)
+-   RPC: http://18.166.30.91:8545/
+-   ChainId: 31337
 
 ### 测试账户
+
 ```text
 Account #0 (admin): 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
 Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
@@ -70,6 +72,7 @@ Private Key: 0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e
 ### 合约接口
 
 #### event code
+
 ```text
 contract: TradingRouter
 event: CancelDecreaseOrder id: b225fd6bcccad9342bc10ccc7e25ef77175b77348c8393d669ac2dbc98a1ae29
@@ -91,7 +94,9 @@ event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a
 ```
 
 #### 开仓
-- TradingRouter
+
+-   TradingRouter
+
 ```text
 // 创建开仓请求（前端用户)
 createIncreaseOrder(IncreasePositionRequest memory request)
@@ -127,7 +132,9 @@ uint256 public increaseLimitOrdersIndex;
 uint256 public decreaseLimitOrdersIndex;
 
 ```
-- ExecuteRouter
+
+-   ExecuteRouter
+
 ```text
 // 设置price并执行市价订单
 setPricesWithBitsAndExecuteMarketOrders(
@@ -156,7 +163,9 @@ executeIncreaseOrder(uint256 _orderId, TradeType tradeType)
 ```
 
 #### 减仓
-- TradingRouter
+
+-   TradingRouter
+
 ```text
 // 创建减仓请求（前端用户)
 createIncreaseOrder(IncreasePositionRequest memory request)
@@ -176,7 +185,8 @@ struct DecreasePositionRequest {
 cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType)
 ```
 
-- ExecuteRouter
+-   ExecuteRouter
+
 ```text
 
 // 批量执行市价减仓（keeper: Account 0 / Account 1）, endIndex: 终止index
@@ -190,7 +200,9 @@ executeDecreaseOrder(uint256 _orderId, TradeType tradeType)
 ```
 
 #### 止盈止损
-- TradingRouter
+
+-   TradingRouter
+
 ```text
 // 单独创建止盈止损
 createTpSl(CreateTpSlRequest memory _request)
@@ -207,7 +219,9 @@ struct CreateTpSlRequest {
 ```
 
 #### 清算
-- ExecuteRouter
+
+-   ExecuteRouter
+
 ```text
 // 设置price并执行清算
 setPricesWithBitsAndLiquidatePositions(
@@ -221,7 +235,9 @@ function liquidatePositions(bytes32[] memory _positionKeys)
 ```
 
 #### ADL
-- ExecuteRouter
+
+-   ExecuteRouter
+
 ```text
 // 设置price并执行ADL
 setPricesWithBitsAndExecuteADL(
@@ -243,7 +259,9 @@ function executeADLAndDecreaseOrder(
 ```
 
 #### 手续费
-- TradingVault
+
+-   TradingVault
+
 ```text
 // 获取交易手续费
 function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount)
