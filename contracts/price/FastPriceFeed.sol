@@ -27,8 +27,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     uint256 public constant MAX_PRICE_DURATION = 30 minutes;
 
-    address public tokenManager;
-
     uint256 public override lastUpdatedAt;
     uint256 public override lastUpdatedBlock;
 
@@ -38,7 +36,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     uint256 public minBlockInterval;
     uint256 public maxTimeDeviation;
 
-    uint256 public priceDataInterval;
 
 
 
@@ -57,11 +54,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         _;
     }
 
-    modifier onlyTokenManager() {
-        require(msg.sender == tokenManager, "FastPriceFeed: forbidden");
-        _;
-    }
-
     constructor(
       
       uint256 _maxPriceUpdateDelay,
@@ -72,7 +64,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
         minBlockInterval = _minBlockInterval;
-        tokenManager = _tokenManager;
         gov = msg.sender;
     }
 
@@ -94,14 +85,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyGov {
         lastUpdatedAt = _lastUpdatedAt;
-    }
-
-    function setTokenManager(address _tokenManager) external onlyTokenManager {
-        tokenManager = _tokenManager;
-    }
-
-    function setPriceDataInterval(uint256 _priceDataInterval) external override onlyTokenManager {
-        priceDataInterval = _priceDataInterval;
     }
 
 
