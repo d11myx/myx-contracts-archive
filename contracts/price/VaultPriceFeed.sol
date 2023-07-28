@@ -36,13 +36,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
     address public secondaryPriceFeed;
     uint256 public spreadThresholdBasisPoints = 30;
 
-    address public btc;
-    address public eth;
-    address public bnb;
-    address public bnbBusd;
-    address public ethBnb;
-    address public btcBnb;
-
     mapping (address => address) public priceFeeds;
     mapping (address => uint256) public priceDecimals;
     mapping (address => uint256) public spreadBasisPoints;
@@ -96,18 +89,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
     function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyGov {
         secondaryPriceFeed = _secondaryPriceFeed;
-    }
-
-    function setTokens(address _btc, address _eth, address _bnb) external onlyGov {
-        btc = _btc;
-        eth = _eth;
-        bnb = _bnb;
-    }
-
-    function setPairs(address _bnbBusd, address _ethBnb, address _btcBnb) external onlyGov {
-        bnbBusd = _bnbBusd;
-        ethBnb = _ethBnb;
-        btcBnb = _btcBnb;
     }
 
     function setSpreadBasisPoints(address _token, uint256 _spreadBasisPoints) external override onlyGov {
