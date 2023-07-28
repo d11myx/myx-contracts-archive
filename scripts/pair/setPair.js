@@ -33,6 +33,7 @@ async function main() {
     maxLeverage: 100,
     minTradeAmount: "1000000000000000",
     maxTradeAmount: "100000000000000000000000",
+    maxPositionAmount: "100000000000000000000000000",
     maintainMarginRate: 1000,
     priceSlipP: 100,
     maxPriceDeviationP: 50

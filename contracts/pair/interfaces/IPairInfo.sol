@@ -18,6 +18,7 @@ interface IPairInfo {
         uint256 maxLeverage;
         uint256 minTradeAmount;
         uint256 maxTradeAmount;
+        uint256 maxPositionAmount;
         uint256 maintainMarginRate; // 10000 for 100%
         uint256 priceSlipP;
         uint256 maxPriceDeviationP;
