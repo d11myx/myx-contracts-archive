@@ -30,32 +30,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      }
-    ],
-    "name": "DisableFastPrice",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      }
-    ],
-    "name": "EnableFastPrice",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint8",
         "name": "version",
         "type": "uint8"
@@ -142,45 +116,6 @@
   },
   {
     "inputs": [],
-    "name": "CUMULATIVE_DELTA_PRECISION",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MAX_CUMULATIVE_FAST_DELTA",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MAX_CUMULATIVE_REF_DELTA",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MAX_PRICE_DURATION",
     "outputs": [
       {
@@ -213,25 +148,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "disableFastPriceVotes",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -274,61 +190,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_minAuthorizations",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address[]",
-        "name": "_signers",
-        "type": "address[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "_updaters",
-        "type": "address[]"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isInitialized",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "isSigner",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -381,19 +242,6 @@
   },
   {
     "inputs": [],
-    "name": "maxDeviationBasisPoints",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "maxPriceUpdateDelay",
     "outputs": [
       {
@@ -420,33 +268,7 @@
   },
   {
     "inputs": [],
-    "name": "minAuthorizations",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "minBlockInterval",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "priceDataInterval",
     "outputs": [
       {
         "internalType": "uint256",
@@ -524,19 +346,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_maxDeviationBasisPoints",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxDeviationBasisPoints",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_maxPriceUpdateDelay",
         "type": "uint256"
       }
@@ -563,37 +372,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_minAuthorizations",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMinAuthorizations",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_minBlockInterval",
         "type": "uint256"
       }
     ],
     "name": "setMinBlockInterval",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_priceDataInterval",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPriceDataInterval",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -642,19 +425,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_tokenManager",
-        "type": "address"
-      }
-    ],
-    "name": "setTokenManager",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address[]",
         "name": "_tokens",
         "type": "address[]"
@@ -691,32 +461,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_vaultPriceFeed",
-        "type": "address"
-      }
-    ],
-    "name": "setVaultPriceFeed",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tokenManager",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -742,19 +486,6 @@
       }
     ],
     "name": "tokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vaultPriceFeed",
     "outputs": [
       {
         "internalType": "address",
