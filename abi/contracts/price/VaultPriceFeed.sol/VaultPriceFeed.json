@@ -207,30 +207,6 @@
         "type": "bool"
       }
     ],
-    "name": "getPriceV2",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
-      }
-    ],
     "name": "getPrimaryPrice",
     "outputs": [
       {
@@ -601,19 +577,6 @@
   {
     "inputs": [
       {
-        "internalType": "bool",
-        "name": "_useV2Pricing",
-        "type": "bool"
-      }
-    ],
-    "name": "setUseV2Pricing",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -652,19 +615,6 @@
       }
     ],
     "name": "strictStableTokens",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "useV2Pricing",
     "outputs": [
       {
         "internalType": "bool",
