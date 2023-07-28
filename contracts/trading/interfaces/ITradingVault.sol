@@ -20,7 +20,8 @@ interface ITradingVault {
         uint256 _pairIndex,
         int256 _collateral,
         uint256 _sizeAmount,
-        bool _isLong
+        bool _isLong,
+        uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
 
     function decreasePosition(
@@ -28,7 +29,8 @@ interface ITradingVault {
         uint256 _pairIndex,
         int256 _collateral,
         uint256 _sizeAmount,
-        bool _isLong
+        bool _isLong,
+        uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns (Position memory);
