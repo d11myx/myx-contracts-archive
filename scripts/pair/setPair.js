@@ -2,6 +2,7 @@ const {deployContract, contractAt} = require("../utils/helpers");
 const {expandDecimals} = require("../utils/utilities");
 const {mintWETH, getConfig, setConfig} = require("../utils/utils");
 const hre = require("hardhat");
+const {BigNumber} = require("ethers");
 
 async function main() {
   const addresses = {}
@@ -23,23 +24,25 @@ async function main() {
     stableToken: usdt.address,
     pairToken: "0x0000000000000000000000000000000000000000",
     enable: true,
-    kOfSwap: "100000000000000000000000000000000000000000000000000",
-    initPairRatio: 1000,
+    kOfSwap: expandDecimals(1, 50),
+    initPrice: expandDecimals(30000, 30),
     addLpFeeP: 100
   };
   let tradingConfig = {
-    minLeverage: 2,
+    minLeverage: 0,
     maxLeverage: 100,
-    minTradeAmount: "1000000000000000000",
+    minTradeAmount: "1000000000000000",
     maxTradeAmount: "100000000000000000000000",
     maintainMarginRate: 1000,
+    priceSlipP: 100,
+    maxPriceDeviationP: 50
   }
   let tradingFeeConfig = {
-    takerFeeP: 100, // 1%
-    makerFeeP: 100,
+    takerFeeP: 10, // 0.1%
+    makerFeeP: 10,
     lpDistributeP: 0,
     keeperDistributeP: 0,
-    treasuryDistributeP: 0,
+    treasuryDistributeP: 10000,
     refererDistributeP: 0
   }
   let fundingFeeConfig = {
@@ -49,19 +52,21 @@ async function main() {
     liquidityPremiumFactor: 10000,
     interest: 0,
     lpDistributeP: 0,
-    userDistributeP: 0,
+    userDistributeP: 10000,
     treasuryDistributeP: 0
   }
   console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\ntradingFeeConfig", tradingFeeConfig,
     "\nfundingFeeConfig", fundingFeeConfig);
+  // btc - usdt
   await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
   let pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
   console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken}`);
   await setConfig("Token-BTC-USDT", pairToken);
 
-  //
+  // eth - usdt
   pair.indexToken = eth.address;
+  pair.initPrice = expandDecimals(2000, 30);
   console.log("pair1: ", pair);
   await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig);
   pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
