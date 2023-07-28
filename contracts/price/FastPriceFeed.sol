@@ -48,8 +48,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     // allowed deviation from primary price
     uint256 public maxDeviationBasisPoints;
 
-    uint256 public minAuthorizations;
-
 
     mapping (address => bool) public isUpdater;
 
@@ -84,18 +82,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         maxDeviationBasisPoints = _maxDeviationBasisPoints;
         tokenManager = _tokenManager;
         gov = msg.sender;
-    }
-
-    function initialize(uint256 _minAuthorizations,  address[] memory _updaters) public onlyGov {
-        require(!isInitialized, "FastPriceFeed: already initialized");
-        isInitialized = true;
-
-        minAuthorizations = _minAuthorizations;
-
-        for (uint256 i = 0; i < _updaters.length; i++) {
-            address updater = _updaters[i];
-            isUpdater[updater] = true;
-        }
     }
 
     function setUpdater(address _account, bool _isActive) external override onlyGov {
@@ -134,9 +120,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         priceDataInterval = _priceDataInterval;
     }
 
-    function setMinAuthorizations(uint256 _minAuthorizations) external onlyTokenManager {
-        minAuthorizations = _minAuthorizations;
-    }
 
     function setTokens(address[] memory _tokens, uint256[] memory _tokenPrecisions) external onlyGov {
         require(_tokens.length == _tokenPrecisions.length, "FastPriceFeed: invalid lengths");

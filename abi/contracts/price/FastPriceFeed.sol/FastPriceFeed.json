@@ -30,32 +30,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      }
-    ],
-    "name": "DisableFastPrice",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      }
-    ],
-    "name": "EnableFastPrice",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint8",
         "name": "version",
         "type": "uint8"
@@ -130,45 +104,6 @@
   {
     "inputs": [],
     "name": "BITMASK_32",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "CUMULATIVE_DELTA_PRECISION",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MAX_CUMULATIVE_FAST_DELTA",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MAX_CUMULATIVE_REF_DELTA",
     "outputs": [
       {
         "internalType": "uint256",
@@ -261,24 +196,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_minAuthorizations",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address[]",
-        "name": "_updaters",
-        "type": "address[]"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "isInitialized",
     "outputs": [
@@ -365,19 +282,6 @@
   {
     "inputs": [],
     "name": "maxTimeDeviation",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minAuthorizations",
     "outputs": [
       {
         "internalType": "uint256",
@@ -512,19 +416,6 @@
       }
     ],
     "name": "setMaxTimeDeviation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_minAuthorizations",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMinAuthorizations",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
