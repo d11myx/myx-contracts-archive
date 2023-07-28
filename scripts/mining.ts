@@ -1,12 +1,11 @@
-const hre = require("hardhat");
+const hre = require('hardhat');
 async function main() {
-  await hre.network.provider.send("evm_setIntervalMining", [3000])
+    await hre.network.provider.send('evm_setIntervalMining', [3000]);
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error)
-    process.exit(1)
-  })
-
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
