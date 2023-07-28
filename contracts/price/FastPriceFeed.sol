@@ -14,12 +14,6 @@ pragma solidity 0.8.17;
 contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     using SafeMath for uint256;
 
-    // fit data in a uint256 slot to save gas costs
-    struct PriceDataItem {
-        uint160 refPrice; // Chainlink price
-        uint32 refTime; // last updated at time
-    }
-
     uint256 public constant PRICE_PRECISION = 10 ** 30;
 
     uint256 public constant CUMULATIVE_DELTA_PRECISION = 10 * 1000 * 1000;
@@ -63,7 +57,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     mapping (address => bool) public isUpdater;
 
     mapping (address => uint256) public prices;
-    mapping (address => PriceDataItem) public priceData;
+
 
 
     mapping (address => bool) public isSigner;
@@ -236,11 +230,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         return fastPrice;
     }
 
-    function getPriceData(address _token) public view returns (uint256, uint256) {
-        PriceDataItem memory data = priceData[_token];
-        return (uint256(data.refPrice), uint256(data.refTime));
-    }
-
     function _setPricesWithBits(uint256 _priceBits, uint256 _timestamp) private {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
@@ -270,36 +259,10 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
             uint256 refPrice = IVaultPriceFeed(_vaultPriceFeed).getLatestPrimaryPrice(_token);
             uint256 fastPrice = prices[_token];
 
-            (uint256 prevRefPrice, uint256 refTime) = getPriceData(_token);
-
-            if (prevRefPrice > 0) {
-                uint256 refDeltaAmount = refPrice > prevRefPrice ? refPrice.sub(prevRefPrice) : prevRefPrice.sub(refPrice);
-                uint256 fastDeltaAmount = fastPrice > _price ? fastPrice.sub(_price) : _price.sub(fastPrice);
-
-                
-            }
-
-            
-            _setPriceData(_token, refPrice);
             emit PriceData(_token, refPrice, fastPrice);
         }
 
         prices[_token] = _price;
-        _emitPriceEvent( _token, _price);
-    }
-
-    function _setPriceData(address _token, uint256 _refPrice) private {
-        require(_refPrice < MAX_REF_PRICE, "FastPriceFeed: invalid refPrice");
-        
-
-        priceData[_token] = PriceDataItem(
-            uint160(_refPrice),
-            uint32(block.timestamp)
-        );
-    }
-
-    function _emitPriceEvent( address _token, uint256 _price) private {
-        
         emit PriceUpdate(_token, _price, msg.sender);
     }
 
