@@ -280,19 +280,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "priceDataInterval",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -397,19 +384,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_priceDataInterval",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPriceDataInterval",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address[]",
         "name": "_tokens",
         "type": "address[]"
@@ -451,19 +425,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_tokenManager",
-        "type": "address"
-      }
-    ],
-    "name": "setTokenManager",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address[]",
         "name": "_tokens",
         "type": "address[]"
@@ -495,19 +456,6 @@
     "name": "setUpdater",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tokenManager",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

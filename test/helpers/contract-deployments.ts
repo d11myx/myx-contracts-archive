@@ -94,7 +94,7 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
 
     await fastPriceFeed.setUpdater(deployer.address, true);
     await fastPriceFeed.setTokens(pairTokenAddresses, [10, 10]);
-    await fastPriceFeed.connect(deployer.signer).setPriceDataInterval(300);
+    
     await fastPriceFeed.setMaxTimeDeviation(10000);
     await fastPriceFeed.setUpdater(deployer.address, true);
 

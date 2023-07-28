@@ -42,7 +42,7 @@ async function main() {
     await fastPriceFeed.setUpdater(user0.address, true);
     await fastPriceFeed.setUpdater(user1.address, true);
     await fastPriceFeed.setTokens([btc.address, eth.address], [10, 10]);
-    await fastPriceFeed.connect(user0).setPriceDataInterval(300);
+    
     await fastPriceFeed.setMaxTimeDeviation(300);
     await fastPriceFeed.setUpdater(user0.address, true);
     await fastPriceFeed.setUpdater(user1.address, true);
