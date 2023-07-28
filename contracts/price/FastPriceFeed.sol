@@ -18,8 +18,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     struct PriceDataItem {
         uint160 refPrice; // Chainlink price
         uint32 refTime; // last updated at time
-        // uint32 cumulativeRefDelta; // cumulative Chainlink price delta
-        // uint32 cumulativeFastDelta; // cumulative fast price delta
     }
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -66,7 +64,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     mapping (address => uint256) public prices;
     mapping (address => PriceDataItem) public priceData;
-    mapping (address => uint256) public maxCumulativeDeltaDiffs;
+
 
     mapping (address => bool) public isSigner;
     mapping (address => bool) public disableFastPriceVotes;
@@ -161,13 +159,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     function setMaxDeviationBasisPoints(uint256 _maxDeviationBasisPoints) external override onlyTokenManager {
         maxDeviationBasisPoints = _maxDeviationBasisPoints;
-    }
-
-    function setMaxCumulativeDeltaDiffs(address[] memory _tokens,  uint256[] memory _maxCumulativeDeltaDiffs) external override onlyTokenManager {
-        for (uint256 i = 0; i < _tokens.length; i++) {
-            address token = _tokens[i];
-            maxCumulativeDeltaDiffs[token] = _maxCumulativeDeltaDiffs[i];
-        }
     }
 
     function setPriceDataInterval(uint256 _priceDataInterval) external override onlyTokenManager {
