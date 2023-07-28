@@ -266,18 +266,5 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_useV2Pricing",
-        "type": "bool"
-      }
-    ],
-    "name": "setUseV2Pricing",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
   }
 ]

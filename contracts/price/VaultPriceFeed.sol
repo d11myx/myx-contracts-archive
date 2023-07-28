@@ -28,7 +28,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
     bool public isAmmEnabled = true;
     bool public isSecondaryPriceEnabled = true;
-    bool public useV2Pricing = false;
+
     bool public favorPrimaryPrice = false;
     // price round space
     uint256 public priceSampleSpace = 3;
@@ -78,11 +78,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
         lastAdjustmentTimings[_token] = block.timestamp;
     }
 
-    function setUseV2Pricing(bool _useV2Pricing) external override onlyGov {
-        useV2Pricing = _useV2Pricing;
-    }
-
-
     function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyGov {
         isSecondaryPriceEnabled = _isEnabled;
     }
@@ -125,7 +120,7 @@ contract VaultPriceFeed is IVaultPriceFeed {
     }
 
     function getPrice(address _token, bool _maximise) public override view returns (uint256) {
-        uint256 price = useV2Pricing ? getPriceV2(_token, _maximise) : getPriceV1(_token, _maximise);
+        uint256 price = getPriceV1(_token, _maximise);
 
         uint256 adjustmentBps = adjustmentBasisPoints[_token];
         if (adjustmentBps > 0) {
@@ -177,42 +172,6 @@ contract VaultPriceFeed is IVaultPriceFeed {
 
         return price.mul(BASIS_POINTS_DIVISOR.sub(_spreadBasisPoints)).div(BASIS_POINTS_DIVISOR);
     }
-
-    function getPriceV2(address _token, bool _maximise) public view returns (uint256) {
-        uint256 price = getPrimaryPrice(_token, _maximise);
-
-        if (isSecondaryPriceEnabled) {
-            price = getSecondaryPrice(_token, price, _maximise);
-        }
-
-        if (strictStableTokens[_token]) {
-            uint256 delta = price > ONE_USD ? price.sub(ONE_USD) : ONE_USD.sub(price);
-            if (delta <= maxStrictPriceDeviation) {
-                return ONE_USD;
-            }
-
-            // if _maximise and price is e.g. 1.02, return 1.02
-            if (_maximise && price > ONE_USD) {
-                return price;
-            }
-
-            // if !_maximise and price is e.g. 0.98, return 0.98
-            if (!_maximise && price < ONE_USD) {
-                return price;
-            }
-
-            return ONE_USD;
-        }
-
-        uint256 _spreadBasisPoints = spreadBasisPoints[_token];
-
-        if (_maximise) {
-            return price.mul(BASIS_POINTS_DIVISOR.add(_spreadBasisPoints)).div(BASIS_POINTS_DIVISOR);
-        }
-
-        return price.mul(BASIS_POINTS_DIVISOR.sub(_spreadBasisPoints)).div(BASIS_POINTS_DIVISOR);
-    }
-
    
 
     function getLatestPrimaryPrice(address _token) public override view returns (uint256) {
