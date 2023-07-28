@@ -18,8 +18,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     struct PriceDataItem {
         uint160 refPrice; // Chainlink price
         uint32 refTime; // last updated at time
-        // uint32 cumulativeRefDelta; // cumulative Chainlink price delta
-        // uint32 cumulativeFastDelta; // cumulative fast price delta
     }
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
