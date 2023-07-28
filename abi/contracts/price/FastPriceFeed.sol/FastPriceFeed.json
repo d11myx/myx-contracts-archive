@@ -89,55 +89,6 @@
         "internalType": "uint256",
         "name": "fastPrice",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "cumulativeRefDelta",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "cumulativeFastDelta",
-        "type": "uint256"
-      }
-    ],
-    "name": "MaxCumulativeDeltaDiffExceeded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "refPrice",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "fastPrice",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "cumulativeRefDelta",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "cumulativeFastDelta",
-        "type": "uint256"
       }
     ],
     "name": "PriceData",
@@ -349,16 +300,6 @@
     ],
     "name": "getPriceData",
     "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
       {
         "internalType": "uint256",
         "name": "",
@@ -588,16 +529,6 @@
       {
         "internalType": "uint32",
         "name": "refTime",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "cumulativeRefDelta",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "cumulativeFastDelta",
         "type": "uint32"
       }
     ],
@@ -839,24 +770,6 @@
       }
     ],
     "name": "setPricesWithBits",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isActive",
-        "type": "bool"
-      }
-    ],
-    "name": "setSigner",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
