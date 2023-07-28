@@ -5,7 +5,7 @@ pragma solidity 0.8.17;
 interface IFastPriceFeed {
     function lastUpdatedAt() external view returns (uint256);
     function lastUpdatedBlock() external view returns (uint256);
-    function setSigner(address _account, bool _isActive) external;
+
     function setUpdater(address _account, bool _isActive) external;
     function setPriceDuration(uint256 _priceDuration) external;
     function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external;
