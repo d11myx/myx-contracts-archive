@@ -15,7 +15,6 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
-    uint256 public constant ONE_USD = PRICE_PRECISION;
     uint256 public constant BASIS_POINTS_DIVISOR = 10000;
     uint256 public constant MAX_SPREAD_BASIS_POINTS = 50;
     uint256 public constant MAX_ADJUSTMENT_INTERVAL = 2 hours;
@@ -29,7 +28,6 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
     bool public isSecondaryPriceEnabled = true;
 
-    bool public favorPrimaryPrice = false;
     // price round space
     uint256 public priceSampleSpace = 3;
     uint256 public maxStrictPriceDeviation = 0;
@@ -37,13 +35,6 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
     mapping (address => address) public priceFeeds;
     mapping (address => uint256) public priceDecimals;
-    mapping (address => uint256) public spreadBasisPoints;
-    // Chainlink can return prices for stablecoins
-    // that differs from 1 USD by a larger percentage than stableSwapFeeBasisPoints
-    // we use strictStableTokens to cap the price to 1 USD
-    // this allows us to configure stablecoins like DAI as being a stableToken
-    // while not being a strictStableToken
-    mapping (address => bool) public strictStableTokens;
 
     mapping (address => uint256) public override adjustmentBasisPoints;
     mapping (address => bool) public override isAdjustmentAdditive;
@@ -51,10 +42,7 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
    
    
-    function setChainlinkFlags(address _chainlinkFlags) external onlyOwner {
-        chainlinkFlags = _chainlinkFlags;
-    }
-
+    
     function setAdjustment(address _token, bool _isAdditive, uint256 _adjustmentBps) external override onlyOwner {
         require(
             lastAdjustmentTimings[_token].add(MAX_ADJUSTMENT_INTERVAL) < block.timestamp,
@@ -66,16 +54,17 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
         lastAdjustmentTimings[_token] = block.timestamp;
     }
 
+    function setChainlinkFlags(address _chainlinkFlags) external onlyOwner {
+        chainlinkFlags = _chainlinkFlags;
+    }
+
+
     function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyOwner {
         isSecondaryPriceEnabled = _isEnabled;
     }
 
     function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyOwner {
         secondaryPriceFeed = _secondaryPriceFeed;
-    }
-
-    function setFavorPrimaryPrice(bool _favorPrimaryPrice) external override onlyOwner {
-        favorPrimaryPrice = _favorPrimaryPrice;
     }
 
     function setPriceSampleSpace(uint256 _priceSampleSpace) external override onlyOwner {
@@ -90,12 +79,11 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
     function setTokenConfig(
         address _token,
         address _priceFeed,
-        uint256 _priceDecimals,
-        bool _isStrictStable
+        uint256 _priceDecimals
     ) external override onlyOwner {
         priceFeeds[_token] = _priceFeed;
         priceDecimals[_token] = _priceDecimals;
-        strictStableTokens[_token] = _isStrictStable;
+    
     }
 
     function getPrice(address _token, bool _maximise) public override view returns (uint256) {
@@ -122,25 +110,6 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
         if (isSecondaryPriceEnabled) {
             price = getSecondaryPrice(_token, price, _maximise);
             console.log("getPriceV1 getSecondaryPrice", price);
-        }
-
-        if (strictStableTokens[_token]) {
-            uint256 delta = price > ONE_USD ? price.sub(ONE_USD) : ONE_USD.sub(price);
-            if (delta <= maxStrictPriceDeviation) {
-                return ONE_USD;
-            }
-
-            // if _maximise and price is e.g. 1.02, return 1.02
-            if (_maximise && price > ONE_USD) {
-                return price;
-            }
-
-            // if !_maximise and price is e.g. 0.98, return 0.98
-            if (!_maximise && price < ONE_USD) {
-                return price;
-            }
-
-            return ONE_USD;
         }
 
         return price;
