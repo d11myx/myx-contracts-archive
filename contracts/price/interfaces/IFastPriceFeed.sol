@@ -9,7 +9,7 @@ interface IFastPriceFeed {
     function setUpdater(address _account, bool _isActive) external;
 
     function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external;
-    
+
     function setMinBlockInterval(uint256 _minBlockInterval) external;
 
     function setMaxDeviationBasisPoints(uint256 _maxDeviationBasisPoints) external;
@@ -17,4 +17,5 @@ interface IFastPriceFeed {
     function setPriceDataInterval(uint256 _priceDataInterval) external;
     function setVaultPriceFeed(address _vaultPriceFeed) external;
     function setPricesWithBits(uint256 _priceBits, uint256 _timestamp) external;
+    function setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) external;
 }
