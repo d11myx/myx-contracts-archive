@@ -344,6 +344,11 @@
         "internalType": "bool",
         "name": "_isLong",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
       }
     ],
     "name": "decreasePosition",
@@ -658,6 +663,11 @@
         "internalType": "bool",
         "name": "_isLong",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
       }
     ],
     "name": "increasePosition",
@@ -1025,6 +1035,11 @@
       {
         "internalType": "uint256",
         "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
         "type": "uint256"
       }
     ],
