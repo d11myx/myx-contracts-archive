@@ -137,16 +137,18 @@ uint256 public decreaseLimitOrdersIndex;
 
 ```text
 // 设置price并执行市价订单
-setPricesWithBitsAndExecuteMarketOrders(
-    uint256 _priceBits,
+setPricesAndExecuteMarketOrders(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
-    uint256 _increaseEndIndex,  // 开仓市价单终止index
-    uint256 _decreaseEndIndex   // 减仓市价单终止index
+    uint256 _increaseEndIndex,
+    uint256 _decreaseEndIndex
 )
 
 // 设置price并执行限价订单
-setPricesWithBitsAndExecuteLimitOrders(
-    uint256 _priceBits,
+setPricesAndExecuteLimitOrders(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
     uint256[] memory _increaseOrderIds,
     uint256[] memory _decreaseOrderIds
@@ -224,8 +226,9 @@ struct CreateTpSlRequest {
 
 ```text
 // 设置price并执行清算
-setPricesWithBitsAndLiquidatePositions(
-    uint256 _priceBits,
+setPricesAndLiquidatePositions(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
     bytes32[] memory _positionKeys
 )
@@ -240,8 +243,9 @@ function liquidatePositions(bytes32[] memory _positionKeys)
 
 ```text
 // 设置price并执行ADL
-setPricesWithBitsAndExecuteADL(
-    uint256 _priceBits,
+setPricesAndExecuteADL(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
     bytes32[] memory _positionKeys,
     uint256[] memory _sizeAmounts,
@@ -250,7 +254,7 @@ setPricesWithBitsAndExecuteADL(
 )
 
 // 执行ADL及减仓订单
-function executeADLAndDecreaseOrder(
+executeADLAndDecreaseOrder(
     bytes32[] memory _positionKeys,         // 待执行ADL仓位key
     uint256[] memory _sizeAmounts,          // 待执行ADL仓位数量
     uint256 _orderId,                       // 待执行订单

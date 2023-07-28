@@ -121,24 +121,26 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         maxTimeDelay = _maxTimeDelay;
     }
 
-    function setPricesWithBitsAndExecuteMarketOrders(
-        uint256 _priceBits,
+    function setPricesAndExecuteMarketOrders(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         uint256 _increaseEndIndex,
         uint256 _decreaseEndIndex
     ) external onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.executeIncreaseMarketOrders(_increaseEndIndex);
         this.executeDecreaseMarketOrders(_decreaseEndIndex);
     }
 
-    function setPricesWithBitsAndExecuteLimitOrders(
-        uint256 _priceBits,
+    function setPricesAndExecuteLimitOrders(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         uint256[] memory _increaseOrderIds,
         uint256[] memory _decreaseOrderIds
     ) external onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.executeIncreaseLimitOrders(_increaseOrderIds);
         this.executeDecreaseLimitOrders(_decreaseOrderIds);
     }
@@ -526,12 +528,13 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         );
     }
 
-    function setPricesWithBitsAndLiquidatePositions(
-        uint256 _priceBits,
+    function setPricesAndLiquidatePositions(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         bytes32[] memory _positionKeys
     ) external nonReentrant onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.liquidatePositions(_positionKeys);
     }
 
@@ -619,15 +622,16 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         );
     }
 
-    function setPricesWithBitsAndExecuteADL(
-        uint256 _priceBits,
+    function setPricesAndExecuteADL(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         bytes32[] memory _positionKeys,
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
         ITradingRouter.TradeType _tradeType
     ) external nonReentrant onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.executeADLAndDecreaseOrder(_positionKeys, _sizeAmounts, _orderId, _tradeType);
     }
 
