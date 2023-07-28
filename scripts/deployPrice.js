@@ -37,7 +37,7 @@ async function main() {
 
 
   let fastPriceFeed = await deployContract("FastPriceFeed", [
-    5 * 60, // _priceDuration
+    
     120 * 60, // _maxPriceUpdateDelay
     2, // _minBlockInterval
     50, // _maxDeviationBasisPoints

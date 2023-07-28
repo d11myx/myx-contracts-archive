@@ -7,7 +7,7 @@ interface IFastPriceFeed {
     function lastUpdatedBlock() external view returns (uint256);
 
     function setUpdater(address _account, bool _isActive) external;
-    function setPriceDuration(uint256 _priceDuration) external;
+
     function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external;
     
     function setMinBlockInterval(uint256 _minBlockInterval) external;
