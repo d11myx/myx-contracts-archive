@@ -83,7 +83,11 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     }
     await vaultPriceFeed.setPriceSampleSpace(1);
 
-    let addressProvider = await deployContract('AddressesProvider',[]);
+    let addressProvider = await deployContract('AddressesProvider', []);
+    let rolemanager = await deployContract('RoleManager', [addressProvider.address]);
+    await addressProvider.setRolManager(rolemanager.address);
+    await rolemanager.addRiskAdmin(deployer.address);
+    await rolemanager.addKeeper(keeper.address);
     const fastPriceFeed = (await deployContract('FastPriceFeed', [
         addressProvider.address,
         120 * 60, // _maxPriceUpdateDelay
@@ -91,11 +95,11 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     ])) as any as FastPriceFeed;
     console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
 
-    await fastPriceFeed.setTokens(pairTokenAddresses, [10, 10]);
+    await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
 
-    await fastPriceFeed.setMaxTimeDeviation(10000);
+    await fastPriceFeed.connect(deployer.signer).setMaxTimeDeviation(10000);
 
-    await fastPriceFeed.setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
+    await fastPriceFeed.connect(keeper.signer).setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
     await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
     await vaultPriceFeed.setIsSecondaryPriceEnabled(false);

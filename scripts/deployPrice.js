@@ -32,21 +32,23 @@ async function main() {
     await usdtPriceFeed.setLatestAnswer(toChainLinkPrice(1));
     await usdtPriceFeed.setAdmin(user1.address, true);
     let addressProvider = await deployContract('AddressesProvider');
+    let rolemanager = await deployContract('RoleManager', [addressProvider.address]);
 
+    await addressProvider.setRolManager(rolemanager.address);
     let fastPriceFeed = await deployContract('FastPriceFeed', [
         addressProvider.address,
         120 * 60, // _maxPriceUpdateDelay
         2, // _minBlockInterval
     ]);
     console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`);
-    await fastPriceFeed.setUpdater(user0.address, true);
-    await fastPriceFeed.setUpdater(user1.address, true);
-    await fastPriceFeed.setTokens([btc.address, eth.address], [10, 10]);
+    await rolemanager.addRiskAdmin(user0.address);
+    await rolemanager.addKeeper(user0.address);
+    await rolemanager.addKeeper(user1.address);
+    
+    await fastPriceFeed.connect(user0).setTokens([btc.address, eth.address], [10, 10]);
 
     await fastPriceFeed.setMaxTimeDeviation(300);
-    await fastPriceFeed.setUpdater(user0.address, true);
-    await fastPriceFeed.setUpdater(user1.address, true);
-}
+    
 
 main()
     .then(() => process.exit(0))
