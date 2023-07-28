@@ -97,6 +97,7 @@ interface ITradingRouter {
     function createDecreaseOrder(DecreasePositionRequest memory _request) external returns (uint256 orderId);
     function cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType) external;
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
+    function cancelOrders(address account, uint256 pairIndex, bool isLong, bool isIncrease) external;
 
     function createTpSl(CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId);
 
