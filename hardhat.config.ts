@@ -42,135 +42,135 @@ const LOCAL_PRIVATE_KEY20 = '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e424
 const abiDecoder = require('abi-decoder');
 
 task('decode-event', 'decode trx event logs')
-  .addParam('hash', 'trx hash')
-  .setAction(async (param, hre) => {
-    const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
-    for (let fullName of fullNames) {
-      let contract = await hre.artifacts.readArtifact(fullName);
-      abiDecoder.addABI(contract.abi);
-    }
-    let receipt = await hre.ethers.provider.getTransactionReceipt(param.hash);
-    const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
-    for (let event of decodedLogs) {
-      console.log(event);
-    }
-  });
+    .addParam('hash', 'trx hash')
+    .setAction(async (param, hre) => {
+        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
+        for (let fullName of fullNames) {
+            let contract = await hre.artifacts.readArtifact(fullName);
+            abiDecoder.addABI(contract.abi);
+        }
+        let receipt = await hre.ethers.provider.getTransactionReceipt(param.hash);
+        const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
+        for (let event of decodedLogs) {
+            console.log(event);
+        }
+    });
 
 task('encode-event', 'get method artifact detail by method name')
-  .addOptionalParam('contract', 'contract name')
-  .setAction(async (param, hre) => {
-    const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
-    for (let fullName of fullNames) {
-      let contract = await hre.artifacts.readArtifact(fullName);
-      if (contract.contractName == param.contract) {
-        console.log(`contract:`, contract.contractName);
-        abiDecoder.addABI(contract.abi);
-      }
-    }
-    let methodObject = abiDecoder.getMethodIDs();
-    Object.keys(methodObject).forEach(function (methodId: string, index: number, arr: any) {
-      let method = methodObject[methodId];
-      if (method.type == 'event') {
-        console.log(`event: ${method.name} id: ${methodId}`);
-      }
+    .addOptionalParam('contract', 'contract name')
+    .setAction(async (param, hre) => {
+        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
+        for (let fullName of fullNames) {
+            let contract = await hre.artifacts.readArtifact(fullName);
+            if (contract.contractName == param.contract) {
+                console.log(`contract:`, contract.contractName);
+                abiDecoder.addABI(contract.abi);
+            }
+        }
+        let methodObject = abiDecoder.getMethodIDs();
+        Object.keys(methodObject).forEach(function (methodId: string, index: number, arr: any) {
+            let method = methodObject[methodId];
+            if (method.type == 'event') {
+                console.log(`event: ${method.name} id: ${methodId}`);
+            }
+        });
     });
-  });
 
 const gas = 'auto';
 const gasPrice = 'auto';
 
 const config: HardhatUserConfig = {
-  solidity: {
-    version: '0.8.17',
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 20,
-      },
-      viaIR: true,
+    solidity: {
+        version: '0.8.17',
+        settings: {
+            optimizer: {
+                enabled: true,
+                runs: 20,
+            },
+            viaIR: true,
+        },
     },
-  },
-  // defaultNetwork: "local",
-  // zksolc: {
-  //   version: "1.3.8",
-  //   compilerSource: "binary",
-  //   settings: {
-  //     libraries: {}, // optional. References to non-inlinable libraries
-  //     isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-  //     forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-  //     optimizer: {
-  //       enabled: true, // optional. True by default
-  //       mode: '3' // optional. 3 by default, z to optimize bytecode size
-  //     }
-  //   }
-  // },
-  networks: {
-    local: {
-      url: 'http://127.0.0.1:8545/',
-      accounts: [
-        LOCAL_PRIVATE_KEY1,
-        LOCAL_PRIVATE_KEY2,
-        LOCAL_PRIVATE_KEY3,
-        LOCAL_PRIVATE_KEY4,
-        LOCAL_PRIVATE_KEY5,
-        LOCAL_PRIVATE_KEY6,
-        LOCAL_PRIVATE_KEY7,
-        LOCAL_PRIVATE_KEY8,
-        LOCAL_PRIVATE_KEY9,
-        LOCAL_PRIVATE_KEY10,
-        LOCAL_PRIVATE_KEY11,
-        LOCAL_PRIVATE_KEY12,
-        LOCAL_PRIVATE_KEY13,
-        LOCAL_PRIVATE_KEY14,
-        LOCAL_PRIVATE_KEY15,
-        LOCAL_PRIVATE_KEY16,
-        LOCAL_PRIVATE_KEY17,
-        LOCAL_PRIVATE_KEY18,
-        LOCAL_PRIVATE_KEY19,
-        LOCAL_PRIVATE_KEY20,
-      ],
-      gas: 4000000,
-      gasPrice: 20000000000,
-      // zksync: true,
+    // defaultNetwork: "local",
+    // zksolc: {
+    //   version: "1.3.8",
+    //   compilerSource: "binary",
+    //   settings: {
+    //     libraries: {}, // optional. References to non-inlinable libraries
+    //     isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
+    //     forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
+    //     optimizer: {
+    //       enabled: true, // optional. True by default
+    //       mode: '3' // optional. 3 by default, z to optimize bytecode size
+    //     }
+    //   }
+    // },
+    networks: {
+        local: {
+            url: 'http://127.0.0.1:8545/',
+            accounts: [
+                LOCAL_PRIVATE_KEY1,
+                LOCAL_PRIVATE_KEY2,
+                LOCAL_PRIVATE_KEY3,
+                LOCAL_PRIVATE_KEY4,
+                LOCAL_PRIVATE_KEY5,
+                LOCAL_PRIVATE_KEY6,
+                LOCAL_PRIVATE_KEY7,
+                LOCAL_PRIVATE_KEY8,
+                LOCAL_PRIVATE_KEY9,
+                LOCAL_PRIVATE_KEY10,
+                LOCAL_PRIVATE_KEY11,
+                LOCAL_PRIVATE_KEY12,
+                LOCAL_PRIVATE_KEY13,
+                LOCAL_PRIVATE_KEY14,
+                LOCAL_PRIVATE_KEY15,
+                LOCAL_PRIVATE_KEY16,
+                LOCAL_PRIVATE_KEY17,
+                LOCAL_PRIVATE_KEY18,
+                LOCAL_PRIVATE_KEY19,
+                LOCAL_PRIVATE_KEY20,
+            ],
+            gas: 4000000,
+            gasPrice: 20000000000,
+            // zksync: true,
+        },
+        remote: {
+            url: 'http://18.166.30.91:8545/',
+            accounts: [
+                LOCAL_PRIVATE_KEY1,
+                LOCAL_PRIVATE_KEY2,
+                LOCAL_PRIVATE_KEY3,
+                LOCAL_PRIVATE_KEY4,
+                LOCAL_PRIVATE_KEY5,
+                LOCAL_PRIVATE_KEY6,
+                LOCAL_PRIVATE_KEY7,
+                LOCAL_PRIVATE_KEY8,
+                LOCAL_PRIVATE_KEY9,
+                LOCAL_PRIVATE_KEY10,
+                LOCAL_PRIVATE_KEY11,
+                LOCAL_PRIVATE_KEY12,
+                LOCAL_PRIVATE_KEY13,
+                LOCAL_PRIVATE_KEY14,
+                LOCAL_PRIVATE_KEY15,
+                LOCAL_PRIVATE_KEY16,
+                LOCAL_PRIVATE_KEY17,
+                LOCAL_PRIVATE_KEY18,
+                LOCAL_PRIVATE_KEY19,
+                LOCAL_PRIVATE_KEY20,
+            ],
+            // gas: gas,
+            // gasPrice: gasPrice
+        },
     },
-    remote: {
-      url: 'http://18.166.30.91:8545/',
-      accounts: [
-        LOCAL_PRIVATE_KEY1,
-        LOCAL_PRIVATE_KEY2,
-        LOCAL_PRIVATE_KEY3,
-        LOCAL_PRIVATE_KEY4,
-        LOCAL_PRIVATE_KEY5,
-        LOCAL_PRIVATE_KEY6,
-        LOCAL_PRIVATE_KEY7,
-        LOCAL_PRIVATE_KEY8,
-        LOCAL_PRIVATE_KEY9,
-        LOCAL_PRIVATE_KEY10,
-        LOCAL_PRIVATE_KEY11,
-        LOCAL_PRIVATE_KEY12,
-        LOCAL_PRIVATE_KEY13,
-        LOCAL_PRIVATE_KEY14,
-        LOCAL_PRIVATE_KEY15,
-        LOCAL_PRIVATE_KEY16,
-        LOCAL_PRIVATE_KEY17,
-        LOCAL_PRIVATE_KEY18,
-        LOCAL_PRIVATE_KEY19,
-        LOCAL_PRIVATE_KEY20,
-      ],
-      // gas: gas,
-      // gasPrice: gasPrice
+    etherscan: {
+        apiKey: 'M5SDQD75WPPKN8XTUZM86BE46VAGUEBCE8',
     },
-  },
-  etherscan: {
-    apiKey: 'M5SDQD75WPPKN8XTUZM86BE46VAGUEBCE8',
-  },
-  abiExporter: {
-    runOnCompile: true,
-    clear: true,
-  },
-  typechain: {
-    outDir: 'types',
-    target: 'ethers-v5',
-  },
+    abiExporter: {
+        runOnCompile: true,
+        clear: true,
+    },
+    typechain: {
+        outDir: 'types',
+        target: 'ethers-v5',
+    },
 };
 export default config;
