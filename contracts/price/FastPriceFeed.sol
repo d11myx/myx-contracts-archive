@@ -3,6 +3,7 @@
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import '../interfaces/IAddressProvider.sol';
+import '../interfaces/IRoleManager.sol';
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IVaultPriceFeed.sol";
@@ -50,13 +51,20 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     // should be 10 ** 3
     uint256[] public tokenPrecisions;
 
-    modifier onlyUpdater() {
-        require(isUpdater[msg.sender], "FastPriceFeed: forbidden");
+    IAddressProvider addressProvider;
+
+    modifier onlyKeeper() {
+        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
+        _;
+    }
+    
+     modifier onlyRiskAdmin() {
+        require(IRoleManager(addressProvider.getRoleManager()).isRiskAdmin(msg.sender), "onlyRiskAdmin");
         _;
     }
 
     constructor(
-      
+      IAddressProvider _addressProvider,
       uint256 _maxPriceUpdateDelay,
       uint256 _minBlockInterval
     )  {
@@ -64,36 +72,35 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
         minBlockInterval = _minBlockInterval;
         gov = msg.sender;
+        addressProvider=_addressProvider;
     }
 
-    function setUpdater(address _account, bool _isActive) external override onlyGov {
-        isUpdater[_account] = _isActive;
-    }
+  
 
-    function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyGov {
+    function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyRiskAdmin {
         maxTimeDeviation = _maxTimeDeviation;
     }
 
-    function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyGov {
+    function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyRiskAdmin {
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
     }
 
-    function setMinBlockInterval(uint256 _minBlockInterval) external override onlyGov {
+    function setMinBlockInterval(uint256 _minBlockInterval) external override onlyRiskAdmin {
         minBlockInterval = _minBlockInterval;
     }
 
-    function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyGov {
+    function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyRiskAdmin {
         lastUpdatedAt = _lastUpdatedAt;
     }
 
 
-    function setTokens(address[] memory _tokens, uint256[] memory _tokenPrecisions) external onlyGov {
+    function setTokens(address[] memory _tokens, uint256[] memory _tokenPrecisions) external onlyRiskAdmin {
         require(_tokens.length == _tokenPrecisions.length, "FastPriceFeed: invalid lengths");
         tokens = _tokens;
         tokenPrecisions = _tokenPrecisions;
     }
 
-    function setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) external onlyUpdater {
+    function setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) external onlyKeeper {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
         if (shouldUpdate) {
@@ -105,7 +112,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         }
     }
 
-    function setCompactedPrices(uint256[] memory _priceBitArray, uint256 _timestamp) external onlyUpdater {
+    function setCompactedPrices(uint256[] memory _priceBitArray, uint256 _timestamp) external onlyKeeper {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
         if (shouldUpdate) {
@@ -131,7 +138,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         }
     }
 
-    function setPricesWithBits(uint256 _priceBits, uint256 _timestamp) external onlyUpdater {
+    function setPricesWithBits(uint256 _priceBits, uint256 _timestamp) external onlyKeeper {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
