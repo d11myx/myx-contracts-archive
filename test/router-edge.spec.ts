@@ -2,7 +2,7 @@ import { SignerWithAddress, testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { waitForTx } from './helpers/tx';
 import { MAX_UINT_AMOUNT, TradeType } from './shared/constants';
-import { ITradingRouter, PriceFeed } from '../types';
+import { ITradingRouter, MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
 import { BigNumber } from 'ethers';
 
@@ -164,7 +164,7 @@ describe('Router: Edge cases', () => {
 
     describe('Router: ADL cases', () => {
         const pairIndex = 0;
-        let btcPriceFeed: PriceFeed;
+        let btcPriceFeed: MockPriceFeed;
 
         before(async () => {
             const { keeper, btc, vaultPriceFeed } = testEnv;
