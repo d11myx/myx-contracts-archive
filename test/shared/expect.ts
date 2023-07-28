@@ -7,6 +7,6 @@ use(jestSnapshotPlugin());
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
-    return this.toString();
+  return this.toString();
 };
 export { expect };

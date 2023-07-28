@@ -187,9 +187,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -382,6 +382,11 @@
         "type": "address"
       },
       {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_maxTimeDelay",
         "type": "uint256"
@@ -507,6 +512,11 @@
       {
         "internalType": "contract IFastPriceFeed",
         "name": "_fastPriceFeed",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
         "type": "address"
       },
       {
