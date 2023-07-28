@@ -118,23 +118,5 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isActive",
-        "type": "bool"
-      }
-    ],
-    "name": "setUpdater",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
   }
 ]

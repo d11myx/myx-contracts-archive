@@ -31,18 +31,18 @@ async function main() {
 
     await usdtPriceFeed.setLatestAnswer(toChainLinkPrice(1));
     await usdtPriceFeed.setAdmin(user1.address, true);
+    let addressProvider = await deployContract('AddressesProvider');
 
     let fastPriceFeed = await deployContract('FastPriceFeed', [
+        addressProvider.address,
         120 * 60, // _maxPriceUpdateDelay
         2, // _minBlockInterval
-        50, // _maxDeviationBasisPoints
-        user0.address, // _tokenManager
     ]);
     console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`);
     await fastPriceFeed.setUpdater(user0.address, true);
     await fastPriceFeed.setUpdater(user1.address, true);
     await fastPriceFeed.setTokens([btc.address, eth.address], [10, 10]);
-    
+
     await fastPriceFeed.setMaxTimeDeviation(300);
     await fastPriceFeed.setUpdater(user0.address, true);
     await fastPriceFeed.setUpdater(user1.address, true);
