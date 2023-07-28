@@ -4,7 +4,7 @@ const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\n increaseLimitShort")
+  console.log("\n testLpStableReserve")
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
@@ -21,6 +21,9 @@ async function main() {
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   await usdt.mint(user3.address, expandDecimals(30000, 18))
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
+  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
+    [expandDecimals(30000, 30)],
+    await getBlockTime(await hre.ethers.provider) + 100)
 
   await usdt.connect(user3).approve(tradingRouter.address, expandDecimals(30000, 30));
 
