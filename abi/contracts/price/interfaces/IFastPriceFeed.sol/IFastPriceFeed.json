@@ -99,19 +99,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_priceDuration",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPriceDuration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_priceBits",
         "type": "uint256"
       },
