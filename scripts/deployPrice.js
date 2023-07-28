@@ -39,9 +39,10 @@ async function main() {
         user0.address, // _tokenManager
     ]);
     console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`);
-    await fastPriceFeed.initialize(2, [user0.address, user1.address], [user0.address, user1.address]);
+    await fastPriceFeed.setUpdater(user0.address, true);
+    await fastPriceFeed.setUpdater(user1.address, true);
     await fastPriceFeed.setTokens([btc.address, eth.address], [10, 10]);
-    await fastPriceFeed.connect(user0).setPriceDataInterval(300);
+    
     await fastPriceFeed.setMaxTimeDeviation(300);
     await fastPriceFeed.setUpdater(user0.address, true);
     await fastPriceFeed.setUpdater(user1.address, true);
