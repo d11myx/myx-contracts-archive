@@ -6,20 +6,20 @@ export const MAX_UINT_AMOUNT = ethers.constants.MaxUint256;
 export const ZERO_ADDRESS = ethers.constants.AddressZero;
 
 export enum eEthereumNetwork {
-  main = 'mainnet',
-  goerli = 'goerli',
+    main = 'mainnet',
+    goerli = 'goerli',
 }
 
 export enum eBscNetwork {
-  main = 'mainnet',
-  test = 'testnet',
+    main = 'mainnet',
+    test = 'testnet',
 }
 
 export enum TradeType {
-  MARKET = 0,
-  LIMIT = 1,
-  TP = 2,
-  SL = 3,
+    MARKET = 0,
+    LIMIT = 1,
+    TP = 2,
+    SL = 3,
 }
 
 export type eNetwork = eEthereumNetwork | eBscNetwork;
@@ -27,10 +27,10 @@ export type eNetwork = eEthereumNetwork | eBscNetwork;
 export const Market = 'USDT';
 
 export function getMarketSymbol(): string {
-  return Market;
+    return Market;
 }
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {
-  BTC: parseUnits('30000', 8),
-  ETH: parseUnits('2000', 8),
+    BTC: parseUnits('30000', 8),
+    ETH: parseUnits('2000', 8),
 };
