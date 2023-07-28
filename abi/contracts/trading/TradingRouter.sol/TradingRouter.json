@@ -1168,11 +1168,6 @@
         "internalType": "contract ITradingUtils",
         "name": "_tradingUtils",
         "type": "address"
-      },
-      {
-        "internalType": "contract ITradingUtils",
-        "name": "_tradingUtils",
-        "type": "address"
       }
     ],
     "name": "initialize",
@@ -1463,11 +1458,6 @@
       {
         "internalType": "contract ITradingVault",
         "name": "_tradingVault",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ITradingUtils",
-        "name": "_tradingUtils",
         "type": "address"
       },
       {
