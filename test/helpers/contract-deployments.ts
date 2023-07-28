@@ -74,7 +74,7 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
         if (!pairTokenAddress) {
             throw `wait for deployed before using`;
         }
-        await vaultPriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8, false);
+        await vaultPriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8);
 
         pairTokenAddresses.push(pairTokenAddress);
         pairTokenPrices.push(
@@ -84,7 +84,6 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     await vaultPriceFeed.setPriceSampleSpace(1);
 
     const fastPriceFeed = (await deployContract('FastPriceFeed', [
-    
         120 * 60, // _maxPriceUpdateDelay
         2, // _minBlockInterval
         250, // _maxDeviationBasisPoints
