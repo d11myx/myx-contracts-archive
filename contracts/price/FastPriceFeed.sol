@@ -16,11 +16,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
 
-    uint256 public constant CUMULATIVE_DELTA_PRECISION = 10 * 1000 * 1000;
-
     uint256 public constant MAX_REF_PRICE = type(uint160).max;
-    uint256 public constant MAX_CUMULATIVE_REF_DELTA = type(uint32).max;
-    uint256 public constant MAX_CUMULATIVE_FAST_DELTA = type(uint32).max;
+    
 
     // uint256(~0) is 256 bits of 1s
     // shift the 1s by (256 - 32) to get (256 - 32) 0s followed by 32 1s
@@ -58,19 +55,11 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     mapping (address => uint256) public prices;
     
-
-    // array of tokens used in setCompactedPrices, saves L1 calldata gas costs
     address[] public tokens;
     // array of tokenPrecisions used in setCompactedPrices, saves L1 calldata gas costs
     // if the token price will be sent with 3 decimals, then tokenPrecision for that token
     // should be 10 ** 3
     uint256[] public tokenPrecisions;
-
-    event PriceUpdate(address token, uint256 price, address priceFeed);
-    event DisableFastPrice(address signer);
-    event EnableFastPrice(address signer);
-    event PriceData(address token, uint256 refPrice, uint256 fastPrice);
-    
 
     modifier onlyUpdater() {
         require(isUpdater[msg.sender], "FastPriceFeed: forbidden");
