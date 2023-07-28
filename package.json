@@ -5,6 +5,7 @@
   "scripts": {
     "format": "prettier --check \"./**/*.ts\" README.md",
     "format:fix": "prettier --write \"./**/*.ts\" README.md",
+    "sol:fix": "prettier --write \"./**/*.sol\" README.md",
     "generate-types": "typechain --target=ethers-v6 'abi/**/*.json'",
     "clean": "rm -rf artifacts/ types/ cache/",
     "compile": "SKIP_LOAD=true npx hardhat compile",
