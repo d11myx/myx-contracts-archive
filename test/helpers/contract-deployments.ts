@@ -92,15 +92,14 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     ])) as any as FastPriceFeed;
     console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
 
-    await fastPriceFeed.initialize(1, [deployer.address], [deployer.address]);
+    await fastPriceFeed.setUpdater(deployer.address, true);
     await fastPriceFeed.setTokens(pairTokenAddresses, [10, 10]);
-    await fastPriceFeed.connect(deployer.signer).setPriceDataInterval(300);
+    
     await fastPriceFeed.setMaxTimeDeviation(10000);
     await fastPriceFeed.setUpdater(deployer.address, true);
 
     await fastPriceFeed.setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
-    await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
     await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
     await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
 
