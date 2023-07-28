@@ -17,6 +17,6 @@ interface IFastPriceFeed {
     function setMaxDeviationBasisPoints(uint256 _maxDeviationBasisPoints) external;
 
     function setPriceDataInterval(uint256 _priceDataInterval) external;
-    function setVaultPriceFeed(address _vaultPriceFeed) external;
+
     function setPricesWithBits(uint256 _priceBits, uint256 _timestamp) external;
 }
