@@ -129,6 +129,7 @@ contract TradingUtils is ITradingUtils, Governable {
         console.log("validLeverage afterPosition", afterPosition, "collateralDelta", totalCollateral.abs().divPrice(price));
         require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
             && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        require(afterPosition <= tradingConfig.maxPositionAmount, "exceed max position");
     }
 
 }

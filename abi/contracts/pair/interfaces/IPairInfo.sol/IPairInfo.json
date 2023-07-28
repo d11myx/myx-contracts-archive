@@ -150,6 +150,11 @@
           },
           {
             "internalType": "uint256",
+            "name": "maxPositionAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "maintainMarginRate",
             "type": "uint256"
           },
