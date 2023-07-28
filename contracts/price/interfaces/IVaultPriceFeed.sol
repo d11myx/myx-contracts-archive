@@ -10,7 +10,6 @@ interface IVaultPriceFeed {
 
     function setIsSecondaryPriceEnabled(bool _isEnabled) external;
     
-    function setFavorPrimaryPrice(bool _favorPrimaryPrice) external;
     function setPriceSampleSpace(uint256 _priceSampleSpace) external;
     function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external;
     function getPrice(address _token, bool _maximise) external view returns (uint256);
@@ -21,7 +20,6 @@ interface IVaultPriceFeed {
     function setTokenConfig(
         address _token,
         address _priceFeed,
-        uint256 _priceDecimals,
-        bool _isStrictStable
+        uint256 _priceDecimals
     ) external;
 }
