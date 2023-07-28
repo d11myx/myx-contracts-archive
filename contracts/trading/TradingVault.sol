@@ -262,7 +262,6 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.updateAveragePrice(_pairIndex, _price);
             }
         } else if (prevNetExposureAmountChecker < 0) {
-
             if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
                 console.log("increasePosition STO short increase");
                 pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
@@ -272,9 +271,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 console.log("increasePosition STO update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             } else if (netExposureAmountChecker[_pairIndex] < 0) {
-
                 console.log("increasePosition BTO short decrease");
-                pairVault.decreaseReserveAmount(_pairIndex, 0, sizeDelta);
+                pairVault.decreaseReserveAmount(_pairIndex, 0, _sizeAmount.mulPrice(lpVault.averagePrice));
 
                 if (_price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
@@ -501,7 +499,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             } else if (netExposureAmountChecker[_pairIndex] < 0) {
 
                 console.log("decreasePosition STC short decrease");
-                pairVault.decreaseReserveAmount(_pairIndex, 0, sizeDelta);
+                pairVault.decreaseReserveAmount(_pairIndex, 0, _sizeAmount.mulPrice(lpVault.averagePrice));
 
                 if (_price > lpVault.averagePrice) {
                     uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
