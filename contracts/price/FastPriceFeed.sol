@@ -18,8 +18,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     struct PriceDataItem {
         uint160 refPrice; // Chainlink price
         uint32 refTime; // last updated at time
-        uint32 cumulativeRefDelta; // cumulative Chainlink price delta
-        uint32 cumulativeFastDelta; // cumulative fast price delta
+        // uint32 cumulativeRefDelta; // cumulative Chainlink price delta
+        // uint32 cumulativeFastDelta; // cumulative fast price delta
     }
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -81,8 +81,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     event PriceUpdate(address token, uint256 price, address priceFeed);
     event DisableFastPrice(address signer);
     event EnableFastPrice(address signer);
-    event PriceData(address token, uint256 refPrice, uint256 fastPrice, uint256 cumulativeRefDelta, uint256 cumulativeFastDelta);
-    event MaxCumulativeDeltaDiffExceeded(address token, uint256 refPrice, uint256 fastPrice, uint256 cumulativeRefDelta, uint256 cumulativeFastDelta);
+    event PriceData(address token, uint256 refPrice, uint256 fastPrice);
+    
 
     modifier onlySigner() {
         require(isSigner[msg.sender], "FastPriceFeed: forbidden");
@@ -130,10 +130,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
             address updater = _updaters[i];
             isUpdater[updater] = true;
         }
-    }
-
-    function setSigner(address _account, bool _isActive) external override onlyGov {
-        isSigner[_account] = _isActive;
     }
 
     function setUpdater(address _account, bool _isActive) external override onlyGov {
@@ -272,22 +268,14 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     function favorFastPrice(address _token) public view returns (bool) {
-       
-        (/* uint256 prevRefPrice */, /* uint256 refTime */, uint256 cumulativeRefDelta, uint256 cumulativeFastDelta) = getPriceData(_token);
-        if (cumulativeFastDelta > cumulativeRefDelta && cumulativeFastDelta.sub(cumulativeRefDelta) > maxCumulativeDeltaDiffs[_token]) {
-            console.log("favorFastPrice cumulativeFastDelta %s cumulativeRefDelta %s", cumulativeFastDelta, cumulativeRefDelta);
-            console.log("favorFastPrice cumulativeDelta diff %s maxCumulativeDeltaDiffs %s", cumulativeFastDelta.sub(cumulativeRefDelta), maxCumulativeDeltaDiffs[_token]);
-            // force a spread if the cumulative delta for the fast price feed exceeds the cumulative delta
-            // for the Chainlink price feed by the maxCumulativeDeltaDiff allowed
-            return false;
-        }
+    
 
         return true;
     }
 
-    function getPriceData(address _token) public view returns (uint256, uint256, uint256, uint256) {
+    function getPriceData(address _token) public view returns (uint256, uint256) {
         PriceDataItem memory data = priceData[_token];
-        return (uint256(data.refPrice), uint256(data.refTime), uint256(data.cumulativeRefDelta), uint256(data.cumulativeFastDelta));
+        return (uint256(data.refPrice), uint256(data.refTime));
     }
 
     function _setPricesWithBits(uint256 _priceBits, uint256 _timestamp) private {
@@ -319,45 +307,31 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
             uint256 refPrice = IVaultPriceFeed(_vaultPriceFeed).getLatestPrimaryPrice(_token);
             uint256 fastPrice = prices[_token];
 
-            (uint256 prevRefPrice, uint256 refTime, uint256 cumulativeRefDelta, uint256 cumulativeFastDelta) = getPriceData(_token);
+            (uint256 prevRefPrice, uint256 refTime) = getPriceData(_token);
 
             if (prevRefPrice > 0) {
                 uint256 refDeltaAmount = refPrice > prevRefPrice ? refPrice.sub(prevRefPrice) : prevRefPrice.sub(refPrice);
                 uint256 fastDeltaAmount = fastPrice > _price ? fastPrice.sub(_price) : _price.sub(fastPrice);
 
-                // reset cumulative delta values if it is a new time window
-                if (refTime.div(priceDataInterval) != block.timestamp.div(priceDataInterval)) {
-                    cumulativeRefDelta = 0;
-                    cumulativeFastDelta = 0;
-                }
-
-                cumulativeRefDelta = cumulativeRefDelta.add(refDeltaAmount.mul(CUMULATIVE_DELTA_PRECISION).div(prevRefPrice));
-                cumulativeFastDelta = cumulativeFastDelta.add(fastDeltaAmount.mul(CUMULATIVE_DELTA_PRECISION).div(fastPrice));
+                
             }
 
-            if (cumulativeFastDelta > cumulativeRefDelta && cumulativeFastDelta.sub(cumulativeRefDelta) > maxCumulativeDeltaDiffs[_token]) {
-                emit MaxCumulativeDeltaDiffExceeded(_token, refPrice, fastPrice, cumulativeRefDelta, cumulativeFastDelta);
-            }
-            console.log("setPrice refPrice %s cumulativeRefDelta %s cumulativeFastDelta %s", refPrice, cumulativeRefDelta, cumulativeFastDelta);
-            _setPriceData(_token, refPrice, cumulativeRefDelta, cumulativeFastDelta);
-            emit PriceData(_token, refPrice, fastPrice, cumulativeRefDelta, cumulativeFastDelta);
+            
+            _setPriceData(_token, refPrice);
+            emit PriceData(_token, refPrice, fastPrice);
         }
 
         prices[_token] = _price;
         _emitPriceEvent( _token, _price);
     }
 
-    function _setPriceData(address _token, uint256 _refPrice, uint256 _cumulativeRefDelta, uint256 _cumulativeFastDelta) private {
+    function _setPriceData(address _token, uint256 _refPrice) private {
         require(_refPrice < MAX_REF_PRICE, "FastPriceFeed: invalid refPrice");
-        // skip validation of block.timestamp, it should only be out of range after the year 2100
-        require(_cumulativeRefDelta < MAX_CUMULATIVE_REF_DELTA, "FastPriceFeed: invalid cumulativeRefDelta");
-        require(_cumulativeFastDelta < MAX_CUMULATIVE_FAST_DELTA, "FastPriceFeed: invalid cumulativeFastDelta");
+        
 
         priceData[_token] = PriceDataItem(
             uint160(_refPrice),
-            uint32(block.timestamp),
-            uint32(_cumulativeRefDelta),
-            uint32(_cumulativeFastDelta)
+            uint32(block.timestamp)
         );
     }
 
