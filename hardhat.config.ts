@@ -14,6 +14,9 @@ import '@nomiclabs/hardhat-ethers';
 import 'hardhat-abi-exporter';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
+import hre from "hardhat";
+import {getCurrentTimestamp} from "hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp";
+import {BigNumber} from "ethers";
 
 dotenv.config();
 
@@ -74,6 +77,15 @@ task('encode-event', 'get method artifact detail by method name')
                 console.log(`event: ${method.name} id: ${methodId}`);
             }
         });
+    });
+
+task('update-evm-time', 'update evm time')
+    .addParam('increase', 'increase or decrease minutes')
+    .setAction(async (param, hre) => {
+        await hre.network.provider.send('evm_increaseTime', [parseInt(param.increase)]);
+        const blockNumber = await hre.ethers.provider.getBlockNumber()
+        const block = await hre.ethers.provider.getBlock(blockNumber)
+        console.log(`block time ${block.timestamp} diff ${block.timestamp - getCurrentTimestamp()}`)
     });
 
 const gas = 'auto';
