@@ -29,12 +29,13 @@ async function main() {
     addLpFeeP: 100
   };
   let tradingConfig = {
-    minLeverage: 2,
+    minLeverage: 0,
     maxLeverage: 100,
     minTradeAmount: "1000000000000000",
     maxTradeAmount: "100000000000000000000000",
     maintainMarginRate: 1000,
-    priceSlipP: 100
+    priceSlipP: 100,
+    maxPriceDeviationP: 50
   }
   let tradingFeeConfig = {
     takerFeeP: 10, // 0.1%
