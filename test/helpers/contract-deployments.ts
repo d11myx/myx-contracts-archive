@@ -162,7 +162,7 @@ export async function deployTrading(
         vaultPriceFeed.address,
     );
 
-    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address);
+    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address, 8*60*60);
 
     await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
 
