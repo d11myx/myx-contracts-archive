@@ -14,8 +14,6 @@ interface IFastPriceFeed {
     
     function setMinBlockInterval(uint256 _minBlockInterval) external;
 
-    function setMaxDeviationBasisPoints(uint256 _maxDeviationBasisPoints) external;
-
     function setPriceDataInterval(uint256 _priceDataInterval) external;
 
     function setPricesWithBits(uint256 _priceBits, uint256 _timestamp) external;

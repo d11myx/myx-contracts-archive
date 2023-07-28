@@ -100,7 +100,6 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
 
     await fastPriceFeed.setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
-    await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
     await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
     await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
 

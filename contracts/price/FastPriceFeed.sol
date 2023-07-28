@@ -27,7 +27,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     uint256 public constant MAX_PRICE_DURATION = 30 minutes;
 
-    bool public isInitialized;
     address public tokenManager;
 
     uint256 public override lastUpdatedAt;
@@ -41,8 +40,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     uint256 public priceDataInterval;
 
-    // allowed deviation from primary price
-    uint256 public maxDeviationBasisPoints;
 
 
     mapping (address => bool) public isUpdater;
@@ -75,7 +72,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
         minBlockInterval = _minBlockInterval;
-        maxDeviationBasisPoints = _maxDeviationBasisPoints;
         tokenManager = _tokenManager;
         gov = msg.sender;
     }
@@ -102,10 +98,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     function setTokenManager(address _tokenManager) external onlyTokenManager {
         tokenManager = _tokenManager;
-    }
-
-    function setMaxDeviationBasisPoints(uint256 _maxDeviationBasisPoints) external override onlyTokenManager {
-        maxDeviationBasisPoints = _maxDeviationBasisPoints;
     }
 
     function setPriceDataInterval(uint256 _priceDataInterval) external override onlyTokenManager {
