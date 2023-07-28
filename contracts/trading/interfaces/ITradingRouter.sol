@@ -9,7 +9,7 @@ interface ITradingRouter {
         address account;
         uint256 pairIndex;             // 币对index
         TradeType tradeType;           // 0: MARKET, 1: LIMIT
-        uint256 collateral;            // 1e18 保证金数量
+        int256 collateral;             // 1e18 保证金数量，负数表示减仓
         uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
         bool isLong;                   // 多/空
         uint256 sizeAmount;            // 仓位数量
@@ -23,6 +23,7 @@ interface ITradingRouter {
         address account;
         uint256 pairIndex;
         TradeType tradeType;
+        int256 collateral;             // 1e18 保证金数量，负数表示减仓
         uint256 triggerPrice;          // 限价触发价格
         uint256 sizeAmount;            // 关单数量
         bool isLong;
@@ -43,7 +44,7 @@ interface ITradingRouter {
         address account;
         uint256 pairIndex;             // 币对index
         TradeType tradeType;           // 0: MARKET, 1: LIMIT
-        uint256 collateral;            // 1e18 保证金数量
+        int256 collateral;             // 1e18 保证金数量
         uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
         bool isLong;                   // 多/空
         uint256 sizeAmount;            // 仓位数量
@@ -57,8 +58,9 @@ interface ITradingRouter {
     struct DecreasePositionOrder {
         uint256 orderId;
         address account;
-        TradeType tradeType;
         uint256 pairIndex;
+        TradeType tradeType;
+        int256 collateral;             // 1e18 保证金数量
         uint256 triggerPrice;           // 限价触发价格
         uint256 sizeAmount;             // 关单数量
         bool isLong;
@@ -95,6 +97,7 @@ interface ITradingRouter {
     function createDecreaseOrder(DecreasePositionRequest memory _request) external returns (uint256 orderId);
     function cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType) external;
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
+    function cancelOrders(address account, uint256 pairIndex, bool isLong, bool isIncrease) external;
 
     function createTpSl(CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId);
 

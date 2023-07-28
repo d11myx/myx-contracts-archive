@@ -2,8 +2,8 @@
 
 pragma solidity 0.8.17;
 
-import "../openzeeplin/contracts/token/ERC20/IERC20.sol";
-import "../openzeeplin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -67,7 +67,8 @@ contract WETH is IERC20 {
     function withdraw(uint256 amount) public {
         require(_balances[msg.sender] >= amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        payable(msg.sender).transfer(amount);
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "unable to withdraw");
     }
 
     /**

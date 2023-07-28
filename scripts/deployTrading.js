@@ -13,17 +13,21 @@ async function main() {
 
   let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
-  let pairLiquidity = await contractAt("PairLiquidity", await getConfig("PairLiquidity"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"));
+  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"));
 
-  let args = [pairInfo.address, pairVault.address, vaultPriceFeed.address, user1.address];
+  let tradingUtils = await deployUpgradeableContract("TradingUtils", []);
+
+  let args = [pairInfo.address, pairVault.address, tradingUtils.address, user1.address];
   let tradingVault = await deployUpgradeableContract("TradingVault", args);
 
-  args = [pairInfo.address, pairVault.address, tradingVault.address, vaultPriceFeed.address];
+  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address];
   let tradingRouter = await deployUpgradeableContract("TradingRouter", args);
 
-  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, vaultPriceFeed.address, 60];
+  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, fastPriceFeed.address, tradingUtils.address, 60];
   let executeRouter = await deployUpgradeableContract("ExecuteRouter", args);
+
+  await tradingUtils.setContract(pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, vaultPriceFeed.address);
 
   await pairVault.setHandler(tradingVault.address, true);
   await tradingVault.setHandler(executeRouter.address, true);
@@ -31,6 +35,7 @@ async function main() {
   await executeRouter.setPositionKeeper(user0.address, true);
   await executeRouter.setPositionKeeper(user1.address, true);
 
+  await fastPriceFeed.setUpdater(executeRouter.address, true);
 }
 
 main()

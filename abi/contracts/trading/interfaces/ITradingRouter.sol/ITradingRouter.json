@@ -111,6 +111,34 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isIncrease",
+        "type": "bool"
+      }
+    ],
+    "name": "cancelOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "address",
@@ -126,6 +154,11 @@
             "internalType": "enum ITradingRouter.TradeType",
             "name": "tradeType",
             "type": "uint8"
+          },
+          {
+            "internalType": "int256",
+            "name": "collateral",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -179,9 +212,9 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "collateral",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -363,14 +396,19 @@
             "type": "address"
           },
           {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
             "internalType": "enum ITradingRouter.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
           {
-            "internalType": "uint256",
-            "name": "pairIndex",
-            "type": "uint256"
+            "internalType": "int256",
+            "name": "collateral",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -449,9 +487,9 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "collateral",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "uint256",

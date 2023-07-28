@@ -1,10 +1,11 @@
-import { expect, use } from "chai";
-import { solidity } from "ethereum-waffle";
-import { jestSnapshotPlugin } from "mocha-chai-jest-snapshot";
+import { expect, use } from 'chai';
+import { solidity } from 'ethereum-waffle';
+import { jestSnapshotPlugin } from 'mocha-chai-jest-snapshot';
 
 use(solidity);
 use(jestSnapshotPlugin());
 
+// @ts-ignore
 BigInt.prototype.toJSON = function () {
     return this.toString();
 };

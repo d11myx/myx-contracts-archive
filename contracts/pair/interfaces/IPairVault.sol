@@ -19,5 +19,5 @@ interface IPairVault {
     function transferTokenTo(address token, address to, uint256 amount) external;
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external;
     function increaseProfit(uint256 _pairIndex, uint256 _profit) external;
-    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external;
+    function decreaseProfit(uint256 _pairIndex, uint256 _profit, uint256 _price) external;
 }
