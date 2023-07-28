@@ -160,19 +160,6 @@
     "inputs": [
       {
         "internalType": "bool",
-        "name": "_favorPrimaryPrice",
-        "type": "bool"
-      }
-    ],
-    "name": "setFavorPrimaryPrice",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
         "name": "_isEnabled",
         "type": "bool"
       }
@@ -224,11 +211,6 @@
         "internalType": "uint256",
         "name": "_priceDecimals",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isStrictStable",
-        "type": "bool"
       }
     ],
     "name": "setTokenConfig",
