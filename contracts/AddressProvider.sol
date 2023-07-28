@@ -5,7 +5,7 @@ pragma solidity 0.8.17;
 import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IAddressProvider.sol';
 
-contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
+contract AddressesProvider is Ownable, IAddressProvider {
    
     bytes32 private constant ROLE_MANAGER = 'ROLE_MANAGER';
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
@@ -46,8 +46,6 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
         setAddress(ROLE_MANAGER, newAddress);
         emit AddressSet(ROLE_MANAGER,oldAclManager, newAddress);
     }
-
-    
   
 
 }
