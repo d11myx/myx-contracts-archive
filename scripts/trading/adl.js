@@ -1,5 +1,5 @@
-const { deployContract, contractAt } = require("../utils/helpers");
-const { bigNumberify, expandDecimals, reduceDecimals } = require("../utils/utilities");
+const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
+const { bigNumberify, expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
@@ -13,50 +13,55 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
+  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
+  let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
+  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   // await usdt.mint(user0.address, expandDecimals(100, 18))
-  await vaultPriceFeed.setPrice(eth.address, expandDecimals(100, 30));
+  await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2100))
+  await fastPriceFeed.connect(user1).setPrices([eth.address],
+    [expandDecimals(2100, 30)],
+    await getBlockTime(await hre.ethers.provider) + 100)
 
   await usdt.approve(tradingRouter.address, expandDecimals(10000, 30));
 
   // increase long
   console.log("\n increase long")
-  await executeOrder(true, user0, true, expandDecimals(600, 18), expandDecimals(60, 18));
+  await executeOrder(true, user0, true, expandDecimals(1200000, 18), expandDecimals(6000, 18));
 
   // increase short
   console.log("\n increase short")
-  await executeOrder(true, user0, false, expandDecimals(600, 18), expandDecimals(60, 18));
+  await executeOrder(true, user0, false, expandDecimals(1200000, 18), expandDecimals(6000, 18));
 
   // increase long
   console.log("\n increase long")
-  await executeOrder(true, user0, true, expandDecimals(600, 18), expandDecimals(60, 18));
+  await executeOrder(true, user0, true, expandDecimals(1200000, 18), expandDecimals(6000, 18));
 
   // decrease short
   console.log("\n decrease short")
-  let orderId = await executeOrder(false, user0, false, 0, expandDecimals(60, 18));
+  let orderId = await executeOrder(false, user0, false, 0, expandDecimals(6000, 18));
 
   // ADL
   console.log("\n execute ADL")
   let pairIndex = 1;
-  let positionKey = await tradingVault.getPositionKey(user0.address, pairIndex, true);
+  let positionKey = await tradingUtils.getPositionKey(user0.address, pairIndex, true);
   let position = await tradingVault.getPosition(user0.address, pairIndex, false);
   console.log(`position before ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
-  console.log(`position collateral: ${reduceDecimals(position.collateral, 18)} amount: ${reduceDecimals(position.positionAmount, 18)}`);
-  await executeRouter.executeADLAndDecreaseOrder([positionKey], [expandDecimals(60, 18)], orderId, 0);
+  console.log(`position collateral: ${formatBalance(position.collateral)} amount: ${formatBalance(position.positionAmount)}`);
+  await executeRouter.executeADLAndDecreaseOrder([positionKey], [expandDecimals(6000, 18)], orderId, 0);
   console.log(`position after ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
   console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
 
   console.log(`position after execute: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
 
-  console.log(`eth balance: ${reduceDecimals(await eth.balanceOf(tradingVault.address), 18)}`,
-              `usdt balance: ${reduceDecimals(await usdt.balanceOf(tradingVault.address), 18)}`);
+  console.log(`eth balance: ${formatBalance(await eth.balanceOf(tradingVault.address))}`,
+              `usdt balance: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(pairIndex);
-  console.log(`eth totalAmount: ${reduceDecimals(vault.indexTotalAmount, 18)} indexReservedAmount ${reduceDecimals(vault.indexReservedAmount, 18)} `);
-  console.log(`usdt totalAmount: ${reduceDecimals(vault.stableTotalAmount, 18)} stableReservedAmount ${reduceDecimals(vault.stableReservedAmount, 18)} `);
+  console.log(`eth totalAmount: ${formatBalance(vault.indexTotalAmount)} indexReservedAmount ${formatBalance(vault.indexReservedAmount)} `);
+  console.log(`usdt totalAmount: ${formatBalance(vault.stableTotalAmount)} stableReservedAmount ${formatBalance(vault.stableReservedAmount)} `);
 
 }
 
@@ -65,7 +70,6 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeedTest", await getConfig("VaultPriceFeedTest"));
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
@@ -79,7 +83,7 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
       pairIndex: pairIndex,
       tradeType: 0,
       collateral: collateral,
-      openPrice: expandDecimals(100, 30),
+      openPrice: expandDecimals(2100, 30),
       isLong: isLong,
       sizeAmount: sizeAmount,
       tpPrice: expandDecimals(0, 30),
@@ -101,7 +105,8 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
       account: user.address,
       pairIndex: pairIndex,
       tradeType: 0,
-      triggerPrice: expandDecimals(100, 30),
+      collateral: collateral,
+      triggerPrice: expandDecimals(2100, 30),
       sizeAmount: sizeAmount,
       isLong: isLong
     };
@@ -118,14 +123,14 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
   let position = await tradingVault.getPosition(user.address, pairIndex, isLong);
 
   console.log(`position: ${position}`);
-  console.log(`position collateral: ${reduceDecimals(position.collateral, 18)} amount: ${reduceDecimals(position.positionAmount, 18)}`);
+  console.log(`position collateral: ${formatBalance(position.collateral)} amount: ${formatBalance(position.positionAmount)}`);
 
-  console.log(`eth balance: ${reduceDecimals(await eth.balanceOf(tradingVault.address), 18)}`,
-              `usdt balance: ${reduceDecimals(await usdt.balanceOf(tradingVault.address), 18)}`);
+  console.log(`eth balance: ${formatBalance(await eth.balanceOf(tradingVault.address))}`,
+              `usdt balance: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
 
   let vault = await pairVault.getVault(pairIndex);
-  console.log(`eth totalAmount: ${reduceDecimals(vault.indexTotalAmount, 18)} indexReservedAmount ${reduceDecimals(vault.indexReservedAmount, 18)} `);
-  console.log(`usdt totalAmount: ${reduceDecimals(vault.stableTotalAmount, 18)} stableReservedAmount ${reduceDecimals(vault.stableReservedAmount, 18)} `);
+  console.log(`eth totalAmount: ${formatBalance(vault.indexTotalAmount)} indexReservedAmount ${formatBalance(vault.indexReservedAmount)} `);
+  console.log(`usdt totalAmount: ${formatBalance(vault.stableTotalAmount)} stableReservedAmount ${formatBalance(vault.stableReservedAmount)} `);
 
   return orderId;
 }

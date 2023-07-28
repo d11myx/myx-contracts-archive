@@ -9,7 +9,7 @@ interface IPairInfo {
         address pairToken;
         bool enable;
         uint256 kOfSwap;
-        uint256 initPairRatio; // index / stable 10000 for 100%
+        uint256 initPrice; // index / stable 10000 for 100%
         uint256 addLpFeeP;
     }
 
@@ -19,6 +19,8 @@ interface IPairInfo {
         uint256 minTradeAmount;
         uint256 maxTradeAmount;
         uint256 maintainMarginRate; // 10000 for 100%
+        uint256 priceSlipP;
+        uint256 maxPriceDeviationP;
     }
 
     struct TradingFeeConfig {

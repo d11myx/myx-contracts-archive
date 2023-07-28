@@ -72,6 +72,12 @@
       },
       {
         "indexed": false,
+        "internalType": "int256",
+        "name": "collateral",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "pairIndex",
         "type": "uint256"
@@ -133,9 +139,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "indexed": false,
@@ -308,6 +314,34 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isIncrease",
+        "type": "bool"
+      }
+    ],
+    "name": "cancelOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "address",
@@ -323,6 +357,11 @@
             "internalType": "enum ITradingRouter.TradeType",
             "name": "tradeType",
             "type": "uint8"
+          },
+          {
+            "internalType": "int256",
+            "name": "collateral",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -349,7 +388,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "orderId",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -376,9 +415,9 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "collateral",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -425,7 +464,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "orderId",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -514,14 +553,19 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
         "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
       {
-        "internalType": "uint256",
-        "name": "pairIndex",
-        "type": "uint256"
+        "internalType": "int256",
+        "name": "collateral",
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -604,14 +648,19 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
         "internalType": "enum ITradingRouter.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
       {
-        "internalType": "uint256",
-        "name": "pairIndex",
-        "type": "uint256"
+        "internalType": "int256",
+        "name": "collateral",
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -688,14 +737,19 @@
             "type": "address"
           },
           {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
             "internalType": "enum ITradingRouter.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
           {
-            "internalType": "uint256",
-            "name": "pairIndex",
-            "type": "uint256"
+            "internalType": "int256",
+            "name": "collateral",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -774,9 +828,9 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "collateral",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -825,35 +879,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_isIncrease",
-        "type": "bool"
-      },
-      {
-        "internalType": "enum ITradingRouter.TradeType",
-        "name": "_tradeType",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_orderId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getOrderKey",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -909,7 +934,7 @@
         "type": "tuple[]"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -956,9 +981,9 @@
         "type": "uint8"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -1061,9 +1086,9 @@
         "type": "uint8"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -1140,8 +1165,8 @@
         "type": "address"
       },
       {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
         "type": "address"
       }
     ],
@@ -1436,8 +1461,8 @@
         "type": "address"
       },
       {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
+        "internalType": "contract ITradingUtils",
+        "name": "_tradingUtils",
         "type": "address"
       }
     ],
@@ -1551,6 +1576,19 @@
   },
   {
     "inputs": [],
+    "name": "tradingUtils",
+    "outputs": [
+      {
+        "internalType": "contract ITradingUtils",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "tradingVault",
     "outputs": [
       {
@@ -1578,19 +1616,6 @@
     "name": "transferToVault",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vaultPriceFeed",
-    "outputs": [
-      {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]

@@ -12,6 +12,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "int256",
+        "name": "_collateral",
+        "type": "int256"
+      },
+      {
         "internalType": "uint256",
         "name": "_sizeAmount",
         "type": "uint256"
@@ -24,6 +29,16 @@
     ],
     "name": "decreasePosition",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
+      },
       {
         "internalType": "int256",
         "name": "pnl",
@@ -60,28 +75,23 @@
         "type": "bool"
       },
       {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_pairIndex",
         "type": "uint256"
       },
       {
+        "internalType": "bool",
+        "name": "_isLong",
+        "type": "bool"
+      },
+      {
         "internalType": "uint256",
         "name": "_sizeAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_positionAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "int256",
-        "name": "_entryFundingRate",
-        "type": "int256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_entryFundingTime",
         "type": "uint256"
       }
     ],
@@ -118,6 +128,11 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
           {
             "internalType": "address",
             "name": "account",
@@ -185,6 +200,11 @@
       {
         "components": [
           {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "account",
             "type": "address"
@@ -241,11 +261,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "_pairIndex",
         "type": "uint256"
@@ -254,17 +269,22 @@
         "internalType": "bool",
         "name": "_isLong",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_sizeAmount",
+        "type": "uint256"
       }
     ],
-    "name": "getPositionKey",
+    "name": "getTradingFee",
     "outputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -280,9 +300,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "_collateral",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -296,7 +316,18 @@
       }
     ],
     "name": "increasePosition",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
