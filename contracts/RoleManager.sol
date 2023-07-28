@@ -9,7 +9,7 @@ import  './interfaces/IRoleManager.sol';
 
 contract RoleManager is AccessControl, IRoleManager {
     
-    bytes32 public constant  EMERGENCY_ADMIN_ROLE = keccak256('EMERGENCY_ADMIN');
+    bytes32 public constant  RISK_ADMIN_ROLE = keccak256('EMERGENCY_ADMIN');
     bytes32 public constant  KEEPER_ROLE = keccak256('KEEPER_ROLE');
     
     
@@ -50,17 +50,17 @@ contract RoleManager is AccessControl, IRoleManager {
 
     
     function addRiskAdmin(address riskAdmin) external override {
-        grantRole(EMERGENCY_ADMIN_ROLE, riskAdmin);
+        grantRole(RISK_ADMIN_ROLE, riskAdmin);
     }
 
     
     function removeRiskAdmin(address riskAdmin) external override {
-        revokeRole(EMERGENCY_ADMIN_ROLE, riskAdmin);
+        revokeRole(RISK_ADMIN_ROLE, riskAdmin);
     }
 
     
     function isRiskAdmin(address riskAdmin) external view override returns (bool) {
-        return hasRole(EMERGENCY_ADMIN_ROLE, riskAdmin);
+        return hasRole(RISK_ADMIN_ROLE, riskAdmin);
     }
 
 
