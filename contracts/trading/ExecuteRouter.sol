@@ -220,6 +220,15 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             require(order.isLong ? price >= order.openPrice : price <= order.openPrice, "not reach trigger price");
         }
 
+        // compare openPrice and oraclePrice
+        if (order.tradeType == ITradingRouter.TradeType.LIMIT) {
+            if (order.isLong) {
+                price = order.openPrice.min(price);
+            } else {
+                price = order.openPrice.max(price);
+            }
+        }
+
         // get position
         ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
 
@@ -264,7 +273,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         if (order.collateral > 0) {
             tradingRouter.transferToVault(pair.stableToken, order.collateral.abs());
         }
-        (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
+        (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong, price);
 
         tradingRouter.removeOrderFromPosition(
             ITradingRouter.PositionOrder(
@@ -396,6 +405,15 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             require(order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice, "not reach trigger price");
         }
 
+        // compare openPrice and oraclePrice
+        if (order.tradeType == ITradingRouter.TradeType.LIMIT) {
+            if (!order.isLong) {
+                price = order.triggerPrice.min(price);
+            } else {
+                price = order.triggerPrice.max(price);
+            }
+        }
+
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
@@ -463,7 +481,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             tradingRouter.transferToVault(pair.stableToken, order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee, int256 pnl)
-            = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
+            = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong, price);
 
         // delete order
         if (order.tradeType == ITradingRouter.TradeType.MARKET) {
