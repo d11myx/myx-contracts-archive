@@ -69,7 +69,7 @@ describe('Router: Liquidation cases', () => {
         // price goes down, trader's position can be liquidated
         await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('20000', 8)));
         await waitForTx(
-            await fastPriceFeed.setPrices(
+            await fastPriceFeed.connect(keeper.signer).setPrices(
                 [btc.address],
                 [ethers.utils.parseUnits('20000', 30)],
                 (await getBlockTimestamp()) + 100,

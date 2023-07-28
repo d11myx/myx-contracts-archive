@@ -2,6 +2,11 @@
   {
     "inputs": [
       {
+        "internalType": "contract IAddressProvider",
+        "name": "_addressProvider",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_maxPriceUpdateDelay",
         "type": "uint256"
@@ -10,16 +15,6 @@
         "internalType": "uint256",
         "name": "_minBlockInterval",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxDeviationBasisPoints",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_tokenManager",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -436,24 +431,6 @@
       }
     ],
     "name": "setTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isActive",
-        "type": "bool"
-      }
-    ],
-    "name": "setUpdater",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
