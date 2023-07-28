@@ -57,11 +57,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     mapping (address => bool) public isUpdater;
 
     mapping (address => uint256) public prices;
-
-
-
-    mapping (address => bool) public isSigner;
-    mapping (address => bool) public disableFastPriceVotes;
+    
 
     // array of tokens used in setCompactedPrices, saves L1 calldata gas costs
     address[] public tokens;
@@ -75,11 +71,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     event EnableFastPrice(address signer);
     event PriceData(address token, uint256 refPrice, uint256 fastPrice);
     
-
-    modifier onlySigner() {
-        require(isSigner[msg.sender], "FastPriceFeed: forbidden");
-        _;
-    }
 
     modifier onlyUpdater() {
         require(isUpdater[msg.sender], "FastPriceFeed: forbidden");
@@ -106,16 +97,11 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         gov = msg.sender;
     }
 
-    function initialize(uint256 _minAuthorizations, address[] memory _signers, address[] memory _updaters) public onlyGov {
+    function initialize(uint256 _minAuthorizations,  address[] memory _updaters) public onlyGov {
         require(!isInitialized, "FastPriceFeed: already initialized");
         isInitialized = true;
 
         minAuthorizations = _minAuthorizations;
-
-        for (uint256 i = 0; i < _signers.length; i++) {
-            address signer = _signers[i];
-            isSigner[signer] = true;
-        }
 
         for (uint256 i = 0; i < _updaters.length; i++) {
             address updater = _updaters[i];
