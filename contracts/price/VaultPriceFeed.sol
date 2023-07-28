@@ -36,24 +36,7 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
     mapping (address => address) public priceFeeds;
     mapping (address => uint256) public priceDecimals;
 
-    mapping (address => uint256) public override adjustmentBasisPoints;
-    mapping (address => bool) public override isAdjustmentAdditive;
-    mapping (address => uint256) public lastAdjustmentTimings;
-
-   
-   
     
-    function setAdjustment(address _token, bool _isAdditive, uint256 _adjustmentBps) external override onlyOwner {
-        require(
-            lastAdjustmentTimings[_token].add(MAX_ADJUSTMENT_INTERVAL) < block.timestamp,
-            "VaultPriceFeed: adjustment frequency exceeded"
-        );
-        require(_adjustmentBps <= MAX_ADJUSTMENT_BASIS_POINTS, "invalid _adjustmentBps");
-        isAdjustmentAdditive[_token] = _isAdditive;
-        adjustmentBasisPoints[_token] = _adjustmentBps;
-        lastAdjustmentTimings[_token] = block.timestamp;
-    }
-
     function setChainlinkFlags(address _chainlinkFlags) external onlyOwner {
         chainlinkFlags = _chainlinkFlags;
     }
@@ -88,16 +71,6 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
     function getPrice(address _token, bool _maximise) public override view returns (uint256) {
         uint256 price = getPriceV1(_token, _maximise);
-
-        uint256 adjustmentBps = adjustmentBasisPoints[_token];
-        if (adjustmentBps > 0) {
-            bool isAdditive = isAdjustmentAdditive[_token];
-            if (isAdditive) {
-                price = price.mul(BASIS_POINTS_DIVISOR.add(adjustmentBps)).div(BASIS_POINTS_DIVISOR);
-            } else {
-                price = price.mul(BASIS_POINTS_DIVISOR.sub(adjustmentBps)).div(BASIS_POINTS_DIVISOR);
-            }
-        }
 
         return price;
     }
