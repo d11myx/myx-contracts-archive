@@ -4,8 +4,8 @@ import { HardhatUserConfig, task } from 'hardhat/config';
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
-import 'hardhat-gas-reporter';
-import 'solidity-coverage';
+// import 'hardhat-gas-reporter';
+
 import '@openzeppelin/hardhat-upgrades';
 // import "@matterlabs/hardhat-zksync-deploy";
 // import "@matterlabs/hardhat-zksync-solc";

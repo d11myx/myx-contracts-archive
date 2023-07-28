@@ -404,25 +404,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "maxCumulativeDeltaDiffs",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "maxDeviationBasisPoints",
     "outputs": [
@@ -583,24 +564,6 @@
       }
     ],
     "name": "setLastUpdatedAt",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "_tokens",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_maxCumulativeDeltaDiffs",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "setMaxCumulativeDeltaDiffs",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
