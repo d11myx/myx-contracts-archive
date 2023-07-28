@@ -2,6 +2,7 @@
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import '../interfaces/IAddressProvider.sol';
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IVaultPriceFeed.sol";
@@ -57,9 +58,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     constructor(
       
       uint256 _maxPriceUpdateDelay,
-      uint256 _minBlockInterval,
-      uint256 _maxDeviationBasisPoints,
-      address _tokenManager
+      uint256 _minBlockInterval
     )  {
         
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
