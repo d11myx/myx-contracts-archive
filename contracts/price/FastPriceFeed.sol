@@ -60,7 +60,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     uint256 public maxDeviationBasisPoints;
 
     uint256 public minAuthorizations;
-    uint256 public disableFastPriceVoteCount = 0;
+
 
     mapping (address => bool) public isUpdater;
 
@@ -238,21 +238,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
-    function disableFastPrice() external onlySigner {
-        require(!disableFastPriceVotes[msg.sender], "FastPriceFeed: already voted");
-        disableFastPriceVotes[msg.sender] = true;
-        disableFastPriceVoteCount = disableFastPriceVoteCount.add(1);
-
-        emit DisableFastPrice(msg.sender);
-    }
-
-    function enableFastPrice() external onlySigner {
-        require(disableFastPriceVotes[msg.sender], "FastPriceFeed: already enabled");
-        disableFastPriceVotes[msg.sender] = false;
-        disableFastPriceVoteCount = disableFastPriceVoteCount.sub(1);
-
-        emit EnableFastPrice(msg.sender);
-    }
 
    
     function getPrice(address _token, uint256 _refPrice, bool _maximise) external override view returns (uint256) {
@@ -288,12 +273,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     function favorFastPrice(address _token) public view returns (bool) {
        
-        if (disableFastPriceVoteCount >= minAuthorizations) {
-            console.log("favorFastPrice disableFastPriceVoteCount %s minAuthorizations %s", disableFastPriceVoteCount, minAuthorizations);
-            // force a spread if watchers have flagged an issue with the fast price
-            return false;
-        }
-
         (/* uint256 prevRefPrice */, /* uint256 refTime */, uint256 cumulativeRefDelta, uint256 cumulativeFastDelta) = getPriceData(_token);
         if (cumulativeFastDelta > cumulativeRefDelta && cumulativeFastDelta.sub(cumulativeRefDelta) > maxCumulativeDeltaDiffs[_token]) {
             console.log("favorFastPrice cumulativeFastDelta %s cumulativeRefDelta %s", cumulativeFastDelta, cumulativeRefDelta);
