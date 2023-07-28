@@ -39,7 +39,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     uint256 public constant MAX_PRICE_DURATION = 30 minutes;
 
     bool public isInitialized;
-    bool public isSpreadEnabled = false;
 
     address public vaultPriceFeed;
 
@@ -51,8 +50,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     uint256 public priceDuration;
     uint256 public maxPriceUpdateDelay;
-    uint256 public spreadBasisPointsIfInactive;
-    uint256 public spreadBasisPointsIfChainError;
+    
     uint256 public minBlockInterval;
     uint256 public maxTimeDeviation;
 
@@ -159,20 +157,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
     }
 
-    function setSpreadBasisPointsIfInactive(uint256 _spreadBasisPointsIfInactive) external override onlyGov {
-        spreadBasisPointsIfInactive = _spreadBasisPointsIfInactive;
-    }
-
-    function setSpreadBasisPointsIfChainError(uint256 _spreadBasisPointsIfChainError) external override onlyGov {
-        spreadBasisPointsIfChainError = _spreadBasisPointsIfChainError;
-    }
-
     function setMinBlockInterval(uint256 _minBlockInterval) external override onlyGov {
         minBlockInterval = _minBlockInterval;
-    }
-
-    function setIsSpreadEnabled(bool _isSpreadEnabled) external override onlyGov {
-        isSpreadEnabled = _isSpreadEnabled;
     }
 
     function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyGov {
@@ -268,35 +254,9 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         emit EnableFastPrice(msg.sender);
     }
 
-    // under regular operation, the fastPrice (prices[token]) is returned and there is no spread returned from this function,
-    // though VaultPriceFeed might apply its own spread
-    //
-    // if the fastPrice has not been updated within priceDuration then it is ignored and only _refPrice with a spread is used (spread: spreadBasisPointsIfInactive)
-    // in case the fastPrice has not been updated for maxPriceUpdateDelay then the _refPrice with a larger spread is used (spread: spreadBasisPointsIfChainError)
-    //
-    // there will be a spread from the _refPrice to the fastPrice in the following cases:
-    // - in case isSpreadEnabled is set to true
-    // - in case the maxDeviationBasisPoints between _refPrice and fastPrice is exceeded
-    // - in case watchers flag an issue
-    // - in case the cumulativeFastDelta exceeds the cumulativeRefDelta by the maxCumulativeDeltaDiff
+   
     function getPrice(address _token, uint256 _refPrice, bool _maximise) external override view returns (uint256) {
-        if (block.timestamp > lastUpdatedAt.add(maxPriceUpdateDelay)) {
-            console.log("getPrice block.timestamp %s lastUpdatedAt %s maxPriceUpdateDelay %s", block.timestamp, lastUpdatedAt, maxPriceUpdateDelay);
-            if (_maximise) {
-                return _refPrice.mul(BASIS_POINTS_DIVISOR.add(spreadBasisPointsIfChainError)).div(BASIS_POINTS_DIVISOR);
-            }
-
-            return _refPrice.mul(BASIS_POINTS_DIVISOR.sub(spreadBasisPointsIfChainError)).div(BASIS_POINTS_DIVISOR);
-        }
-
-        if (block.timestamp > lastUpdatedAt.add(priceDuration)) {
-            console.log("getPrice block.timestamp %s lastUpdatedAt %s priceDuration %s", block.timestamp, lastUpdatedAt, priceDuration);
-            if (_maximise) {
-                return _refPrice.mul(BASIS_POINTS_DIVISOR.add(spreadBasisPointsIfInactive)).div(BASIS_POINTS_DIVISOR);
-            }
-
-            return _refPrice.mul(BASIS_POINTS_DIVISOR.sub(spreadBasisPointsIfInactive)).div(BASIS_POINTS_DIVISOR);
-        }
+        
 
         uint256 fastPrice = prices[_token];
         console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
@@ -327,10 +287,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     function favorFastPrice(address _token) public view returns (bool) {
-        if (isSpreadEnabled) {
-            return false;
-        }
-
+       
         if (disableFastPriceVoteCount >= minAuthorizations) {
             console.log("favorFastPrice disableFastPriceVoteCount %s minAuthorizations %s", disableFastPriceVoteCount, minAuthorizations);
             // force a spread if watchers have flagged an issue with the fast price
