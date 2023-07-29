@@ -6,7 +6,7 @@
     "format": "prettier --check \"./**/*.ts\" README.md",
     "format:fix": "prettier --write \"./**/*.ts\" README.md",
     "sol:fix": "prettier --write \"./**/*.sol\" README.md",
-    "generate-types": "typechain --target=ethers-v6 'abi/**/*.json'",
+    "generate-types": "hardhat typechain",
     "clean": "rm -rf artifacts/ types/ cache/",
     "compile": "SKIP_LOAD=true npx hardhat compile",
     "test": "npm run compile && npx hardhat test",
