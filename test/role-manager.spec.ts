@@ -62,35 +62,35 @@ describe('Access Control List Manager', () => {
         expect(await roleManager.hasRole(keeperRole, keeper1.address)).to.be.eq(true);
     });
 
-    // it('Make OPERATOR_ROLE admin of FLASH_BORROWER_ROLE', async () => {
-    //     const { deployer } = testEnv;
-    //     const FLASH_BORROW_ROLE = await roleManager.FLASH_BORROWER_ROLE();
-    //     expect(await roleManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.not.be.eq(
-    //         OPERATOR_ROLE
-    //     );
-    //     await roleManager
-    //         .connect(deployer.signer)
-    //         .setRoleAdmin(FLASH_BORROW_ROLE, OPERATOR_ROLE);
-    //     expect(await roleManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.be.eq(OPERATOR_ROLE);
-    // });
+    it('Make OPERATOR_ROLE admin of FLASH_BORROWER_ROLE', async () => {
+        const { deployer } = testEnv;
+        const OPERATOR_ROLE = await roleManager.OPERATOR_ROLE();
+        expect(await roleManager.getRoleAdmin(OPERATOR_ROLE)).to.not.be.eq(
+            OPERATOR_ROLE
+        );
+        await roleManager
+            .connect(deployer.signer)
+            .setRoleAdmin(OPERATOR_ROLE, OPERATOR_ROLE);
+        expect(await roleManager.getRoleAdmin(OPERATOR_ROLE)).to.be.eq(OPERATOR_ROLE);
+    });
 
-    // it('OPERATOR_ROLE grant FLASH_BORROW_ROLE', async () => {
-    //     const {
-    //         users: [keeper1, keeper2],
-    //     } = testEnv;
+    it('OPERATOR_ROLE grant FLASH_BORROW_ROLE', async () => {
+        const {
+            users: [keeper1, keeper2],
+        } = testEnv;
 
-    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(false);
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(true);
+        expect(await roleManager.isTreasurer(keeper2.address)).to.be.eq(false);
+        expect(
+            await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+        ).to.be.eq(true);
 
-    //     await roleManager.connect(keeper1.signer).addFlashBorrower(keeper2.address);
+        await roleManager.connect(keeper1.signer).addTreasurer(keeper2.address);
 
-    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(true);
-    // });
+        expect(await roleManager.isTreasurer(keeper2.address)).to.be.eq(true);
+        expect(
+            await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+        ).to.be.eq(true);
+    });
 
     // it('DEFAULT_ADMIN tries to revoke FLASH_BORROW_ROLE (revert expected)', async () => {
     //     const {
