@@ -1,292 +1,274 @@
-// import { expect } from 'chai';
-// import { constants, utils } from 'ethers';
-// import { RoleManager } from '../types';
-// import { SignerWithAddress, testEnv } from './helpers/make-suite';
-// import { deployContract } from './helpers/tx';
+import { expect } from 'chai';
+import { constants, utils } from 'ethers';
+import { AddressesProvider, RoleManager } from '../types';
+import { SignerWithAddress, setupTestEnv, testEnv } from './helpers/make-suite';
+import { deployContract } from './helpers/tx';
+import { ethers } from 'hardhat';
 
-// // import { ZERO_ADDRESS } from '../helpers/constants';
-// // import { ACLManager, ACLManager__factory } from '../types';
-// // import { makeSuite, TestEnv } from './helpers/make-suite';
-// // import { ProtocolErrors } from '../helpers/types';
+describe('Access Control List Manager', () => {
+    let roleManager: RoleManager;
 
-// describe('Access Control List Manager', () => {
-//     let aclManager: RoleManager;
+    const OPERATOR_ROLE = utils.keccak256(utils.formatBytes32String('OPERATOR_ROLE'));
+    const KEEPER_ROLE = utils.keccak256(utils.formatBytes32String('KEEPER_ROLE'));
 
-//     const FLASH_BORROW_ADMIN_ROLE = utils.keccak256(
-//         utils.formatBytes32String('FLASH_BORROWER_ADMIN')
-//     );
+    before(async () => {
+        await setupTestEnv();
+        const { deployer, keeper } = testEnv;
+        const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
+        roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
+        await addressesProvider.setRolManager(roleManager.address);
 
-//     before(async () => {
-//         const { deployer, keeper } = testEnv;
-//         const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
-//         const roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
-//         await addressesProvider.setRolManager(roleManager.address);
-//         await roleManager.addPoolAdmin(deployer.address);
-//         await roleManager.addKeeper(keeper.address);
-    
-//     await addressProvider.setRolManager(rolemanager.address);
-    
-//         aclManager = await new ACLManager__factory(deployer.signer).deploy(
-//             addressesProvider.address
-//         );
-//     });
+        // await roleManager.addPoolAdmin(deployer.address);
+        // await roleManager.addKeeper(keeper.address);
+    });
 
-//     it('Check DEFAULT_ADMIN_ROLE', async () => {
-//         const { deployer, users } = testEnv;
+    it('Check DEFAULT_ADMIN_ROLE', async () => {
+        const { deployer, users } = testEnv;
 
-//         const DEFAULT_ADMIN_ROLE = await aclManager.DEFAULT_ADMIN_ROLE();
-//         expect(await aclManager.hasRole(DEFAULT_ADMIN_ROLE, deployer.address)).to.be.eq(true);
-//         expect(await aclManager.hasRole(DEFAULT_ADMIN_ROLE, users[0].address)).to.be.eq(false);
-//     });
+        await roleManager.addPoolAdmin(deployer.address);
+        const DEFAULT_ADMIN_ROLE = ethers.constants.HashZero;
+        expect(await roleManager.hasRole(DEFAULT_ADMIN_ROLE, deployer.address)).to.be.eq(true);
+        expect(await roleManager.hasRole(DEFAULT_ADMIN_ROLE, users[0].address)).to.be.eq(false);
+    });
 
-//     it('Grant FLASH_BORROW_ADMIN role', async () => {
-//         const {
-//             deployer,
-//             users: [flashBorrowAdmin],
-//         } = testEnv;
+    it('Grant OPERATOR_ROLE role', async () => {
+        const {
+            deployer,
+            users: [keeper1],
+        } = testEnv;
 
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(false);
-//         await aclManager
-//             .connect(deployer.signer)
-//             .grantRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
-//     });
+        expect(await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).grantRole(OPERATOR_ROLE, keeper1.address);
+        expect(await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)).to.be.eq(true);
+    });
 
-//     it('FLASH_BORROW_ADMIN grant FLASH_BORROW_ROLE (revert expected)', async () => {
-//         const {
-//             users: [flashBorrowAdmin, flashBorrower],
-//         } = testEnv;
+    it('KEEPER_ROLE grant KEEPER_ROLE (revert expected)', async () => {
+        const {
+            users: [keeper1, keeper2],
+        } = testEnv;
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(false);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
+        console.log('KEEPER_ROLE:' + KEEPER_ROLE);
+        let keeperRole = await roleManager.KEEPER_ROLE();
+        await roleManager.addKeeper(keeper1.address);
+        expect(await roleManager.isKeeper(keeper2.address)).to.be.eq(false);
+        expect(await roleManager.isKeeper(keeper1.address)).to.be.eq(true);
+        expect(await roleManager.hasRole(keeperRole, keeper1.address)).to.be.eq(true);
 
-//         await expect(
-//             aclManager.connect(flashBorrowAdmin.signer).addFlashBorrower(flashBorrower.address)
-//         ).to.be.revertedWith(
-//             `AccessControl: account ${flashBorrowAdmin.address.toLowerCase()} is missing role ${
-//                 constants.HashZero
-//             }`
-//         );
+        await expect(roleManager.connect(keeper1.signer).addKeeper(keeper2.address)).to.be.revertedWith(
+            `AccessControl: account ${keeper1.address.toLowerCase()} is missing role ${constants.HashZero}`,
+        );
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(false);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
-//     });
+        expect(await roleManager.isKeeper(keeper2.address)).to.be.eq(false);
+        expect(await roleManager.hasRole(keeperRole, keeper1.address)).to.be.eq(true);
+    });
 
-//     it('Make FLASH_BORROW_ADMIN_ROLE admin of FLASH_BORROWER_ROLE', async () => {
-//         const { deployer } = testEnv;
-//         const FLASH_BORROW_ROLE = await aclManager.FLASH_BORROWER_ROLE();
-//         expect(await aclManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.not.be.eq(
-//             FLASH_BORROW_ADMIN_ROLE
-//         );
-//         await aclManager
-//             .connect(deployer.signer)
-//             .setRoleAdmin(FLASH_BORROW_ROLE, FLASH_BORROW_ADMIN_ROLE);
-//         expect(await aclManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.be.eq(FLASH_BORROW_ADMIN_ROLE);
-//     });
+    // it('Make OPERATOR_ROLE admin of FLASH_BORROWER_ROLE', async () => {
+    //     const { deployer } = testEnv;
+    //     const FLASH_BORROW_ROLE = await roleManager.FLASH_BORROWER_ROLE();
+    //     expect(await roleManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.not.be.eq(
+    //         OPERATOR_ROLE
+    //     );
+    //     await roleManager
+    //         .connect(deployer.signer)
+    //         .setRoleAdmin(FLASH_BORROW_ROLE, OPERATOR_ROLE);
+    //     expect(await roleManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.be.eq(OPERATOR_ROLE);
+    // });
 
-//     it('FLASH_BORROW_ADMIN grant FLASH_BORROW_ROLE', async () => {
-//         const {
-//             users: [flashBorrowAdmin, flashBorrower],
-//         } = testEnv;
+    // it('OPERATOR_ROLE grant FLASH_BORROW_ROLE', async () => {
+    //     const {
+    //         users: [keeper1, keeper2],
+    //     } = testEnv;
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(false);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
+    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(false);
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(true);
 
-//         await aclManager.connect(flashBorrowAdmin.signer).addFlashBorrower(flashBorrower.address);
+    //     await roleManager.connect(keeper1.signer).addFlashBorrower(keeper2.address);
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(true);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(true);
+    // });
 
-//     it('DEFAULT_ADMIN tries to revoke FLASH_BORROW_ROLE (revert expected)', async () => {
-//         const {
-//             deployer,
-//             users: [flashBorrowAdmin, flashBorrower],
-//         } = testEnv;
+    // it('DEFAULT_ADMIN tries to revoke FLASH_BORROW_ROLE (revert expected)', async () => {
+    //     const {
+    //         deployer,
+    //         users: [keeper1, keeper2],
+    //     } = testEnv;
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(true);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
+    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(true);
 
-//         await expect(
-//             aclManager.connect(deployer.signer).removeFlashBorrower(flashBorrower.address)
-//         ).to.be.revertedWith(
-//             `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${FLASH_BORROW_ADMIN_ROLE}`
-//         );
+    //     await expect(
+    //         roleManager.connect(deployer.signer).removeFlashBorrower(keeper2.address)
+    //     ).to.be.revertedWith(
+    //         `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${OPERATOR_ROLE}`
+    //     );
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(true);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(true);
+    // });
 
-//     it('Grant POOL_ADMIN role', async () => {
-//         const {
-//             deployer,
-//             users: [, poolAdmin],
-//         } = testEnv;
+    // it('Grant POOL_ADMIN role', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, poolAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
-//         await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address);
-//         expect(await aclManager.isPoolAdmin(poolAdmin.address)).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
+    //     await roleManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address);
+    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(true);
+    // });
 
-//     it('Grant EMERGENCY_ADMIN role', async () => {
-//         const {
-//             deployer,
-//             users: [, , emergencyAdmin],
-//         } = testEnv;
+    // it('Grant EMERGENCY_ADMIN role', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , emergencyAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(false);
-//         await aclManager.connect(deployer.signer).addEmergencyAdmin(emergencyAdmin.address);
-//         expect(await aclManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(false);
+    //     await roleManager.connect(deployer.signer).addEmergencyAdmin(emergencyAdmin.address);
+    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(true);
+    // });
 
-//     it('Grant BRIDGE role', async () => {
-//         const {
-//             deployer,
-//             users: [, , , bridge],
-//         } = testEnv;
+    // it('Grant BRIDGE role', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , , bridge],
+    //     } = testEnv;
 
-//         expect(await aclManager.isBridge(bridge.address)).to.be.eq(false);
-//         await aclManager.connect(deployer.signer).addBridge(bridge.address);
-//         expect(await aclManager.isBridge(bridge.address)).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(false);
+    //     await roleManager.connect(deployer.signer).addBridge(bridge.address);
+    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(true);
+    // });
 
-//     it('Grant RISK_ADMIN role', async () => {
-//         const {
-//             deployer,
-//             users: [, , , , riskAdmin],
-//         } = testEnv;
+    // it('Grant RISK_ADMIN role', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , , , riskAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isRiskAdmin(riskAdmin.address)).to.be.eq(false);
-//         await aclManager.connect(deployer.signer).addRiskAdmin(riskAdmin.address);
-//         expect(await aclManager.isRiskAdmin(riskAdmin.address)).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(false);
+    //     await roleManager.connect(deployer.signer).addRiskAdmin(riskAdmin.address);
+    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(true);
+    // });
 
-//     it('Grant ASSET_LISTING_ADMIN role', async () => {
-//         const {
-//             deployer,
-//             users: [, , , , , assetListingAdmin],
-//         } = testEnv;
+    // it('Grant ASSET_LISTING_ADMIN role', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , , , , assetListingAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(false);
-//         await aclManager.connect(deployer.signer).addAssetListingAdmin(assetListingAdmin.address);
-//         expect(await aclManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(false);
+    //     await roleManager.connect(deployer.signer).addAssetListingAdmin(assetListingAdmin.address);
+    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(true);
+    // });
 
-//     it('Revoke FLASH_BORROWER', async () => {
-//         const {
-//             users: [flashBorrowAdmin, flashBorrower],
-//         } = testEnv;
+    // it('Revoke FLASH_BORROWER', async () => {
+    //     const {
+    //         users: [keeper1, keeper2],
+    //     } = testEnv;
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(true);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
+    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(true);
 
-//         await aclManager
-//             .connect(flashBorrowAdmin.signer)
-//             .removeFlashBorrower(flashBorrower.address);
+    //     await roleManager
+    //         .connect(keeper1.signer)
+    //         .removeFlashBorrower(keeper2.address);
 
-//         expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(false);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
-//     });
+    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(false);
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(true);
+    // });
 
-//     it('Revoke FLASH_BORROWER_ADMIN', async () => {
-//         const {
-//             deployer,
-//             users: [flashBorrowAdmin],
-//         } = testEnv;
+    // it('Revoke OPERATOR_ROLE', async () => {
+    //     const {
+    //         deployer,
+    //         users: [keeper1],
+    //     } = testEnv;
 
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(true);
-//         await aclManager
-//             .connect(deployer.signer)
-//             .revokeRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address);
-//         expect(
-//             await aclManager.hasRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address)
-//         ).to.be.eq(false);
-//     });
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(true);
+    //     await roleManager
+    //         .connect(deployer.signer)
+    //         .revokeRole(OPERATOR_ROLE, keeper1.address);
+    //     expect(
+    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
+    //     ).to.be.eq(false);
+    // });
 
-//     it('Revoke POOL_ADMIN', async () => {
-//         const {
-//             deployer,
-//             users: [, poolAdmin],
-//         } = testEnv;
+    // it('Revoke POOL_ADMIN', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, poolAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isPoolAdmin(poolAdmin.address)).to.be.eq(true);
-//         await aclManager.connect(deployer.signer).removePoolAdmin(poolAdmin.address);
-//         expect(await aclManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
-//     });
+    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(true);
+    //     await roleManager.connect(deployer.signer).removePoolAdmin(poolAdmin.address);
+    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
+    // });
 
-//     it('Revoke EMERGENCY_ADMIN', async () => {
-//         const {
-//             deployer,
-//             users: [, , emergencyAdmin],
-//         } = testEnv;
+    // it('Revoke EMERGENCY_ADMIN', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , emergencyAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(true);
-//         await aclManager.connect(deployer.signer).removeEmergencyAdmin(emergencyAdmin.address);
-//         expect(await aclManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(false);
-//     });
+    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(true);
+    //     await roleManager.connect(deployer.signer).removeEmergencyAdmin(emergencyAdmin.address);
+    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(false);
+    // });
 
-//     it('Revoke BRIDGE', async () => {
-//         const {
-//             deployer,
-//             users: [, , , bridge],
-//         } = testEnv;
+    // it('Revoke BRIDGE', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , , bridge],
+    //     } = testEnv;
 
-//         expect(await aclManager.isBridge(bridge.address)).to.be.eq(true);
-//         await aclManager.connect(deployer.signer).removeBridge(bridge.address);
-//         expect(await aclManager.isBridge(bridge.address)).to.be.eq(false);
-//     });
+    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(true);
+    //     await roleManager.connect(deployer.signer).removeBridge(bridge.address);
+    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(false);
+    // });
 
-//     it('Revoke RISK_ADMIN', async () => {
-//         const {
-//             deployer,
-//             users: [, , , , riskAdmin],
-//         } = testEnv;
+    // it('Revoke RISK_ADMIN', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , , , riskAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isRiskAdmin(riskAdmin.address)).to.be.eq(true);
-//         await aclManager.connect(deployer.signer).removeRiskAdmin(riskAdmin.address);
-//         expect(await aclManager.isRiskAdmin(riskAdmin.address)).to.be.eq(false);
-//     });
+    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(true);
+    //     await roleManager.connect(deployer.signer).removeRiskAdmin(riskAdmin.address);
+    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(false);
+    // });
 
-//     it('Revoke ASSET_LISTING_ADMIN', async () => {
-//         const {
-//             deployer,
-//             users: [, , , , , assetListingAdmin],
-//         } = testEnv;
+    // it('Revoke ASSET_LISTING_ADMIN', async () => {
+    //     const {
+    //         deployer,
+    //         users: [, , , , , assetListingAdmin],
+    //     } = testEnv;
 
-//         expect(await aclManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(true);
-//         await aclManager
-//             .connect(deployer.signer)
-//             .removeAssetListingAdmin(assetListingAdmin.address);
-//         expect(await aclManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(false);
-//     });
+    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(true);
+    //     await roleManager
+    //         .connect(deployer.signer)
+    //         .removeAssetListingAdmin(assetListingAdmin.address);
+    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(false);
+    // });
 
-//     it('Tries to deploy ACLManager when ACLAdmin is ZERO_ADDRESS (revert expected)', async () => {
-//         const { deployer, addressesProvider } = testEnv;
+    // it('Tries to deploy roleManager when ACLAdmin is ZERO_ADDRESS (revert expected)', async () => {
+    //     const { deployer, addressesProvider } = testEnv;
 
-//         expect(await addressesProvider.setACLAdmin(ZERO_ADDRESS));
-//         const deployTx = new ACLManager__factory(deployer.signer).deploy(addressesProvider.address);
-//         await expect(deployTx).to.be.revertedWith(ProtocolErrors.ACL_ADMIN_CANNOT_BE_ZERO);
-//     });
-// });
+    //     expect(await addressesProvider.setACLAdmin(ZERO_ADDRESS));
+    //     const deployTx = new ACLManager__factory(deployer.signer).deploy(addressesProvider.address);
+    //     await expect(deployTx).to.be.revertedWith(ProtocolErrors.ACL_ADMIN_CANNOT_BE_ZERO);
+    // });
+});
