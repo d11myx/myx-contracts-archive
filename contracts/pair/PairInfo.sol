@@ -104,7 +104,7 @@ contract PairInfo is IPairInfo, Handleable {
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updateFundingFeeDistribute(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig) external onlyHandler {
+    function updateFundingFeeConfig(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig) external onlyHandler {
         require(_fundingFeeConfig.lpDistributeP + _fundingFeeConfig.userDistributeP + _fundingFeeConfig.treasuryDistributeP == PERCENTAGE,
             "percentage exceed 100%");
         fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;

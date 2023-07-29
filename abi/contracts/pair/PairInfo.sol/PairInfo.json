@@ -879,7 +879,7 @@
         "type": "tuple"
       }
     ],
-    "name": "updateFundingFeeDistribute",
+    "name": "updateFundingFeeConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
