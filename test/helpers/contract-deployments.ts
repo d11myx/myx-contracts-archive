@@ -89,9 +89,7 @@ export async function deployPrice(
     await vaultPriceFeed.setPriceSampleSpace(1);
 
     const fastPriceFeed = (await deployContract('FastPriceFeed', [
-        addressesProvider.address,
-        120 * 60, // _maxPriceUpdateDelay
-        2, // _minBlockInterval
+        addressesProvider.address
     ])) as any as FastPriceFeed;
     console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
 
