@@ -5,16 +5,6 @@
         "internalType": "contract IAddressProvider",
         "name": "_addressProvider",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxPriceUpdateDelay",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_minBlockInterval",
-        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",

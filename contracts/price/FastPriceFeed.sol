@@ -53,9 +53,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     constructor(
-      IAddressProvider _addressProvider,
-      uint256 _maxPriceUpdateDelay,
-      uint256 _minBlockInterval
+      IAddressProvider _addressProvider
     )  {
         
         gov = msg.sender;
