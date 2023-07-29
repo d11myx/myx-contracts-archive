@@ -29,11 +29,37 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "operator",
         "type": "address"
       }
     ],
-    "name": "addRiskAdmin",
+    "name": "addOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "poolAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "addPoolAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "treasurer",
+        "type": "address"
+      }
+    ],
+    "name": "addTreasurer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -80,11 +106,49 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "operator",
         "type": "address"
       }
     ],
-    "name": "isRiskAdmin",
+    "name": "isOperator",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "poolAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "isPoolAdmin",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "treasurer",
+        "type": "address"
+      }
+    ],
+    "name": "isTreasurer",
     "outputs": [
       {
         "internalType": "bool",
@@ -125,11 +189,37 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "operator",
         "type": "address"
       }
     ],
-    "name": "removeRiskAdmin",
+    "name": "removeOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "poolAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "removePoolAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "treasurer",
+        "type": "address"
+      }
+    ],
+    "name": "removeTreasurer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
