@@ -63,45 +63,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "lastUpdatedBlock",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_maxPriceUpdateDelay",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxPriceUpdateDelay",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_minBlockInterval",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMinBlockInterval",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",

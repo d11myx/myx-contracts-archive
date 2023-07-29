@@ -191,25 +191,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "isUpdater",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "lastUpdatedAt",
     "outputs": [
@@ -224,46 +205,7 @@
   },
   {
     "inputs": [],
-    "name": "lastUpdatedBlock",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxPriceUpdateDelay",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "maxTimeDeviation",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minBlockInterval",
     "outputs": [
       {
         "internalType": "uint256",
@@ -341,37 +283,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_maxPriceUpdateDelay",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxPriceUpdateDelay",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_maxTimeDeviation",
         "type": "uint256"
       }
     ],
     "name": "setMaxTimeDeviation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_minBlockInterval",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMinBlockInterval",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
