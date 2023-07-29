@@ -43,8 +43,8 @@ async function main() {
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
 
   // execute
-  // await executeRouter.executeIncreaseOrder(orderId, 1);
-  // await executeRouter.executeIncreaseLimitOrders([orderId]);
+  await executeRouter.executeDecreaseOrder(orderId, 1);
+  // await executeRouter.executeDecreaseLimitOrders([orderId]);
   console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`);
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
   console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
