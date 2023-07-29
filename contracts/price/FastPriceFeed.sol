@@ -57,17 +57,13 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
       uint256 _maxPriceUpdateDelay,
       uint256 _minBlockInterval
     )  {
-        maxPriceUpdateDelay = _maxPriceUpdateDelay;
+        
         gov = msg.sender;
         addressProvider=_addressProvider;
     }
 
     function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyPoolAdmin {
         maxTimeDeviation = _maxTimeDeviation;
-    }
-
-    function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyPoolAdmin {
-        maxPriceUpdateDelay = _maxPriceUpdateDelay;
     }
 
     function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyPoolAdmin {
@@ -171,10 +167,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         if (_timestamp < lastUpdatedAt) {
             return false;
         }
-
         lastUpdatedAt = _timestamp;
-        lastUpdatedBlock = block.number;
-
         return true;
     }
 }
