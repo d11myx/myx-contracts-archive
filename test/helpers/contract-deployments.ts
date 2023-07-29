@@ -12,6 +12,7 @@ import {
     TradingVault,
     VaultPriceFeed,
     WETH,
+    AddressesProvider,
 } from '../../types';
 import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './tx';
 import { getMarketSymbol, MOCK_PRICES } from '../shared/constants';
@@ -53,7 +54,11 @@ export async function deployToken() {
     return { usdt, weth, tokens };
 }
 
-export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWithAddress) {
+export async function deployPrice(
+    deployer: SignerWithAddress,
+    keeper: SignerWithAddress,
+    addressesProvider: AddressesProvider,
+) {
     console.log(` - setup price`);
 
     const pairConfigs = loadCurrentPairConfigs();
@@ -83,13 +88,8 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     }
     await vaultPriceFeed.setPriceSampleSpace(1);
 
-    let addressProvider = await deployContract('AddressesProvider', []);
-    let rolemanager = await deployContract('RoleManager', [addressProvider.address]);
-    await addressProvider.setRolManager(rolemanager.address);
-    await rolemanager.addRiskAdmin(deployer.address);
-    await rolemanager.addKeeper(keeper.address);
     const fastPriceFeed = (await deployContract('FastPriceFeed', [
-        addressProvider.address,
+        addressesProvider.address,
         120 * 60, // _maxPriceUpdateDelay
         2, // _minBlockInterval
     ])) as any as FastPriceFeed;
@@ -99,7 +99,9 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
 
     await fastPriceFeed.connect(deployer.signer).setMaxTimeDeviation(10000);
 
-    await fastPriceFeed.connect(keeper.signer).setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
+    await fastPriceFeed
+        .connect(keeper.signer)
+        .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
     await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
     await vaultPriceFeed.setIsSecondaryPriceEnabled(false);

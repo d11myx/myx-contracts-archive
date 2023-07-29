@@ -2,11 +2,13 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Signer } from 'ethers';
 import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
+    AddressesProvider,
     ExecuteRouter,
     FastPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
+    RoleManager,
     Token,
     TradingRouter,
     TradingUtils,
@@ -17,6 +19,7 @@ import {
 import { SymbolMap } from '../shared/types';
 import { deployPair, deployPrice, deployToken, deployTrading } from './contract-deployments';
 import { initPairs } from './init-helper';
+import { deployContract } from './tx';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -89,8 +92,14 @@ export async function setupTestEnv() {
     testEnv.pairTokens = tokens;
     testEnv.btc = tokens['BTC'];
 
+    const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
+    const roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
+    await addressesProvider.setRolManager(roleManager.address);
+    await roleManager.addPoolAdmin(deployer.address);
+    await roleManager.addKeeper(keeper.address);
+
     // setup price
-    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper);
+    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper, addressesProvider);
     testEnv.vaultPriceFeed = vaultPriceFeed;
     testEnv.fastPriceFeed = fastPriceFeed;
 
