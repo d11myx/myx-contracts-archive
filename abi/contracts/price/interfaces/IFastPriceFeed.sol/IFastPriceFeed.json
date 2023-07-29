@@ -1,5 +1,55 @@
 [
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "refPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fastPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "PriceData",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "priceFeed",
+        "type": "address"
+      }
+    ],
+    "name": "PriceUpdate",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "lastUpdatedAt",
     "outputs": [
@@ -23,50 +73,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_isSpreadEnabled",
-        "type": "bool"
-      }
-    ],
-    "name": "setIsSpreadEnabled",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "_tokens",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_maxCumulativeDeltaDiffs",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "setMaxCumulativeDeltaDiffs",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_maxDeviationBasisPoints",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxDeviationBasisPoints",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -99,32 +105,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_priceDataInterval",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPriceDataInterval",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_priceDuration",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPriceDuration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_priceBits",
         "type": "uint256"
       },
@@ -135,81 +115,6 @@
       }
     ],
     "name": "setPricesWithBits",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isActive",
-        "type": "bool"
-      }
-    ],
-    "name": "setSigner",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_spreadBasisPointsIfChainError",
-        "type": "uint256"
-      }
-    ],
-    "name": "setSpreadBasisPointsIfChainError",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_spreadBasisPointsIfInactive",
-        "type": "uint256"
-      }
-    ],
-    "name": "setSpreadBasisPointsIfInactive",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isActive",
-        "type": "bool"
-      }
-    ],
-    "name": "setUpdater",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_vaultPriceFeed",
-        "type": "address"
-      }
-    ],
-    "name": "setVaultPriceFeed",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
