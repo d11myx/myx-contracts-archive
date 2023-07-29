@@ -96,7 +96,14 @@ contract TradingUtils is ITradingUtils, Governable {
         return pnl;
     }
 
-    function validLeverage(address account, uint256 pairIndex, bool isLong, int256 _collateral, uint256 _sizeAmount, bool _increase) public view {
+    function validLeverage(
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        int256 _collateral,
+        uint256 _sizeAmount,
+        bool _increase
+    ) public view returns (uint256, uint256) {
         bytes32 key = getPositionKey(account, pairIndex, isLong);
         ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
         uint256 price = getPrice(pairIndex, isLong);
@@ -109,7 +116,7 @@ contract TradingUtils is ITradingUtils, Governable {
 
         // close position
         if (afterPosition == 0) {
-            return;
+            return (0, 0);
         }
 
         // check collateral
@@ -130,6 +137,8 @@ contract TradingUtils is ITradingUtils, Governable {
         require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
             && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
         require(afterPosition <= tradingConfig.maxPositionAmount, "exceed max position");
+
+        return (afterPosition, totalCollateral.abs());
     }
 
 }

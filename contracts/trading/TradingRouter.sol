@@ -126,14 +126,14 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 price = tradingUtils.getPrice(_request.pairIndex, _request.isLong);
 
         // check increase size
-        require(_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
+        require(_request.sizeAmount == 0 || (_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
 
         // check leverage
         bytes32 key = tradingUtils.getPositionKey(account, _request.pairIndex, _request.isLong);
-        tradingUtils.validLeverage(_request.account, _request.pairIndex, _request.isLong, _request.collateral, _request.sizeAmount, true);
+        (uint256 afterPosition, ) = tradingUtils.validLeverage(_request.account, _request.pairIndex, _request.isLong, _request.collateral, _request.sizeAmount, true);
 
         // check tp sl
-        require(_request.tp <= _request.sizeAmount && _request.sl <= _request.sizeAmount, "tp/sl exceeds max size");
+        require(_request.tp <= afterPosition && _request.sl <= afterPosition, "tp/sl exceeds max size");
         require(_request.tp == 0 || !positionHasTpSl[key][TradeType.TP], "tp already exists");
         require(_request.sl == 0 || !positionHasTpSl[key][TradeType.SL], "sl already exists");
 
@@ -228,9 +228,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             ));
 
         if (_tradeType == TradeType.MARKET) {
-            delete increaseMarketOrders[_orderId];
+            this.removeFromIncreaseMarketOrders(_orderId);
         } else if (_tradeType == TradeType.LIMIT) {
-            delete increaseLimitOrders[_orderId];
+            this.removeFromIncreaseLimitOrders(_orderId);
         }
 
         emit CancelIncreaseOrder(order.account, _orderId, _tradeType);
@@ -254,6 +254,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("createDecreaseOrder sizeAmount %s positionAmount %s positionDecreaseTotalAmount %s",
             _request.sizeAmount, position.positionAmount, positionDecreaseTotalAmount[positionKey]);
         require(_request.sizeAmount <= position.positionAmount - positionDecreaseTotalAmount[positionKey], "decrease amount exceed position");
+        require(_request.sizeAmount == 0 || (_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
 
         // check leverage
         tradingUtils.validLeverage(position.account, position.pairIndex, position.isLong, _request.collateral, _request.sizeAmount, false);
@@ -346,12 +347,12 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             ));
 
         if (order.tradeType == TradeType.MARKET) {
-            delete decreaseMarketOrders[_orderId];
+            this.removeFromDecreaseMarketOrders(_orderId);
         } else if (order.tradeType == TradeType.LIMIT) {
-            delete decreaseLimitOrders[_orderId];
+            this.removeFromDecreaseLimitOrders(_orderId);
         } else {
-            positionHasTpSl[key][order.tradeType] = false;
-            delete decreaseLimitOrders[_orderId];
+            this.setPositionHasTpSl(key, order.tradeType, false);
+            this.removeFromDecreaseLimitOrders(_orderId);
         }
 
         emit CancelDecreaseOrder(order.account, _orderId, order.tradeType);
