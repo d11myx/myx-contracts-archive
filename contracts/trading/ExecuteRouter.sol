@@ -526,7 +526,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256[] memory _prices,
         uint256 _timestamp,
         bytes32[] memory _positionKeys
-    ) external nonReentrant onlyPositionKeeper {
+    ) external onlyPositionKeeper {
         console.log("setPricesAndLiquidatePositions");
         fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.liquidatePositions(_positionKeys);
@@ -620,7 +620,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
         ITradingRouter.TradeType _tradeType
-    ) external nonReentrant onlyPositionKeeper {
+    ) external onlyPositionKeeper {
         console.log("setPricesAndExecuteADL");
         fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.executeADLAndDecreaseOrder(_positionKeys, _sizeAmounts, _orderId, _tradeType);
