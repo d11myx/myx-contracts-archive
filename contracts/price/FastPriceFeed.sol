@@ -33,7 +33,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     uint256 public maxPriceUpdateDelay;
 
-    uint256 public minBlockInterval;
     uint256 public maxTimeDeviation;
 
     mapping (address => bool) public isUpdater;
@@ -64,7 +63,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
       uint256 _minBlockInterval
     )  {
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
-        minBlockInterval = _minBlockInterval;
         gov = msg.sender;
         addressProvider=_addressProvider;
     }
@@ -75,10 +73,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyPoolAdmin {
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
-    }
-
-    function setMinBlockInterval(uint256 _minBlockInterval) external override onlyPoolAdmin {
-        minBlockInterval = _minBlockInterval;
     }
 
     function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyPoolAdmin {
@@ -173,10 +167,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     function _setLastUpdatedValues(uint256 _timestamp) private returns (bool) {
-        if (minBlockInterval > 0) {
-            require(block.number.sub(lastUpdatedBlock) >= minBlockInterval, "FastPriceFeed: minBlockInterval not yet passed");
-        }
-
+    
         uint256 _maxTimeDeviation = maxTimeDeviation;
         require(_timestamp > block.timestamp.sub(_maxTimeDeviation), "FastPriceFeed: _timestamp below allowed range");
         require(_timestamp < block.timestamp.add(_maxTimeDeviation), "FastPriceFeed: _timestamp exceeds allowed range");
