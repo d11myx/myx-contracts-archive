@@ -37,6 +37,7 @@ contract AddressesProvider is Ownable, IAddressProvider {
     }
 
     function setRolManager(address newAddress) external override onlyOwner {
+        require(newAddress!=address(0),"is 0");
         address oldAclManager = _addresses[ROLE_MANAGER];
         setAddress(ROLE_MANAGER, newAddress);
         emit AddressSet(ROLE_MANAGER,oldAclManager, newAddress);
