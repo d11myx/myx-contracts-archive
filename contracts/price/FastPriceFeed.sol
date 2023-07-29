@@ -35,8 +35,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
 
     uint256 public maxTimeDeviation;
 
-    mapping (address => bool) public isUpdater;
-
     mapping (address => uint256) public prices;
 
     address[] public tokens;
