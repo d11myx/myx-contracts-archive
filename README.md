@@ -6,6 +6,7 @@
 
 ### 测试账户
 
+- 私链
 ```text
 Account #0 (admin): 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
 Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
@@ -66,6 +67,25 @@ Private Key: 0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0
 
 Account #19 (keeper): 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199 (10000 ETH)
 Private Key: 0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e
+
+```
+
+- goerli
+```text
+Account #0 (admin): 0x9a51ed860dfd64ac1faf6f2df906c31b588d1f26
+Private Key: 0x35fb41f603c91d8fdf29391ce17e96d50f028dd895762027806cde096dca8a3b
+
+Account #1 (多签1): 0x229b2dd414fc6d64d49f252d6efd960bb80c49ad
+Private Key: 0x56e7a541829f9e675773c9e2542fe31c6cd8c742f156c1b5beafe3f4f483eea2
+
+Account #2 (多签2): 0x1A5240e6427c8fB400770b6260385cd18B89eD91
+Private Key: 0xe9733eeed09ad95c2ef876eb7c9073a68a49651101f93dfdc56bea3b16baabcd
+
+Account #3 (多签3): 0xF28C074e6d49332f89bA69FaA7438e5038F9e2B2
+Private Key: 0x2f218d6f236015060f30827825d5d24711d01d502d0a5bd3ec85043ff45c2ae2
+
+Account #4 (user1): 0xC177e2A539Be587792808D94d3Ca076c6317227c
+Private Key: 0xa661ddc2b2524edf18074ac62ed919c8af1fedcd658d5361e0ed7eee249ff168
 
 ```
 

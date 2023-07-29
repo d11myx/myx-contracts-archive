@@ -5,13 +5,14 @@ const hre = require("hardhat");
 const {BigNumber} = require("ethers");
 
 async function main() {
-  const addresses = {}
+  console.log("\n updatePair")
 
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
   let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
+  let pairLiquidity = await contractAt("PairLiquidity", await getConfig("PairLiquidity"));
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
@@ -56,29 +57,41 @@ async function main() {
     userDistributeP: 10000,
     treasuryDistributeP: 0
   }
-  console.log("pair0", pair, "\ntradingConfig", tradingConfig, "\ntradingFeeConfig", tradingFeeConfig,
-    "\nfundingFeeConfig", fundingFeeConfig);
   // btc - usdt
   let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
+  await pairInfo.updatePair(pairIndex, pair);
   await pairInfo.updateTradingConfig(pairIndex, tradingConfig);
   await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
-  await pairInfo.updateFundingFeeDistribute(pairIndex, fundingFeeConfig);
-  let pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
-  console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken}`);
-  await setConfig("Token-BTC-USDT", pairToken);
+  await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
+
+  let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+  console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken.address}`);
+  console.log(`pairToken owner  ${await pairToken.owner()}`)
+  await pairInfo.updatePairMiner(pairIndex, pairLiquidity.address, true);
+
+  console.log(`pair0: ${await pairInfo.getPair(pairIndex)},
+  tradingConfig: ${await pairInfo.getTradingConfig(pairIndex)},
+  tradingFeeConfig: ${await pairInfo.getTradingFeeConfig(pairIndex)},
+  fundingFeeConfig: ${await pairInfo.getFundingFeeConfig(pairIndex)}`);
 
   // eth - usdt
   pair.indexToken = eth.address;
   pair.initPrice = expandDecimals(2000, 30);
   pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-  console.log("pair1: ", pair);
+  await pairInfo.updatePair(pairIndex, pair);
   await pairInfo.updateTradingConfig(pairIndex, tradingConfig);
   await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
-  await pairInfo.updateFundingFeeDistribute(pairIndex, fundingFeeConfig);
+  await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
 
-  pairToken = (await pairInfo.pairs(pairIndex)).pairToken;
-  console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken}`);
-  await setConfig("Token-ETH-USDT", pairToken);
+  pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+  console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken.address}`);
+  console.log(`pairToken owner  ${await pairToken.owner()}`)
+  await pairInfo.updatePairMiner(pairIndex, pairLiquidity.address, true);
+
+  console.log(`pair1: ${await pairInfo.getPair(pairIndex)},
+  tradingConfig: ${await pairInfo.getTradingConfig(pairIndex)},
+  tradingFeeConfig: ${await pairInfo.getTradingFeeConfig(pairIndex)},
+  fundingFeeConfig: ${await pairInfo.getFundingFeeConfig(pairIndex)}`);
 
 }
 

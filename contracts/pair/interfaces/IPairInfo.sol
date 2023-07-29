@@ -48,12 +48,6 @@ interface IPairInfo {
         uint256 treasuryDistributeP;
     }
 
-    function pairIndexes(address, address) external view returns(uint256);
-
-    function isPairListed(address, address) external view returns (bool);
-
-    function pairsCount() external view returns (uint256);
-
     function getPair(uint256) external view returns(Pair memory);
 
     function getTradingConfig(uint256 _pairIndex) external view returns(TradingConfig memory);
