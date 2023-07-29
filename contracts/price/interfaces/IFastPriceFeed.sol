@@ -10,7 +10,6 @@ interface IFastPriceFeed {
 
     function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external;
     
-    function setMinBlockInterval(uint256 _minBlockInterval) external;
 
     function setPricesWithBits(uint256 _priceBits, uint256 _timestamp) external;
 }
