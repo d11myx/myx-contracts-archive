@@ -10,11 +10,6 @@
         "internalType": "uint256",
         "name": "_referencePrice",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
       }
     ],
     "name": "getPrice",
