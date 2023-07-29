@@ -7,13 +7,12 @@ import '../interfaces/IRoleManager.sol';
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IVaultPriceFeed.sol";
-import "../libraries/access/Governable.sol";
 
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
+contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -55,8 +54,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     constructor(
       IAddressProvider _addressProvider
     )  {
-        
-        gov = msg.sender;
         addressProvider=_addressProvider;
     }
 
@@ -114,7 +111,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
-    function getPrice(address _token, uint256 _refPrice, bool _maximise) external override view returns (uint256) {
+    function getPrice(address _token, uint256 _refPrice) external override view returns (uint256) {
         uint256 fastPrice = prices[_token];
         console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
 
