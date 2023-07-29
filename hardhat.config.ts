@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 
-import { HardhatUserConfig, task } from 'hardhat/config';
+import {HardhatUserConfig, task} from 'hardhat/config';
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
@@ -40,6 +40,8 @@ const LOCAL_PRIVATE_KEY17 = '0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1b
 const LOCAL_PRIVATE_KEY18 = '0x689af8efa8c651a91ad287602527f3af2fe9f6501a7ac4b061667b5a93e037fd';
 const LOCAL_PRIVATE_KEY19 = '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0';
 const LOCAL_PRIVATE_KEY20 = '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e';
+
+const GOERLI_DEPLOY_KEY = '0x35fb41f603c91d8fdf29391ce17e96d50f028dd895762027806cde096dca8a3b';
 
 // const GOERLI_DEPLOY_KEY = "";
 const abiDecoder = require('abi-decoder');
@@ -178,6 +180,12 @@ const config: HardhatUserConfig = {
             ],
             // gas: gas,
             // gasPrice: gasPrice
+        },
+        goerli: {
+            // url: "https://rpc.ankr.com/eth_goerli",
+            url: "https://goerli.infura.io/v3/c0beb1509e87416b83e1d9e02203bef7",
+            accounts:
+                [GOERLI_DEPLOY_KEY]
         },
     },
     etherscan: {
