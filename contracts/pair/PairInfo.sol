@@ -4,14 +4,13 @@ import "../token/interfaces/IPairToken.sol";
 import "../token/PairToken.sol";
 import './interfaces/IPairInfo.sol';
 import './interfaces/IPairLiquidity.sol';
+import "./interfaces/IPairInfo.sol";
 
 pragma solidity 0.8.17;
 
 contract PairInfo is IPairInfo, Handleable {
 
     uint256 public constant PERCENTAGE = 10000;
-
-    IPairLiquidity public pairLiquidity;
 
     uint256 public pairsCount;
 
@@ -35,57 +34,43 @@ contract PairInfo is IPairInfo, Handleable {
         __Handleable_init();
     }
 
-    function setPairLiquidity(IPairLiquidity _pairLiquidity) external onlyHandler {
-        pairLiquidity = _pairLiquidity;
-    }
-
     // Manage pairs
     function addPair(
-        Pair calldata _pair,
-        TradingConfig calldata _tradingConfig,
-        TradingFeeConfig calldata _tradingFeeConfig,
-        FundingFeeConfig calldata _fundingFeeConfig
+        address _indexToken,
+        address _stableToken,
+        address _pairLiquidity
     ) external onlyHandler {
-        address indexToken = _pair.indexToken;
-        address stableToken = _pair.stableToken;
 
-        uint256 pairIndex = pairIndexes[indexToken][stableToken];
+        require(_indexToken != _stableToken, "identical address");
+        require(_indexToken != address(0) && _stableToken != address(0), "zero address");
+        require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
 
-        require(!isPairListed[indexToken][stableToken], 'pair already listed');
+        address pairToken = _createPair(_indexToken, _stableToken, _pairLiquidity);
 
-        pairIndexes[indexToken][stableToken] = pairsCount;
+        isPairListed[_indexToken][_stableToken] = true;
+        pairIndexes[_indexToken][_stableToken] = pairsCount;
 
-        require(indexToken != stableToken, 'identical address');
-        require(indexToken != address(0) && stableToken != address(0), 'zero address');
-        isPairListed[indexToken][stableToken] = true;
+        Pair storage pair = pairs[pairsCount];
+        pair.indexToken = _indexToken;
+        pair.stableToken = _stableToken;
+        pair.pairToken = pairToken;
 
-        address pairToken = _createPair(indexToken, stableToken);
-        pairs[pairsCount] = _pair;
-        pairs[pairsCount].pairToken = pairToken;
-
-        require(_tradingFeeConfig.lpDistributeP + _tradingFeeConfig.keeperDistributeP + _tradingFeeConfig.treasuryDistributeP
-            + _tradingFeeConfig.refererDistributeP == PERCENTAGE, "percentage exceed 100%");
-        require(_fundingFeeConfig.lpDistributeP + _fundingFeeConfig.userDistributeP + _fundingFeeConfig.treasuryDistributeP == PERCENTAGE,
-            "percentage exceed 100%");
-        tradingConfigs[pairsCount] = _tradingConfig;
-        tradingFeeConfigs[pairsCount] = _tradingFeeConfig;
-        fundingFeeConfigs[pairsCount] = _fundingFeeConfig;
-
-        emit PairAdded(indexToken, stableToken, pairToken, pairsCount++);
+        emit PairAdded(_indexToken, _stableToken, pairToken, pairsCount++);
     }
 
-    function _createPair(address indexToken, address stableToken) private returns (address) {
-        bytes memory bytecode = abi.encodePacked(type(PairToken).creationCode, abi.encode(indexToken, stableToken, address(pairLiquidity)));
+    function _createPair(address indexToken, address stableToken, address pairLiquidity) private returns (address) {
+        bytes memory bytecode = abi.encodePacked(type(PairToken).creationCode, abi.encode(indexToken, stableToken));
         bytes32 salt = keccak256(abi.encodePacked(indexToken, stableToken));
         address pairToken;
         assembly {
             pairToken := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
+        IPairToken(pairToken).setMiner(pairLiquidity, true);
         return pairToken;
     }
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyHandler {
-        Pair memory pair = pairs[_pairIndex];
+        Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
 
         pair.enable = _pair.enable;
@@ -108,6 +93,13 @@ contract PairInfo is IPairInfo, Handleable {
         require(_fundingFeeConfig.lpDistributeP + _fundingFeeConfig.userDistributeP + _fundingFeeConfig.treasuryDistributeP == PERCENTAGE,
             "percentage exceed 100%");
         fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
+    }
+
+    function updatePairMiner(uint256 _pairIndex, address _account, bool _enable) external onlyHandler {
+        Pair memory pair = pairs[_pairIndex];
+        require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
+
+        IPairToken(pair.pairToken).setMiner(_account, _enable);
     }
 
     function getPair(uint256 _pairIndex) external view override returns(Pair memory) {
