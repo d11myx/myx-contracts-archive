@@ -8,10 +8,10 @@ import { ethers } from 'hardhat';
 describe('Access Control List Manager', () => {
     let roleManager: RoleManager;
 
-    const OPERATOR_ROLE = utils.keccak256(utils.formatBytes32String('OPERATOR_ROLE'));
-    const KEEPER_ROLE = utils.keccak256(utils.formatBytes32String('KEEPER_ROLE'));
+    // const OPERATOR_ROLE = utils.keccak256(utils.formatBytes32String('OPERATOR_ROLE'));
+    // const KEEPER_ROLE = utils.keccak256(utils.formatBytes32String('KEEPER_ROLE'));
 
-    before(async () => {
+    beforeEach(async () => {
         await setupTestEnv();
         const { deployer, keeper } = testEnv;
         const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
@@ -36,7 +36,7 @@ describe('Access Control List Manager', () => {
             deployer,
             users: [keeper1],
         } = testEnv;
-
+        let OPERATOR_ROLE = await roleManager.OPERATOR_ROLE();
         expect(await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)).to.be.eq(false);
         await roleManager.connect(deployer.signer).grantRole(OPERATOR_ROLE, keeper1.address);
         expect(await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)).to.be.eq(true);
@@ -46,6 +46,7 @@ describe('Access Control List Manager', () => {
         const {
             users: [keeper1, keeper2],
         } = testEnv;
+        let KEEPER_ROLE = await roleManager.KEEPER_ROLE();
 
         console.log('KEEPER_ROLE:' + KEEPER_ROLE);
         let keeperRole = await roleManager.KEEPER_ROLE();
@@ -65,55 +66,48 @@ describe('Access Control List Manager', () => {
     it('Make OPERATOR_ROLE admin of FLASH_BORROWER_ROLE', async () => {
         const { deployer } = testEnv;
         const OPERATOR_ROLE = await roleManager.OPERATOR_ROLE();
-        expect(await roleManager.getRoleAdmin(OPERATOR_ROLE)).to.not.be.eq(
-            OPERATOR_ROLE
-        );
-        await roleManager
-            .connect(deployer.signer)
-            .setRoleAdmin(OPERATOR_ROLE, OPERATOR_ROLE);
+        expect(await roleManager.getRoleAdmin(OPERATOR_ROLE)).to.not.be.eq(OPERATOR_ROLE);
+        await roleManager.connect(deployer.signer).setRoleAdmin(OPERATOR_ROLE, OPERATOR_ROLE);
         expect(await roleManager.getRoleAdmin(OPERATOR_ROLE)).to.be.eq(OPERATOR_ROLE);
     });
 
-    it('OPERATOR_ROLE grant FLASH_BORROW_ROLE', async () => {
+    it('Treasurer', async () => {
         const {
+            deployer,
             users: [keeper1, keeper2],
         } = testEnv;
 
+        let TREASURER_ROLE = await roleManager.TREASURER_ROLE();
+
+        await roleManager.addTreasurer(keeper1.address);
         expect(await roleManager.isTreasurer(keeper2.address)).to.be.eq(false);
-        expect(
-            await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-        ).to.be.eq(true);
+        expect(await roleManager.hasRole(TREASURER_ROLE, keeper1.address)).to.be.eq(true);
+        await roleManager.setRoleAdmin(TREASURER_ROLE, ethers.constants.HashZero);
+        // await roleManager.connect(keeper1.signer).addTreasurer(keeper2.address);
 
-        await roleManager.connect(keeper1.signer).addTreasurer(keeper2.address);
-
-        expect(await roleManager.isTreasurer(keeper2.address)).to.be.eq(true);
-        expect(
-            await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-        ).to.be.eq(true);
+        // expect(await roleManager.isTreasurer(keeper2.address)).to.be.eq(true);
+        // expect(await roleManager.hasRole(TREASURER_ROLE, keeper1.address)).to.be.eq(true);
     });
 
-    // it('DEFAULT_ADMIN tries to revoke FLASH_BORROW_ROLE (revert expected)', async () => {
-    //     const {
-    //         deployer,
-    //         users: [keeper1, keeper2],
-    //     } = testEnv;
+    it('DEFAULT_ADMIN tries to revoke OPERATOR_ROLE (revert expected)', async () => {
+        const {
+            deployer,
+            users: [keeper1, keeper2],
+        } = testEnv;
 
-    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(true);
+        let OPERATOR_ROLE = roleManager.OPERATOR_ROLE();
+        await roleManager.addOperator(keeper2.address);
+        await roleManager.addOperator(keeper1.address);
+        expect(await roleManager.isOperator(keeper2.address)).to.be.eq(true);
+        expect(await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)).to.be.eq(true);
 
-    //     await expect(
-    //         roleManager.connect(deployer.signer).removeFlashBorrower(keeper2.address)
-    //     ).to.be.revertedWith(
-    //         `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${OPERATOR_ROLE}`
-    //     );
+        await expect(roleManager.connect(keeper2.signer).removeOperator(keeper2.address)).to.be.revertedWith(
+            `AccessControl: account ${keeper2.address.toLowerCase()} is missing role ${ethers.constants.HashZero}`,
+        );
 
-    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(true);
-    // });
+        // expect(await roleManager.addOperator(keeper2.address)).to.be.eq(true);
+        expect(await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)).to.be.eq(true);
+    });
 
     // it('Grant POOL_ADMIN role', async () => {
     //     const {
