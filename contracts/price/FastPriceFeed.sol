@@ -19,7 +19,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     uint256 public constant PRICE_PRECISION = 10 ** 30;
 
     uint256 public constant MAX_REF_PRICE = type(uint160).max;
-    
 
     // uint256(~0) is 256 bits of 1s
     // shift the 1s by (256 - 32) to get (256 - 32) 0s followed by 32 1s
@@ -32,19 +31,15 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     uint256 public override lastUpdatedAt;
     uint256 public override lastUpdatedBlock;
 
-    
     uint256 public maxPriceUpdateDelay;
-    
+
     uint256 public minBlockInterval;
     uint256 public maxTimeDeviation;
-
-
-
 
     mapping (address => bool) public isUpdater;
 
     mapping (address => uint256) public prices;
-    
+
     address[] public tokens;
     // array of tokenPrecisions used in setCompactedPrices, saves L1 calldata gas costs
     // if the token price will be sent with 3 decimals, then tokenPrecision for that token
@@ -57,9 +52,9 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
         _;
     }
-    
-     modifier onlyRiskAdmin() {
-        require(IRoleManager(addressProvider.getRoleManager()).isRiskAdmin(msg.sender), "onlyRiskAdmin");
+
+     modifier onlyPoolAdmin() {
+        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
 
@@ -68,33 +63,29 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
       uint256 _maxPriceUpdateDelay,
       uint256 _minBlockInterval
     )  {
-        
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
         minBlockInterval = _minBlockInterval;
         gov = msg.sender;
         addressProvider=_addressProvider;
     }
 
-  
-
-    function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyRiskAdmin {
+    function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyPoolAdmin {
         maxTimeDeviation = _maxTimeDeviation;
     }
 
-    function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyRiskAdmin {
+    function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyPoolAdmin {
         maxPriceUpdateDelay = _maxPriceUpdateDelay;
     }
 
-    function setMinBlockInterval(uint256 _minBlockInterval) external override onlyRiskAdmin {
+    function setMinBlockInterval(uint256 _minBlockInterval) external override onlyPoolAdmin {
         minBlockInterval = _minBlockInterval;
     }
 
-    function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyRiskAdmin {
+    function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyPoolAdmin {
         lastUpdatedAt = _lastUpdatedAt;
     }
 
-
-    function setTokens(address[] memory _tokens, uint256[] memory _tokenPrecisions) external onlyRiskAdmin {
+    function setTokens(address[] memory _tokens, uint256[] memory _tokenPrecisions) external onlyPoolAdmin {
         require(_tokens.length == _tokenPrecisions.length, "FastPriceFeed: invalid lengths");
         tokens = _tokens;
         tokenPrecisions = _tokenPrecisions;
@@ -116,8 +107,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
         if (shouldUpdate) {
-            
-
             for (uint256 i = 0; i < _priceBitArray.length; i++) {
                 uint256 priceBits = _priceBitArray[i];
 
@@ -143,8 +132,6 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     function getPrice(address _token, uint256 _refPrice, bool _maximise) external override view returns (uint256) {
-        
-
         uint256 fastPrice = prices[_token];
         console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
 
