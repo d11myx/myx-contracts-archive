@@ -109,160 +109,74 @@ describe('Access Control List Manager', () => {
         expect(await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)).to.be.eq(true);
     });
 
-    // it('Grant POOL_ADMIN role', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, poolAdmin],
-    //     } = testEnv;
+    it('Grant POOL_ADMIN role', async () => {
+        const {
+            deployer,
+            users: [, poolAdmin],
+        } = testEnv;
 
-    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
-    //     await roleManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address);
-    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(true);
-    // });
+        expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address);
+        expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(true);
+        await roleManager.removePoolAdmin(poolAdmin.address);
+        expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
+    });
 
-    // it('Grant EMERGENCY_ADMIN role', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , emergencyAdmin],
-    //     } = testEnv;
+    it('Grant Operator role', async () => {
+        const {
+            deployer,
+            users: [, , emergencyAdmin],
+        } = testEnv;
 
-    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(false);
-    //     await roleManager.connect(deployer.signer).addEmergencyAdmin(emergencyAdmin.address);
-    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(true);
-    // });
+        expect(await roleManager.isOperator(emergencyAdmin.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).addOperator(emergencyAdmin.address);
+        expect(await roleManager.isOperator(emergencyAdmin.address)).to.be.eq(true);
+        await roleManager.connect(deployer.signer).removeOperator(emergencyAdmin.address);
+        expect(await roleManager.isOperator(emergencyAdmin.address)).to.be.eq(false);
+    });
 
-    // it('Grant BRIDGE role', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , , bridge],
-    //     } = testEnv;
+    it('Grant BRIDGE role', async () => {
+        const {
+            deployer,
+            users: [, , , bridge],
+        } = testEnv;
 
-    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(false);
-    //     await roleManager.connect(deployer.signer).addBridge(bridge.address);
-    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(true);
-    // });
+        expect(await roleManager.isTreasurer(bridge.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).addTreasurer(bridge.address);
+        expect(await roleManager.isTreasurer(bridge.address)).to.be.eq(true);
+        await roleManager.connect(deployer.signer).removeTreasurer(bridge.address);
+        expect(await roleManager.isTreasurer(bridge.address)).to.be.eq(false);
+    });
 
-    // it('Grant RISK_ADMIN role', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , , , riskAdmin],
-    //     } = testEnv;
+    it('Grant RISK_ADMIN role', async () => {
+        const {
+            deployer,
+            users: [, , , , riskAdmin],
+        } = testEnv;
 
-    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(false);
-    //     await roleManager.connect(deployer.signer).addRiskAdmin(riskAdmin.address);
-    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(true);
-    // });
+        expect(await roleManager.isKeeper(riskAdmin.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).addKeeper(riskAdmin.address);
+        expect(await roleManager.isKeeper(riskAdmin.address)).to.be.eq(true);
+        await roleManager.connect(deployer.signer).removeKeeper(riskAdmin.address);
+        expect(await roleManager.isKeeper(riskAdmin.address)).to.be.eq(false);
+    });
 
-    // it('Grant ASSET_LISTING_ADMIN role', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , , , , assetListingAdmin],
-    //     } = testEnv;
+    it('Grant ASSET_LISTING_ADMIN role', async () => {
+        const {
+            deployer,
+            users: [, , , , , assetListingAdmin],
+        } = testEnv;
 
-    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(false);
-    //     await roleManager.connect(deployer.signer).addAssetListingAdmin(assetListingAdmin.address);
-    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(true);
-    // });
+        expect(await roleManager.isAdmin(assetListingAdmin.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).addAdmin(assetListingAdmin.address);
+        expect(await roleManager.isAdmin(assetListingAdmin.address)).to.be.eq(true);
+        await roleManager.connect(deployer.signer).removeAdmin(assetListingAdmin.address);
+        expect(await roleManager.isAdmin(assetListingAdmin.address)).to.be.eq(false);
+    });
 
-    // it('Revoke FLASH_BORROWER', async () => {
-    //     const {
-    //         users: [keeper1, keeper2],
-    //     } = testEnv;
+    it('Tries to deploy  is ZERO_ADDRESS (revert expected)', async () => {
+        const { deployer, addressesProvider } = testEnv;
 
-    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(true);
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(true);
-
-    //     await roleManager
-    //         .connect(keeper1.signer)
-    //         .removeFlashBorrower(keeper2.address);
-
-    //     expect(await roleManager.isFlashBorrower(keeper2.address)).to.be.eq(false);
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(true);
-    // });
-
-    // it('Revoke OPERATOR_ROLE', async () => {
-    //     const {
-    //         deployer,
-    //         users: [keeper1],
-    //     } = testEnv;
-
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(true);
-    //     await roleManager
-    //         .connect(deployer.signer)
-    //         .revokeRole(OPERATOR_ROLE, keeper1.address);
-    //     expect(
-    //         await roleManager.hasRole(OPERATOR_ROLE, keeper1.address)
-    //     ).to.be.eq(false);
-    // });
-
-    // it('Revoke POOL_ADMIN', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, poolAdmin],
-    //     } = testEnv;
-
-    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(true);
-    //     await roleManager.connect(deployer.signer).removePoolAdmin(poolAdmin.address);
-    //     expect(await roleManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
-    // });
-
-    // it('Revoke EMERGENCY_ADMIN', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , emergencyAdmin],
-    //     } = testEnv;
-
-    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(true);
-    //     await roleManager.connect(deployer.signer).removeEmergencyAdmin(emergencyAdmin.address);
-    //     expect(await roleManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(false);
-    // });
-
-    // it('Revoke BRIDGE', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , , bridge],
-    //     } = testEnv;
-
-    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(true);
-    //     await roleManager.connect(deployer.signer).removeBridge(bridge.address);
-    //     expect(await roleManager.isBridge(bridge.address)).to.be.eq(false);
-    // });
-
-    // it('Revoke RISK_ADMIN', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , , , riskAdmin],
-    //     } = testEnv;
-
-    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(true);
-    //     await roleManager.connect(deployer.signer).removeRiskAdmin(riskAdmin.address);
-    //     expect(await roleManager.isRiskAdmin(riskAdmin.address)).to.be.eq(false);
-    // });
-
-    // it('Revoke ASSET_LISTING_ADMIN', async () => {
-    //     const {
-    //         deployer,
-    //         users: [, , , , , assetListingAdmin],
-    //     } = testEnv;
-
-    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(true);
-    //     await roleManager
-    //         .connect(deployer.signer)
-    //         .removeAssetListingAdmin(assetListingAdmin.address);
-    //     expect(await roleManager.isAssetListingAdmin(assetListingAdmin.address)).to.be.eq(false);
-    // });
-
-    // it('Tries to deploy roleManager when ACLAdmin is ZERO_ADDRESS (revert expected)', async () => {
-    //     const { deployer, addressesProvider } = testEnv;
-
-    //     expect(await addressesProvider.setACLAdmin(ZERO_ADDRESS));
-    //     const deployTx = new ACLManager__factory(deployer.signer).deploy(addressesProvider.address);
-    //     await expect(deployTx).to.be.revertedWith(ProtocolErrors.ACL_ADMIN_CANNOT_BE_ZERO);
-    // });
+        await expect( addressesProvider.setRolManager(ethers.constants.AddressZero)).to.be.revertedWith('is 0');
+    });
 });
