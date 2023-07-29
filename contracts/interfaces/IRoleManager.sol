@@ -3,25 +3,36 @@ pragma solidity ^0.8.0;
 
 interface IRoleManager {
 
-  
+
     function setRoleAdmin(bytes32 role, bytes32 adminRole) external;
 
-    function addAdmin(address ) external;
+    function addAdmin(address) external;
 
-    function removeAdmin(address ) external;
+    function removeAdmin(address) external;
 
-    function isAdmin(address ) external view returns (bool);
+    function isAdmin(address) external view returns (bool);
 
-    function addRiskAdmin(address ) external;
+    function addPoolAdmin(address poolAdmin) external;
 
-    function removeRiskAdmin(address ) external;
+    function removePoolAdmin(address poolAdmin) external;
 
-    function isRiskAdmin(address ) external view returns (bool);
+    function isPoolAdmin(address poolAdmin) external view returns (bool);
 
+    function addOperator(address operator) external;
 
-    function addKeeper(address ) external;
+    function removeOperator(address operator) external;
 
-    function removeKeeper(address ) external;
+    function isOperator(address operator) external view returns (bool);
 
-    function isKeeper(address ) external view returns (bool);
+    function addTreasurer(address treasurer) external;
+
+    function removeTreasurer(address treasurer) external;
+
+    function isTreasurer(address treasurer) external view returns (bool);
+
+    function addKeeper(address) external;
+
+    function removeKeeper(address) external;
+
+    function isKeeper(address) external view returns (bool);
 }
