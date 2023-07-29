@@ -17,7 +17,18 @@ describe('Router: Liquidation cases', () => {
         btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
         await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
     });
-    after(async () => {});
+    after(async () => {
+        const { keeper, btc, fastPriceFeed } = testEnv
+
+        await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+        await waitForTx(
+            await fastPriceFeed.connect(keeper.signer).setPrices(
+                [btc.address],
+                [ethers.utils.parseUnits('30000', 30)],
+                (await getBlockTimestamp()) + 100,
+            ),
+        );
+    });
 
     it("user's position leverage exceeded 100x, liquidated", async () => {
         const {
