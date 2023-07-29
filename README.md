@@ -93,6 +93,69 @@ event: UpdateFundingRate id: 30ee8c76a6febcb0400fb07183d873b5c18cf9e5ca6a4710467
 event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a639ef285ad
 ```
 
+#### 设置参数
+
+- PairInfo
+```text
+// 更新交易对配置
+updatePair(uint256 _pairIndex, Pair calldata _pair)
+
+struct Pair {
+    address indexToken;     // 交易对基础币种
+    address stableToken;    // 交易对稳定币
+    address pairToken;      // lp token
+    bool enable;            // 是否可用
+    uint256 kOfSwap;        // 流动性初始k值
+    uint256 initPrice;      // index / stable 初始价格 10^30
+    uint256 addLpFeeP;      // 添加流动性手续费
+}
+
+// 更新交易配置
+updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig)
+
+struct TradingConfig {
+    uint256 minLeverage;        // 最小杠杆
+    uint256 maxLeverage;        // 最大杠杆
+    uint256 minTradeAmount;     // 最小交易量
+    uint256 maxTradeAmount;     // 最大交易量
+    uint256 maxPositionAmount;  // 最大持仓量
+    uint256 maintainMarginRate; // 维持保证金率 10000 for 100%
+    uint256 priceSlipP;         // 价格滑点
+    uint256 maxPriceDeviationP; // 指数价格最大偏移量
+}
+
+// 更新交易手续费配置
+updateTradingFeeConfig(uint256 _pairIndex, TradingFeeConfig calldata _tradingFeeConfig)
+
+struct TradingFeeConfig {
+    // fee
+    uint256 takerFeeP;          // taker手续费率
+    uint256 makerFeeP;          // maker手续费率
+    // Distribute
+    uint256 lpDistributeP;      // lp分配比例
+    uint256 keeperDistributeP;  // keeper分配比例
+    uint256 treasuryDistributeP;// 国库分配比例
+    uint256 refererDistributeP; // 邀请人分配比例
+}
+
+// 更新资金费配置
+updateFundingFeeConfig(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig)
+
+
+struct FundingFeeConfig {
+    // factor
+    uint256 minFundingRate;             // 最小资金费率   1000000 for 100%
+    uint256 maxFundingRate;             // 最大资金费率   1000000 for 100%
+    uint256 fundingWeightFactor;        // 多空双方资金费率权重系数 10000 for 100%
+    uint256 liquidityPremiumFactor;     // 流动性对于溢价的系数  10000 for 100%
+    uint256 interest;
+    // Distribute
+    uint256 lpDistributeP;              // lp分配比例
+    uint256 userDistributeP;            // 用户分配比例
+    uint256 treasuryDistributeP;        // 国库分配比例
+}
+```
+
 #### 开仓
 
 -   TradingRouter
