@@ -36,9 +36,7 @@ async function main() {
 
     await addressProvider.setRolManager(rolemanager.address);
     let fastPriceFeed = await deployContract('FastPriceFeed', [
-        addressProvider.address,
-        120 * 60, // _maxPriceUpdateDelay
-        2, // _minBlockInterval
+        addressProvider.address
     ]);
     console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`);
     await rolemanager.addRiskAdmin(user0.address);

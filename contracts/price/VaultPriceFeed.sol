@@ -161,7 +161,7 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
     function getSecondaryPrice(address _token, uint256 _referencePrice, bool _maximise) public view returns (uint256) {
         if (secondaryPriceFeed == address(0)) { return _referencePrice; }
-        return ISecondaryPriceFeed(secondaryPriceFeed).getPrice(_token, _referencePrice, _maximise);
+        return ISecondaryPriceFeed(secondaryPriceFeed).getPrice(_token, _referencePrice);
     }
 
   
