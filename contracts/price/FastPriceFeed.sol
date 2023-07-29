@@ -7,13 +7,12 @@ import '../interfaces/IRoleManager.sol';
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
 import "./interfaces/IVaultPriceFeed.sol";
-import "../libraries/access/Governable.sol";
 
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
+contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -29,14 +28,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     uint256 public constant MAX_PRICE_DURATION = 30 minutes;
 
     uint256 public override lastUpdatedAt;
-    uint256 public override lastUpdatedBlock;
 
-    uint256 public maxPriceUpdateDelay;
-
-    uint256 public minBlockInterval;
     uint256 public maxTimeDeviation;
-
-    mapping (address => bool) public isUpdater;
 
     mapping (address => uint256) public prices;
 
@@ -59,26 +52,13 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     constructor(
-      IAddressProvider _addressProvider,
-      uint256 _maxPriceUpdateDelay,
-      uint256 _minBlockInterval
+      IAddressProvider _addressProvider
     )  {
-        maxPriceUpdateDelay = _maxPriceUpdateDelay;
-        minBlockInterval = _minBlockInterval;
-        gov = msg.sender;
         addressProvider=_addressProvider;
     }
 
     function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyPoolAdmin {
         maxTimeDeviation = _maxTimeDeviation;
-    }
-
-    function setMaxPriceUpdateDelay(uint256 _maxPriceUpdateDelay) external override onlyPoolAdmin {
-        maxPriceUpdateDelay = _maxPriceUpdateDelay;
-    }
-
-    function setMinBlockInterval(uint256 _minBlockInterval) external override onlyPoolAdmin {
-        minBlockInterval = _minBlockInterval;
     }
 
     function setLastUpdatedAt(uint256 _lastUpdatedAt) external onlyPoolAdmin {
@@ -131,7 +111,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
-    function getPrice(address _token, uint256 _refPrice, bool _maximise) external override view returns (uint256) {
+    function getPrice(address _token, uint256 _refPrice) external override view returns (uint256) {
         uint256 fastPrice = prices[_token];
         console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
 
@@ -173,10 +153,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
     }
 
     function _setLastUpdatedValues(uint256 _timestamp) private returns (bool) {
-        if (minBlockInterval > 0) {
-            require(block.number.sub(lastUpdatedBlock) >= minBlockInterval, "FastPriceFeed: minBlockInterval not yet passed");
-        }
-
+    
         uint256 _maxTimeDeviation = maxTimeDeviation;
         require(_timestamp > block.timestamp.sub(_maxTimeDeviation), "FastPriceFeed: _timestamp below allowed range");
         require(_timestamp < block.timestamp.add(_maxTimeDeviation), "FastPriceFeed: _timestamp exceeds allowed range");
@@ -185,10 +162,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed, Governable {
         if (_timestamp < lastUpdatedAt) {
             return false;
         }
-
         lastUpdatedAt = _timestamp;
-        lastUpdatedBlock = block.number;
-
         return true;
     }
 }
