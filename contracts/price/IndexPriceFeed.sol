@@ -12,7 +12,7 @@ import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
+contract IndexPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;

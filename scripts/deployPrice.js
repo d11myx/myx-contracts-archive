@@ -35,7 +35,7 @@ async function main() {
     let rolemanager = await deployContract('RoleManager', [addressProvider.address]);
 
     await addressProvider.setRolManager(rolemanager.address);
-    let fastPriceFeed = await deployContract('FastPriceFeed', [
+    let fastPriceFeed = await deployContract('IndexPriceFeed', [
         addressProvider.address
     ]);
     console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`);

@@ -24,7 +24,7 @@ async function main() {
 
   let tokens = ["BTC", "ETH"]
   let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   for (let symbol of tokens) {
     console.log(repeatString('-'))

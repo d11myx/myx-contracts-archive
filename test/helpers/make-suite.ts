@@ -4,7 +4,7 @@ import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
     AddressesProvider,
     ExecuteRouter,
-    FastPriceFeed,
+    IndexPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
@@ -41,7 +41,7 @@ export interface TestEnv {
     pairLiquidity: PairLiquidity;
     pairVault: PairVault;
     vaultPriceFeed: VaultPriceFeed;
-    fastPriceFeed: FastPriceFeed;
+    fastPriceFeed: IndexPriceFeed;
     tradingUtils: TradingUtils;
     tradingVault: TradingVault;
     tradingRouter: TradingRouter;
@@ -61,7 +61,7 @@ export const testEnv: TestEnv = {
     pairLiquidity: {} as PairLiquidity,
     pairVault: {} as PairVault,
     vaultPriceFeed: {} as VaultPriceFeed,
-    fastPriceFeed: {} as FastPriceFeed,
+    fastPriceFeed: {} as IndexPriceFeed,
     tradingUtils: {} as TradingUtils,
     tradingVault: {} as TradingVault,
     tradingRouter: {} as TradingRouter,
