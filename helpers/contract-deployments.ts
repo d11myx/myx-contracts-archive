@@ -13,13 +13,14 @@ import {
     OraclePriceFeed,
     WETH,
     AddressesProvider,
-} from '../../types';
-import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './tx';
-import { getMarketSymbol, MOCK_PRICES } from '../shared/constants';
-import { loadCurrentPairConfigs } from './market-config-helper';
-import { SymbolMap } from '../shared/types';
-import { getPairToken, SignerWithAddress, testEnv } from './make-suite';
+} from '../types';
+import { loadReserveConfig } from './market-config-helper';
 import { ethers } from 'ethers';
+import { MARKET_NAME } from './env';
+import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './utilities/tx';
+import { getMarketSymbol, MOCK_PRICES } from './constants';
+import { SymbolMap } from './types';
+import { getPairToken, SignerWithAddress, testEnv } from '../test/helpers/make-suite';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -41,8 +42,8 @@ export async function deployToken() {
     const weth = await deployWETH();
     console.log(`deployed WETH at ${weth.address}`);
 
-  // pairs token
-  const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
+    // pairs token
+    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
     const tokens: SymbolMap<Token> = {};
     for (let pair of Object.keys(pairConfigs)) {
@@ -61,7 +62,7 @@ export async function deployPrice(
 ) {
     console.log(` - setup price`);
 
-  const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
+    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
     const vaultPriceFeed = (await deployContract('OraclePriceFeed', [
         addressesProvider.address,
@@ -89,8 +90,9 @@ export async function deployPrice(
         );
     }
 
-
-    const fastPriceFeed = (await deployContract('IndexPriceFeed', [addressesProvider.address])) as any as IndexPriceFeed;
+    const fastPriceFeed = (await deployContract('IndexPriceFeed', [
+        addressesProvider.address,
+    ])) as any as IndexPriceFeed;
     console.log(`deployed IndexPriceFeed at ${fastPriceFeed.address}`);
 
     await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
@@ -102,7 +104,6 @@ export async function deployPrice(
         .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
     await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
-
 
     return { vaultPriceFeed, fastPriceFeed };
 }
@@ -161,7 +162,13 @@ export async function deployTrading(
         vaultPriceFeed.address,
     );
 
-    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address, 8*60*60);
+    await tradingVault.initialize(
+        pairInfo.address,
+        pairVault.address,
+        tradingUtils.address,
+        deployer.address,
+        8 * 60 * 60,
+    );
 
     await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
 

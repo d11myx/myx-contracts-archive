@@ -36,13 +36,13 @@ export const MOCK_PRICES: { [key: string]: BigNumber } = {
 };
 
 export const DEFAULT_NAMED_ACCOUNTS = {
-  deployer: {
-    default: 0,
-  },
-  keeper: {
-    default: 0,
-  },
-  feeReceiver: {
-    default: 0,
-  },
+    deployer: {
+        default: 0,
+    },
+    keeper: {
+        default: 0,
+    },
+    feeReceiver: {
+        default: 0,
+    },
 };
