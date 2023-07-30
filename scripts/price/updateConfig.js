@@ -22,7 +22,7 @@ async function main() {
 
   
   await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
-  await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
+  
 
   for (let i = 10; i < signers.length; i++) {
       await fastPriceFeed.setUpdater(signers[i].address, true)

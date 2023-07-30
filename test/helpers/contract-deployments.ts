@@ -102,7 +102,7 @@ export async function deployPrice(
         .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
     await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
-    await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
+    
 
     return { vaultPriceFeed, fastPriceFeed };
 }
