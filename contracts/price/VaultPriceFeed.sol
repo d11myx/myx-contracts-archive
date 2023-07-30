@@ -5,8 +5,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/IVaultPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
+import "../interfaces/IOraclePrice.sol";
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
+import '../interfaces/IAddressesProvider.sol';
+import '../interfaces/IRoleManager.sol';
+
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
@@ -33,9 +37,25 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
     uint256 public maxStrictPriceDeviation = 0;
     address public secondaryPriceFeed;
 
+     IAddressesProvider addressProvider;
+
     mapping (address => address) public priceFeeds;
     mapping (address => uint256) public priceDecimals;
 
+
+    constructor(IAddressesProvider _addressProvider)  {
+        addressProvider = _addressProvider;
+    }
+
+     modifier onlyKeeper() {
+        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
+        _;
+    }
+
+    modifier onlyPoolAdmin() {
+        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
+        _;
+    }
     
     function setChainlinkFlags(address _chainlinkFlags) external onlyOwner {
         chainlinkFlags = _chainlinkFlags;
@@ -161,7 +181,7 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
     function getIndexPrice(address _token, uint256 _referencePrice) public view returns (uint256) {
         if (secondaryPriceFeed == address(0)) { return _referencePrice; }
-        return IPriceFeed(secondaryPriceFeed).getPrice(_token);
+        return IOraclePrice(secondaryPriceFeed).getPrice(_token);
     }
 
   
