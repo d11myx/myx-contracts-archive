@@ -21,7 +21,7 @@ async function main() {
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
 
   
-  await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
+  await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
   
 
   for (let i = 10; i < signers.length; i++) {
