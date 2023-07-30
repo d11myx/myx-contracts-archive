@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IVaultPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IOraclePrice.sol";
-import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
