@@ -48,8 +48,8 @@ contract MockPriceFeed is IPriceFeed {
     {
         return (_roundId, answers[_roundId], 0, 0, 0);
     }
-    
-     function getPrice(address _token) external  view returns (uint256){
-       return 1e8; 
-     }
+
+    // function getPrice(address _token) external  view returns (uint256){
+    //    return 1e8; 
+    // }
 }

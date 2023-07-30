@@ -12,7 +12,7 @@ import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract IndexPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
+contract IndexPriceFeed is IFastPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -40,7 +40,10 @@ contract IndexPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     uint256[] public tokenPrecisions;
 
     IAddressesProvider addressProvider;
-
+    
+    constructor(IAddressesProvider _addressProvider)  {
+        addressProvider = _addressProvider;
+    }
     modifier onlyKeeper() {
         require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
         _;
@@ -51,9 +54,7 @@ contract IndexPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
         _;
     }
 
-    constructor(IAddressesProvider _addressProvider)  {
-        addressProvider = _addressProvider;
-    }
+    
 
     function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyPoolAdmin {
         maxTimeDeviation = _maxTimeDeviation;
