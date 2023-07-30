@@ -14,7 +14,7 @@
         "compile": "SKIP_LOAD=true npx hardhat compile",
         "test": "npm run compile && npx hardhat test",
         "deploy": "npx hardhat deploy",
-        "coverage": "hardhat coverage"
+        "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'"
     },
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.2.3",
