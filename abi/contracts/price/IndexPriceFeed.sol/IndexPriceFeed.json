@@ -131,11 +131,6 @@
         "internalType": "address",
         "name": "_token",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_refPrice",
-        "type": "uint256"
       }
     ],
     "name": "getPrice",

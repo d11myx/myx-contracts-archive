@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../price/interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 import "../interfaces/IWETH.sol";
 
