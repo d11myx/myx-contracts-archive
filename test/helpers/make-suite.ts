@@ -13,7 +13,7 @@ import {
     TradingRouter,
     TradingUtils,
     TradingVault,
-    VaultPriceFeed,
+    OraclePriceFeed,
     WETH,
 } from '../../types';
 import { SymbolMap } from '../shared/types';
@@ -40,7 +40,7 @@ export interface TestEnv {
     pairInfo: PairInfo;
     pairLiquidity: PairLiquidity;
     pairVault: PairVault;
-    vaultPriceFeed: VaultPriceFeed;
+    vaultPriceFeed: OraclePriceFeed;
     fastPriceFeed: IndexPriceFeed;
     tradingUtils: TradingUtils;
     tradingVault: TradingVault;
@@ -60,7 +60,7 @@ export const testEnv: TestEnv = {
     pairInfo: {} as PairInfo,
     pairLiquidity: {} as PairLiquidity,
     pairVault: {} as PairVault,
-    vaultPriceFeed: {} as VaultPriceFeed,
+    vaultPriceFeed: {} as OraclePriceFeed,
     fastPriceFeed: {} as IndexPriceFeed,
     tradingUtils: {} as TradingUtils,
     tradingVault: {} as TradingVault,

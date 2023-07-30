@@ -10,7 +10,7 @@ import {
     TradingRouter,
     TradingUtils,
     TradingVault,
-    VaultPriceFeed,
+    OraclePriceFeed,
     WETH,
     AddressesProvider,
 } from '../../types';
@@ -63,10 +63,10 @@ export async function deployPrice(
 
     const pairConfigs = loadCurrentPairConfigs();
 
-    const vaultPriceFeed = (await deployContract('VaultPriceFeed', [
+    const vaultPriceFeed = (await deployContract('OraclePriceFeed', [
         addressesProvider.address,
-    ])) as any as VaultPriceFeed;
-    console.log(`deployed VaultPriceFeed at ${vaultPriceFeed.address}`);
+    ])) as any as OraclePriceFeed;
+    console.log(`deployed OraclePriceFeed at ${vaultPriceFeed.address}`);
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
@@ -88,7 +88,7 @@ export async function deployPrice(
             ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
         );
     }
-    
+
 
     const fastPriceFeed = (await deployContract('IndexPriceFeed', [addressesProvider.address])) as any as IndexPriceFeed;
     console.log(`deployed IndexPriceFeed at ${fastPriceFeed.address}`);
@@ -102,12 +102,12 @@ export async function deployPrice(
         .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
     await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
-    
+
 
     return { vaultPriceFeed, fastPriceFeed };
 }
 
-export async function deployPair(vaultPriceFeed: VaultPriceFeed, deployer: SignerWithAddress, weth: WETH) {
+export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: SignerWithAddress, weth: WETH) {
     console.log(` - setup pairs`);
 
     const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
@@ -137,7 +137,7 @@ export async function deployTrading(
     deployer: SignerWithAddress,
     pairVault: PairVault,
     pairInfo: PairInfo,
-    vaultPriceFeed: VaultPriceFeed,
+    vaultPriceFeed: OraclePriceFeed,
     fastPriceFeed: IndexPriceFeed,
 ) {
     console.log(` - setup trading`);

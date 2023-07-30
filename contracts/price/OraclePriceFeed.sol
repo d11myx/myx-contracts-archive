@@ -3,10 +3,10 @@
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IOraclePrice.sol";
-import "./interfaces/IChainlinkFlags.sol";
+import "../interfaces/IChainlinkFlags.sol";
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
@@ -14,7 +14,7 @@ import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract VaultPriceFeed is  IVaultPriceFeed {
+contract OraclePriceFeed is  IVaultPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -30,7 +30,7 @@ contract VaultPriceFeed is  IVaultPriceFeed {
 
     address public indexPriceFeed;
 
-     IAddressesProvider addressProvider;
+    IAddressesProvider addressProvider;
 
     mapping (address => address) public priceFeeds;
     mapping (address => uint256) public priceDecimals;
@@ -40,7 +40,7 @@ contract VaultPriceFeed is  IVaultPriceFeed {
         addressProvider = _addressProvider;
     }
 
-     modifier onlyKeeper() {
+    modifier onlyKeeper() {
         require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
         _;
     }
@@ -49,7 +49,7 @@ contract VaultPriceFeed is  IVaultPriceFeed {
         require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
-    
+
     function setChainlinkFlags(address _chainlinkFlags) external onlyPoolAdmin {
         chainlinkFlags = _chainlinkFlags;
     }
@@ -65,16 +65,14 @@ contract VaultPriceFeed is  IVaultPriceFeed {
     ) external override onlyPoolAdmin {
         priceFeeds[_token] = _priceFeed;
         priceDecimals[_token] = _priceDecimals;
-    
+
     }
 
     function getPrice(address _token) public override view returns (uint256) {
         uint256 price = getPrimaryPrice(_token);
         return price;
     }
-   
 
-    
     function getPrimaryPrice(address _token) public override view returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
         require(priceFeedAddress != address(0), "invalid price feed");
@@ -87,16 +85,15 @@ contract VaultPriceFeed is  IVaultPriceFeed {
             }
         }
 
-        // todo IChainlinkPriceFeed
         IPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
 
         uint256 price = 0;
         int256 _p = priceFeed.latestAnswer();
         require(_p > 0, "invalid price");
         price = uint256(_p);
-       
+
         require(price > 0, "could not fetch price");
-        // normalise price precision
+
         uint256 _priceDecimals = priceDecimals[_token];
         return price.mul(PRICE_PRECISION).div(10 ** _priceDecimals);
     }
@@ -105,6 +102,4 @@ contract VaultPriceFeed is  IVaultPriceFeed {
         if (indexPriceFeed == address(0)) { return _referencePrice; }
         return IOraclePrice(indexPriceFeed).getPrice(_token);
     }
-
-  
 }

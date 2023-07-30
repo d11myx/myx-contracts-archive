@@ -43,7 +43,7 @@ async function main() {
     blockTime + 100)
 
   let tokens = ["BTC", "ETH"]
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"))
   for (let symbol of tokens) {
     console.log(repeatString('-'))
     console.log(symbol)
