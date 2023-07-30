@@ -13,7 +13,7 @@ async function main() {
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
 
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"));
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"));
 
   let pairInfo = await deployUpgradeableContract("PairInfo", []);
   let pairVault = await deployUpgradeableContract("PairVault", [pairInfo.address]);
@@ -23,7 +23,6 @@ async function main() {
 
   await pairLiquidity.setHandler(pairInfo.address, true);
   await pairVault.setHandler(pairLiquidity.address, true);
-  await pairInfo.setPairLiquidity(pairLiquidity.address);
 }
 
 main()

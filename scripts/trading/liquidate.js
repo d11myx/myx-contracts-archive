@@ -1,10 +1,10 @@
 const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
-const { expandDecimals, formatBalance} = require("../utils/utilities");
+const { expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
 async function main() {
-  console.log("\nliquidate")
+  console.log("\n liquidate")
 
   const [user0, user1, user2, user3] = await hre.ethers.getSigners()
 
@@ -14,19 +14,24 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let btcPriceFeed = await contractAt("PriceFeed", await getConfig("PriceFeed-BTC"));
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
   let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
 
-  console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
+  console.log(`position: ${await tradingVault.getPosition(user3.address, 0, true)}`)
 
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(40000))
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(35000))
+  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
+    [expandDecimals(35000, 30)],
+    await getBlockTime(await hre.ethers.provider) + 100)
+
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
-  let key = await tradingUtils.getPositionKey(user0.address, 0, false);
+  let key = await tradingUtils.getPositionKey(user3.address, 0, false);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
 

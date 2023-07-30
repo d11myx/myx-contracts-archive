@@ -7,34 +7,34 @@ declare var hre: HardhatRuntimeEnvironment;
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
 
 export const deployContract = async <ContractType extends Contract>(
-  contract: string,
-  args?: any,
+    contract: string,
+    args?: any,
 ): Promise<ContractType> => {
-  const [deployer] = await hre.ethers.getSigners();
+    const [deployer] = await hre.ethers.getSigners();
 
-  const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
-  const contractDeployed = await contractFactory.deploy(...args);
+    const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
+    const contractDeployed = await contractFactory.deploy(...args);
 
-  return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
+    return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
 
 export const deployUpgradeableContract = async <ContractType extends Contract>(
-  contract: string,
-  args?: any,
+    contract: string,
+    args?: any,
 ): Promise<ContractType> => {
   const [deployer] = await hre.ethers.getSigners();
 
-  const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
-  let contractDeployed = await hre.upgrades.deployProxy(contractFactory, [...args]);
+    const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
+    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, [...args]);
 
-  return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
+    return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
 
 export const getContractAt = async <ContractType extends BaseContract>(
-  contract: string,
-  address: string,
+    contract: string,
+    address: string,
 ): Promise<ContractType> => {
-  return (await hre.ethers.getContractAt(contract, address)) as any as ContractType;
+    return (await hre.ethers.getContractAt(contract, address)) as any as ContractType;
 };
 
 interface AccountItem {

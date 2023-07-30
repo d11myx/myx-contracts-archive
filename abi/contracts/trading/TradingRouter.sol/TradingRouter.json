@@ -314,6 +314,34 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isIncrease",
+        "type": "bool"
+      }
+    ],
+    "name": "cancelOrders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "address",
@@ -360,7 +388,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "orderId",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -436,7 +464,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "orderId",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -906,7 +934,7 @@
         "type": "tuple[]"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -6,13 +6,14 @@ import "./interfaces/ITradingRouter.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "./interfaces/ITradingVault.sol";
-import "../price/interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/PrecisionUtils.sol";
 import "hardhat/console.sol";
 
 contract TradingUtils is ITradingUtils, Governable {
+    using Math for uint256;
     using Int256Utils for int256;
     using PrecisionUtils for uint256;
 
@@ -50,9 +51,26 @@ contract TradingUtils is ITradingUtils, Governable {
 
     function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        console.log("getPrice pairIndex", _pairIndex);
-        console.log("getPrice indexToken", pair.indexToken);
-        return vaultPriceFeed.getPrice(pair.indexToken, _isLong ? true : false, false, false);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
+        console.log("getPrice pairIndex %s isLong %s price %s", _pairIndex, _isLong, price);
+        return price;
+    }
+
+    function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken);
+        console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
+
+        uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
+        console.log("getValidPrice oraclePrice %s indexPrice %s", oraclePrice, indexPrice);
+
+        uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
+        diffP = diffP.calculatePercentage(oraclePrice);
+
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        console.log("getValidPrice diffP %s maxPriceDeviationP %s", diffP, tradingConfig.maxPriceDeviationP);
+        require(diffP <= tradingConfig.maxPriceDeviationP, "exceed max price deviation");
+        return oraclePrice;
     }
 
     function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
@@ -74,11 +92,20 @@ contract TradingUtils is ITradingUtils, Governable {
                 pnl = - int256(_sizeAmount.mulPrice(price - position.averagePrice));
             }
         }
-        console.log("getUnrealizedPnl", pnl >= 0 ? "": "-", pnl.abs());
+        console.log("getUnrealizedPnl", pnl >= 0 ? "" : "-", pnl.abs());
         return pnl;
     }
 
-    function validLeverage(address account, uint256 pairIndex, bool isLong, int256 _collateral, uint256 _sizeAmount, bool _increase) public {
+    function validLeverage(
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        int256 _collateral,
+        uint256 _sizeAmount,
+        bool _increase
+    ) public view returns (uint256, uint256) {
+        console.log("validLeverage sizeAmount", _sizeAmount, "collateral", _collateral.toString());
+
         bytes32 key = getPositionKey(account, pairIndex, isLong);
         ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
         uint256 price = getPrice(pairIndex, isLong);
@@ -91,12 +118,11 @@ contract TradingUtils is ITradingUtils, Governable {
 
         // close position
         if (afterPosition == 0) {
-            return;
+            return (0, 0);
         }
 
         // check collateral
         int256 totalCollateral = int256(position.collateral) + _collateral;
-        console.log("validLeverage collateral", _collateral >= 0 ? "": "-", _collateral.abs());
         require(totalCollateral >= 0, "collateral not enough for decrease");
 
         // pnl
@@ -104,13 +130,15 @@ contract TradingUtils is ITradingUtils, Governable {
             totalCollateral += getUnrealizedPnl(account, pairIndex, isLong, position.positionAmount);
         }
 
-        console.log("validLeverage totalCollateral", totalCollateral >= 0 ? "": "-", totalCollateral.abs());
-
+        console.log("validLeverage totalCollateral", totalCollateral.toString());
         require(totalCollateral >= 0, "collateral not enough for pnl");
-        console.log("validLeverage price", price);
+
         console.log("validLeverage afterPosition", afterPosition, "collateralDelta", totalCollateral.abs().divPrice(price));
         require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-          && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+        require(afterPosition <= tradingConfig.maxPositionAmount, "exceed max position");
+
+        return (afterPosition, totalCollateral.abs());
     }
 
 }
