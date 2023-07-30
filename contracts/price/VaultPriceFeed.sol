@@ -81,8 +81,8 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
     
         if (isSecondaryPriceEnabled) {
-            price = getSecondaryPrice(_token, price, _maximise);
-            console.log("getPriceV1 getSecondaryPrice", price);
+            price = getIndexPrice(_token, price);
+            console.log("getPriceV1 getIndexPrice", price);
         }
 
         return price;
@@ -159,9 +159,9 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
         return price.mul(PRICE_PRECISION).div(10 ** _priceDecimals);
     }
 
-    function getSecondaryPrice(address _token, uint256 _referencePrice, bool _maximise) public view returns (uint256) {
+    function getIndexPrice(address _token, uint256 _referencePrice) public view returns (uint256) {
         if (secondaryPriceFeed == address(0)) { return _referencePrice; }
-        return ISecondaryPriceFeed(secondaryPriceFeed).getPrice(_token, _referencePrice);
+        return IPriceFeed(secondaryPriceFeed).getPrice(_token);
     }
 
   

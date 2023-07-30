@@ -197,7 +197,7 @@
         "type": "bool"
       }
     ],
-    "name": "getSecondaryPrice",
+    "name": "getIndexPrice",
     "outputs": [
       {
         "internalType": "uint256",
