@@ -20,7 +20,7 @@ async function main() {
   let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
   let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
 
-  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
+  await btcPriceFeed.setLatestAnswer(toChainLinkPrice(29450))
   await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
 
   // set keeper price
@@ -39,7 +39,7 @@ async function main() {
 
   await fastPriceFeed.connect(user1).setPrices(
     [await getConfig("Token-BTC"), await getConfig("Token-ETH")],
-    [expandDecimals(29990, 30), expandDecimals(1995, 30)],
+    [expandDecimals(29450, 30), expandDecimals(2000, 30)],
     blockTime + 100)
 
   let tokens = ["BTC", "ETH"]

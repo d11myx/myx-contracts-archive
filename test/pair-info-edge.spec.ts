@@ -74,7 +74,7 @@ describe('PairInfo: Edge cases', () => {
             let pairToUpdate: IPairInfo.PairStructOutput = { ...pairBefore };
             pairToUpdate.enable = !pairBefore.enable;
             pairToUpdate.kOfSwap = BigNumber.from(99999999);
-            pairToUpdate.initPrice = BigNumber.from(999);
+            pairToUpdate.expectIndexTokenP = BigNumber.from(4000);
             await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
 
             const pairAfterObj = await pairInfo.getPair(pairIndex);
@@ -88,7 +88,7 @@ describe('PairInfo: Edge cases', () => {
 
             expect(pairAfter.enable).to.be.eq(pairToUpdate.enable);
             expect(pairAfter.kOfSwap).to.be.eq(pairToUpdate.kOfSwap);
-            expect(pairAfter.initPrice).to.be.eq(pairToUpdate.initPrice);
+            pairToUpdate.expectIndexTokenP = BigNumber.from(4000);
 
             pairToUpdate.enable = true;
             await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));

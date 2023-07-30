@@ -75,7 +75,7 @@ contract PairInfo is IPairInfo, Handleable {
 
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
-        pair.initPrice = _pair.initPrice;
+        pair.expectIndexTokenP = _pair.expectIndexTokenP;
         pair.addLpFeeP = _pair.addLpFeeP;
     }
 

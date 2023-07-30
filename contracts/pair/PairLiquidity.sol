@@ -117,18 +117,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
-        // init liquidity
-        if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = _stableAmount.divPrice(pair.initPrice);
-            uint256 stableDesiredAmount = _indexAmount.mulPrice(pair.initPrice);
-            console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
-            if (indexDesiredAmount <= _indexAmount) {
-                _indexAmount = indexDesiredAmount;
-            } else {
-                _stableAmount = stableDesiredAmount;
-            }
-        }
-        console.log("_indexAmount", _indexAmount, "_stableAmount", _stableAmount);
+        console.log("addLiquidity indexAmount", _indexAmount, "stableAmount", _stableAmount);
         // transfer token
         IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), _indexAmount);
         IERC20(pair.stableToken).safeTransferFrom(_funder, address(this), _stableAmount);
@@ -141,7 +130,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
             // transfer fee
             uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
             uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
-            console.log("indexFeeAmount", indexFeeAmount, "stableFeeAmount", stableFeeAmount);
+            console.log("addLiquidity indexFeeAmount", indexFeeAmount, "stableFeeAmount", stableFeeAmount);
 
             IERC20(pair.indexToken).safeTransfer(feeReceiver, indexFeeAmount);
             IERC20(pair.stableToken).safeTransfer(feeReceiver, stableFeeAmount);
@@ -167,35 +156,40 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 // after deposit
                 uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
                 uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
+                console.log("addLiquidity indexTotalDelta", indexTotalDelta, "stableTotalDelta", stableTotalDelta);
 
-                // reserve: 70 30
-                // deposit: 40 20
-                // total:  110 50
+                // expect delta
+                uint256 expectIndexDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(pair.expectIndexTokenP);
+                uint256 expectStableDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+                console.log("addLiquidity expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
+
                 (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
-                if (indexTotalDelta > stableTotalDelta) {
-                    // 60 / 2 = 30
-                    // 40 - 30 -> 20 + 30
-                    uint256 needSwapIndexDelta = (indexTotalDelta - stableTotalDelta) / 2;
+                if (indexTotalDelta > expectIndexDelta) {
+                    uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
                     uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
+                    console.log("addLiquidity needSwapIndexDelta", needSwapIndexDelta, "swapIndexDelta", swapIndexDelta);
 
                     slipDelta =  AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
                     uint256 slipAmount = _getAmount(slipDelta, price);
 
                     afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
                     IERC20(pair.indexToken).safeTransfer(slipReceiver, slipAmount);
-                } else if (indexTotalDelta < stableTotalDelta) {
-                    uint256 needSwapStableDelta = (stableTotalDelta - indexTotalDelta) / 2;
+                    console.log("addLiquidity slipDelta", slipDelta, "afterFeeIndexAmount", afterFeeIndexAmount);
+                } else if (stableTotalDelta > expectStableDelta) {
+                    uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
                     uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
+                    console.log("addLiquidity needSwapStableDelta", needSwapStableDelta, "swapStableDelta", swapStableDelta);
 
                     slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
 
                     afterFeeStableAmount = afterFeeStableAmount - slipDelta;
                     IERC20(pair.stableToken).safeTransfer(slipReceiver, slipDelta);
+                    console.log("addLiquidity slipDelta", slipDelta, "afterFeeStableAmount", afterFeeStableAmount);
                 }
             }
             // mint lp
             mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
-            console.log("indexDepositDelta", indexDepositDelta, "afterFeeStableAmount", afterFeeStableAmount);
+            console.log("addLiquidity indexDepositDelta", indexDepositDelta, "afterFeeStableAmount", afterFeeStableAmount);
         }
         IPairToken(pair.pairToken).mint(address(this), mintAmount);
         userPairTokens[pair.pairToken][_account] = userPairTokens[pair.pairToken][_account] + mintAmount;
@@ -204,7 +198,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         IERC20(pair.indexToken).safeTransfer(address(pairVault), afterFeeIndexAmount);
         IERC20(pair.stableToken).safeTransfer(address(pairVault), afterFeeStableAmount);
-        console.log("afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
+        console.log("addLiquidity afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
 
         emit AddLiquidity(_account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
 
@@ -264,18 +258,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
-        // init liquidity
-        if (vault.indexTotalAmount == 0 && vault.stableTotalAmount == 0) {
-            uint256 indexDesiredAmount = _stableAmount.divPrice(pair.initPrice);
-            uint256 stableDesiredAmount = _indexAmount.mulPrice(pair.initPrice);
-            if (indexDesiredAmount <= _indexAmount) {
-                _indexAmount = indexDesiredAmount;
-            } else {
-                _stableAmount = stableDesiredAmount;
-            }
-            console.log("indexDesiredAmount", indexDesiredAmount, "stableDesiredAmount", stableDesiredAmount);
-        }
-        console.log("_indexAmount", _indexAmount, "_stableAmount", _stableAmount);
+        console.log("getMintLpAmount indexAmount", _indexAmount, "stableAmount", _stableAmount);
 
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
@@ -297,6 +280,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         // usdt value of deposit
         uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
+        console.log("getMintLpAmount indexDepositDelta", indexDepositDelta);
+
         {
             uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
 
@@ -305,38 +290,42 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 // after deposit
                 uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
                 uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
+                console.log("getMintLpAmount indexTotalDelta", indexTotalDelta, "stableTotalDelta", stableTotalDelta);
 
-                // reserve: 70 30
-                // deposit: 40 20
-                // total:  110 50
+                uint256 expectIndexDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(pair.expectIndexTokenP);
+                uint256 expectStableDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+                console.log("getMintLpAmount expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
+
                 (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
-                if (indexTotalDelta > stableTotalDelta) {
-                    // 60 / 2 = 30
-                    // 40 - 30 -> 20 + 30
-                    uint256 needSwapIndexDelta = (indexTotalDelta - stableTotalDelta) / 2;
+                if (indexTotalDelta > expectIndexDelta) {
+                    uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
                     uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
+                    console.log("getMintLpAmount needSwapIndexDelta", needSwapIndexDelta, "swapIndexDelta", swapIndexDelta);
 
                     slipDelta =  AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
                     slipAmount = _getAmount(slipDelta, price);
                     slipToken = pair.indexToken;
 
                     afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                } else if (indexTotalDelta < stableTotalDelta) {
-                    uint256 needSwapStableDelta = (stableTotalDelta - indexTotalDelta) / 2;
+                    console.log("getMintLpAmount slipDelta", slipDelta, "afterFeeIndexAmount", afterFeeIndexAmount);
+                } else if (stableTotalDelta > expectStableDelta) {
+                    uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
                     uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
+                    console.log("getMintLpAmount needSwapStableDelta", needSwapStableDelta, "swapStableDelta", swapStableDelta);
 
                     slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
                     slipAmount = slipDelta;
                     slipToken = pair.stableToken;
 
                     afterFeeStableAmount = afterFeeStableAmount - slipAmount;
+                    console.log("getMintLpAmount slipDelta", slipDelta, "afterFeeStableAmount", afterFeeStableAmount);
                 }
             }
         }
-        console.log("afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
+        console.log("getMintLpAmount afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
         // mint lp
         mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
-        console.log("indexDepositDelta", indexDepositDelta, "afterFeeStableAmount", afterFeeStableAmount);
+        console.log("getMintLpAmount indexDepositDelta", indexDepositDelta, "afterFeeStableAmount", afterFeeStableAmount);
         return (mintAmount, slipToken, slipAmount);
     }
 
@@ -353,42 +342,44 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
-
         uint256 depositDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex));
+        console.log("getMintLpAmount depositDelta", depositDelta);
+
+        // expect delta
+        uint256 expectIndexDelta = (indexReserveDelta + stableReserveDelta + depositDelta).mulPercentage(pair.expectIndexTokenP);
+        uint256 expectStableDelta = (indexReserveDelta + stableReserveDelta + depositDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+        console.log("getDepositAmount expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
 
         uint256 depositIndexTokenDelta;
         uint256 depositStableTokenDelta;
 
-        if (indexReserveDelta == stableReserveDelta) {
-            depositIndexTokenDelta = depositDelta / 2;
-            depositStableTokenDelta = depositDelta / 2;
-        } else if (indexReserveDelta > stableReserveDelta) {
-            uint256 extraIndexReserveDelta = indexReserveDelta - stableReserveDelta;
+        if (expectIndexDelta >= indexReserveDelta) {
+            uint256 extraIndexReserveDelta = expectIndexDelta - indexReserveDelta;
             if (extraIndexReserveDelta >= depositDelta) {
                 depositIndexTokenDelta = depositDelta;
             } else {
-                uint256 lastDepositDelta = depositDelta - extraIndexReserveDelta;
-                depositIndexTokenDelta = extraIndexReserveDelta + lastDepositDelta / 2;
-                depositStableTokenDelta = lastDepositDelta / 2;
+                depositIndexTokenDelta = extraIndexReserveDelta;
+                depositStableTokenDelta = depositDelta - extraIndexReserveDelta;
             }
+            console.log("getDepositAmount depositIndexTokenDelta", depositIndexTokenDelta, "depositStableTokenDelta", depositStableTokenDelta);
         } else {
-            uint256 extraStableReserveDelta = stableReserveDelta - indexReserveDelta;
+            uint256 extraStableReserveDelta = expectStableDelta - stableReserveDelta;
             if (extraStableReserveDelta >= depositDelta) {
                 depositStableTokenDelta = depositDelta;
             } else {
-                uint256 lastDepositDelta = depositDelta - extraStableReserveDelta;
-                depositIndexTokenDelta = lastDepositDelta / 2;
-                depositStableTokenDelta = extraStableReserveDelta + depositDelta / 2;
+                depositIndexTokenDelta = depositDelta - extraStableReserveDelta;
+                depositStableTokenDelta = extraStableReserveDelta;
             }
+            console.log("getDepositAmount depositIndexTokenDelta", depositIndexTokenDelta, "depositStableTokenDelta", depositStableTokenDelta);
         }
         depositIndexAmount = _getAmount(depositIndexTokenDelta, price);
         depositStableAmount = depositStableTokenDelta;
-        console.log("depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
+        console.log("getDepositAmount depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
 
         // add fee
         depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - pair.addLpFeeP);
         depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - pair.addLpFeeP);
-
+        console.log("getDepositAmount depositIndexAmount", depositIndexAmount, "depositStableAmount", depositStableAmount);
         return (depositIndexAmount, depositStableAmount);
     }
 
@@ -408,35 +399,39 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         uint256 stableReserveDelta = vault.stableTotalAmount;
 
         uint256 receiveDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex));
+        console.log("getReceivedAmount receiveDelta", receiveDelta);
+
+        // expect delta
+        uint256 expectIndexDelta = (indexReserveDelta + stableReserveDelta - receiveDelta).mulPercentage(pair.expectIndexTokenP);
+        uint256 expectStableDelta = (indexReserveDelta + stableReserveDelta - receiveDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+        console.log("getReceivedAmount expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
 
         // received delta of indexToken and stableToken
         uint256 receiveIndexTokenDelta;
         uint256 receiveStableTokenDelta;
 
-        if (indexReserveDelta == stableReserveDelta) {
-            receiveIndexTokenDelta = receiveDelta / 2;
-            receiveStableTokenDelta = receiveDelta / 2;
-        } else if (indexReserveDelta > stableReserveDelta) {
-            uint256 extraIndexReserveDelta = indexReserveDelta - stableReserveDelta;
+        if (indexReserveDelta > expectIndexDelta) {
+            uint256 extraIndexReserveDelta = indexReserveDelta - expectIndexDelta;
             if (extraIndexReserveDelta >= receiveDelta) {
                 receiveIndexTokenDelta = receiveDelta;
             } else {
-                uint256 lastReceiveDelta = receiveDelta - extraIndexReserveDelta;
-                receiveIndexTokenDelta = extraIndexReserveDelta + lastReceiveDelta / 2;
-                receiveStableTokenDelta = lastReceiveDelta / 2;
+                receiveIndexTokenDelta = extraIndexReserveDelta;
+                receiveStableTokenDelta = receiveDelta - extraIndexReserveDelta;
             }
+            console.log("getReceivedAmount receiveIndexTokenDelta", receiveIndexTokenDelta, "receiveStableTokenDelta", receiveStableTokenDelta);
         } else {
-            uint256 extraStableReserveDelta = stableReserveDelta - indexReserveDelta;
+            uint256 extraStableReserveDelta = stableReserveDelta - expectStableDelta;
             if (extraStableReserveDelta >= receiveDelta) {
                 receiveStableTokenDelta = receiveDelta;
             } else {
-                uint256 lastReceiveDelta = receiveDelta - extraStableReserveDelta;
-                receiveIndexTokenDelta = lastReceiveDelta / 2;
-                receiveStableTokenDelta = extraStableReserveDelta + lastReceiveDelta / 2;
+                receiveIndexTokenDelta = receiveDelta - extraStableReserveDelta;
+                receiveStableTokenDelta = extraStableReserveDelta;
             }
+            console.log("getReceivedAmount receiveIndexTokenDelta", receiveIndexTokenDelta, "receiveStableTokenDelta", receiveStableTokenDelta);
         }
         receiveIndexTokenAmount = _getAmount(receiveIndexTokenDelta, price);
         receiveStableTokenAmount = receiveStableTokenDelta;
+        console.log("getReceivedAmount receiveIndexTokenAmount", receiveIndexTokenAmount, "receiveStableTokenAmount", receiveStableTokenAmount);
         return (receiveIndexTokenAmount, receiveStableTokenAmount);
     }
 
