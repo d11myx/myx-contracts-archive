@@ -7,6 +7,6 @@ hh run scripts/token/mint.js --network $1
 hh run scripts/pair/addPair.js --network $1
 hh run scripts/pair/updatePair.js --network $1
 hh run scripts/price/updateConfig.js --network $1
-hh run scripts/price/setPrices.js --network $1
-hh run scripts/pair/addLiquidity.js --network $1
+#hh run scripts/price/setPrices.js --network $1
+#hh run scripts/pair/addLiquidity.js --network $1
 #sh scripts/trading.sh $1
