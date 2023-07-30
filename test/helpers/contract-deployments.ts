@@ -128,7 +128,6 @@ export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: Sign
 
     await waitForTx(await pairLiquidity.setHandler(pairInfo.address, true));
     await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
-    await waitForTx(await pairInfo.setPairLiquidity(pairLiquidity.address));
 
     return { pairInfo, pairLiquidity, pairVault };
 }
@@ -162,7 +161,7 @@ export async function deployTrading(
         vaultPriceFeed.address,
     );
 
-    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address);
+    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address, 8*60*60);
 
     await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
 

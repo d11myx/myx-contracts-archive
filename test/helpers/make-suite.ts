@@ -126,7 +126,7 @@ export async function setupTestEnv() {
     testEnv.tradingRouter = tradingRouter;
     testEnv.executeRouter = executeRouter;
 
-    await initPairs(deployer, tokens, usdt, pairInfo);
+    await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 }
 
 export async function getPairToken(pair: string): Promise<Token> {
