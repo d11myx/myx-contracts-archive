@@ -29,7 +29,6 @@ contract VaultPriceFeed is  IVaultPriceFeed {
 
     address public chainlinkFlags;
 
-    bool public isSecondaryPriceEnabled = true;
 
     // price round space
     uint256 public priceSampleSpace = 3;
@@ -60,11 +59,6 @@ contract VaultPriceFeed is  IVaultPriceFeed {
         chainlinkFlags = _chainlinkFlags;
     }
 
-
-    function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyPoolAdmin {
-        isSecondaryPriceEnabled = _isEnabled;
-    }
-
     function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyPoolAdmin {
         secondaryPriceFeed = _secondaryPriceFeed;
     }
@@ -89,21 +83,8 @@ contract VaultPriceFeed is  IVaultPriceFeed {
     }
 
     function getPrice(address _token, bool _maximise) public override view returns (uint256) {
-        uint256 price = getPriceV1(_token, _maximise);
-
-        return price;
-    }
-
-    function getPriceV1(address _token, bool _maximise) public view returns (uint256) {
         uint256 price = getPrimaryPrice(_token, _maximise);
         console.log("getPriceV1 getPrimaryPrice", price);
-
-    
-        if (isSecondaryPriceEnabled) {
-            price = getIndexPrice(_token, price);
-            console.log("getPriceV1 getIndexPrice", price);
-        }
-
         return price;
     }
    

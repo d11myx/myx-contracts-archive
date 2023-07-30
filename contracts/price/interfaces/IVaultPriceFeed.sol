@@ -3,9 +3,7 @@
 pragma solidity 0.8.17;
 
 interface IVaultPriceFeed {
-   
-    function setIsSecondaryPriceEnabled(bool _isEnabled) external;
-    
+       
     function setPriceSampleSpace(uint256 _priceSampleSpace) external;
     function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external;
     function getPrice(address _token, bool _maximise) external view returns (uint256);
