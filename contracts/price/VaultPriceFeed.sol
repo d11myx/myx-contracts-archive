@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
+import '../interfaces/IAddressesProvider.sol';
+import '../interfaces/IRoleManager.sol';
 import "./interfaces/IVaultPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IChainlinkFlags.sol";
+import {Errors} from '../libraries/Errors.sol';
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract VaultPriceFeed is Ownable, IVaultPriceFeed {
+contract VaultPriceFeed is IVaultPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -36,26 +37,36 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
     mapping (address => address) public priceFeeds;
     mapping (address => uint256) public priceDecimals;
 
-    
-    function setChainlinkFlags(address _chainlinkFlags) external onlyOwner {
+    IAddressesProvider addressProvider;
+
+    modifier onlyPoolAdmin() {
+        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
+        _;
+    }
+
+    constructor(IAddressesProvider _addressProvider)  {
+        addressProvider =_addressProvider;
+    }
+
+    function setChainlinkFlags(address _chainlinkFlags) external onlyPoolAdmin {
         chainlinkFlags = _chainlinkFlags;
     }
 
 
-    function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyOwner {
+    function setIsSecondaryPriceEnabled(bool _isEnabled) external override onlyPoolAdmin {
         isSecondaryPriceEnabled = _isEnabled;
     }
 
-    function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyOwner {
+    function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyPoolAdmin {
         secondaryPriceFeed = _secondaryPriceFeed;
     }
 
-    function setPriceSampleSpace(uint256 _priceSampleSpace) external override onlyOwner {
+    function setPriceSampleSpace(uint256 _priceSampleSpace) external override onlyPoolAdmin {
         require(_priceSampleSpace > 0, "VaultPriceFeed: invalid _priceSampleSpace");
         priceSampleSpace = _priceSampleSpace;
     }
 
-    function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external override onlyOwner {
+    function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external override onlyPoolAdmin {
         maxStrictPriceDeviation = _maxStrictPriceDeviation;
     }
 
@@ -63,10 +74,10 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
         address _token,
         address _priceFeed,
         uint256 _priceDecimals
-    ) external override onlyOwner {
+    ) external override onlyPoolAdmin {
         priceFeeds[_token] = _priceFeed;
         priceDecimals[_token] = _priceDecimals;
-    
+
     }
 
     function getPrice(address _token, bool _maximise) public override view returns (uint256) {
@@ -79,7 +90,7 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
         uint256 price = getPrimaryPrice(_token, _maximise);
         console.log("getPriceV1 getPrimaryPrice", price);
 
-    
+
         if (isSecondaryPriceEnabled) {
             price = getSecondaryPrice(_token, price, _maximise);
             console.log("getPriceV1 getSecondaryPrice", price);
@@ -87,7 +98,7 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
 
         return price;
     }
-   
+
 
     function getLatestPrimaryPrice(address _token) public override view returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
@@ -164,5 +175,5 @@ contract VaultPriceFeed is Ownable, IVaultPriceFeed {
         return ISecondaryPriceFeed(secondaryPriceFeed).getPrice(_token, _referencePrice);
     }
 
-  
+
 }
