@@ -26,13 +26,8 @@ contract VaultPriceFeed is  IVaultPriceFeed {
     // Identifier of the Sequencer offline flag on the Flags contract
     address constant private FLAG_ARBITRUM_SEQ_OFFLINE = address(bytes20(bytes32(uint256(keccak256("chainlink.flags.arbitrum-seq-offline")) - 1)));
 
-
     address public chainlinkFlags;
 
-
-    // price round space
-    uint256 public priceSampleSpace = 3;
-    uint256 public maxStrictPriceDeviation = 0;
     address public secondaryPriceFeed;
 
      IAddressesProvider addressProvider;
@@ -61,15 +56,6 @@ contract VaultPriceFeed is  IVaultPriceFeed {
 
     function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyPoolAdmin {
         secondaryPriceFeed = _secondaryPriceFeed;
-    }
-
-    function setPriceSampleSpace(uint256 _priceSampleSpace) external override onlyPoolAdmin {
-        require(_priceSampleSpace > 0, "invalid _priceSampleSpace");
-        priceSampleSpace = _priceSampleSpace;
-    }
-
-    function setMaxStrictPriceDeviation(uint256 _maxStrictPriceDeviation) external override onlyPoolAdmin {
-        maxStrictPriceDeviation = _maxStrictPriceDeviation;
     }
 
     function setTokenConfig(
@@ -119,40 +105,10 @@ contract VaultPriceFeed is  IVaultPriceFeed {
         IPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
 
         uint256 price = 0;
-        uint80 roundId = priceFeed.latestRound();
-
-        for (uint80 i = 0; i < priceSampleSpace; i++) {
-            console.log("getPrimaryPrice i %s priceSampleSpace %s roundId %s", i, priceSampleSpace, roundId);
-
-            if (roundId <= i) { break; }
-            uint256 p;
-
-            if (i == 0) {
-                int256 _p = priceFeed.latestAnswer();
-                require(_p > 0, "invalid price");
-                p = uint256(_p);
-            } else {
-                (, int256 _p, , ,) = priceFeed.getRoundData(roundId - i);
-                require(_p > 0, "invalid price");
-                p = uint256(_p);
-            }
-            console.log("getPrimaryPrice i %s price %s p %s", i, price, p);
-
-            if (price == 0) {
-                price = p;
-                continue;
-            }
-
-            if (_maximise && p > price) {
-                price = p;
-                continue;
-            }
-
-            if (!_maximise && p < price) {
-                price = p;
-            }
-        }
-
+        int256 _p = priceFeed.latestAnswer();
+        require(_p > 0, "invalid price");
+        price = uint256(_p);
+       
         require(price > 0, "could not fetch price");
         // normalise price precision
         uint256 _priceDecimals = priceDecimals[_token];

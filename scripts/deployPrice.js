@@ -21,7 +21,7 @@ async function main() {
     await vaultPriceFeed.setTokenConfig(eth.address, ethPriceFeed.address, 8);
     await vaultPriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8);
     await vaultPriceFeed.setTokenConfig(usdt.address, usdtPriceFeed.address, 8);
-    await vaultPriceFeed.setPriceSampleSpace(1);
+    
 
     await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000));
     await ethPriceFeed.setAdmin(user1.address, true);

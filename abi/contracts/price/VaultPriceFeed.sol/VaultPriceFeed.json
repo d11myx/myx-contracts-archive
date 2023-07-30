@@ -180,19 +180,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "maxStrictPriceDeviation",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -232,19 +219,6 @@
   },
   {
     "inputs": [],
-    "name": "priceSampleSpace",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "secondaryPriceFeed",
     "outputs": [
       {
@@ -265,32 +239,6 @@
       }
     ],
     "name": "setChainlinkFlags",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_maxStrictPriceDeviation",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxStrictPriceDeviation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_priceSampleSpace",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPriceSampleSpace",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

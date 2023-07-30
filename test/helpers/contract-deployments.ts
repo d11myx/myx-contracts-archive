@@ -88,7 +88,7 @@ export async function deployPrice(
             ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
         );
     }
-    await vaultPriceFeed.setPriceSampleSpace(1);
+    
 
     const fastPriceFeed = (await deployContract('IndexPriceFeed', [addressesProvider.address])) as any as IndexPriceFeed;
     console.log(`deployed IndexPriceFeed at ${fastPriceFeed.address}`);
