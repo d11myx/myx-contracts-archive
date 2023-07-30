@@ -26,7 +26,7 @@ async function main() {
         pairToken: "0x0000000000000000000000000000000000000000",
         enable: true,
         kOfSwap: expandDecimals(1, 50),
-        initPrice: expandDecimals(30000, 30),
+        expectIndexTokenP: 4000,
         addLpFeeP: 100
     };
     let tradingConfig = {
@@ -77,7 +77,6 @@ async function main() {
 
     // eth - usdt
     pair.indexToken = eth.address;
-    pair.initPrice = expandDecimals(2000, 30);
     pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
     await pairInfo.updatePair(pairIndex, pair);
     await pairInfo.updateTradingConfig(pairIndex, tradingConfig);
