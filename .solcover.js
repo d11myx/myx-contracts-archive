@@ -1,3 +1,4 @@
 module.exports = {
-    skipFiles: ['mock','openzeeplin']
-  };
+    configureYulOptimizer: true,
+    skipFiles: ['mock', 'openzeeplin'],
+};
