@@ -59,172 +59,19 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "indexToken",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "stableToken",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "pairToken",
-            "type": "address"
-          },
-          {
-            "internalType": "bool",
-            "name": "enable",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "kOfSwap",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "initPrice",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "addLpFeeP",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IPairInfo.Pair",
-        "name": "_pair",
-        "type": "tuple"
+        "internalType": "address",
+        "name": "_indexToken",
+        "type": "address"
       },
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "minLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxLeverage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minTradeAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxTradeAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maintainMarginRate",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "priceSlipP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxPriceDeviationP",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IPairInfo.TradingConfig",
-        "name": "_tradingConfig",
-        "type": "tuple"
+        "internalType": "address",
+        "name": "_stableToken",
+        "type": "address"
       },
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "takerFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "makerFeeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpDistributeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "keeperDistributeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "treasuryDistributeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "refererDistributeP",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IPairInfo.TradingFeeConfig",
-        "name": "_tradingFeeConfig",
-        "type": "tuple"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "minFundingRate",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxFundingRate",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "fundingWeightFactor",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "liquidityPremiumFactor",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "interest",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpDistributeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "userDistributeP",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "treasuryDistributeP",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IPairInfo.FundingFeeConfig",
-        "name": "_fundingFeeConfig",
-        "type": "tuple"
+        "internalType": "address",
+        "name": "_pairLiquidity",
+        "type": "address"
       }
     ],
     "name": "addPair",
@@ -437,6 +284,11 @@
           },
           {
             "internalType": "uint256",
+            "name": "maxPositionAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "maintainMarginRate",
             "type": "uint256"
           },
@@ -598,19 +450,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "pairLiquidity",
-    "outputs": [
-      {
-        "internalType": "contract IPairLiquidity",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -706,19 +545,6 @@
   {
     "inputs": [
       {
-        "internalType": "contract IPairLiquidity",
-        "name": "_pairLiquidity",
-        "type": "address"
-      }
-    ],
-    "name": "setPairLiquidity",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -744,6 +570,11 @@
       {
         "internalType": "uint256",
         "name": "maxTradeAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxPositionAmount",
         "type": "uint256"
       },
       {
@@ -864,7 +695,7 @@
         "type": "tuple"
       }
     ],
-    "name": "updateFundingFeeDistribute",
+    "name": "updateFundingFeeConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -932,6 +763,29 @@
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_enable",
+        "type": "bool"
+      }
+    ],
+    "name": "updatePairMiner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_pairIndex",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "uint256",
@@ -951,6 +805,11 @@
           {
             "internalType": "uint256",
             "name": "maxTradeAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPositionAmount",
             "type": "uint256"
           },
           {

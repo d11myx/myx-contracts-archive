@@ -4,6 +4,7 @@ const {expandDecimals} = require("./utilities");
 
 let localPath = __dirname + "/" + "../config/local_config.json";
 let remotePath = __dirname + "/" + "../config/remote_config.json";
+let goerliPath = __dirname + "/" + "../config/goerli_config.json";
 
 function repeatString(str, num) {
   if (!num) {
@@ -45,6 +46,8 @@ async function getPath() {
       return localPath
   } else if (hre.network.name === 'remote') {
       return remotePath
+  } else if (hre.network.name === 'goerli') {
+      return goerliPath
   }
 }
 
