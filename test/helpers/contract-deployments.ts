@@ -101,7 +101,7 @@ export async function deployPrice(
         .connect(keeper.signer)
         .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
-    await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
+    await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
     
 
     return { vaultPriceFeed, fastPriceFeed };
