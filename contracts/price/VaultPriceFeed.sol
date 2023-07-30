@@ -68,28 +68,14 @@ contract VaultPriceFeed is  IVaultPriceFeed {
     
     }
 
-    function getPrice(address _token, bool _maximise) public override view returns (uint256) {
-        uint256 price = getPrimaryPrice(_token, _maximise);
-        console.log("getPriceV1 getPrimaryPrice", price);
+    function getPrice(address _token) public override view returns (uint256) {
+        uint256 price = getPrimaryPrice(_token);
         return price;
     }
    
 
-    function getLatestPrimaryPrice(address _token) public override view returns (uint256) {
-        address priceFeedAddress = priceFeeds[_token];
-        require(priceFeedAddress != address(0), "invalid price feed");
-
-        // todo IChainlinkPriceFeed
-        IPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
-
-        int256 price = priceFeed.latestAnswer();
-        require(price > 0, "invalid price");
-
-        return uint256(price);
-    }
-
-    // _maximise: if get the max price in round
-    function getPrimaryPrice(address _token, bool _maximise) public override view returns (uint256) {
+    
+    function getPrimaryPrice(address _token) public override view returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
         require(priceFeedAddress != address(0), "invalid price feed");
 
