@@ -51,14 +51,14 @@ contract TradingUtils is ITradingUtils, Governable {
 
     function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, _isLong);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
         console.log("getPrice pairIndex %s isLong %s price %s", _pairIndex, _isLong, price);
         return price;
     }
 
     function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken, _isLong);
+        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken);
         console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
 
         uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
