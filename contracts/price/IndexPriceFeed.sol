@@ -109,17 +109,8 @@ contract IndexPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
-    function getPrice(address _token, uint256 _refPrice) external override view returns (uint256) {
-        uint256 fastPrice = prices[_token];
-        console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
-
-        if (fastPrice == 0) {return _refPrice;}
-        if (_refPrice == 0) {return fastPrice;}
-
-        uint256 diffBasisPoints = _refPrice > fastPrice ? _refPrice.sub(fastPrice) : fastPrice.sub(_refPrice);
-        diffBasisPoints = diffBasisPoints.mul(BASIS_POINTS_DIVISOR).div(_refPrice);
-
-        return fastPrice;
+    function getPrice(address _token) external  view returns (uint256) {
+        return prices[_token];
     }
 
     function _setPricesWithBits(uint256 _priceBits, uint256 _timestamp) private {
