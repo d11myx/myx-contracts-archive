@@ -1,5 +1,5 @@
 const { deployContract, contractAt } = require("../utils/helpers");
-const { expandDecimals, formatBalance, reduceDecimals} = require("../utils/utilities");
+const { expandDecimals, formatBalance, reduceDecimals, getBlockTime} = require("../utils/utilities");
 const { getConfig, mintETH} = require("../utils/utils");
 const hre = require("hardhat");
 
@@ -70,6 +70,7 @@ async function main() {
   console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, ethAmount)}`);
   await pairLiquidity.addLiquidityETH(pairIndex, usdtAmount, {value: ethAmount});
   console.log(`deposit eth: ${formatBalance(await eth.balanceOf(pairVault.address))}, usdt: ${formatBalance(await usdt.balanceOf(pairVault.address))}`);
+  console.log(`${await getBlockTime(await hre.ethers.provider)}`)
   console.log();
 }
 

@@ -23,7 +23,6 @@ async function main() {
 
   await pairLiquidity.setHandler(pairInfo.address, true);
   await pairVault.setHandler(pairLiquidity.address, true);
-  await pairInfo.setPairLiquidity(pairLiquidity.address);
 }
 
 main()

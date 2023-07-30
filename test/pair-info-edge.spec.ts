@@ -8,7 +8,7 @@ import { deployMockToken } from './helpers/contract-deployments';
 
 describe('PairInfo: Edge cases', () => {
     before('addPair', async () => {
-        const { pairInfo, usdt } = testEnv;
+        const { pairInfo, usdt, pairLiquidity } = testEnv;
 
         const token = await deployMockToken('Test');
         const btcPair = loadPairConfigs('USDT')['BTC'];
@@ -21,7 +21,13 @@ describe('PairInfo: Edge cases', () => {
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
         const countBefore = await pairInfo.pairsCount();
-        await waitForTx(await pairInfo.addPair(pair, tradingConfig, tradingFeeConfig, fundingFeeConfig));
+        await waitForTx(await pairInfo.addPair(pair.indexToken, pair.stableToken, pairLiquidity.address));
+
+        let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
+        await waitForTx(await pairInfo.updatePair(pairIndex, pair));
+        await waitForTx(await pairInfo.updateTradingConfig(pairIndex, tradingConfig));
+        await waitForTx(await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
+        await waitForTx(await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
         const countAfter = await pairInfo.pairsCount();
         expect(countAfter).to.be.eq(countBefore.add(1));
@@ -80,9 +86,13 @@ describe('PairInfo: Edge cases', () => {
 
             // expect(pairAfter).deep.be.eq(pairToUpdate);
 
-            // expect(pairAfter.enable).to.be.eq(pairToUpdate.enable);
-            // expect(pairAfter.kOfSwap).to.be.eq(pairToUpdate.kOfSwap);
-            // expect(pairAfter.initPrice).to.be.eq(pairToUpdate.initPrice);
+            expect(pairAfter.enable).to.be.eq(pairToUpdate.enable);
+            expect(pairAfter.kOfSwap).to.be.eq(pairToUpdate.kOfSwap);
+            expect(pairAfter.initPrice).to.be.eq(pairToUpdate.initPrice);
+
+            pairToUpdate.enable = true;
+            await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
+
         });
     });
 });
