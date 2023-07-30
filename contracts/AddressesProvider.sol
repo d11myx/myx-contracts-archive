@@ -1,11 +1,11 @@
-
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
-import './interfaces/IAddressProvider.sol';
+import './interfaces/IAddressesProvider.sol';
+import './libraries/Errors.sol';
 
-contract AddressesProvider is Ownable, IAddressProvider {
+contract AddressesProvider is Ownable, IAddressesProvider {
 
     bytes32 private constant ROLE_MANAGER = 'ROLE_MANAGER';
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
@@ -29,7 +29,7 @@ contract AddressesProvider is Ownable, IAddressProvider {
     function setPriceOracle(address newPriceOracle) external override onlyOwner {
         address oldPriceOracle = _addresses[PRICE_ORACLE];
         _addresses[PRICE_ORACLE] = newPriceOracle;
-        emit AddressSet(PRICE_ORACLE,oldPriceOracle, newPriceOracle);
+        emit AddressSet(PRICE_ORACLE, oldPriceOracle, newPriceOracle);
     }
 
     function getRoleManager() external view override returns (address) {
@@ -37,10 +37,10 @@ contract AddressesProvider is Ownable, IAddressProvider {
     }
 
     function setRolManager(address newAddress) external override onlyOwner {
-        require(newAddress!=address(0),"is 0");
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
         address oldAclManager = _addresses[ROLE_MANAGER];
         setAddress(ROLE_MANAGER, newAddress);
-        emit AddressSet(ROLE_MANAGER,oldAclManager, newAddress);
+        emit AddressSet(ROLE_MANAGER, oldAclManager, newAddress);
     }
 
 }
