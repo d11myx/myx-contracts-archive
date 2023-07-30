@@ -11,8 +11,8 @@ describe('PairInfo: Edge cases', () => {
     before('addPair', async () => {
         const { pairInfo, usdt, pairLiquidity } = testEnv;
 
-    const token = await deployMockToken('Test');
-    const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+        const token = await deployMockToken('Test');
+        const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
 
         const pair = btcPair.pair;
         pair.indexToken = token.address;
@@ -44,12 +44,12 @@ describe('PairInfo: Edge cases', () => {
         expect(await pairInfo.tradingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingFeeConfig(pairIndex));
         expect(await pairInfo.fundingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getFundingFeeConfig(pairIndex));
 
-    const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
-    const pair = await pairInfo.getPair(pairIndex);
-    expect(pair.indexToken).to.be.eq(btc.address);
-    expect(pair.stableToken).to.be.eq(usdt.address);
-    expect(pair.enable).to.be.eq(btcPair.pair.enable);
-  });
+        const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+        const pair = await pairInfo.getPair(pairIndex);
+        expect(pair.indexToken).to.be.eq(btc.address);
+        expect(pair.stableToken).to.be.eq(usdt.address);
+        expect(pair.enable).to.be.eq(btcPair.pair.enable);
+    });
 
     describe('test updatePair', async () => {
         it('unHandler updatePair should be reverted', async () => {
@@ -93,7 +93,6 @@ describe('PairInfo: Edge cases', () => {
 
             pairToUpdate.enable = true;
             await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
-
         });
     });
 });

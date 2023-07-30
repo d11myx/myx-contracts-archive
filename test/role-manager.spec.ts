@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { constants, utils } from 'ethers';
+import { constants } from 'ethers';
 import { AddressesProvider, RoleManager } from '../types';
-import { SignerWithAddress, setupTestEnv, testEnv } from './helpers/make-suite';
-import { deployContract } from './helpers/tx';
+import { setupTestEnv, testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
+import { deployContract } from '../helpers/utilities/tx';
 
 describe('Access Control List Manager', () => {
     let roleManager: RoleManager;
@@ -177,6 +177,6 @@ describe('Access Control List Manager', () => {
     it('Tries to deploy  is ZERO_ADDRESS (revert expected)', async () => {
         const { deployer, addressesProvider } = testEnv;
 
-        await expect( addressesProvider.setRolManager(ethers.constants.AddressZero)).to.be.revertedWith('is 0');
+        await expect(addressesProvider.setRolManager(ethers.constants.AddressZero)).to.be.revertedWith('is 0');
     });
 });

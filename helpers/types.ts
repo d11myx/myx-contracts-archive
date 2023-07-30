@@ -17,9 +17,9 @@ export interface PairInfoConfig {
 }
 
 export interface ReserveConfiguration {
-  TokenSymbol: string;
-  TokenName: string;
-  TokenAddress: ParamsPerNetwork<string>;
-  PairsConfig: SymbolMap<PairInfoConfig>;
-  PairAssets: ParamsPerNetwork<SymbolMap<string>>;
+    TokenSymbol: string;
+    TokenName: string;
+    TokenAddress: ParamsPerNetwork<string>;
+    PairsConfig: SymbolMap<PairInfoConfig>;
+    PairAssets: ParamsPerNetwork<SymbolMap<string>>;
 }
