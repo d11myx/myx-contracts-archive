@@ -63,7 +63,9 @@ export async function deployPrice(
 
     const pairConfigs = loadCurrentPairConfigs();
 
-    const vaultPriceFeed = (await deployContract('VaultPriceFeed', [])) as any as VaultPriceFeed;
+    const vaultPriceFeed = (await deployContract('VaultPriceFeed', [
+        addressesProvider.address,
+    ])) as any as VaultPriceFeed;
     console.log(`deployed VaultPriceFeed at ${vaultPriceFeed.address}`);
 
     const pairTokenAddresses = [];
@@ -88,9 +90,7 @@ export async function deployPrice(
     }
     await vaultPriceFeed.setPriceSampleSpace(1);
 
-    const fastPriceFeed = (await deployContract('FastPriceFeed', [
-        addressesProvider.address
-    ])) as any as FastPriceFeed;
+    const fastPriceFeed = (await deployContract('FastPriceFeed', [addressesProvider.address])) as any as FastPriceFeed;
     console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
 
     await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);

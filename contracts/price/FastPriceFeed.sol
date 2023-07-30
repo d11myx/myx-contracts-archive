@@ -2,7 +2,7 @@
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import '../interfaces/IAddressProvider.sol';
+import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import "./interfaces/ISecondaryPriceFeed.sol";
 import "./interfaces/IFastPriceFeed.sol";
@@ -31,7 +31,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
 
     uint256 public maxTimeDeviation;
 
-    mapping (address => uint256) public prices;
+    mapping(address => uint256) public prices;
 
     address[] public tokens;
     // array of tokenPrecisions used in setCompactedPrices, saves L1 calldata gas costs
@@ -39,22 +39,20 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     // should be 10 ** 3
     uint256[] public tokenPrecisions;
 
-    IAddressProvider addressProvider;
+    IAddressesProvider addressProvider;
 
     modifier onlyKeeper() {
         require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
         _;
     }
 
-     modifier onlyPoolAdmin() {
+    modifier onlyPoolAdmin() {
         require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
 
-    constructor(
-      IAddressProvider _addressProvider
-    )  {
-        addressProvider=_addressProvider;
+    constructor(IAddressesProvider _addressProvider)  {
+        addressProvider = _addressProvider;
     }
 
     function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyPoolAdmin {
@@ -92,7 +90,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
 
                 for (uint256 j = 0; j < 8; j++) {
                     uint256 index = i * 8 + j;
-                    if (index >= tokens.length) { return; }
+                    if (index >= tokens.length) {return;}
 
                     uint256 startBit = 32 * j;
                     uint256 price = (priceBits >> startBit) & BITMASK_32;
@@ -115,8 +113,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
         uint256 fastPrice = prices[_token];
         console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
 
-        if (fastPrice == 0) { return _refPrice; }
-        if (_refPrice == 0) { return fastPrice; }
+        if (fastPrice == 0) {return _refPrice;}
+        if (_refPrice == 0) {return fastPrice;}
 
         uint256 diffBasisPoints = _refPrice > fastPrice ? _refPrice.sub(fastPrice) : fastPrice.sub(_refPrice);
         diffBasisPoints = diffBasisPoints.mul(BASIS_POINTS_DIVISOR).div(_refPrice);
@@ -131,7 +129,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
 
             for (uint256 j = 0; j < 8; j++) {
                 uint256 index = j;
-                if (index >= tokens.length) { return; }
+                if (index >= tokens.length) {return;}
 
                 uint256 startBit = 32 * j;
                 uint256 price = (_priceBits >> startBit) & BITMASK_32;
@@ -153,7 +151,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     }
 
     function _setLastUpdatedValues(uint256 _timestamp) private returns (bool) {
-    
+
         uint256 _maxTimeDeviation = maxTimeDeviation;
         require(_timestamp > block.timestamp.sub(_maxTimeDeviation), "FastPriceFeed: _timestamp below allowed range");
         require(_timestamp < block.timestamp.add(_maxTimeDeviation), "FastPriceFeed: _timestamp exceeds allowed range");
