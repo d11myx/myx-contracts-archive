@@ -131,6 +131,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         // check leverage
         bytes32 key = tradingUtils.getPositionKey(account, _request.pairIndex, _request.isLong);
         (uint256 afterPosition, ) = tradingUtils.validLeverage(_request.account, _request.pairIndex, _request.isLong, _request.collateral, _request.sizeAmount, true);
+        require(afterPosition > 0, "zero position amount");
 
         // check tp sl
         require(_request.tp <= afterPosition && _request.sl <= afterPosition, "tp/sl exceeds max size");
