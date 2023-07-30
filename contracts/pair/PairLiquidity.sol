@@ -441,6 +441,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     function _getPrice(address _token) internal view returns (uint256) {
-        return vaultPriceFeed.getPrice(_token, true);
+        return vaultPriceFeed.getPrice(_token);
     }
 }
