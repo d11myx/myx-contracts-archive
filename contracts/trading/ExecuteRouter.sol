@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../openzeeplin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "../openzeeplin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../libraries/access/Handleable.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
-import "../price/interfaces/IFastPriceFeed.sol";
+import "../interfaces/IIndexPriceFeed.sol";
 
 import "./interfaces/IExecuteRouter.sol";
 import "./interfaces/ITradingRouter.sol";
@@ -33,7 +33,9 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         int256 collateral,
         bool isLong,
         uint256 sizeAmount,
-        uint256 price
+        uint256 price,
+        uint256 tradingFee,
+        int256 fundingFee
     );
     event ExecuteDecreaseOrder(
         address account,
@@ -44,7 +46,9 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 sizeAmount,
         uint256 price,
         int256 pnl,
-        bool needADL            // 需要执行ADL
+        bool needADL,            // 需要执行ADL
+        uint256 tradingFee,
+        int256 fundingFee
     );
     event LiquidatePosition(
         bytes32 positionKey,
@@ -61,7 +65,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     ITradingRouter public tradingRouter;
-    IFastPriceFeed public fastPriceFeed;
+    IIndexPriceFeed public fastPriceFeed;
     ITradingUtils public tradingUtils;
 
     uint256 public maxTimeDelay;
@@ -78,7 +82,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
-        IFastPriceFeed _fastPriceFeed,
+        IIndexPriceFeed _fastPriceFeed,
         ITradingUtils _tradingUtils,
         uint256 _maxTimeDelay
     ) external initializer {
@@ -98,7 +102,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
-        IFastPriceFeed _fastPriceFeed,
+        IIndexPriceFeed _fastPriceFeed,
         ITradingUtils _tradingUtils
     ) external onlyGov {
         pairInfo = _pairInfo;
@@ -117,33 +121,37 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         maxTimeDelay = _maxTimeDelay;
     }
 
-    function setPricesWithBitsAndExecuteMarketOrders(
-        uint256 _priceBits,
+    function setPricesAndExecuteMarketOrders(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         uint256 _increaseEndIndex,
         uint256 _decreaseEndIndex
     ) external onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+        console.log("setPricesAndExecuteMarketOrders");
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.executeIncreaseMarketOrders(_increaseEndIndex);
         this.executeDecreaseMarketOrders(_decreaseEndIndex);
     }
 
-    function setPricesWithBitsAndExecuteLimitOrders(
-        uint256 _priceBits,
+    function setPricesAndExecuteLimitOrders(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         uint256[] memory _increaseOrderIds,
         uint256[] memory _decreaseOrderIds
     ) external onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+        console.log("setPricesAndExecuteLimitOrders");
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.executeIncreaseLimitOrders(_increaseOrderIds);
         this.executeDecreaseLimitOrders(_decreaseOrderIds);
     }
 
-    // 批量执行市价加仓订单
     function executeIncreaseMarketOrders(uint256 _endIndex) external onlyPositionKeeper {
+        console.log("executeIncreaseMarketOrders endIndex", _endIndex, "timestamp", block.timestamp);
         uint256 index = tradingRouter.increaseMarketOrderStartIndex();
         uint256 length = tradingRouter.increaseMarketOrdersIndex();
-        console.log("executeIncreaseMarketOrders index %s length %s endIndex %s", index, length, _endIndex);
+
         if (index >= length) {
             return;
         }
@@ -153,40 +161,35 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         while (index < _endIndex) {
             try this.executeIncreaseOrder(index, ITradingRouter.TradeType.MARKET) {
-                console.log("executeIncreaseMarketOrder success index", index, "_endIndex", _endIndex);
+                console.log();
             } catch Error(string memory reason) {
                 console.log("executeIncreaseMarketOrder error ", reason);
                 tradingRouter.cancelIncreaseOrder(index, ITradingRouter.TradeType.MARKET);
             }
-            tradingRouter.removeFromIncreaseMarketOrders(index);
             index++;
         }
         tradingRouter.setIncreaseMarketOrderStartIndex(index);
     }
 
-    // 批量执行限价加仓订单
     function executeIncreaseLimitOrders(uint256[] memory _orderIds) external onlyPositionKeeper {
-        console.log("executeIncreaseLimitOrders");
+        console.log("executeIncreaseLimitOrders timestamp", block.timestamp);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             uint256 index = _orderIds[i];
             try this.executeIncreaseOrder(index, ITradingRouter.TradeType.LIMIT) {
-                console.log("executeIncreaseLimitOrders success index", index);
+                console.log();
             } catch Error(string memory reason) {
                 console.log("executeIncreaseLimitOrders error ", reason);
             }
-            tradingRouter.removeFromIncreaseLimitOrders(index);
         }
     }
 
-    // 执行加仓订单
     function executeIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) public nonReentrant onlyPositionKeeper {
-        console.log("executeIncreaseOrder account", msg.sender);
+        console.log("executeIncreaseOrder account %s orderId %s tradeType %s", msg.sender, _orderId, uint8(_tradeType));
 
         ITradingRouter.IncreasePositionOrder memory order = tradingRouter.getIncreaseOrder(_orderId, _tradeType);
-        console.log("executeIncreaseOrder orderId", _orderId, "tradeType", uint8(order.tradeType));
 
-        // 请求已执行或已取消
+
         if (order.account == address(0)) {
             console.log("executeIncreaseOrder not exists", _orderId);
             return;
@@ -194,7 +197,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // expire
         if (_tradeType == ITradingRouter.TradeType.MARKET) {
-            console.log("executeIncreaseOrder blockTime", order.blockTime, "current timestamp", block.timestamp);
             require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
@@ -208,18 +210,24 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // check trading amount
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
-        require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
+        require(order.sizeAmount == 0 || (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
 
         // check price
-        uint256 price = tradingUtils.getPrice(pairIndex, order.isLong);
-        if (order.tradeType == ITradingRouter.TradeType.MARKET) {
+        uint256 price = tradingUtils.getValidPrice(pairIndex, order.isLong);
+        if (order.tradeType == ITradingRouter.TradeType.MARKET || order.tradeType == ITradingRouter.TradeType.LIMIT) {
             require(order.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.openPrice
-                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice, "exceed acceptable price");
-        } else if (order.tradeType == ITradingRouter.TradeType.LIMIT) {
-            require(order.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice
-                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.openPrice, "not reach trigger price");
+                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice, "not reach trigger price");
         } else {
             require(order.isLong ? price >= order.openPrice : price <= order.openPrice, "not reach trigger price");
+        }
+
+        // compare openPrice and oraclePrice
+        if (order.tradeType == ITradingRouter.TradeType.LIMIT) {
+            if (order.isLong) {
+                price = order.openPrice.min(price);
+            } else {
+                price = order.openPrice.max(price);
+            }
         }
 
         // get position
@@ -229,42 +237,35 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
         // check position and leverage
-        tradingUtils.validLeverage(order.account, order.pairIndex, order.isLong, order.collateral, order.sizeAmount, true);
+        (uint256 afterPosition, ) = tradingUtils.validLeverage(order.account, order.pairIndex, order.isLong, order.collateral, order.sizeAmount, true);
+        require(afterPosition > 0, "zero position amount");
 
         // check tp sl
         require(order.tp == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.TP), "tp already exists");
         require(order.sl == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.SL), "sl already exists");
 
-        // 检查交易量
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log("executeIncreaseOrder preNetExposureAmountChecker",
-            preNetExposureAmountChecker > 0 ? uint256(preNetExposureAmountChecker) : uint256(- preNetExposureAmountChecker));
+        console.log("executeIncreaseOrder preNetExposureAmountChecker", preNetExposureAmountChecker.abs());
         if (preNetExposureAmountChecker >= 0) {
-            // 偏向多头
             if (order.isLong) {
-                // 买入单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                console.log("executeIncreaseOrder availableIndex", availableIndex);
                 require(order.sizeAmount <= availableIndex, "lp index token not enough");
             } else {
-                // 卖出单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                console.log("executeIncreaseOrder availableStable", availableStable);
                 require(order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.divPrice(price), "lp stable token not enough");
             }
         } else {
-            // 偏向空头
             if (order.isLong) {
-                // 卖出单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                console.log("executeIncreaseOrder availableIndex", availableIndex);
                 require(order.sizeAmount <= uint256(- preNetExposureAmountChecker) + availableIndex, "lp index token not enough");
             } else {
-                // 买入单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                console.log("executeIncreaseOrder availableStable", availableStable);
                 require(order.sizeAmount <= availableStable.divPrice(price), "lp stable token not enough");
             }
         }
@@ -273,7 +274,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         if (order.collateral > 0) {
             tradingRouter.transferToVault(pair.stableToken, order.collateral.abs());
         }
-        tradingVault.increasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
+        (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong, price);
 
         tradingRouter.removeOrderFromPosition(
             ITradingRouter.PositionOrder(
@@ -285,8 +286,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 _orderId,
                 order.sizeAmount
             ));
-
-        // 添加止盈止损
         tradingRouter.createTpSl(
             ITradingRouter.CreateTpSlRequest(
                 order.account,
@@ -314,15 +313,16 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             order.collateral,
             order.isLong,
             order.sizeAmount,
-            price
+            price,
+            tradingFee,
+            fundingFee
         );
     }
 
-    // 批量执行市价加仓订单
     function executeDecreaseMarketOrders(uint256 _endIndex) external onlyPositionKeeper {
+        console.log("executeDecreaseMarketOrders endIndex", _endIndex, "timestamp", block.timestamp);
         uint256 index = tradingRouter.decreaseMarketOrderStartIndex();
         uint256 length = tradingRouter.decreaseMarketOrdersIndex();
-        console.log("executeDecreaseMarketOrders index %s length %s endIndex %s", index, length, _endIndex);
         if (index >= length) {
             return;
         }
@@ -337,15 +337,13 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 console.log("executeDecreaseMarketOrders error ", reason);
                 tradingRouter.cancelDecreaseOrder(index, ITradingRouter.TradeType.MARKET);
             }
-            tradingRouter.removeFromDecreaseMarketOrders(index);
             index++;
         }
         tradingRouter.setDecreaseMarketOrderStartIndex(index);
     }
 
-    // 批量执行限价减仓订单
     function executeDecreaseLimitOrders(uint256[] memory _orderIds) external onlyPositionKeeper {
-        console.log("executeDecreaseLimitOrders");
+        console.log("executeDecreaseLimitOrders timestamp", block.timestamp);
 
         for (uint256 i = 0; i < _orderIds.length; i++) {
             uint256 index = _orderIds[i];
@@ -354,22 +352,20 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             } catch Error(string memory reason) {
                 console.log("executeDecreaseLimitOrders error ", reason);
             }
-            tradingRouter.removeFromDecreaseLimitOrders(index);
         }
     }
 
-    // 执行减仓订单
+
     function executeDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) public nonReentrant onlyPositionKeeper {
         _executeDecreaseOrder(_orderId, _tradeType);
     }
 
     function _executeDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) internal {
-        console.log("executeDecreaseOrder account", msg.sender);
-        console.log("executeDecreaseOrder orderId", _orderId, "tradeType", uint8(_tradeType));
+        console.log("executeDecreaseOrder account %s orderId %s tradeType %s", msg.sender, _orderId, uint8(_tradeType));
 
         ITradingRouter.DecreasePositionOrder memory order = tradingRouter.getDecreaseOrder(_orderId, _tradeType);
 
-        // 请求已执行或已取消
+
         if (order.account == address(0)) {
             console.log("executeDecreaseOrder not exists", _orderId);
             return;
@@ -377,7 +373,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         // expire
         if (order.tradeType == ITradingRouter.TradeType.MARKET) {
-            console.log("executeDecreaseOrder blockTime", order.blockTime, "current timestamp", block.timestamp);
             require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
@@ -385,12 +380,21 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 pairIndex = order.pairIndex;
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
 
+        // get position
+        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        if (position.positionAmount == 0) {
+            console.log("position already closed", _orderId);
+            return;
+        }
+
         // check trading amount
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
-        require(order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
+
+        order.sizeAmount = order.sizeAmount.min(position.positionAmount);
+        require(order.sizeAmount == 0 || (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
 
         // check price
-        uint256 price = tradingUtils.getPrice(pairIndex, order.isLong);
+        uint256 price = tradingUtils.getValidPrice(pairIndex, order.isLong);
         if (order.tradeType == ITradingRouter.TradeType.MARKET || order.tradeType == ITradingRouter.TradeType.LIMIT) {
             require(order.abovePrice ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.triggerPrice
                 : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.triggerPrice, "not reach trigger price");
@@ -398,9 +402,14 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             require(order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice, "not reach trigger price");
         }
 
-        // get position
-        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
-        require(position.positionAmount != 0, "position already closed");
+        // compare openPrice and oraclePrice
+        if (order.tradeType == ITradingRouter.TradeType.LIMIT) {
+            if (!order.isLong) {
+                price = order.triggerPrice.min(price);
+            } else {
+                price = order.triggerPrice.max(price);
+            }
+        }
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
@@ -408,37 +417,29 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         // check position and leverage
         tradingUtils.validLeverage(position.account, position.pairIndex, position.isLong, order.collateral, order.sizeAmount, false);
 
-        // 检查交易量
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log("executeDecreaseOrder preNetExposureAmountChecker",
-            preNetExposureAmountChecker > 0 ? uint256(preNetExposureAmountChecker) : uint256(- preNetExposureAmountChecker));
+        console.log("executeDecreaseOrder preNetExposureAmountChecker", preNetExposureAmountChecker.toString());
         bool needADL;
         if (preNetExposureAmountChecker >= 0) {
-            // 偏向多头
             if (!order.isLong) {
-                // 关空单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                console.log("executeDecreaseOrder availableIndex", availableIndex);
                 needADL = order.sizeAmount > availableIndex;
             } else {
-                // 关多单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                console.log("executeDecreaseOrder availableStable", availableStable);
                 needADL = order.sizeAmount > uint256(preNetExposureAmountChecker) + availableStable.divPrice(price);
             }
         } else {
-            // 偏向空头
             if (!order.isLong) {
-                // 关空单
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableIndex", availableIndex);
+                console.log("executeDecreaseOrder availableIndex", availableIndex);
                 needADL = order.sizeAmount > uint256(- preNetExposureAmountChecker) + availableIndex;
             } else {
-                // 关多单
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "availableStable", availableStable);
+                console.log("executeDecreaseOrder availableStable", availableStable);
                 needADL = order.sizeAmount > availableStable.divPrice(price);
             }
         }
@@ -456,7 +457,9 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 order.sizeAmount,
                 price,
                 0,
-                needADL
+                needADL,
+                0,
+                0
             );
             return;
         }
@@ -466,7 +469,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
             tradingRouter.transferToVault(pair.stableToken, order.collateral.abs());
         }
-        int256 pnl = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong);
+        (uint256 tradingFee, int256 fundingFee, int256 pnl)
+            = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong, price);
 
         // delete order
         if (order.tradeType == ITradingRouter.TradeType.MARKET) {
@@ -490,10 +494,10 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 order.sizeAmount
             ));
 
-        // 仓位清零后 取消所有减仓委托
         position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+
         if (position.positionAmount == 0) {
-            tradingRouter.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
+            tradingRouter.cancelOrders(order.account, order.pairIndex, order.isLong, false);
         }
 
         emit ExecuteDecreaseOrder(
@@ -505,16 +509,20 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             order.sizeAmount,
             price,
             pnl,
-            needADL
+            needADL,
+            tradingFee,
+            fundingFee
         );
     }
 
-    function setPricesWithBitsAndLiquidatePositions(
-        uint256 _priceBits,
+    function setPricesAndLiquidatePositions(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         bytes32[] memory _positionKeys
-    ) external nonReentrant onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+    ) external onlyPositionKeeper {
+        console.log("setPricesAndLiquidatePositions timestamp", block.timestamp);
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.liquidatePositions(_positionKeys);
     }
 
@@ -528,16 +536,13 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("liquidatePosition start");
         ITradingVault.Position memory position = tradingVault.getPositionByKey(_positionKey);
 
-        // 仓位已关闭
         if (position.positionAmount == 0) {
             console.log("position not exists");
             return;
         }
 
-        // 预言机价格
-        uint256 price = tradingUtils.getPrice(position.pairIndex, position.isLong);
+        uint256 price = tradingUtils.getValidPrice(position.pairIndex, position.isLong);
 
-        // 仓位pnl
         int256 unrealizedPnl;
         if (position.isLong) {
             if (price > position.averagePrice) {
@@ -552,7 +557,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
                 unrealizedPnl = - int256(position.positionAmount.mulPrice(price - position.averagePrice));
             }
         }
-        // 仓位净资产
+        console.log("liquidatePosition averagePrice %s unrealizedPnl %s", position.averagePrice, unrealizedPnl.toString());
+
         int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
 
@@ -560,10 +566,11 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         if (exposureAsset <= 0) {
             needLiquidate = true;
         } else {
-            uint256 riskRate = position.positionAmount.mulPrice(price).mulPercentage(tradingConfig.maintainMarginRate)
-            .calculatePercentage(uint256(exposureAsset));
+            uint256 riskRate = position.positionAmount.mulPrice(price)
+                .mulPercentage(tradingConfig.maintainMarginRate)
+                .calculatePercentage(uint256(exposureAsset));
             needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
-            console.log("liquidatePosition riskRate", riskRate);
+            console.log("liquidatePosition riskRate %s positionAmount %s exposureAsset %s", riskRate, position.positionAmount, exposureAsset.toString());
         }
         console.log("liquidatePosition needLiquidate", needLiquidate);
 
@@ -571,18 +578,16 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             return;
         }
 
-        // 取消所有减仓委托
         tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
 
-        // 挂单
+
         uint256 orderId = tradingRouter.createDecreaseOrder(
             ITradingRouter.DecreasePositionRequest(
                 position.account,
                 position.pairIndex,
                 ITradingRouter.TradeType.MARKET,
                 0,
-                position.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP)
-                    : price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP),
+                price,
                 position.positionAmount,
                 position.isLong
             ));
@@ -601,15 +606,17 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         );
     }
 
-    function setPricesWithBitsAndExecuteADL(
-        uint256 _priceBits,
+    function setPricesAndExecuteADL(
+        address[] memory _tokens,
+        uint256[] memory _prices,
         uint256 _timestamp,
         bytes32[] memory _positionKeys,
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
         ITradingRouter.TradeType _tradeType
-    ) external nonReentrant onlyPositionKeeper {
-        fastPriceFeed.setPricesWithBits(_priceBits, _timestamp);
+    ) external onlyPositionKeeper {
+        console.log("setPricesAndExecuteADL timestamp", block.timestamp);
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.executeADLAndDecreaseOrder(_positionKeys, _sizeAmounts, _orderId, _tradeType);
     }
 
@@ -622,11 +629,11 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("executeADLAndDecreaseOrder");
 
         require(_positionKeys.length == _sizeAmounts.length, "length not match");
-        // 待平仓订单
+
         ITradingRouter.DecreasePositionOrder memory order = tradingRouter.getDecreaseOrder(_orderId, _tradeType);
         require(order.needADL, "no need ADL");
 
-        // 检查交易数量
+
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(order.pairIndex);
 
         ITradingVault.Position[] memory adlPositions = new ITradingVault.Position[](_positionKeys.length);
@@ -642,16 +649,21 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(sumAmount == order.sizeAmount, "ADL position amount not match decrease order");
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
+        uint256 price = tradingUtils.getValidPrice(order.pairIndex, !order.isLong);
+
         for (uint256 i = 0; i < adlPositions.length; i++) {
             ITradingVault.Position memory adlPosition = adlPositions[i];
-            tradingVault.decreasePosition(
-                adlPosition.account,
-                adlPosition.pairIndex,
-                0,
-                adlPosition.positionAmount,
-                adlPosition.isLong
-            );
-            console.log("executeADLAndDecreaseOrder usdt balance of vault", IERC20(pair.stableToken).balanceOf(address(tradingVault)));
+            uint256 orderId = tradingRouter.createDecreaseOrder(
+                ITradingRouter.DecreasePositionRequest(
+                    adlPosition.account,
+                    adlPosition.pairIndex,
+                    ITradingRouter.TradeType.MARKET,
+                    0,
+                    price,
+                    adlPosition.positionAmount,
+                    adlPosition.isLong
+                ));
+            _executeDecreaseOrder(orderId, ITradingRouter.TradeType.MARKET);
             console.log();
         }
         _executeDecreaseOrder(_orderId, order.tradeType);

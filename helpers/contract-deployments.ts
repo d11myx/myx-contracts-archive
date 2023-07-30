@@ -1,181 +1,184 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
-  ExecuteRouter,
-  FastPriceEvents,
-  FastPriceFeed,
-  PairInfo,
-  PairLiquidity,
-  PairVault,
-  PriceFeed,
-  Token,
-  TradingRouter,
-  TradingUtils,
-  TradingVault,
-  VaultPriceFeed,
-  WETH,
-} from '../types';
-import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
-import { getMarketSymbol, MOCK_PRICES } from './constants';
-import { loadReserveConfig } from './market-config-helper';
-import { SymbolMap } from './types';
-import { getPairToken, SignerWithAddress, testEnv } from '../test/helpers/make-suite';
-import { MARKET_NAME } from './env';
+    ExecuteRouter,
+    IndexPriceFeed,
+    PairInfo,
+    PairLiquidity,
+    PairVault,
+    MockPriceFeed,
+    Token,
+    TradingRouter,
+    TradingUtils,
+    TradingVault,
+    OraclePriceFeed,
+    WETH,
+    AddressesProvider,
+} from '../../types';
+import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './tx';
+import { getMarketSymbol, MOCK_PRICES } from '../shared/constants';
+import { loadCurrentPairConfigs } from './market-config-helper';
+import { SymbolMap } from '../shared/types';
+import { getPairToken, SignerWithAddress, testEnv } from './make-suite';
+import { ethers } from 'ethers';
 
 declare var hre: HardhatRuntimeEnvironment;
 
 export const deployMockToken = async (symbol: string): Promise<Token> => {
-  return await deployContract<Token>('Token', [symbol]);
+    return await deployContract<Token>('Token', [symbol]);
 };
 
 export const deployWETH = async (): Promise<WETH> => {
-  return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
+    return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
 };
 
 export async function deployToken() {
-  console.log(` - setup tokens`);
+    console.log(` - setup tokens`);
 
-  // basic token
-  const usdt = await deployMockToken(getMarketSymbol());
-  console.log(`deployed USDT at ${usdt.address}`);
+    // basic token
+    const usdt = await deployMockToken(getMarketSymbol());
+    console.log(`deployed USDT at ${usdt.address}`);
 
-  const weth = await deployWETH();
-  console.log(`deployed WETH at ${weth.address}`);
+    const weth = await deployWETH();
+    console.log(`deployed WETH at ${weth.address}`);
 
   // pairs token
   const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
-  const tokens: SymbolMap<Token> = {};
-  for (let pair of Object.keys(pairConfigs)) {
-    const token = await deployMockToken(pair);
-    console.log(`deployed ${pair} at ${token.address}`);
+    const tokens: SymbolMap<Token> = {};
+    for (let pair of Object.keys(pairConfigs)) {
+        const token = await deployMockToken(pair);
+        console.log(`deployed ${pair} at ${token.address}`);
 
-    tokens[pair] = token;
-  }
-  return { usdt, weth, tokens };
+        tokens[pair] = token;
+    }
+    return { usdt, weth, tokens };
 }
 
-export async function deployPrice(deployer: SignerWithAddress) {
-  console.log(` - setup price`);
+export async function deployPrice(
+    deployer: SignerWithAddress,
+    keeper: SignerWithAddress,
+    addressesProvider: AddressesProvider,
+) {
+    console.log(` - setup price`);
 
   const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
-  const vaultPriceFeed = (await deployContract('VaultPriceFeed', [])) as any as VaultPriceFeed;
-  console.log(`deployed VaultPriceFeed at ${vaultPriceFeed.address}`);
+    const vaultPriceFeed = (await deployContract('OraclePriceFeed', [
+        addressesProvider.address,
+    ])) as any as OraclePriceFeed;
+    console.log(`deployed OraclePriceFeed at ${vaultPriceFeed.address}`);
 
-  const pairTokenAddresses = [];
-  for (let pair of Object.keys(pairConfigs)) {
-    const priceFeed = (await deployContract('PriceFeed', [])) as any as PriceFeed;
-    console.log(`deployed PriceFeed with ${pair} at ${priceFeed.address}`);
+    const pairTokenAddresses = [];
+    const pairTokenPrices = [];
+    for (let pair of Object.keys(pairConfigs)) {
+        const priceFeed = (await deployContract('MockPriceFeed', [])) as any as MockPriceFeed;
+        console.log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
 
-    await priceFeed.connect(deployer.signer).setLatestAnswer(MOCK_PRICES[pair]);
-    await priceFeed.connect(deployer.signer).setAdmin(deployer.address, true);
+        await priceFeed.connect(deployer.signer).setAdmin(keeper.address, true);
+        await priceFeed.connect(keeper.signer).setLatestAnswer(MOCK_PRICES[pair]);
 
-    const pairTokenAddress = (await getPairToken(pair)).address;
-    if (!pairTokenAddress) {
-      throw `wait for deployed before using`;
+        const pairTokenAddress = (await getPairToken(pair)).address;
+        if (!pairTokenAddress) {
+            throw `wait for deployed before using`;
+        }
+        await vaultPriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8);
+
+        pairTokenAddresses.push(pairTokenAddress);
+        pairTokenPrices.push(
+            ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
+        );
     }
-    await vaultPriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8, false);
 
-    pairTokenAddresses.push(pairTokenAddress);
-  }
-  await vaultPriceFeed.setPriceSampleSpace(1);
 
-  const fastPriceEvents = (await deployContract('FastPriceEvents', [])) as any as FastPriceEvents;
-  console.log(`deployed FastPriceEvents at ${fastPriceEvents.address}`);
+    const fastPriceFeed = (await deployContract('IndexPriceFeed', [addressesProvider.address])) as any as IndexPriceFeed;
+    console.log(`deployed IndexPriceFeed at ${fastPriceFeed.address}`);
 
-  const fastPriceFeed = (await deployContract('FastPriceFeed', [
-    5 * 60, // _priceDuration
-    120 * 60, // _maxPriceUpdateDelay
-    2, // _minBlockInterval
-    250, // _maxDeviationBasisPoints
-    fastPriceEvents.address, // _fastPriceEvents
-    deployer.address, // _tokenManager
-  ])) as any as FastPriceFeed;
-  console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
+    await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
 
-  await fastPriceFeed.initialize(1, [deployer.address], [deployer.address]);
-  await fastPriceFeed.setTokens(pairTokenAddresses, [10, 10]);
-  await fastPriceFeed.connect(deployer.signer).setPriceDataInterval(300);
-  await fastPriceFeed.setMaxTimeDeviation(10000);
-  await fastPriceFeed.setUpdater(deployer.address, true);
-  await fastPriceEvents.setIsPriceFeed(fastPriceFeed.address, true);
+    await fastPriceFeed.connect(deployer.signer).setMaxTimeDeviation(10000);
 
-  return { vaultPriceFeed, fastPriceFeed, fastPriceEvents };
+    await fastPriceFeed
+        .connect(keeper.signer)
+        .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
+
+    await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
+
+
+    return { vaultPriceFeed, fastPriceFeed };
 }
 
-export async function deployPair(vaultPriceFeed: VaultPriceFeed, deployer: SignerWithAddress, weth: WETH) {
-  console.log(` - setup pairs`);
+export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: SignerWithAddress, weth: WETH) {
+    console.log(` - setup pairs`);
 
-  const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
-  console.log(`deployed PairInfo at ${pairInfo.address}`);
+    const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
+    console.log(`deployed PairInfo at ${pairInfo.address}`);
 
-  const pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
-  console.log(`deployed PairVault at ${pairVault.address}`);
+    const pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
+    console.log(`deployed PairVault at ${pairVault.address}`);
 
-  const pairLiquidity = (await deployUpgradeableContract('PairLiquidity', [
-    pairInfo.address,
-    pairVault.address,
-    vaultPriceFeed.address,
-    deployer.address,
-    deployer.address,
-    weth.address,
-  ])) as any as PairLiquidity;
-  console.log(`deployed PairLiquidity at ${pairLiquidity.address}`);
+    const pairLiquidity = (await deployUpgradeableContract('PairLiquidity', [
+        pairInfo.address,
+        pairVault.address,
+        vaultPriceFeed.address,
+        deployer.address,
+        deployer.address,
+        weth.address,
+    ])) as any as PairLiquidity;
+    console.log(`deployed PairLiquidity at ${pairLiquidity.address}`);
 
-  await waitForTx(await pairLiquidity.setHandler(pairInfo.address, true));
-  await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
-  await waitForTx(await pairInfo.setPairLiquidity(pairLiquidity.address));
+    await waitForTx(await pairLiquidity.setHandler(pairInfo.address, true));
+    await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
 
-  return { pairInfo, pairLiquidity, pairVault };
+    return { pairInfo, pairLiquidity, pairVault };
 }
 
 export async function deployTrading(
-  deployer: SignerWithAddress,
-  pairVault: PairVault,
-  pairInfo: PairInfo,
-  vaultPriceFeed: VaultPriceFeed,
-  fastPriceFeed: FastPriceFeed,
+    deployer: SignerWithAddress,
+    pairVault: PairVault,
+    pairInfo: PairInfo,
+    vaultPriceFeed: OraclePriceFeed,
+    fastPriceFeed: IndexPriceFeed,
 ) {
-  console.log(` - setup trading`);
+    console.log(` - setup trading`);
 
-  let tradingUtils = (await deployUpgradeableContract('TradingUtils', [])) as any as TradingUtils;
-  console.log(`deployed TradingUtils at ${tradingUtils.address}`);
+    let tradingUtils = (await deployUpgradeableContract('TradingUtils', [])) as any as TradingUtils;
+    console.log(`deployed TradingUtils at ${tradingUtils.address}`);
 
-  let tradingVault = (await deployContract('TradingVault', [])) as any as TradingVault;
-  console.log(`deployed TradingVault at ${tradingVault.address}`);
+    let tradingVault = (await deployContract('TradingVault', [])) as any as TradingVault;
+    console.log(`deployed TradingVault at ${tradingVault.address}`);
 
-  let tradingRouter = (await deployContract('TradingRouter', [])) as any as TradingRouter;
-  console.log(`deployed TradingRouter at ${tradingRouter.address}`);
+    let tradingRouter = (await deployContract('TradingRouter', [])) as any as TradingRouter;
+    console.log(`deployed TradingRouter at ${tradingRouter.address}`);
 
-  let executeRouter = (await deployContract('ExecuteRouter', [])) as any as ExecuteRouter;
-  console.log(`deployed ExecuteRouter at ${executeRouter.address}`);
+    let executeRouter = (await deployContract('ExecuteRouter', [])) as any as ExecuteRouter;
+    console.log(`deployed ExecuteRouter at ${executeRouter.address}`);
 
-  await tradingUtils.setContract(
-    pairInfo.address,
-    pairVault.address,
-    tradingVault.address,
-    tradingRouter.address,
-    vaultPriceFeed.address,
-  );
+    await tradingUtils.setContract(
+        pairInfo.address,
+        pairVault.address,
+        tradingVault.address,
+        tradingRouter.address,
+        vaultPriceFeed.address,
+    );
 
-  await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address);
+    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address, 8*60*60);
 
-  await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
+    await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
 
-  await executeRouter.initialize(
-    pairInfo.address,
-    pairVault.address,
-    tradingVault.address,
-    tradingRouter.address,
-    fastPriceFeed.address,
-    tradingUtils.address,
-    60,
-  );
+    await executeRouter.initialize(
+        pairInfo.address,
+        pairVault.address,
+        tradingVault.address,
+        tradingRouter.address,
+        fastPriceFeed.address,
+        tradingUtils.address,
+        60,
+    );
 
-  await pairVault.setHandler(tradingVault.address, true);
-  await tradingVault.setHandler(executeRouter.address, true);
-  await tradingRouter.setHandler(executeRouter.address, true);
-  await executeRouter.setPositionKeeper(testEnv.keeper.address, true);
+    await pairVault.setHandler(tradingVault.address, true);
+    await tradingVault.setHandler(executeRouter.address, true);
+    await tradingRouter.setHandler(executeRouter.address, true);
+    await executeRouter.setPositionKeeper(testEnv.keeper.address, true);
 
-  return { tradingUtils, tradingVault, tradingRouter, executeRouter };
+    return { tradingUtils, tradingVault, tradingRouter, executeRouter };
 }

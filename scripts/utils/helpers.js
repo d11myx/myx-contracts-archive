@@ -127,7 +127,7 @@ async function deployContract(name, args, label, options) {
     name += "-" + args[1]
   } else if (name === "Token") {
     name += "-" + args[0]
-  } else if (name === "PriceFeed") {
+  } else if (name === "MockPriceFeed") {
     name += "-" + args[0]
     args = []
   } else if (name === "WETH") {
@@ -185,7 +185,7 @@ async function deployUpgradeableContract(name, args, label, options) {
     name += "-" + args[1]
   } else if (name === "Token") {
     name += "-" + args[0]
-  } else if (name === "PriceFeed") {
+  } else if (name === "MockPriceFeed") {
     name += "-" + args[0]
     args = []
   } else if (name === "WETH") {
@@ -205,6 +205,17 @@ async function deployUpgradeableContract(name, args, label, options) {
   console.log(repeatString("-"))
   await setConfig(name, contract.address, null)
   return contract
+}
+
+async function updateContract(name, address, options) {
+  const contractFactory = await hre.ethers.getContractFactory(name, options)
+
+  console.log(`Update [${name}] starting`)
+  let contract = await hre.upgrades.upgradeProxy(address, contractFactory)
+  let adminAddr = await hre.upgrades.erc1967.getAdminAddress(address);
+  let implAddr = await hre.upgrades.erc1967.getImplementationAddress(address);
+  console.log(`upgrade success: ${contract.address}, adminAddr: ${adminAddr}, implAddr: ${implAddr}`);
+  console.log(repeatString("-"))
 }
 
 async function contractAt(name, address, provider, options) {
@@ -286,5 +297,6 @@ module.exports = {
   processBatch,
   updateTokensPerInterval,
   sleep,
-  toChainLinkPrice
+  toChainLinkPrice,
+  updateContract
 }

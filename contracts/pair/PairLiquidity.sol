@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "../openzeeplin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../openzeeplin/contracts/token/ERC20/IERC20.sol";
-import "../openzeeplin/contracts/utils/math/Math.sol";
-import "../openzeeplin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 import "../interfaces/IWETH.sol";
 import "./interfaces/IPairInfo.sol";
@@ -13,7 +13,7 @@ import "./interfaces/IPairVault.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../price/interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 
 import "hardhat/console.sol";
@@ -88,7 +88,8 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
         IWETH(weth).deposit{value: msg.value}();
-        return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
+        IWETH(weth).transfer(msg.sender, msg.value);
+        return _addLiquidity(msg.sender, msg.sender, _pairIndex, msg.value, _stableAmount);
     }
 
     function addLiquidityForAccount(address _funder, address _account, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler returns (uint256) {
@@ -246,11 +247,11 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         return lpFairDelta > 0 ? Math.mulDiv(lpFairDelta, PRICE_PRECISION, IERC20(pair.pairToken).totalSupply()) : 1 * PRICE_PRECISION;
     }
 
-    function _getDelta(uint256 amount, uint256 price) internal view returns(uint256) {
+    function _getDelta(uint256 amount, uint256 price) internal pure returns(uint256) {
         return Math.mulDiv(amount, price, PRICE_PRECISION);
     }
 
-    function _getAmount(uint256 delta, uint256 price) internal view returns(uint256) {
+    function _getAmount(uint256 delta, uint256 price) internal pure returns(uint256) {
         return Math.mulDiv(delta, PRICE_PRECISION, price);
     }
 
@@ -440,6 +441,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     function _getPrice(address _token) internal view returns (uint256) {
-        return vaultPriceFeed.getPrice(_token, true, false, false);
+        return vaultPriceFeed.getPrice(_token);
     }
 }

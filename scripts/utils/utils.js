@@ -4,6 +4,7 @@ const {expandDecimals} = require("./utilities");
 
 let localPath = __dirname + "/" + "../config/local_config.json";
 let remotePath = __dirname + "/" + "../config/remote_config.json";
+let goerliPath = __dirname + "/" + "../config/goerli_config.json";
 
 function repeatString(str, num) {
   if (!num) {
@@ -45,6 +46,8 @@ async function getPath() {
       return localPath
   } else if (hre.network.name === 'remote') {
       return remotePath
+  } else if (hre.network.name === 'goerli') {
+      return goerliPath
   }
 }
 
@@ -66,6 +69,16 @@ async function mintWETH(eth, receiver, amount) {
   await eth.connect(user).transfer(receiver, expandDecimals(amount, 18))
 }
 
+async function mintETH(receiver, amount) {
+  const user = (await ethers.getSigners())[9];
+  await network.provider.request({
+    method: "hardhat_setBalance",
+    params: [user.address, expandDecimals(amount + 1000, 18).toHexString().replace("0x0", "0x")],
+  });
+
+  await user.sendTransaction({to: receiver, value: expandDecimals(amount, 18)});
+}
+
 module.exports = {
   repeatString,
   getChainId,
@@ -73,5 +86,6 @@ module.exports = {
   getConfig,
   addDecimal,
   getConfirmBlock,
-  mintWETH
+  mintWETH,
+  mintETH
 }
