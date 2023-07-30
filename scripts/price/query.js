@@ -23,7 +23,7 @@ async function main() {
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
 
   let tokens = ["BTC", "ETH"]
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"))
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   for (let symbol of tokens) {

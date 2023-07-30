@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import "../interfaces/IIndexPriceFeed.sol";
-import "./interfaces/IVaultPriceFeed.sol";
+
 
 import "hardhat/console.sol";
 
@@ -39,7 +39,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
     uint256[] public tokenPrecisions;
 
     IAddressesProvider addressProvider;
-    
+
     constructor(IAddressesProvider _addressProvider)  {
         addressProvider = _addressProvider;
     }
@@ -53,7 +53,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
         _;
     }
 
-    
+
 
     function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyPoolAdmin {
         maxTimeDeviation = _maxTimeDeviation;
