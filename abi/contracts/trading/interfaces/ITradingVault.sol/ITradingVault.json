@@ -25,10 +25,25 @@
         "internalType": "bool",
         "name": "_isLong",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
       }
     ],
     "name": "decreasePosition",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
+      },
       {
         "internalType": "int256",
         "name": "pnl",
@@ -303,10 +318,26 @@
         "internalType": "bool",
         "name": "_isLong",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
       }
     ],
     "name": "increasePosition",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tradingFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "fundingFee",
+        "type": "int256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

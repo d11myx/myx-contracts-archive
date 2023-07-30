@@ -9,7 +9,7 @@ interface IPairInfo {
         address pairToken;
         bool enable;
         uint256 kOfSwap;
-        uint256 initPrice; // index / stable 10000 for 100%
+        uint256 initPrice; // index / stable
         uint256 addLpFeeP;
     }
 
@@ -18,8 +18,10 @@ interface IPairInfo {
         uint256 maxLeverage;
         uint256 minTradeAmount;
         uint256 maxTradeAmount;
+        uint256 maxPositionAmount;
         uint256 maintainMarginRate; // 10000 for 100%
         uint256 priceSlipP;
+        uint256 maxPriceDeviationP;
     }
 
     struct TradingFeeConfig {
@@ -45,12 +47,6 @@ interface IPairInfo {
         uint256 userDistributeP;
         uint256 treasuryDistributeP;
     }
-
-    function pairIndexes(address, address) external view returns(uint256);
-
-    function isPairListed(address, address) external view returns (bool);
-
-    function pairsCount() external view returns (uint256);
 
     function getPair(uint256) external view returns(Pair memory);
 
