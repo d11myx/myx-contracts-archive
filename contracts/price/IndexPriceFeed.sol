@@ -4,15 +4,14 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
-import "./interfaces/ISecondaryPriceFeed.sol";
-import "./interfaces/IFastPriceFeed.sol";
-import "./interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IIndexPriceFeed.sol";
+
 
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
+contract IndexPriceFeed is IIndexPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -41,6 +40,9 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
 
     IAddressesProvider addressProvider;
 
+    constructor(IAddressesProvider _addressProvider)  {
+        addressProvider = _addressProvider;
+    }
     modifier onlyKeeper() {
         require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
         _;
@@ -51,9 +53,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
         _;
     }
 
-    constructor(IAddressesProvider _addressProvider)  {
-        addressProvider = _addressProvider;
-    }
+
 
     function setMaxTimeDeviation(uint256 _maxTimeDeviation) external onlyPoolAdmin {
         maxTimeDeviation = _maxTimeDeviation;
@@ -64,7 +64,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     }
 
     function setTokens(address[] memory _tokens, uint256[] memory _tokenPrecisions) external onlyPoolAdmin {
-        require(_tokens.length == _tokenPrecisions.length, "FastPriceFeed: invalid lengths");
+        require(_tokens.length == _tokenPrecisions.length, "invalid lengths");
         tokens = _tokens;
         tokenPrecisions = _tokenPrecisions;
     }
@@ -109,17 +109,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
-    function getPrice(address _token, uint256 _refPrice) external override view returns (uint256) {
-        uint256 fastPrice = prices[_token];
-        console.log("getPrice _token %s _refPrice %s fastPrice %s", _token, _refPrice, fastPrice);
-
-        if (fastPrice == 0) {return _refPrice;}
-        if (_refPrice == 0) {return fastPrice;}
-
-        uint256 diffBasisPoints = _refPrice > fastPrice ? _refPrice.sub(fastPrice) : fastPrice.sub(_refPrice);
-        diffBasisPoints = diffBasisPoints.mul(BASIS_POINTS_DIVISOR).div(_refPrice);
-
-        return fastPrice;
+    function getPrice(address _token) external  view returns (uint256) {
+        return prices[_token];
     }
 
     function _setPricesWithBits(uint256 _priceBits, uint256 _timestamp) private {
@@ -153,8 +144,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     function _setLastUpdatedValues(uint256 _timestamp) private returns (bool) {
 
         uint256 _maxTimeDeviation = maxTimeDeviation;
-        require(_timestamp > block.timestamp.sub(_maxTimeDeviation), "FastPriceFeed: _timestamp below allowed range");
-        require(_timestamp < block.timestamp.add(_maxTimeDeviation), "FastPriceFeed: _timestamp exceeds allowed range");
+        require(_timestamp > block.timestamp.sub(_maxTimeDeviation), "ts below range");
+        require(_timestamp < block.timestamp.add(_maxTimeDeviation), "ts exceeds range");
 
         // do not update prices if _timestamp is before the current lastUpdatedAt value
         if (_timestamp < lastUpdatedAt) {
