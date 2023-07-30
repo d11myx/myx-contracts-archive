@@ -12,6 +12,7 @@ import {
     TradingVault,
     VaultPriceFeed,
     WETH,
+    AddressesProvider,
 } from '../../types';
 import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './tx';
 import { getMarketSymbol, MOCK_PRICES } from '../shared/constants';
@@ -53,12 +54,18 @@ export async function deployToken() {
     return { usdt, weth, tokens };
 }
 
-export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWithAddress) {
+export async function deployPrice(
+    deployer: SignerWithAddress,
+    keeper: SignerWithAddress,
+    addressesProvider: AddressesProvider,
+) {
     console.log(` - setup price`);
 
     const pairConfigs = loadCurrentPairConfigs();
 
-    const vaultPriceFeed = (await deployContract('VaultPriceFeed', [])) as any as VaultPriceFeed;
+    const vaultPriceFeed = (await deployContract('VaultPriceFeed', [
+        addressesProvider.address,
+    ])) as any as VaultPriceFeed;
     console.log(`deployed VaultPriceFeed at ${vaultPriceFeed.address}`);
 
     const pairTokenAddresses = [];
@@ -83,24 +90,17 @@ export async function deployPrice(deployer: SignerWithAddress, keeper: SignerWit
     }
     await vaultPriceFeed.setPriceSampleSpace(1);
 
-    const fastPriceFeed = (await deployContract('FastPriceFeed', [
-        120 * 60, // _maxPriceUpdateDelay
-        2, // _minBlockInterval
-        250, // _maxDeviationBasisPoints
-
-        deployer.address, // _tokenManager
-    ])) as any as FastPriceFeed;
+    const fastPriceFeed = (await deployContract('FastPriceFeed', [addressesProvider.address])) as any as FastPriceFeed;
     console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
 
-    await fastPriceFeed.initialize(1, [deployer.address], [deployer.address]);
-    await fastPriceFeed.setTokens(pairTokenAddresses, [10, 10]);
-    await fastPriceFeed.connect(deployer.signer).setPriceDataInterval(300);
-    await fastPriceFeed.setMaxTimeDeviation(10000);
-    await fastPriceFeed.setUpdater(deployer.address, true);
+    await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
 
-    await fastPriceFeed.setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
+    await fastPriceFeed.connect(deployer.signer).setMaxTimeDeviation(10000);
 
-    await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
+    await fastPriceFeed
+        .connect(keeper.signer)
+        .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
+
     await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
     await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
 

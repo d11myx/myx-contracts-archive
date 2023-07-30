@@ -20,7 +20,7 @@ async function main() {
   let usdtPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-USDT"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
 
-  await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
+  
   await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
   await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
 
