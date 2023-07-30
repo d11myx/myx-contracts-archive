@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     ExecuteRouter,
-    FastPriceFeed,
+    IndexPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
@@ -90,8 +90,8 @@ export async function deployPrice(
     }
     await vaultPriceFeed.setPriceSampleSpace(1);
 
-    const fastPriceFeed = (await deployContract('FastPriceFeed', [addressesProvider.address])) as any as FastPriceFeed;
-    console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
+    const fastPriceFeed = (await deployContract('IndexPriceFeed', [addressesProvider.address])) as any as IndexPriceFeed;
+    console.log(`deployed IndexPriceFeed at ${fastPriceFeed.address}`);
 
     await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
 
@@ -138,7 +138,7 @@ export async function deployTrading(
     pairVault: PairVault,
     pairInfo: PairInfo,
     vaultPriceFeed: VaultPriceFeed,
-    fastPriceFeed: FastPriceFeed,
+    fastPriceFeed: IndexPriceFeed,
 ) {
     console.log(` - setup trading`);
 

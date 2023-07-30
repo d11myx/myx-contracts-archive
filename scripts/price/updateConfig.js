@@ -13,7 +13,7 @@ async function main() {
   console.log("\n updateConfig")
   const signers = await hre.ethers.getSigners()
 
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
   let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
   let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
   let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));

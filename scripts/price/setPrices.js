@@ -24,7 +24,7 @@ async function main() {
   await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
 
   // set keeper price
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
   let blockTime = await getBlockTime(provider)
   console.log(`lastUpdatedAt: ${await fastPriceFeed.lastUpdatedAt()}`)
   console.log(`lastUpdatedBlock: ${await fastPriceFeed.lastUpdatedBlock()}`)
