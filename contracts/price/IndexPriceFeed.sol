@@ -4,15 +4,14 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
-import "./interfaces/ISecondaryPriceFeed.sol";
-import "./interfaces/IFastPriceFeed.sol";
+import "../interfaces/IIndexPriceFeed.sol";
 import "./interfaces/IVaultPriceFeed.sol";
 
 import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract IndexPriceFeed is IFastPriceFeed {
+contract IndexPriceFeed is IIndexPriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
