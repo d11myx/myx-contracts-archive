@@ -6,7 +6,7 @@ import "./interfaces/ITradingRouter.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "./interfaces/ITradingVault.sol";
-import "../price/interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/PrecisionUtils.sol";
@@ -51,17 +51,17 @@ contract TradingUtils is ITradingUtils, Governable {
 
     function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken, _isLong);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
         console.log("getPrice pairIndex %s isLong %s price %s", _pairIndex, _isLong, price);
         return price;
     }
 
     function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken, _isLong);
+        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken);
         console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
 
-        uint256 indexPrice = vaultPriceFeed.getSecondaryPrice(pair.indexToken, 0, _isLong);
+        uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
         console.log("getValidPrice oraclePrice %s indexPrice %s", oraclePrice, indexPrice);
 
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
