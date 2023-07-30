@@ -14,15 +14,15 @@ async function main() {
   const signers = await hre.ethers.getSigners()
 
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"))
   let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
   let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
   let usdtPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-USDT"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
 
-  
+
   await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
-  
+
 
   for (let i = 10; i < signers.length; i++) {
       await fastPriceFeed.setUpdater(signers[i].address, true)

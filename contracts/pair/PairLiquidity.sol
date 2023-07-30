@@ -13,7 +13,7 @@ import "./interfaces/IPairVault.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../price/interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 
 import "hardhat/console.sol";

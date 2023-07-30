@@ -6,7 +6,7 @@ import "./interfaces/ITradingRouter.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "./interfaces/ITradingVault.sol";
-import "../price/interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/PrecisionUtils.sol";

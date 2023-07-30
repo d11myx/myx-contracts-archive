@@ -16,12 +16,12 @@ async function main() {
     let usdtPriceFeed = await deployContract('MockPriceFeed', ['USDT']);
     let ethPriceFeed = await deployContract('MockPriceFeed', ['ETH']);
 
-    let vaultPriceFeed = await deployContract('VaultPriceFeed', []);
+    let vaultPriceFeed = await deployContract('OraclePriceFeed', []);
 
     await vaultPriceFeed.setTokenConfig(eth.address, ethPriceFeed.address, 8);
     await vaultPriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8);
     await vaultPriceFeed.setTokenConfig(usdt.address, usdtPriceFeed.address, 8);
-    
+
 
     await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000));
     await ethPriceFeed.setAdmin(user1.address, true);
@@ -42,11 +42,11 @@ async function main() {
     await rolemanager.addRiskAdmin(user0.address);
     await rolemanager.addKeeper(user0.address);
     await rolemanager.addKeeper(user1.address);
-    
+
     await fastPriceFeed.connect(user0).setTokens([btc.address, eth.address], [10, 10]);
 
     await fastPriceFeed.setMaxTimeDeviation(300);
-    
+
 
 main()
     .then(() => process.exit(0))
