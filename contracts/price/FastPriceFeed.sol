@@ -64,7 +64,7 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     }
 
     function setTokens(address[] memory _tokens, uint256[] memory _tokenPrecisions) external onlyPoolAdmin {
-        require(_tokens.length == _tokenPrecisions.length, "FastPriceFeed: invalid lengths");
+        require(_tokens.length == _tokenPrecisions.length, "invalid lengths");
         tokens = _tokens;
         tokenPrecisions = _tokenPrecisions;
     }
@@ -153,8 +153,8 @@ contract FastPriceFeed is ISecondaryPriceFeed, IFastPriceFeed {
     function _setLastUpdatedValues(uint256 _timestamp) private returns (bool) {
 
         uint256 _maxTimeDeviation = maxTimeDeviation;
-        require(_timestamp > block.timestamp.sub(_maxTimeDeviation), "FastPriceFeed: _timestamp below allowed range");
-        require(_timestamp < block.timestamp.add(_maxTimeDeviation), "FastPriceFeed: _timestamp exceeds allowed range");
+        require(_timestamp > block.timestamp.sub(_maxTimeDeviation), "ts below range");
+        require(_timestamp < block.timestamp.add(_maxTimeDeviation), "ts exceeds range");
 
         // do not update prices if _timestamp is before the current lastUpdatedAt value
         if (_timestamp < lastUpdatedAt) {
