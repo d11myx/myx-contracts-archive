@@ -237,7 +237,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
         // check position and leverage
-        tradingUtils.validLeverage(order.account, order.pairIndex, order.isLong, order.collateral, order.sizeAmount, true);
+        (uint256 afterPosition, ) = tradingUtils.validLeverage(order.account, order.pairIndex, order.isLong, order.collateral, order.sizeAmount, true);
+        require(afterPosition > 0, "zero position amount");
 
         // check tp sl
         require(order.tp == 0 || !tradingRouter.positionHasTpSl(position.key, ITradingRouter.TradeType.TP), "tp already exists");
