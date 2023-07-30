@@ -127,6 +127,8 @@ export async function setupTestEnv() {
     testEnv.executeRouter = executeRouter;
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
+
+    console.log(`Setup finished`);
 }
 
 export async function getPairToken(pair: string): Promise<Token> {
