@@ -180,6 +180,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "indexPriceFeed",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -218,19 +231,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "secondaryPriceFeed",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -251,7 +251,7 @@
         "type": "address"
       }
     ],
-    "name": "setSecondaryPriceFeed",
+    "name": "setIndexPriceFeed",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

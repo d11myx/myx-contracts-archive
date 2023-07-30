@@ -28,7 +28,7 @@ contract VaultPriceFeed is  IVaultPriceFeed {
 
     address public chainlinkFlags;
 
-    address public secondaryPriceFeed;
+    address public indexPriceFeed;
 
      IAddressesProvider addressProvider;
 
@@ -54,8 +54,8 @@ contract VaultPriceFeed is  IVaultPriceFeed {
         chainlinkFlags = _chainlinkFlags;
     }
 
-    function setSecondaryPriceFeed(address _secondaryPriceFeed) external onlyPoolAdmin {
-        secondaryPriceFeed = _secondaryPriceFeed;
+    function setIndexPriceFeed(address _secondaryPriceFeed) external onlyPoolAdmin {
+        indexPriceFeed = _secondaryPriceFeed;
     }
 
     function setTokenConfig(
@@ -116,8 +116,8 @@ contract VaultPriceFeed is  IVaultPriceFeed {
     }
 
     function getIndexPrice(address _token, uint256 _referencePrice) public view returns (uint256) {
-        if (secondaryPriceFeed == address(0)) { return _referencePrice; }
-        return IOraclePrice(secondaryPriceFeed).getPrice(_token);
+        if (indexPriceFeed == address(0)) { return _referencePrice; }
+        return IOraclePrice(indexPriceFeed).getPrice(_token);
     }
 
   
