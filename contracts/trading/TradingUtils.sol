@@ -61,7 +61,7 @@ contract TradingUtils is ITradingUtils, Governable {
         uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken, _isLong);
         console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
 
-        uint256 indexPrice = vaultPriceFeed.getSecondaryPrice(pair.indexToken, 0, _isLong);
+        uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
         console.log("getValidPrice oraclePrice %s indexPrice %s", oraclePrice, indexPrice);
 
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
