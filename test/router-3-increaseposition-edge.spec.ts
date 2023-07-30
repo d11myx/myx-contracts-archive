@@ -10,7 +10,7 @@ describe('Router: sizeAmount cases', () => {
 	const pairIndex = 0;
 
 	before(async () => {
-		const { 
+		const {
 			keeper,
 			users: [trader],
 			btc,
@@ -19,7 +19,7 @@ describe('Router: sizeAmount cases', () => {
 			tradingRouter,
             executeRouter,
             tradingVault,
-		} = testEnv; 
+		} = testEnv;
 
 		const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
 		const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
@@ -63,7 +63,7 @@ describe('Router: sizeAmount cases', () => {
 
 		const collateral = ethers.utils.parseUnits('1000', 18)
 		await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-		
+
 		const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
 			account: trader.address,
 			pairIndex: pairIndex,
@@ -95,7 +95,7 @@ describe('Router: sizeAmount cases', () => {
 			executeRouter,
 			tradingVault,
 		} = testEnv;
-		
+
 		// open position
 		const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
 			account: trader.address,
@@ -119,7 +119,7 @@ describe('Router: sizeAmount cases', () => {
 	});
 
 	//TODO: fix
-	
+
 	// it('hava a position, input sizeAmount = 0, withdraw collateral', async() => {
 	// 	const {
 	// 		keeper,
@@ -127,7 +127,7 @@ describe('Router: sizeAmount cases', () => {
 	// 		tradingRouter,
 	// 		executeRouter,
 	// 		tradingVault,
-	// 	} = testEnv;	
+	// 	} = testEnv;
 
 	// 	// hava a position, input sizeAmount = 0, withdraw collateral
 	// 	const traderCollateral = await tradingVault.getPosition(trader.address, pairIndex, true)
@@ -161,7 +161,7 @@ describe('Router: sizeAmount cases', () => {
 			tradingRouter,
 			executeRouter,
 			tradingVault,
-		} = testEnv;	
+		} = testEnv;
 
 		const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
 			account: trader.address,
