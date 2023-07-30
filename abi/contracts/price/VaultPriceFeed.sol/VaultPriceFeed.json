@@ -168,49 +168,12 @@
         "type": "bool"
       }
     ],
-    "name": "getPriceV1",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
-      }
-    ],
     "name": "getPrimaryPrice",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isSecondaryPriceEnabled",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -302,19 +265,6 @@
       }
     ],
     "name": "setChainlinkFlags",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_isEnabled",
-        "type": "bool"
-      }
-    ],
-    "name": "setIsSecondaryPriceEnabled",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
