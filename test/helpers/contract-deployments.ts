@@ -128,7 +128,6 @@ export async function deployPair(vaultPriceFeed: VaultPriceFeed, deployer: Signe
 
     await waitForTx(await pairLiquidity.setHandler(pairInfo.address, true));
     await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
-    await waitForTx(await pairInfo.setPairLiquidity(pairLiquidity.address));
 
     return { pairInfo, pairLiquidity, pairVault };
 }

@@ -1,6 +1,7 @@
 const hre = require('hardhat');
 const {getBlockTime} = require("./utils/utilities");
 const {getCurrentTimestamp} = require("hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp");
+const {sleep} = require("./utils/helpers");
 
 async function main() {
     await hre.network.provider.send('evm_setIntervalMining', [3000]);
@@ -12,7 +13,7 @@ async function main() {
     console.log(`current time ${currentTime} block time ${blockTime} diff ${diff}`)
     await hre.network.provider.send('evm_increaseTime', [diff]);
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await sleep(3000);
 
     blockTime = await getBlockTime(await hre.ethers.provider);
     currentTime = getCurrentTimestamp();
