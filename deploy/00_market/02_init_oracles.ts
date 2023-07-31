@@ -8,8 +8,8 @@ import {
     loadReserveConfig,
     MARKET_NAME,
     MOCK_PRICES,
+    getBlockTimestamp,
 } from '../../helpers';
-import { getBlockTimestamp } from '../../helpers/utilities/tx';
 import { ethers } from 'ethers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
