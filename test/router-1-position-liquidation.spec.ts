@@ -1,9 +1,9 @@
 import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
-import { getBlockTimestamp, waitForTx } from './helpers/tx';
-import { MAX_UINT_AMOUNT, TradeType } from './shared/constants';
 import { ITradingRouter, MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
+import { getBlockTimestamp, waitForTx } from '../helpers/utilities/tx';
+import { MAX_UINT_AMOUNT, TradeType } from '../helpers';
 
 describe('Router: Liquidation cases', () => {
     const pairIndex = 0;
@@ -18,15 +18,13 @@ describe('Router: Liquidation cases', () => {
         await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
     });
     after(async () => {
-        const { keeper, btc, fastPriceFeed } = testEnv
+        const { keeper, btc, fastPriceFeed } = testEnv;
 
         await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
         await waitForTx(
-            await fastPriceFeed.connect(keeper.signer).setPrices(
-                [btc.address],
-                [ethers.utils.parseUnits('30000', 30)],
-                (await getBlockTimestamp()) + 100,
-            ),
+            await fastPriceFeed
+                .connect(keeper.signer)
+                .setPrices([btc.address], [ethers.utils.parseUnits('30000', 30)], (await getBlockTimestamp()) + 100),
         );
     });
 
@@ -80,11 +78,9 @@ describe('Router: Liquidation cases', () => {
         // price goes down, trader's position can be liquidated
         await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('20000', 8)));
         await waitForTx(
-            await fastPriceFeed.connect(keeper.signer).setPrices(
-                [btc.address],
-                [ethers.utils.parseUnits('20000', 30)],
-                (await getBlockTimestamp()) + 100,
-            ),
+            await fastPriceFeed
+                .connect(keeper.signer)
+                .setPrices([btc.address], [ethers.utils.parseUnits('20000', 30)], (await getBlockTimestamp()) + 100),
         );
 
         const leverageAft = positionBef.positionAmount.div(positionBef.collateral.div(30000 + 10000));

@@ -1,9 +1,9 @@
 import { setupTestEnv, testEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import { TradeType } from './shared/constants';
 import { ethers } from 'hardhat';
 import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';
 import { BigNumber } from 'ethers';
+import { TradeType } from '../helpers';
 
 describe('Trade: Market order cases', () => {
     const pairIndex = 0;
