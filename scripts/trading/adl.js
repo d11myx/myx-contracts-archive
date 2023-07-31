@@ -15,7 +15,7 @@ async function main() {
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
   let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))

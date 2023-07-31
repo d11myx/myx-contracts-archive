@@ -16,12 +16,12 @@ async function main() {
     let usdtPriceFeed = await deployContract('MockPriceFeed', ['USDT']);
     let ethPriceFeed = await deployContract('MockPriceFeed', ['ETH']);
 
-    let vaultPriceFeed = await deployContract('VaultPriceFeed', []);
+    let vaultPriceFeed = await deployContract('OraclePriceFeed', []);
 
     await vaultPriceFeed.setTokenConfig(eth.address, ethPriceFeed.address, 8);
     await vaultPriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8);
     await vaultPriceFeed.setTokenConfig(usdt.address, usdtPriceFeed.address, 8);
-    await vaultPriceFeed.setPriceSampleSpace(1);
+
 
     await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000));
     await ethPriceFeed.setAdmin(user1.address, true);
@@ -31,21 +31,22 @@ async function main() {
 
     await usdtPriceFeed.setLatestAnswer(toChainLinkPrice(1));
     await usdtPriceFeed.setAdmin(user1.address, true);
+    let addressProvider = await deployContract('AddressesProvider');
+    let rolemanager = await deployContract('RoleManager', [addressProvider.address]);
 
-    let fastPriceFeed = await deployContract('FastPriceFeed', [
-        120 * 60, // _maxPriceUpdateDelay
-        2, // _minBlockInterval
-        50, // _maxDeviationBasisPoints
-        user0.address, // _tokenManager
+    await addressProvider.setRolManager(rolemanager.address);
+    let fastPriceFeed = await deployContract('IndexPriceFeed', [
+        addressProvider.address
     ]);
     console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`);
-    await fastPriceFeed.initialize(2, [user0.address, user1.address], [user0.address, user1.address]);
-    await fastPriceFeed.setTokens([btc.address, eth.address], [10, 10]);
-    await fastPriceFeed.connect(user0).setPriceDataInterval(300);
+    await rolemanager.addRiskAdmin(user0.address);
+    await rolemanager.addKeeper(user0.address);
+    await rolemanager.addKeeper(user1.address);
+
+    await fastPriceFeed.connect(user0).setTokens([btc.address, eth.address], [10, 10]);
+
     await fastPriceFeed.setMaxTimeDeviation(300);
-    await fastPriceFeed.setUpdater(user0.address, true);
-    await fastPriceFeed.setUpdater(user1.address, true);
-}
+
 
 main()
     .then(() => process.exit(0))

@@ -24,7 +24,7 @@ async function main() {
   await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
 
   // set keeper price
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
   let blockTime = await getBlockTime(provider)
   console.log(`lastUpdatedAt: ${await fastPriceFeed.lastUpdatedAt()}`)
   console.log(`lastUpdatedBlock: ${await fastPriceFeed.lastUpdatedBlock()}`)
@@ -43,7 +43,7 @@ async function main() {
     blockTime + 100)
 
   let tokens = ["BTC", "ETH"]
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"))
   for (let symbol of tokens) {
     console.log(repeatString('-'))
     console.log(symbol)
@@ -56,7 +56,7 @@ async function main() {
     console.log(`oracle latestAnswer: ${latestAnswer} ${reduceDecimals(latestAnswer, decimals)}`)
     console.log(`fastPriceFeed price: ${reduceDecimals(await fastPriceFeed.prices(token), 30)}`);
     console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, true), 30)}`)
-    console.log(`vaultPriceFeed getSecondaryPrice: ${reduceDecimals(await vaultPriceFeed.getSecondaryPrice(token, 0, true), 30)}`)
+    console.log(`vaultPriceFeed getIndexPrice: ${reduceDecimals(await vaultPriceFeed.getIndexPrice(token, 0, true), 30)}`)
     console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true), 30)}`)
   }
 

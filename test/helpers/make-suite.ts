@@ -2,21 +2,24 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Signer } from 'ethers';
 import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
+    AddressesProvider,
     ExecuteRouter,
-    FastPriceFeed,
+    IndexPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
+    RoleManager,
     Token,
     TradingRouter,
     TradingUtils,
     TradingVault,
-    VaultPriceFeed,
+    OraclePriceFeed,
     WETH,
 } from '../../types';
 import { SymbolMap } from '../shared/types';
 import { deployPair, deployPrice, deployToken, deployTrading } from './contract-deployments';
 import { initPairs } from './init-helper';
+import { deployContract } from './tx';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -32,12 +35,13 @@ export interface TestEnv {
     weth: WETH;
     btc: Token;
     usdt: Token;
+    addressesProvider: AddressesProvider;
     pairTokens: SymbolMap<Token>;
     pairInfo: PairInfo;
     pairLiquidity: PairLiquidity;
     pairVault: PairVault;
-    vaultPriceFeed: VaultPriceFeed;
-    fastPriceFeed: FastPriceFeed;
+    vaultPriceFeed: OraclePriceFeed;
+    fastPriceFeed: IndexPriceFeed;
     tradingUtils: TradingUtils;
     tradingVault: TradingVault;
     tradingRouter: TradingRouter;
@@ -51,12 +55,13 @@ export const testEnv: TestEnv = {
     weth: {} as WETH,
     btc: {} as Token,
     usdt: {} as Token,
+    addressesProvider: {} as AddressesProvider,
     pairTokens: {} as SymbolMap<Token>,
     pairInfo: {} as PairInfo,
     pairLiquidity: {} as PairLiquidity,
     pairVault: {} as PairVault,
-    vaultPriceFeed: {} as VaultPriceFeed,
-    fastPriceFeed: {} as FastPriceFeed,
+    vaultPriceFeed: {} as OraclePriceFeed,
+    fastPriceFeed: {} as IndexPriceFeed,
     tradingUtils: {} as TradingUtils,
     tradingVault: {} as TradingVault,
     tradingRouter: {} as TradingRouter,
@@ -89,8 +94,16 @@ export async function setupTestEnv() {
     testEnv.pairTokens = tokens;
     testEnv.btc = tokens['BTC'];
 
+    // setup provider
+    const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
+    const roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
+    await addressesProvider.setRolManager(roleManager.address);
+    await roleManager.addPoolAdmin(deployer.address);
+    await roleManager.addKeeper(keeper.address);
+    testEnv.addressesProvider = addressesProvider;
+
     // setup price
-    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper);
+    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper, addressesProvider);
     testEnv.vaultPriceFeed = vaultPriceFeed;
     testEnv.fastPriceFeed = fastPriceFeed;
 
@@ -114,6 +127,8 @@ export async function setupTestEnv() {
     testEnv.executeRouter = executeRouter;
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
+
+    console.log(`Setup finished`);
 }
 
 export async function getPairToken(pair: string): Promise<Token> {
