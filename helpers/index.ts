@@ -1,8 +1,15 @@
 export * from './constants';
 export * from './contract-deployments';
+export * from './contract-getters';
+export * from './deploy-ids';
+export * from './env';
 export * from './hardhat-config-helpers';
+export * from './init-helper';
+export * from './market-config-helper';
+export * from './types';
+export * from './utilities/signer';
+export * from './utilities/tx';
 export * from '../tasks/misc/print-deployments';
-export * from '../types';
 
 import { loadTasks } from './hardhat-config-helpers';
 

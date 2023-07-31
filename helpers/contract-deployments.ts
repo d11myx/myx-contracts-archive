@@ -18,7 +18,7 @@ import { loadReserveConfig } from './market-config-helper';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
 import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './utilities/tx';
-import { getMarketSymbol, MOCK_PRICES } from './constants';
+import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { getPairToken, SignerWithAddress, testEnv } from '../test/helpers/make-suite';
 
@@ -36,7 +36,7 @@ export async function deployToken() {
     console.log(` - setup tokens`);
 
     // basic token
-    const usdt = await deployMockToken(getMarketSymbol());
+    const usdt = await deployMockToken(MARKET_NAME);
     console.log(`deployed USDT at ${usdt.address}`);
 
     const weth = await deployWETH();
