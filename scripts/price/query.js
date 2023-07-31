@@ -1,5 +1,5 @@
 const { deployContract, deployUpgradeableContract, toChainLinkPrice} = require("../utils/helpers");
-const { expandDecimals, reduceDecimals, formatBalance} = require("../utils/utilities");
+const { expandDecimals, reduceDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const hre = require("hardhat");
 const {mintWETH, getConfig, repeatString} = require("../utils/utils");
 const {contractAt} = require("../utils/helpers");
@@ -23,8 +23,8 @@ async function main() {
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
 
   let tokens = ["BTC", "ETH"]
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   for (let symbol of tokens) {
     console.log(repeatString('-'))
@@ -41,7 +41,7 @@ async function main() {
     }
     console.log(`fastPriceFeed price: ${reduceDecimals(await fastPriceFeed.prices(token), 30)}`);
     console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, true), 30)}`)
-    console.log(`vaultPriceFeed getSecondaryPrice: ${reduceDecimals(await vaultPriceFeed.getSecondaryPrice(token, 0, true), 30)}`)
+    console.log(`vaultPriceFeed getIndexPrice: ${reduceDecimals(await vaultPriceFeed.getIndexPrice(token, 0, true), 30)}`)
     console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true), 30)}`)
   }
 }

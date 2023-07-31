@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     ExecuteRouter,
-    FastPriceFeed,
+    IndexPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
@@ -10,7 +10,7 @@ import {
     TradingRouter,
     TradingUtils,
     TradingVault,
-    VaultPriceFeed,
+    OraclePriceFeed,
     WETH,
     AddressesProvider,
 } from '../../types';
@@ -63,10 +63,10 @@ export async function deployPrice(
 
     const pairConfigs = loadCurrentPairConfigs();
 
-    const vaultPriceFeed = (await deployContract('VaultPriceFeed', [
+    const vaultPriceFeed = (await deployContract('OraclePriceFeed', [
         addressesProvider.address,
-    ])) as any as VaultPriceFeed;
-    console.log(`deployed VaultPriceFeed at ${vaultPriceFeed.address}`);
+    ])) as any as OraclePriceFeed;
+    console.log(`deployed OraclePriceFeed at ${vaultPriceFeed.address}`);
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
@@ -88,10 +88,10 @@ export async function deployPrice(
             ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
         );
     }
-    await vaultPriceFeed.setPriceSampleSpace(1);
 
-    const fastPriceFeed = (await deployContract('FastPriceFeed', [addressesProvider.address])) as any as FastPriceFeed;
-    console.log(`deployed FastPriceFeed at ${fastPriceFeed.address}`);
+
+    const fastPriceFeed = (await deployContract('IndexPriceFeed', [addressesProvider.address])) as any as IndexPriceFeed;
+    console.log(`deployed IndexPriceFeed at ${fastPriceFeed.address}`);
 
     await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
 
@@ -101,13 +101,13 @@ export async function deployPrice(
         .connect(keeper.signer)
         .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
-    await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
-    await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
+    await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
+
 
     return { vaultPriceFeed, fastPriceFeed };
 }
 
-export async function deployPair(vaultPriceFeed: VaultPriceFeed, deployer: SignerWithAddress, weth: WETH) {
+export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: SignerWithAddress, weth: WETH) {
     console.log(` - setup pairs`);
 
     const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
@@ -128,7 +128,6 @@ export async function deployPair(vaultPriceFeed: VaultPriceFeed, deployer: Signe
 
     await waitForTx(await pairLiquidity.setHandler(pairInfo.address, true));
     await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
-    await waitForTx(await pairInfo.setPairLiquidity(pairLiquidity.address));
 
     return { pairInfo, pairLiquidity, pairVault };
 }
@@ -137,8 +136,8 @@ export async function deployTrading(
     deployer: SignerWithAddress,
     pairVault: PairVault,
     pairInfo: PairInfo,
-    vaultPriceFeed: VaultPriceFeed,
-    fastPriceFeed: FastPriceFeed,
+    vaultPriceFeed: OraclePriceFeed,
+    fastPriceFeed: IndexPriceFeed,
 ) {
     console.log(` - setup trading`);
 
@@ -162,7 +161,7 @@ export async function deployTrading(
         vaultPriceFeed.address,
     );
 
-    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address);
+    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, deployer.address, 8*60*60);
 
     await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
 
