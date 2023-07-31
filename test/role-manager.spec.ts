@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { constants } from 'ethers';
 import { AddressesProvider, RoleManager } from '../types';
-import { setupTestEnv, testEnv } from './helpers/make-suite';
+import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { deployContract } from '../helpers/utilities/tx';
 
@@ -12,7 +12,6 @@ describe('Access Control List Manager', () => {
     // const KEEPER_ROLE = utils.keccak256(utils.formatBytes32String('KEEPER_ROLE'));
 
     beforeEach(async () => {
-        await setupTestEnv();
         const { deployer, keeper } = testEnv;
         const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
         roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;

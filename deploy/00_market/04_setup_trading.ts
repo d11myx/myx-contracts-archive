@@ -3,27 +3,15 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
     EXECUTE_ROUTER_ID,
-    ExecuteRouter,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPairInfo,
     getPairVault,
-    getWETH,
-    PAIR_INFO_ID,
-    PAIR_LIQUIDITY_ID,
-    PAIR_VAULT_ID,
-    PairInfo,
-    PairLiquidity,
-    PairVault,
     TRADING_ROUTER_ID,
     TRADING_UTILS_ID,
     TRADING_VAULT_ID,
-    TradingRouter,
-    TradingUtils,
-    TradingVault,
 } from '../../helpers';
-import { waitForTx } from '../../helpers/utilities/tx';
-import { testEnv } from '../../test/helpers/make-suite';
+import { ExecuteRouter, TradingRouter, TradingUtils, TradingVault } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;

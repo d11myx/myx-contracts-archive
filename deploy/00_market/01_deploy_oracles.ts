@@ -7,11 +7,10 @@ import {
     loadReserveConfig,
     MARKET_NAME,
     MOCK_PRICE_FEED_PREFIX,
-    MockPriceFeed,
     ORACLE_PRICE_FEED_ID,
-    OraclePriceFeed,
+    waitForTx,
 } from '../../helpers';
-import { waitForTx } from '../../helpers/utilities/tx';
+import { MockPriceFeed, OraclePriceFeed } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;

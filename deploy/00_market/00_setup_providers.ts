@@ -1,13 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import {
-    ADDRESSES_PROVIDER_ID,
-    AddressesProvider,
-    COMMON_DEPLOY_PARAMS,
-    ROLE_MANAGER_ID,
-    RoleManager,
-} from '../../helpers';
-import { waitForTx } from '../../helpers/utilities/tx';
+import { ADDRESSES_PROVIDER_ID, COMMON_DEPLOY_PARAMS, ROLE_MANAGER_ID, waitForTx } from '../../helpers';
+import { AddressesProvider, RoleManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
