@@ -23,12 +23,12 @@ export enum TradeType {
 }
 
 export type eNetwork = eEthereumNetwork | eBscNetwork;
-
-export const Market = 'USDT';
-
-export function getMarketSymbol(): string {
-    return Market;
-}
+//
+// export const Market = 'USDT';
+//
+// export function getMarketSymbol(): string {
+//     return Market;
+// }
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {
     BTC: parseUnits('30000', 8),
@@ -39,10 +39,22 @@ export const DEFAULT_NAMED_ACCOUNTS = {
     deployer: {
         default: 0,
     },
+    poolAdmin: {
+        default: 0,
+    },
+    operator: {
+        default: 1,
+    },
+    treasurer: {
+        default: 1,
+    },
     keeper: {
         default: 0,
     },
     feeReceiver: {
+        default: 0,
+    },
+    slipReceiver: {
         default: 0,
     },
 };
