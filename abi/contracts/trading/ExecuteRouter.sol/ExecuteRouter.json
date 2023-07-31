@@ -328,7 +328,7 @@
     "name": "fastPriceFeed",
     "outputs": [
       {
-        "internalType": "contract IFastPriceFeed",
+        "internalType": "contract IIndexPriceFeed",
         "name": "",
         "type": "address"
       }
@@ -372,7 +372,7 @@
         "type": "address"
       },
       {
-        "internalType": "contract IFastPriceFeed",
+        "internalType": "contract IIndexPriceFeed",
         "name": "_fastPriceFeed",
         "type": "address"
       },
@@ -505,7 +505,7 @@
         "type": "address"
       },
       {
-        "internalType": "contract IFastPriceFeed",
+        "internalType": "contract IIndexPriceFeed",
         "name": "_fastPriceFeed",
         "type": "address"
       },
@@ -585,9 +585,14 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_priceBits",
-        "type": "uint256"
+        "internalType": "address[]",
+        "name": "_tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_prices",
+        "type": "uint256[]"
       },
       {
         "internalType": "uint256",
@@ -615,7 +620,7 @@
         "type": "uint8"
       }
     ],
-    "name": "setPricesWithBitsAndExecuteADL",
+    "name": "setPricesAndExecuteADL",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -623,9 +628,14 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_priceBits",
-        "type": "uint256"
+        "internalType": "address[]",
+        "name": "_tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_prices",
+        "type": "uint256[]"
       },
       {
         "internalType": "uint256",
@@ -643,7 +653,7 @@
         "type": "uint256[]"
       }
     ],
-    "name": "setPricesWithBitsAndExecuteLimitOrders",
+    "name": "setPricesAndExecuteLimitOrders",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -651,9 +661,14 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_priceBits",
-        "type": "uint256"
+        "internalType": "address[]",
+        "name": "_tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_prices",
+        "type": "uint256[]"
       },
       {
         "internalType": "uint256",
@@ -671,7 +686,7 @@
         "type": "uint256"
       }
     ],
-    "name": "setPricesWithBitsAndExecuteMarketOrders",
+    "name": "setPricesAndExecuteMarketOrders",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -679,9 +694,14 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_priceBits",
-        "type": "uint256"
+        "internalType": "address[]",
+        "name": "_tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_prices",
+        "type": "uint256[]"
       },
       {
         "internalType": "uint256",
@@ -694,7 +714,7 @@
         "type": "bytes32[]"
       }
     ],
-    "name": "setPricesWithBitsAndLiquidatePositions",
+    "name": "setPricesAndLiquidatePositions",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

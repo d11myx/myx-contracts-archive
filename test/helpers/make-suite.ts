@@ -4,7 +4,7 @@ import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
     AddressesProvider,
     ExecuteRouter,
-    FastPriceFeed,
+    IndexPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
@@ -13,7 +13,7 @@ import {
     TradingRouter,
     TradingUtils,
     TradingVault,
-    VaultPriceFeed,
+    OraclePriceFeed,
     WETH,
 } from '../../types';
 import { SymbolMap } from '../shared/types';
@@ -40,8 +40,8 @@ export interface TestEnv {
     pairInfo: PairInfo;
     pairLiquidity: PairLiquidity;
     pairVault: PairVault;
-    vaultPriceFeed: VaultPriceFeed;
-    fastPriceFeed: FastPriceFeed;
+    vaultPriceFeed: OraclePriceFeed;
+    fastPriceFeed: IndexPriceFeed;
     tradingUtils: TradingUtils;
     tradingVault: TradingVault;
     tradingRouter: TradingRouter;
@@ -60,8 +60,8 @@ export const testEnv: TestEnv = {
     pairInfo: {} as PairInfo,
     pairLiquidity: {} as PairLiquidity,
     pairVault: {} as PairVault,
-    vaultPriceFeed: {} as VaultPriceFeed,
-    fastPriceFeed: {} as FastPriceFeed,
+    vaultPriceFeed: {} as OraclePriceFeed,
+    fastPriceFeed: {} as IndexPriceFeed,
     tradingUtils: {} as TradingUtils,
     tradingVault: {} as TradingVault,
     tradingRouter: {} as TradingRouter,
@@ -126,7 +126,9 @@ export async function setupTestEnv() {
     testEnv.tradingRouter = tradingRouter;
     testEnv.executeRouter = executeRouter;
 
-    await initPairs(deployer, tokens, usdt, pairInfo);
+    await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
+
+    console.log(`Setup finished`);
 }
 
 export async function getPairToken(pair: string): Promise<Token> {

@@ -6,6 +6,7 @@
 
 ### 测试账户
 
+- 私链
 ```text
 Account #0 (admin): 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
 Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
@@ -69,6 +70,26 @@ Private Key: 0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e
 
 ```
 
+- goerli
+```text
+Account #0 (admin): 0x9a51ed860dfd64ac1faf6f2df906c31b588d1f26
+Private Key: 0x35fb41f603c91d8fdf29391ce17e96d50f028dd895762027806cde096dca8a3b
+
+Account #1 (多签1): 0x229b2dd414fc6d64d49f252d6efd960bb80c49ad
+Private Key: 0x56e7a541829f9e675773c9e2542fe31c6cd8c742f156c1b5beafe3f4f483eea2
+
+Account #2 (多签2): 0x1A5240e6427c8fB400770b6260385cd18B89eD91
+Private Key: 0xe9733eeed09ad95c2ef876eb7c9073a68a49651101f93dfdc56bea3b16baabcd
+
+Account #3 (多签3): 0xF28C074e6d49332f89bA69FaA7438e5038F9e2B2
+Private Key: 0x2f218d6f236015060f30827825d5d24711d01d502d0a5bd3ec85043ff45c2ae2
+
+Account #4 (user1): 0xC177e2A539Be587792808D94d3Ca076c6317227c
+Private Key: 0xa661ddc2b2524edf18074ac62ed919c8af1fedcd658d5361e0ed7eee249ff168
+
+多签合约: 0xe72aDF5f08dB431258776205172d2f1fF1cC4541
+```
+
 ### 合约接口
 
 #### event code
@@ -91,6 +112,69 @@ event: DecreasePosition id: f1d296a817e8ecfa2709fcd52c61a6dddc7e87ed697b3ba601e8
 event: IncreasePosition id: 07777c9f149d310fb8670fb9752de106d0ebc29093eb6df2be370406a7d742a3
 event: UpdateFundingRate id: 30ee8c76a6febcb0400fb07183d873b5c18cf9e5ca6a47104676795b989c606d
 event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a639ef285ad
+```
+
+#### 设置参数
+
+- PairInfo
+```text
+// 更新交易对配置
+updatePair(uint256 _pairIndex, Pair calldata _pair)
+
+struct Pair {
+    address indexToken;     // 交易对基础币种
+    address stableToken;    // 交易对稳定币
+    address pairToken;      // lp token
+    bool enable;            // 是否可用
+    uint256 kOfSwap;        // 流动性初始k值
+    uint256 initPrice;      // index / stable 初始价格 10^30
+    uint256 addLpFeeP;      // 添加流动性手续费
+}
+
+// 更新交易配置
+updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig)
+
+struct TradingConfig {
+    uint256 minLeverage;        // 最小杠杆
+    uint256 maxLeverage;        // 最大杠杆
+    uint256 minTradeAmount;     // 最小交易量
+    uint256 maxTradeAmount;     // 最大交易量
+    uint256 maxPositionAmount;  // 最大持仓量
+    uint256 maintainMarginRate; // 维持保证金率 10000 for 100%
+    uint256 priceSlipP;         // 价格滑点
+    uint256 maxPriceDeviationP; // 指数价格最大偏移量
+}
+
+// 更新交易手续费配置
+updateTradingFeeConfig(uint256 _pairIndex, TradingFeeConfig calldata _tradingFeeConfig)
+
+struct TradingFeeConfig {
+    // fee
+    uint256 takerFeeP;          // taker手续费率
+    uint256 makerFeeP;          // maker手续费率
+    // Distribute
+    uint256 lpDistributeP;      // lp分配比例
+    uint256 keeperDistributeP;  // keeper分配比例
+    uint256 treasuryDistributeP;// 国库分配比例
+    uint256 refererDistributeP; // 邀请人分配比例
+}
+
+// 更新资金费配置
+updateFundingFeeConfig(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig)
+
+
+struct FundingFeeConfig {
+    // factor
+    uint256 minFundingRate;             // 最小资金费率   1000000 for 100%
+    uint256 maxFundingRate;             // 最大资金费率   1000000 for 100%
+    uint256 fundingWeightFactor;        // 多空双方资金费率权重系数 10000 for 100%
+    uint256 liquidityPremiumFactor;     // 流动性对于溢价的系数  10000 for 100%
+    uint256 interest;
+    // Distribute
+    uint256 lpDistributeP;              // lp分配比例
+    uint256 userDistributeP;            // 用户分配比例
+    uint256 treasuryDistributeP;        // 国库分配比例
+}
 ```
 
 #### 开仓
@@ -137,16 +221,18 @@ uint256 public decreaseLimitOrdersIndex;
 
 ```text
 // 设置price并执行市价订单
-setPricesWithBitsAndExecuteMarketOrders(
-    uint256 _priceBits,
+setPricesAndExecuteMarketOrders(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
-    uint256 _increaseEndIndex,  // 开仓市价单终止index
-    uint256 _decreaseEndIndex   // 减仓市价单终止index
+    uint256 _increaseEndIndex,
+    uint256 _decreaseEndIndex
 )
 
 // 设置price并执行限价订单
-setPricesWithBitsAndExecuteLimitOrders(
-    uint256 _priceBits,
+setPricesAndExecuteLimitOrders(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
     uint256[] memory _increaseOrderIds,
     uint256[] memory _decreaseOrderIds
@@ -224,8 +310,9 @@ struct CreateTpSlRequest {
 
 ```text
 // 设置price并执行清算
-setPricesWithBitsAndLiquidatePositions(
-    uint256 _priceBits,
+setPricesAndLiquidatePositions(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
     bytes32[] memory _positionKeys
 )
@@ -240,8 +327,9 @@ function liquidatePositions(bytes32[] memory _positionKeys)
 
 ```text
 // 设置price并执行ADL
-setPricesWithBitsAndExecuteADL(
-    uint256 _priceBits,
+setPricesAndExecuteADL(
+    address[] memory _tokens,
+    uint256[] memory _prices,
     uint256 _timestamp,
     bytes32[] memory _positionKeys,
     uint256[] memory _sizeAmounts,
@@ -250,7 +338,7 @@ setPricesWithBitsAndExecuteADL(
 )
 
 // 执行ADL及减仓订单
-function executeADLAndDecreaseOrder(
+executeADLAndDecreaseOrder(
     bytes32[] memory _positionKeys,         // 待执行ADL仓位key
     uint256[] memory _sizeAmounts,          // 待执行ADL仓位数量
     uint256 _orderId,                       // 待执行订单

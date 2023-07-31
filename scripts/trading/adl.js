@@ -15,7 +15,7 @@ async function main() {
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
   let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
   let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
@@ -96,7 +96,8 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
     console.log(`order: ${await tradingRouter.increaseMarketOrders(orderId)}`)
 
     // execute
-    await executeRouter.executeIncreaseOrder(orderId, 0);
+    // await executeRouter.executeIncreaseOrder(orderId, 0);
+    await executeRouter.executeIncreaseMarketOrders(orderId.add(1));
 
     console.log(`order after execute: ${await tradingRouter.increaseMarketOrders(orderId)}`);
   } else {
@@ -115,7 +116,8 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
     console.log(`order: ${await tradingRouter.decreaseMarketOrders(orderId)}`)
 
     // execute
-    await executeRouter.executeDecreaseOrder(orderId, 0);
+    // await executeRouter.executeDecreaseOrder(orderId, 0);
+    await executeRouter.executeDecreaseMarketOrders(orderId.add(1));
 
     console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
   }
