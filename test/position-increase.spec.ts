@@ -3,9 +3,26 @@ import { ethers } from 'hardhat';
 import { ITradingRouter, MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
 import { getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { mintAndApprove } from './helpers/misc';
 
 describe('Router: increase position ar', () => {
     const pairIndex = 0;
+
+    before(async () => {
+        const {
+            users: [depositor],
+            btc,
+            usdt,
+            pairLiquidity,
+        } = testEnv;
+        // add liquidity
+        const indexAmount = ethers.utils.parseUnits('10000', 18);
+        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, pairLiquidity.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairLiquidity.address);
+        await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+    });
 
     describe('Router: collateral test cases', () => {
         before(async () => {
