@@ -30,11 +30,15 @@ export const deployUpgradeableContract = async <ContractType extends Contract>(
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
 
-export const getContractAt = async <ContractType extends BaseContract>(
-    contract: string,
-    address: string,
+export const getContract = async <ContractType extends Contract>(
+    id: string,
+    address?: string,
 ): Promise<ContractType> => {
-    return (await hre.ethers.getContractAt(contract, address)) as any as ContractType;
+    const artifact = await hre.deployments.getArtifact(id);
+    return hre.ethers.getContractAt(
+        artifact.abi,
+        address || (await (await hre.deployments.get(id)).address),
+    ) as any as ContractType;
 };
 
 interface AccountItem {
