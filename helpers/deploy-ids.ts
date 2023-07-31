@@ -1,6 +1,6 @@
 import { MARKET_NAME } from './env';
 
-export const TOKEN_PREFIX = `MockToken-`;
+export const MOCK_TOKEN_PREFIX = `MockToken-`;
 export const ADDRESSES_PROVIDER_ID = `AddressesProvider`;
 export const ROLE_MANAGER_ID = `RoleManager`;
 export const ORACLE_PRICE_FEED_ID = `OraclePriceFeed`;

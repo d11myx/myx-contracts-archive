@@ -14,13 +14,13 @@ import {
     WETH,
     AddressesProvider,
 } from '../types';
-import { loadReserveConfig } from './market-config-helper';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
 import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
-import { getPairToken, SignerWithAddress, testEnv } from '../test/helpers/make-suite';
+import { SignerWithAddress } from '../test/helpers/make-suite';
+import { loadReserveConfig } from './market-config-helper';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -59,10 +59,9 @@ export async function deployPrice(
     deployer: SignerWithAddress,
     keeper: SignerWithAddress,
     addressesProvider: AddressesProvider,
+    tokens: SymbolMap<Token>,
 ) {
     console.log(` - setup price`);
-
-    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
     const vaultPriceFeed = (await deployContract('OraclePriceFeed', [
         addressesProvider.address,
@@ -71,14 +70,14 @@ export async function deployPrice(
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
-    for (let pair of Object.keys(pairConfigs)) {
+    for (let [pair, token] of Object.entries(tokens)) {
         const priceFeed = (await deployContract('MockPriceFeed', [])) as any as MockPriceFeed;
         console.log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
 
         await priceFeed.connect(deployer.signer).setAdmin(keeper.address, true);
         await priceFeed.connect(keeper.signer).setLatestAnswer(MOCK_PRICES[pair]);
 
-        const pairTokenAddress = (await getPairToken(pair)).address;
+        const pairTokenAddress = token.address;
         if (!pairTokenAddress) {
             throw `wait for deployed before using`;
         }
@@ -135,6 +134,7 @@ export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: Sign
 
 export async function deployTrading(
     deployer: SignerWithAddress,
+    keeper: SignerWithAddress,
     pairVault: PairVault,
     pairInfo: PairInfo,
     vaultPriceFeed: OraclePriceFeed,
@@ -185,7 +185,7 @@ export async function deployTrading(
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(executeRouter.address, true);
-    await executeRouter.setPositionKeeper(testEnv.keeper.address, true);
+    await executeRouter.setPositionKeeper(keeper.address, true);
 
     return { tradingUtils, tradingVault, tradingRouter, executeRouter };
 }

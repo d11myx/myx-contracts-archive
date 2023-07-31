@@ -16,10 +16,30 @@ import {
     OraclePriceFeed,
     WETH,
 } from '../../types';
-import { SymbolMap } from '../../helpers/types';
-import { deployPair, deployPrice, deployToken, deployTrading } from '../../helpers';
-import { initPairs } from '../../helpers/init-helper';
-import { deployContract } from '../../helpers/utilities/tx';
+import {
+    SymbolMap,
+    getAddressesProvider,
+    getExecuteRouter,
+    getIndexPriceFeed,
+    getOraclePriceFeed,
+    getPairInfo,
+    getPairLiquidity,
+    getPairVault,
+    getRoleManager,
+    getToken,
+    getTradingRouter,
+    getTradingUtils,
+    getTradingVault,
+    getWETH,
+    MOCK_TOKEN_PREFIX,
+    initPairs,
+    deployTrading,
+    deployPair,
+    deployPrice,
+    deployToken,
+    deployContract,
+} from '../../helpers';
+import { btcPairInfo } from '../../markets/usdt/pairs';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -30,12 +50,15 @@ export interface SignerWithAddress {
 
 export interface TestEnv {
     deployer: SignerWithAddress;
+    poolAdmin: SignerWithAddress;
     keeper: SignerWithAddress;
     users: SignerWithAddress[];
     weth: WETH;
     btc: Token;
+    eth: Token;
     usdt: Token;
     addressesProvider: AddressesProvider;
+    roleManager: RoleManager;
     pairTokens: SymbolMap<Token>;
     pairInfo: PairInfo;
     pairLiquidity: PairLiquidity;
@@ -50,12 +73,15 @@ export interface TestEnv {
 
 export const testEnv: TestEnv = {
     deployer: {} as SignerWithAddress,
+    poolAdmin: {} as SignerWithAddress,
     keeper: {} as SignerWithAddress,
     users: [] as SignerWithAddress[],
     weth: {} as WETH,
     btc: {} as Token,
+    eth: {} as Token,
     usdt: {} as Token,
     addressesProvider: {} as AddressesProvider,
+    roleManager: {} as RoleManager,
     pairTokens: {} as SymbolMap<Token>,
     pairInfo: {} as PairInfo,
     pairLiquidity: {} as PairLiquidity,
@@ -69,6 +95,62 @@ export const testEnv: TestEnv = {
 } as TestEnv;
 
 export async function setupTestEnv() {
+    const [_deployer, , ...restSigners] = await getSigners(hre);
+    const deployer: SignerWithAddress = {
+        address: await _deployer.getAddress(),
+        signer: _deployer,
+    };
+
+    for (const signer of restSigners) {
+        testEnv.users.push({
+            signer,
+            address: await signer.getAddress(),
+        });
+    }
+
+    // users
+    testEnv.deployer = deployer;
+    testEnv.poolAdmin = deployer;
+    testEnv.keeper = deployer;
+
+    const allDeployments = await hre.deployments.all();
+    const mockTokenKeys = Object.keys(allDeployments).filter((key) => key.includes(MOCK_TOKEN_PREFIX));
+
+    let pairTokens: SymbolMap<Token> = {};
+    for (let [key, deployment] of Object.entries(allDeployments)) {
+        if (mockTokenKeys.includes(key)) {
+            pairTokens[key.replace(MOCK_TOKEN_PREFIX, '')] = await getToken(deployment.address);
+        }
+    }
+
+    // tokens
+    testEnv.weth = await getWETH();
+    testEnv.usdt = await getToken();
+    testEnv.pairTokens = pairTokens;
+    testEnv.btc = pairTokens['BTC'];
+    testEnv.eth = pairTokens['ETH'];
+
+    // provider
+    testEnv.addressesProvider = await getAddressesProvider();
+    testEnv.roleManager = await getRoleManager();
+
+    // oracle
+    testEnv.vaultPriceFeed = await getOraclePriceFeed();
+    testEnv.fastPriceFeed = await getIndexPriceFeed();
+
+    // pair
+    testEnv.pairInfo = await getPairInfo();
+    testEnv.pairLiquidity = await getPairLiquidity();
+    testEnv.pairVault = await getPairVault();
+
+    // trading
+    testEnv.tradingUtils = await getTradingUtils();
+    testEnv.tradingVault = await getTradingVault();
+    testEnv.tradingRouter = await getTradingRouter();
+    testEnv.executeRouter = await getExecuteRouter();
+}
+
+export async function newTestEnv(): Promise<TestEnv> {
     const [_deployer, _keeper, ...restSigners] = await getSigners(hre);
     const deployer: SignerWithAddress = {
         address: await _deployer.getAddress(),
@@ -79,58 +161,56 @@ export async function setupTestEnv() {
         signer: _keeper,
     };
 
+    const users: SignerWithAddress[] = [];
     for (const signer of restSigners) {
-        testEnv.users.push({
+        users.push({
             signer,
             address: await signer.getAddress(),
         });
     }
-    // setup tokens
     const { weth, usdt, tokens } = await deployToken();
-    testEnv.deployer = deployer;
-    testEnv.keeper = keeper;
-    testEnv.weth = weth;
-    testEnv.usdt = usdt;
-    testEnv.pairTokens = tokens;
-    testEnv.btc = tokens['BTC'];
 
-    // setup provider
     const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
     const roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
     await addressesProvider.setRolManager(roleManager.address);
     await roleManager.addPoolAdmin(deployer.address);
     await roleManager.addKeeper(keeper.address);
-    testEnv.addressesProvider = addressesProvider;
 
-    // setup price
-    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper, addressesProvider);
-    testEnv.vaultPriceFeed = vaultPriceFeed;
-    testEnv.fastPriceFeed = fastPriceFeed;
+    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    // setup pair
     const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
-    testEnv.pairInfo = pairInfo;
-    testEnv.pairLiquidity = pairLiquidity;
-    testEnv.pairVault = pairVault;
 
-    // setup trading
     const { tradingUtils, tradingVault, tradingRouter, executeRouter } = await deployTrading(
         deployer,
+        keeper,
         pairVault,
         pairInfo,
         vaultPriceFeed,
         fastPriceFeed,
     );
-    testEnv.tradingUtils = tradingUtils;
-    testEnv.tradingVault = tradingVault;
-    testEnv.tradingRouter = tradingRouter;
-    testEnv.executeRouter = executeRouter;
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 
-    console.log(`Setup finished`);
-}
-
-export async function getPairToken(pair: string): Promise<Token> {
-    return testEnv.pairTokens[pair];
+    return {
+        deployer: deployer,
+        poolAdmin: deployer,
+        keeper: keeper,
+        users: users,
+        weth: weth,
+        btc: tokens['BTC'],
+        eth: tokens['ETH'],
+        usdt: usdt,
+        addressesProvider: addressesProvider,
+        roleManager: roleManager,
+        pairTokens: tokens,
+        pairInfo: pairInfo,
+        pairLiquidity: pairLiquidity,
+        pairVault: pairVault,
+        vaultPriceFeed: vaultPriceFeed,
+        fastPriceFeed: fastPriceFeed,
+        tradingUtils: tradingUtils,
+        tradingVault: tradingVault,
+        tradingRouter: tradingRouter,
+        executeRouter: executeRouter,
+    } as TestEnv;
 }

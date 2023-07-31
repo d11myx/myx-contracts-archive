@@ -1,16 +1,23 @@
 import { ITradingRouter, Token } from '../../types';
 import { BigNumber } from 'ethers';
-import { SignerWithAddress, testEnv } from './make-suite';
-import { TradeType } from '../shared/constants';
+import { SignerWithAddress, TestEnv } from './make-suite';
 import { ethers } from 'hardhat';
+import { TradeType } from '../../helpers';
 
-export async function mintAndApprove(token: Token, amount: BigNumber, account: SignerWithAddress, spender: string) {
+export async function mintAndApprove(
+    testEnv: TestEnv,
+    token: Token,
+    amount: BigNumber,
+    account: SignerWithAddress,
+    spender: string,
+) {
     const { deployer } = testEnv;
     await token.connect(deployer.signer).mint(account.address, amount);
     await token.connect(account.signer).approve(spender, amount);
 }
 
 export async function increasePosition(
+    testEnv: TestEnv,
     user: SignerWithAddress,
     pairIndex: number,
     collateral: BigNumber,
@@ -42,6 +49,7 @@ export async function increasePosition(
 }
 
 export async function decreasePosition(
+    testEnv: TestEnv,
     user: SignerWithAddress,
     pairIndex: number,
     collateral: BigNumber,
