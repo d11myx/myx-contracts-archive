@@ -328,7 +328,7 @@
     "name": "fastPriceFeed",
     "outputs": [
       {
-        "internalType": "contract IFastPriceFeed",
+        "internalType": "contract IIndexPriceFeed",
         "name": "",
         "type": "address"
       }
@@ -372,7 +372,7 @@
         "type": "address"
       },
       {
-        "internalType": "contract IFastPriceFeed",
+        "internalType": "contract IIndexPriceFeed",
         "name": "_fastPriceFeed",
         "type": "address"
       },
@@ -505,7 +505,7 @@
         "type": "address"
       },
       {
-        "internalType": "contract IFastPriceFeed",
+        "internalType": "contract IIndexPriceFeed",
         "name": "_fastPriceFeed",
         "type": "address"
       },

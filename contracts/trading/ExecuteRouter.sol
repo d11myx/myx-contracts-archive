@@ -9,7 +9,7 @@ import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
-import "../price/interfaces/IFastPriceFeed.sol";
+import "../interfaces/IIndexPriceFeed.sol";
 
 import "./interfaces/IExecuteRouter.sol";
 import "./interfaces/ITradingRouter.sol";
@@ -65,7 +65,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     ITradingRouter public tradingRouter;
-    IFastPriceFeed public fastPriceFeed;
+    IIndexPriceFeed public fastPriceFeed;
     ITradingUtils public tradingUtils;
 
     uint256 public maxTimeDelay;
@@ -82,7 +82,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
-        IFastPriceFeed _fastPriceFeed,
+        IIndexPriceFeed _fastPriceFeed,
         ITradingUtils _tradingUtils,
         uint256 _maxTimeDelay
     ) external initializer {
@@ -102,7 +102,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
-        IFastPriceFeed _fastPriceFeed,
+        IIndexPriceFeed _fastPriceFeed,
         ITradingUtils _tradingUtils
     ) external onlyGov {
         pairInfo = _pairInfo;
