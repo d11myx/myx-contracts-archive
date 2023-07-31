@@ -1,22 +1,14 @@
 [
   {
-    "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newOwner",
+        "internalType": "contract IAddressesProvider",
+        "name": "_addressProvider",
         "type": "address"
       }
     ],
-    "name": "OwnershipTransferred",
-    "type": "event"
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "inputs": [],
@@ -102,9 +94,14 @@
         "internalType": "address",
         "name": "_token",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_referencePrice",
+        "type": "uint256"
       }
     ],
-    "name": "getLatestPrimaryPrice",
+    "name": "getIndexPrice",
     "outputs": [
       {
         "internalType": "uint256",
@@ -121,11 +118,6 @@
         "internalType": "address",
         "name": "_token",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
       }
     ],
     "name": "getPrice",
@@ -145,35 +137,6 @@
         "internalType": "address",
         "name": "_token",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
-      }
-    ],
-    "name": "getPriceV1",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
       }
     ],
     "name": "getPrimaryPrice",
@@ -188,63 +151,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_referencePrice",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_maximise",
-        "type": "bool"
-      }
-    ],
-    "name": "getSecondaryPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
-    "name": "isSecondaryPriceEnabled",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxStrictPriceDeviation",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
+    "name": "indexPriceFeed",
     "outputs": [
       {
         "internalType": "address",
@@ -294,39 +202,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "priceSampleSpace",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "secondaryPriceFeed",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -342,51 +217,12 @@
   {
     "inputs": [
       {
-        "internalType": "bool",
-        "name": "_isEnabled",
-        "type": "bool"
-      }
-    ],
-    "name": "setIsSecondaryPriceEnabled",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_maxStrictPriceDeviation",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxStrictPriceDeviation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_priceSampleSpace",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPriceSampleSpace",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_secondaryPriceFeed",
         "type": "address"
       }
     ],
-    "name": "setSecondaryPriceFeed",
+    "name": "setIndexPriceFeed",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -410,19 +246,6 @@
       }
     ],
     "name": "setTokenConfig",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
