@@ -233,7 +233,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "initPrice",
+            "name": "expectIndexTokenP",
             "type": "uint256"
           },
           {
@@ -486,7 +486,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "initPrice",
+        "name": "expectIndexTokenP",
         "type": "uint256"
       },
       {
@@ -736,7 +736,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "initPrice",
+            "name": "expectIndexTokenP",
             "type": "uint256"
           },
           {
