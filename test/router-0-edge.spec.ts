@@ -29,7 +29,7 @@ describe('Router: Edge cases', () => {
             pairVault,
         } = testEnv;
 
-        const btcAmount = ethers.utils.parseUnits('100', await btc.decimals());
+        const btcAmount = ethers.utils.parseUnits('34', await btc.decimals());
         const usdtAmount = ethers.utils.parseUnits('1000000', await usdt.decimals());
         await waitForTx(await btc.connect(deployer.signer).mint(depositor.address, btcAmount));
         await waitForTx(await usdt.connect(deployer.signer).mint(depositor.address, usdtAmount));
@@ -206,7 +206,7 @@ describe('Router: Edge cases', () => {
                 pairIndex,
                 BigNumber.from(0),
                 ethers.utils.parseUnits('30000', 30),
-                ethers.utils.parseUnits('18', 18),
+                ethers.utils.parseUnits('18.66', 18),
                 true,
             );
 
@@ -234,6 +234,7 @@ describe('Router: Edge cases', () => {
             );
 
             const pairVaultInfo = await pairVault.getVault(pairIndex);
+            console.log("indexTotalAmount", pairVaultInfo.indexTotalAmount, "indexReservedAmount", pairVaultInfo.indexReservedAmount);
             expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(0);
 
             // shorter decrease position will wait for adl

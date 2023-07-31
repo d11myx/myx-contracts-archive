@@ -127,7 +127,7 @@ struct Pair {
     address pairToken;      // lp token
     bool enable;            // 是否可用
     uint256 kOfSwap;        // 流动性初始k值
-    uint256 initPrice;      // index / stable 初始价格 10^30
+    uint256 expectIndexTokenP;   // index token初始比例 5000 for 50%
     uint256 addLpFeeP;      // 添加流动性手续费
 }
 
