@@ -1,19 +1,19 @@
-import {PairInfo, Token, PairLiquidity} from '../../types';
-import {loadPairConfigs} from './market-config-helper';
-import {waitForTx} from './tx';
-import {SignerWithAddress} from './make-suite';
-import {getMarketSymbol} from '../shared/constants';
-import {SymbolMap} from '../shared/types';
+import { PairInfo, Token, PairLiquidity } from '../types';
+import { loadReserveConfig } from './market-config-helper';
+import { MARKET_NAME } from './env';
+import { SignerWithAddress } from '../test/helpers/make-suite';
+import { SymbolMap } from './types';
+import { waitForTx } from './utilities/tx';
 
 export async function initPairs(
     deployer: SignerWithAddress,
     pairTokens: SymbolMap<Token>,
     usdt: Token,
     pairInfo: PairInfo,
-    pairLiquidity: PairLiquidity
+    pairLiquidity: PairLiquidity,
 ) {
     console.log(`Initializing pairs`);
-    const pairConfigs = loadPairConfigs(getMarketSymbol());
+    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
     for (let symbol of Object.keys(pairConfigs)) {
         const pairConfig = pairConfigs[symbol];
@@ -32,10 +32,7 @@ export async function initPairs(
         await waitForTx(await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
         await waitForTx(await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
-        console.log(
-            `added pair [${symbol}, ${getMarketSymbol()}] at index`,
-            (await pairInfo.pairsCount()).sub(1).toString(),
-        );
+        console.log(`added pair [${symbol}, ${MARKET_NAME}] at index`, (await pairInfo.pairsCount()).sub(1).toString());
     }
 
     console.log(`Configured all pairs [${Object.keys(pairConfigs)}]`);

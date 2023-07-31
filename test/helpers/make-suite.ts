@@ -16,10 +16,10 @@ import {
     OraclePriceFeed,
     WETH,
 } from '../../types';
-import { SymbolMap } from '../shared/types';
-import { deployPair, deployPrice, deployToken, deployTrading } from './contract-deployments';
-import { initPairs } from './init-helper';
-import { deployContract } from './tx';
+import { SymbolMap } from '../../helpers/types';
+import { deployPair, deployPrice, deployToken, deployTrading } from '../../helpers';
+import { initPairs } from '../../helpers/init-helper';
+import { deployContract } from '../../helpers/utilities/tx';
 
 declare var hre: HardhatRuntimeEnvironment;
 
