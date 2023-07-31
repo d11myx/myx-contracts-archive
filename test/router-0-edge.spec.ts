@@ -234,6 +234,7 @@ describe('Router: Edge cases', () => {
             );
 
             const pairVaultInfo = await pairVault.getVault(pairIndex);
+            console.log("indexTotalAmount", pairVaultInfo.indexTotalAmount, "indexReservedAmount", pairVaultInfo.indexReservedAmount);
             expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(0);
 
             // shorter decrease position will wait for adl
