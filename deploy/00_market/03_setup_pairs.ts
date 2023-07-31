@@ -7,11 +7,9 @@ import {
     PAIR_INFO_ID,
     PAIR_LIQUIDITY_ID,
     PAIR_VAULT_ID,
-    PairInfo,
-    PairLiquidity,
-    PairVault,
+    waitForTx,
 } from '../../helpers';
-import { waitForTx } from '../../helpers/utilities/tx';
+import { PairInfo, PairLiquidity, PairVault } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;

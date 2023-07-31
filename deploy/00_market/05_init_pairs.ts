@@ -1,7 +1,14 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { getMockToken, getPairInfo, getPairLiquidity, getToken, loadReserveConfig, MARKET_NAME } from '../../helpers';
-import { waitForTx } from '../../helpers/utilities/tx';
+import {
+    getMockToken,
+    getPairInfo,
+    getPairLiquidity,
+    getToken,
+    loadReserveConfig,
+    MARKET_NAME,
+    waitForTx,
+} from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
