@@ -87,13 +87,14 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     // lastFundingTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingTimes;
 
-    uint256 constant public fundingInterval = 8 hours;
+    uint256 public fundingInterval;
 
     function initialize(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingUtils _tradingUtils,
-        address _tradingFeeReceiver
+        address _tradingFeeReceiver,
+        uint256 _fundingInterval
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();
@@ -101,6 +102,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         pairVault = _pairVault;
         tradingUtils = _tradingUtils;
         tradingFeeReceiver = _tradingFeeReceiver;
+        fundingInterval = _fundingInterval;
     }
 
     function setContract(
@@ -115,6 +117,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     function setTradingFeeReceiver(address _tradingFeeReceiver) external onlyGov {
         tradingFeeReceiver = _tradingFeeReceiver;
+    }
+
+    function setFundingInterval(uint256 _fundingInterval) external onlyGov {
+        fundingInterval = _fundingInterval;
     }
 
     function increasePosition(

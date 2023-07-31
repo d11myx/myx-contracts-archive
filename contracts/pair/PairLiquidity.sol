@@ -13,7 +13,7 @@ import "./interfaces/IPairVault.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../price/interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../token/PairToken.sol";
 
 import "hardhat/console.sol";
@@ -441,6 +441,6 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     function _getPrice(address _token) internal view returns (uint256) {
-        return vaultPriceFeed.getPrice(_token, true);
+        return vaultPriceFeed.getPrice(_token);
     }
 }
