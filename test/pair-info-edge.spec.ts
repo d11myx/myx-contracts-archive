@@ -88,7 +88,7 @@ describe('PairInfo: Edge cases', () => {
 
             expect(pairAfter.enable).to.be.eq(pairToUpdate.enable);
             expect(pairAfter.kOfSwap).to.be.eq(pairToUpdate.kOfSwap);
-            pairToUpdate.expectIndexTokenP = BigNumber.from(4000);
+            pairToUpdate.expectIndexTokenP = BigNumber.from(5000);
 
             pairToUpdate.enable = true;
             await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
