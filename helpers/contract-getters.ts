@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     AddressesProvider,
+    ExecuteRouter,
     IndexPriceFeed,
     MockPriceFeed,
     OraclePriceFeed,
@@ -9,6 +10,9 @@ import {
     PairVault,
     RoleManager,
     Token,
+    TradingRouter,
+    TradingUtils,
+    TradingVault,
     WETH,
 } from '../types';
 import { getContract } from './utilities/tx';
@@ -21,14 +25,18 @@ import {
     PAIR_LIQUIDITY_ID,
     PAIR_VAULT_ID,
     ROLE_MANAGER_ID,
-    TOKEN_PREFIX,
+    MOCK_TOKEN_PREFIX,
+    TRADING_UTILS_ID,
+    TRADING_VAULT_ID,
+    TRADING_ROUTER_ID,
+    EXECUTE_ROUTER_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
 declare var hre: HardhatRuntimeEnvironment;
 
 export const getMockToken = async (pair: string, address?: string): Promise<Token> => {
-    return getContract<Token>('Token', address || (await hre.deployments.get(TOKEN_PREFIX + pair)).address);
+    return getContract<Token>('Token', address || (await hre.deployments.get(MOCK_TOKEN_PREFIX + pair)).address);
 };
 
 export const getToken = async (address?: string): Promise<Token> => {
@@ -83,5 +91,27 @@ export const getPairLiquidity = async (address?: string): Promise<PairLiquidity>
     return getContract<PairLiquidity>(
         'PairLiquidity',
         address || (await hre.deployments.get(PAIR_LIQUIDITY_ID)).address,
+    );
+};
+
+export const getTradingUtils = async (address?: string): Promise<TradingUtils> => {
+    return getContract<TradingUtils>('TradingUtils', address || (await hre.deployments.get(TRADING_UTILS_ID)).address);
+};
+
+export const getTradingVault = async (address?: string): Promise<TradingVault> => {
+    return getContract<TradingVault>('TradingVault', address || (await hre.deployments.get(TRADING_VAULT_ID)).address);
+};
+
+export const getTradingRouter = async (address?: string): Promise<TradingRouter> => {
+    return getContract<TradingRouter>(
+        'TradingRouter',
+        address || (await hre.deployments.get(TRADING_ROUTER_ID)).address,
+    );
+};
+
+export const getExecuteRouter = async (address?: string): Promise<ExecuteRouter> => {
+    return getContract<ExecuteRouter>(
+        'ExecuteRouter',
+        address || (await hre.deployments.get(EXECUTE_ROUTER_ID)).address,
     );
 };

@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { COMMON_DEPLOY_PARAMS, loadReserveConfig, MARKET_NAME, Token, TOKEN_PREFIX } from '../../../helpers';
+import { COMMON_DEPLOY_PARAMS, loadReserveConfig, MARKET_NAME, MOCK_TOKEN_PREFIX } from '../../../helpers';
+import { Token } from '../../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -30,15 +31,12 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     // pairs token
     for (let pair of Object.keys(pairConfigs)) {
-        const tokenArtifact = await deploy(`${TOKEN_PREFIX}${pair}`, {
+        await deploy(`${MOCK_TOKEN_PREFIX}${pair}`, {
             from: deployer,
             contract: 'Token',
             args: [pair],
             ...COMMON_DEPLOY_PARAMS,
         });
-        // const token = (await hre.ethers.getContractAt(tokenArtifact.abi, tokenArtifact.address)) as Token;
-        //
-        // console.log(`deployed ${pair} at ${token.address}`);
     }
 };
 
