@@ -83,14 +83,14 @@ interface ITradingRouter {
         uint256 sizeAmount;
     }
 
-    function increaseMarketOrdersIndex() external returns (uint256);
-    function decreaseMarketOrdersIndex() external returns (uint256);
-    function increaseMarketOrderStartIndex() external returns (uint256);
-    function decreaseMarketOrderStartIndex() external returns (uint256);
-    function increaseLimitOrdersIndex() external returns (uint256);
-    function decreaseLimitOrdersIndex() external returns (uint256);
+    function increaseMarketOrdersIndex() external view returns (uint256);
+    function decreaseMarketOrdersIndex() external view returns (uint256);
+    function increaseMarketOrderStartIndex() external view returns (uint256);
+    function decreaseMarketOrderStartIndex() external view returns (uint256);
+    function increaseLimitOrdersIndex() external view returns (uint256);
+    function decreaseLimitOrdersIndex() external view returns (uint256);
 
-    function positionHasTpSl(bytes32 positionKey, TradeType tradeType) external returns (bool);
+    function positionHasTpSl(bytes32 positionKey, TradeType tradeType) external view returns (bool);
 
     function createIncreaseOrder(IncreasePositionRequest memory _request) external returns (uint256 orderId);
     function cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType) external;
@@ -101,8 +101,10 @@ interface ITradingRouter {
 
     function createTpSl(CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId);
 
-    function getIncreaseOrder(uint256 _orderId, TradeType _tradeType) external returns (IncreasePositionOrder memory order);
-    function getDecreaseOrder(uint256 _orderId, TradeType _tradeType) external returns (DecreasePositionOrder memory order);
+    function getIncreaseOrder(uint256 _orderId, TradeType _tradeType) external view returns (IncreasePositionOrder memory order);
+    function getDecreaseOrder(uint256 _orderId, TradeType _tradeType) external view returns (DecreasePositionOrder memory order);
+
+    function getPositionOrders(bytes32 key) external view returns (ITradingRouter.PositionOrder[] memory orders);
 
     function addOrderToPosition(PositionOrder memory _order) external;
     function removeOrderFromPosition(PositionOrder memory _order) external;
