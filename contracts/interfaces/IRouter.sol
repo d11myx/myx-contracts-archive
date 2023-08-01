@@ -16,20 +16,20 @@ interface IRouter {
     function increaseLimitOrdersIndex() external returns (uint256);
     function decreaseLimitOrdersIndex() external returns (uint256);
 
-    function positionHasTpSl(bytes32 positionKey, ITradingRouter.TradeType tradeType) external returns (bool);
+    function positionHasTpSl(bytes32 positionKey, TradingTypes.TradeType tradeType) external returns (bool);
 
-    function createIncreaseOrder(ITradingRouter.IncreasePositionRequest memory _request) external returns (uint256 orderId);
-    function cancelIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external;
-    function createDecreaseOrder(ITradingRouter.DecreasePositionRequest memory _request) external returns (uint256 orderId);
-    function cancelDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external;
+    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external returns (uint256 orderId);
+    function cancelIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
+    function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external returns (uint256 orderId);
+    function cancelDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
     function cancelOrders(address account, uint256 pairIndex, bool isLong, bool isIncrease) external;
 
-    function createTpSl(ITradingRouter.CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId);
+    function createTpSl(TradingTypes.CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId);
 
-    function getIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external view returns (ITradingRouter.IncreasePositionOrder memory order);
-    function getDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external view returns (ITradingRouter.DecreasePositionOrder memory order);
+    function getIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external view returns (TradingTypes.IncreasePositionOrder memory order);
+    function getDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external view returns (TradingTypes.DecreasePositionOrder memory order);
 
-    function getPositionOrders(bytes32 key) external view returns (ITradingRouter.PositionOrder[] memory orders);
+    function getPositionOrders(bytes32 key) external view returns (TradingTypes.PositionOrder[] memory orders);
 
 }

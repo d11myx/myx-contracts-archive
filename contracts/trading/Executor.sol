@@ -3,7 +3,6 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./interfaces/IExecuteRouter.sol";
-import "./interfaces/ITradingRouter.sol";
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
@@ -77,7 +76,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         executeRouter.executeIncreaseLimitOrders(_orderIds);
     }
 
-    function executeIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external override nonReentrant onlyPositionKeeper {
+    function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override nonReentrant onlyPositionKeeper {
         executeRouter.executeIncreaseOrder(_orderId, _tradeType);
     }
 
@@ -90,7 +89,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
     }
 
 
-    function executeDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external override nonReentrant onlyPositionKeeper {
+    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override nonReentrant onlyPositionKeeper {
         executeRouter.executeDecreaseOrder(_orderId, _tradeType);
     }
 
@@ -119,7 +118,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         bytes32[] memory _positionKeys,
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
-        ITradingRouter.TradeType _tradeType
+        TradingTypes.TradeType _tradeType
     ) external override onlyPositionKeeper {
         executeRouter.setPricesAndExecuteADL(
             _tokens,
@@ -136,7 +135,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         bytes32[] memory _positionKeys,
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
-        ITradingRouter.TradeType _tradeType
+        TradingTypes.TradeType _tradeType
     ) external override nonReentrant onlyPositionKeeper {
         executeRouter.executeADLAndDecreaseOrder(
             _positionKeys,

@@ -16,7 +16,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       }
@@ -41,7 +41,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       }
@@ -66,7 +66,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -133,7 +133,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -227,7 +227,7 @@
             "type": "bool"
           },
           {
-            "internalType": "enum ITradingRouter.TradeType",
+            "internalType": "enum TradingTypes.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -242,7 +242,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ITradingRouter.PositionOrder",
+        "internalType": "struct TradingTypes.PositionOrder",
         "name": "_order",
         "type": "tuple"
       }
@@ -283,7 +283,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       }
@@ -301,7 +301,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       }
@@ -354,7 +354,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum ITradingRouter.TradeType",
+            "internalType": "enum TradingTypes.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -379,7 +379,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct ITradingRouter.DecreasePositionRequest",
+        "internalType": "struct TradingTypes.DecreasePositionRequest",
         "name": "_request",
         "type": "tuple"
       }
@@ -410,7 +410,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum ITradingRouter.TradeType",
+            "internalType": "enum TradingTypes.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -455,7 +455,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ITradingRouter.IncreasePositionRequest",
+        "internalType": "struct TradingTypes.IncreasePositionRequest",
         "name": "_request",
         "type": "tuple"
       }
@@ -511,7 +511,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ITradingRouter.CreateTpSlRequest",
+        "internalType": "struct TradingTypes.CreateTpSlRequest",
         "name": "_request",
         "type": "tuple"
       }
@@ -558,7 +558,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -653,7 +653,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -717,7 +717,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       }
@@ -742,7 +742,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum ITradingRouter.TradeType",
+            "internalType": "enum TradingTypes.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -782,7 +782,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct ITradingRouter.DecreasePositionOrder",
+        "internalType": "struct TradingTypes.DecreasePositionOrder",
         "name": "order",
         "type": "tuple"
       }
@@ -798,7 +798,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       }
@@ -823,7 +823,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum ITradingRouter.TradeType",
+            "internalType": "enum TradingTypes.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -873,7 +873,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ITradingRouter.IncreasePositionOrder",
+        "internalType": "struct TradingTypes.IncreasePositionOrder",
         "name": "order",
         "type": "tuple"
       }
@@ -914,7 +914,7 @@
             "type": "bool"
           },
           {
-            "internalType": "enum ITradingRouter.TradeType",
+            "internalType": "enum TradingTypes.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -929,7 +929,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ITradingRouter.PositionOrder[]",
+        "internalType": "struct TradingTypes.PositionOrder[]",
         "name": "orders",
         "type": "tuple[]"
       }
@@ -976,7 +976,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -1081,7 +1081,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -1247,7 +1247,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "",
         "type": "uint8"
       }
@@ -1323,7 +1323,7 @@
         "type": "bool"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
@@ -1418,7 +1418,7 @@
             "type": "bool"
           },
           {
-            "internalType": "enum ITradingRouter.TradeType",
+            "internalType": "enum TradingTypes.TradeType",
             "name": "tradeType",
             "type": "uint8"
           },
@@ -1433,7 +1433,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ITradingRouter.PositionOrder",
+        "internalType": "struct TradingTypes.PositionOrder",
         "name": "_order",
         "type": "tuple"
       }
@@ -1536,7 +1536,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "_tradeType",
         "type": "uint8"
       },
@@ -1559,7 +1559,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ITradingRouter.TradeType",
+        "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
       },
