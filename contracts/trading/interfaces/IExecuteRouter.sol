@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./ITradingRouter.sol";
+import "../../libraries/type/TradingTypes.sol";
 
 interface IExecuteRouter {
 
@@ -25,14 +25,14 @@ interface IExecuteRouter {
 
     function executeIncreaseLimitOrders(uint256[] memory _orderIds) external;
 
-    function executeIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external;
+    function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
 
 
     function executeDecreaseMarketOrders(uint256 _endIndex) external;
 
     function executeDecreaseLimitOrders(uint256[] memory _orderIds) external;
 
-    function executeDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external;
+    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
 
     function setPricesAndLiquidatePositions(
         address[] memory _tokens,
@@ -50,14 +50,14 @@ interface IExecuteRouter {
         bytes32[] memory _positionKeys,
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
-        ITradingRouter.TradeType _tradeType
+        TradingTypes.TradeType _tradeType
     ) external;
 
     function executeADLAndDecreaseOrder(
         bytes32[] memory _positionKeys,
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
-        ITradingRouter.TradeType _tradeType
+        TradingTypes.TradeType _tradeType
     ) external;
 
 }
