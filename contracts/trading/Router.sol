@@ -57,23 +57,23 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         return tradingRouter.decreaseLimitOrdersIndex();
     }
 
-    function positionHasTpSl(bytes32 positionKey, ITradingRouter.TradeType tradeType) external view override returns (bool) {
+    function positionHasTpSl(bytes32 positionKey, TradingTypes.TradeType tradeType) external view override returns (bool) {
         return tradingRouter.positionHasTpSl(positionKey, tradeType);
     }
 
-    function createIncreaseOrder(ITradingRouter.IncreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
+    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
         return tradingRouter.createIncreaseOrder(_request);
     }
 
-    function cancelIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external override nonReentrant {
+    function cancelIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override nonReentrant {
         tradingRouter.cancelIncreaseOrder(_orderId, _tradeType);
     }
 
-    function createDecreaseOrder(ITradingRouter.DecreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
+    function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
         return tradingRouter.createDecreaseOrder(_request);
     }
 
-    function cancelDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external override nonReentrant {
+    function cancelDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override nonReentrant {
         tradingRouter.cancelDecreaseOrder(_orderId, _tradeType);
     }
 
@@ -85,19 +85,19 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         tradingRouter.cancelOrders(account, pairIndex, isLong, isIncrease);
     }
 
-    function createTpSl(ITradingRouter.CreateTpSlRequest memory _request) external override returns (uint256 tpOrderId, uint256 slOrderId) {
+    function createTpSl(TradingTypes.CreateTpSlRequest memory _request) external override returns (uint256 tpOrderId, uint256 slOrderId) {
         return tradingRouter.createTpSl(_request);
     }
 
-    function getIncreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external override view returns (ITradingRouter.IncreasePositionOrder memory order) {
+    function getIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override view returns (TradingTypes.IncreasePositionOrder memory order) {
         return tradingRouter.getIncreaseOrder(_orderId, _tradeType);
     }
 
-    function getDecreaseOrder(uint256 _orderId, ITradingRouter.TradeType _tradeType) external override view returns (ITradingRouter.DecreasePositionOrder memory order) {
+    function getDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override view returns (TradingTypes.DecreasePositionOrder memory order) {
         return tradingRouter.getDecreaseOrder(_orderId, _tradeType);
     }
 
-    function getPositionOrders(bytes32 key) external override view returns (ITradingRouter.PositionOrder[] memory orders) {
+    function getPositionOrders(bytes32 key) external override view returns (TradingTypes.PositionOrder[] memory orders) {
         return tradingRouter.getPositionOrders(key);
     }
 
