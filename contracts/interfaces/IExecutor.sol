@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./ITradingRouter.sol";
+import "../trading/interfaces/ITradingRouter.sol";
+import "../trading/interfaces/IExecuteRouter.sol";
 
-interface IExecuteRouter {
+interface IExecutor {
+
+    event UpdateExecuteRouter(address oldAddress, address newAddress);
+
+    function updateExecuteRouter(IExecuteRouter _executeRouter) external;
 
     function setPricesAndExecuteMarketOrders(
         address[] memory _tokens,
