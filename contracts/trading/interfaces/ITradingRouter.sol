@@ -76,4 +76,10 @@ interface ITradingRouter {
     function removeFromDecreaseLimitOrders(uint256 orderId) external;
     function transferToVault(address token, uint256 amount) external;
     function setOrderNeedADL(uint256 _orderId, TradingTypes.TradeType _tradeType, bool _needADL) external;
+
+    function saveIncreaseMarketOrder(TradingTypes.IncreasePositionOrder memory order) external;
+    function saveIncreaseLimitOrder(TradingTypes.IncreasePositionOrder memory order) external;
+
+    function saveDecreaseMarketOrder(TradingTypes.DecreasePositionOrder memory order) external;
+    function saveDecreaseLimitOrder(TradingTypes.DecreasePositionOrder memory order) external;
 }
