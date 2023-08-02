@@ -11,6 +11,7 @@ import "../pair/interfaces/IPairVault.sol";
 import "../libraries/PositionKey.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
+import "../libraries/PositionKey.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/type/TradingTypes.sol";
 
@@ -510,7 +511,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
     function addOrderToPosition(TradingTypes.PositionOrder memory _order) public onlyHandler {
         bytes32 positionKey = PositionKey.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
-        bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
+        bytes32 orderKey = PositionKey.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
         positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(_order);
         console.log("positionOrders add orderId", _order.orderId, "tradeType", uint8(_order.tradeType));
@@ -523,7 +524,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     function removeOrderFromPosition(TradingTypes.PositionOrder memory _order) public onlyHandler {
         console.log("removeOrderFromPosition account %s orderId %s tradeType %s ", _order.account, _order.orderId, uint8(_order.tradeType));
         bytes32 positionKey = PositionKey.getPositionKey(_order.account, _order.pairIndex, _order.isLong);
-        bytes32 orderKey = tradingUtils.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
+        bytes32 orderKey = PositionKey.getOrderKey(_order.isIncrease, _order.tradeType, _order.orderId);
 
         uint256 index = positionOrderIndex[positionKey][orderKey];
         uint256 lastIndex = positionOrders[positionKey].length - 1;
@@ -531,7 +532,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         if (index < lastIndex) {
             // swap last order
             TradingTypes.PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-            bytes32 lastOrderKey = tradingUtils.getOrderKey(lastOrder.isIncrease, lastOrder.tradeType, lastOrder.orderId);
+            bytes32 lastOrderKey = PositionKey.getOrderKey(lastOrder.isIncrease, lastOrder.tradeType, lastOrder.orderId);
 
             positionOrders[positionKey][index] = lastOrder;
             positionOrderIndex[positionKey][lastOrderKey] = index;
