@@ -5,9 +5,9 @@ import "./ITradingRouter.sol";
 
 interface ITradingUtils {
 
-    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
+    // function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
 
-    function getOrderKey(bool _isIncrease, TradingTypes.TradeType _tradeType, uint256 _orderId) external pure returns (bytes32);
+    // function getOrderKey(bool _isIncrease, TradingTypes.TradeType _tradeType, uint256 _orderId) external pure returns (bytes32);
 
     function getPrice(uint256 _pairIndex, bool _isLong) external view returns (uint256);
 
