@@ -9,14 +9,18 @@ interface IRouter {
 
     function updateTradingRouter(ITradingRouter _tradingRouter) external;
 
-    function increaseMarketOrdersIndex() external returns (uint256);
-    function decreaseMarketOrdersIndex() external returns (uint256);
-    function increaseMarketOrderStartIndex() external returns (uint256);
-    function decreaseMarketOrderStartIndex() external returns (uint256);
-    function increaseLimitOrdersIndex() external returns (uint256);
-    function decreaseLimitOrdersIndex() external returns (uint256);
+    function increaseMarketOrders(uint256 index) external view returns(TradingTypes.IncreasePositionOrder memory);
+    function decreaseMarketOrders(uint256 index) external view returns(TradingTypes.DecreasePositionOrder memory);
+    function increaseMarketOrdersIndex() external view returns (uint256);
+    function decreaseMarketOrdersIndex() external view returns (uint256);
+    function increaseMarketOrderStartIndex() external view returns (uint256);
+    function decreaseMarketOrderStartIndex() external view returns (uint256);
+    function increaseLimitOrders(uint256 index) external view returns(TradingTypes.IncreasePositionOrder memory);
+    function decreaseLimitOrders(uint256 index) external view returns(TradingTypes.DecreasePositionOrder memory);
+    function increaseLimitOrdersIndex() external view returns (uint256);
+    function decreaseLimitOrdersIndex() external view returns (uint256);
 
-    function positionHasTpSl(bytes32 positionKey, TradingTypes.TradeType tradeType) external returns (bool);
+    function positionHasTpSl(bytes32 positionKey, TradingTypes.TradeType tradeType) external view returns (bool);
 
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external returns (uint256 orderId);
     function cancelIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;

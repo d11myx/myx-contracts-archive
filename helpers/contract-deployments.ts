@@ -13,6 +13,8 @@ import {
     OraclePriceFeed,
     WETH,
     AddressesProvider,
+    Router,
+    Executor,
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -135,6 +137,7 @@ export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: Sign
 export async function deployTrading(
     deployer: SignerWithAddress,
     keeper: SignerWithAddress,
+    addressProvider: AddressesProvider,
     pairVault: PairVault,
     pairInfo: PairInfo,
     vaultPriceFeed: OraclePriceFeed,
@@ -153,6 +156,15 @@ export async function deployTrading(
 
     let executeRouter = (await deployContract('ExecuteRouter', [])) as any as ExecuteRouter;
     console.log(`deployed ExecuteRouter at ${executeRouter.address}`);
+
+    let router = (await deployContract('Router', [addressProvider.address, tradingRouter.address])) as any as Router;
+    console.log(`deployed Router at ${router.address}`);
+
+    let executor = (await deployContract('Executor', [
+        addressProvider.address,
+        executeRouter.address,
+    ])) as any as Executor;
+    console.log(`deployed Executor at ${executor.address}`);
 
     await tradingUtils.setContract(
         pairInfo.address,
@@ -185,7 +197,9 @@ export async function deployTrading(
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(executeRouter.address, true);
+    await tradingRouter.setHandler(router.address, true);
     await executeRouter.setPositionKeeper(keeper.address, true);
+    await executeRouter.setPositionKeeper(executor.address, true);
 
-    return { tradingUtils, tradingVault, tradingRouter, executeRouter };
+    return { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor };
 }

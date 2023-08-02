@@ -13,3 +13,5 @@ export const TRADING_UTILS_ID = `TradingUtils`;
 export const TRADING_VAULT_ID = `TradingVault`;
 export const TRADING_ROUTER_ID = `TradingRouter`;
 export const EXECUTE_ROUTER_ID = `ExecuteRouter`;
+export const ROUTER_ID = `Router`;
+export const EXECUTOR_ID = `Executor`;

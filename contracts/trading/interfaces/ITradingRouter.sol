@@ -37,10 +37,14 @@ interface ITradingRouter {
     event CancelDecreaseOrder(address account, uint256 orderId, TradingTypes.TradeType tradeType);
 
 
+    function getIncreaseMarketOrder(uint256 index) external view returns(TradingTypes.IncreasePositionOrder memory);
+    function getDecreaseMarketOrder(uint256 index) external view returns(TradingTypes.DecreasePositionOrder memory);
     function increaseMarketOrdersIndex() external view returns (uint256);
     function decreaseMarketOrdersIndex() external view returns (uint256);
     function increaseMarketOrderStartIndex() external view returns (uint256);
     function decreaseMarketOrderStartIndex() external view returns (uint256);
+    function getIncreaseLimitOrder(uint256 index) external view returns(TradingTypes.IncreasePositionOrder memory);
+    function getDecreaseLimitOrder(uint256 index) external view returns(TradingTypes.DecreasePositionOrder memory);
     function increaseLimitOrdersIndex() external view returns (uint256);
     function decreaseLimitOrdersIndex() external view returns (uint256);
 

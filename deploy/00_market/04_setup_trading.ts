@@ -3,15 +3,18 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
     EXECUTE_ROUTER_ID,
+    EXECUTOR_ID,
+    getAddressesProvider,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPairInfo,
     getPairVault,
+    ROUTER_ID,
     TRADING_ROUTER_ID,
     TRADING_UTILS_ID,
     TRADING_VAULT_ID,
 } from '../../helpers';
-import { ExecuteRouter, TradingRouter, TradingUtils, TradingVault } from '../../types';
+import { ExecuteRouter, Router, Executor, TradingRouter, TradingUtils, TradingVault } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -66,6 +69,26 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         executeRouterArtifact.address,
     )) as ExecuteRouter;
 
+    const addressProvider = await getAddressesProvider();
+
+    // Router
+    const routerArtifact = await deploy(`${ROUTER_ID}`, {
+        from: deployer,
+        contract: 'Router',
+        args: [addressProvider.address, tradingRouter.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
+
+    // Executor
+    const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
+        from: deployer,
+        contract: 'Executor',
+        args: [addressProvider.address, executeRouter.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
+
     const pairInfo = await getPairInfo();
     const pairVault = await getPairVault();
     const oraclePriceFeed = await getOraclePriceFeed();
@@ -97,7 +120,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(executeRouter.address, true);
+    await tradingRouter.setHandler(router.address, true);
     await executeRouter.setPositionKeeper(keeper, true);
+    await executeRouter.setPositionKeeper(executor.address, true);
 };
 
 func.id = `Pairs`;
