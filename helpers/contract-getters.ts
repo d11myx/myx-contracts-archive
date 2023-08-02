@@ -9,6 +9,7 @@ import {
     PairInfo,
     PairLiquidity,
     PairVault,
+    PositionManager,
     RoleManager,
     Router,
     Token,
@@ -34,6 +35,7 @@ import {
     EXECUTE_ROUTER_ID,
     ROUTER_ID,
     EXECUTOR_ID,
+    POSITION_MANAGER_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -126,4 +128,11 @@ export const getRouter = async (address?: string): Promise<Router> => {
 
 export const getExecutor = async (address?: string): Promise<Executor> => {
     return getContract<Executor>('Executor', address || (await hre.deployments.get(EXECUTOR_ID)).address);
+};
+
+export const getPositionManager = async (address?: string): Promise<PositionManager> => {
+    return getContract<PositionManager>(
+        'PositionManager',
+        address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
+    );
 };

@@ -8,21 +8,24 @@ import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "./interfaces/ITradingRouter.sol";
 import "hardhat/console.sol";
+import "../interfaces/IPositionManager.sol";
 
 contract Router is IRouter, ReentrancyGuardUpgradeable {
 
     IAddressesProvider public immutable addressProvider;
 
     ITradingRouter public tradingRouter;
+    IPositionManager public positionManager;
 
     modifier onlyPoolAdmin() {
         require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
 
-    constructor(IAddressesProvider _addressProvider, ITradingRouter _tradingRouter) {
+    constructor(IAddressesProvider _addressProvider, ITradingRouter _tradingRouter, IPositionManager _positionManager) {
         addressProvider = _addressProvider;
         tradingRouter = _tradingRouter;
+        positionManager = _positionManager;
     }
 
     function updateTradingRouter(ITradingRouter _tradingRouter) external override onlyPoolAdmin {
@@ -78,7 +81,27 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
     }
 
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
-        return tradingRouter.createIncreaseOrder(_request);
+//        // check leverage
+//        bytes32 key = tradingUtils.getPositionKey(account, _request.pairIndex, _request.isLong);
+//        (uint256 afterPosition, ) = tradingUtils.validLeverage(_request.account, _request.pairIndex, _request.isLong, _request.collateral, _request.sizeAmount, true);
+//        require(afterPosition > 0, "zero position amount");
+//
+//        // check tp sl
+//        require(_request.tp <= afterPosition && _request.sl <= afterPosition, "tp/sl exceeds max size");
+//        require(_request.tp == 0 || !positionHasTpSl[key][TradingTypes.TradeType.TP], "tp already exists");
+//        require(_request.sl == 0 || !positionHasTpSl[key][TradingTypes.TradeType.SL], "sl already exists");
+
+        //todo tp sl
+
+        return positionManager.createOrder(TradingTypes.CreateOrderRequest({
+            account: _request.account,
+            pairIndex: _request.pairIndex,
+            tradeType: _request.tradeType,
+            collateral: _request.collateral,
+            openPrice: _request.openPrice,
+            isLong: _request.isLong,
+            sizeAmount: int256(_request.sizeAmount)
+        }));
     }
 
     function cancelIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override nonReentrant {

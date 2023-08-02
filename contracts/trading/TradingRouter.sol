@@ -587,4 +587,20 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         order.needADL = _needADL;
     }
 
+    function saveIncreaseMarketOrder(TradingTypes.IncreasePositionOrder memory order) public {
+        increaseMarketOrders[increaseMarketOrdersIndex++] = order;
+    }
+
+    function saveIncreaseLimitOrder(TradingTypes.IncreasePositionOrder memory order) public {
+        increaseLimitOrders[increaseLimitOrdersIndex++] = order;
+    }
+
+    function saveDecreaseMarketOrder(TradingTypes.DecreasePositionOrder memory order) public {
+        decreaseMarketOrders[decreaseMarketOrdersIndex++] = order;
+    }
+
+    function saveDecreaseLimitOrder(TradingTypes.DecreasePositionOrder memory order) public {
+        decreaseLimitOrders[decreaseLimitOrdersIndex++] = order;
+    }
+
 }

@@ -9,12 +9,21 @@ import {
     getOraclePriceFeed,
     getPairInfo,
     getPairVault,
+    POSITION_MANAGER_ID,
     ROUTER_ID,
     TRADING_ROUTER_ID,
     TRADING_UTILS_ID,
     TRADING_VAULT_ID,
 } from '../../helpers';
-import { ExecuteRouter, Router, Executor, TradingRouter, TradingUtils, TradingVault } from '../../types';
+import {
+    ExecuteRouter,
+    Router,
+    Executor,
+    TradingRouter,
+    TradingUtils,
+    TradingVault,
+    PositionManager,
+} from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -70,12 +79,26 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as ExecuteRouter;
 
     const addressProvider = await getAddressesProvider();
+    const pairInfo = await getPairInfo();
+    const pairVault = await getPairVault();
+
+    // PositionManager
+    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
+        from: deployer,
+        contract: 'PositionManager',
+        args: [pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address, tradingRouter.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const positionManager = (await hre.ethers.getContractAt(
+        positionManagerArtifact.abi,
+        positionManagerArtifact.address,
+    )) as PositionManager;
 
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
         contract: 'Router',
-        args: [addressProvider.address, tradingRouter.address],
+        args: [addressProvider.address, tradingRouter.address, positionManager.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
@@ -89,8 +112,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
 
-    const pairInfo = await getPairInfo();
-    const pairVault = await getPairVault();
+    // const pairInfo = await getPairInfo();
+    // const pairVault = await getPairVault();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
 
@@ -121,6 +144,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await tradingVault.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(router.address, true);
+    await tradingRouter.setHandler(positionManager.address, true);
     await executeRouter.setPositionKeeper(keeper, true);
     await executeRouter.setPositionKeeper(executor.address, true);
 };

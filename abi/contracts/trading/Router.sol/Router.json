@@ -10,6 +10,11 @@
         "internalType": "contract ITradingRouter",
         "name": "_tradingRouter",
         "type": "address"
+      },
+      {
+        "internalType": "contract IPositionManager",
+        "name": "_positionManager",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -989,6 +994,19 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "positionManager",
+    "outputs": [
+      {
+        "internalType": "contract IPositionManager",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
