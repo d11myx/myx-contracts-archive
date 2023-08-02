@@ -1,0 +1,198 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TradingTypes.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "collateral",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "openPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "sizeAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "abovePrice",
+        "type": "bool"
+      }
+    ],
+    "name": "CreateDecreaseOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TradingTypes.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "collateral",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "openPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "sizeAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tpPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tpAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "slPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "slAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "CreateIncreaseOrder",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum TradingTypes.TradeType",
+            "name": "tradeType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int256",
+            "name": "collateral",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "openPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "internalType": "int256",
+            "name": "sizeAmount",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct TradingTypes.CreateOrderRequest",
+        "name": "request",
+        "type": "tuple"
+      }
+    ],
+    "name": "createOrder",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

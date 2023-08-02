@@ -10,6 +10,7 @@ import "../interfaces/IVaultPriceFeed.sol";
 import "../libraries/access/Governable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/PrecisionUtils.sol";
+import "../libraries/PositionKey.sol";
 import "hardhat/console.sol";
 
 contract TradingUtils is ITradingUtils, Governable {
@@ -39,14 +40,6 @@ contract TradingUtils is ITradingUtils, Governable {
         tradingVault = _tradingVault;
         tradingRouter = _tradingRouter;
         vaultPriceFeed = _vaultPriceFeed;
-    }
-
-    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_account, _pairIndex, _isLong));
-    }
-
-    function getOrderKey(bool _isIncrease, TradingTypes.TradeType _tradeType, uint256 _orderId) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_isIncrease, _tradeType, _orderId));
     }
 
     function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
@@ -106,7 +99,7 @@ contract TradingUtils is ITradingUtils, Governable {
     ) public view returns (uint256, uint256) {
         console.log("validLeverage sizeAmount", _sizeAmount, "collateral", _collateral.toString());
 
-        bytes32 key = getPositionKey(account, pairIndex, isLong);
+        bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
         ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
         uint256 price = getPrice(pairIndex, isLong);
 
