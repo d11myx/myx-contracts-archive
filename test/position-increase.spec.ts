@@ -4,6 +4,7 @@ import { ITradingRouter, MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
 import { getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { mintAndApprove } from './helpers/misc';
+import { TradingTypes } from '../types/contracts/trading/Router';
 
 describe('Router: increase position ar', () => {
     const pairIndex = 0;
@@ -51,7 +52,7 @@ describe('Router: increase position ar', () => {
             const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
             console.log("user's position", traderPosition);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -75,6 +76,8 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 usdt,
+                router,
+                executor,
                 tradingRouter,
                 executeRouter,
                 tradingVault,
@@ -84,7 +87,7 @@ describe('Router: increase position ar', () => {
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
             await usdt.connect(trader.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -98,8 +101,8 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
-            console.log(`order:`, await tradingRouter.increaseMarketOrders(orderId));
+            const orderId = await router.increaseMarketOrdersIndex();
+            console.log(`order:`, await router.increaseMarketOrders(orderId));
 
             await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
@@ -116,6 +119,8 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 usdt,
+                router,
+                executor,
                 tradingRouter,
                 executeRouter,
                 tradingVault,
@@ -126,7 +131,7 @@ describe('Router: increase position ar', () => {
 
             const amount = ethers.utils.parseUnits('300', 18);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -140,11 +145,11 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
-            console.log(`order:`, await tradingRouter.increaseMarketOrders(orderId));
+            const orderId = await router.increaseMarketOrdersIndex();
+            console.log(`order:`, await router.increaseMarketOrders(orderId));
 
-            await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const position = await tradingVault.getPosition(trader.address, pairIndex, true);
             console.log(`update position:`, position);
@@ -159,6 +164,8 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 usdt,
+                router,
+                executor,
                 tradingRouter,
                 executeRouter,
                 tradingVault,
@@ -170,7 +177,7 @@ describe('Router: increase position ar', () => {
             // const traderBalance = await usdt.balanceOf(trader.address)
             // console.log(`user balance: `, traderBalance)
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -184,11 +191,11 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
-            console.log(`order:`, await tradingRouter.increaseMarketOrders(orderId));
+            const orderId = await router.increaseMarketOrdersIndex();
+            console.log(`order:`, await router.increaseMarketOrders(orderId));
 
-            await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const positionAfter = await tradingVault.getPosition(trader.address, pairIndex, true);
             console.log(`after position :`, positionAfter);
@@ -203,6 +210,8 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 usdt,
+                router,
+                executor,
                 tradingRouter,
                 executeRouter,
                 tradingVault,
@@ -215,7 +224,7 @@ describe('Router: increase position ar', () => {
             console.log(`user balanceBefore: `, balanceBefore);
             console.log(`user traderCollateral: `, traderCollateral);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -229,11 +238,11 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
-            console.log(`order:`, await tradingRouter.increaseMarketOrders(orderId));
+            const orderId = await router.increaseMarketOrdersIndex();
+            console.log(`order:`, await router.increaseMarketOrders(orderId));
 
-            await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const position = await tradingVault.getPosition(trader.address, pairIndex, true);
             const collateralAfter = position.collateral;
@@ -263,7 +272,7 @@ describe('Router: increase position ar', () => {
             console.log(`user balance: `, balance);
             console.log('user collateral: ', traderCollateral);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -304,7 +313,7 @@ describe('Router: increase position ar', () => {
             const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
             console.log('before user position: ', traderPosition);
 
-            const decreasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+            const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -338,7 +347,7 @@ describe('Router: increase position ar', () => {
             const collateral = ethers.utils.parseUnits('1000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -372,7 +381,7 @@ describe('Router: increase position ar', () => {
             } = testEnv;
 
             // open position
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -438,7 +447,7 @@ describe('Router: increase position ar', () => {
                 tradingVault,
             } = testEnv;
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -483,7 +492,7 @@ describe('Router: increase position ar', () => {
             const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
             console.log('before user position: ', traderPosition);
 
-            const decreasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+            const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -524,7 +533,7 @@ describe('Router: increase position ar', () => {
             const collateral = ethers.utils.parseUnits('10000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -558,7 +567,7 @@ describe('Router: increase position ar', () => {
 
             const collateral = ethers.utils.parseUnits('10000', 18);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -608,7 +617,7 @@ describe('Router: increase position ar', () => {
             const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
             console.log('before user position: ', traderPosition);
 
-            const decreasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+            const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -634,7 +643,7 @@ describe('Router: increase position ar', () => {
 
             const collateral = ethers.utils.parseUnits('10000', 18);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -672,7 +681,7 @@ describe('Router: increase position ar', () => {
             console.log(`traderPosition: `, traderPosition);
             console.log(`traderOpenAverage: `, traderOpenAverage);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -705,7 +714,7 @@ describe('Router: increase position ar', () => {
                 tradingVault,
             } = testEnv;
 
-            const decreasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+            const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -759,7 +768,7 @@ describe('Router: increase position ar', () => {
 
             const collateral = ethers.utils.parseUnits('10000', 18);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
