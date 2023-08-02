@@ -17,6 +17,7 @@ import {
     WETH,
     Router,
     Executor,
+    PositionManager,
 } from '../../types';
 import {
     SymbolMap,
@@ -42,6 +43,7 @@ import {
     deployContract,
     getRouter,
     getExecutor,
+    getPositionManager,
 } from '../../helpers';
 import { btcPairInfo } from '../../markets/usdt/pairs';
 import { RouterInterface } from '../../types/contracts/trading/Router';
@@ -77,6 +79,7 @@ export interface TestEnv {
     executeRouter: ExecuteRouter;
     router: Router;
     executor: Executor;
+    positionManager: PositionManager;
 }
 
 export const testEnv: TestEnv = {
@@ -102,6 +105,7 @@ export const testEnv: TestEnv = {
     executeRouter: {} as ExecuteRouter,
     router: {} as Router,
     executor: {} as Executor,
+    positionManager: {} as PositionManager,
 } as TestEnv;
 
 export async function setupTestEnv() {
@@ -160,6 +164,7 @@ export async function setupTestEnv() {
     testEnv.executeRouter = await getExecuteRouter();
     testEnv.router = await getRouter();
     testEnv.executor = await getExecutor();
+    testEnv.positionManager = await getPositionManager();
 }
 
 export async function newTestEnv(): Promise<TestEnv> {
@@ -192,15 +197,8 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
 
-    const { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor } = await deployTrading(
-        deployer,
-        keeper,
-        addressesProvider,
-        pairVault,
-        pairInfo,
-        vaultPriceFeed,
-        fastPriceFeed,
-    );
+    const { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor, positionManager } =
+        await deployTrading(deployer, keeper, addressesProvider, pairVault, pairInfo, vaultPriceFeed, fastPriceFeed);
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 
@@ -227,5 +225,6 @@ export async function newTestEnv(): Promise<TestEnv> {
         executeRouter: executeRouter,
         router: router,
         executor: executor,
+        positionManager: positionManager,
     } as TestEnv;
 }

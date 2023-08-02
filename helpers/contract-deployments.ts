@@ -15,6 +15,7 @@ import {
     AddressesProvider,
     Router,
     Executor,
+    PositionManager,
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -157,7 +158,20 @@ export async function deployTrading(
     let executeRouter = (await deployContract('ExecuteRouter', [])) as any as ExecuteRouter;
     console.log(`deployed ExecuteRouter at ${executeRouter.address}`);
 
-    let router = (await deployContract('Router', [addressProvider.address, tradingRouter.address])) as any as Router;
+    let positionManager = (await deployContract('PositionManager', [
+        pairInfo.address,
+        pairVault.address,
+        tradingVault.address,
+        tradingUtils.address,
+        tradingRouter.address,
+    ])) as any as PositionManager;
+    console.log(`deployed PositionManager at ${positionManager.address}`);
+
+    let router = (await deployContract('Router', [
+        addressProvider.address,
+        tradingRouter.address,
+        positionManager.address,
+    ])) as any as Router;
     console.log(`deployed Router at ${router.address}`);
 
     let executor = (await deployContract('Executor', [
@@ -198,8 +212,9 @@ export async function deployTrading(
     await tradingVault.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(router.address, true);
+    await tradingRouter.setHandler(positionManager.address, true);
     await executeRouter.setPositionKeeper(keeper.address, true);
     await executeRouter.setPositionKeeper(executor.address, true);
 
-    return { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor };
+    return { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor, positionManager };
 }

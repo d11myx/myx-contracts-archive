@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { ITradingRouter, MockPriceFeed } from '../types';
 import { BigNumber } from 'ethers';
 import { getBlockTimestamp, waitForTx } from '../helpers/utilities/tx';
-import { MAX_UINT_AMOUNT, TradeType } from '../helpers';
+import { MAX_UINT_AMOUNT, POSITION_MANAGER_ID, TradeType } from '../helpers';
 import { expect } from './shared/expect';
 import { mintAndApprove } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/trading/Router';
@@ -62,12 +62,13 @@ describe('Router: Edge cases', () => {
             tradingRouter,
             executor,
             tradingVault,
+            positionManager,
         } = testEnv;
 
         const amount = ethers.utils.parseUnits('30000', 18);
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
 
-        await usdt.connect(trader.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
+        await usdt.connect(trader.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
 
         const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
             account: trader.address,
@@ -196,6 +197,7 @@ describe('Router: Edge cases', () => {
                 executeRouter,
                 tradingVault,
                 tradingUtils,
+                positionManager,
             } = testEnv;
 
             const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
@@ -218,7 +220,7 @@ describe('Router: Edge cases', () => {
             // shorter open position
             collateral = ethers.utils.parseUnits('27000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(shorter.address, collateral));
-            await usdt.connect(shorter.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
+            await usdt.connect(shorter.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
             await increaseUserPosition(
                 shorter,
                 pairIndex,
@@ -355,11 +357,12 @@ describe('Router: Edge cases', () => {
                 tradingVault,
                 tradingUtils,
                 fastPriceFeed,
+                positionManager,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('1000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-            await usdt.connect(trader.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
+            await usdt.connect(trader.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
 
             const size = collateral.div(30000).mul(100).mul(90).div(100);
 

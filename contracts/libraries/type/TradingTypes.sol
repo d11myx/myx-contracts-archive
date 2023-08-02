@@ -5,6 +5,16 @@ library TradingTypes {
 
     enum TradeType {MARKET, LIMIT, TP, SL}
 
+    struct CreateOrderRequest {
+        address account;
+        uint256 pairIndex;             // 币对index
+        TradeType tradeType;           // 0: MARKET, 1: LIMIT
+        int256 collateral;             // 1e18 保证金数量，负数表示减仓
+        uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
+        bool isLong;                   // 多/空
+        int256 sizeAmount;            // 仓位数量
+    }
+
     struct IncreasePositionRequest {
         address account;
         uint256 pairIndex;             // 币对index
