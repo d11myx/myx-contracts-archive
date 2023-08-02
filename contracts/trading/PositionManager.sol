@@ -9,6 +9,7 @@ import "../interfaces/IVaultPriceFeed.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../libraries/PrecisionUtils.sol";
+import "../libraries/PositionKey.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/type/TradingTypes.sol";
@@ -61,7 +62,7 @@ contract PositionManager is IPositionManager {
         require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
 
         uint256 price = tradingUtils.getPrice(request.pairIndex, request.isLong);
-        bytes32 key = tradingUtils.getPositionKey(account, request.pairIndex, request.isLong);
+        bytes32 key = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
 
         // transfer collateral
         if (request.collateral > 0) {
