@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     AddressesProvider,
     ExecuteRouter,
+    Executor,
     IndexPriceFeed,
     MockPriceFeed,
     OraclePriceFeed,
@@ -9,6 +10,7 @@ import {
     PairLiquidity,
     PairVault,
     RoleManager,
+    Router,
     Token,
     TradingRouter,
     TradingUtils,
@@ -30,6 +32,8 @@ import {
     TRADING_VAULT_ID,
     TRADING_ROUTER_ID,
     EXECUTE_ROUTER_ID,
+    ROUTER_ID,
+    EXECUTOR_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -114,4 +118,12 @@ export const getExecuteRouter = async (address?: string): Promise<ExecuteRouter>
         'ExecuteRouter',
         address || (await hre.deployments.get(EXECUTE_ROUTER_ID)).address,
     );
+};
+
+export const getRouter = async (address?: string): Promise<Router> => {
+    return getContract<Router>('Router', address || (await hre.deployments.get(ROUTER_ID)).address);
+};
+
+export const getExecutor = async (address?: string): Promise<Executor> => {
+    return getContract<Executor>('Executor', address || (await hre.deployments.get(EXECUTOR_ID)).address);
 };

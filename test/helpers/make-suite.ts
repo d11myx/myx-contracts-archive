@@ -15,6 +15,8 @@ import {
     TradingVault,
     OraclePriceFeed,
     WETH,
+    Router,
+    Executor,
 } from '../../types';
 import {
     SymbolMap,
@@ -38,8 +40,12 @@ import {
     deployPrice,
     deployToken,
     deployContract,
+    getRouter,
+    getExecutor,
 } from '../../helpers';
 import { btcPairInfo } from '../../markets/usdt/pairs';
+import { RouterInterface } from '../../types/contracts/trading/Router';
+import { address } from 'hardhat/internal/core/config/config-validation';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -69,6 +75,8 @@ export interface TestEnv {
     tradingVault: TradingVault;
     tradingRouter: TradingRouter;
     executeRouter: ExecuteRouter;
+    router: Router;
+    executor: Executor;
 }
 
 export const testEnv: TestEnv = {
@@ -92,6 +100,8 @@ export const testEnv: TestEnv = {
     tradingVault: {} as TradingVault,
     tradingRouter: {} as TradingRouter,
     executeRouter: {} as ExecuteRouter,
+    router: {} as Router,
+    executor: {} as Executor,
 } as TestEnv;
 
 export async function setupTestEnv() {
@@ -148,6 +158,8 @@ export async function setupTestEnv() {
     testEnv.tradingVault = await getTradingVault();
     testEnv.tradingRouter = await getTradingRouter();
     testEnv.executeRouter = await getExecuteRouter();
+    testEnv.router = await getRouter();
+    testEnv.executor = await getExecutor();
 }
 
 export async function newTestEnv(): Promise<TestEnv> {
@@ -180,9 +192,10 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
 
-    const { tradingUtils, tradingVault, tradingRouter, executeRouter } = await deployTrading(
+    const { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor } = await deployTrading(
         deployer,
         keeper,
+        addressesProvider,
         pairVault,
         pairInfo,
         vaultPriceFeed,
@@ -212,5 +225,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         tradingVault: tradingVault,
         tradingRouter: tradingRouter,
         executeRouter: executeRouter,
+        router: router,
+        executor: executor,
     } as TestEnv;
 }
