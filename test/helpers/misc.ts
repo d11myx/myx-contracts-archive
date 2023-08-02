@@ -1,8 +1,9 @@
-import { ITradingRouter, Token } from '../../types';
+import { Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import { ethers } from 'hardhat';
 import { TradeType } from '../../helpers';
+import { TradingTypes } from '../../types/contracts/trading/Router';
 
 export async function mintAndApprove(
     testEnv: TestEnv,
@@ -25,9 +26,9 @@ export async function increasePosition(
     tradeType: TradeType,
     isLong: boolean,
 ) {
-    const { keeper, tradingRouter, executeRouter } = testEnv;
+    const { keeper, router, executor } = testEnv;
 
-    const request: ITradingRouter.IncreasePositionRequestStruct = {
+    const request: TradingTypes.IncreasePositionRequestStruct = {
         account: user.address,
         pairIndex: pairIndex,
         tradeType: tradeType,
@@ -42,10 +43,10 @@ export async function increasePosition(
     };
 
     // create increase order
-    const orderId = await tradingRouter.increaseMarketOrdersIndex();
-    await tradingRouter.connect(user.signer).createIncreaseOrder(request);
+    const orderId = await router.increaseMarketOrdersIndex();
+    await router.connect(user.signer).createIncreaseOrder(request);
     // execute order
-    await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType);
+    await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType);
 }
 
 export async function decreasePosition(
@@ -57,9 +58,9 @@ export async function decreasePosition(
     tradeType: TradeType,
     isLong: boolean,
 ) {
-    const { keeper, tradingRouter, executeRouter } = testEnv;
+    const { keeper, router, executor } = testEnv;
 
-    const request: ITradingRouter.DecreasePositionRequestStruct = {
+    const request: TradingTypes.DecreasePositionRequestStruct = {
         account: user.address,
         pairIndex: pairIndex,
         tradeType: tradeType,
@@ -70,8 +71,8 @@ export async function decreasePosition(
     };
 
     // create increase order
-    const orderId = await tradingRouter.decreaseMarketOrdersIndex();
-    await tradingRouter.connect(user.signer).createDecreaseOrder(request);
+    const orderId = await router.decreaseMarketOrdersIndex();
+    await router.connect(user.signer).createDecreaseOrder(request);
     // execute order
-    await executeRouter.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType);
+    await executor.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType);
 }

@@ -32,20 +32,20 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     ITradingUtils public tradingUtils;
 
 
-    mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseMarketOrders;
-    mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseMarketOrders;
+    mapping(uint256 => TradingTypes.IncreasePositionOrder) internal increaseMarketOrders;
+    mapping(uint256 => TradingTypes.DecreasePositionOrder) internal decreaseMarketOrders;
 
-    uint256 public increaseMarketOrdersIndex;
-    uint256 public decreaseMarketOrdersIndex;
+    uint256 public override increaseMarketOrdersIndex;
+    uint256 public override decreaseMarketOrdersIndex;
 
-    uint256 public increaseMarketOrderStartIndex;
-    uint256 public decreaseMarketOrderStartIndex;
+    uint256 public override increaseMarketOrderStartIndex;
+    uint256 public override decreaseMarketOrderStartIndex;
 
 
-    mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseLimitOrders;
-    mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
-    uint256 public increaseLimitOrdersIndex;
-    uint256 public decreaseLimitOrdersIndex;
+    mapping(uint256 => TradingTypes.IncreasePositionOrder) internal increaseLimitOrders;
+    mapping(uint256 => TradingTypes.DecreasePositionOrder) internal decreaseLimitOrders;
+    uint256 public override increaseLimitOrdersIndex;
+    uint256 public override decreaseLimitOrdersIndex;
 
 
     mapping(bytes32 => TradingTypes.PositionOrder[]) public positionOrders;
@@ -80,6 +80,22 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         tradingUtils = _tradingUtils;
+    }
+
+    function getIncreaseMarketOrder(uint256 index) public view override returns(TradingTypes.IncreasePositionOrder memory) {
+        return increaseMarketOrders[index];
+    }
+
+    function getDecreaseMarketOrder(uint256 index) public view override returns(TradingTypes.DecreasePositionOrder memory) {
+        return decreaseMarketOrders[index];
+    }
+
+    function getIncreaseLimitOrder(uint256 index) public view override returns(TradingTypes.IncreasePositionOrder memory) {
+        return increaseLimitOrders[index];
+    }
+
+    function getDecreaseLimitOrder(uint256 index) external view returns(TradingTypes.DecreasePositionOrder memory) {
+        return decreaseLimitOrders[index];
     }
 
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external nonReentrant returns (uint256) {

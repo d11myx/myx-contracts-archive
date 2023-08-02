@@ -33,6 +33,14 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         emit UpdateTradingRouter(oldAddress, newAddress);
     }
 
+    function increaseMarketOrders(uint256 index) external view override returns(TradingTypes.IncreasePositionOrder memory) {
+        return tradingRouter.getIncreaseMarketOrder(index);
+    }
+
+    function decreaseMarketOrders(uint256 index) external view override returns(TradingTypes.DecreasePositionOrder memory) {
+        return tradingRouter.getDecreaseMarketOrder(index);
+    }
+
     function increaseMarketOrdersIndex() external view override returns (uint256) {
         return tradingRouter.increaseMarketOrdersIndex();
     }
@@ -47,6 +55,14 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
 
     function decreaseMarketOrderStartIndex() external view override returns (uint256) {
         return tradingRouter.decreaseMarketOrderStartIndex();
+    }
+
+    function increaseLimitOrders(uint256 index) external view override returns(TradingTypes.IncreasePositionOrder memory) {
+        return tradingRouter.getIncreaseLimitOrder(index);
+    }
+
+    function decreaseLimitOrders(uint256 index) external view override returns(TradingTypes.DecreasePositionOrder memory) {
+        return tradingRouter.getDecreaseLimitOrder(index);
     }
 
     function increaseLimitOrdersIndex() external view override returns (uint256) {

@@ -6,6 +6,7 @@ import { getBlockTimestamp, waitForTx } from '../helpers/utilities/tx';
 import { MAX_UINT_AMOUNT, TradeType } from '../helpers';
 import { expect } from './shared/expect';
 import { mintAndApprove } from './helpers/misc';
+import { TradingTypes } from '../types/contracts/trading/Router';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 0;
@@ -57,8 +58,9 @@ describe('Router: Edge cases', () => {
             keeper,
             users: [trader],
             usdt,
+            router,
             tradingRouter,
-            executeRouter,
+            executor,
             tradingVault,
         } = testEnv;
 
@@ -67,7 +69,7 @@ describe('Router: Edge cases', () => {
 
         await usdt.connect(trader.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
 
-        const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+        const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
             account: trader.address,
             pairIndex: pairIndex,
             tradeType: TradeType.MARKET,
@@ -80,15 +82,12 @@ describe('Router: Edge cases', () => {
             slPrice: ethers.utils.parseUnits('29000', 30),
             sl: ethers.utils.parseUnits('1', 18),
         };
-
-        await tradingRouter.setHandler(trader.address, true);
-
-        await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+        await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
         const orderId = 0;
-        console.log(`order:`, await tradingRouter.increaseMarketOrders(orderId));
+        console.log(`order:`, await router.increaseMarketOrders(orderId));
 
-        await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
         const position = await tradingVault.getPosition(trader.address, pairIndex, true);
         console.log(`position:`, position);
@@ -108,7 +107,7 @@ describe('Router: Edge cases', () => {
         const positionAmountBefore = positionBefore.positionAmount;
         expect(positionAmountBefore).to.be.eq(ethers.utils.parseUnits('10', 18));
 
-        const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+        const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
             account: trader.address,
             pairIndex: pairIndex,
             tradeType: TradeType.MARKET,
@@ -144,7 +143,7 @@ describe('Router: Edge cases', () => {
         expect(positionAmountBefore).to.be.eq(ethers.utils.parseUnits('18', 18));
 
         // Decrease position
-        const increasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+        const increasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
             account: trader.address,
             pairIndex: pairIndex,
             tradeType: TradeType.MARKET,
@@ -242,11 +241,16 @@ describe('Router: Edge cases', () => {
             );
 
             const pairVaultInfo = await pairVault.getVault(pairIndex);
-            console.log("indexTotalAmount", pairVaultInfo.indexTotalAmount, "indexReservedAmount", pairVaultInfo.indexReservedAmount);
+            console.log(
+                'indexTotalAmount',
+                pairVaultInfo.indexTotalAmount,
+                'indexReservedAmount',
+                pairVaultInfo.indexReservedAmount,
+            );
             expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(0);
 
             // shorter decrease position will wait for adl
-            const decreasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+            const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: shorter.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -290,7 +294,7 @@ describe('Router: Edge cases', () => {
             const position = await tradingVault.getPosition(trader.address, pairIndex, true);
 
             // Closing position
-            const increasePositionRequest: ITradingRouter.DecreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -345,8 +349,9 @@ describe('Router: Edge cases', () => {
                 users: [trader],
                 btc,
                 usdt,
+                router,
+                executor,
                 tradingRouter,
-                executeRouter,
                 tradingVault,
                 tradingUtils,
                 fastPriceFeed,
@@ -358,7 +363,7 @@ describe('Router: Edge cases', () => {
 
             const size = collateral.div(30000).mul(100).mul(90).div(100);
 
-            const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -373,10 +378,10 @@ describe('Router: Edge cases', () => {
             };
 
             // await tradingRouter.setHandler(trader.address, true);
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
-            await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            const orderId = await router.increaseMarketOrdersIndex();
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
-            await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const positionBef = await tradingVault.getPosition(trader.address, pairIndex, true);
 
@@ -401,7 +406,7 @@ describe('Router: Edge cases', () => {
 
             // liquidation
             const traderPositionKey = tradingUtils.getPositionKey(trader.address, pairIndex, true);
-            await executeRouter.connect(keeper.signer).liquidatePositions([traderPositionKey]);
+            await executor.connect(keeper.signer).liquidatePositions([traderPositionKey]);
 
             const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
             expect(positionAft.positionAmount).to.be.eq(0);
@@ -420,7 +425,7 @@ export async function increaseUserPosition(
 ) {
     const { keeper, tradingRouter, executeRouter } = testEnv;
 
-    const increasePositionRequest: ITradingRouter.IncreasePositionRequestStruct = {
+    const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
         account: user.address,
         pairIndex: pairIndex,
         tradeType: TradeType.MARKET,
