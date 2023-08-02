@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
+import "../libraries/PositionKey.sol";
 import "./interfaces/ITradingVault.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
@@ -136,7 +137,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         require(pair.enable, "trade pair not supported");
 
         // get position
-        bytes32 positionKey = tradingUtils.getPositionKey(_account, _pairIndex, _isLong);
+        bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
         Position storage position = positions[positionKey];
         position.key = positionKey;
 
@@ -370,7 +371,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         require(_sizeAmount >= tradingConfig.minTradeAmount && _sizeAmount <= tradingConfig.maxTradeAmount, "invalid size");
 
         // get position
-        bytes32 positionKey = tradingUtils.getPositionKey(_account, _pairIndex, _isLong);
+        bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
         Position storage position = positions[positionKey];
         require(position.account != address(0), "position already closed");
 
@@ -716,9 +717,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     }
 
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position memory) {
-        Position memory position = positions[tradingUtils.getPositionKey(_account, _pairIndex, _isLong)];
+        Position memory position = positions[PositionKey.getPositionKey(_account, _pairIndex, _isLong)];
         if (position.account == address(0)) {
-            position.key = tradingUtils.getPositionKey(_account, _pairIndex, _isLong);
+            position.key = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
             position.account = _account;
             position.pairIndex = _pairIndex;
             position.isLong = _isLong;
