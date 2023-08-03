@@ -270,7 +270,7 @@ describe('Router: Edge cases', () => {
             expect(decreaseOrderInfo.needADL).to.be.eq(true);
 
             // execute ADL
-            let traderPositionKey = await tradingUtils.getPositionKey(trader.address, pairIndex, true);
+            let traderPositionKey = await tradingVault.getPositionKey(trader.address, pairIndex, true);
             let traderCurPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
             console.log(traderCurPosition);
             await executeRouter
@@ -408,7 +408,7 @@ describe('Router: Edge cases', () => {
             expect(leverageAft).to.be.eq(131);
 
             // liquidation
-            const traderPositionKey = tradingUtils.getPositionKey(trader.address, pairIndex, true);
+            const traderPositionKey = tradingVault.getPositionKey(trader.address, pairIndex, true);
             await executor.connect(keeper.signer).liquidatePositions([traderPositionKey]);
 
             const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
