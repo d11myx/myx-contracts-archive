@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../libraries/Position.sol";
 import "../libraries/PositionKey.sol";
 import "./interfaces/ITradingVault.sol";
+import "../interfaces/IVaultPriceFeed.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/access/Handleable.sol";
@@ -93,12 +94,15 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     uint256 public fundingInterval;
 
+    IVaultPriceFeed public vaultPriceFeed;
+
     function initialize(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingUtils _tradingUtils,
         address _tradingFeeReceiver,
-        uint256 _fundingInterval
+        uint256 _fundingInterval,
+        IVaultPriceFeed _vaultPriceFeed
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();
@@ -107,6 +111,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         tradingUtils = _tradingUtils;
         tradingFeeReceiver = _tradingFeeReceiver;
         fundingInterval = _fundingInterval;
+        vaultPriceFeed=_vaultPriceFeed;
     }
 
     function setContract(
@@ -549,7 +554,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             }
             pairVault.updateAveragePrice(_pairIndex, _price);
         }
-        uint256 price = tradingUtils.getPrice(pair.indexToken);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
         pnl = position.getUnrealizedPnl( _sizeAmount,price);
         console.log("decreasePosition pnl", pnl.toString());
 
@@ -635,7 +640,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     function buyIndexToken(uint256 _pairIndex, uint256 _amount) public onlyHandler {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = tradingUtils.getPrice(pair.indexToken);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
         uint256 stableAmount = _amount.mulPrice(price);
 
 
@@ -645,7 +650,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external override view returns (uint256 tradingFee) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = tradingUtils.getPrice(pair.indexToken);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
         return _tradingFee(_pairIndex, _isLong, _sizeAmount, price);
     }
 
@@ -695,7 +700,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     function getCurrentFundingRate(uint256 _pairIndex) external override view returns (int256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = tradingUtils.getPrice(pair.indexToken);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
         return _currentFundingRate(_pairIndex, price);
     }
 
