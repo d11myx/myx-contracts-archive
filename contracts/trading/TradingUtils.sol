@@ -18,6 +18,9 @@ contract TradingUtils is ITradingUtils, Governable {
     using Math for uint256;
     using Int256Utils for int256;
     using PrecisionUtils for uint256;
+    using Position for mapping(bytes32 => Position.Info);
+    using Position for Position.Info;
+
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
@@ -67,28 +70,28 @@ contract TradingUtils is ITradingUtils, Governable {
         return oraclePrice;
     }
 
-    function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
-        Position.Info memory position = tradingVault.getPosition(_account, _pairIndex, _isLong);
+    // function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
+    //     Position.Info memory position = tradingVault.getPosition(_account, _pairIndex, _isLong);
 
-        uint256 price = getPrice(_pairIndex, _isLong);
-        if (price == position.averagePrice) {return 0;}
+    //     uint256 price = getPrice(position.pairIndex, position.isLong);
+    //     if (price == position.averagePrice) {return 0;}
 
-        if (_isLong) {
-            if (price > position.averagePrice) {
-                pnl = int256(_sizeAmount.mulPrice(price - position.averagePrice));
-            } else {
-                pnl = - int256(_sizeAmount.mulPrice(position.averagePrice - price));
-            }
-        } else {
-            if (position.averagePrice > price) {
-                pnl = int256(_sizeAmount.mulPrice(position.averagePrice - price));
-            } else {
-                pnl = - int256(_sizeAmount.mulPrice(price - position.averagePrice));
-            }
-        }
-        console.log("getUnrealizedPnl", pnl >= 0 ? "" : "-", pnl.abs());
-        return pnl;
-    }
+    //     if (_isLong) {
+    //         if (price > position.averagePrice) {
+    //             pnl = int256(_sizeAmount.mulPrice(price - position.averagePrice));
+    //         } else {
+    //             pnl = - int256(_sizeAmount.mulPrice(position.averagePrice - price));
+    //         }
+    //     } else {
+    //         if (position.averagePrice > price) {
+    //             pnl = int256(_sizeAmount.mulPrice(position.averagePrice - price));
+    //         } else {
+    //             pnl = - int256(_sizeAmount.mulPrice(price - position.averagePrice));
+    //         }
+    //     }
+    //     console.log("getUnrealizedPnl", pnl >= 0 ? "" : "-", pnl.abs());
+    //     return pnl;
+    // }
 
     function validLeverage(
         address account,
@@ -121,7 +124,8 @@ contract TradingUtils is ITradingUtils, Governable {
 
         // pnl
         if (position.positionAmount > 0) {
-            totalCollateral += getUnrealizedPnl(account, pairIndex, isLong, position.positionAmount);
+            uint256 price = getPrice(pairIndex, isLong);
+            totalCollateral += position.getUnrealizedPnl(position.positionAmount,price);
         }
 
         console.log("validLeverage totalCollateral", totalCollateral.toString());

@@ -13,7 +13,7 @@ interface ITradingUtils {
 
     function getValidPrice(uint256 _pairIndex, bool _isLong) external view returns (uint256);
 
-    function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (int256 pnl);
+    // function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (int256 pnl);
 
     function validLeverage(
         address account,
