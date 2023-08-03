@@ -1,4 +1,4 @@
-import { newTestEnv, TestEnv, testEnv } from './helpers/make-suite';
+import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
 import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';

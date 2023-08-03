@@ -32,5 +32,10 @@ interface IPositionManager {
         bool abovePrice
     );
 
+    event CancelIncreaseOrder(address account, uint256 orderId, TradingTypes.TradeType tradeType);
+    event CancelDecreaseOrder(address account, uint256 orderId, TradingTypes.TradeType tradeType);
+
     function createOrder(TradingTypes.CreateOrderRequest memory request) external returns (uint256 orderId);
+
+    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) external;
 }

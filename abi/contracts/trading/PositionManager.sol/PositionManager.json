@@ -50,6 +50,56 @@
         "internalType": "enum TradingTypes.TradeType",
         "name": "tradeType",
         "type": "uint8"
+      }
+    ],
+    "name": "CancelDecreaseOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TradingTypes.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      }
+    ],
+    "name": "CancelIncreaseOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TradingTypes.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
       },
       {
         "indexed": false,
@@ -169,6 +219,29 @@
     ],
     "name": "CreateIncreaseOrder",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum TradingTypes.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "isIncrease",
+        "type": "bool"
+      }
+    ],
+    "name": "cancelOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
