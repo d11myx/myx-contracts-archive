@@ -58,47 +58,45 @@ contract PositionManager is IPositionManager {
         IPairInfo.Pair memory pair = pairInfo.getPair(request.pairIndex);
         require(pair.enable, "trade pair not supported");
 
-        // check size
-        require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
+        if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
+            // check size
+            require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
 
-        Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
-        // IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
+            bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
 
+            //TODO if size = 0
+            if (request.sizeAmount >= 0) {
+                // check leverage
+                (uint256 afterPosition,) = position.validLeverage(price,request.collateral, uint256(request.sizeAmount), true,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
+                // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
+                require(afterPosition > 0, "zero position amount");
 
-        bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
+                // check tp sl
+                require(request.tp <= afterPosition && request.sl <= afterPosition, "tp/sl exceeds max size");
+                require(request.tp == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.TP), "tp already exists");
+                require(request.sl == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.SL), "sl already exists");
+            }
+            if (request.sizeAmount <= 0) {
+                // check leverage
+                position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
 
-        //TODO if size = 0
-        if (request.sizeAmount >= 0) {
+                Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
 
-            // check leverage
-            (uint256 afterPosition,)=position.validLeverage(price,request.collateral, uint256(request.sizeAmount), true,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
-            // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
-            require(afterPosition > 0, "zero position amount");
+                //TODO if request size exceed position size, can calculate the max size
+                require(uint256(request.sizeAmount.abs()) <= position.positionAmount - tradingRouter.positionDecreaseTotalAmount(positionKey), "decrease amount exceed position");
+            }
 
-            // check tp sl
-            require(request.tp <= afterPosition && request.sl <= afterPosition, "tp/sl exceeds max size");
-            require(request.tp == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.TP), "tp already exists");
-            require(request.sl == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.SL), "sl already exists");
+            // transfer collateral
+            if (request.collateral > 0) {
+                IERC20(pair.stableToken).safeTransferFrom(account, address(tradingRouter), request.collateral.abs());
+            }
         }
-        if (request.sizeAmount <= 0) {
-            // check leverage
-            position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
 
+        if (request.tradeType == TradingTypes.TradeType.TP || request.tradeType == TradingTypes.TradeType.SL) {
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
-
-            //TODO if request size exceed position size, can calculate the max size
-            require(uint256(request.sizeAmount.abs()) <= position.positionAmount - tradingRouter.positionDecreaseTotalAmount(positionKey), "decrease amount exceed position");
+            require(request.tp <= position.positionAmount && request.sl <= position.positionAmount, "tp/sl exceeds max size");
+            require(request.collateral == 0, "no collateral required");
         }
-
-        // transfer collateral
-        if (request.collateral > 0) {
-            IERC20(pair.stableToken).safeTransferFrom(account, address(tradingRouter), request.collateral.abs());
-        }
-
-//        uint256 price = tradingUtils.getPrice(request.pairIndex, request.isLong);
-//        bytes32 key = tradingUtils.getPositionKey(account, request.pairIndex, request.isLong);
 
         if (request.sizeAmount > 0) {
             return _createIncreaseOrder(
@@ -224,7 +222,7 @@ contract PositionManager is IPositionManager {
 
     function _createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) internal returns (uint256) {
         TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder(
-            0,
+            0, // orderId
             _request.account,
             _request.pairIndex,
             _request.tradeType,
@@ -232,20 +230,40 @@ contract PositionManager is IPositionManager {
             _request.triggerPrice,
             _request.sizeAmount,
             _request.isLong,
-
-            _request.tradeType == TradingTypes.TradeType.MARKET ? _request.isLong : !_request.isLong,
+            false, // abovePrice
             block.timestamp,
             false
         );
 
+        // abovePrice
+        // market：long: true,  short: false
+        //  limit：long: false, short: true
+        //     tp：long: false, short: true
+        //     sl：long: true,  short: false
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
             order.orderId = tradingRouter.decreaseMarketOrdersIndex();
+            order.abovePrice = _request.isLong;
+
             tradingRouter.saveDecreaseMarketOrder(order);
-            console.log("orderId", order.orderId, "decreaseMarketOrdersIndex", tradingRouter.decreaseMarketOrdersIndex());
         } else if (_request.tradeType == TradingTypes.TradeType.LIMIT) {
             order.orderId = tradingRouter.decreaseLimitOrdersIndex();
+            order.abovePrice = !_request.isLong;
+
             tradingRouter.saveDecreaseLimitOrder(order);
-            console.log("orderId", order.orderId, "decreaseLimitOrdersIndex", tradingRouter.decreaseLimitOrdersIndex());
+        } else if (_request.tradeType == TradingTypes.TradeType.TP) {
+            order.orderId = tradingRouter.decreaseLimitOrdersIndex();
+            order.abovePrice = !_request.isLong;
+
+            tradingRouter.saveDecreaseLimitOrder(order);
+            tradingRouter.setPositionHasTpSl(
+                PositionKey.getPositionKey(_request.account, _request.pairIndex, _request.isLong), TradingTypes.TradeType.TP, true);
+        } else if (_request.tradeType == TradingTypes.TradeType.SL) {
+            order.orderId = tradingRouter.decreaseLimitOrdersIndex();
+            order.abovePrice = _request.isLong;
+
+            tradingRouter.saveDecreaseLimitOrder(order);
+            tradingRouter.setPositionHasTpSl(
+                PositionKey.getPositionKey(_request.account, _request.pairIndex, _request.isLong), TradingTypes.TradeType.SL, true);
         } else {
             revert("invalid trade type");
         }
