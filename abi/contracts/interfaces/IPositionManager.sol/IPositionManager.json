@@ -250,6 +250,26 @@
             "internalType": "int256",
             "name": "sizeAmount",
             "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tpPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "slPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sl",
+            "type": "uint256"
           }
         ],
         "internalType": "struct TradingTypes.CreateOrderRequest",

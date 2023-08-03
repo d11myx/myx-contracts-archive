@@ -64,10 +64,15 @@ contract PositionManager is IPositionManager {
 
         // check size
         require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
+
         Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
         // IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
         uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
+
+
+        bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
+
         //TODO if size = 0
         if (request.sizeAmount >= 0) {
 
@@ -75,13 +80,17 @@ contract PositionManager is IPositionManager {
             (uint256 afterPosition,)=position.validLeverage(price,request.collateral, uint256(request.sizeAmount), true,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
             // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
             require(afterPosition > 0, "zero position amount");
+
+            // check tp sl
+            require(request.tp <= afterPosition && request.sl <= afterPosition, "tp/sl exceeds max size");
+            require(request.tp == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.TP), "tp already exists");
+            require(request.sl == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.SL), "sl already exists");
         }
         if (request.sizeAmount <= 0) {
             // check leverage
             position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
 
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
-            bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
 
             //TODO if request size exceed position size, can calculate the max size
             require(uint256(request.sizeAmount.abs()) <= position.positionAmount - tradingRouter.positionDecreaseTotalAmount(positionKey), "decrease amount exceed position");
@@ -105,10 +114,10 @@ contract PositionManager is IPositionManager {
                     openPrice: request.openPrice,
                     isLong: request.isLong,
                     sizeAmount: uint256(request.sizeAmount),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
+                    tpPrice: request.tpPrice,
+                    tp: request.tp,
+                    slPrice: request.slPrice,
+                    sl: request.sl
                 })
             );
         } else if (request.sizeAmount < 0) {
