@@ -156,8 +156,42 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         }
     }
 
-    function createTpSl(TradingTypes.CreateTpSlRequest memory _request) external override returns (uint256 tpOrderId, uint256 slOrderId) {
-        return tradingRouter.createTpSl(_request);
+    function createTpSl(TradingTypes.CreateTpSlRequest memory request) external override returns (uint256 tpOrderId, uint256 slOrderId) {
+        bytes32 key = PositionKey.getPositionKey(msg.sender, request.pairIndex, request.isLong);
+        require(request.tp == 0 || !tradingRouter.positionHasTpSl(key, TradingTypes.TradeType.TP), "tp already exists");
+        require(request.sl == 0 || !tradingRouter.positionHasTpSl(key, TradingTypes.TradeType.SL), "sl already exists");
+
+        if (request.tp > 0) {
+            tpOrderId = positionManager.createOrder(TradingTypes.CreateOrderRequest({
+                account: msg.sender,
+                pairIndex: request.pairIndex,
+                tradeType: TradingTypes.TradeType.TP,
+                collateral: 0,
+                openPrice: request.tpPrice,
+                isLong: request.isLong,
+                sizeAmount: - int256(request.tp),
+                tpPrice: 0,
+                tp: 0,
+                slPrice: 0,
+                sl: 0
+            }));
+        }
+        if (request.sl > 0) {
+            slOrderId = positionManager.createOrder(TradingTypes.CreateOrderRequest({
+                account: msg.sender,
+                pairIndex: request.pairIndex,
+                tradeType: TradingTypes.TradeType.SL,
+                collateral: 0,
+                openPrice: request.slPrice,
+                isLong: request.isLong,
+                sizeAmount: - int256(request.sl),
+                tpPrice: 0,
+                tp: 0,
+                slPrice: 0,
+                sl: 0
+            }));
+        }
+        return (tpOrderId, slOrderId);
     }
 
     function getIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override view returns (TradingTypes.IncreasePositionOrder memory order) {
