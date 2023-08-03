@@ -1196,6 +1196,11 @@
         "internalType": "contract ITradingUtils",
         "name": "_tradingUtils",
         "type": "address"
+      },
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "_vaultPriceFeed",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -1944,6 +1949,19 @@
     "name": "transferToVault",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vaultPriceFeed",
+    "outputs": [
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
