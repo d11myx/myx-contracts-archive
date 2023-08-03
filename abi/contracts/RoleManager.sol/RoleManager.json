@@ -167,6 +167,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "target",
+        "type": "address"
+      }
+    ],
+    "name": "addContractWhiteList",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "keeper",
         "type": "address"
       }
@@ -224,25 +237,6 @@
       }
     ],
     "name": "contractWhiteList",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "excludeAssets",
     "outputs": [
       {
         "internalType": "bool",
@@ -418,6 +412,19 @@
       }
     ],
     "name": "removeAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      }
+    ],
+    "name": "removeContractWhiteList",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

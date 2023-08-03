@@ -18,8 +18,10 @@ import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
 import "../interfaces/IPositionManager.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 
-contract OrderManager is IPositionManager {
+contract OrderManager is IPositionManager, ReentrancyGuardUpgradeable {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -28,6 +30,7 @@ contract OrderManager is IPositionManager {
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
+    IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
@@ -36,12 +39,14 @@ contract OrderManager is IPositionManager {
     IVaultPriceFeed public vaultPriceFeed;
 
     constructor(
+        IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
         IVaultPriceFeed _vaultPriceFeed
     ) {
+        ADDRESS_PROVIDER = addressProvider;
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
@@ -49,8 +54,13 @@ contract OrderManager is IPositionManager {
         vaultPriceFeed = _vaultPriceFeed;
     }
 
-    function createOrder(TradingTypes.CreateOrderRequest memory request) public returns (uint256 orderId) {
-        //todo onlyRouterOrAccount
+    modifier onlyWhiteListOrSelf(address account) {
+        require(
+            IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) || account == msg.sender, "no access");
+        _;
+    }
+
+    function createOrder(TradingTypes.CreateOrderRequest memory request) public nonReentrant onlyWhiteListOrSelf(request.account) returns (uint256 orderId) {
         address account = request.account;
 
         require(!tradingVault.isFrozen(account), "account is frozen");
@@ -64,12 +74,12 @@ contract OrderManager is IPositionManager {
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
-            uint256 price =vaultPriceFeed.getPrice(pair.indexToken);
+            uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
             IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
-                (uint256 afterPosition,) = position.validLeverage(price,request.collateral, uint256(request.sizeAmount), true,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
+                (uint256 afterPosition,) = position.validLeverage(price, request.collateral, uint256(request.sizeAmount), true, tradingConfig.minLeverage, tradingConfig.maxLeverage, tradingConfig.maxPositionAmount);
                 // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
                 require(afterPosition > 0, "zero position amount");
 
@@ -80,9 +90,7 @@ contract OrderManager is IPositionManager {
             }
             if (request.sizeAmount <= 0) {
                 // check leverage
-                position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
-
-
+                position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false, tradingConfig.minLeverage, tradingConfig.maxLeverage, tradingConfig.maxPositionAmount);
 
                 //TODO if request size exceed position size, can calculate the max size
                 require(uint256(request.sizeAmount.abs()) <= position.positionAmount - tradingRouter.positionDecreaseTotalAmount(positionKey), "decrease amount exceed position");
@@ -135,7 +143,7 @@ contract OrderManager is IPositionManager {
         return 0;
     }
 
-    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) public {
+    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) public nonReentrant {
         console.log("cancelIncreaseOrder orderId", orderId, "tradeType", uint8(tradeType));
         console.log("cancelIncreaseOrder orderId", orderId, "isIncrease", isIncrease);
 
@@ -144,8 +152,7 @@ contract OrderManager is IPositionManager {
             if (order.account == address(0)) {
                 return;
             }
-            //TODO onlyRouterOrOrderOwner
-//            require(msg.sender == address(this) || isHandler[msg.sender] || msg.sender == order.account, "not order sender or handler");
+            require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) || order.account == msg.sender, "no access");
 
             _cancelIncreaseOrder(order);
         } else {
@@ -153,8 +160,7 @@ contract OrderManager is IPositionManager {
             if (order.account == address(0)) {
                 return;
             }
-            //TODO onlyRouterOrOrderOwner
-//            require(msg.sender == address(this) || isHandler[msg.sender] || msg.sender == order.account, "not order sender or handler");
+            require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) || order.account == msg.sender, "no access");
 
             _cancelDecreaseOrder(order);
         }
