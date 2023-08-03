@@ -19,7 +19,7 @@ import "../libraries/type/TradingTypes.sol";
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
-import "./interfaces/ITradingUtils.sol";
+
 
 contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable {
 
@@ -34,7 +34,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
-    ITradingUtils public tradingUtils;
 
     IVaultPriceFeed public vaultPriceFeed;
 
@@ -67,7 +66,6 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        ITradingUtils _tradingUtils,
         IVaultPriceFeed _vaultPriceFeed
 
     ) external initializer {
@@ -76,20 +74,17 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
-        tradingUtils = _tradingUtils;
         vaultPriceFeed=_vaultPriceFeed;
     }
 
     function setContract(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        ITradingVault _tradingVault,
-        ITradingUtils _tradingUtils
+        ITradingVault _tradingVault
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
-        tradingUtils = _tradingUtils;
     }
 
     function getIncreaseMarketOrder(uint256 index) public view override returns(TradingTypes.IncreasePositionOrder memory) {

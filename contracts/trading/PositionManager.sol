@@ -17,7 +17,6 @@ import "../libraries/type/TradingTypes.sol";
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
-import "./interfaces/ITradingUtils.sol";
 import "../interfaces/IPositionManager.sol";
 
 contract PositionManager is IPositionManager {
@@ -33,7 +32,6 @@ contract PositionManager is IPositionManager {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
-    ITradingUtils public tradingUtils;
     ITradingRouter public tradingRouter;
     IVaultPriceFeed public vaultPriceFeed;
 
@@ -41,14 +39,12 @@ contract PositionManager is IPositionManager {
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        ITradingUtils _tradingUtils,
         ITradingRouter _tradingRouter,
         IVaultPriceFeed _vaultPriceFeed
     ) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
-        tradingUtils = _tradingUtils;
         tradingRouter = _tradingRouter;
         vaultPriceFeed = _vaultPriceFeed;
     }

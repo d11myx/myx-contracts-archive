@@ -9,8 +9,6 @@ import "../interfaces/IVaultPriceFeed.sol";
 import "./interfaces/IExecuteRouter.sol";
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
-import "./interfaces/ITradingUtils.sol";
-
 
 import "../libraries/Position.sol";
 import "../libraries/access/Handleable.sol";
@@ -36,7 +34,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     ITradingVault public tradingVault;
     ITradingRouter public tradingRouter;
     IIndexPriceFeed public fastPriceFeed;
-    ITradingUtils public tradingUtils;
+
 
     IVaultPriceFeed public vaultPriceFeed;
 
@@ -56,7 +54,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         ITradingRouter _tradingRouter,
         IVaultPriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
-        ITradingUtils _tradingUtils,
         uint256 _maxTimeDelay
     ) external initializer {
         __ReentrancyGuard_init();
@@ -67,7 +64,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         tradingRouter = _tradingRouter;
         fastPriceFeed = _fastPriceFeed;
         vaultPriceFeed=_vaultPriceFeed;
-        tradingUtils = _tradingUtils;
         maxTimeDelay = _maxTimeDelay;
     }
 
@@ -77,9 +73,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
         IVaultPriceFeed _vaultPriceFeed,
-        IIndexPriceFeed _fastPriceFeed,
-        ITradingUtils _tradingUtils
-
+        IIndexPriceFeed _fastPriceFeed
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
@@ -87,7 +81,6 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         tradingRouter = _tradingRouter;
         fastPriceFeed = _fastPriceFeed;
         vaultPriceFeed=_vaultPriceFeed;
-        tradingUtils = _tradingUtils;
     }
 
     function setPositionKeeper(address _account, bool _enable) external onlyGov {
