@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
+import "../libraries/Position.sol";
 import "../interfaces/IVaultPriceFeed.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
@@ -239,7 +240,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 price = tradingUtils.getPrice(_request.pairIndex, _request.isLong);
 
         // check decrease size
-        ITradingVault.Position memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
+        Position.Info memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
         bytes32 positionKey = PositionKey.getPositionKey(account, _request.pairIndex, _request.isLong);
         console.log("createDecreaseOrder sizeAmount %s positionAmount %s positionDecreaseTotalAmount %s",
             _request.sizeAmount, position.positionAmount, positionDecreaseTotalAmount[positionKey]);
@@ -391,7 +392,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(isHandler[msg.sender] || msg.sender == _request.account, "not order sender or handler");
 
         // check
-        ITradingVault.Position memory position = tradingVault.getPosition(_request.account, _request.pairIndex, _request.isLong);
+        Position.Info memory position = tradingVault.getPosition(_request.account, _request.pairIndex, _request.isLong);
 
         require(_request.tp <= position.positionAmount && _request.sl <= position.positionAmount, "tp/sl exceeds max size");
 

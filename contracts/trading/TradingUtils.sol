@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "../libraries/Position.sol";
 import "./interfaces/ITradingUtils.sol";
 import "./interfaces/ITradingRouter.sol";
 import "../pair/interfaces/IPairInfo.sol";
@@ -67,7 +68,7 @@ contract TradingUtils is ITradingUtils, Governable {
     }
 
     function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) public view returns (int256 pnl) {
-        ITradingVault.Position memory position = tradingVault.getPosition(_account, _pairIndex, _isLong);
+        Position.Info memory position = tradingVault.getPosition(_account, _pairIndex, _isLong);
 
         uint256 price = getPrice(_pairIndex, _isLong);
         if (price == position.averagePrice) {return 0;}
@@ -100,7 +101,7 @@ contract TradingUtils is ITradingUtils, Governable {
         console.log("validLeverage sizeAmount", _sizeAmount, "collateral", _collateral.toString());
 
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
-        ITradingVault.Position memory position = tradingVault.getPositionByKey(key);
+        Position.Info memory position = tradingVault.getPositionByKey(key);
         uint256 price = getPrice(pairIndex, isLong);
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
