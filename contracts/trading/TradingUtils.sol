@@ -53,51 +53,51 @@ contract TradingUtils is ITradingUtils, Governable {
         return price;
     }
 
-    function validLeverage(
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        int256 _collateral,
-        uint256 _sizeAmount,
-        bool _increase
-    ) public view returns (uint256, uint256) {
-        console.log("validLeverage sizeAmount", _sizeAmount, "collateral", _collateral.toString());
+    // function validLeverage(
+    //     address account,
+    //     uint256 pairIndex,
+    //     bool isLong,
+    //     int256 _collateral,
+    //     uint256 _sizeAmount,
+    //     bool _increase
+    // ) public view returns (uint256, uint256) {
+    //     console.log("validLeverage sizeAmount", _sizeAmount, "collateral", _collateral.toString());
 
-        bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
-        Position.Info memory position = tradingVault.getPositionByKey(key);
-        IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
-        uint256 price = getPrice(pair.indexToken);
+    //     bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
+    //     Position.Info memory position = tradingVault.getPositionByKey(key);
+    //     IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
+    //     uint256 price = getPrice(pair.indexToken);
 
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
-        // position >= decrease size
-        require(_increase ? true : position.positionAmount >= _sizeAmount, "decrease amount exceed position");
+    //     IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
+    //     // position >= decrease size
+    //     require(_increase ? true : position.positionAmount >= _sizeAmount, "decrease amount exceed position");
 
-        uint256 afterPosition = _increase ? position.positionAmount + _sizeAmount : position.positionAmount - _sizeAmount;
+    //     uint256 afterPosition = _increase ? position.positionAmount + _sizeAmount : position.positionAmount - _sizeAmount;
 
-        // close position
-        if (afterPosition == 0) {
-            return (0, 0);
-        }
+    //     // close position
+    //     if (afterPosition == 0) {
+    //         return (0, 0);
+    //     }
 
-        // check collateral
-        int256 totalCollateral = int256(position.collateral) + _collateral;
-        require(totalCollateral >= 0, "collateral not enough for decrease");
+    //     // check collateral
+    //     int256 totalCollateral = int256(position.collateral) + _collateral;
+    //     require(totalCollateral >= 0, "collateral not enough for decrease");
 
-        // pnl
-        if (position.positionAmount > 0) {
-            uint256 price = getPrice(pair.indexToken);
-            totalCollateral += position.getUnrealizedPnl(position.positionAmount,price);
-        }
+    //     // pnl
+    //     if (position.positionAmount > 0) {
+    //         uint256 price = getPrice(pair.indexToken);
+    //         totalCollateral += position.getUnrealizedPnl(position.positionAmount,price);
+    //     }
 
-        console.log("validLeverage totalCollateral", totalCollateral.toString());
-        require(totalCollateral >= 0, "collateral not enough for pnl");
+    //     console.log("validLeverage totalCollateral", totalCollateral.toString());
+    //     require(totalCollateral >= 0, "collateral not enough for pnl");
 
-        console.log("validLeverage afterPosition", afterPosition, "collateralDelta", totalCollateral.abs().divPrice(price));
-        require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
-            && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
-        require(afterPosition <= tradingConfig.maxPositionAmount, "exceed max position");
+    //     console.log("validLeverage afterPosition", afterPosition, "collateralDelta", totalCollateral.abs().divPrice(price));
+    //     require(afterPosition >= totalCollateral.abs().divPrice(price) * tradingConfig.minLeverage
+    //         && afterPosition <= totalCollateral.abs().divPrice(price) * tradingConfig.maxLeverage, "leverage incorrect");
+    //     require(afterPosition <= tradingConfig.maxPositionAmount, "exceed max position");
 
-        return (afterPosition, totalCollateral.abs());
-    }
+    //     return (afterPosition, totalCollateral.abs());
+    // }
 
 }

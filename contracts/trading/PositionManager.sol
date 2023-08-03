@@ -26,25 +26,31 @@ contract PositionManager is IPositionManager {
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
+    using Position for mapping(bytes32 => Position.Info);
+    using Position for Position.Info;
+
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     ITradingUtils public tradingUtils;
     ITradingRouter public tradingRouter;
+    IVaultPriceFeed public vaultPriceFeed;
 
     constructor(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingUtils _tradingUtils,
-        ITradingRouter _tradingRouter
+        ITradingRouter _tradingRouter,
+        IVaultPriceFeed _vaultPriceFeed
     ) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         tradingUtils = _tradingUtils;
         tradingRouter = _tradingRouter;
+        vaultPriceFeed = _vaultPriceFeed;
     }
 
     function createOrder(TradingTypes.CreateOrderRequest memory request) public returns (uint256 orderId) {
@@ -58,16 +64,21 @@ contract PositionManager is IPositionManager {
 
         // check size
         require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
-
+        Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
+        // IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
         //TODO if size = 0
         if (request.sizeAmount >= 0) {
+
             // check leverage
-            (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
+            (uint256 afterPosition,)=position.validLeverage(price,request.collateral, uint256(request.sizeAmount), true,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
+            // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
             require(afterPosition > 0, "zero position amount");
         }
         if (request.sizeAmount <= 0) {
             // check leverage
-            tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount.abs()), false);
+            position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
 
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
