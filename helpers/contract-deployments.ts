@@ -164,6 +164,7 @@ export async function deployTrading(
         tradingVault.address,
         tradingUtils.address,
         tradingRouter.address,
+        vaultPriceFeed.address
     ])) as any as PositionManager;
     console.log(`deployed PositionManager at ${positionManager.address}`);
 
