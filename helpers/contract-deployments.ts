@@ -203,6 +203,7 @@ export async function deployTrading(
         pairVault.address,
         tradingVault.address,
         tradingRouter.address,
+        vaultPriceFeed.address,
         fastPriceFeed.address,
         tradingUtils.address,
         60,
