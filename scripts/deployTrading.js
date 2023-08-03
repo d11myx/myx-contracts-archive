@@ -16,7 +16,6 @@ async function main() {
   let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"));
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"));
 
-  let tradingUtils = await deployUpgradeableContract("TradingUtils", []);
 
   let args = [pairInfo.address, pairVault.address, tradingUtils.address, user1.address, 8 * 60 * 60];
   let tradingVault = await deployUpgradeableContract("TradingVault", args);

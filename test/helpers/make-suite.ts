@@ -11,7 +11,6 @@ import {
     RoleManager,
     Token,
     TradingRouter,
-    TradingUtils,
     TradingVault,
     OraclePriceFeed,
     WETH,
@@ -31,7 +30,6 @@ import {
     getRoleManager,
     getToken,
     getTradingRouter,
-    getTradingUtils,
     getTradingVault,
     getWETH,
     MOCK_TOKEN_PREFIX,
@@ -73,7 +71,6 @@ export interface TestEnv {
     pairVault: PairVault;
     vaultPriceFeed: OraclePriceFeed;
     fastPriceFeed: IndexPriceFeed;
-    tradingUtils: TradingUtils;
     tradingVault: TradingVault;
     tradingRouter: TradingRouter;
     executeRouter: ExecuteRouter;
@@ -99,7 +96,6 @@ export const testEnv: TestEnv = {
     pairVault: {} as PairVault,
     vaultPriceFeed: {} as OraclePriceFeed,
     fastPriceFeed: {} as IndexPriceFeed,
-    tradingUtils: {} as TradingUtils,
     tradingVault: {} as TradingVault,
     tradingRouter: {} as TradingRouter,
     executeRouter: {} as ExecuteRouter,
@@ -158,7 +154,6 @@ export async function setupTestEnv() {
     testEnv.pairVault = await getPairVault();
 
     // trading
-    testEnv.tradingUtils = await getTradingUtils();
     testEnv.tradingVault = await getTradingVault();
     testEnv.tradingRouter = await getTradingRouter();
     testEnv.executeRouter = await getExecuteRouter();

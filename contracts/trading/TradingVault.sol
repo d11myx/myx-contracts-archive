@@ -98,9 +98,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     function initialize(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
+        IVaultPriceFeed _vaultPriceFeed,
         address _tradingFeeReceiver,
-        uint256 _fundingInterval,
-        IVaultPriceFeed _vaultPriceFeed
+        uint256 _fundingInterval
+
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();

@@ -14,7 +14,6 @@ import {
     Router,
     Token,
     TradingRouter,
-    TradingUtils,
     TradingVault,
     WETH,
 } from '../types';
@@ -98,10 +97,6 @@ export const getPairLiquidity = async (address?: string): Promise<PairLiquidity>
         'PairLiquidity',
         address || (await hre.deployments.get(PAIR_LIQUIDITY_ID)).address,
     );
-};
-
-export const getTradingUtils = async (address?: string): Promise<TradingUtils> => {
-    return getContract<TradingUtils>('TradingUtils', address || (await hre.deployments.get(TRADING_UTILS_ID)).address);
 };
 
 export const getTradingVault = async (address?: string): Promise<TradingVault> => {

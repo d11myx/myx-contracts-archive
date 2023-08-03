@@ -13,12 +13,11 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
 
   await updateContract("TradingVault", tradingVault.address);
   await updateContract("TradingRouter", tradingRouter.address);
   await updateContract("ExecuteRouter", executeRouter.address);
-  await updateContract("TradingUtils", tradingUtils.address);
+
 
 }
 
