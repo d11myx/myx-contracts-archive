@@ -2,14 +2,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isLong",
-        "type": "bool"
+        "internalType": "address",
+        "name": "indexToken",
+        "type": "address"
       }
     ],
     "name": "getPrice",
