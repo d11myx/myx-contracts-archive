@@ -196,7 +196,7 @@ describe('Router: Edge cases', () => {
                 tradingRouter,
                 executeRouter,
                 tradingVault,
-                tradingUtils,
+
                 positionManager,
             } = testEnv;
 
@@ -355,7 +355,7 @@ describe('Router: Edge cases', () => {
                 executor,
                 tradingRouter,
                 tradingVault,
-                tradingUtils,
+
                 fastPriceFeed,
                 positionManager,
             } = testEnv;
