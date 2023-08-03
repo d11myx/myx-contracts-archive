@@ -82,7 +82,7 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
     }
 
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
-        //TODO tp sl
+        //TODO decoupling tp sl
 
         return positionManager.createOrder(TradingTypes.CreateOrderRequest({
             account: _request.account,
@@ -91,7 +91,11 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
             collateral: _request.collateral,
             openPrice: _request.openPrice,
             isLong: _request.isLong,
-            sizeAmount: int256(_request.sizeAmount)
+            sizeAmount: int256(_request.sizeAmount),
+            tpPrice: _request.tpPrice,
+            tp: _request.tp,
+            slPrice: _request.slPrice,
+            sl: _request.sl
         }));
     }
 
@@ -103,7 +107,11 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
             collateral: _request.collateral,
             openPrice: _request.triggerPrice,
             isLong: _request.isLong,
-            sizeAmount: - int256(_request.sizeAmount)
+            sizeAmount: - int256(_request.sizeAmount),
+            tpPrice: 0,
+            tp: 0,
+            slPrice: 0,
+            sl: 0
         }));
     }
 

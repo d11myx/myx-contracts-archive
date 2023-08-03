@@ -59,18 +59,24 @@ contract PositionManager is IPositionManager {
         // check size
         require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
 
+        bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
+
         //TODO if size = 0
         if (request.sizeAmount >= 0) {
             // check leverage
             (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
             require(afterPosition > 0, "zero position amount");
+
+            // check tp sl
+            require(request.tp <= afterPosition && request.sl <= afterPosition, "tp/sl exceeds max size");
+            require(request.tp == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.TP), "tp already exists");
+            require(request.sl == 0 || !tradingRouter.positionHasTpSl(positionKey, TradingTypes.TradeType.SL), "sl already exists");
         }
         if (request.sizeAmount <= 0) {
             // check leverage
             tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount.abs()), false);
 
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
-            bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
 
             //TODO if request size exceed position size, can calculate the max size
             require(uint256(request.sizeAmount.abs()) <= position.positionAmount - tradingRouter.positionDecreaseTotalAmount(positionKey), "decrease amount exceed position");
@@ -94,10 +100,10 @@ contract PositionManager is IPositionManager {
                     openPrice: request.openPrice,
                     isLong: request.isLong,
                     sizeAmount: uint256(request.sizeAmount),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
+                    tpPrice: request.tpPrice,
+                    tp: request.tp,
+                    slPrice: request.slPrice,
+                    sl: request.sl
                 })
             );
         } else if (request.sizeAmount < 0) {

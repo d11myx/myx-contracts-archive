@@ -13,6 +13,10 @@ library TradingTypes {
         uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
         bool isLong;                   // 多/空
         int256 sizeAmount;            // 仓位数量
+        uint256 tpPrice;               // 止盈价 1e30
+        uint256 tp;                    // 止盈数量
+        uint256 slPrice;               // 止损价 1e30
+        uint256 sl;                    // 止损数量
     }
 
     struct IncreasePositionRequest {
