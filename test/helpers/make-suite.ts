@@ -16,7 +16,7 @@ import {
     WETH,
     Router,
     Executor,
-    PositionManager,
+    OrderManager,
 } from '../../types';
 import {
     SymbolMap,
@@ -76,7 +76,7 @@ export interface TestEnv {
     executeRouter: ExecuteRouter;
     router: Router;
     executor: Executor;
-    positionManager: PositionManager;
+    positionManager: OrderManager;
 }
 
 export const testEnv: TestEnv = {
@@ -101,7 +101,7 @@ export const testEnv: TestEnv = {
     executeRouter: {} as ExecuteRouter,
     router: {} as Router,
     executor: {} as Executor,
-    positionManager: {} as PositionManager,
+    positionManager: {} as OrderManager,
 } as TestEnv;
 
 export async function setupTestEnv() {
