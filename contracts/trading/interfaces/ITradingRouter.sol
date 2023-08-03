@@ -48,6 +48,7 @@ interface ITradingRouter {
     function increaseLimitOrdersIndex() external view returns (uint256);
     function decreaseLimitOrdersIndex() external view returns (uint256);
 
+    function positionDecreaseTotalAmount(bytes32) external view returns(uint256);
     function positionHasTpSl(bytes32 positionKey, TradingTypes.TradeType tradeType) external view returns (bool);
 
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external returns (uint256 orderId);

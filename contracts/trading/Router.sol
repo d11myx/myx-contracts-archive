@@ -7,8 +7,9 @@ import "../interfaces/IRouter.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "./interfaces/ITradingRouter.sol";
-import "hardhat/console.sol";
 import "../interfaces/IPositionManager.sol";
+import "../libraries/PositionKey.sol";
+import "hardhat/console.sol";
 
 contract Router is IRouter, ReentrancyGuardUpgradeable {
 
@@ -36,11 +37,11 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         emit UpdateTradingRouter(oldAddress, newAddress);
     }
 
-    function increaseMarketOrders(uint256 index) external view override returns(TradingTypes.IncreasePositionOrder memory) {
+    function increaseMarketOrders(uint256 index) external view override returns (TradingTypes.IncreasePositionOrder memory) {
         return tradingRouter.getIncreaseMarketOrder(index);
     }
 
-    function decreaseMarketOrders(uint256 index) external view override returns(TradingTypes.DecreasePositionOrder memory) {
+    function decreaseMarketOrders(uint256 index) external view override returns (TradingTypes.DecreasePositionOrder memory) {
         return tradingRouter.getDecreaseMarketOrder(index);
     }
 
@@ -60,11 +61,11 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         return tradingRouter.decreaseMarketOrderStartIndex();
     }
 
-    function increaseLimitOrders(uint256 index) external view override returns(TradingTypes.IncreasePositionOrder memory) {
+    function increaseLimitOrders(uint256 index) external view override returns (TradingTypes.IncreasePositionOrder memory) {
         return tradingRouter.getIncreaseLimitOrder(index);
     }
 
-    function decreaseLimitOrders(uint256 index) external view override returns(TradingTypes.DecreasePositionOrder memory) {
+    function decreaseLimitOrders(uint256 index) external view override returns (TradingTypes.DecreasePositionOrder memory) {
         return tradingRouter.getDecreaseLimitOrder(index);
     }
 
@@ -81,17 +82,7 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
     }
 
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
-//        // check leverage
-//        bytes32 key = tradingUtils.getPositionKey(account, _request.pairIndex, _request.isLong);
-//        (uint256 afterPosition, ) = tradingUtils.validLeverage(_request.account, _request.pairIndex, _request.isLong, _request.collateral, _request.sizeAmount, true);
-//        require(afterPosition > 0, "zero position amount");
-//
-//        // check tp sl
-//        require(_request.tp <= afterPosition && _request.sl <= afterPosition, "tp/sl exceeds max size");
-//        require(_request.tp == 0 || !positionHasTpSl[key][TradingTypes.TradeType.TP], "tp already exists");
-//        require(_request.sl == 0 || !positionHasTpSl[key][TradingTypes.TradeType.SL], "sl already exists");
-
-        //todo tp sl
+        //TODO tp sl
 
         return positionManager.createOrder(TradingTypes.CreateOrderRequest({
             account: _request.account,
@@ -104,24 +95,57 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         }));
     }
 
-    function cancelIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override nonReentrant {
-        tradingRouter.cancelIncreaseOrder(_orderId, _tradeType);
-    }
-
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
-        return tradingRouter.createDecreaseOrder(_request);
+        return positionManager.createOrder(TradingTypes.CreateOrderRequest({
+            account: _request.account,
+            pairIndex: _request.pairIndex,
+            tradeType: _request.tradeType,
+            collateral: _request.collateral,
+            openPrice: _request.triggerPrice,
+            isLong: _request.isLong,
+            sizeAmount: - int256(_request.sizeAmount)
+        }));
     }
 
-    function cancelDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external override nonReentrant {
-        tradingRouter.cancelDecreaseOrder(_orderId, _tradeType);
+    function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override nonReentrant {
+        positionManager.cancelOrder(orderId, tradeType, true);
     }
 
-    function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external override {
-        tradingRouter.cancelAllPositionOrders(account, pairIndex, isLong);
+    function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override nonReentrant {
+        positionManager.cancelOrder(orderId, tradeType, false);
     }
 
-    function cancelOrders(address account, uint256 pairIndex, bool isLong, bool isIncrease) external override {
-        tradingRouter.cancelOrders(account, pairIndex, isLong, isIncrease);
+    function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external override {
+        bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
+        TradingTypes.PositionOrder[] memory orders = tradingRouter.getPositionOrders(key);
+
+        while (orders.length > 0) {
+            uint256 lastIndex = orders.length - 1;
+            TradingTypes.PositionOrder memory positionOrder = orders[lastIndex];
+            console.log("positionOrder lastIndex", lastIndex, "orderId", positionOrder.orderId);
+            console.log("positionOrder tradeType", uint8(positionOrder.tradeType), "isIncrease", positionOrder.isIncrease);
+            if (positionOrder.isIncrease) {
+                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+            } else {
+                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+            }
+        }
+    }
+
+    function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external override {
+        bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
+        TradingTypes.PositionOrder[] memory orders = tradingRouter.getPositionOrders(key);
+
+        for (uint256 i = 0; i < orders.length; i++) {
+            TradingTypes.PositionOrder memory positionOrder = orders[i];
+            console.log("positionOrder index", i, "orderId", positionOrder.orderId);
+            console.log("positionOrder tradeType", uint8(positionOrder.tradeType), "isIncrease", positionOrder.isIncrease);
+            if (isIncrease && positionOrder.isIncrease) {
+                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+            } else if (!isIncrease && !positionOrder.isIncrease) {
+                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+            }
+        }
     }
 
     function createTpSl(TradingTypes.CreateTpSlRequest memory _request) external override returns (uint256 tpOrderId, uint256 slOrderId) {

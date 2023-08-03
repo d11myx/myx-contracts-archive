@@ -56,24 +56,35 @@ contract PositionManager is IPositionManager {
         IPairInfo.Pair memory pair = pairInfo.getPair(request.pairIndex);
         require(pair.enable, "trade pair not supported");
 
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(request.pairIndex);
-
         // check size
         require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
 
-        uint256 price = tradingUtils.getPrice(pair.indexToken);
-        bytes32 key = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
+        //TODO if size = 0
+        if (request.sizeAmount >= 0) {
+            // check leverage
+            (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
+            require(afterPosition > 0, "zero position amount");
+        }
+        if (request.sizeAmount <= 0) {
+            // check leverage
+            tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount.abs()), false);
+
+            Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
+            bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
+
+            //TODO if request size exceed position size, can calculate the max size
+            require(uint256(request.sizeAmount.abs()) <= position.positionAmount - tradingRouter.positionDecreaseTotalAmount(positionKey), "decrease amount exceed position");
+        }
 
         // transfer collateral
         if (request.collateral > 0) {
             IERC20(pair.stableToken).safeTransferFrom(account, address(tradingRouter), request.collateral.abs());
         }
 
-        if (request.sizeAmount > 0) {
-            // check leverage
-            (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
-            require(afterPosition > 0, "zero position amount");
+//        uint256 price = tradingUtils.getPrice(request.pairIndex, request.isLong);
+//        bytes32 key = tradingUtils.getPositionKey(account, request.pairIndex, request.isLong);
 
+        if (request.sizeAmount > 0) {
             return _createIncreaseOrder(
                 TradingTypes.IncreasePositionRequest({
                     account: account,
@@ -90,10 +101,6 @@ contract PositionManager is IPositionManager {
                 })
             );
         } else if (request.sizeAmount < 0) {
-            // check leverage
-            (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount.abs()), false);
-            require(afterPosition > 0, "zero position amount");
-
             return _createDecreaseOrder(
                 TradingTypes.DecreasePositionRequest({
                     account: account,
@@ -110,6 +117,31 @@ contract PositionManager is IPositionManager {
             revert('size eq 0');
         }
         return 0;
+    }
+
+    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) public {
+        console.log("cancelIncreaseOrder orderId", orderId, "tradeType", uint8(tradeType));
+        console.log("cancelIncreaseOrder orderId", orderId, "isIncrease", isIncrease);
+
+        if (isIncrease) {
+            TradingTypes.IncreasePositionOrder memory order = tradingRouter.getIncreaseOrder(orderId, tradeType);
+            if (order.account == address(0)) {
+                return;
+            }
+            //TODO onlyRouterOrOrderOwner
+//            require(msg.sender == address(this) || isHandler[msg.sender] || msg.sender == order.account, "not order sender or handler");
+
+            _cancelIncreaseOrder(order);
+        } else {
+            TradingTypes.DecreasePositionOrder memory order = tradingRouter.getDecreaseOrder(orderId, tradeType);
+            if (order.account == address(0)) {
+                return;
+            }
+            //TODO onlyRouterOrOrderOwner
+//            require(msg.sender == address(this) || isHandler[msg.sender] || msg.sender == order.account, "not order sender or handler");
+
+            _cancelDecreaseOrder(order);
+        }
     }
 
     function checkTradingAmount(uint256 pairIndex, uint256 size) public returns (bool) {
@@ -226,5 +258,68 @@ contract PositionManager is IPositionManager {
             order.abovePrice
         );
         return order.orderId;
+    }
+
+    function _cancelIncreaseOrder(TradingTypes.IncreasePositionOrder memory order) internal {
+        IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
+
+        if (order.collateral > 0) {
+            //TODO if removed TradingRouter, fix this
+//            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+            IERC20(pair.stableToken).safeTransferFrom(address(tradingRouter), order.account, order.collateral.abs());
+        }
+
+        tradingRouter.removeOrderFromPosition(
+            TradingTypes.PositionOrder(
+                order.account,
+                order.pairIndex,
+                order.isLong,
+                true,
+                order.tradeType,
+                order.orderId,
+                order.sizeAmount
+            ));
+
+        if (order.tradeType == TradingTypes.TradeType.MARKET) {
+            tradingRouter.removeFromIncreaseMarketOrders(order.orderId);
+        } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+            tradingRouter.removeFromIncreaseLimitOrders(order.orderId);
+        }
+
+        emit CancelIncreaseOrder(order.account, order.orderId, order.tradeType);
+    }
+
+    function _cancelDecreaseOrder(TradingTypes.DecreasePositionOrder memory order) internal {
+        IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
+
+        if (order.collateral > 0) {
+            //TODO if removed TradingRouter, fix this
+//            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+            IERC20(pair.stableToken).safeTransferFrom(address(tradingRouter), order.account, order.collateral.abs());
+        }
+
+        tradingRouter.removeOrderFromPosition(
+            TradingTypes.PositionOrder(
+                order.account,
+                order.pairIndex,
+                order.isLong,
+                false,
+                order.tradeType,
+                order.orderId,
+                order.sizeAmount
+            ));
+
+        bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
+
+        if (order.tradeType == TradingTypes.TradeType.MARKET) {
+            tradingRouter.removeFromDecreaseMarketOrders(order.orderId);
+        } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+            tradingRouter.removeFromDecreaseLimitOrders(order.orderId);
+        } else {
+            tradingRouter.setPositionHasTpSl(key, order.tradeType, false);
+            tradingRouter.removeFromDecreaseLimitOrders(order.orderId);
+        }
+
+        emit CancelDecreaseOrder(order.account, order.orderId, order.tradeType);
     }
 }
