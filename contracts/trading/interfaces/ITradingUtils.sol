@@ -11,7 +11,7 @@ interface ITradingUtils {
 
     function getPrice(address indexToken) external view returns (uint256);
 
-    function getValidPrice(uint256 _pairIndex, bool _isLong) external view returns (uint256);
+    // function getValidPrice(uint256 _pairIndex, bool _isLong) external view returns (uint256);
 
     // function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (int256 pnl);
 
