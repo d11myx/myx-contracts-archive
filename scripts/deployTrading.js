@@ -17,16 +17,16 @@ async function main() {
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"));
 
 
-  let args = [pairInfo.address, pairVault.address, tradingUtils.address, user1.address, 8 * 60 * 60];
+  let args = [pairInfo.address, pairVault.address, user1.address, 8 * 60 * 60];
   let tradingVault = await deployUpgradeableContract("TradingVault", args);
 
-  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address];
+  args = [pairInfo.address, pairVault.address, tradingVault.address,];
   let tradingRouter = await deployUpgradeableContract("TradingRouter", args);
 
-  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, fastPriceFeed.address, tradingUtils.address, 60];
+  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, fastPriceFeed.address, 60];
   let executeRouter = await deployUpgradeableContract("ExecuteRouter", args);
 
-  await tradingUtils.setContract(pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, vaultPriceFeed.address);
+//   await tradingUtils.setContract(pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, vaultPriceFeed.address);
 
   await pairVault.setHandler(tradingVault.address, true);
   await tradingVault.setHandler(executeRouter.address, true);

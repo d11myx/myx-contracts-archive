@@ -192,7 +192,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
 
-    const { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor, positionManager } =
+    const {  tradingVault, tradingRouter, executeRouter, router, executor, positionManager } =
         await deployTrading(deployer, keeper, addressesProvider, pairVault, pairInfo, vaultPriceFeed, fastPriceFeed);
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
@@ -214,7 +214,6 @@ export async function newTestEnv(): Promise<TestEnv> {
         pairVault: pairVault,
         vaultPriceFeed: vaultPriceFeed,
         fastPriceFeed: fastPriceFeed,
-        tradingUtils: tradingUtils,
         tradingVault: tradingVault,
         tradingRouter: tradingRouter,
         executeRouter: executeRouter,

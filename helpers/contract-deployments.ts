@@ -176,23 +176,16 @@ export async function deployTrading(
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
-    await tradingUtils.setContract(
-        pairInfo.address,
-        pairVault.address,
-        tradingVault.address,
-        tradingRouter.address,
-        vaultPriceFeed.address,
-    );
 
     await tradingVault.initialize(
         pairInfo.address,
         pairVault.address,
-        tradingUtils.address,
+        vaultPriceFeed.address,
         deployer.address,
         8 * 60 * 60,
     );
 
-    await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
+    await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, vaultPriceFeed.address);
 
     await executeRouter.initialize(
         pairInfo.address,
@@ -201,7 +194,6 @@ export async function deployTrading(
         tradingRouter.address,
         vaultPriceFeed.address,
         fastPriceFeed.address,
-        tradingUtils.address,
         60,
     );
 
@@ -213,5 +205,5 @@ export async function deployTrading(
     await executeRouter.setPositionKeeper(keeper.address, true);
     await executeRouter.setPositionKeeper(executor.address, true);
 
-    return { tradingUtils, tradingVault, tradingRouter, executeRouter, router, executor, positionManager };
+    return {  tradingVault, tradingRouter, executeRouter, router, executor, positionManager };
 }
