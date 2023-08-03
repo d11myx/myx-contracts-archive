@@ -15,33 +15,12 @@ import {
     TRADING_UTILS_ID,
     TRADING_VAULT_ID,
 } from '../../helpers';
-import {
-    ExecuteRouter,
-    Router,
-    Executor,
-    TradingRouter,
-    TradingUtils,
-    TradingVault,
-    PositionManager,
-} from '../../types';
+import { ExecuteRouter, Router, Executor, TradingRouter, TradingVault, PositionManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
     const { deployer, keeper, feeReceiver } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
-
-    // TradingUtils
-    const tradingUtilsArtifact = await deploy(`${TRADING_UTILS_ID}`, {
-        from: deployer,
-        contract: 'TradingUtils',
-        args: [],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const tradingUtils = (await hre.ethers.getContractAt(
-        tradingUtilsArtifact.abi,
-        tradingUtilsArtifact.address,
-    )) as TradingUtils;
-
     // TradingVault
     const tradingVaultArtifact = await deploy(`${TRADING_VAULT_ID}`, {
         from: deployer,
@@ -90,7 +69,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             pairInfo.address,
             pairVault.address,
             tradingVault.address,
-            tradingUtils.address,
             tradingRouter.address,
             oraclePriceFeed.address,
         ],
@@ -124,18 +102,15 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const indexPriceFeed = await getIndexPriceFeed();
 
-    await tradingUtils.initialize();
-    await tradingUtils.setContract(
+    await tradingVault.initialize(
         pairInfo.address,
         pairVault.address,
-        tradingVault.address,
-        tradingRouter.address,
         oraclePriceFeed.address,
+        feeReceiver,
+        8 * 60 * 60,
     );
 
-    await tradingVault.initialize(pairInfo.address, pairVault.address, tradingUtils.address, feeReceiver, 8 * 60 * 60);
-
-    await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address);
+    await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, oraclePriceFeed.address);
 
     await executeRouter.initialize(
         pairInfo.address,
@@ -144,7 +119,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         tradingRouter.address,
         oraclePriceFeed.address,
         indexPriceFeed.address,
-        tradingUtils.address,
         60,
     );
 

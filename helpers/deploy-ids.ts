@@ -9,7 +9,6 @@ export const INDEX_PRICE_FEED_ID = `IndexPriceFeed`;
 export const PAIR_INFO_ID = `PairInfo`;
 export const PAIR_VAULT_ID = `PairVault`;
 export const PAIR_LIQUIDITY_ID = `PairLiquidity`;
-export const TRADING_UTILS_ID = `TradingUtils`;
 export const TRADING_VAULT_ID = `TradingVault`;
 export const TRADING_ROUTER_ID = `TradingRouter`;
 export const EXECUTE_ROUTER_ID = `ExecuteRouter`;
