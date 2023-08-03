@@ -81,12 +81,19 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const addressProvider = await getAddressesProvider();
     const pairInfo = await getPairInfo();
     const pairVault = await getPairVault();
-
+    const oraclePriceFeed = await getOraclePriceFeed();
     // PositionManager
     const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
         from: deployer,
         contract: 'PositionManager',
-        args: [pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address, tradingRouter.address],
+        args: [
+            pairInfo.address,
+            pairVault.address,
+            tradingVault.address,
+            tradingUtils.address,
+            tradingRouter.address,
+            oraclePriceFeed.address,
+        ],
         ...COMMON_DEPLOY_PARAMS,
     });
     const positionManager = (await hre.ethers.getContractAt(
@@ -114,7 +121,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     // const pairInfo = await getPairInfo();
     // const pairVault = await getPairVault();
-    const oraclePriceFeed = await getOraclePriceFeed();
+
     const indexPriceFeed = await getIndexPriceFeed();
 
     await tradingUtils.initialize();
