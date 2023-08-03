@@ -62,13 +62,13 @@ describe('Router: Edge cases', () => {
             tradingRouter,
             executor,
             tradingVault,
-            positionManager,
+            orderManager,
         } = testEnv;
 
         const amount = ethers.utils.parseUnits('30000', 18);
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
 
-        await usdt.connect(trader.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
+        await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
         const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
             account: trader.address,
@@ -197,7 +197,7 @@ describe('Router: Edge cases', () => {
                 executeRouter,
                 tradingVault,
 
-                positionManager,
+                orderManager,
             } = testEnv;
 
             const traderPosition = await tradingVault.getPosition(trader.address, pairIndex, true);
@@ -220,7 +220,7 @@ describe('Router: Edge cases', () => {
             // shorter open position
             collateral = ethers.utils.parseUnits('27000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(shorter.address, collateral));
-            await usdt.connect(shorter.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
+            await usdt.connect(shorter.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
             await increaseUserPosition(
                 shorter,
                 pairIndex,
@@ -357,12 +357,12 @@ describe('Router: Edge cases', () => {
                 tradingVault,
 
                 fastPriceFeed,
-                positionManager,
+                orderManager,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('1000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-            await usdt.connect(trader.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
+            await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
             const size = collateral.div(30000).mul(100).mul(90).div(100);
 
