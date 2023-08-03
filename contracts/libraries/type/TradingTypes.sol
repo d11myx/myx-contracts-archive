@@ -42,30 +42,29 @@ library TradingTypes {
         uint256 sizeAmount;            // size
         bool isLong;
     }
-
     struct CreateTpSlRequest {
         address account;
-        uint256 pairIndex;             // pair index
+        uint256 pairIndex;              // pair index
         bool isLong;
-        uint256 tpPrice;               // 止盈价 1e30
-        uint256 tp;                    // 止盈数量
-        uint256 slPrice;               // 止损价 1e30
-        uint256 sl;                    // 止损数量
+        uint256 tpPrice;                // Stop profit price 1e30
+        uint256 tp;                     // The number of profit stops
+        uint256 slPrice;                // Stop price 1e30
+        uint256 sl;                     // Stop loss quantity
     }
 
     struct IncreasePositionOrder {
         uint256 orderId;
         address account;
-        uint256 pairIndex;             // pair index
-        TradeType tradeType;           // 0: MARKET, 1: LIMIT
-        int256 collateral;             // 1e18 保证金数量
-        uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
-        bool isLong;                   // 多/空
-        uint256 sizeAmount;            // 仓位数量
-        uint256 tpPrice;               // 止盈价 1e30
-        uint256 tp;                    // 止盈数量
-        uint256 slPrice;               // 止损价 1e30
-        uint256 sl;                    // 止损数量
+        uint256 pairIndex;              // pair index
+        TradeType tradeType;            // 0: MARKET, 1: LIMIT
+        int256 collateral;              // 1e18 Margin amount
+        uint256 openPrice;              // 1e30 Market acceptable price/Limit opening price
+        bool isLong;                    // Long/short
+        uint256 sizeAmount;             // Number of positions
+        uint256 tpPrice;                // Stop profit price 1e30
+        uint256 tp;                     // The number of profit stops
+        uint256 slPrice;                // Stop price 1e30
+        uint256 sl;                     // Stop loss quantity
         uint256 blockTime;
     }
 
@@ -74,15 +73,15 @@ library TradingTypes {
         address account;
         uint256 pairIndex;
         TradeType tradeType;
-        int256 collateral;             // 1e18 保证金数量
-        uint256 triggerPrice;           // 限价触发价格
-        uint256 sizeAmount;             // 关单数量
+        int256 collateral;              // 1e18 Margin amount
+        uint256 triggerPrice;            // Limit trigger price
+        uint256 sizeAmount;              // Number of customs documents
         bool isLong;
-        bool abovePrice;                // 高于或低于触发价格
-        // 市价单：开多 true 空 false
-        // 限价单：开多 false 空 true
-        // 止盈：多单 false 空单 true
-        // 止损：多单 true 空单 false
+        bool abovePrice;                 // Above or below the trigger price
+        // Market order: open long true empty false
+        // Limit order: open multiple false empty true
+        // Stop profit: multiple single false empty single true
+        // Stop loss: multiple orders true and short orders false
         uint256 blockTime;
         bool needADL;
     }
