@@ -8,7 +8,6 @@ import {
     MockPriceFeed,
     Token,
     TradingRouter,
-    TradingUtils,
     TradingVault,
     OraclePriceFeed,
     WETH,
@@ -146,9 +145,6 @@ export async function deployTrading(
 ) {
     console.log(` - setup trading`);
 
-    let tradingUtils = (await deployUpgradeableContract('TradingUtils', [])) as any as TradingUtils;
-    console.log(`deployed TradingUtils at ${tradingUtils.address}`);
-
     let tradingVault = (await deployContract('TradingVault', [])) as any as TradingVault;
     console.log(`deployed TradingVault at ${tradingVault.address}`);
 
@@ -162,7 +158,6 @@ export async function deployTrading(
         pairInfo.address,
         pairVault.address,
         tradingVault.address,
-        tradingUtils.address,
         tradingRouter.address,
         vaultPriceFeed.address
     ])) as any as PositionManager;
