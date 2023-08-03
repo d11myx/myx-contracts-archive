@@ -384,7 +384,7 @@ describe('Router: increase position ar', () => {
                 executeRouter,
                 tradingVault,
             } = testEnv;
-
+            console.log('?????????????????????');
             // open position
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,

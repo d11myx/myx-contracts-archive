@@ -26,8 +26,8 @@ interface IRouter {
     function cancelIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external returns (uint256 orderId);
     function cancelDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
-    function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
-    function cancelOrders(address account, uint256 pairIndex, bool isLong, bool isIncrease) external;
+    function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external;
+    function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
 
     function createTpSl(TradingTypes.CreateTpSlRequest memory _request) external returns (uint256 tpOrderId, uint256 slOrderId);
 

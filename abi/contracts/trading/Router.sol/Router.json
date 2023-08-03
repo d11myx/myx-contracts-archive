@@ -68,11 +68,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "pairIndex",
         "type": "uint256"
@@ -92,12 +87,12 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_orderId",
+        "name": "orderId",
         "type": "uint256"
       },
       {
         "internalType": "enum TradingTypes.TradeType",
-        "name": "_tradeType",
+        "name": "tradeType",
         "type": "uint8"
       }
     ],
@@ -110,12 +105,12 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_orderId",
+        "name": "orderId",
         "type": "uint256"
       },
       {
         "internalType": "enum TradingTypes.TradeType",
-        "name": "_tradeType",
+        "name": "tradeType",
         "type": "uint8"
       }
     ],
@@ -126,11 +121,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
       {
         "internalType": "uint256",
         "name": "pairIndex",
