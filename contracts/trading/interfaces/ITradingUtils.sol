@@ -9,7 +9,7 @@ interface ITradingUtils {
 
     // function getOrderKey(bool _isIncrease, TradingTypes.TradeType _tradeType, uint256 _orderId) external pure returns (bytes32);
 
-    function getPrice(uint256 _pairIndex, bool _isLong) external view returns (uint256);
+    function getPrice(address indexToken) external view returns (uint256);
 
     function getValidPrice(uint256 _pairIndex, bool _isLong) external view returns (uint256);
 
