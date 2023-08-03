@@ -113,7 +113,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(pair.enable, "trade pair not supported");
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
-        uint256 price = tradingUtils.getPrice(_request.pairIndex, _request.isLong);
+        uint256 price = tradingUtils.getPrice(pair.indexToken);
 
         // check increase size
         require(_request.sizeAmount == 0 || (_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
@@ -237,7 +237,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo.Pair memory pair = pairInfo.getPair(_request.pairIndex);
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
 
-        uint256 price = tradingUtils.getPrice(_request.pairIndex, _request.isLong);
+        uint256 price = tradingUtils.getPrice(pair.indexToken);
 
         // check decrease size
         Position.Info memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);

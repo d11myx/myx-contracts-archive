@@ -61,7 +61,7 @@ contract PositionManager is IPositionManager {
         // check size
         require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
 
-        uint256 price = tradingUtils.getPrice(request.pairIndex, request.isLong);
+        uint256 price = tradingUtils.getPrice(pair.indexToken);
         bytes32 key = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
 
         // transfer collateral

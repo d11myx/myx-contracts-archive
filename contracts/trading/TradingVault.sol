@@ -549,7 +549,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             }
             pairVault.updateAveragePrice(_pairIndex, _price);
         }
-        uint256 price = tradingUtils.getPrice(position.pairIndex, position.isLong);
+        uint256 price = tradingUtils.getPrice(pair.indexToken);
         pnl = position.getUnrealizedPnl( _sizeAmount,price);
         console.log("decreasePosition pnl", pnl.toString());
 
@@ -634,16 +634,18 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     }
 
     function buyIndexToken(uint256 _pairIndex, uint256 _amount) public onlyHandler {
-        uint256 price = tradingUtils.getPrice(_pairIndex, true);
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 price = tradingUtils.getPrice(pair.indexToken);
         uint256 stableAmount = _amount.mulPrice(price);
 
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+
         IERC20(pair.stableToken).safeTransferFrom(msg.sender, address(this), stableAmount);
         IERC20(pair.indexToken).safeTransfer(msg.sender, _amount);
     }
 
     function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external override view returns (uint256 tradingFee) {
-        uint256 price = tradingUtils.getPrice(_pairIndex, _isLong);
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 price = tradingUtils.getPrice(pair.indexToken);
         return _tradingFee(_pairIndex, _isLong, _sizeAmount, price);
     }
 
@@ -692,7 +694,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external override view returns (int256) {
-        uint256 price = tradingUtils.getPrice(_pairIndex, true);
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 price = tradingUtils.getPrice(pair.indexToken);
         return _currentFundingRate(_pairIndex, price);
     }
 

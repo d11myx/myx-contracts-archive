@@ -46,10 +46,10 @@ contract TradingUtils is ITradingUtils, Governable {
         vaultPriceFeed = _vaultPriceFeed;
     }
 
-    function getPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
-        console.log("getPrice pairIndex %s isLong %s price %s", _pairIndex, _isLong, price);
+    function getPrice(address indexToken) public view returns (uint256) {
+        // IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 price = vaultPriceFeed.getPrice(indexToken);
+        // console.log("getPrice pairIndex %s isLong %s price %s", _pairIndex, _isLong, price);
         return price;
     }
 
@@ -105,7 +105,8 @@ contract TradingUtils is ITradingUtils, Governable {
 
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info memory position = tradingVault.getPositionByKey(key);
-        uint256 price = getPrice(pairIndex, isLong);
+        IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
+        uint256 price = getPrice(pair.indexToken);
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
         // position >= decrease size
@@ -124,7 +125,7 @@ contract TradingUtils is ITradingUtils, Governable {
 
         // pnl
         if (position.positionAmount > 0) {
-            uint256 price = getPrice(pairIndex, isLong);
+            uint256 price = getPrice(pair.indexToken);
             totalCollateral += position.getUnrealizedPnl(position.positionAmount,price);
         }
 
