@@ -26,6 +26,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
+    using Position for mapping(bytes32 => Position.Info);
+    using Position for Position.Info;
 
 
 
@@ -211,8 +213,9 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
+
         // check position and leverage
-        (uint256 afterPosition, ) = tradingUtils.validLeverage(order.account, order.pairIndex, order.isLong, order.collateral, order.sizeAmount, true);
+        (uint256 afterPosition, ) = position.validLeverage(price,order.collateral, order.sizeAmount, true,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
         require(afterPosition > 0, "zero position amount");
 
         // check tp sl
@@ -390,7 +393,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
 
         // check position and leverage
-        tradingUtils.validLeverage(position.account, position.pairIndex, position.isLong, order.collateral, order.sizeAmount, false);
+        position.validLeverage(price,order.collateral, order.sizeAmount, false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
 
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 

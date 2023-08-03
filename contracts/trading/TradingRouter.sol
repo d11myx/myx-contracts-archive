@@ -27,6 +27,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
+    using Position for mapping(bytes32 => Position.Info);
+    using Position for Position.Info;
 
 
     IPairInfo public pairInfo;
@@ -120,7 +122,11 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
 
         // check leverage
         bytes32 key = PositionKey.getPositionKey(account, _request.pairIndex, _request.isLong);
-        (uint256 afterPosition, ) = tradingUtils.validLeverage(_request.account, _request.pairIndex, _request.isLong, _request.collateral, _request.sizeAmount, true);
+
+        Position.Info memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
+        // IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
+
+        (uint256 afterPosition, ) = position.validLeverage(price, _request.collateral, _request.sizeAmount, true,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
         require(afterPosition > 0, "zero position amount");
 
         // check tp sl
@@ -246,9 +252,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
             _request.sizeAmount, position.positionAmount, positionDecreaseTotalAmount[positionKey]);
         require(_request.sizeAmount <= position.positionAmount - positionDecreaseTotalAmount[positionKey], "decrease amount exceed position");
         require(_request.sizeAmount == 0 || (_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
-
+        // IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
         // check leverage
-        tradingUtils.validLeverage(position.account, position.pairIndex, position.isLong, _request.collateral, _request.sizeAmount, false);
+        position.validLeverage(price, _request.collateral, _request.sizeAmount, false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
 
         // transfer collateral
         if (_request.collateral > 0) {
