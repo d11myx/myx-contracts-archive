@@ -9,7 +9,7 @@ import {
     PairInfo,
     PairLiquidity,
     PairVault,
-    PositionManager,
+    OrderManager,
     RoleManager,
     Router,
     Token,
@@ -125,9 +125,9 @@ export const getExecutor = async (address?: string): Promise<Executor> => {
     return getContract<Executor>('Executor', address || (await hre.deployments.get(EXECUTOR_ID)).address);
 };
 
-export const getPositionManager = async (address?: string): Promise<PositionManager> => {
-    return getContract<PositionManager>(
-        'PositionManager',
+export const getPositionManager = async (address?: string): Promise<OrderManager> => {
+    return getContract<OrderManager>(
+        'OrderManager',
         address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
     );
 };

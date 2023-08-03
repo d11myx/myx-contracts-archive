@@ -19,7 +19,7 @@ import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
 import "../interfaces/IPositionManager.sol";
 
-contract PositionManager is IPositionManager {
+contract OrderManager is IPositionManager {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -63,7 +63,9 @@ contract PositionManager is IPositionManager {
             require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
-
+            Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
+            uint256 price =vaultPriceFeed.getPrice(pair.indexToken);
+            IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
@@ -80,7 +82,7 @@ contract PositionManager is IPositionManager {
                 // check leverage
                 position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false,tradingConfig.minLeverage,tradingConfig.maxLeverage,tradingConfig.maxPositionAmount);
 
-                Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
+
 
                 //TODO if request size exceed position size, can calculate the max size
                 require(uint256(request.sizeAmount.abs()) <= position.positionAmount - tradingRouter.positionDecreaseTotalAmount(positionKey), "decrease amount exceed position");
