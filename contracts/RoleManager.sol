@@ -15,8 +15,7 @@ contract RoleManager is AccessControl, IRoleManager {
 
     using Address for address;
 
-    mapping(address => bool) public contractWhiteList;
-    mapping(address => bool) public excludeAssets;
+    mapping(address => bool) public override contractWhiteList;
 
     constructor(Ownable provider) {
         require(provider.owner() != address(0), "is 0");
@@ -89,4 +88,13 @@ contract RoleManager is AccessControl, IRoleManager {
     function isKeeper(address keeper) external view override returns (bool) {
         return hasRole(KEEPER_ROLE, keeper);
     }
+
+    function addContractWhiteList(address target) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        contractWhiteList[target] = true;
+    }
+
+    function removeContractWhiteList(address target) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        delete contractWhiteList[target];
+    }
+
 }

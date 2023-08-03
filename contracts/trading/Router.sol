@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
 import "../interfaces/IRouter.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
@@ -11,7 +9,7 @@ import "../interfaces/IPositionManager.sol";
 import "../libraries/PositionKey.sol";
 import "hardhat/console.sol";
 
-contract Router is IRouter, ReentrancyGuardUpgradeable {
+contract Router is IRouter {
 
     IAddressesProvider public immutable addressProvider;
 
@@ -81,7 +79,7 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         return tradingRouter.positionHasTpSl(positionKey, tradeType);
     }
 
-    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
+    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external override returns (uint256) {
         //TODO decoupling tp sl
 
         return positionManager.createOrder(TradingTypes.CreateOrderRequest({
@@ -99,7 +97,7 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         }));
     }
 
-    function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external override nonReentrant returns (uint256) {
+    function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external override returns (uint256) {
         return positionManager.createOrder(TradingTypes.CreateOrderRequest({
             account: _request.account,
             pairIndex: _request.pairIndex,
@@ -115,11 +113,11 @@ contract Router is IRouter, ReentrancyGuardUpgradeable {
         }));
     }
 
-    function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override nonReentrant {
+    function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override {
         positionManager.cancelOrder(orderId, tradeType, true);
     }
 
-    function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override nonReentrant {
+    function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override {
         positionManager.cancelOrder(orderId, tradeType, false);
     }
 
