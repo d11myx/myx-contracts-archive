@@ -15,7 +15,7 @@ import "../libraries/access/Handleable.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "hardhat/console.sol";
-import "./interfaces/ITradingUtils.sol";
+
 
 contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     using SafeERC20 for IERC20;
@@ -75,7 +75,6 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
-    ITradingUtils public tradingUtils;
     address public tradingFeeReceiver;
 
     mapping(bytes32 => Position.Info) public positions;
@@ -99,7 +98,6 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     function initialize(
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        ITradingUtils _tradingUtils,
         address _tradingFeeReceiver,
         uint256 _fundingInterval,
         IVaultPriceFeed _vaultPriceFeed
@@ -108,7 +106,6 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         __Handleable_init();
         pairInfo = _pairInfo;
         pairVault = _pairVault;
-        tradingUtils = _tradingUtils;
         tradingFeeReceiver = _tradingFeeReceiver;
         fundingInterval = _fundingInterval;
         vaultPriceFeed=_vaultPriceFeed;
@@ -116,12 +113,10 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     function setContract(
         IPairInfo _pairInfo,
-        IPairVault _pairVault,
-        ITradingUtils _tradingUtils
+        IPairVault _pairVault
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
-        tradingUtils = _tradingUtils;
     }
 
     function setTradingFeeReceiver(address _tradingFeeReceiver) external onlyGov {
