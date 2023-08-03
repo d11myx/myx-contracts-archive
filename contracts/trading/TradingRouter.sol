@@ -36,6 +36,8 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
     ITradingVault public tradingVault;
     ITradingUtils public tradingUtils;
 
+    IVaultPriceFeed public vaultPriceFeed;
+
 
     mapping(uint256 => TradingTypes.IncreasePositionOrder) internal increaseMarketOrders;
     mapping(uint256 => TradingTypes.DecreasePositionOrder) internal decreaseMarketOrders;
@@ -65,7 +67,9 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        ITradingUtils _tradingUtils
+        ITradingUtils _tradingUtils,
+        IVaultPriceFeed _vaultPriceFeed
+
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();
@@ -73,6 +77,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         tradingUtils = _tradingUtils;
+        vaultPriceFeed=_vaultPriceFeed;
     }
 
     function setContract(
@@ -115,7 +120,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         require(pair.enable, "trade pair not supported");
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
-        uint256 price = tradingUtils.getPrice(pair.indexToken);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
 
         // check increase size
         require(_request.sizeAmount == 0 || (_request.sizeAmount >= tradingConfig.minTradeAmount && _request.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
@@ -243,7 +248,7 @@ contract TradingRouter is ITradingRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo.Pair memory pair = pairInfo.getPair(_request.pairIndex);
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_request.pairIndex);
 
-        uint256 price = tradingUtils.getPrice(pair.indexToken);
+        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
 
         // check decrease size
         Position.Info memory position = tradingVault.getPosition(account, _request.pairIndex, _request.isLong);
