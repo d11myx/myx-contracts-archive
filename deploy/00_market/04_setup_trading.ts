@@ -135,6 +135,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         pairVault.address,
         tradingVault.address,
         tradingRouter.address,
+        oraclePriceFeed.address,
         indexPriceFeed.address,
         tradingUtils.address,
         60,

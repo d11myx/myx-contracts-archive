@@ -396,6 +396,11 @@
         "type": "address"
       },
       {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "_vaultPriceFeed",
+        "type": "address"
+      },
+      {
         "internalType": "contract IIndexPriceFeed",
         "name": "_fastPriceFeed",
         "type": "address"
@@ -409,11 +414,6 @@
         "internalType": "uint256",
         "name": "_maxTimeDelay",
         "type": "uint256"
-      },
-      {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
-        "type": "address"
       }
     ],
     "name": "initialize",
@@ -534,6 +534,11 @@
         "type": "address"
       },
       {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "_vaultPriceFeed",
+        "type": "address"
+      },
+      {
         "internalType": "contract IIndexPriceFeed",
         "name": "_fastPriceFeed",
         "type": "address"
@@ -541,11 +546,6 @@
       {
         "internalType": "contract ITradingUtils",
         "name": "_tradingUtils",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
         "type": "address"
       }
     ],
