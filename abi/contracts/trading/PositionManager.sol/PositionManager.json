@@ -25,6 +25,11 @@
         "internalType": "contract ITradingRouter",
         "name": "_tradingRouter",
         "type": "address"
+      },
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "_vaultPriceFeed",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -381,6 +386,19 @@
     "outputs": [
       {
         "internalType": "contract ITradingVault",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vaultPriceFeed",
+    "outputs": [
+      {
+        "internalType": "contract IVaultPriceFeed",
         "name": "",
         "type": "address"
       }

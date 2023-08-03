@@ -150,55 +150,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "pairIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "isLong",
-        "type": "bool"
-      },
-      {
-        "internalType": "int256",
-        "name": "_collateral",
-        "type": "int256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_sizeAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_increase",
-        "type": "bool"
-      }
-    ],
-    "name": "validLeverage",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "vaultPriceFeed",
     "outputs": [

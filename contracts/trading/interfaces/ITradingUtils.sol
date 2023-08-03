@@ -15,12 +15,12 @@ interface ITradingUtils {
 
     // function getUnrealizedPnl(address _account, uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (int256 pnl);
 
-    function validLeverage(
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        int256 _collateral,
-        uint256 _sizeAmount,
-        bool _increase
-    ) external view returns (uint256 afterPosition, uint256 totalCollateral);
+    // function validLeverage(
+    //     address account,
+    //     uint256 pairIndex,
+    //     bool isLong,
+    //     int256 _collateral,
+    //     uint256 _sizeAmount,
+    //     bool _increase
+    // ) external view returns (uint256 afterPosition, uint256 totalCollateral);
 }
