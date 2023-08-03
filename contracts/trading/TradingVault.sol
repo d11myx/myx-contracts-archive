@@ -549,9 +549,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             }
             pairVault.updateAveragePrice(_pairIndex, _price);
         }
-
-
-        pnl = tradingUtils.getUnrealizedPnl(position.account, position.pairIndex, position.isLong, _sizeAmount);
+        uint256 price = tradingUtils.getPrice(position.pairIndex, position.isLong);
+        pnl = position.getUnrealizedPnl( _sizeAmount,price);
         console.log("decreasePosition pnl", pnl.toString());
 
         if (pnl > 0) {
@@ -726,6 +725,9 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     function getPositionByKey(bytes32 key) public view returns (Position.Info memory) {
         Position.Info memory position = positions[key];
         return position;
+    }
+    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
+       return PositionKey.getPositionKey(_account, _pairIndex, _isLong);
     }
 
 }

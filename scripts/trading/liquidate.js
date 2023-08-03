@@ -31,7 +31,7 @@ async function main() {
 
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
-  let key = await tradingUtils.getPositionKey(user3.address, 0, false);
+  let key = await tradingVault.getPositionKey(user3.address, 0, false);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
 

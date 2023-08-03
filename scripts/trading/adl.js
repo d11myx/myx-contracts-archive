@@ -46,7 +46,7 @@ async function main() {
   // ADL
   console.log("\n execute ADL")
   let pairIndex = 1;
-  let positionKey = await tradingUtils.getPositionKey(user0.address, pairIndex, true);
+  let positionKey = await tradingVault.getPositionKey(user0.address, pairIndex, true);
   let position = await tradingVault.getPosition(user0.address, pairIndex, false);
   console.log(`position before ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
   console.log(`position collateral: ${formatBalance(position.collateral)} amount: ${formatBalance(position.positionAmount)}`);
