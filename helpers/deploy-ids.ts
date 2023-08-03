@@ -14,4 +14,4 @@ export const TRADING_ROUTER_ID = `TradingRouter`;
 export const EXECUTE_ROUTER_ID = `ExecuteRouter`;
 export const ROUTER_ID = `Router`;
 export const EXECUTOR_ID = `Executor`;
-export const POSITION_MANAGER_ID = `PositionManager`;
+export const POSITION_MANAGER_ID = `OrderManager`;

@@ -15,7 +15,7 @@ import {
     TRADING_UTILS_ID,
     TRADING_VAULT_ID,
 } from '../../helpers';
-import { ExecuteRouter, Router, Executor, TradingRouter, TradingVault, PositionManager } from '../../types';
+import { ExecuteRouter, Router, Executor, TradingRouter, TradingVault, OrderManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -61,10 +61,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pairInfo = await getPairInfo();
     const pairVault = await getPairVault();
     const oraclePriceFeed = await getOraclePriceFeed();
-    // PositionManager
+    // OrderManager
     const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
         from: deployer,
-        contract: 'PositionManager',
+        contract: 'OrderManager',
         args: [
             pairInfo.address,
             pairVault.address,
@@ -77,7 +77,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const positionManager = (await hre.ethers.getContractAt(
         positionManagerArtifact.abi,
         positionManagerArtifact.address,
-    )) as PositionManager;
+    )) as OrderManager;
 
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {

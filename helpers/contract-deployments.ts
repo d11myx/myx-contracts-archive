@@ -14,7 +14,7 @@ import {
     AddressesProvider,
     Router,
     Executor,
-    PositionManager,
+    OrderManager,
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -154,14 +154,14 @@ export async function deployTrading(
     let executeRouter = (await deployContract('ExecuteRouter', [])) as any as ExecuteRouter;
     console.log(`deployed ExecuteRouter at ${executeRouter.address}`);
 
-    let positionManager = (await deployContract('PositionManager', [
+    let positionManager = (await deployContract('OrderManager', [
         pairInfo.address,
         pairVault.address,
         tradingVault.address,
         tradingRouter.address,
         vaultPriceFeed.address
-    ])) as any as PositionManager;
-    console.log(`deployed PositionManager at ${positionManager.address}`);
+    ])) as any as OrderManager;
+    console.log(`deployed OrderManager at ${positionManager.address}`);
 
     let router = (await deployContract('Router', [
         addressProvider.address,
