@@ -4,18 +4,20 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "../interfaces/IIndexPriceFeed.sol";
+import "../interfaces/IVaultPriceFeed.sol";
+import "./interfaces/IExecuteRouter.sol";
+import "./interfaces/ITradingRouter.sol";
+import "./interfaces/ITradingVault.sol";
+import "./interfaces/ITradingUtils.sol";
+
+
 import "../libraries/Position.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
-import "../interfaces/IIndexPriceFeed.sol";
-
-import "./interfaces/IExecuteRouter.sol";
-import "./interfaces/ITradingRouter.sol";
-import "./interfaces/ITradingVault.sol";
-import "./interfaces/ITradingUtils.sol";
 import "hardhat/console.sol";
 
 contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable {
@@ -34,6 +36,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     IIndexPriceFeed public fastPriceFeed;
     ITradingUtils public tradingUtils;
 
+    IVaultPriceFeed public vaultPriceFeed;
+
     uint256 public maxTimeDelay;
 
     mapping(address => bool) public isPositionKeeper;
@@ -50,7 +54,8 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         ITradingRouter _tradingRouter,
         IIndexPriceFeed _fastPriceFeed,
         ITradingUtils _tradingUtils,
-        uint256 _maxTimeDelay
+        uint256 _maxTimeDelay,
+        IVaultPriceFeed _vaultPriceFeed
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();
@@ -59,6 +64,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         tradingVault = _tradingVault;
         tradingRouter = _tradingRouter;
         fastPriceFeed = _fastPriceFeed;
+        vaultPriceFeed=_vaultPriceFeed;
         tradingUtils = _tradingUtils;
         maxTimeDelay = _maxTimeDelay;
     }
@@ -69,13 +75,15 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
         IIndexPriceFeed _fastPriceFeed,
-        ITradingUtils _tradingUtils
+        ITradingUtils _tradingUtils,
+        IVaultPriceFeed _vaultPriceFeed
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         tradingRouter = _tradingRouter;
         fastPriceFeed = _fastPriceFeed;
+        vaultPriceFeed=_vaultPriceFeed;
         tradingUtils = _tradingUtils;
     }
 
@@ -179,7 +187,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(order.sizeAmount == 0 || (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
 
         // check price
-        uint256 price = tradingUtils.getValidPrice(pairIndex, order.isLong);
+        uint256 price = getValidPrice(pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(order.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.openPrice
                 : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice, "not reach trigger price");
@@ -360,7 +368,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(order.sizeAmount == 0 || (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
 
         // check price
-        uint256 price = tradingUtils.getValidPrice(pairIndex, order.isLong);
+        uint256 price = getValidPrice(pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(order.abovePrice ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.triggerPrice
                 : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.triggerPrice, "not reach trigger price");
@@ -507,7 +515,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
             return;
         }
 
-        uint256 price = tradingUtils.getValidPrice(position.pairIndex, position.isLong);
+        uint256 price = getValidPrice(position.pairIndex, position.isLong);
 
         int256 unrealizedPnl;
         if (position.isLong) {
@@ -615,7 +623,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         require(sumAmount == order.sizeAmount, "ADL position amount not match decrease order");
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
-        uint256 price = tradingUtils.getValidPrice(order.pairIndex, !order.isLong);
+        uint256 price = getValidPrice(order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             Position.Info memory adlPosition = adlPositions[i];
@@ -635,5 +643,21 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         _executeDecreaseOrder(_orderId, order.tradeType);
     }
 
+   function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken);
+        console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
+
+        uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
+        console.log("getValidPrice oraclePrice %s indexPrice %s", oraclePrice, indexPrice);
+
+        uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
+        diffP = diffP.calculatePercentage(oraclePrice);
+
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        console.log("getValidPrice diffP %s maxPriceDeviationP %s", diffP, tradingConfig.maxPriceDeviationP);
+        require(diffP <= tradingConfig.maxPriceDeviationP, "exceed max price deviation");
+        return oraclePrice;
+    }
 
 }
