@@ -52,10 +52,10 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
+        IVaultPriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
         ITradingUtils _tradingUtils,
-        uint256 _maxTimeDelay,
-        IVaultPriceFeed _vaultPriceFeed
+        uint256 _maxTimeDelay
     ) external initializer {
         __ReentrancyGuard_init();
         __Handleable_init();
@@ -74,9 +74,10 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
+        IVaultPriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
-        ITradingUtils _tradingUtils,
-        IVaultPriceFeed _vaultPriceFeed
+        ITradingUtils _tradingUtils
+
     ) external onlyGov {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
