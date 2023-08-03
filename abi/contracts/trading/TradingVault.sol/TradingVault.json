@@ -516,7 +516,7 @@
             "type": "int256"
           }
         ],
-        "internalType": "struct ITradingVault.Position",
+        "internalType": "struct Position.Info",
         "name": "",
         "type": "tuple"
       }
@@ -587,7 +587,7 @@
             "type": "int256"
           }
         ],
-        "internalType": "struct ITradingVault.Position",
+        "internalType": "struct Position.Info",
         "name": "",
         "type": "tuple"
       }

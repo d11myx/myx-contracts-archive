@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
+import "../libraries/Position.sol";
 import "../libraries/PositionKey.sol";
 import "./interfaces/ITradingVault.sol";
 import "../libraries/PrecisionUtils.sol";
@@ -20,6 +21,8 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
+    using Position for mapping(bytes32 => Position.Info);
+    using Position for Position.Info;
 
     event IncreasePosition(
         bytes32 positionKey,
@@ -74,7 +77,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
     ITradingUtils public tradingUtils;
     address public tradingFeeReceiver;
 
-    mapping(bytes32 => Position) public positions;
+    mapping(bytes32 => Position.Info) public positions;
 
     mapping(address => bool) public override isFrozen;
 
@@ -138,7 +141,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // get position
         bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
-        Position storage position = positions[positionKey];
+        Position.Info storage position = positions[positionKey];
         position.key = positionKey;
 
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
@@ -372,7 +375,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         // get position
         bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
-        Position storage position = positions[positionKey];
+        Position.Info storage position = positions[positionKey];
         require(position.account != address(0), "position already closed");
 
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
@@ -675,7 +678,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         bool _isLong,
         uint256 _sizeAmount
     ) public override view returns (int256) {
-        Position memory position = getPosition(_account, _pairIndex, _isLong);
+        Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
 
         uint256 interval = block.timestamp - position.entryFundingTime;
         if (interval < fundingInterval) {
@@ -715,23 +718,14 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
         return netExposureAmountChecker[_pairIndex] >= 0 ? int256(fundingRate) : - int256(fundingRate);
     }
+    function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position.Info memory) {
+        Position.Info memory position = positions.get( _account, _pairIndex, _isLong);
+        return position;
 
-    function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position memory) {
-        Position memory position = positions[PositionKey.getPositionKey(_account, _pairIndex, _isLong)];
-        if (position.account == address(0)) {
-            position.key = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
-            position.account = _account;
-            position.pairIndex = _pairIndex;
-            position.isLong = _isLong;
-        }
+    }
+    function getPositionByKey(bytes32 key) public view returns (Position.Info memory) {
+        Position.Info memory position = positions[key];
         return position;
     }
 
-    function getPositionByKey(bytes32 key) public view returns (Position memory) {
-        Position memory position = positions[key];
-        if (position.account == address(0)) {
-            position.key = key;
-        }
-        return position;
-    }
 }

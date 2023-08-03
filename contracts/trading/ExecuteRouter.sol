@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "../libraries/Position.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
@@ -24,7 +25,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
     using Math for uint256;
     using Int256Utils for int256;
 
-   
+
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
@@ -196,7 +197,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         }
 
         // get position
-        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
         console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
@@ -346,7 +347,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
 
         // get position
-        ITradingVault.Position memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
             console.log("position already closed", _orderId);
             return;
@@ -499,7 +500,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
     function _liquidatePosition(bytes32 _positionKey) internal {
         console.log("liquidatePosition start");
-        ITradingVault.Position memory position = tradingVault.getPositionByKey(_positionKey);
+        Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
 
         if (position.positionAmount == 0) {
             console.log("position not exists");
@@ -601,10 +602,10 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(order.pairIndex);
 
-        ITradingVault.Position[] memory adlPositions = new ITradingVault.Position[](_positionKeys.length);
+        Position.Info[] memory adlPositions = new Position.Info[](_positionKeys.length);
         uint256 sumAmount;
         for (uint256 i = 0; i < _positionKeys.length; i++) {
-            ITradingVault.Position memory position = tradingVault.getPositionByKey(_positionKeys[i]);
+            Position.Info memory position = tradingVault.getPositionByKey(_positionKeys[i]);
             require(_sizeAmounts[i] <= position.positionAmount, "ADL size exceeds position");
             require(_sizeAmounts[i] <= tradingConfig.maxTradeAmount, "exceeds max trade amount");
             sumAmount += _sizeAmounts[i];
@@ -617,7 +618,7 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         uint256 price = tradingUtils.getValidPrice(order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
-            ITradingVault.Position memory adlPosition = adlPositions[i];
+            Position.Info memory adlPosition = adlPositions[i];
             uint256 orderId = tradingRouter.createDecreaseOrder(
                 TradingTypes.DecreasePositionRequest(
                     adlPosition.account,
