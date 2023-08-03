@@ -728,11 +728,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract ITradingUtils",
-        "name": "_tradingUtils",
-        "type": "address"
-      },
-      {
         "internalType": "address",
         "name": "_tradingFeeReceiver",
         "type": "address"
@@ -968,11 +963,6 @@
         "internalType": "contract IPairVault",
         "name": "_pairVault",
         "type": "address"
-      },
-      {
-        "internalType": "contract ITradingUtils",
-        "name": "_tradingUtils",
-        "type": "address"
       }
     ],
     "name": "setContract",
@@ -1062,19 +1052,6 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tradingUtils",
-    "outputs": [
-      {
-        "internalType": "contract ITradingUtils",
         "name": "",
         "type": "address"
       }
