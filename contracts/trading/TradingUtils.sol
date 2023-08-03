@@ -53,24 +53,6 @@ contract TradingUtils is ITradingUtils, Governable {
         return price;
     }
 
-    // function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
-    //     IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-    //     uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken);
-    //     console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
-
-    //     uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
-    //     console.log("getValidPrice oraclePrice %s indexPrice %s", oraclePrice, indexPrice);
-
-    //     uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
-    //     diffP = diffP.calculatePercentage(oraclePrice);
-
-    //     IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
-    //     console.log("getValidPrice diffP %s maxPriceDeviationP %s", diffP, tradingConfig.maxPriceDeviationP);
-    //     require(diffP <= tradingConfig.maxPriceDeviationP, "exceed max price deviation");
-    //     return oraclePrice;
-    // }
-
-
     function validLeverage(
         address account,
         uint256 pairIndex,
