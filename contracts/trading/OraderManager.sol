@@ -17,9 +17,9 @@ import "../libraries/type/TradingTypes.sol";
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
-import "../interfaces/IPositionManager.sol";
+import "../interfaces/IOrderManager.sol";
 
-contract OrderManager is IPositionManager {
+contract OrderManager is IOrderManager {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
