@@ -17,11 +17,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract ITradingUtils",
-        "name": "_tradingUtils",
-        "type": "address"
-      },
-      {
         "internalType": "contract ITradingRouter",
         "name": "_tradingRouter",
         "type": "address"
@@ -380,19 +375,6 @@
     "outputs": [
       {
         "internalType": "contract ITradingRouter",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tradingUtils",
-    "outputs": [
-      {
-        "internalType": "contract ITradingUtils",
         "name": "",
         "type": "address"
       }

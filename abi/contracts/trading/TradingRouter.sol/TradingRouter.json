@@ -1193,11 +1193,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract ITradingUtils",
-        "name": "_tradingUtils",
-        "type": "address"
-      },
-      {
         "internalType": "contract IVaultPriceFeed",
         "name": "_vaultPriceFeed",
         "type": "address"
@@ -1792,11 +1787,6 @@
         "internalType": "contract ITradingVault",
         "name": "_tradingVault",
         "type": "address"
-      },
-      {
-        "internalType": "contract ITradingUtils",
-        "name": "_tradingUtils",
-        "type": "address"
       }
     ],
     "name": "setContract",
@@ -1905,19 +1895,6 @@
     "name": "setPositionHasTpSl",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tradingUtils",
-    "outputs": [
-      {
-        "internalType": "contract ITradingUtils",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
