@@ -486,96 +486,96 @@ contract ExecuteRouter is IExecuteRouter, ReentrancyGuardUpgradeable, Handleable
         );
     }
 
-    function setPricesAndLiquidatePositions(
-        address[] memory _tokens,
-        uint256[] memory _prices,
-        uint256 _timestamp,
-        bytes32[] memory _positionKeys
-    ) external onlyPositionKeeper {
-        console.log("setPricesAndLiquidatePositions timestamp", block.timestamp);
-        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
-        this.liquidatePositions(_positionKeys);
-    }
+    // function setPricesAndLiquidatePositions(
+    //     address[] memory _tokens,
+    //     uint256[] memory _prices,
+    //     uint256 _timestamp,
+    //     bytes32[] memory _positionKeys
+    // ) external onlyPositionKeeper {
+    //     console.log("setPricesAndLiquidatePositions timestamp", block.timestamp);
+    //     fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
+    //     this.liquidatePositions(_positionKeys);
+    // }
 
-    function liquidatePositions(bytes32[] memory _positionKeys) external nonReentrant onlyPositionKeeper {
-        for (uint256 i = 0; i < _positionKeys.length; i++) {
-            _liquidatePosition(_positionKeys[i]);
-        }
-    }
+    // function liquidatePositions(bytes32[] memory _positionKeys) external nonReentrant onlyPositionKeeper {
+    //     for (uint256 i = 0; i < _positionKeys.length; i++) {
+    //         _liquidatePosition(_positionKeys[i]);
+    //     }
+    // }
 
-    function _liquidatePosition(bytes32 _positionKey) internal {
-        console.log("liquidatePosition start");
-        Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
+    // function _liquidatePosition(bytes32 _positionKey) internal {
+    //     console.log("liquidatePosition start");
+    //     Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
 
-        if (position.positionAmount == 0) {
-            console.log("position not exists");
-            return;
-        }
+    //     if (position.positionAmount == 0) {
+    //         console.log("position not exists");
+    //         return;
+    //     }
 
-        uint256 price = getValidPrice(position.pairIndex, position.isLong);
+    //     uint256 price = getValidPrice(position.pairIndex, position.isLong);
 
-        int256 unrealizedPnl;
-        if (position.isLong) {
-            if (price > position.averagePrice) {
-                unrealizedPnl = int256(position.positionAmount.mulPrice(price - position.averagePrice));
-            } else {
-                unrealizedPnl = - int256(position.positionAmount.mulPrice(position.averagePrice - price));
-            }
-        } else {
-            if (position.averagePrice > price) {
-                unrealizedPnl = int256(position.positionAmount.mulPrice(position.averagePrice - price));
-            } else {
-                unrealizedPnl = - int256(position.positionAmount.mulPrice(price - position.averagePrice));
-            }
-        }
-        console.log("liquidatePosition averagePrice %s unrealizedPnl %s", position.averagePrice, unrealizedPnl.toString());
+    //     int256 unrealizedPnl;
+    //     if (position.isLong) {
+    //         if (price > position.averagePrice) {
+    //             unrealizedPnl = int256(position.positionAmount.mulPrice(price - position.averagePrice));
+    //         } else {
+    //             unrealizedPnl = - int256(position.positionAmount.mulPrice(position.averagePrice - price));
+    //         }
+    //     } else {
+    //         if (position.averagePrice > price) {
+    //             unrealizedPnl = int256(position.positionAmount.mulPrice(position.averagePrice - price));
+    //         } else {
+    //             unrealizedPnl = - int256(position.positionAmount.mulPrice(price - position.averagePrice));
+    //         }
+    //     }
+    //     console.log("liquidatePosition averagePrice %s unrealizedPnl %s", position.averagePrice, unrealizedPnl.toString());
 
-        int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
+    //     int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
+    //     IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
 
-        bool needLiquidate;
-        if (exposureAsset <= 0) {
-            needLiquidate = true;
-        } else {
-            uint256 riskRate = position.positionAmount.mulPrice(price)
-                .mulPercentage(tradingConfig.maintainMarginRate)
-                .calculatePercentage(uint256(exposureAsset));
-            needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
-            console.log("liquidatePosition riskRate %s positionAmount %s exposureAsset %s", riskRate, position.positionAmount, exposureAsset.toString());
-        }
-        console.log("liquidatePosition needLiquidate", needLiquidate);
+    //     bool needLiquidate;
+    //     if (exposureAsset <= 0) {
+    //         needLiquidate = true;
+    //     } else {
+    //         uint256 riskRate = position.positionAmount.mulPrice(price)
+    //             .mulPercentage(tradingConfig.maintainMarginRate)
+    //             .calculatePercentage(uint256(exposureAsset));
+    //         needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
+    //         console.log("liquidatePosition riskRate %s positionAmount %s exposureAsset %s", riskRate, position.positionAmount, exposureAsset.toString());
+    //     }
+    //     console.log("liquidatePosition needLiquidate", needLiquidate);
 
-        if (!needLiquidate) {
-            return;
-        }
+    //     if (!needLiquidate) {
+    //         return;
+    //     }
 
-        tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+    //     tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
 
 
-        uint256 orderId = tradingRouter.createDecreaseOrder(
-            TradingTypes.DecreasePositionRequest(
-                position.account,
-                position.pairIndex,
-                TradingTypes.TradeType.MARKET,
-                0,
-                price,
-                position.positionAmount,
-                position.isLong
-            ));
+    //     uint256 orderId = tradingRouter.createDecreaseOrder(
+    //         TradingTypes.DecreasePositionRequest(
+    //             position.account,
+    //             position.pairIndex,
+    //             TradingTypes.TradeType.MARKET,
+    //             0,
+    //             price,
+    //             position.positionAmount,
+    //             position.isLong
+    //         ));
 
-        _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+    //     _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
 
-        emit LiquidatePosition(
-            _positionKey,
-            position.account,
-            position.pairIndex,
-            position.isLong,
-            position.positionAmount,
-            position.collateral,
-            price,
-            orderId
-        );
-    }
+    //     emit LiquidatePosition(
+    //         _positionKey,
+    //         position.account,
+    //         position.pairIndex,
+    //         position.isLong,
+    //         position.positionAmount,
+    //         position.collateral,
+    //         price,
+    //         orderId
+    //     );
+    // }
 
     function setPricesAndExecuteADL(
         address[] memory _tokens,
