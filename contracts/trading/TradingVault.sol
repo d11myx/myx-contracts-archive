@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "../libraries/Position.sol";
 import "../libraries/PositionKey.sol";
-import "./interfaces/ITradingVault.sol";
+import "../interfaces/ITradingVault.sol";
 import "../interfaces/IVaultPriceFeed.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
@@ -109,7 +109,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
         pairVault = _pairVault;
         tradingFeeReceiver = _tradingFeeReceiver;
         fundingInterval = _fundingInterval;
-        vaultPriceFeed=_vaultPriceFeed;
+        vaultPriceFeed = _vaultPriceFeed;
     }
 
     function setContract(
@@ -236,7 +236,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
                 uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) + sizeDelta)
-                .calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
+                    .calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
                 console.log("increasePosition BTO update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             } else if (netExposureAmountChecker[_pairIndex] > 0) {
@@ -278,7 +278,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
                 uint256 averagePrice = (uint256(- prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) + sizeDelta)
-                .calculatePrice(uint256(- prevNetExposureAmountChecker) + _sizeAmount);
+                    .calculatePrice(uint256(- prevNetExposureAmountChecker) + _sizeAmount);
                 console.log("increasePosition STO update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             } else if (netExposureAmountChecker[_pairIndex] < 0) {
@@ -462,7 +462,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 console.log("decreasePosition STC long increase");
                 pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) + sizeDelta)
-                .calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
+                    .calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
                 console.log("decreasePosition STC update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             } else if (netExposureAmountChecker[_pairIndex] > 0) {
@@ -504,7 +504,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
                 pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
                 uint256 averagePrice = (uint256(- prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) + sizeDelta)
-                .calculatePrice(uint256(- prevNetExposureAmountChecker) + _sizeAmount);
+                    .calculatePrice(uint256(- prevNetExposureAmountChecker) + _sizeAmount);
                 console.log("decreasePosition BTC update averagePrice", averagePrice);
                 pairVault.updateAveragePrice(_pairIndex, averagePrice);
             } else if (netExposureAmountChecker[_pairIndex] < 0) {
@@ -551,7 +551,7 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             pairVault.updateAveragePrice(_pairIndex, _price);
         }
         uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
-        pnl = position.getUnrealizedPnl( _sizeAmount,price);
+        pnl = position.getUnrealizedPnl(_sizeAmount, price);
         console.log("decreasePosition pnl", pnl.toString());
 
         if (pnl > 0) {
@@ -715,23 +715,26 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
             + (PrecisionUtils.fundingRatePrecision() - w) * absNetExposure / (k * l);
 
         fundingRate = fundingRate >= fundingFeeConfig.interest ?
-        (fundingRate - fundingFeeConfig.interest).min(fundingFeeConfig.minFundingRate).max(fundingFeeConfig.maxFundingRate) :
-        (fundingFeeConfig.interest - fundingRate).min(fundingFeeConfig.minFundingRate).max(fundingFeeConfig.maxFundingRate);
+            (fundingRate - fundingFeeConfig.interest).min(fundingFeeConfig.minFundingRate).max(fundingFeeConfig.maxFundingRate) :
+            (fundingFeeConfig.interest - fundingRate).min(fundingFeeConfig.minFundingRate).max(fundingFeeConfig.maxFundingRate);
         console.log("getCurrentFundingRate fundingRate", fundingRate);
 
         return netExposureAmountChecker[_pairIndex] >= 0 ? int256(fundingRate) : - int256(fundingRate);
     }
+
     function getPosition(address _account, uint256 _pairIndex, bool _isLong) public view returns (Position.Info memory) {
-        Position.Info memory position = positions.get( _account, _pairIndex, _isLong);
+        Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
         return position;
 
     }
+
     function getPositionByKey(bytes32 key) public view returns (Position.Info memory) {
         Position.Info memory position = positions[key];
         return position;
     }
+
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
-       return PositionKey.getPositionKey(_account, _pairIndex, _isLong);
+        return PositionKey.getPositionKey(_account, _pairIndex, _isLong);
     }
 
 }

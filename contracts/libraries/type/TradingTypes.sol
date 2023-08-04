@@ -85,14 +85,4 @@ library TradingTypes {
         uint256 blockTime;
         bool needADL;
     }
-
-    struct PositionOrder {
-        address account;
-        uint256 pairIndex;
-        bool isLong;
-        bool isIncrease;
-        TradeType tradeType;
-        uint256 orderId;
-        uint256 sizeAmount;
-    }
 }

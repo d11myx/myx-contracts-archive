@@ -13,6 +13,10 @@ interface IAddressesProvider {
 
     function setPriceOracle(address newPriceOracle) external;
 
+    function getIndexPriceOracle() external view returns (address);
+
+    function setIndexPriceOracle(address newIndexPriceOracle) external;
+
     function getRoleManager() external view returns (address);
 
     function setRolManager(address) external;
