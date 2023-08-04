@@ -16,6 +16,7 @@ import {
     TradingRouter,
     TradingVault,
     WETH,
+    PositionManager,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -34,6 +35,7 @@ import {
     ROUTER_ID,
     EXECUTOR_ID,
     ORDER_MANAGER_ID,
+    POSITION_MANAGER_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -126,4 +128,11 @@ export const getExecutor = async (address?: string): Promise<Executor> => {
 
 export const getOrderManager = async (address?: string): Promise<OrderManager> => {
     return getContract<OrderManager>('OrderManager', address || (await hre.deployments.get(ORDER_MANAGER_ID)).address);
+};
+
+export const getPositionManager = async (address?: string): Promise<PositionManager> => {
+    return getContract<PositionManager>(
+        'PositionManager',
+        address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
+    );
 };

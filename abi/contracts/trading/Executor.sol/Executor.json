@@ -10,6 +10,11 @@
         "internalType": "contract IExecuteRouter",
         "name": "_executeRouter",
         "type": "address"
+      },
+      {
+        "internalType": "contract IPositionManager",
+        "name": "_positionManager",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -200,6 +205,19 @@
     "name": "liquidatePositions",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "positionManager",
+    "outputs": [
+      {
+        "internalType": "contract IPositionManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
