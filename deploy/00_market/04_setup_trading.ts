@@ -9,11 +9,12 @@ import {
     getOraclePriceFeed,
     getPairInfo,
     getPairVault,
-    POSITION_MANAGER_ID,
+    getRoleManager,
+    ORDER_MANAGER_ID,
     ROUTER_ID,
     TRADING_ROUTER_ID,
-    TRADING_UTILS_ID,
     TRADING_VAULT_ID,
+    waitForTx,
 } from '../../helpers';
 import { ExecuteRouter, Router, Executor, TradingRouter, TradingVault, OrderManager } from '../../types';
 
@@ -62,10 +63,11 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pairVault = await getPairVault();
     const oraclePriceFeed = await getOraclePriceFeed();
     // OrderManager
-    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
+    const orderManagerArtifact = await deploy(`${ORDER_MANAGER_ID}`, {
         from: deployer,
         contract: 'OrderManager',
         args: [
+            addressProvider.address,
             pairInfo.address,
             pairVault.address,
             tradingVault.address,
@@ -74,16 +76,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ],
         ...COMMON_DEPLOY_PARAMS,
     });
-    const positionManager = (await hre.ethers.getContractAt(
-        positionManagerArtifact.abi,
-        positionManagerArtifact.address,
+    const orderManager = (await hre.ethers.getContractAt(
+        orderManagerArtifact.abi,
+        orderManagerArtifact.address,
     )) as OrderManager;
 
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
         contract: 'Router',
-        args: [addressProvider.address, tradingRouter.address, positionManager.address],
+        args: [addressProvider.address, tradingRouter.address, orderManager.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
@@ -122,11 +124,14 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         60,
     );
 
+    const roleManager = await getRoleManager();
+    await waitForTx(await roleManager.connect(deployerSigner).addContractWhiteList(router.address));
+
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(router.address, true);
-    await tradingRouter.setHandler(positionManager.address, true);
+    await tradingRouter.setHandler(orderManager.address, true);
     await executeRouter.setPositionKeeper(keeper, true);
     await executeRouter.setPositionKeeper(executor.address, true);
 };
