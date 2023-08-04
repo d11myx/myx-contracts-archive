@@ -18,8 +18,10 @@ import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
 import "../interfaces/IOrderManager.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 
-contract OrderManager is IOrderManager {
+contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
 
 
     using SafeERC20 for IERC20;

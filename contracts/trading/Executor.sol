@@ -6,12 +6,14 @@ import "./interfaces/IExecuteRouter.sol";
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
+import "../interfaces/IPositionManager.sol";
 
 contract Executor is IExecutor, ReentrancyGuardUpgradeable {
 
     IAddressesProvider public immutable addressProvider;
 
     IExecuteRouter public executeRouter;
+    IPositionManager public positionManager;
 
     modifier onlyPoolAdmin() {
         require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
@@ -23,9 +25,10 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         _;
     }
 
-    constructor(IAddressesProvider _addressProvider, IExecuteRouter _executeRouter) {
+    constructor(IAddressesProvider _addressProvider, IExecuteRouter _executeRouter, IPositionManager _positionManager) {
         addressProvider = _addressProvider;
         executeRouter = _executeRouter;
+        positionManager = _positionManager;
     }
 
     function updateExecuteRouter(IExecuteRouter _executeRouter) external override onlyPoolAdmin {
@@ -99,7 +102,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         uint256 _timestamp,
         bytes32[] memory _positionKeys
     ) external override onlyPositionKeeper {
-        executeRouter.setPricesAndLiquidatePositions(
+        positionManager.setPricesAndLiquidatePositions(
             _tokens,
             _prices,
             _timestamp,
@@ -108,7 +111,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
     }
 
     function liquidatePositions(bytes32[] memory _positionKeys) external override nonReentrant onlyPositionKeeper {
-        executeRouter.liquidatePositions(_positionKeys);
+        positionManager.liquidatePositions(_positionKeys);
     }
 
     function setPricesAndExecuteADL(

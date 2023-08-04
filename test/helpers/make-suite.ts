@@ -17,6 +17,7 @@ import {
     Router,
     Executor,
     OrderManager,
+    PositionManager,
 } from '../../types';
 import {
     SymbolMap,
@@ -42,6 +43,7 @@ import {
     getRouter,
     getExecutor,
     getOrderManager,
+    getPositionManager,
 } from '../../helpers';
 import { btcPairInfo } from '../../markets/usdt/pairs';
 import { RouterInterface } from '../../types/contracts/trading/Router';
@@ -77,6 +79,7 @@ export interface TestEnv {
     router: Router;
     executor: Executor;
     orderManager: OrderManager;
+    positionManager: PositionManager;
 }
 
 export const testEnv: TestEnv = {
@@ -102,6 +105,7 @@ export const testEnv: TestEnv = {
     router: {} as Router,
     executor: {} as Executor,
     orderManager: {} as OrderManager,
+    positionManager: {} as PositionManager,
 } as TestEnv;
 
 export async function setupTestEnv() {
@@ -160,6 +164,7 @@ export async function setupTestEnv() {
     testEnv.router = await getRouter();
     testEnv.executor = await getExecutor();
     testEnv.orderManager = await getOrderManager();
+    testEnv.positionManager = await getPositionManager();
 }
 
 export async function newTestEnv(): Promise<TestEnv> {
@@ -192,16 +197,17 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
 
-    const { tradingVault, tradingRouter, executeRouter, router, executor, orderManager } = await deployTrading(
-        deployer,
-        keeper,
-        addressesProvider,
-        roleManager,
-        pairVault,
-        pairInfo,
-        vaultPriceFeed,
-        fastPriceFeed,
-    );
+    const { tradingVault, tradingRouter, executeRouter, router, executor, orderManager, positionManager } =
+        await deployTrading(
+            deployer,
+            keeper,
+            addressesProvider,
+            roleManager,
+            pairVault,
+            pairInfo,
+            vaultPriceFeed,
+            fastPriceFeed,
+        );
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 
@@ -228,5 +234,6 @@ export async function newTestEnv(): Promise<TestEnv> {
         router: router,
         executor: executor,
         orderManager: orderManager,
+        positionManager: positionManager,
     } as TestEnv;
 }

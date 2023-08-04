@@ -20,8 +20,10 @@ import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import '../interfaces/IAddressesProvider.sol';
 import "hardhat/console.sol";
+import "../interfaces/IOrderManager.sol";
+import "../interfaces/IRouter.sol";
 
-contract PositionManager is ReentrancyGuard,IPositionManager {
+contract PositionManager is ReentrancyGuard, IPositionManager {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -30,41 +32,47 @@ contract PositionManager is ReentrancyGuard,IPositionManager {
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
-    IAddressesProvider addressProvider;
+    IAddressesProvider public immutable ADDRESS_PROVIDER;
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     ITradingRouter public tradingRouter;
     IIndexPriceFeed public fastPriceFeed;
     IVaultPriceFeed public vaultPriceFeed;
+    IOrderManager public orderManager;
+    IRouter public router; //TODO warning. temped, will be removed later
 
 
-     constructor(
-        IAddressesProvider _addressProvider,
+    constructor(
+        IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         ITradingRouter _tradingRouter,
         IVaultPriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
-        uint256 _maxTimeDelay
+        uint256 _maxTimeDelay,
+        IOrderManager _orderManager,
+        IRouter _router
     ) {
-        addressProvider = _addressProvider;
+        ADDRESS_PROVIDER = addressProvider;
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         tradingRouter = _tradingRouter;
         fastPriceFeed = _fastPriceFeed;
-        vaultPriceFeed=_vaultPriceFeed;
+        vaultPriceFeed = _vaultPriceFeed;
+        orderManager = _orderManager;
+        router = _router;
     }
 
     modifier onlyKeeper() {
-        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) || IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
 
@@ -85,7 +93,7 @@ contract PositionManager is ReentrancyGuard,IPositionManager {
         }
     }
 
-     function _liquidatePosition(bytes32 _positionKey) internal {
+    function _liquidatePosition(bytes32 _positionKey) internal {
         console.log("liquidatePosition start");
         Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
 
@@ -131,8 +139,9 @@ contract PositionManager is ReentrancyGuard,IPositionManager {
             return;
         }
 
+        //TODO positionManager
+        // cancelAllPositionOrders
         tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
-
 
         uint256 orderId = tradingRouter.createDecreaseOrder(
             TradingTypes.DecreasePositionRequest(
