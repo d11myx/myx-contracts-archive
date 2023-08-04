@@ -16,6 +16,7 @@ import {
     Executor,
     OrderManager,
     RoleManager,
+    PositionManager,
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -173,9 +174,24 @@ export async function deployTrading(
     ])) as any as Router;
     console.log(`deployed Router at ${router.address}`);
 
+    let positionManager = (await deployContract('PositionManager', [
+        addressProvider.address,
+        pairInfo.address,
+        pairVault.address,
+        tradingVault.address,
+        tradingRouter.address,
+        vaultPriceFeed.address,
+        fastPriceFeed.address,
+        60,
+        orderManager.address,
+        router.address,
+    ])) as any as PositionManager;
+    console.log(`deployed PositionManager at ${positionManager.address}`);
+
     let executor = (await deployContract('Executor', [
         addressProvider.address,
         executeRouter.address,
+        positionManager.address,
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
@@ -200,14 +216,18 @@ export async function deployTrading(
     );
 
     await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(router.address));
+    await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(executor.address));
+    await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(orderManager.address));
+    await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(positionManager.address));
 
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(executeRouter.address, true);
     await tradingRouter.setHandler(router.address, true);
     await tradingRouter.setHandler(orderManager.address, true);
+    await tradingRouter.setHandler(positionManager.address, true);
     await executeRouter.setPositionKeeper(keeper.address, true);
     await executeRouter.setPositionKeeper(executor.address, true);
 
-    return { tradingVault, tradingRouter, executeRouter, router, executor, orderManager };
+    return { tradingVault, tradingRouter, executeRouter, router, executor, orderManager, positionManager };
 }
