@@ -28,13 +28,12 @@ import {
     PAIR_VAULT_ID,
     ROLE_MANAGER_ID,
     MOCK_TOKEN_PREFIX,
-    TRADING_UTILS_ID,
     TRADING_VAULT_ID,
     TRADING_ROUTER_ID,
     EXECUTE_ROUTER_ID,
     ROUTER_ID,
     EXECUTOR_ID,
-    POSITION_MANAGER_ID,
+    ORDER_MANAGER_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -125,9 +124,6 @@ export const getExecutor = async (address?: string): Promise<Executor> => {
     return getContract<Executor>('Executor', address || (await hre.deployments.get(EXECUTOR_ID)).address);
 };
 
-export const getPositionManager = async (address?: string): Promise<OrderManager> => {
-    return getContract<OrderManager>(
-        'OrderManager',
-        address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
-    );
+export const getOrderManager = async (address?: string): Promise<OrderManager> => {
+    return getContract<OrderManager>('OrderManager', address || (await hre.deployments.get(ORDER_MANAGER_ID)).address);
 };

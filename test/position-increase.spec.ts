@@ -80,12 +80,12 @@ describe('Router: increase position ar', () => {
                 tradingRouter,
                 executeRouter,
                 tradingVault,
-                positionManager,
+                orderManager,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('10000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-            await usdt.connect(trader.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
+            await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
