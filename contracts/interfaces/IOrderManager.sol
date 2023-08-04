@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../libraries/type/TradingTypes.sol";
 
-interface IPositionManager {
+interface IOrderManager {
 
     event CreateIncreaseOrder(
         address account,

@@ -12,8 +12,8 @@
         "type": "address"
       },
       {
-        "internalType": "contract IPositionManager",
-        "name": "_positionManager",
+        "internalType": "contract IOrderManager",
+        "name": "_orderManager",
         "type": "address"
       }
     ],
@@ -953,6 +953,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "orderManager",
+    "outputs": [
+      {
+        "internalType": "contract IOrderManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -971,19 +984,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "positionManager",
-    "outputs": [
-      {
-        "internalType": "contract IPositionManager",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",

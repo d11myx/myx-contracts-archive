@@ -5,7 +5,7 @@ import "../interfaces/IRouter.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "./interfaces/ITradingRouter.sol";
-import "../interfaces/IPositionManager.sol";
+import "../interfaces/IOrderManager.sol";
 import "../libraries/PositionKey.sol";
 import "hardhat/console.sol";
 
@@ -14,17 +14,17 @@ contract Router is IRouter {
     IAddressesProvider public immutable addressProvider;
 
     ITradingRouter public tradingRouter;
-    IPositionManager public positionManager;
+    IOrderManager public orderManager;
 
     modifier onlyPoolAdmin() {
         require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
 
-    constructor(IAddressesProvider _addressProvider, ITradingRouter _tradingRouter, IPositionManager _positionManager) {
+    constructor(IAddressesProvider _addressProvider, ITradingRouter _tradingRouter, IOrderManager _orderManager) {
         addressProvider = _addressProvider;
         tradingRouter = _tradingRouter;
-        positionManager = _positionManager;
+        orderManager = _orderManager;
     }
 
     function updateTradingRouter(ITradingRouter _tradingRouter) external override onlyPoolAdmin {
@@ -82,7 +82,7 @@ contract Router is IRouter {
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external override returns (uint256) {
         //TODO decoupling tp sl
 
-        return positionManager.createOrder(TradingTypes.CreateOrderRequest({
+        return orderManager.createOrder(TradingTypes.CreateOrderRequest({
             account: _request.account,
             pairIndex: _request.pairIndex,
             tradeType: _request.tradeType,
@@ -98,7 +98,7 @@ contract Router is IRouter {
     }
 
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external override returns (uint256) {
-        return positionManager.createOrder(TradingTypes.CreateOrderRequest({
+        return orderManager.createOrder(TradingTypes.CreateOrderRequest({
             account: _request.account,
             pairIndex: _request.pairIndex,
             tradeType: _request.tradeType,
@@ -114,11 +114,11 @@ contract Router is IRouter {
     }
 
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override {
-        positionManager.cancelOrder(orderId, tradeType, true);
+        orderManager.cancelOrder(orderId, tradeType, true);
     }
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external override {
-        positionManager.cancelOrder(orderId, tradeType, false);
+        orderManager.cancelOrder(orderId, tradeType, false);
     }
 
     function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external override {
@@ -131,9 +131,9 @@ contract Router is IRouter {
             console.log("positionOrder lastIndex", lastIndex, "orderId", positionOrder.orderId);
             console.log("positionOrder tradeType", uint8(positionOrder.tradeType), "isIncrease", positionOrder.isIncrease);
             if (positionOrder.isIncrease) {
-                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
             } else {
-                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
             }
         }
     }
@@ -147,9 +147,9 @@ contract Router is IRouter {
             console.log("positionOrder index", i, "orderId", positionOrder.orderId);
             console.log("positionOrder tradeType", uint8(positionOrder.tradeType), "isIncrease", positionOrder.isIncrease);
             if (isIncrease && positionOrder.isIncrease) {
-                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
             } else if (!isIncrease && !positionOrder.isIncrease) {
-                positionManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
             }
         }
     }
@@ -160,7 +160,7 @@ contract Router is IRouter {
         require(request.sl == 0 || !tradingRouter.positionHasTpSl(key, TradingTypes.TradeType.SL), "sl already exists");
 
         if (request.tp > 0) {
-            tpOrderId = positionManager.createOrder(TradingTypes.CreateOrderRequest({
+            tpOrderId = orderManager.createOrder(TradingTypes.CreateOrderRequest({
                 account: msg.sender,
                 pairIndex: request.pairIndex,
                 tradeType: TradingTypes.TradeType.TP,
@@ -175,7 +175,7 @@ contract Router is IRouter {
             }));
         }
         if (request.sl > 0) {
-            slOrderId = positionManager.createOrder(TradingTypes.CreateOrderRequest({
+            slOrderId = orderManager.createOrder(TradingTypes.CreateOrderRequest({
                 account: msg.sender,
                 pairIndex: request.pairIndex,
                 tradeType: TradingTypes.TradeType.SL,

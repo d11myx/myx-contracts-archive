@@ -17,11 +17,11 @@ import "../libraries/type/TradingTypes.sol";
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
 import "hardhat/console.sol";
-import "../interfaces/IPositionManager.sol";
+import "../interfaces/IOrderManager.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
-contract OrderManager is IPositionManager, ReentrancyGuardUpgradeable {
+contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
