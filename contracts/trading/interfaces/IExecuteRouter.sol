@@ -30,16 +30,7 @@ interface IExecuteRouter {
         uint256 tradingFee,
         int256 fundingFee
     );
-    event LiquidatePosition(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        uint256 sizeAmount,
-        uint256 collateral,
-        uint256 price,
-        uint256 orderId
-    );
+
 
     function setPricesAndExecuteMarketOrders(
         address[] memory _tokens,
@@ -70,14 +61,14 @@ interface IExecuteRouter {
 
     function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
 
-    function setPricesAndLiquidatePositions(
-        address[] memory _tokens,
-        uint256[] memory _prices,
-        uint256 _timestamp,
-        bytes32[] memory _positionKeys
-    ) external;
+    // function setPricesAndLiquidatePositions(
+    //     address[] memory _tokens,
+    //     uint256[] memory _prices,
+    //     uint256 _timestamp,
+    //     bytes32[] memory _positionKeys
+    // ) external;
 
-    function liquidatePositions(bytes32[] memory _positionKeys) external;
+    // function liquidatePositions(bytes32[] memory _positionKeys) external;
 
     function setPricesAndExecuteADL(
         address[] memory _tokens,

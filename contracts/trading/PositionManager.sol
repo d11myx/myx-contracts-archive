@@ -1,14 +1,16 @@
 pragma solidity 0.8.17;
 
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IIndexPriceFeed.sol";
 import "../interfaces/IVaultPriceFeed.sol";
 import "./interfaces/IExecuteRouter.sol";
+import "../interfaces/IPositionManager.sol";
 import "./interfaces/ITradingRouter.sol";
 import "./interfaces/ITradingVault.sol";
+import "../interfaces/IRoleManager.sol";
 
 import "../libraries/Position.sol";
 import "../libraries/access/Handleable.sol";
@@ -16,11 +18,19 @@ import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
+import '../interfaces/IAddressesProvider.sol';
 import "hardhat/console.sol";
 
-contract PositionManager {
+contract PositionManager is ReentrancyGuard,IPositionManager {
 
+    using SafeERC20 for IERC20;
+    using PrecisionUtils for uint256;
+    using Math for uint256;
+    using Int256Utils for int256;
+    using Position for mapping(bytes32 => Position.Info);
+    using Position for Position.Info;
 
+    IAddressesProvider addressProvider;
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
@@ -28,7 +38,9 @@ contract PositionManager {
     IIndexPriceFeed public fastPriceFeed;
     IVaultPriceFeed public vaultPriceFeed;
 
+
      constructor(
+        IAddressesProvider _addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
@@ -36,18 +48,42 @@ contract PositionManager {
         IVaultPriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
         uint256 _maxTimeDelay
-    ) external  {
-
-
+    ) {
+        addressProvider = _addressProvider;
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         tradingRouter = _tradingRouter;
         fastPriceFeed = _fastPriceFeed;
         vaultPriceFeed=_vaultPriceFeed;
-
     }
 
+    modifier onlyKeeper() {
+        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
+        _;
+    }
+
+    modifier onlyPoolAdmin() {
+        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
+        _;
+    }
+
+    function setPricesAndLiquidatePositions(
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        uint256 _timestamp,
+        bytes32[] memory _positionKeys
+    ) external onlyKeeper {
+        console.log("setPricesAndLiquidatePositions timestamp", block.timestamp);
+        fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
+        this.liquidatePositions(_positionKeys);
+    }
+
+    function liquidatePositions(bytes32[] memory _positionKeys) external nonReentrant onlyKeeper {
+        for (uint256 i = 0; i < _positionKeys.length; i++) {
+            _liquidatePosition(_positionKeys[i]);
+        }
+    }
 
      function _liquidatePosition(bytes32 _positionKey) internal {
         console.log("liquidatePosition start");
