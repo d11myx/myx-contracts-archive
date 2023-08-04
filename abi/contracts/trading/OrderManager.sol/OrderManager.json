@@ -1,5 +1,36 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "contract IAddressesProvider",
+        "name": "addressProvider",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IPairInfo",
+        "name": "_pairInfo",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IPairVault",
+        "name": "_pairVault",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ITradingVault",
+        "name": "_tradingVault",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "_vaultPriceFeed",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -190,6 +221,32 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "ADDRESS_PROVIDER",
+    "outputs": [
+      {
+        "internalType": "contract IAddressesProvider",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
@@ -259,6 +316,30 @@
     ],
     "name": "cancelOrder",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "size",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkTradingAmount",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -336,6 +417,19 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "decreaseLimitOrdersIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -581,7 +675,65 @@
   },
   {
     "inputs": [],
+    "name": "increaseLimitOrdersIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "increaseMarketOrdersIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pairInfo",
+    "outputs": [
+      {
+        "internalType": "contract IPairInfo",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pairVault",
+    "outputs": [
+      {
+        "internalType": "contract IPairVault",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "positionDecreaseTotalAmount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -596,12 +748,12 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "key",
+        "name": "",
         "type": "bytes32"
       },
       {
         "internalType": "enum TradingTypes.TradeType",
-        "name": "tradeType",
+        "name": "",
         "type": "uint8"
       }
     ],
@@ -611,6 +763,84 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "positionOrderIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "positionOrders",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isLong",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isIncrease",
+        "type": "bool"
+      },
+      {
+        "internalType": "enum TradingTypes.TradeType",
+        "name": "tradeType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "sizeAmount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -762,6 +992,32 @@
     "name": "setPositionHasTpSl",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tradingVault",
+    "outputs": [
+      {
+        "internalType": "contract ITradingVault",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vaultPriceFeed",
+    "outputs": [
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

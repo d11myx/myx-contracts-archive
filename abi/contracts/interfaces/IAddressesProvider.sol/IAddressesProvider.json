@@ -45,6 +45,19 @@
   },
   {
     "inputs": [],
+    "name": "getIndexPriceOracle",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getPriceOracle",
     "outputs": [
       {
@@ -83,6 +96,19 @@
       }
     ],
     "name": "setAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newIndexPriceOracle",
+        "type": "address"
+      }
+    ],
+    "name": "setIndexPriceOracle",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

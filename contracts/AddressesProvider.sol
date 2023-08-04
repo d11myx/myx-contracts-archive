@@ -9,6 +9,7 @@ contract AddressesProvider is Ownable, IAddressesProvider {
 
     bytes32 private constant ROLE_MANAGER = 'ROLE_MANAGER';
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
+    bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
 
     mapping(bytes32 => address) private _addresses;
 
@@ -30,6 +31,16 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         address oldPriceOracle = _addresses[PRICE_ORACLE];
         _addresses[PRICE_ORACLE] = newPriceOracle;
         emit AddressSet(PRICE_ORACLE, oldPriceOracle, newPriceOracle);
+    }
+
+    function getIndexPriceOracle() external view override returns (address) {
+        return getAddress(INDEX_PRICE_ORACLE);
+    }
+
+    function setIndexPriceOracle(address newIndexPriceOracle) external override onlyOwner {
+        address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
+        _addresses[INDEX_PRICE_ORACLE] = newIndexPriceOracle;
+        emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
     }
 
     function getRoleManager() external view override returns (address) {
