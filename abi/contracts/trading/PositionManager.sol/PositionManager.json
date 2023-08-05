@@ -376,25 +376,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "isHandler",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32[]",
         "name": "_positionKeys",
         "type": "bytes32[]"
@@ -455,24 +436,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_handler",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isHandler",
-        "type": "bool"
-      }
-    ],
-    "name": "setHandler",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
