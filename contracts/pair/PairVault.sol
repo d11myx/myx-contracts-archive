@@ -28,12 +28,14 @@ contract PairVault is IPairVault, Handleable {
 
     mapping(uint256 => Vault) public vaults;
 
-    function initialize(IPairInfo _pairInfo) external initializer {
-        __Handleable_init();
+    constructor(
+        IAddressesProvider addressProvider,
+        IPairInfo _pairInfo
+    ) Handleable(addressProvider) {
         pairInfo = _pairInfo;
     }
 
-    function setPairInfo(IPairInfo _pairInfo) external onlyGov {
+    function setPairInfo(IPairInfo _pairInfo) external onlyPoolAdmin {
         pairInfo = _pairInfo;
     }
 

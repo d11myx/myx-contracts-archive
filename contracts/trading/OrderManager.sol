@@ -19,8 +19,9 @@ import "hardhat/console.sol";
 import "../interfaces/IOrderManager.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
+import "../interfaces/IPositionManager.sol";
 
-contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
+contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -28,17 +29,17 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
-    mapping(uint256 => TradingTypes.IncreasePositionOrder) internal increaseMarketOrders;
+    mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseMarketOrders;
     uint256 public override increaseMarketOrdersIndex;
 
-    mapping(uint256 => TradingTypes.DecreasePositionOrder) internal decreaseMarketOrders;
+    mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseMarketOrders;
     uint256 public override decreaseMarketOrdersIndex;
 
-    mapping(uint256 => TradingTypes.IncreasePositionOrder) internal increaseLimitOrders;
-    uint256 public  increaseLimitOrdersIndex;
+    mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseLimitOrders;
+    uint256 public override increaseLimitOrdersIndex;
 
-    mapping(uint256 => TradingTypes.DecreasePositionOrder) internal decreaseLimitOrders;
-    uint256 public  decreaseLimitOrdersIndex;
+    mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
+    uint256 public override decreaseLimitOrdersIndex;
 
     mapping(bytes32 => PositionOrder[]) public positionOrders;
     mapping(bytes32 => mapping(bytes32 => uint256)) public positionOrderIndex;
@@ -47,13 +48,11 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
 
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
-
-    IAddressesProvider public immutable ADDRESS_PROVIDER;
-
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     IVaultPriceFeed public vaultPriceFeed;
+    IPositionManager public positionManager;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -61,8 +60,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         IVaultPriceFeed _vaultPriceFeed
-    ) {
-        ADDRESS_PROVIDER = addressProvider;
+    ) Handleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
@@ -79,9 +77,18 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         return positionOrders[key];
     }
 
-    function createOrder(TradingTypes.CreateOrderRequest memory request) public nonReentrant onlyWhiteListOrSelf(request.account) returns (uint256 orderId) {
-        address account = request.account;
+    function updatePositionManager(address newAddress) external onlyPoolAdmin {
+        address oldAddress = address(positionManager);
+        positionManager = IPositionManager(newAddress);
+        emit UpdatePositionManager(oldAddress, newAddress);
+    }
 
+    function createOrder(
+        TradingTypes.CreateOrderRequest memory request
+    ) public nonReentrant onlyWhiteListOrSelf(request.account) returns (uint256 orderId) {
+        require(address(positionManager) != address(0), "zero address");
+
+        address account = request.account;
         require(!tradingVault.isFrozen(account), "account is frozen");
 
         IPairInfo.Pair memory pair = pairInfo.getPair(request.pairIndex);
@@ -89,7 +96,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
 
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
             // check size
-            require(request.sizeAmount == 0 || checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
+            require(request.sizeAmount == 0 || _checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
@@ -117,7 +124,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
 
             // transfer collateral
             if (request.collateral > 0) {
-                IERC20(pair.stableToken).safeTransferFrom(account, address(this), request.collateral.abs());
+                IERC20(pair.stableToken).safeTransferFrom(account, address(positionManager), request.collateral.abs());
             }
         }
 
@@ -185,7 +192,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         }
     }
 
-    function checkTradingAmount(uint256 pairIndex, uint256 size) public returns (bool) {
+    function _checkTradingAmount(uint256 pairIndex, uint256 size) public returns (bool) {
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
         return size >= tradingConfig.minTradeAmount && size <= tradingConfig.maxTradeAmount;
     }
@@ -383,8 +390,10 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         emit CancelDecreaseOrder(order.account, order.orderId, order.tradeType);
     }
 
-    function getIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) public view returns (TradingTypes.IncreasePositionOrder memory order) {
-        //TODO onlyManager
+    function getIncreaseOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType
+    ) public view returns (TradingTypes.IncreasePositionOrder memory order) {
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = increaseMarketOrders[orderId];
         } else if (tradeType == TradingTypes.TradeType.LIMIT) {
@@ -395,7 +404,10 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         return order;
     }
 
-    function getDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) public view returns (TradingTypes.DecreasePositionOrder memory order) {
+    function getDecreaseOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType
+    ) public view returns (TradingTypes.DecreasePositionOrder memory order) {
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];
         } else {
@@ -404,8 +416,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         return order;
     }
 
-    function addOrderToPosition(PositionOrder memory order) public {
-        //TODO onlyManager
+    function addOrderToPosition(PositionOrder memory order) public onlyHandler {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
         positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
@@ -417,8 +428,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         }
     }
 
-    function removeOrderFromPosition(PositionOrder memory order) public {
-        //TODO onlyManager
+    function removeOrderFromPosition(PositionOrder memory order) public onlyHandler {
         console.log("removeOrderFromPosition account %s orderId %s tradeType %s ", order.account, order.orderId, uint8(order.tradeType));
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
@@ -443,28 +453,27 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable {
         }
     }
 
-    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) public {
+    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) public onlyHandler {
         positionHasTpSl[key][tradeType] = has;
     }
 
-    ////TODO onlyManager
-    function removeIncreaseMarketOrders(uint256 orderId) public {
+    function removeIncreaseMarketOrders(uint256 orderId) public onlyHandler {
         delete increaseMarketOrders[orderId];
     }
 
-    function removeIncreaseLimitOrders(uint256 orderId) public {
+    function removeIncreaseLimitOrders(uint256 orderId) public onlyHandler {
         delete increaseLimitOrders[orderId];
     }
 
-    function removeDecreaseMarketOrders(uint256 orderId) public {
+    function removeDecreaseMarketOrders(uint256 orderId) public onlyHandler {
         delete decreaseMarketOrders[orderId];
     }
 
-    function removeDecreaseLimitOrders(uint256 orderId) public {
+    function removeDecreaseLimitOrders(uint256 orderId) public onlyHandler {
         delete decreaseLimitOrders[orderId];
     }
 
-    function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) public {
+    function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) public onlyHandler {
         TradingTypes.DecreasePositionOrder storage order;
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];

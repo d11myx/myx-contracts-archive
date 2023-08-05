@@ -3,14 +3,12 @@ import { Signer } from 'ethers';
 import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
     AddressesProvider,
-    ExecuteRouter,
     IndexPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
     RoleManager,
     Token,
-    TradingRouter,
     TradingVault,
     OraclePriceFeed,
     WETH,
@@ -22,7 +20,6 @@ import {
 import {
     SymbolMap,
     getAddressesProvider,
-    getExecuteRouter,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPairInfo,
@@ -30,7 +27,6 @@ import {
     getPairVault,
     getRoleManager,
     getToken,
-    getTradingRouter,
     getTradingVault,
     getWETH,
     MOCK_TOKEN_PREFIX,
@@ -45,8 +41,6 @@ import {
     getOrderManager,
     getPositionManager,
 } from '../../helpers';
-import { btcPairInfo } from '../../markets/usdt/pairs';
-import { RouterInterface } from '../../types/contracts/trading/Router';
 import { address } from 'hardhat/internal/core/config/config-validation';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -71,11 +65,9 @@ export interface TestEnv {
     pairInfo: PairInfo;
     pairLiquidity: PairLiquidity;
     pairVault: PairVault;
-    vaultPriceFeed: OraclePriceFeed;
-    fastPriceFeed: IndexPriceFeed;
+    oraclePriceFeed: OraclePriceFeed;
+    indexPriceFeed: IndexPriceFeed;
     tradingVault: TradingVault;
-    tradingRouter: TradingRouter;
-    executeRouter: ExecuteRouter;
     router: Router;
     executor: Executor;
     orderManager: OrderManager;
@@ -97,11 +89,9 @@ export const testEnv: TestEnv = {
     pairInfo: {} as PairInfo,
     pairLiquidity: {} as PairLiquidity,
     pairVault: {} as PairVault,
-    vaultPriceFeed: {} as OraclePriceFeed,
-    fastPriceFeed: {} as IndexPriceFeed,
+    oraclePriceFeed: {} as OraclePriceFeed,
+    indexPriceFeed: {} as IndexPriceFeed,
     tradingVault: {} as TradingVault,
-    tradingRouter: {} as TradingRouter,
-    executeRouter: {} as ExecuteRouter,
     router: {} as Router,
     executor: {} as Executor,
     orderManager: {} as OrderManager,
@@ -149,8 +139,8 @@ export async function setupTestEnv() {
     testEnv.roleManager = await getRoleManager();
 
     // oracle
-    testEnv.vaultPriceFeed = await getOraclePriceFeed();
-    testEnv.fastPriceFeed = await getIndexPriceFeed();
+    testEnv.oraclePriceFeed = await getOraclePriceFeed();
+    testEnv.indexPriceFeed = await getIndexPriceFeed();
 
     // pair
     testEnv.pairInfo = await getPairInfo();
@@ -159,8 +149,6 @@ export async function setupTestEnv() {
 
     // trading
     testEnv.tradingVault = await getTradingVault();
-    testEnv.tradingRouter = await getTradingRouter();
-    testEnv.executeRouter = await getExecuteRouter();
     testEnv.router = await getRouter();
     testEnv.executor = await getExecutor();
     testEnv.orderManager = await getOrderManager();
@@ -195,19 +183,18 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
+    const { pairInfo, pairLiquidity, pairVault } = await deployPair(addressesProvider, vaultPriceFeed, deployer, weth);
 
-    const { tradingVault, tradingRouter, executeRouter, router, executor, orderManager, positionManager } =
-        await deployTrading(
-            deployer,
-            keeper,
-            addressesProvider,
-            roleManager,
-            pairVault,
-            pairInfo,
-            vaultPriceFeed,
-            fastPriceFeed,
-        );
+    const { tradingVault, router, executor, orderManager, positionManager } = await deployTrading(
+        deployer,
+        deployer,
+        addressesProvider,
+        roleManager,
+        pairVault,
+        pairInfo,
+        vaultPriceFeed,
+        fastPriceFeed,
+    );
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 
@@ -226,11 +213,9 @@ export async function newTestEnv(): Promise<TestEnv> {
         pairInfo: pairInfo,
         pairLiquidity: pairLiquidity,
         pairVault: pairVault,
-        vaultPriceFeed: vaultPriceFeed,
-        fastPriceFeed: fastPriceFeed,
+        oraclePriceFeed: vaultPriceFeed,
+        indexPriceFeed: fastPriceFeed,
         tradingVault: tradingVault,
-        tradingRouter: tradingRouter,
-        executeRouter: executeRouter,
         router: router,
         executor: executor,
         orderManager: orderManager,

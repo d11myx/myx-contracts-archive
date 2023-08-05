@@ -18,17 +18,17 @@ export const deployContract = async <ContractType extends Contract>(
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
 
-export const deployUpgradeableContract = async <ContractType extends Contract>(
-    contract: string,
-    args?: any,
-): Promise<ContractType> => {
-    const [deployer] = await hre.ethers.getSigners();
-
-    const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
-    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, [...args]);
-
-    return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
-};
+// export const deployUpgradeableContract = async <ContractType extends Contract>(
+//     contract: string,
+//     args?: any,
+// ): Promise<ContractType> => {
+//     const [deployer] = await hre.ethers.getSigners();
+//
+//     const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
+//     let contractDeployed = await hre.upgrades.deployProxy(contractFactory, [...args]);
+//
+//     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
+// };
 
 export const getContract = async <ContractType extends Contract>(
     id: string,

@@ -36,4 +36,8 @@ interface IRoleManager {
     function removeKeeper(address) external;
 
     function isKeeper(address) external view returns (bool);
+
+    function addContractWhiteList(address target) external;
+
+    function removeContractWhiteList(address target) external;
 }

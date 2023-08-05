@@ -9,7 +9,7 @@ import { MARKET_NAME } from '../helpers/env';
 
 describe('PairInfo: Edge cases', () => {
     before('addPair', async () => {
-        const { pairInfo, usdt, pairLiquidity } = testEnv;
+        const { poolAdmin, pairInfo, usdt, pairLiquidity } = testEnv;
 
         const token = await deployMockToken('Test');
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
@@ -22,13 +22,15 @@ describe('PairInfo: Edge cases', () => {
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
         const countBefore = await pairInfo.pairsCount();
-        await waitForTx(await pairInfo.addPair(pair.indexToken, pair.stableToken, pairLiquidity.address));
+        await waitForTx(
+            await pairInfo.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken, pairLiquidity.address),
+        );
 
         let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-        await waitForTx(await pairInfo.updatePair(pairIndex, pair));
-        await waitForTx(await pairInfo.updateTradingConfig(pairIndex, tradingConfig));
-        await waitForTx(await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
-        await waitForTx(await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+        await waitForTx(await pairInfo.connect(poolAdmin.signer).updatePair(pairIndex, pair));
+        await waitForTx(await pairInfo.connect(poolAdmin.signer).updateTradingConfig(pairIndex, tradingConfig));
+        await waitForTx(await pairInfo.connect(poolAdmin.signer).updateTradingFeeConfig(pairIndex, tradingFeeConfig));
+        await waitForTx(await pairInfo.connect(poolAdmin.signer).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
         const countAfter = await pairInfo.pairsCount();
         expect(countAfter).to.be.eq(countBefore.add(1));
@@ -61,7 +63,7 @@ describe('PairInfo: Edge cases', () => {
             const pairIndex = 0;
             const pair = await pairInfo.getPair(pairIndex);
             await expect(pairInfo.connect(unHandler.signer).updatePair(pairIndex, pair)).to.be.revertedWith(
-                'Handleable: forbidden',
+                'onlyPoolAdmin',
             );
         });
 

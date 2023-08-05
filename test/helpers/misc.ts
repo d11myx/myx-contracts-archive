@@ -26,7 +26,7 @@ export async function increasePosition(
     tradeType: TradeType,
     isLong: boolean,
 ) {
-    const { keeper, router, executor } = testEnv;
+    const { keeper, router, executor, orderManager } = testEnv;
 
     const request: TradingTypes.IncreasePositionRequestStruct = {
         account: user.address,
@@ -43,7 +43,7 @@ export async function increasePosition(
     };
 
     // create increase order
-    const orderId = await router.increaseMarketOrdersIndex();
+    const orderId = await orderManager.increaseMarketOrdersIndex();
     await router.connect(user.signer).createIncreaseOrder(request);
     // execute order
     await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType);
@@ -58,7 +58,7 @@ export async function decreasePosition(
     tradeType: TradeType,
     isLong: boolean,
 ) {
-    const { keeper, router, executor } = testEnv;
+    const { keeper, router, executor, orderManager } = testEnv;
 
     const request: TradingTypes.DecreasePositionRequestStruct = {
         account: user.address,
@@ -71,7 +71,7 @@ export async function decreasePosition(
     };
 
     // create increase order
-    const orderId = await router.decreaseMarketOrdersIndex();
+    const orderId = await orderManager.decreaseMarketOrdersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
     // execute order
     await executor.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType);
