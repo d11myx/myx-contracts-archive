@@ -45,11 +45,18 @@ interface IPositionManager {
 
     event UpdateMaxTimeDelay(uint256 oldDelay, uint256 newDelay);
 
-    function updateMaxTimeDelay(uint256 _maxTimeDelay) external;
+    function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
     function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
 
     function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external;
+
+    function setPricesAndLiquidatePositions(
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        uint256 _timestamp,
+        bytes32[] memory _positionKeys
+    ) external;
 
     function liquidatePositions(bytes32[] memory _positionKeys) external;
 
@@ -59,4 +66,6 @@ interface IPositionManager {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
     ) external;
+
+    function getValidPrice(uint256 _pairIndex, bool _isLong) external view returns (uint256);
 }

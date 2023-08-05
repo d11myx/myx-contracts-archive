@@ -55,15 +55,15 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         uint256 lpAmount
     );
 
-    function initialize(
+    constructor(
+        IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         IVaultPriceFeed _vaultPriceFeed,
         address _feeReceiver,
         address _slipReceiver,
         address _weth
-    ) external initializer {
-        __Handleable_init();
+    ) Handleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         vaultPriceFeed = _vaultPriceFeed;
@@ -72,12 +72,12 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         weth = _weth;
     }
 
-    function setContract(IPairInfo _pairStorage, IPairVault _pairVault) external onlyHandler {
+    function setContract(IPairInfo _pairStorage, IPairVault _pairVault) external onlyPoolAdmin {
         pairInfo = _pairStorage;
         pairVault = _pairVault;
     }
 
-    function setReceiver(address _feeReceiver, address _slipReceiver) external onlyHandler {
+    function setReceiver(address _feeReceiver, address _slipReceiver) external onlyPoolAdmin {
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
     }

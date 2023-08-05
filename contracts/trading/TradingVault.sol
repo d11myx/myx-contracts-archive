@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -15,67 +15,16 @@ import "../libraries/access/Handleable.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "hardhat/console.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 
-
-contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
+contract TradingVault is ITradingVault, ReentrancyGuard, Handleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
-
-    event IncreasePosition(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        int256 collateral,
-        bool isLong,
-        uint256 sizeAmount,
-        uint256 price,
-        uint256 tradingFee,
-        int256 fundingFee,
-        uint256 transferOut
-    );
-
-    event DecreasePosition(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        int256 collateral,
-        uint256 sizeAmount,
-        uint256 price,
-        uint256 tradingFee,
-        int256 fundingFee,
-        int256 realisedPnl,
-        uint256 transferOut
-    );
-
-
-    event UpdatePosition(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        uint256 collateral,
-        uint256 positionAmount,
-        uint256 averagePrice,
-        int256 entryFundingRate,
-        uint256 entryFundingTime,
-        int256 realisedPnl,
-        uint256 price
-    );
-
-    event ClosePosition(bytes32 positionKey, address account, uint256 pairIndex, bool isLong);
-
-    event UpdateFundingRate(uint256 pairIndex, int256 fundingRate, uint256 lastFundingTime);
-
-    using PrecisionUtils for uint256;
-
-    IPairInfo public pairInfo;
-    IPairVault public pairVault;
-    address public tradingFeeReceiver;
 
     mapping(bytes32 => Position.Info) public positions;
 
@@ -93,39 +42,48 @@ contract TradingVault is ReentrancyGuardUpgradeable, ITradingVault, Handleable {
 
     uint256 public fundingInterval;
 
+    IPairInfo public pairInfo;
+    IPairVault public pairVault;
+    address public tradingFeeReceiver;
     IVaultPriceFeed public vaultPriceFeed;
 
-    function initialize(
+    constructor (
+        IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         IVaultPriceFeed _vaultPriceFeed,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
-
-    ) external initializer {
-        __ReentrancyGuard_init();
-        __Handleable_init();
+    ) Handleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
-        tradingFeeReceiver = _tradingFeeReceiver;
-        fundingInterval = _fundingInterval;
         vaultPriceFeed = _vaultPriceFeed;
-    }
-
-    function setContract(
-        IPairInfo _pairInfo,
-        IPairVault _pairVault
-    ) external onlyGov {
-        pairInfo = _pairInfo;
-        pairVault = _pairVault;
-    }
-
-    function setTradingFeeReceiver(address _tradingFeeReceiver) external onlyGov {
         tradingFeeReceiver = _tradingFeeReceiver;
+        fundingInterval = _fundingInterval;
     }
 
-    function setFundingInterval(uint256 _fundingInterval) external onlyGov {
-        fundingInterval = _fundingInterval;
+    function updatePairInfo(address newPairInfo) external onlyPoolAdmin {
+        address oldPairInfo = address(pairInfo);
+        pairInfo = IPairInfo(newPairInfo);
+        emit UpdatePairInfo(oldPairInfo, newPairInfo);
+    }
+
+    function updatePairVault(address newPairVault) external onlyPoolAdmin {
+        address oldPairVault = address(pairVault);
+        pairVault = IPairVault(newPairVault);
+        emit UpdatePairVault(oldPairVault, newPairVault);
+    }
+
+    function updateTradingFeeReceiver(address newReceiver) external onlyPoolAdmin {
+        address oldReceiver = tradingFeeReceiver;
+        tradingFeeReceiver = newReceiver;
+        emit UpdateTradingFeeReceiver(oldReceiver, newReceiver);
+    }
+
+    function updateFundingInterval(uint256 newInterval) external onlyPoolAdmin {
+        uint256 oldInterval = fundingInterval;
+        fundingInterval = newInterval;
+        emit UpdateFundingInterval(oldInterval, newInterval);
     }
 
     function increasePosition(

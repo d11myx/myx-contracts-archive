@@ -1,7 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     AddressesProvider,
-    ExecuteRouter,
     Executor,
     IndexPriceFeed,
     MockPriceFeed,
@@ -13,7 +12,6 @@ import {
     RoleManager,
     Router,
     Token,
-    TradingRouter,
     TradingVault,
     WETH,
     PositionManager,
@@ -30,8 +28,6 @@ import {
     ROLE_MANAGER_ID,
     MOCK_TOKEN_PREFIX,
     TRADING_VAULT_ID,
-    TRADING_ROUTER_ID,
-    EXECUTE_ROUTER_ID,
     ROUTER_ID,
     EXECUTOR_ID,
     ORDER_MANAGER_ID,
@@ -102,20 +98,6 @@ export const getPairLiquidity = async (address?: string): Promise<PairLiquidity>
 
 export const getTradingVault = async (address?: string): Promise<TradingVault> => {
     return getContract<TradingVault>('TradingVault', address || (await hre.deployments.get(TRADING_VAULT_ID)).address);
-};
-
-export const getTradingRouter = async (address?: string): Promise<TradingRouter> => {
-    return getContract<TradingRouter>(
-        'TradingRouter',
-        address || (await hre.deployments.get(TRADING_ROUTER_ID)).address,
-    );
-};
-
-export const getExecuteRouter = async (address?: string): Promise<ExecuteRouter> => {
-    return getContract<ExecuteRouter>(
-        'ExecuteRouter',
-        address || (await hre.deployments.get(EXECUTE_ROUTER_ID)).address,
-    );
 };
 
 export const getRouter = async (address?: string): Promise<Router> => {

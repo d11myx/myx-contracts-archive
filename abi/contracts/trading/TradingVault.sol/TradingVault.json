@@ -1,5 +1,41 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "contract IAddressesProvider",
+        "name": "addressProvider",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IPairInfo",
+        "name": "_pairInfo",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IPairVault",
+        "name": "_pairVault",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IVaultPriceFeed",
+        "name": "_vaultPriceFeed",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_tradingFeeReceiver",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_fundingInterval",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -175,12 +211,18 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint8",
-        "name": "version",
-        "type": "uint8"
+        "internalType": "uint256",
+        "name": "oldInterval",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newInterval",
+        "type": "uint256"
       }
     ],
-    "name": "Initialized",
+    "name": "UpdateFundingInterval",
     "type": "event"
   },
   {
@@ -206,6 +248,44 @@
       }
     ],
     "name": "UpdateFundingRate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldPairInfo",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newPairInfo",
+        "type": "address"
+      }
+    ],
+    "name": "UpdatePairInfo",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldPairVault",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newPairVault",
+        "type": "address"
+      }
+    ],
+    "name": "UpdatePairVault",
     "type": "event"
   },
   {
@@ -280,6 +360,38 @@
     ],
     "name": "UpdatePosition",
     "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldReceiver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newReceiver",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateTradingFeeReceiver",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "ADDRESS_PROVIDER",
+    "outputs": [
+      {
+        "internalType": "contract IAddressesProvider",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -654,19 +766,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "gov",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -712,39 +811,6 @@
         "type": "int256"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract IPairInfo",
-        "name": "_pairInfo",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IPairVault",
-        "name": "_pairVault",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_tradingFeeReceiver",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_fundingInterval",
-        "type": "uint256"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -955,50 +1021,6 @@
   {
     "inputs": [
       {
-        "internalType": "contract IPairInfo",
-        "name": "_pairInfo",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IPairVault",
-        "name": "_pairVault",
-        "type": "address"
-      }
-    ],
-    "name": "setContract",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_fundingInterval",
-        "type": "uint256"
-      }
-    ],
-    "name": "setFundingInterval",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_gov",
-        "type": "address"
-      }
-    ],
-    "name": "setGov",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_handler",
         "type": "address"
@@ -1010,19 +1032,6 @@
       }
     ],
     "name": "setHandler",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_tradingFeeReceiver",
-        "type": "address"
-      }
-    ],
-    "name": "setTradingFeeReceiver",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1073,6 +1082,58 @@
       }
     ],
     "name": "updateCumulativeFundingRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newInterval",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateFundingInterval",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newPairInfo",
+        "type": "address"
+      }
+    ],
+    "name": "updatePairInfo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newPairVault",
+        "type": "address"
+      }
+    ],
+    "name": "updatePairVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newReceiver",
+        "type": "address"
+      }
+    ],
+    "name": "updateTradingFeeReceiver",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

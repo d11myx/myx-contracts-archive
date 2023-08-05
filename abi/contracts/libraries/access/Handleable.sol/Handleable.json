@@ -1,23 +1,10 @@
 [
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "version",
-        "type": "uint8"
-      }
-    ],
-    "name": "Initialized",
-    "type": "event"
-  },
-  {
     "inputs": [],
-    "name": "gov",
+    "name": "ADDRESS_PROVIDER",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IAddressesProvider",
         "name": "",
         "type": "address"
       }
@@ -42,19 +29,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_gov",
-        "type": "address"
-      }
-    ],
-    "name": "setGov",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
@@ -10,7 +9,7 @@ import "../interfaces/IPositionManager.sol";
 import "../interfaces/IIndexPriceFeed.sol";
 import "hardhat/console.sol";
 
-contract Executor is IExecutor, ReentrancyGuardUpgradeable {
+contract Executor is IExecutor {
 
     uint256 public increaseMarketOrderStartIndex;
     uint256 public decreaseMarketOrderStartIndex;
@@ -20,6 +19,12 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
     IOrderManager public orderManager;
     IPositionManager public positionManager;
 
+    constructor(IAddressesProvider addressProvider, IOrderManager _orderManager, IPositionManager _positionManager) {
+        ADDRESS_PROVIDER = addressProvider;
+        orderManager = _orderManager;
+        positionManager = _positionManager;
+    }
+
     modifier onlyPoolAdmin() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
@@ -28,12 +33,6 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
     modifier onlyPositionKeeper() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), "onlyPositionKeeper");
         _;
-    }
-
-    constructor(IAddressesProvider addressProvider, IOrderManager _orderManager, IPositionManager _positionManager) {
-        ADDRESS_PROVIDER = addressProvider;
-        orderManager = _orderManager;
-        positionManager = _positionManager;
     }
 
     function setPricesAndExecuteMarketOrders(
@@ -101,7 +100,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         }
     }
 
-    function executeIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external nonReentrant onlyPositionKeeper {
+    function executeIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external onlyPositionKeeper {
         positionManager.executeIncreaseOrder(orderId, tradeType);
     }
 
@@ -139,7 +138,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         }
     }
 
-    function executeDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external nonReentrant onlyPositionKeeper {
+    function executeDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external onlyPositionKeeper {
         positionManager.executeDecreaseOrder(orderId, tradeType);
     }
 
@@ -148,7 +147,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         uint256[] memory prices,
         uint256 timestamp,
         bytes32[] memory positionKeys
-    ) external nonReentrant onlyPositionKeeper {
+    ) external onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "invalid params");
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
@@ -156,7 +155,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         positionManager.liquidatePositions(positionKeys);
     }
 
-    function liquidatePositions(bytes32[] memory positionKeys) external nonReentrant onlyPositionKeeper {
+    function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper {
         positionManager.liquidatePositions(positionKeys);
     }
 
@@ -181,7 +180,7 @@ contract Executor is IExecutor, ReentrancyGuardUpgradeable {
         uint256[] memory sizeAmounts,
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) external nonReentrant onlyPositionKeeper {
+    ) public onlyPositionKeeper {
         positionManager.executeADLAndDecreaseOrder(
             positionKeys,
             sizeAmounts,

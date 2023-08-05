@@ -1,13 +1,11 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
-    ExecuteRouter,
     IndexPriceFeed,
     PairInfo,
     PairLiquidity,
     PairVault,
     MockPriceFeed,
     Token,
-    TradingRouter,
     TradingVault,
     OraclePriceFeed,
     WETH,
@@ -20,11 +18,12 @@ import {
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { deployContract, deployUpgradeableContract, getBlockTimestamp, waitForTx } from './utilities/tx';
+import { deployContract, getBlockTimestamp, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
+import { address } from 'hardhat/internal/core/config/config-validation';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -111,16 +110,25 @@ export async function deployPrice(
     return { vaultPriceFeed, fastPriceFeed };
 }
 
-export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: SignerWithAddress, weth: WETH) {
+export async function deployPair(
+    addressProvider: AddressesProvider,
+    vaultPriceFeed: OraclePriceFeed,
+    deployer: SignerWithAddress,
+    weth: WETH,
+) {
     console.log(` - setup pairs`);
 
-    const pairInfo = (await deployUpgradeableContract('PairInfo', [])) as any as PairInfo;
+    const pairInfo = (await deployContract('PairInfo', [addressProvider.address])) as any as PairInfo;
     console.log(`deployed PairInfo at ${pairInfo.address}`);
 
-    const pairVault = (await deployUpgradeableContract('PairVault', [pairInfo.address])) as any as PairVault;
+    const pairVault = (await deployContract('PairVault', [
+        addressProvider.address,
+        pairInfo.address,
+    ])) as any as PairVault;
     console.log(`deployed PairVault at ${pairVault.address}`);
 
-    const pairLiquidity = (await deployUpgradeableContract('PairLiquidity', [
+    const pairLiquidity = (await deployContract('PairLiquidity', [
+        addressProvider.address,
         pairInfo.address,
         pairVault.address,
         vaultPriceFeed.address,
@@ -138,82 +146,58 @@ export async function deployPair(vaultPriceFeed: OraclePriceFeed, deployer: Sign
 
 export async function deployTrading(
     deployer: SignerWithAddress,
-    keeper: SignerWithAddress,
+    poolAdmin: SignerWithAddress,
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pairVault: PairVault,
     pairInfo: PairInfo,
-    vaultPriceFeed: OraclePriceFeed,
-    fastPriceFeed: IndexPriceFeed,
+    oraclePriceFeed: OraclePriceFeed,
+    indexPriceFeed: IndexPriceFeed,
 ) {
     console.log(` - setup trading`);
 
-    let tradingVault = (await deployContract('TradingVault', [])) as any as TradingVault;
+    let tradingVault = (await deployContract('TradingVault', [
+        addressProvider.address,
+        pairInfo.address,
+        pairVault.address,
+        oraclePriceFeed.address,
+        deployer.address,
+        8 * 60 * 60,
+    ])) as any as TradingVault;
     console.log(`deployed TradingVault at ${tradingVault.address}`);
-
-    let tradingRouter = (await deployContract('TradingRouter', [])) as any as TradingRouter;
-    console.log(`deployed TradingRouter at ${tradingRouter.address}`);
-
-    let executeRouter = (await deployContract('ExecuteRouter', [])) as any as ExecuteRouter;
-    console.log(`deployed ExecuteRouter at ${executeRouter.address}`);
 
     let orderManager = (await deployContract('OrderManager', [
         addressProvider.address,
         pairInfo.address,
         pairVault.address,
         tradingVault.address,
-        tradingRouter.address,
-        vaultPriceFeed.address,
+        oraclePriceFeed.address,
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
-
-    let router = (await deployContract('Router', [
-        addressProvider.address,
-        tradingRouter.address,
-        orderManager.address,
-    ])) as any as Router;
-    console.log(`deployed Router at ${router.address}`);
 
     let positionManager = (await deployContract('PositionManager', [
         addressProvider.address,
         pairInfo.address,
         pairVault.address,
         tradingVault.address,
-        tradingRouter.address,
-        vaultPriceFeed.address,
-        fastPriceFeed.address,
+        oraclePriceFeed.address,
+        indexPriceFeed.address,
         60,
         orderManager.address,
-        router.address,
     ])) as any as PositionManager;
     console.log(`deployed PositionManager at ${positionManager.address}`);
 
+    let router = (await deployContract('Router', [addressProvider.address, orderManager.address])) as any as Router;
+    console.log(`deployed Router at ${router.address}`);
+
     let executor = (await deployContract('Executor', [
         addressProvider.address,
-        executeRouter.address,
+        orderManager.address,
         positionManager.address,
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
-    await tradingVault.initialize(
-        pairInfo.address,
-        pairVault.address,
-        vaultPriceFeed.address,
-        deployer.address,
-        8 * 60 * 60,
-    );
-
-    await tradingRouter.initialize(pairInfo.address, pairVault.address, tradingVault.address, vaultPriceFeed.address);
-
-    await executeRouter.initialize(
-        pairInfo.address,
-        pairVault.address,
-        tradingVault.address,
-        tradingRouter.address,
-        vaultPriceFeed.address,
-        fastPriceFeed.address,
-        60,
-    );
+    await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
 
     await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(router.address));
     await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(executor.address));
@@ -221,13 +205,8 @@ export async function deployTrading(
     await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(positionManager.address));
 
     await pairVault.setHandler(tradingVault.address, true);
-    await tradingVault.setHandler(executeRouter.address, true);
-    await tradingRouter.setHandler(executeRouter.address, true);
-    await tradingRouter.setHandler(router.address, true);
-    await tradingRouter.setHandler(orderManager.address, true);
-    await tradingRouter.setHandler(positionManager.address, true);
-    await executeRouter.setPositionKeeper(keeper.address, true);
-    await executeRouter.setPositionKeeper(executor.address, true);
+    await tradingVault.setHandler(positionManager.address, true);
+    await orderManager.setHandler(positionManager.address, true);
 
-    return { tradingVault, tradingRouter, executeRouter, router, executor, orderManager, positionManager };
+    return { tradingVault, router, executor, orderManager, positionManager };
 }

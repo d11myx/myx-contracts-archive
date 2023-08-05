@@ -10,47 +10,47 @@ import "hardhat/console.sol";
 
 contract Router is IRouter {
 
-    IAddressesProvider public immutable addressProvider;
+    IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IOrderManager public orderManager;
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
 
-    constructor(IAddressesProvider _addressProvider, IOrderManager _orderManager) {
-        addressProvider = _addressProvider;
+    constructor(IAddressesProvider addressProvider, IOrderManager _orderManager) {
+        ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
     }
 
-    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) external returns (uint256) {
+    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory request) external returns (uint256) {
         //TODO decoupling tp sl
 
         return orderManager.createOrder(TradingTypes.CreateOrderRequest({
-            account: _request.account,
-            pairIndex: _request.pairIndex,
-            tradeType: _request.tradeType,
-            collateral: _request.collateral,
-            openPrice: _request.openPrice,
-            isLong: _request.isLong,
-            sizeAmount: int256(_request.sizeAmount),
-            tpPrice: _request.tpPrice,
-            tp: _request.tp,
-            slPrice: _request.slPrice,
-            sl: _request.sl
+            account: request.account,
+            pairIndex: request.pairIndex,
+            tradeType: request.tradeType,
+            collateral: request.collateral,
+            openPrice: request.openPrice,
+            isLong: request.isLong,
+            sizeAmount: int256(request.sizeAmount),
+            tpPrice: request.tpPrice,
+            tp: request.tp,
+            slPrice: request.slPrice,
+            sl: request.sl
         }));
     }
 
-    function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) external returns (uint256) {
+    function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256) {
         return orderManager.createOrder(TradingTypes.CreateOrderRequest({
-            account: _request.account,
-            pairIndex: _request.pairIndex,
-            tradeType: _request.tradeType,
-            collateral: _request.collateral,
-            openPrice: _request.triggerPrice,
-            isLong: _request.isLong,
-            sizeAmount: - int256(_request.sizeAmount),
+            account: request.account,
+            pairIndex: request.pairIndex,
+            tradeType: request.tradeType,
+            collateral: request.collateral,
+            openPrice: request.triggerPrice,
+            isLong: request.isLong,
+            sizeAmount: - int256(request.sizeAmount),
             tpPrice: 0,
             tp: 0,
             slPrice: 0,
