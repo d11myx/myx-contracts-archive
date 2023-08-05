@@ -10,6 +10,7 @@ import "../interfaces/IPositionManager.sol";
 import "../interfaces/ITradingVault.sol";
 import "../interfaces/IRoleManager.sol";
 
+
 import "../libraries/Position.sol";
 import "../libraries/access/Handleable.sol";
 import "../libraries/PrecisionUtils.sol";
@@ -20,7 +21,7 @@ import '../interfaces/IAddressesProvider.sol';
 import "hardhat/console.sol";
 import "../interfaces/IOrderManager.sol";
 
-contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
+contract PositionManager is IPositionManager, ReentrancyGuard {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -29,6 +30,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
+    IAddressesProvider public immutable ADDRESS_PROVIDER;
     uint256 public maxTimeDelay;
 
     IPairInfo public pairInfo;
@@ -37,6 +39,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
     IIndexPriceFeed public fastPriceFeed;
     IVaultPriceFeed public vaultPriceFeed;
     IOrderManager public orderManager;
+
 
     constructor(
         IAddressesProvider addressProvider,
@@ -47,7 +50,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
         IIndexPriceFeed _fastPriceFeed,
         uint256 _maxTimeDelay,
         IOrderManager _orderManager
-    ) Handleable (addressProvider) {
+    )  {
+        ADDRESS_PROVIDER=addressProvider;
         maxTimeDelay = _maxTimeDelay;
         pairInfo = _pairInfo;
         pairVault = _pairVault;
@@ -60,6 +64,11 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
     modifier onlyKeeper() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender),
             "onlyKeeper");
+        _;
+    }
+
+    modifier onlyPoolAdmin() {
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
         _;
     }
 
