@@ -1,28 +1,25 @@
 pragma solidity 0.8.17;
 
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import '../interfaces/IIndexPriceFeed.sol';
+import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IPositionManager.sol';
+import '../interfaces/ITradingVault.sol';
+import '../interfaces/IRoleManager.sol';
 
-import "../interfaces/IIndexPriceFeed.sol";
-import "../interfaces/IVaultPriceFeed.sol";
-import "../interfaces/IPositionManager.sol";
-import "../interfaces/ITradingVault.sol";
-import "../interfaces/IRoleManager.sol";
-
-
-import "../libraries/Position.sol";
-import "../libraries/access/Handleable.sol";
-import "../libraries/PrecisionUtils.sol";
-import "../libraries/Int256Utils.sol";
-import "../pair/interfaces/IPairInfo.sol";
-import "../pair/interfaces/IPairVault.sol";
+import '../libraries/Position.sol';
+import '../libraries/access/Handleable.sol';
+import '../libraries/PrecisionUtils.sol';
+import '../libraries/Int256Utils.sol';
+import '../pair/interfaces/IPairInfo.sol';
+import '../pair/interfaces/IPairVault.sol';
 import '../interfaces/IAddressesProvider.sol';
-import "hardhat/console.sol";
-import "../interfaces/IOrderManager.sol";
+import 'hardhat/console.sol';
+import '../interfaces/IOrderManager.sol';
 
 contract PositionManager is IPositionManager, ReentrancyGuard {
-
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -40,7 +37,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     IVaultPriceFeed public vaultPriceFeed;
     IOrderManager public orderManager;
 
-
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
@@ -50,8 +46,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         IIndexPriceFeed _fastPriceFeed,
         uint256 _maxTimeDelay,
         IOrderManager _orderManager
-    )  {
-        ADDRESS_PROVIDER=addressProvider;
+    ) {
+        ADDRESS_PROVIDER = addressProvider;
         maxTimeDelay = _maxTimeDelay;
         pairInfo = _pairInfo;
         pairVault = _pairVault;
@@ -62,13 +58,12 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     }
 
     modifier onlyKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender),
-            "onlyKeeper");
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'onlyKeeper');
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 
@@ -79,39 +74,49 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     }
 
     function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) public nonReentrant onlyKeeper {
-        console.log("executeIncreaseOrder account %s orderId %s tradeType %s", msg.sender, _orderId, uint8(_tradeType));
+        console.log('executeIncreaseOrder account %s orderId %s tradeType %s', msg.sender, _orderId, uint8(_tradeType));
 
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
 
         if (order.account == address(0)) {
-            console.log("executeIncreaseOrder not exists", _orderId);
+            console.log('executeIncreaseOrder not exists', _orderId);
             return;
         }
 
         // expire
         if (_tradeType == TradingTypes.TradeType.MARKET) {
-            require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
+            require(order.blockTime + maxTimeDelay >= block.timestamp, 'order expired');
         }
 
         // check pair enable
         uint256 pairIndex = order.pairIndex;
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
-        require(pair.enable, "trade pair not supported");
+        require(pair.enable, 'trade pair not supported');
 
         // check account enable
-        require(!tradingVault.isFrozen(order.account), "account is frozen");
+        require(!tradingVault.isFrozen(order.account), 'account is frozen');
 
         // check trading amount
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
-        require(order.sizeAmount == 0 || (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
+        require(
+            order.sizeAmount == 0 ||
+                (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
+            'invalid trade size'
+        );
 
         // check price
         uint256 price = getValidPrice(pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
-            require(order.isLong ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.openPrice
-                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.openPrice, "not reach trigger price");
+            require(
+                order.isLong
+                    ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <=
+                        order.openPrice
+                    : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >=
+                        order.openPrice,
+                'not reach trigger price'
+            );
         } else {
-            require(order.isLong ? price >= order.openPrice : price <= order.openPrice, "not reach trigger price");
+            require(order.isLong ? price >= order.openPrice : price <= order.openPrice, 'not reach trigger price');
         }
 
         // compare openPrice and oraclePrice
@@ -127,39 +132,59 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
-        console.log("executeIncreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
+        console.log('executeIncreaseOrder sizeAmount', order.sizeAmount, 'sizeDelta', sizeDelta);
 
         // check position and leverage
-        (uint256 afterPosition,) = position.validLeverage(price, order.collateral, order.sizeAmount, true, tradingConfig.minLeverage, tradingConfig.maxLeverage, tradingConfig.maxPositionAmount);
-        require(afterPosition > 0, "zero position amount");
+        (uint256 afterPosition, ) = position.validLeverage(
+            price,
+            order.collateral,
+            order.sizeAmount,
+            true,
+            tradingConfig.minLeverage,
+            tradingConfig.maxLeverage,
+            tradingConfig.maxPositionAmount
+        );
+        require(afterPosition > 0, 'zero position amount');
 
         // check tp sl
-        require(order.tp == 0 || !orderManager.positionHasTpSl(position.key, TradingTypes.TradeType.TP), "tp already exists");
-        require(order.sl == 0 || !orderManager.positionHasTpSl(position.key, TradingTypes.TradeType.SL), "sl already exists");
+        require(
+            order.tp == 0 || !orderManager.positionHasTpSl(position.key, TradingTypes.TradeType.TP),
+            'tp already exists'
+        );
+        require(
+            order.sl == 0 || !orderManager.positionHasTpSl(position.key, TradingTypes.TradeType.SL),
+            'sl already exists'
+        );
 
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log("executeIncreaseOrder preNetExposureAmountChecker", preNetExposureAmountChecker.abs());
+        console.log('executeIncreaseOrder preNetExposureAmountChecker', preNetExposureAmountChecker.abs());
         if (preNetExposureAmountChecker >= 0) {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeIncreaseOrder availableIndex", availableIndex);
-                require(order.sizeAmount <= availableIndex, "lp index token not enough");
+                console.log('executeIncreaseOrder availableIndex', availableIndex);
+                require(order.sizeAmount <= availableIndex, 'lp index token not enough');
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeIncreaseOrder availableStable", availableStable);
-                require(order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.divPrice(price), "lp stable token not enough");
+                console.log('executeIncreaseOrder availableStable', availableStable);
+                require(
+                    order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.divPrice(price),
+                    'lp stable token not enough'
+                );
             }
         } else {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeIncreaseOrder availableIndex", availableIndex);
-                require(order.sizeAmount <= uint256(- preNetExposureAmountChecker) + availableIndex, "lp index token not enough");
+                console.log('executeIncreaseOrder availableIndex', availableIndex);
+                require(
+                    order.sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex,
+                    'lp index token not enough'
+                );
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeIncreaseOrder availableStable", availableStable);
-                require(order.sizeAmount <= availableStable.divPrice(price), "lp stable token not enough");
+                console.log('executeIncreaseOrder availableStable', availableStable);
+                require(order.sizeAmount <= availableStable.divPrice(price), 'lp stable token not enough');
             }
         }
 
@@ -167,7 +192,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         if (order.collateral > 0) {
             IERC20(pair.stableToken).safeTransfer(address(tradingVault), order.collateral.abs());
         }
-        (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong, price);
+        (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(
+            order.account,
+            pairIndex,
+            order.collateral,
+            order.sizeAmount,
+            order.isLong,
+            price
+        );
 
         orderManager.removeOrderFromPosition(
             IOrderManager.PositionOrder(
@@ -178,37 +210,42 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
                 order.tradeType,
                 _orderId,
                 order.sizeAmount
-            ));
+            )
+        );
 
         if (order.tp > 0) {
-            orderManager.createOrder(TradingTypes.CreateOrderRequest({
-                account: order.account,
-                pairIndex: order.pairIndex,
-                tradeType: TradingTypes.TradeType.TP,
-                collateral: 0,
-                openPrice: order.tpPrice,
-                isLong: order.isLong,
-                sizeAmount: - int256(order.tp),
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0
-            }));
+            orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: order.account,
+                    pairIndex: order.pairIndex,
+                    tradeType: TradingTypes.TradeType.TP,
+                    collateral: 0,
+                    openPrice: order.tpPrice,
+                    isLong: order.isLong,
+                    sizeAmount: -int256(order.tp),
+                    tpPrice: 0,
+                    tp: 0,
+                    slPrice: 0,
+                    sl: 0
+                })
+            );
         }
         if (order.sl > 0) {
-            orderManager.createOrder(TradingTypes.CreateOrderRequest({
-                account: order.account,
-                pairIndex: order.pairIndex,
-                tradeType: TradingTypes.TradeType.SL,
-                collateral: 0,
-                openPrice: order.slPrice,
-                isLong: order.isLong,
-                sizeAmount: - int256(order.sl),
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0
-            }));
+            orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: order.account,
+                    pairIndex: order.pairIndex,
+                    tradeType: TradingTypes.TradeType.SL,
+                    collateral: 0,
+                    openPrice: order.slPrice,
+                    isLong: order.isLong,
+                    sizeAmount: -int256(order.sl),
+                    tpPrice: 0,
+                    tp: 0,
+                    slPrice: 0,
+                    sl: 0
+                })
+            );
         }
 
         // delete order
@@ -232,23 +269,26 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         );
     }
 
-    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external nonReentrant onlyKeeper {
+    function executeDecreaseOrder(
+        uint256 _orderId,
+        TradingTypes.TradeType _tradeType
+    ) external nonReentrant onlyKeeper {
         _executeDecreaseOrder(_orderId, _tradeType);
     }
 
     function _executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) internal {
-        console.log("executeDecreaseOrder account %s orderId %s tradeType %s", msg.sender, _orderId, uint8(_tradeType));
+        console.log('executeDecreaseOrder account %s orderId %s tradeType %s', msg.sender, _orderId, uint8(_tradeType));
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
 
         if (order.account == address(0)) {
-            console.log("executeDecreaseOrder not exists", _orderId);
+            console.log('executeDecreaseOrder not exists', _orderId);
             return;
         }
 
         // expire
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
+            require(order.blockTime + maxTimeDelay >= block.timestamp, 'order expired');
         }
 
         // get pair
@@ -258,7 +298,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         // get position
         Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
-            console.log("position already closed", _orderId);
+            console.log('position already closed', _orderId);
             return;
         }
 
@@ -266,15 +306,28 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
 
         order.sizeAmount = order.sizeAmount.min(position.positionAmount);
-        require(order.sizeAmount == 0 || (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount), "invalid trade size");
+        require(
+            order.sizeAmount == 0 ||
+                (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
+            'invalid trade size'
+        );
 
         // check price
         uint256 price = getValidPrice(pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
-            require(order.abovePrice ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <= order.triggerPrice
-                : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >= order.triggerPrice, "not reach trigger price");
+            require(
+                order.abovePrice
+                    ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <=
+                        order.triggerPrice
+                    : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >=
+                        order.triggerPrice,
+                'not reach trigger price'
+            );
         } else {
-            require(order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice, "not reach trigger price");
+            require(
+                order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice,
+                'not reach trigger price'
+            );
         }
 
         // compare openPrice and oraclePrice
@@ -287,40 +340,48 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         }
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
-        console.log("executeDecreaseOrder sizeAmount", order.sizeAmount, "sizeDelta", sizeDelta);
+        console.log('executeDecreaseOrder sizeAmount', order.sizeAmount, 'sizeDelta', sizeDelta);
 
         // check position and leverage
-        position.validLeverage(price, order.collateral, order.sizeAmount, false, tradingConfig.minLeverage, tradingConfig.maxLeverage, tradingConfig.maxPositionAmount);
+        position.validLeverage(
+            price,
+            order.collateral,
+            order.sizeAmount,
+            false,
+            tradingConfig.minLeverage,
+            tradingConfig.maxLeverage,
+            tradingConfig.maxPositionAmount
+        );
 
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log("executeDecreaseOrder preNetExposureAmountChecker", preNetExposureAmountChecker.toString());
+        console.log('executeDecreaseOrder preNetExposureAmountChecker', preNetExposureAmountChecker.toString());
         bool needADL;
         if (preNetExposureAmountChecker >= 0) {
             if (!order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeDecreaseOrder availableIndex", availableIndex);
+                console.log('executeDecreaseOrder availableIndex', availableIndex);
                 needADL = order.sizeAmount > availableIndex;
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeDecreaseOrder availableStable", availableStable);
+                console.log('executeDecreaseOrder availableStable', availableStable);
                 needADL = order.sizeAmount > uint256(preNetExposureAmountChecker) + availableStable.divPrice(price);
             }
         } else {
             if (!order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log("executeDecreaseOrder availableIndex", availableIndex);
-                needADL = order.sizeAmount > uint256(- preNetExposureAmountChecker) + availableIndex;
+                console.log('executeDecreaseOrder availableIndex', availableIndex);
+                needADL = order.sizeAmount > uint256(-preNetExposureAmountChecker) + availableIndex;
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log("executeDecreaseOrder availableStable", availableStable);
+                console.log('executeDecreaseOrder availableStable', availableStable);
                 needADL = order.sizeAmount > availableStable.divPrice(price);
             }
         }
 
         if (needADL) {
-            console.log("executeDecreaseOrder needADL");
+            console.log('executeDecreaseOrder needADL');
             orderManager.setOrderNeedADL(_orderId, order.tradeType, needADL);
 
             emit ExecuteDecreaseOrder(
@@ -344,7 +405,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
             IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
             IERC20(pair.stableToken).safeTransfer(address(tradingVault), order.collateral.abs());
         }
-        (uint256 tradingFee, int256 fundingFee, int256 pnl) = tradingVault.decreasePosition(order.account, pairIndex, order.collateral, order.sizeAmount, order.isLong, price);
+        (uint256 tradingFee, int256 fundingFee, int256 pnl) = tradingVault.decreasePosition(
+            order.account,
+            pairIndex,
+            order.collateral,
+            order.sizeAmount,
+            order.isLong,
+            price
+        );
 
         // delete order
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
@@ -366,7 +434,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
                 order.tradeType,
                 order.orderId,
                 order.sizeAmount
-            ));
+            )
+        );
 
         position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
 
@@ -404,7 +473,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         uint256 _timestamp,
         bytes32[] memory _positionKeys
     ) external onlyKeeper {
-        console.log("setPricesAndLiquidatePositions timestamp", block.timestamp);
+        console.log('setPricesAndLiquidatePositions timestamp', block.timestamp);
         fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.liquidatePositions(_positionKeys);
     }
@@ -421,13 +490,12 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
     ) external nonReentrant onlyKeeper {
-        console.log("executeADLAndDecreaseOrder");
+        console.log('executeADLAndDecreaseOrder');
 
-        require(_positionKeys.length == _sizeAmounts.length, "length not match");
+        require(_positionKeys.length == _sizeAmounts.length, 'length not match');
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
-        require(order.needADL, "no need ADL");
-
+        require(order.needADL, 'no need ADL');
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(order.pairIndex);
 
@@ -435,43 +503,45 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         uint256 sumAmount;
         for (uint256 i = 0; i < _positionKeys.length; i++) {
             Position.Info memory position = tradingVault.getPositionByKey(_positionKeys[i]);
-            require(_sizeAmounts[i] <= position.positionAmount, "ADL size exceeds position");
-            require(_sizeAmounts[i] <= tradingConfig.maxTradeAmount, "exceeds max trade amount");
+            require(_sizeAmounts[i] <= position.positionAmount, 'ADL size exceeds position');
+            require(_sizeAmounts[i] <= tradingConfig.maxTradeAmount, 'exceeds max trade amount');
             sumAmount += _sizeAmounts[i];
             adlPositions[i] = position;
         }
 
-        require(sumAmount == order.sizeAmount, "ADL position amount not match decrease order");
+        require(sumAmount == order.sizeAmount, 'ADL position amount not match decrease order');
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
         uint256 price = getValidPrice(order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             Position.Info memory adlPosition = adlPositions[i];
-            uint256 orderId = orderManager.createOrder(TradingTypes.CreateOrderRequest({
-                account: adlPosition.account,
-                pairIndex: adlPosition.pairIndex,
-                tradeType: TradingTypes.TradeType.MARKET,
-                collateral: 0,
-                openPrice: price,
-                isLong: adlPosition.isLong,
-                sizeAmount: - int256(adlPosition.positionAmount),
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0
-            }));
+            uint256 orderId = orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: adlPosition.account,
+                    pairIndex: adlPosition.pairIndex,
+                    tradeType: TradingTypes.TradeType.MARKET,
+                    collateral: 0,
+                    openPrice: price,
+                    isLong: adlPosition.isLong,
+                    sizeAmount: -int256(adlPosition.positionAmount),
+                    tpPrice: 0,
+                    tp: 0,
+                    slPrice: 0,
+                    sl: 0
+                })
+            );
             _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
         }
         _executeDecreaseOrder(_orderId, order.tradeType);
     }
 
     function _liquidatePosition(bytes32 _positionKey) internal {
-        console.log("liquidatePosition start");
+        console.log('liquidatePosition start');
         Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
 
         if (position.positionAmount == 0) {
-            console.log("position not exists");
+            console.log('position not exists');
             return;
         }
 
@@ -482,16 +552,20 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
             if (price > position.averagePrice) {
                 unrealizedPnl = int256(position.positionAmount.mulPrice(price - position.averagePrice));
             } else {
-                unrealizedPnl = - int256(position.positionAmount.mulPrice(position.averagePrice - price));
+                unrealizedPnl = -int256(position.positionAmount.mulPrice(position.averagePrice - price));
             }
         } else {
             if (position.averagePrice > price) {
                 unrealizedPnl = int256(position.positionAmount.mulPrice(position.averagePrice - price));
             } else {
-                unrealizedPnl = - int256(position.positionAmount.mulPrice(price - position.averagePrice));
+                unrealizedPnl = -int256(position.positionAmount.mulPrice(price - position.averagePrice));
             }
         }
-        console.log("liquidatePosition averagePrice %s unrealizedPnl %s", position.averagePrice, unrealizedPnl.toString());
+        console.log(
+            'liquidatePosition averagePrice %s unrealizedPnl %s',
+            position.averagePrice,
+            unrealizedPnl.toString()
+        );
 
         int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
@@ -500,13 +574,20 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         if (exposureAsset <= 0) {
             needLiquidate = true;
         } else {
-            uint256 riskRate = position.positionAmount.mulPrice(price)
+            uint256 riskRate = position
+                .positionAmount
+                .mulPrice(price)
                 .mulPercentage(tradingConfig.maintainMarginRate)
                 .calculatePercentage(uint256(exposureAsset));
             needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
-            console.log("liquidatePosition riskRate %s positionAmount %s exposureAsset %s", riskRate, position.positionAmount, exposureAsset.toString());
+            console.log(
+                'liquidatePosition riskRate %s positionAmount %s exposureAsset %s',
+                riskRate,
+                position.positionAmount,
+                exposureAsset.toString()
+            );
         }
-        console.log("liquidatePosition needLiquidate", needLiquidate);
+        console.log('liquidatePosition needLiquidate', needLiquidate);
 
         if (!needLiquidate) {
             return;
@@ -514,21 +595,23 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
 
         //TODO positionManager
         // cancelAllPositionOrders
-//        tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+        //        tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
 
-        uint256 orderId = orderManager.createOrder(TradingTypes.CreateOrderRequest({
-            account: position.account,
-            pairIndex: position.pairIndex,
-            tradeType: TradingTypes.TradeType.MARKET,
-            collateral: 0,
-            openPrice: price,
-            isLong: position.isLong,
-            sizeAmount: - int256(position.positionAmount),
-            tpPrice: 0,
-            tp: 0,
-            slPrice: 0,
-            sl: 0
-        }));
+        uint256 orderId = orderManager.createOrder(
+            TradingTypes.CreateOrderRequest({
+                account: position.account,
+                pairIndex: position.pairIndex,
+                tradeType: TradingTypes.TradeType.MARKET,
+                collateral: 0,
+                openPrice: price,
+                isLong: position.isLong,
+                sizeAmount: -int256(position.positionAmount),
+                tpPrice: 0,
+                tp: 0,
+                slPrice: 0,
+                sl: 0
+            })
+        );
 
         _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
 
@@ -547,18 +630,17 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken);
-        console.log("getValidPrice pairIndex %s isLong %s ", _pairIndex, _isLong);
+        console.log('getValidPrice pairIndex %s isLong %s ', _pairIndex, _isLong);
 
         uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
-        console.log("getValidPrice oraclePrice %s indexPrice %s", oraclePrice, indexPrice);
+        console.log('getValidPrice oraclePrice %s indexPrice %s', oraclePrice, indexPrice);
 
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
-        console.log("getValidPrice diffP %s maxPriceDeviationP %s", diffP, tradingConfig.maxPriceDeviationP);
-        require(diffP <= tradingConfig.maxPriceDeviationP, "exceed max price deviation");
+        console.log('getValidPrice diffP %s maxPriceDeviationP %s', diffP, tradingConfig.maxPriceDeviationP);
+        require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
         return oraclePrice;
     }
-
 }
