@@ -57,9 +57,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
         orderManager = _orderManager;
     }
 
-    modifier onlyWhitelistOrKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender)
-        || IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender),
+    modifier onlyKeeper() {
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender),
             "onlyKeeper");
         _;
     }
@@ -70,7 +69,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
         emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
     }
 
-    function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) public nonReentrant onlyWhitelistOrKeeper {
+    function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) public nonReentrant onlyKeeper {
         console.log("executeIncreaseOrder account %s orderId %s tradeType %s", msg.sender, _orderId, uint8(_tradeType));
 
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
@@ -224,7 +223,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
         );
     }
 
-    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external nonReentrant onlyWhitelistOrKeeper {
+    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external nonReentrant onlyKeeper {
         _executeDecreaseOrder(_orderId, _tradeType);
     }
 
@@ -395,13 +394,13 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
         uint256[] memory _prices,
         uint256 _timestamp,
         bytes32[] memory _positionKeys
-    ) external onlyWhitelistOrKeeper {
+    ) external onlyKeeper {
         console.log("setPricesAndLiquidatePositions timestamp", block.timestamp);
         fastPriceFeed.setPrices(_tokens, _prices, _timestamp);
         this.liquidatePositions(_positionKeys);
     }
 
-    function liquidatePositions(bytes32[] memory _positionKeys) external nonReentrant onlyWhitelistOrKeeper {
+    function liquidatePositions(bytes32[] memory _positionKeys) external nonReentrant onlyKeeper {
         for (uint256 i = 0; i < _positionKeys.length; i++) {
             _liquidatePosition(_positionKeys[i]);
         }
@@ -412,7 +411,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
-    ) external nonReentrant onlyWhitelistOrKeeper {
+    ) external nonReentrant onlyKeeper {
         console.log("executeADLAndDecreaseOrder");
 
         require(_positionKeys.length == _sizeAmounts.length, "length not match");
