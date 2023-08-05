@@ -19,9 +19,8 @@ import "../pair/interfaces/IPairVault.sol";
 import '../interfaces/IAddressesProvider.sol';
 import "hardhat/console.sol";
 import "../interfaces/IOrderManager.sol";
-import "../interfaces/IRouter.sol";
 
-contract PositionManager is ReentrancyGuard, IPositionManager {
+contract PositionManager is IPositionManager, ReentrancyGuard, Handleable {
 
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -32,15 +31,12 @@ contract PositionManager is ReentrancyGuard, IPositionManager {
 
     uint256 public maxTimeDelay;
 
-    IAddressesProvider public immutable ADDRESS_PROVIDER;
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     IIndexPriceFeed public fastPriceFeed;
     IVaultPriceFeed public vaultPriceFeed;
     IOrderManager public orderManager;
-    IRouter public router; //TODO warning. temped, will be removed later
-
 
     constructor(
         IAddressesProvider addressProvider,
@@ -50,18 +46,15 @@ contract PositionManager is ReentrancyGuard, IPositionManager {
         IVaultPriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
         uint256 _maxTimeDelay,
-        IOrderManager _orderManager,
-        IRouter _router
-    ) {
+        IOrderManager _orderManager
+    ) Handleable (addressProvider) {
         maxTimeDelay = _maxTimeDelay;
-        ADDRESS_PROVIDER = addressProvider;
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
         fastPriceFeed = _fastPriceFeed;
         vaultPriceFeed = _vaultPriceFeed;
         orderManager = _orderManager;
-        router = _router;
     }
 
     modifier onlyWhitelistOrKeeper() {
@@ -71,24 +64,16 @@ contract PositionManager is ReentrancyGuard, IPositionManager {
         _;
     }
 
-    modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
-        _;
-    }
-
-    function updateMaxTimeDelay(uint256 _maxTimeDelay) external override onlyPoolAdmin {
-        uint256 oldDelay = _maxTimeDelay;
-        maxTimeDelay = _maxTimeDelay;
-        uint256 newDelay = maxTimeDelay;
-
-        emit UpdateMaxTimeDelay(oldDelay, newDelay);
+    function updateMaxTimeDelay(uint256 newMaxTimeDelay) external override onlyPoolAdmin {
+        uint256 oldDelay = maxTimeDelay;
+        maxTimeDelay = newMaxTimeDelay;
+        emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
     }
 
     function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) public nonReentrant onlyWhitelistOrKeeper {
         console.log("executeIncreaseOrder account %s orderId %s tradeType %s", msg.sender, _orderId, uint8(_tradeType));
 
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
-
 
         if (order.account == address(0)) {
             console.log("executeIncreaseOrder not exists", _orderId);
@@ -239,7 +224,11 @@ contract PositionManager is ReentrancyGuard, IPositionManager {
         );
     }
 
-    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) public nonReentrant onlyWhitelistOrKeeper {
+    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external nonReentrant onlyWhitelistOrKeeper {
+        _executeDecreaseOrder(_orderId, _tradeType);
+    }
+
+    function _executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) internal {
         console.log("executeDecreaseOrder account %s orderId %s tradeType %s", msg.sender, _orderId, uint8(_tradeType));
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
@@ -464,10 +453,9 @@ contract PositionManager is ReentrancyGuard, IPositionManager {
                 slPrice: 0,
                 sl: 0
             }));
-            executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
-            console.log();
+            _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
         }
-        executeDecreaseOrder(_orderId, order.tradeType);
+        _executeDecreaseOrder(_orderId, order.tradeType);
     }
 
     function _liquidatePosition(bytes32 _positionKey) internal {
@@ -534,7 +522,7 @@ contract PositionManager is ReentrancyGuard, IPositionManager {
             sl: 0
         }));
 
-        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+        _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
 
         emit LiquidatePosition(
             _positionKey,

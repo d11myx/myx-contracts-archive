@@ -30,8 +30,9 @@ contract PairInfo is IPairInfo, Handleable {
     // Events
     event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
 
-    function initialize() external initializer {
-        __Handleable_init();
+    constructor(
+        IAddressesProvider addressProvider
+    ) Handleable(addressProvider) {
     }
 
     // Manage pairs
@@ -39,7 +40,7 @@ contract PairInfo is IPairInfo, Handleable {
         address _indexToken,
         address _stableToken,
         address _pairLiquidity
-    ) external onlyHandler {
+    ) external onlyPoolAdmin {
 
         require(_indexToken != _stableToken, "identical address");
         require(_indexToken != address(0) && _stableToken != address(0), "zero address");
@@ -69,7 +70,7 @@ contract PairInfo is IPairInfo, Handleable {
         return pairToken;
     }
 
-    function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyHandler {
+    function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
 
@@ -79,23 +80,23 @@ contract PairInfo is IPairInfo, Handleable {
         pair.addLpFeeP = _pair.addLpFeeP;
     }
 
-    function updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyHandler {
+    function updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyPoolAdmin {
         tradingConfigs[_pairIndex] = _tradingConfig;
     }
 
-    function updateTradingFeeConfig(uint256 _pairIndex, TradingFeeConfig calldata _tradingFeeConfig) external onlyHandler {
+    function updateTradingFeeConfig(uint256 _pairIndex, TradingFeeConfig calldata _tradingFeeConfig) external onlyPoolAdmin {
         require(_tradingFeeConfig.lpDistributeP + _tradingFeeConfig.keeperDistributeP + _tradingFeeConfig.treasuryDistributeP
             + _tradingFeeConfig.refererDistributeP == PERCENTAGE, "percentage exceed 100%");
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updateFundingFeeConfig(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig) external onlyHandler {
+    function updateFundingFeeConfig(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig) external onlyPoolAdmin {
         require(_fundingFeeConfig.lpDistributeP + _fundingFeeConfig.userDistributeP + _fundingFeeConfig.treasuryDistributeP == PERCENTAGE,
             "percentage exceed 100%");
         fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
     }
 
-    function updatePairMiner(uint256 _pairIndex, address _account, bool _enable) external onlyHandler {
+    function updatePairMiner(uint256 _pairIndex, address _account, bool _enable) external onlyPoolAdmin {
         Pair memory pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), "pair not existed");
 

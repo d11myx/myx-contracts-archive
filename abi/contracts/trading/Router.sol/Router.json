@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "contract IAddressesProvider",
-        "name": "_addressProvider",
+        "name": "addressProvider",
         "type": "address"
       },
       {
@@ -36,7 +36,7 @@
   },
   {
     "inputs": [],
-    "name": "addressProvider",
+    "name": "ADDRESS_PROVIDER",
     "outputs": [
       {
         "internalType": "contract IAddressesProvider",
@@ -165,7 +165,7 @@
           }
         ],
         "internalType": "struct TradingTypes.DecreasePositionRequest",
-        "name": "_request",
+        "name": "request",
         "type": "tuple"
       }
     ],
@@ -241,7 +241,7 @@
           }
         ],
         "internalType": "struct TradingTypes.IncreasePositionRequest",
-        "name": "_request",
+        "name": "request",
         "type": "tuple"
       }
     ],

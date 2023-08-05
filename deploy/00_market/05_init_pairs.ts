@@ -2,8 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     getMockToken,
+    getOrderManager,
     getPairInfo,
     getPairLiquidity,
+    getPairVault,
+    getPositionManager,
     getToken,
     loadReserveConfig,
     MARKET_NAME,
@@ -11,10 +14,20 @@ import {
 } from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
+    const { deployer, poolAdmin } = await getNamedAccounts();
+    const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
+
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
     const pairInfo = await getPairInfo();
+    const pairVault = await getPairVault();
     const pairLiquidity = await getPairLiquidity();
+    const orderManager = await getOrderManager();
+    const positionManager = await getPositionManager();
+
+    await waitForTx(await pairLiquidity.setHandler(orderManager.address, true));
+    await waitForTx(await pairLiquidity.setHandler(positionManager.address, true));
+    await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
 
     for (let symbol of Object.keys(pairConfigs)) {
         const pairToken = await getMockToken(symbol);
@@ -28,13 +41,15 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         const tradingFeeConfig = pairConfig.tradingFeeConfig;
         const fundingFeeConfig = pairConfig.fundingFeeConfig;
 
-        await waitForTx(await pairInfo.addPair(pair.indexToken, pair.stableToken, pairLiquidity.address));
+        await waitForTx(
+            await pairInfo.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken, pairLiquidity.address),
+        );
 
-        let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-        await waitForTx(await pairInfo.updatePair(pairIndex, pair));
-        await waitForTx(await pairInfo.updateTradingConfig(pairIndex, tradingConfig));
-        await waitForTx(await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
-        await waitForTx(await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+        let pairIndex = await pairInfo.connect(poolAdminSigner).pairIndexes(pair.indexToken, pair.stableToken);
+        await waitForTx(await pairInfo.connect(poolAdminSigner).updatePair(pairIndex, pair));
+        await waitForTx(await pairInfo.connect(poolAdminSigner).updateTradingConfig(pairIndex, tradingConfig));
+        await waitForTx(await pairInfo.connect(poolAdminSigner).updateTradingFeeConfig(pairIndex, tradingFeeConfig));
+        await waitForTx(await pairInfo.connect(poolAdminSigner).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
         console.log(`added pair [${symbol}/${MARKET_NAME}] at index`, (await pairInfo.pairsCount()).sub(1).toString());
     }

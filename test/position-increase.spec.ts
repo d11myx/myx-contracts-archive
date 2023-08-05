@@ -1,8 +1,8 @@
-import { SignerWithAddress, testEnv } from './helpers/make-suite';
+import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
-import { ITradingRouter, MockPriceFeed } from '../types';
+import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
-import { getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { getBlockTimestamp, MAX_UINT_AMOUNT, ORDER_MANAGER_ID, TradeType, waitForTx } from '../helpers';
 import { mintAndApprove } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/trading/Router';
 
@@ -27,10 +27,10 @@ describe('Router: increase position ar', () => {
 
     describe('Router: collateral test cases', () => {
         before(async () => {
-            const { btc, vaultPriceFeed } = testEnv;
+            const { btc, oraclePriceFeed } = testEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
+            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
             const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
             await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
         });
@@ -77,8 +77,6 @@ describe('Router: increase position ar', () => {
                 usdt,
                 router,
                 executor,
-                tradingRouter,
-                executeRouter,
                 tradingVault,
                 orderManager,
             } = testEnv;
@@ -101,8 +99,8 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await router.increaseMarketOrdersIndex();
-            console.log(`order:`, await router.increaseMarketOrders(orderId));
+            const orderId = await orderManager.increaseMarketOrdersIndex();
+            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
@@ -121,8 +119,7 @@ describe('Router: increase position ar', () => {
                 usdt,
                 router,
                 executor,
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
             } = testEnv;
 
@@ -145,8 +142,8 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await router.increaseMarketOrdersIndex();
-            console.log(`order:`, await router.increaseMarketOrders(orderId));
+            const orderId = await orderManager.increaseMarketOrdersIndex();
+            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
@@ -166,8 +163,7 @@ describe('Router: increase position ar', () => {
                 usdt,
                 router,
                 executor,
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
             } = testEnv;
 
@@ -191,8 +187,8 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await router.increaseMarketOrdersIndex();
-            console.log(`order:`, await router.increaseMarketOrders(orderId));
+            const orderId = await orderManager.increaseMarketOrdersIndex();
+            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
@@ -212,8 +208,7 @@ describe('Router: increase position ar', () => {
                 usdt,
                 router,
                 executor,
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
             } = testEnv;
 
@@ -238,8 +233,8 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await router.increaseMarketOrdersIndex();
-            console.log(`order:`, await router.increaseMarketOrders(orderId));
+            const orderId = await orderManager.increaseMarketOrdersIndex();
+            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
@@ -261,7 +256,7 @@ describe('Router: increase position ar', () => {
                 users: [trader],
                 usdt,
                 router,
-                executeRouter,
+                orderManager,
                 tradingVault,
             } = testEnv;
 
@@ -299,14 +294,13 @@ describe('Router: increase position ar', () => {
                 usdt,
                 router,
                 executor,
-                vaultPriceFeed,
-                tradingRouter,
-                executeRouter,
+                oraclePriceFeed,
+                orderManager,
                 tradingVault,
             } = testEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
+            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
             const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
             await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
 
@@ -323,7 +317,7 @@ describe('Router: increase position ar', () => {
                 isLong: true,
                 sizeAmount: traderPosition.positionAmount,
             };
-            const orderId = await tradingRouter.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.decreaseMarketOrdersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
@@ -380,11 +374,9 @@ describe('Router: increase position ar', () => {
                 usdt,
                 router,
                 executor,
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
             } = testEnv;
-            console.log('?????????????????????');
             // open position
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -399,7 +391,7 @@ describe('Router: increase position ar', () => {
                 slPrice: 0,
                 sl: 0,
             };
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
+            const orderId = await orderManager.increaseMarketOrdersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -449,8 +441,7 @@ describe('Router: increase position ar', () => {
                 users: [trader],
                 router,
                 executor,
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
             } = testEnv;
 
@@ -468,7 +459,7 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
+            const orderId = await orderManager.increaseMarketOrdersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -484,16 +475,15 @@ describe('Router: increase position ar', () => {
                 users: [trader],
                 btc,
                 usdt,
-                vaultPriceFeed,
-                tradingRouter,
-                executeRouter,
+                oraclePriceFeed,
+                orderManager,
                 tradingVault,
                 router,
                 executor,
             } = testEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
+            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
             const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
             await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
 
@@ -510,7 +500,7 @@ describe('Router: increase position ar', () => {
                 isLong: true,
                 sizeAmount: traderPosition.positionAmount,
             };
-            const orderId = await tradingRouter.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.decreaseMarketOrdersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
@@ -534,9 +524,7 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 usdt,
-                tradingRouter,
-                executeRouter,
-                tradingVault,
+                orderManager,
                 router,
                 executor,
             } = testEnv;
@@ -558,7 +546,7 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
+            const orderId = await orderManager.increaseMarketOrdersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await expect(
                 executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET),
@@ -571,8 +559,7 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 usdt,
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
                 router,
                 executor,
@@ -594,7 +581,7 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
+            const orderId = await orderManager.increaseMarketOrdersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -615,16 +602,15 @@ describe('Router: increase position ar', () => {
                 users: [trader],
                 btc,
                 usdt,
-                vaultPriceFeed,
-                tradingRouter,
-                executeRouter,
+                oraclePriceFeed,
+                orderManager,
                 tradingVault,
                 router,
                 executor,
             } = testEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
+            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
             const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
             await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
 
@@ -641,7 +627,7 @@ describe('Router: increase position ar', () => {
                 isLong: true,
                 sizeAmount: traderPosition.positionAmount,
             };
-            const orderId = await tradingRouter.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.decreaseMarketOrdersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
         });
@@ -651,8 +637,7 @@ describe('Router: increase position ar', () => {
             const {
                 keeper,
                 users: [trader],
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
                 router,
                 executor,
@@ -674,7 +659,7 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
+            const orderId = await orderManager.increaseMarketOrdersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -688,8 +673,7 @@ describe('Router: increase position ar', () => {
             const {
                 keeper,
                 users: [trader],
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
                 router,
                 executor,
@@ -714,7 +698,7 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
+            const orderId = await orderManager.increaseMarketOrdersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -728,8 +712,7 @@ describe('Router: increase position ar', () => {
             const {
                 keeper,
                 users: [trader],
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
                 router,
                 executor,
@@ -744,7 +727,7 @@ describe('Router: increase position ar', () => {
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
             };
-            const orderId = await tradingRouter.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.decreaseMarketOrdersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
@@ -764,23 +747,22 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 btc,
-                tradingRouter,
-                executeRouter,
+                orderManager,
                 tradingVault,
-                fastPriceFeed,
-                vaultPriceFeed,
+                indexPriceFeed,
+                oraclePriceFeed,
                 router,
                 executor,
             } = testEnv;
 
             // modify btc price
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await vaultPriceFeed.priceFeeds(btc.address);
+            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
             const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
 
             await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('40000', 8)));
             await waitForTx(
-                await fastPriceFeed
+                await indexPriceFeed
                     .connect(keeper.signer)
                     .setPrices(
                         [btc.address],
@@ -805,7 +787,7 @@ describe('Router: increase position ar', () => {
                 sl: 0,
             };
 
-            const orderId = await tradingRouter.increaseMarketOrdersIndex();
+            const orderId = await orderManager.increaseMarketOrdersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 

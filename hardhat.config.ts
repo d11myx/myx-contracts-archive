@@ -137,6 +137,9 @@ const config: HardhatUserConfig = {
     //   }
     // },
     networks: {
+        hardhat: {
+            allowUnlimitedContractSize: true,
+        },
         local: {
             url: 'http://127.0.0.1:8545/',
             accounts: [
