@@ -198,6 +198,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 
+    await roleManager.addKeeper(executor.address);
     return {
         deployer: deployer,
         poolAdmin: deployer,

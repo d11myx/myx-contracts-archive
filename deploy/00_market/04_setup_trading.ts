@@ -112,6 +112,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await roleManager.connect(deployerSigner).addContractWhiteList(executor.address));
     await waitForTx(await roleManager.connect(deployerSigner).addContractWhiteList(orderManager.address));
     await waitForTx(await roleManager.connect(deployerSigner).addContractWhiteList(positionManager.address));
+    await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(orderManager.address, true);
