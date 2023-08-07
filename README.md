@@ -97,13 +97,13 @@ Private Key: 0xa661ddc2b2524edf18074ac62ed919c8af1fedcd658d5361e0ed7eee249ff168
 #### event code
 
 ```text
-contract: TradingRouter
+contract: OrderManager
 event: CancelDecreaseOrder id: b225fd6bcccad9342bc10ccc7e25ef77175b77348c8393d669ac2dbc98a1ae29
 event: CancelIncreaseOrder id: 7e93a6b00cb3caacf000d7018943b12e2b4ad29e7849df14ebd51caf4fd739b8
 event: CreateDecreaseOrder id: e71a68544c2c9cf2a006d283baa849468003198fa8d8026335170198a30349dd
 event: CreateIncreaseOrder id: e83629b11df9fcc6b9ebc666eb284c939d1710576a8d3eac23474d70fae8d478
 
-contract: ExecuteRouter
+contract: PositionManager
 event: ExecuteDecreaseOrder id: 9b4ff42a2fc7960edd49c603150f69894e46d386129c040ae7519a427fee0613
 event: ExecuteIncreaseOrder id: 462ad18c79032b6336d456416b46e1012c8ed1c03cd3ff073957ae8834539e72
 event: LiquidatePosition id: aac40228c5d58dfc6360c331165fa5a8fa13f51c87a6124cb1999a4c6117bb79
@@ -119,8 +119,7 @@ event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a
 #### 设置参数
 
 -   PairInfo
-
-```text
+```solidity
 // 更新交易对配置
 updatePair(uint256 _pairIndex, Pair calldata _pair)
 
@@ -182,14 +181,14 @@ struct FundingFeeConfig {
 
 #### 开仓
 
--   TradingRouter
+-   Router
 
-```text
+```solidity
 // 创建开仓请求（前端用户)
 createIncreaseOrder(IncreasePositionRequest memory request)
 
 // 取消订单（前端用户）
-TradingRouter.cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType)
+cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType)
 
 struct IncreasePositionRequest {
     address account;               // 当前用户
@@ -205,24 +204,31 @@ struct IncreasePositionRequest {
     uint256 sl;                    // 止损数量
 }
 
-// 当前市价开仓请求最新index
-uint256 public increaseMarketOrdersIndex;
-// 当前市价关仓请求最新index
-uint256 public decreaseMarketOrdersIndex;
+```
+
+- Executor
+```solidity
 // 当前市价开仓请求未执行起始index
 uint256 public increaseMarketOrderStartIndex;
 // 当前市价关仓请求未执行起始index
 uint256 public decreaseMarketOrderStartIndex;
+```
+
+- OrderManager
+```solidity
+// 当前市价开仓请求最新index
+uint256 public increaseMarketOrdersIndex;
+// 当前市价关仓请求最新index
+uint256 public decreaseMarketOrdersIndex;
 // 当前限价开仓请求最新index
 uint256 public increaseLimitOrdersIndex;
 // 当前限价关仓请求最新index
 uint256 public decreaseLimitOrdersIndex;
-
 ```
 
--   ExecuteRouter
+-   Executor
 
-```text
+```solidity
 // 设置price并执行市价订单
 setPricesAndExecuteMarketOrders(
     address[] memory _tokens,
@@ -242,7 +248,7 @@ setPricesAndExecuteLimitOrders(
 )
 
 // 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
-executeIncreaseMarkets(uint256 _endIndex)
+executeIncreaseMarketOrders(uint256 _endIndex)
 
 // 批量执行限价开仓
 executeIncreaseLimitOrders(uint256[] memory _orderIds)
@@ -253,9 +259,9 @@ executeIncreaseOrder(uint256 _orderId, TradeType tradeType)
 
 #### 减仓
 
--   TradingRouter
+-   Router
 
-```text
+```solidity
 // 创建减仓请求（前端用户)
 createIncreaseOrder(IncreasePositionRequest memory request)
 
@@ -274,9 +280,9 @@ struct DecreasePositionRequest {
 cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType)
 ```
 
--   ExecuteRouter
+-   Executor
 
-```text
+```solidity
 
 // 批量执行市价减仓（keeper: Account 0 / Account 1）, endIndex: 终止index
 executeDecreaseMarkets(uint256 _endIndex)
@@ -290,9 +296,9 @@ executeDecreaseOrder(uint256 _orderId, TradeType tradeType)
 
 #### 止盈止损
 
--   TradingRouter
+-   Router
 
-```text
+```solidity
 // 单独创建止盈止损
 createTpSl(CreateTpSlRequest memory _request)
 
@@ -309,9 +315,9 @@ struct CreateTpSlRequest {
 
 #### 清算
 
--   ExecuteRouter
+-   Executor
 
-```text
+```solidity
 // 设置price并执行清算
 setPricesAndLiquidatePositions(
     address[] memory _tokens,
@@ -326,9 +332,9 @@ function liquidatePositions(bytes32[] memory _positionKeys)
 
 #### ADL
 
--   ExecuteRouter
+-   Executor
 
-```text
+```solidity
 // 设置price并执行ADL
 setPricesAndExecuteADL(
     address[] memory _tokens,
@@ -353,7 +359,7 @@ executeADLAndDecreaseOrder(
 
 -   TradingVault
 
-```text
+```solidity
 // 获取交易手续费
 function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount)
 
