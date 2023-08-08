@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 interface IRoleManager {
 
-    function contractWhiteList(address) external view returns (bool);
-
     function setRoleAdmin(bytes32 role, bytes32 adminRole) external;
 
     function addAdmin(address) external;
@@ -37,7 +35,4 @@ interface IRoleManager {
 
     function isKeeper(address) external view returns (bool);
 
-    function addContractWhiteList(address target) external;
-
-    function removeContractWhiteList(address target) external;
 }
