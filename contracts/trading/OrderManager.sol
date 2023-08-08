@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/utils/math/Math.sol';
 
-import "../interfaces/IVaultPriceFeed.sol";
-import "../pair/interfaces/IPairInfo.sol";
-import "../pair/interfaces/IPairVault.sol";
-import "../libraries/PrecisionUtils.sol";
-import "../libraries/PositionKey.sol";
-import "../libraries/Int256Utils.sol";
-import "../libraries/access/Handleable.sol";
-import "../libraries/type/TradingTypes.sol";
+import '../interfaces/IVaultPriceFeed.sol';
+import '../pair/interfaces/IPairInfo.sol';
+import '../pair/interfaces/IPairVault.sol';
+import '../libraries/PrecisionUtils.sol';
+import '../libraries/PositionKey.sol';
+import '../libraries/Int256Utils.sol';
+import '../libraries/access/Handleable.sol';
+import '../libraries/type/TradingTypes.sol';
 
-import "../interfaces/ITradingVault.sol";
-import "hardhat/console.sol";
-import "../interfaces/IOrderManager.sol";
-import "../interfaces/IAddressesProvider.sol";
-import "../interfaces/IRoleManager.sol";
-import "../interfaces/IPositionManager.sol";
+import '../interfaces/ITradingVault.sol';
+import 'hardhat/console.sol';
+import '../interfaces/IOrderManager.sol';
+import '../interfaces/IAddressesProvider.sol';
+import '../interfaces/IRoleManager.sol';
+import '../interfaces/IPositionManager.sol';
 
 contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
     using SafeERC20 for IERC20;
@@ -53,6 +53,8 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
     ITradingVault public tradingVault;
     IVaultPriceFeed public vaultPriceFeed;
     IPositionManager public positionManager;
+    address public addressPositionManager;
+    address public router;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -67,9 +69,21 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         vaultPriceFeed = _vaultPriceFeed;
     }
 
-    modifier onlyWhiteListOrSelf(address account) {
-        require(
-            IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) || account == msg.sender, "no access");
+    modifier onlyPositionManager() {
+        require(msg.sender == addressPositionManager, 'Position Manager: forbidden');
+        _;
+    }
+
+    function setPositionManager(address _postintionManager) external onlyPoolAdmin {
+        addressPositionManager = _postintionManager;
+    }
+
+    function setRouter(address _router) external onlyPoolAdmin {
+        router = _router;
+    }
+
+    modifier onlyCreateOrderAddress(address account) {
+        require(msg.sender == router || msg.sender == addressPositionManager || account == msg.sender, 'no access');
         _;
     }
 
@@ -85,18 +99,21 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
 
     function createOrder(
         TradingTypes.CreateOrderRequest memory request
-    ) public nonReentrant onlyWhiteListOrSelf(request.account) returns (uint256 orderId) {
-        require(address(positionManager) != address(0), "zero address");
+    ) public nonReentrant onlyCreateOrderAddress(request.account) returns (uint256 orderId) {
+        require(address(positionManager) != address(0), 'zero address');
 
         address account = request.account;
-        require(!tradingVault.isFrozen(account), "account is frozen");
+        require(!tradingVault.isFrozen(account), 'account is frozen');
 
         IPairInfo.Pair memory pair = pairInfo.getPair(request.pairIndex);
-        require(pair.enable, "trade pair not supported");
+        require(pair.enable, 'trade pair not supported');
 
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
             // check size
-            require(request.sizeAmount == 0 || _checkTradingAmount(request.pairIndex, request.sizeAmount.abs()), "invalid trade size");
+            require(
+                request.sizeAmount == 0 || _checkTradingAmount(request.pairIndex, request.sizeAmount.abs()),
+                'invalid trade size'
+            );
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
@@ -105,21 +122,47 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
-                (uint256 afterPosition,) = position.validLeverage(price, request.collateral, uint256(request.sizeAmount), true, tradingConfig.minLeverage, tradingConfig.maxLeverage, tradingConfig.maxPositionAmount);
+                (uint256 afterPosition, ) = position.validLeverage(
+                    price,
+                    request.collateral,
+                    uint256(request.sizeAmount),
+                    true,
+                    tradingConfig.minLeverage,
+                    tradingConfig.maxLeverage,
+                    tradingConfig.maxPositionAmount
+                );
                 // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
-                require(afterPosition > 0, "zero position amount");
+                require(afterPosition > 0, 'zero position amount');
 
                 // check tp sl
-                require(request.tp <= afterPosition && request.sl <= afterPosition, "tp/sl exceeds max size");
-                require(request.tp == 0 || !positionHasTpSl[positionKey][TradingTypes.TradeType.TP], "tp already exists");
-                require(request.sl == 0 || !positionHasTpSl[positionKey][TradingTypes.TradeType.SL], "sl already exists");
+                require(request.tp <= afterPosition && request.sl <= afterPosition, 'tp/sl exceeds max size');
+                require(
+                    request.tp == 0 || !positionHasTpSl[positionKey][TradingTypes.TradeType.TP],
+                    'tp already exists'
+                );
+                require(
+                    request.sl == 0 || !positionHasTpSl[positionKey][TradingTypes.TradeType.SL],
+                    'sl already exists'
+                );
             }
             if (request.sizeAmount <= 0) {
                 // check leverage
-                position.validLeverage(price, request.collateral, uint256(request.sizeAmount.abs()), false, tradingConfig.minLeverage, tradingConfig.maxLeverage, tradingConfig.maxPositionAmount);
+                position.validLeverage(
+                    price,
+                    request.collateral,
+                    uint256(request.sizeAmount.abs()),
+                    false,
+                    tradingConfig.minLeverage,
+                    tradingConfig.maxLeverage,
+                    tradingConfig.maxPositionAmount
+                );
 
                 //TODO if request size exceed position size, can calculate the max size
-                require(uint256(request.sizeAmount.abs()) <= position.positionAmount - positionDecreaseTotalAmount[positionKey], "decrease amount exceed position");
+                require(
+                    uint256(request.sizeAmount.abs()) <=
+                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
+                    'decrease amount exceed position'
+                );
             }
 
             // transfer collateral
@@ -130,38 +173,43 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
 
         if (request.tradeType == TradingTypes.TradeType.TP || request.tradeType == TradingTypes.TradeType.SL) {
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
-            require(request.tp <= position.positionAmount && request.sl <= position.positionAmount, "tp/sl exceeds max size");
-            require(request.collateral == 0, "no collateral required");
+            require(
+                request.tp <= position.positionAmount && request.sl <= position.positionAmount,
+                'tp/sl exceeds max size'
+            );
+            require(request.collateral == 0, 'no collateral required');
         }
 
         if (request.sizeAmount > 0) {
-            return _createIncreaseOrder(
-                TradingTypes.IncreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: uint256(request.sizeAmount),
-                    tpPrice: request.tpPrice,
-                    tp: request.tp,
-                    slPrice: request.slPrice,
-                    sl: request.sl
-                })
-            );
+            return
+                _createIncreaseOrder(
+                    TradingTypes.IncreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        openPrice: request.openPrice,
+                        isLong: request.isLong,
+                        sizeAmount: uint256(request.sizeAmount),
+                        tpPrice: request.tpPrice,
+                        tp: request.tp,
+                        slPrice: request.slPrice,
+                        sl: request.sl
+                    })
+                );
         } else if (request.sizeAmount < 0) {
-            return _createDecreaseOrder(
-                TradingTypes.DecreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    triggerPrice: request.openPrice,
-                    sizeAmount: uint256(request.sizeAmount.abs()),
-                    isLong: request.isLong
-                })
-            );
+            return
+                _createDecreaseOrder(
+                    TradingTypes.DecreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        triggerPrice: request.openPrice,
+                        sizeAmount: uint256(request.sizeAmount.abs()),
+                        isLong: request.isLong
+                    })
+                );
         } else {
             //todo
             revert('size eq 0');
@@ -170,15 +218,19 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
     }
 
     function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) public nonReentrant {
-        console.log("cancelIncreaseOrder orderId", orderId, "tradeType", uint8(tradeType));
-        console.log("cancelIncreaseOrder orderId", orderId, "isIncrease", isIncrease);
+        console.log('cancelIncreaseOrder orderId', orderId, 'tradeType', uint8(tradeType));
+        console.log('cancelIncreaseOrder orderId', orderId, 'isIncrease', isIncrease);
 
         if (isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = getIncreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
                 return;
             }
-            require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) || order.account == msg.sender, "no access");
+            require(
+                IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) ||
+                    order.account == msg.sender,
+                'no access'
+            );
 
             _cancelIncreaseOrder(order);
         } else {
@@ -186,7 +238,11 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
             if (order.account == address(0)) {
                 return;
             }
-            require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) || order.account == msg.sender, "no access");
+            require(
+                IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) ||
+                    order.account == msg.sender,
+                'no access'
+            );
 
             _cancelDecreaseOrder(order);
         }
@@ -222,9 +278,9 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
             order.orderId = increaseLimitOrdersIndex;
 
             increaseLimitOrders[increaseLimitOrdersIndex++] = order;
-            console.log("orderId", order.orderId, "increaseLimitOrdersIndex", increaseLimitOrdersIndex);
+            console.log('orderId', order.orderId, 'increaseLimitOrdersIndex', increaseLimitOrdersIndex);
         } else {
-            revert("invalid trade type");
+            revert('invalid trade type');
         }
 
         this.addOrderToPosition(
@@ -236,7 +292,8 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
                 order.tradeType,
                 order.orderId,
                 order.sizeAmount
-            ));
+            )
+        );
 
         emit CreateIncreaseOrder(
             order.account,
@@ -302,7 +359,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
             bytes32 positionKey = PositionKey.getPositionKey(_request.account, _request.pairIndex, _request.isLong);
             positionHasTpSl[positionKey][TradingTypes.TradeType.SL] = true;
         } else {
-            revert("invalid trade type");
+            revert('invalid trade type');
         }
 
         // add decrease order
@@ -315,7 +372,8 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
                 order.tradeType,
                 order.orderId,
                 order.sizeAmount
-            ));
+            )
+        );
 
         emit CreateDecreaseOrder(
             order.account,
@@ -347,7 +405,8 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
                 order.tradeType,
                 order.orderId,
                 order.sizeAmount
-            ));
+            )
+        );
 
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
             delete increaseMarketOrders[order.orderId];
@@ -374,7 +433,8 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
                 order.tradeType,
                 order.orderId,
                 order.sizeAmount
-            ));
+            )
+        );
 
         bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
 
@@ -399,7 +459,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         } else if (tradeType == TradingTypes.TradeType.LIMIT) {
             order = increaseLimitOrders[orderId];
         } else {
-            revert("invalid trade type");
+            revert('invalid trade type');
         }
         return order;
     }
@@ -416,20 +476,28 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         return order;
     }
 
-    function addOrderToPosition(PositionOrder memory order) public onlyHandler {
+    function addOrderToPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
         positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(order);
-        console.log("positionOrders add orderId", order.orderId, "tradeType", uint8(order.tradeType));
+        console.log('positionOrders add orderId', order.orderId, 'tradeType', uint8(order.tradeType));
 
-        if (!order.isIncrease && (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)) {
+        if (
+            !order.isIncrease &&
+            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+        ) {
             positionDecreaseTotalAmount[positionKey] += order.sizeAmount;
         }
     }
 
-    function removeOrderFromPosition(PositionOrder memory order) public onlyHandler {
-        console.log("removeOrderFromPosition account %s orderId %s tradeType %s ", order.account, order.orderId, uint8(order.tradeType));
+    function removeOrderFromPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) {
+        console.log(
+            'removeOrderFromPosition account %s orderId %s tradeType %s ',
+            order.account,
+            order.orderId,
+            uint8(order.tradeType)
+        );
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
 
@@ -439,47 +507,58 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         if (index < lastIndex) {
             // swap last order
             PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-            bytes32 lastOrderKey = PositionKey.getOrderKey(lastOrder.isIncrease, lastOrder.tradeType, lastOrder.orderId);
+            bytes32 lastOrderKey = PositionKey.getOrderKey(
+                lastOrder.isIncrease,
+                lastOrder.tradeType,
+                lastOrder.orderId
+            );
 
             positionOrders[positionKey][index] = lastOrder;
             positionOrderIndex[positionKey][lastOrderKey] = index;
         }
         delete positionOrderIndex[positionKey][orderKey];
         positionOrders[positionKey].pop();
-        console.log("positionOrders remove orderId", order.orderId, "tradeType", uint8(order.tradeType));
+        console.log('positionOrders remove orderId', order.orderId, 'tradeType', uint8(order.tradeType));
 
-        if (!order.isIncrease && (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)) {
+        if (
+            !order.isIncrease &&
+            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+        ) {
             positionDecreaseTotalAmount[positionKey] -= order.sizeAmount;
         }
     }
 
-    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) public onlyHandler {
+    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) public onlyPositionManager {
         positionHasTpSl[key][tradeType] = has;
     }
 
-    function removeIncreaseMarketOrders(uint256 orderId) public onlyHandler {
+    function removeIncreaseMarketOrders(uint256 orderId) public onlyPositionManager {
         delete increaseMarketOrders[orderId];
     }
 
-    function removeIncreaseLimitOrders(uint256 orderId) public onlyHandler {
+    function removeIncreaseLimitOrders(uint256 orderId) public onlyPositionManager {
         delete increaseLimitOrders[orderId];
     }
 
-    function removeDecreaseMarketOrders(uint256 orderId) public onlyHandler {
+    function removeDecreaseMarketOrders(uint256 orderId) public onlyPositionManager {
         delete decreaseMarketOrders[orderId];
     }
 
-    function removeDecreaseLimitOrders(uint256 orderId) public onlyHandler {
+    function removeDecreaseLimitOrders(uint256 orderId) public onlyPositionManager {
         delete decreaseLimitOrders[orderId];
     }
 
-    function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) public onlyHandler {
+    function setOrderNeedADL(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool needADL
+    ) public onlyPositionManager {
         TradingTypes.DecreasePositionOrder storage order;
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];
         } else {
             order = decreaseLimitOrders[orderId];
-            require(order.tradeType == tradeType, "trade type not match");
+            require(order.tradeType == tradeType, 'trade type not match');
         }
         order.needADL = needADL;
     }

@@ -88,6 +88,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as PositionManager;
 
     await tradingVault.setPositionManager(positionManager.address);
+    await orderManager.setPositionManager(positionManager.address);
 
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
@@ -97,6 +98,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
+    await orderManager.setRouter(router.address);
 
     // Executor
     const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
