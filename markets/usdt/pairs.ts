@@ -33,6 +33,7 @@ export const btcPairInfo: PairInfoConfig = {
     fundingFeeConfig: {
         minFundingRate: 100,
         maxFundingRate: 10000,
+        defaultFundingRate: 1000000,
         fundingWeightFactor: 100,
         liquidityPremiumFactor: 10000,
         interest: 0,
@@ -73,6 +74,7 @@ export const ethPairInfo: PairInfoConfig = {
     fundingFeeConfig: {
         minFundingRate: 100,
         maxFundingRate: 10000,
+        defaultFundingRate: 1000000,
         fundingWeightFactor: 100,
         liquidityPremiumFactor: 10000,
         interest: 0,
