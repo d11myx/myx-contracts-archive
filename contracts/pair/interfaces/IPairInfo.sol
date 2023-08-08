@@ -8,9 +8,9 @@ interface IPairInfo {
         address stableToken;
         address pairToken;
         bool enable;
-        uint256 kOfSwap;
+        uint256 kOfSwap; //Initial k value of liquidity
         uint256 expectIndexTokenP; //  10000 for 100%
-        uint256 addLpFeeP;
+        uint256 addLpFeeP; // Add liquidity fee
     }
 
     struct TradingConfig {
@@ -19,9 +19,9 @@ interface IPairInfo {
         uint256 minTradeAmount;
         uint256 maxTradeAmount;
         uint256 maxPositionAmount;
-        uint256 maintainMarginRate; // 10000 for 100%
-        uint256 priceSlipP;
-        uint256 maxPriceDeviationP;
+        uint256 maintainMarginRate; // Maintain the margin rate of 10000 for 100%
+        uint256 priceSlipP; // Price slip point
+        uint256 maxPriceDeviationP; // Maximum offset of index price
     }
 
     struct TradingFeeConfig {
@@ -37,11 +37,12 @@ interface IPairInfo {
 
     struct FundingFeeConfig {
         // factor
-        uint256 minFundingRate;             // 最小资金费率   1000000 for 100%
-        uint256 maxFundingRate;             // 最大资金费率   1000000 for 100%
-        uint256 fundingWeightFactor;        // 多空双方资金费率权重系数 10000 for 100%
-        uint256 liquidityPremiumFactor;     // 流动性对于溢价的系数  10000 for 100%
-        uint256 interest;
+        int256 minFundingRate;             // Minimum capital rate 1,000,000 for 100%
+        int256 maxFundingRate;             // The maximum capital rate is 1,000,000 for 100%
+        int256 defaultFundingRate;          // default capital rate  1,000,000 for 100%
+        uint256 fundingWeightFactor;        // The weight coefficient of the fund rate of both sides is 10000 for 100%
+        uint256 liquidityPremiumFactor;     // The coefficient of liquidity to premium is 10,000 for 100%
+        int256 interest;
         // Distribute
         uint256 lpDistributeP;
         uint256 userDistributeP;

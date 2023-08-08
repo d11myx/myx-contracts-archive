@@ -19,7 +19,7 @@ import "../token/PairToken.sol";
 import "hardhat/console.sol";
 
 contract PairLiquidity is IPairLiquidity, Handleable {
-
+    using Math for uint256;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Address for address payable;
@@ -40,6 +40,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     mapping(address => mapping(address => uint256)) public userPairTokens;
 
     event AddLiquidity(
+        address indexed funder,
         address indexed account,
         uint256 indexed pairIndex,
         uint256 indexAmount,
@@ -49,11 +50,23 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
     event RemoveLiquidity(
         address indexed account,
+        address indexed receiver,
         uint256 indexed pairIndex,
         uint256 indexAmount,
         uint256 stableAmount,
         uint256 lpAmount
     );
+
+    event Swap(
+        address indexed funder,
+        address indexed receiver,
+        uint256 indexed pairIndex,
+        bool isBuy,                 // buy indexToken with stableToken
+        uint256 amountIn,
+        uint256 amountOut
+    );
+
+    receive() external payable {}
 
     constructor(
         IAddressesProvider addressProvider,
@@ -87,9 +100,13 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        require(pair.indexToken == weth && pair.pairToken != address(0), "invalid pair");
+
         IWETH(weth).deposit{value: msg.value}();
-        IWETH(weth).transfer(msg.sender, msg.value);
-        return _addLiquidity(msg.sender, msg.sender, _pairIndex, msg.value, _stableAmount);
+
+        IWETH(pair.stableToken).transferFrom(msg.sender, address(this), _stableAmount);
+        return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
     }
 
     function addLiquidityForAccount(address _funder, address _account, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external onlyHandler returns (uint256) {
@@ -97,16 +114,123 @@ contract PairLiquidity is IPairLiquidity, Handleable {
     }
 
     function removeLiquidity(uint256 _pairIndex, uint256 _amount) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
-        (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, msg.sender, _pairIndex, _amount);
-        if (receivedIndexAmount > 0 && pairInfo.getPair(_pairIndex).indexToken == weth) {
+        (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, address(this), _pairIndex, _amount);
+
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        if (receivedIndexAmount > 0 && pair.indexToken == weth) {
             IWETH(weth).withdraw(receivedIndexAmount);
             payable(msg.sender).sendValue(receivedIndexAmount);
+        }
+        if (receivedStableAmount > 0) {
+            IERC20(pair.stableToken).transfer(msg.sender, receivedStableAmount);
         }
         return (receivedIndexAmount, receivedStableAmount);
     }
 
     function removeLiquidityForAccount(address _account, address _receiver, uint256 _pairIndex, uint256 _amount) external onlyHandler returns (uint256, uint256) {
         return _removeLiquidity(_account, _receiver, _pairIndex, _amount);
+    }
+
+    function swapInEth(uint256 _pairIndex, uint256 _minOut) external payable onlyHandler returns (uint256 amountIn, uint256 amountOut) {
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        require(pair.indexToken == weth && pair.pairToken != address(0), "invalid pair");
+
+        IWETH(weth).deposit{value: msg.value}();
+        IERC20(weth).approve(address(this), msg.value);
+
+        (amountIn, amountOut) = _swap(address(this), msg.sender, _pairIndex, false, msg.value, _minOut);
+
+        // send last eth back
+        if (amountIn < msg.value) {
+            uint256 lastETH = msg.value - amountIn;
+            IWETH(weth).withdraw(lastETH);
+            payable(msg.sender).sendValue(lastETH);
+        }
+        return (amountIn, amountOut);
+    }
+
+    function swap(uint256 _pairIndex, bool _isBuy, uint256 _amountIn, uint256 _minOut) external onlyHandler returns (uint256 amountIn, uint256 amountOut) {
+        (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut);
+        if (amountOut > 0 && _isBuy && pairInfo.getPair(_pairIndex).indexToken == weth) {
+            IWETH(weth).withdraw(amountOut);
+            payable(msg.sender).sendValue(amountOut);
+        }
+        return (amountIn, amountOut);
+    }
+
+    function swapForAccount(address _funder, address _receiver, uint256 _pairIndex, bool _isBuy, uint256 _amountIn, uint256 _minOut) external onlyHandler returns (uint256 amountIn, uint256 amountOut) {
+        return _swap(_funder, _receiver, _pairIndex, _isBuy, _amountIn, _minOut);
+    }
+
+    function _swap(address _funder, address _receiver, uint256 _pairIndex, bool _isBuy, uint256 _amountIn, uint256 _minOut) internal returns (uint256 amountIn, uint256 amountOut) {
+        console.log("swap funder %s receiver %s", _funder, _receiver);
+        console.log("swap pairIndex %s isBuy %s expectAmountIn %s", _pairIndex, _isBuy, _amountIn);
+
+        require(_amountIn > 0, "swap invalid amount in");
+
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        require(pair.pairToken != address(0), "swap invalid pair");
+
+        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+
+        uint256 price = _getPrice(pair.indexToken);
+
+        // total delta
+        uint256 indexTotalDelta = vault.indexTotalAmount.mulPrice(price);
+        uint256 stableTotalDelta = vault.stableTotalAmount;
+        console.log("swap indexTotalDelta %s stableTotalDelta %s", indexTotalDelta, stableTotalDelta);
+
+        uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
+        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
+        uint256 expectStableDelta = totalDelta - expectIndexDelta;
+        console.log("swap expectIndexDelta %s expectStableDelta %s", expectIndexDelta, expectStableDelta);
+
+        if (_isBuy) {
+            // index out stable in
+            require(expectStableDelta > stableTotalDelta, "no need stable token");
+
+            uint256 stableInDelta = _amountIn;
+            stableInDelta = stableInDelta.min(expectStableDelta - stableTotalDelta);
+            console.log("swap stableInDelta", stableInDelta);
+
+            amountOut = stableInDelta.divPrice(price);
+            uint256 availableIndex = vault.indexTotalAmount - vault.indexReservedAmount;
+            console.log("swap amountOut indexToken %s availableIndex %s", amountOut, availableIndex);
+
+            require(availableIndex > 0, "no available index token");
+
+            amountOut = amountOut.min(availableIndex);
+            amountIn = amountOut.divPrice(price);
+
+            console.log("swap amountIn %s amountOut %s", amountIn, amountOut);
+            require(amountOut >= _minOut, "insufficient minOut");
+
+            pairVault.swap(_pairIndex, _isBuy, amountIn, amountOut);
+
+            pairVault.transferTokenTo(pair.indexToken, _receiver, amountOut);
+            IERC20(pair.stableToken).safeTransferFrom(_funder, address(pairVault), amountIn);
+        } else {
+            // index in stable out
+            require(expectIndexDelta > indexTotalDelta, "no need index token");
+
+            uint256 indexInDelta = _amountIn.mulPrice(price);
+            indexInDelta = indexInDelta.min(expectIndexDelta - indexTotalDelta);
+            console.log("swap indexInDelta", indexInDelta);
+
+            amountOut = indexInDelta;
+            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
+            console.log("swap amountOut stableToken %s availableStable %s", amountOut, availableStable);
+
+            require(availableStable > 0, "no stable token");
+
+            amountOut = amountOut.min(availableStable);
+            amountIn = amountOut.divPrice(price);
+
+            IERC20(pair.indexToken).safeTransferFrom(_funder, address(pairVault), amountIn);
+            pairVault.transferTokenTo(pair.stableToken, _receiver, amountOut);
+        }
+
+        emit Swap(_funder, _receiver, _pairIndex, _isBuy, amountIn, amountOut);
     }
 
     function _addLiquidity(address _funder, address _account, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) private returns (uint256 mintAmount) {
@@ -119,9 +243,10 @@ contract PairLiquidity is IPairLiquidity, Handleable {
 
         console.log("addLiquidity indexAmount", _indexAmount, "stableAmount", _stableAmount);
         // transfer token
-        IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), _indexAmount);
-        IERC20(pair.stableToken).safeTransferFrom(_funder, address(this), _stableAmount);
-
+        if (_funder != address(this)) {
+            IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), _indexAmount);
+            IERC20(pair.stableToken).safeTransferFrom(_funder, address(this), _stableAmount);
+        }
         // fee
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
@@ -159,8 +284,9 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 console.log("addLiquidity indexTotalDelta", indexTotalDelta, "stableTotalDelta", stableTotalDelta);
 
                 // expect delta
-                uint256 expectIndexDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(pair.expectIndexTokenP);
-                uint256 expectStableDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+                uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
+                uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
+                uint256 expectStableDelta = totalDelta - expectIndexDelta;
                 console.log("addLiquidity expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
 
                 (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
@@ -200,7 +326,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         IERC20(pair.stableToken).safeTransfer(address(pairVault), afterFeeStableAmount);
         console.log("addLiquidity afterFeeIndexAmount", afterFeeIndexAmount, "afterFeeStableAmount", afterFeeStableAmount);
 
-        emit AddLiquidity(_account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
+        emit AddLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
 
         return mintAmount;
     }
@@ -228,7 +354,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         pairVault.transferTokenTo(pair.indexToken, _receiver, receiveIndexTokenAmount);
         pairVault.transferTokenTo(pair.stableToken, _receiver, receiveStableTokenAmount);
 
-        emit RemoveLiquidity(_account, _pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount, _amount);
+        emit RemoveLiquidity(_account, _receiver, _pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount, _amount);
 
         return (receiveIndexTokenAmount, receiveStableTokenAmount);
     }
@@ -292,8 +418,9 @@ contract PairLiquidity is IPairLiquidity, Handleable {
                 uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
                 console.log("getMintLpAmount indexTotalDelta", indexTotalDelta, "stableTotalDelta", stableTotalDelta);
 
-                uint256 expectIndexDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(pair.expectIndexTokenP);
-                uint256 expectStableDelta = (indexTotalDelta + stableTotalDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+                uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
+                uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
+                uint256 expectStableDelta = totalDelta - expectIndexDelta;
                 console.log("getMintLpAmount expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
 
                 (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
@@ -346,8 +473,9 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         console.log("getMintLpAmount depositDelta", depositDelta);
 
         // expect delta
-        uint256 expectIndexDelta = (indexReserveDelta + stableReserveDelta + depositDelta).mulPercentage(pair.expectIndexTokenP);
-        uint256 expectStableDelta = (indexReserveDelta + stableReserveDelta + depositDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+        uint256 totalDelta = (indexReserveDelta + stableReserveDelta + depositDelta);
+        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
+        uint256 expectStableDelta = totalDelta - expectIndexDelta;
         console.log("getDepositAmount expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
 
         uint256 depositIndexTokenDelta;
@@ -402,8 +530,9 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         console.log("getReceivedAmount receiveDelta", receiveDelta);
 
         // expect delta
-        uint256 expectIndexDelta = (indexReserveDelta + stableReserveDelta - receiveDelta).mulPercentage(pair.expectIndexTokenP);
-        uint256 expectStableDelta = (indexReserveDelta + stableReserveDelta - receiveDelta).mulPercentage(PrecisionUtils.oneHundredPercentage() - pair.expectIndexTokenP);
+        uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
+        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
+        uint256 expectStableDelta = totalDelta - expectIndexDelta;
         console.log("getReceivedAmount expectIndexDelta", expectIndexDelta, "expectStableDelta", expectStableDelta);
 
         // received delta of indexToken and stableToken

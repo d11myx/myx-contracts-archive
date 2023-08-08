@@ -66,14 +66,6 @@ library Position {
         uint256 maxLeverage,
         uint256 maxPositionAmount
     ) internal view returns (uint256, uint256) {
-        // console.log("validLeverage sizeAmount", _sizeAmount, "collateral", _collateral.toString());
-
-        // bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
-        // Position.Info memory position = tradingVault.getPositionByKey(key);
-        // IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
-        // uint256 price = getPrice(pair.indexToken);
-
-        // IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
         // position >= decrease size
         require(_increase ? true : self.positionAmount >= _sizeAmount, "decrease amount exceed position");
 
@@ -90,20 +82,16 @@ library Position {
 
         // pnl
         if (self.positionAmount > 0) {
-            // uint256 price = getPrice(pair.indexToken);
             totalCollateral += getUnrealizedPnl(self,self.positionAmount,price);
         }
 
-        // console.log("validLeverage totalCollateral", totalCollateral.toString());
         require(totalCollateral >= 0, "collateral not enough for pnl");
 
-        // console.log("validLeverage afterPosition", afterPosition, "collateralDelta", totalCollateral.abs().divPrice(price));
         require(afterPosition >= totalCollateral.abs().divPrice(price) * minLeverage
             && afterPosition <= totalCollateral.abs().divPrice(price) * maxLeverage, "leverage incorrect");
         require(afterPosition <= maxPositionAmount, "exceed max position");
 
         return (afterPosition, totalCollateral.abs());
     }
-
 
 }
