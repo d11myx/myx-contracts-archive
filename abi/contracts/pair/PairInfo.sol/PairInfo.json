@@ -101,14 +101,19 @@
     "name": "fundingFeeConfigs",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "minFundingRate",
-        "type": "uint256"
+        "type": "int256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "maxFundingRate",
-        "type": "uint256"
+        "type": "int256"
+      },
+      {
+        "internalType": "int256",
+        "name": "defaultFundingRate",
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -121,9 +126,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "interest",
-        "type": "uint256"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -157,14 +162,19 @@
       {
         "components": [
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "minFundingRate",
-            "type": "uint256"
+            "type": "int256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "maxFundingRate",
-            "type": "uint256"
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "defaultFundingRate",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -177,9 +187,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "interest",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -628,14 +638,19 @@
       {
         "components": [
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "minFundingRate",
-            "type": "uint256"
+            "type": "int256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "maxFundingRate",
-            "type": "uint256"
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "defaultFundingRate",
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -648,9 +663,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int256",
             "name": "interest",
-            "type": "uint256"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
