@@ -217,7 +217,11 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         return 0;
     }
 
-    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) public nonReentrant {
+    function cancelOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease
+    ) public nonReentrant onlyCreateOrderAddress(msg.sender) {
         console.log('cancelIncreaseOrder orderId', orderId, 'tradeType', uint8(tradeType));
         console.log('cancelIncreaseOrder orderId', orderId, 'isIncrease', isIncrease);
 
@@ -226,11 +230,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
             if (order.account == address(0)) {
                 return;
             }
-            require(
-                IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) ||
-                    order.account == msg.sender,
-                'no access'
-            );
 
             _cancelIncreaseOrder(order);
         } else {
@@ -238,12 +237,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
             if (order.account == address(0)) {
                 return;
             }
-            require(
-                IRoleManager(ADDRESS_PROVIDER.getRoleManager()).contractWhiteList(msg.sender) ||
-                    order.account == msg.sender,
-                'no access'
-            );
-
             _cancelDecreaseOrder(order);
         }
     }
