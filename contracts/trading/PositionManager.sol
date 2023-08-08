@@ -74,12 +74,9 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     }
 
     function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) public nonReentrant onlyKeeper {
-        console.log('executeIncreaseOrder account %s orderId %s tradeType %s', msg.sender, _orderId, uint8(_tradeType));
-
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
 
         if (order.account == address(0)) {
-            console.log('executeIncreaseOrder not exists', _orderId);
             return;
         }
 
@@ -277,12 +274,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     }
 
     function _executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) internal {
-        console.log('executeDecreaseOrder account %s orderId %s tradeType %s', msg.sender, _orderId, uint8(_tradeType));
-
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
+        console.log("executeDecreaseOrder account %s orderId %s tradeType %s", order.account, _orderId, uint8(order.tradeType));
 
         if (order.account == address(0)) {
-            console.log('executeDecreaseOrder not exists', _orderId);
             return;
         }
 
@@ -537,8 +532,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     }
 
     function _liquidatePosition(bytes32 _positionKey) internal {
-        console.log('liquidatePosition start');
         Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
+        console.log("liquidatePosition account %s pairIndex %s", position.account, position.pairIndex);
 
         if (position.positionAmount == 0) {
             console.log('position not exists');
