@@ -68,6 +68,24 @@ interface ITradingVault {
 
     function shortTracker(uint256 pairIndex) external view returns (uint256);
 
+     function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (uint256 tradingFee);
+
+    function getFundingFee(
+        bool _increase,
+        address _account,
+        uint256 _pairIndex,
+        bool _isLong,
+        uint256 _sizeAmount
+    ) external view returns (int256);
+
+    function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
+
+    function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns (Position.Info memory);
+
+    function getPositionByKey(bytes32 key) external view returns (Position.Info memory);
+
+    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
+
     function updatePairInfo(address newPairInfo) external;
 
     function updatePairVault(address newPairVault) external;
@@ -96,22 +114,6 @@ interface ITradingVault {
 
     function updateCumulativeFundingRate(uint256 _pairIndex, uint256 _price) external;
 
-    function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (uint256 tradingFee);
 
-    function getFundingFee(
-        bool _increase,
-        address _account,
-        uint256 _pairIndex,
-        bool _isLong,
-        uint256 _sizeAmount
-    ) external view returns (int256);
-
-    function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
-
-    function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns (Position.Info memory);
-
-    function getPositionByKey(bytes32 key) external view returns (Position.Info memory);
-
-    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
 
 }

@@ -87,6 +87,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         positionManagerArtifact.address,
     )) as PositionManager;
 
+    await tradingVault.setPositionManager(positionManager.address);
+
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
