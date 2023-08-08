@@ -186,11 +186,12 @@ export async function deployTrading(
         orderManager.address,
     ])) as any as PositionManager;
     await tradingVault.setPositionManager(positionManager.address);
+    await orderManager.setPositionManager(positionManager.address);
     console.log(`deployed PositionManager at ${positionManager.address}`);
 
     let router = (await deployContract('Router', [addressProvider.address, orderManager.address])) as any as Router;
     console.log(`deployed Router at ${router.address}`);
-
+    await orderManager.setRouter(router.address);
     let executor = (await deployContract('Executor', [
         addressProvider.address,
         orderManager.address,
