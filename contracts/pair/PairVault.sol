@@ -79,7 +79,7 @@ contract PairVault is IPairVault, Handleable {
         IERC20(token).safeTransfer(to, amount);
     }
 
-    function getVault(uint256 _pairIndex) external view returns(Vault memory vault) {
+    function getVault(uint256 _pairIndex) external view returns (Vault memory vault) {
         return vaults[_pairIndex];
     }
 
@@ -99,27 +99,48 @@ contract PairVault is IPairVault, Handleable {
         console.log("decreaseReserveAmount after stableTotalAmount", vault.stableTotalAmount, "realisedPnl", vault.realisedPnl.toString());
     }
 
-    function decreaseProfit(uint256 _pairIndex, uint256 _profit, uint256 _price) external onlyHandler {
+    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyHandler returns (uint256 extraIndexAmount) {
         Vault storage vault = vaults[_pairIndex];
         console.log("decreaseProfit _pairIndex", _pairIndex, "_profit", _profit);
         console.log("decreaseProfit indexTotalAmount", vault.indexTotalAmount, "indexReservedAmount", vault.indexReservedAmount);
-        console.log("increaseProfit indexToken balance", IERC20(pairInfo.getPair(_pairIndex).indexToken).balanceOf(address(this)),
+        console.log("decreaseProfit indexToken balance", IERC20(pairInfo.getPair(_pairIndex).indexToken).balanceOf(address(this)),
             "stableToken balance", IERC20(pairInfo.getPair(_pairIndex).stableToken).balanceOf(address(this)));
         uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-        if (_profit <= availableStable) {
-            IERC20(pairInfo.getPair(_pairIndex).stableToken).safeTransfer(msg.sender, _profit);
-            vault.stableTotalAmount -= _profit;
-        } else {
-            IERC20(pairInfo.getPair(_pairIndex).stableToken).safeTransfer(msg.sender, availableStable);
-            vault.stableTotalAmount -= availableStable;
 
-            uint256 diffIndexAmount = (_profit - availableStable).divPrice(_price);
-            IERC20(pairInfo.getPair(_pairIndex).stableToken).safeTransfer(msg.sender, diffIndexAmount);
-            vault.indexTotalAmount -= diffIndexAmount;
-        }
+        console.log("decreaseProfit availableStable", availableStable);
+        require(_profit <= availableStable, "stable token not enough");
+
+        IERC20(pairInfo.getPair(_pairIndex).stableToken).safeTransfer(msg.sender, _profit);
+        vault.stableTotalAmount -= _profit;
         vault.realisedPnl -= int256(_profit);
-        console.log("decreaseReserveAmount after stableTotalAmount %s indexTotalAmount %s realisedPnl %s",
+        console.log("decreaseProfit after stableTotalAmount %s indexTotalAmount %s realisedPnl %s",
             vault.stableTotalAmount, vault.indexTotalAmount, vault.realisedPnl.toString());
+    }
+
+    function swap(uint256 _pairIndex, bool _isBuy, uint256 _amountIn, uint256 _amountOut) external onlyHandler {
+        console.log("swap pairIndex %s buyIndexToken %s", _pairIndex, _isBuy);
+        console.log("swap pairIndex %s amountIn %s amountOut %s", _amountIn, _amountOut);
+
+        Vault memory vault = vaults[_pairIndex];
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+
+        if (_isBuy) {
+            uint256 availableIndex = vault.indexTotalAmount - vault.indexReservedAmount;
+            console.log("swap amountOut indexToken %s availableIndex %s", _amountOut, availableIndex);
+            require(_amountOut <= availableIndex, "swap index token not enough");
+
+            this.increaseTotalAmount(_pairIndex, 0, _amountIn);
+            this.decreaseTotalAmount(_pairIndex, _amountOut, 0);
+
+        } else {
+            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
+            console.log("swap amountOut stableToken %s availableStable %s", _amountOut, availableStable);
+            require(_amountOut <= availableStable, "swap stable token not enough");
+
+            this.increaseTotalAmount(_pairIndex, _amountIn, 0);
+            this.decreaseTotalAmount(_pairIndex, 0, _amountOut);
+        }
+
     }
 
 }

@@ -58,6 +58,8 @@ interface ITradingVault {
 
     event UpdateFundingRate(uint256 pairIndex, int256 fundingRate, uint256 lastFundingTime);
 
+    event NeedBuyIndexToken(uint256 pairIndex, uint256 profit, uint256 lastFundingTime);
+
     function isFrozen(address account) external view returns (bool);
 
     function netExposureAmountChecker(uint256 pairIndex) external view returns (int256);
@@ -93,8 +95,6 @@ interface ITradingVault {
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
     function updateCumulativeFundingRate(uint256 _pairIndex, uint256 _price) external;
-
-    function buyIndexToken(uint256 _pairIndex, uint256 _amount) external;
 
     function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (uint256 tradingFee);
 
