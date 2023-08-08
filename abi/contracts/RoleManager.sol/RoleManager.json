@@ -167,19 +167,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "target",
-        "type": "address"
-      }
-    ],
-    "name": "addContractWhiteList",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "keeper",
         "type": "address"
       }
@@ -226,25 +213,6 @@
     "name": "addTreasurer",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "contractWhiteList",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -412,19 +380,6 @@
       }
     ],
     "name": "removeAdmin",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "target",
-        "type": "address"
-      }
-    ],
-    "name": "removeContractWhiteList",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
