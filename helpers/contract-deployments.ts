@@ -201,10 +201,6 @@ export async function deployTrading(
 
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
 
-    await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(router.address));
-    await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(executor.address));
-    await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(orderManager.address));
-    await waitForTx(await roleManager.connect(deployer.signer).addContractWhiteList(positionManager.address));
 
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(positionManager.address, true);
