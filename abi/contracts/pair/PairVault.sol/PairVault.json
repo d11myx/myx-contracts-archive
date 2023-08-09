@@ -246,6 +246,32 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "pairLiquidity",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pairVault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -279,6 +305,37 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_pairLiquidity",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_pairVaule",
+        "type": "address"
+      }
+    ],
+    "name": "setPairLiquidityAndVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_tradingVault",
+        "type": "address"
+      }
+    ],
+    "name": "setTradingVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_pairIndex",
         "type": "uint256"
@@ -302,6 +359,19 @@
     "name": "swap",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tradingVault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
