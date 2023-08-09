@@ -10,7 +10,7 @@ import '../interfaces/IWETH.sol';
 import './interfaces/IPairInfo.sol';
 import './interfaces/IPairLiquidity.sol';
 import './interfaces/IPairVault.sol';
-import '../libraries/access/Handleable.sol';
+import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IVaultPriceFeed.sol';
@@ -18,7 +18,7 @@ import '../token/PairToken.sol';
 
 import 'hardhat/console.sol';
 
-contract PairLiquidity is IPairLiquidity, Handleable {
+contract PairLiquidity is IPairLiquidity, Roleable {
     using Math for uint256;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
@@ -76,7 +76,7 @@ contract PairLiquidity is IPairLiquidity, Handleable {
         address _feeReceiver,
         address _slipReceiver,
         address _weth
-    ) Handleable(addressProvider) {
+    ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         vaultPriceFeed = _vaultPriceFeed;

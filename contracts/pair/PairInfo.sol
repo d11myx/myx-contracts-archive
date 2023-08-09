@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import "../libraries/access/Handleable.sol";
+import "../libraries/Roleable.sol";
 import "../token/interfaces/IPairToken.sol";
 import "../token/PairToken.sol";
 import './interfaces/IPairInfo.sol';
@@ -8,7 +8,7 @@ import "./interfaces/IPairInfo.sol";
 
 pragma solidity 0.8.17;
 
-contract PairInfo is IPairInfo, Handleable {
+contract PairInfo is IPairInfo, Roleable {
 
     uint256 public constant PERCENTAGE = 10000;
 
@@ -32,7 +32,7 @@ contract PairInfo is IPairInfo, Handleable {
 
     constructor(
         IAddressesProvider addressProvider
-    ) Handleable(addressProvider) {
+    ) Roleable(addressProvider) {
     }
 
     // Manage pairs
