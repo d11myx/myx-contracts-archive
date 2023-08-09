@@ -4,7 +4,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 import '../interfaces/IIndexPriceFeed.sol';
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/ITradingVault.sol';
 import '../interfaces/IRoleManager.sol';
@@ -28,7 +28,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     IIndexPriceFeed public fastPriceFeed;
-    IVaultPriceFeed public vaultPriceFeed;
+    IOraclePriceFeed public vaultPriceFeed;
     IOrderManager public orderManager;
 
     constructor(
@@ -36,7 +36,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed,
+        IOraclePriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
         IOrderManager _orderManager
     ) {

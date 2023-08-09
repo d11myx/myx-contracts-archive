@@ -22,7 +22,7 @@
         "type": "address"
       },
       {
-        "internalType": "contract IVaultPriceFeed",
+        "internalType": "contract IOraclePriceFeed",
         "name": "_vaultPriceFeed",
         "type": "address"
       }
@@ -1423,7 +1423,7 @@
     "name": "vaultPriceFeed",
     "outputs": [
       {
-        "internalType": "contract IVaultPriceFeed",
+        "internalType": "contract IOraclePriceFeed",
         "name": "",
         "type": "address"
       }
