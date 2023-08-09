@@ -115,9 +115,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
     await pairVault.setTradingVault(tradingVault.address);
-    await tradingVault.setHandler(orderManager.address, true);
-    await tradingVault.setHandler(positionManager.address, true);
-    await orderManager.setHandler(positionManager.address, true);
+
 };
 
 func.id = `Pairs`;
