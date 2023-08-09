@@ -62,6 +62,8 @@ interface IOrderManager {
 
     function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) external;
 
+    function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
+
     function getIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external view returns (TradingTypes.IncreasePositionOrder memory order);
     function getDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external view returns (TradingTypes.DecreasePositionOrder memory order);
 
