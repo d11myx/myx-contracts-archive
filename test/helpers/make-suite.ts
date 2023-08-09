@@ -183,6 +183,9 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
+    await addressesProvider.setIndexPriceOracle(fastPriceFeed.address);
+    await addressesProvider.setPriceOracle(vaultPriceFeed.address);
+
     const { pairInfo, pairLiquidity, pairVault } = await deployPair(addressesProvider, vaultPriceFeed, deployer, weth);
 
     const { tradingVault, router, executor, orderManager, positionManager } = await deployTrading(
