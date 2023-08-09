@@ -180,7 +180,6 @@ export async function deployTrading(
         tradingVault.address,
         oraclePriceFeed.address,
         indexPriceFeed.address,
-        60,
         orderManager.address,
     ])) as any as PositionManager;
     await tradingVault.setPositionManager(positionManager.address);
@@ -192,8 +191,14 @@ export async function deployTrading(
     await orderManager.setRouter(router.address);
     let executor = (await deployContract('Executor', [
         addressProvider.address,
+        pairInfo.address,
+        pairVault.address,
         orderManager.address,
         positionManager.address,
+        tradingVault.address,
+        oraclePriceFeed.address,
+        indexPriceFeed.address,
+        60,
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
