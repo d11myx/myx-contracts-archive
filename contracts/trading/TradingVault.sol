@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 import '../libraries/Position.sol';
 import '../libraries/PositionKey.sol';
 import '../interfaces/ITradingVault.sol';
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
@@ -45,14 +45,14 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     address public tradingFeeReceiver;
-    IVaultPriceFeed public vaultPriceFeed;
-    address public addressPositionManager;
+    IOraclePriceFeed public vaultPriceFeed;
+    address public addressExecutor;
 
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        IVaultPriceFeed _vaultPriceFeed,
+        IOraclePriceFeed _vaultPriceFeed,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {
@@ -63,13 +63,13 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
         fundingInterval = _fundingInterval;
     }
 
-    modifier onlyPositionManager() {
-        require(msg.sender == addressPositionManager, 'Position Manager: forbidden');
+    modifier onlyExecutor() {
+        require(msg.sender == addressExecutor, 'Position Manager: forbidden');
         _;
     }
 
-    function setPositionManager(address _postintionManager) external onlyPoolAdmin {
-        addressPositionManager = _postintionManager;
+    function setExecutor(address _addressExecutor) external onlyPoolAdmin {
+        addressExecutor = _addressExecutor;
     }
 
     function updatePairInfo(address newPairInfo) external onlyPoolAdmin {
@@ -103,7 +103,7 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
         uint256 _sizeAmount,
         bool _isLong,
         uint256 _price
-    ) external nonReentrant onlyPositionManager returns (uint256 tradingFee, int256 fundingFee) {
+    ) external nonReentrant onlyExecutor returns (uint256 tradingFee, int256 fundingFee) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.enable, 'trade pair not supported');
 
@@ -341,7 +341,7 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
         uint256 _sizeAmount,
         bool _isLong,
         uint256 _price
-    ) external onlyPositionManager nonReentrant returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
+    ) external onlyExecutor nonReentrant returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
 
         // check trading amount

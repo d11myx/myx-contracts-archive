@@ -5,7 +5,7 @@ import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../pair/interfaces/IPairInfo.sol';
 import '../pair/interfaces/IPairVault.sol';
 import '../libraries/PrecisionUtils.sol';
@@ -51,9 +51,9 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
-    IVaultPriceFeed public vaultPriceFeed;
+    IOraclePriceFeed public vaultPriceFeed;
     IPositionManager public positionManager;
-    address public addressPositionManager;
+    address public addressExecutor;
     address public router;
 
     constructor(
@@ -61,7 +61,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed
+        IOraclePriceFeed _vaultPriceFeed
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
@@ -69,13 +69,13 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         vaultPriceFeed = _vaultPriceFeed;
     }
 
-    modifier onlyPositionManager() {
-        require(msg.sender == addressPositionManager, 'Position Manager: forbidden');
+    modifier onlyExecutor() {
+        require(msg.sender == addressExecutor, 'Position Manager: forbidden');
         _;
     }
 
-    function setPositionManager(address _postintionManager) external onlyPoolAdmin {
-        addressPositionManager = _postintionManager;
+    function setExecutor(address _addressExecutor) external onlyPoolAdmin {
+        addressExecutor = _addressExecutor;
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
@@ -83,12 +83,12 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
     }
 
     modifier onlyCreateOrderAddress(address account) {
-        require(msg.sender == router || msg.sender == addressPositionManager || account == msg.sender, 'no access');
+        require(msg.sender == router || msg.sender == addressExecutor || account == msg.sender, 'no access');
         _;
     }
 
-    modifier onlyPositionManagerOrAccount(address account) {
-        require(msg.sender == address(positionManager) || account == msg.sender, "no access");
+    modifier onlyExecutorOrAccount(address account) {
+        require(msg.sender == address(addressExecutor) || account == msg.sender, "no access");
         _;
     }
 
@@ -246,7 +246,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         }
     }
 
-    function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external onlyPositionManagerOrAccount(account) {
+    function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external onlyExecutorOrAccount(account) {
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
 
         while (positionOrders[key].length > 0) {
@@ -402,7 +402,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
         if (order.collateral > 0) {
-            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+            positionManager.transferTokenTo(pair.stableToken, order.account, order.collateral.abs());
         }
 
         this.removeOrderFromPosition(
@@ -537,23 +537,23 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         }
     }
 
-    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) public onlyPositionManager {
+    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) public onlyExecutor {
         positionHasTpSl[key][tradeType] = has;
     }
 
-    function removeIncreaseMarketOrders(uint256 orderId) public onlyPositionManager {
+    function removeIncreaseMarketOrders(uint256 orderId) public onlyExecutor {
         delete increaseMarketOrders[orderId];
     }
 
-    function removeIncreaseLimitOrders(uint256 orderId) public onlyPositionManager {
+    function removeIncreaseLimitOrders(uint256 orderId) public onlyExecutor {
         delete increaseLimitOrders[orderId];
     }
 
-    function removeDecreaseMarketOrders(uint256 orderId) public onlyPositionManager {
+    function removeDecreaseMarketOrders(uint256 orderId) public onlyExecutor {
         delete decreaseMarketOrders[orderId];
     }
 
-    function removeDecreaseLimitOrders(uint256 orderId) public onlyPositionManager {
+    function removeDecreaseLimitOrders(uint256 orderId) public onlyExecutor {
         delete decreaseLimitOrders[orderId];
     }
 
@@ -561,7 +561,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         bool needADL
-    ) public onlyPositionManager {
+    ) public onlyExecutor {
         TradingTypes.DecreasePositionOrder storage order;
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];

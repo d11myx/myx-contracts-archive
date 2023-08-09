@@ -181,9 +181,9 @@ export async function newTestEnv(): Promise<TestEnv> {
     await roleManager.addPoolAdmin(deployer.address);
     await roleManager.addKeeper(keeper.address);
 
-    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
+    const { oraclePriceFeed, indexPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    const { pairInfo, pairLiquidity, pairVault } = await deployPair(addressesProvider, vaultPriceFeed, deployer, weth);
+    const { pairInfo, pairLiquidity, pairVault } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const { tradingVault, router, executor, orderManager, positionManager } = await deployTrading(
         deployer,
@@ -192,8 +192,8 @@ export async function newTestEnv(): Promise<TestEnv> {
         roleManager,
         pairVault,
         pairInfo,
-        vaultPriceFeed,
-        fastPriceFeed,
+        oraclePriceFeed,
+        indexPriceFeed,
     );
 
     await pairVault.setTradingVault(tradingVault.address);
@@ -215,8 +215,8 @@ export async function newTestEnv(): Promise<TestEnv> {
         pairInfo: pairInfo,
         pairLiquidity: pairLiquidity,
         pairVault: pairVault,
-        oraclePriceFeed: vaultPriceFeed,
-        indexPriceFeed: fastPriceFeed,
+        oraclePriceFeed: oraclePriceFeed,
+        indexPriceFeed: indexPriceFeed,
         tradingVault: tradingVault,
         router: router,
         executor: executor,
