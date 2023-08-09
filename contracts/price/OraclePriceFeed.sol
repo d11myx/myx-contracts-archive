@@ -14,7 +14,7 @@ import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract OraclePriceFeed is IOraclePriceFeed {
+contract OraclePriceFeed is  IOraclePriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
