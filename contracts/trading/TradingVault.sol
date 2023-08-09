@@ -45,20 +45,17 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     address public tradingFeeReceiver;
-    IOraclePriceFeed public vaultPriceFeed;
     address public addressExecutor;
 
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        IOraclePriceFeed _vaultPriceFeed,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
-        vaultPriceFeed = _vaultPriceFeed;
         tradingFeeReceiver = _tradingFeeReceiver;
         fundingInterval = _fundingInterval;
     }
@@ -529,7 +526,7 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
             }
             pairVault.updateAveragePrice(_pairIndex, _price);
         }
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         pnl = position.getUnrealizedPnl(_sizeAmount, price);
         console.log('decreasePosition pnl', pnl.toString());
 
@@ -614,7 +611,7 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
         uint256 _sizeAmount
     ) external view override returns (uint256 tradingFee) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         return _tradingFee(_pairIndex, _isLong, _sizeAmount, price);
     }
 
@@ -667,7 +664,7 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         return _currentFundingRate(_pairIndex, price);
     }
 

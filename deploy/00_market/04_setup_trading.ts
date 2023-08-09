@@ -37,7 +37,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             addressProvider.address,
             pairInfo.address,
             pairVault.address,
-            oraclePriceFeed.address,
             feeReceiver,
             8 * 60 * 60,
         ],
