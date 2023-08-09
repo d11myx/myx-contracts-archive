@@ -15,7 +15,7 @@ import "hardhat/console.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../interfaces/ITradingVault.sol";
-import "../interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IOraclePriceFeed.sol";
 
 contract Executor is IExecutor {
     using SafeERC20 for IERC20;
@@ -38,7 +38,7 @@ contract Executor is IExecutor {
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     IIndexPriceFeed public fastPriceFeed;
-    IVaultPriceFeed public vaultPriceFeed;
+    IOraclePriceFeed public vaultPriceFeed;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -47,7 +47,7 @@ contract Executor is IExecutor {
         IOrderManager _orderManager,
         IPositionManager _positionManager,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed,
+        IOraclePriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
         uint256 _maxTimeDelay
     ) {

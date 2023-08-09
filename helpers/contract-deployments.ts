@@ -131,7 +131,6 @@ export async function deployPair(
         addressProvider.address,
         pairInfo.address,
         pairVault.address,
-        vaultPriceFeed.address,
         deployer.address,
         deployer.address,
         weth.address,
