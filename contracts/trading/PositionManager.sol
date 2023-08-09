@@ -10,7 +10,7 @@ import '../interfaces/ITradingVault.sol';
 import '../interfaces/IRoleManager.sol';
 
 import '../libraries/Position.sol';
-import '../libraries/access/Handleable.sol';
+import '../libraries/Roleable.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../pair/interfaces/IPairInfo.sol';
