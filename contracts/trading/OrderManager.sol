@@ -11,7 +11,7 @@ import '../pair/interfaces/IPairVault.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/PositionKey.sol';
 import '../libraries/Int256Utils.sol';
-import '../libraries/access/Handleable.sol';
+import '../libraries/Roleable.sol';
 import '../libraries/type/TradingTypes.sol';
 
 import '../interfaces/ITradingVault.sol';
@@ -21,7 +21,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IPositionManager.sol';
 
-contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
+contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -62,7 +62,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         IPairVault _pairVault,
         ITradingVault _tradingVault,
         IVaultPriceFeed _vaultPriceFeed
-    ) Handleable(addressProvider) {
+    ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;

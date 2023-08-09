@@ -6,7 +6,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
-import '../libraries/access/Handleable.sol';
+import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IVaultPriceFeed.sol';
@@ -18,7 +18,7 @@ import './interfaces/IPairVault.sol';
 import 'hardhat/console.sol';
 import '../libraries/Int256Utils.sol';
 
-contract PairVault is IPairVault, Handleable {
+contract PairVault is IPairVault, Roleable {
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
@@ -30,7 +30,7 @@ contract PairVault is IPairVault, Handleable {
 
     mapping(uint256 => Vault) public vaults;
 
-    constructor(IAddressesProvider addressProvider, IPairInfo _pairInfo) Handleable(addressProvider) {
+    constructor(IAddressesProvider addressProvider, IPairInfo _pairInfo) Roleable(addressProvider) {
         pairInfo = _pairInfo;
     }
 

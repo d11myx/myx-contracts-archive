@@ -11,14 +11,14 @@ import '../interfaces/ITradingVault.sol';
 import '../interfaces/IVaultPriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
-import '../libraries/access/Handleable.sol';
+import '../libraries/Roleable.sol';
 import '../pair/interfaces/IPairInfo.sol';
 import '../pair/interfaces/IPairVault.sol';
 import 'hardhat/console.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
-contract TradingVault is ITradingVault, ReentrancyGuard, Handleable {
+contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -55,7 +55,7 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Handleable {
         IVaultPriceFeed _vaultPriceFeed,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
-    ) Handleable(addressProvider) {
+    ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         vaultPriceFeed = _vaultPriceFeed;
