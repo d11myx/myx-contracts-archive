@@ -6,9 +6,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 // import 'hardhat-gas-reporter';
 import '@openzeppelin/hardhat-upgrades';
-// import "@matterlabs/hardhat-zksync-deploy";
-// import "@matterlabs/hardhat-zksync-solc";
-// import "@matterlabs/hardhat-zksync-verify";
+import "hardhat-contract-sizer";
 import '@nomiclabs/hardhat-ethers';
 import 'hardhat-deploy';
 import 'hardhat-abi-exporter';
@@ -122,20 +120,11 @@ const config: HardhatUserConfig = {
             viaIR: true,
         },
     },
-    // defaultNetwork: "local",
-    // zksolc: {
-    //   version: "1.3.8",
-    //   compilerSource: "binary",
-    //   settings: {
-    //     libraries: {}, // optional. References to non-inlinable libraries
-    //     isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-    //     forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-    //     optimizer: {
-    //       enabled: true, // optional. True by default
-    //       mode: '3' // optional. 3 by default, z to optimize bytecode size
-    //     }
-    //   }
-    // },
+    contractSizer: {
+        alphaSort: true,
+        runOnCompile: true,
+        disambiguatePaths: false,
+      },
     networks: {
         hardhat: {
             allowUnlimitedContractSize: true,
