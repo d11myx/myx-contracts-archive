@@ -39,7 +39,6 @@ contract PairLiquidity is IPairLiquidity, Roleable {
     // pairToken => user => amount
     mapping(address => mapping(address => uint256)) public userPairTokens;
 
-
     receive() external payable {}
 
     constructor(
