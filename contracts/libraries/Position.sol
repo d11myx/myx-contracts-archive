@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
-import "../libraries/type/TradingTypes.sol";
+import "../libraries/TradingTypes.sol";
 import "../libraries/PositionKey.sol";
 
 library Position {

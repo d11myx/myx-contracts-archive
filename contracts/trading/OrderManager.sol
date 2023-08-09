@@ -12,7 +12,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../libraries/PositionKey.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
-import '../libraries/type/TradingTypes.sol';
+import '../libraries/TradingTypes.sol';
 
 import '../interfaces/ITradingVault.sol';
 import 'hardhat/console.sol';
