@@ -53,7 +53,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         args: [addressesProvider.address],
         ...COMMON_DEPLOY_PARAMS,
     });
-
+    
     await addressesProvider.connect(deployerSigner).setPriceOracle(oraclePriceFeed.address);
 };
 
