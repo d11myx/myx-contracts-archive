@@ -17,11 +17,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract IOraclePriceFeed",
-        "name": "_vaultPriceFeed",
-        "type": "address"
-      },
-      {
         "internalType": "address",
         "name": "_tradingFeeReceiver",
         "type": "address"
@@ -1151,19 +1146,6 @@
     "name": "updateTradingFeeReceiver",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vaultPriceFeed",
-    "outputs": [
-      {
-        "internalType": "contract IOraclePriceFeed",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]
