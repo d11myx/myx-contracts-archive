@@ -734,8 +734,10 @@ contract Executor is IExecutor {
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 oraclePrice = oraclePriceFeed.getPrice(pair.indexToken);
+        console.log('getValidPrice pairIndex %s isLong %s ', _pairIndex, _isLong);
 
         uint256 indexPrice = oraclePriceFeed.getIndexPrice(pair.indexToken, 0);
+        console.log('getValidPrice oraclePrice %s indexPrice %s', oraclePrice, indexPrice);
 
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
