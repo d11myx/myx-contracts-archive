@@ -5,11 +5,53 @@ import "../libraries/TradingTypes.sol";
 
 interface IExecutor {
 
-    event UpdateExecuteRouter(address oldAddress, address newAddress);
+    event UpdateMaxTimeDelay(uint256 oldDelay, uint256 newDelay);
+
+    event ExecuteIncreaseOrder(
+        address account,
+        uint256 orderId,
+        uint256 pairIndex,
+        TradingTypes.TradeType tradeType,
+        int256 collateral,
+        bool isLong,
+        uint256 sizeAmount,
+        uint256 price,
+        uint256 tradingFee,
+        int256 fundingFee
+    );
+
+    event ExecuteDecreaseOrder(
+        address account,
+        uint256 orderId,
+        uint256 pairIndex,
+        TradingTypes.TradeType tradeType,
+        bool isLong,
+        uint256 sizeAmount,
+        uint256 price,
+        int256 pnl,
+        bool needADL,
+        uint256 tradingFee,
+        int256 fundingFee
+    );
+
+    event LiquidatePosition(
+        bytes32 positionKey,
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        uint256 sizeAmount,
+        uint256 collateral,
+        uint256 price,
+        uint256 orderId
+    );
 
     function increaseMarketOrderStartIndex() external view returns (uint256);
 
     function decreaseMarketOrderStartIndex() external view returns (uint256);
+
+    function maxTimeDelay() external view returns(uint256);
+
+    function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
     function setPricesAndExecuteMarketOrders(
         address[] memory tokens,

@@ -77,7 +77,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             tradingVault.address,
             oraclePriceFeed.address,
             indexPriceFeed.address,
-            60,
             orderManager.address,
         ],
         ...COMMON_DEPLOY_PARAMS,
@@ -104,7 +103,17 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
-        args: [addressProvider.address, orderManager.address, positionManager.address],
+        args: [
+            addressProvider.address,
+            pairInfo.address,
+            pairVault.address,
+            orderManager.address,
+            positionManager.address,
+            tradingVault.address,
+            oraclePriceFeed.address,
+            indexPriceFeed.address,
+            60,
+        ],
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
@@ -115,7 +124,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
     await pairVault.setTradingVault(tradingVault.address);
-
 };
 
 func.id = `Pairs`;
