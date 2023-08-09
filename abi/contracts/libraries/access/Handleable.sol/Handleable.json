@@ -30,23 +30,5 @@
     ],
     "stateMutability": "view",
     "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_handler",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isHandler",
-        "type": "bool"
-      }
-    ],
-    "name": "setHandler",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
   }
 ]

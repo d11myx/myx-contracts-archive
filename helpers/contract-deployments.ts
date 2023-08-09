@@ -139,9 +139,6 @@ export async function deployPair(
     console.log(`deployed PairLiquidity at ${pairLiquidity.address}`);
     await pairVault.setPairLiquidityAndVault(pairLiquidity.address, pairVault.address);
 
-    await waitForTx(await pairLiquidity.setHandler(pairInfo.address, true));
-    await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
-
     return { pairInfo, pairLiquidity, pairVault };
 }
 
@@ -201,10 +198,6 @@ export async function deployTrading(
     console.log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
-
-    await pairVault.setHandler(tradingVault.address, true);
-    await tradingVault.setHandler(positionManager.address, true);
-    await orderManager.setHandler(positionManager.address, true);
 
     return { tradingVault, router, executor, orderManager, positionManager };
 }

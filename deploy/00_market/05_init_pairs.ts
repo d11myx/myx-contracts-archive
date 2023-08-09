@@ -25,10 +25,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const orderManager = await getOrderManager();
     const positionManager = await getPositionManager();
 
-    await waitForTx(await pairLiquidity.setHandler(orderManager.address, true));
-    await waitForTx(await pairLiquidity.setHandler(positionManager.address, true));
-    await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
-
     for (let symbol of Object.keys(pairConfigs)) {
         const pairToken = await getMockToken(symbol);
         const basicToken = await getToken();
