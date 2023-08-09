@@ -22,7 +22,7 @@
         "type": "address"
       },
       {
-        "internalType": "contract IVaultPriceFeed",
+        "internalType": "contract IOraclePriceFeed",
         "name": "_vaultPriceFeed",
         "type": "address"
       }
@@ -317,7 +317,7 @@
   },
   {
     "inputs": [],
-    "name": "addressPositionManager",
+    "name": "addressExecutor",
     "outputs": [
       {
         "internalType": "address",
@@ -1323,6 +1323,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_addressExecutor",
+        "type": "address"
+      }
+    ],
+    "name": "setExecutor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "orderId",
         "type": "uint256"
@@ -1362,19 +1375,6 @@
       }
     ],
     "name": "setPositionHasTpSl",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_postintionManager",
-        "type": "address"
-      }
-    ],
-    "name": "setPositionManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1423,7 +1423,7 @@
     "name": "vaultPriceFeed",
     "outputs": [
       {
-        "internalType": "contract IVaultPriceFeed",
+        "internalType": "contract IOraclePriceFeed",
         "name": "",
         "type": "address"
       }

@@ -13,7 +13,7 @@ import './interfaces/IPairVault.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../token/PairToken.sol';
 
 import 'hardhat/console.sol';
@@ -28,7 +28,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
-    IVaultPriceFeed public vaultPriceFeed;
+    IOraclePriceFeed public vaultPriceFeed;
 
     address public feeReceiver;
 
@@ -72,7 +72,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        IVaultPriceFeed _vaultPriceFeed,
+        IOraclePriceFeed _vaultPriceFeed,
         address _feeReceiver,
         address _slipReceiver,
         address _weth

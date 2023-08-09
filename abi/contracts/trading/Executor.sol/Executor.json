@@ -32,16 +32,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "_vaultPriceFeed",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IIndexPriceFeed",
-        "name": "_fastPriceFeed",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "_maxTimeDelay",
         "type": "uint256"
@@ -407,19 +397,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "fastPriceFeed",
-    "outputs": [
-      {
-        "internalType": "contract IIndexPriceFeed",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -695,19 +672,6 @@
     "name": "updateMaxTimeDelay",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vaultPriceFeed",
-    "outputs": [
-      {
-        "internalType": "contract IVaultPriceFeed",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]

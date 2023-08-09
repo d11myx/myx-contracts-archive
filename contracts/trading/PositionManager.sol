@@ -4,7 +4,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 import '../interfaces/IIndexPriceFeed.sol';
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/ITradingVault.sol';
 import '../interfaces/IRoleManager.sol';
@@ -20,7 +20,7 @@ import 'hardhat/console.sol';
 import '../interfaces/IOrderManager.sol';
 
 contract PositionManager is IPositionManager, ReentrancyGuard {
-
+    using SafeERC20 for IERC20;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
@@ -28,7 +28,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
     IPairVault public pairVault;
     ITradingVault public tradingVault;
     IIndexPriceFeed public fastPriceFeed;
-    IVaultPriceFeed public vaultPriceFeed;
+    IOraclePriceFeed public vaultPriceFeed;
     IOrderManager public orderManager;
 
     constructor(
@@ -36,7 +36,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed,
+        IOraclePriceFeed _vaultPriceFeed,
         IIndexPriceFeed _fastPriceFeed,
         IOrderManager _orderManager
     ) {
@@ -49,14 +49,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
         orderManager = _orderManager;
     }
 
-    modifier onlyKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'onlyKeeper');
-        _;
+    // will remove to increasePosition
+    function transferTokenTo(address token, address to, uint256 amount) external {
+        IERC20(token).safeTransfer(to, amount);
     }
-
-    modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
-        _;
-    }
-
 }

@@ -9,7 +9,7 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../token/PairToken.sol';
 import '../interfaces/IWETH.sol';
 

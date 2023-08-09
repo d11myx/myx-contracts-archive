@@ -66,10 +66,10 @@ export async function deployPrice(
 ) {
     console.log(` - setup price`);
 
-    const vaultPriceFeed = (await deployContract('OraclePriceFeed', [
+    const oraclePriceFeed = (await deployContract('OraclePriceFeed', [
         addressesProvider.address,
     ])) as any as OraclePriceFeed;
-    console.log(`deployed OraclePriceFeed at ${vaultPriceFeed.address}`);
+    console.log(`deployed OraclePriceFeed at ${oraclePriceFeed.address}`);
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
@@ -84,7 +84,7 @@ export async function deployPrice(
         if (!pairTokenAddress) {
             throw `wait for deployed before using`;
         }
-        await vaultPriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8);
+        await oraclePriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8);
 
         pairTokenAddresses.push(pairTokenAddress);
         pairTokenPrices.push(
@@ -92,22 +92,24 @@ export async function deployPrice(
         );
     }
 
-    const fastPriceFeed = (await deployContract('IndexPriceFeed', [
+    const indexPriceFeed = (await deployContract('IndexPriceFeed', [
         addressesProvider.address,
     ])) as any as IndexPriceFeed;
-    console.log(`deployed IndexPriceFeed at ${fastPriceFeed.address}`);
+    console.log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
-    await fastPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
+    await indexPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
 
-    await fastPriceFeed.connect(deployer.signer).setMaxTimeDeviation(10000);
+    await indexPriceFeed.connect(deployer.signer).setMaxTimeDeviation(10000);
 
-    await fastPriceFeed
+    await indexPriceFeed
         .connect(keeper.signer)
         .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
 
-    await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
+    await oraclePriceFeed.setIndexPriceFeed(indexPriceFeed.address);
 
-    return { vaultPriceFeed, fastPriceFeed };
+    await addressesProvider.connect(deployer.signer).setPriceOracle(oraclePriceFeed.address);
+    await addressesProvider.connect(deployer.signer).setIndexPriceOracle(indexPriceFeed.address);
+    return { oraclePriceFeed, indexPriceFeed };
 }
 
 export async function deployPair(
@@ -182,8 +184,6 @@ export async function deployTrading(
         indexPriceFeed.address,
         orderManager.address,
     ])) as any as PositionManager;
-    await tradingVault.setPositionManager(positionManager.address);
-    await orderManager.setPositionManager(positionManager.address);
     console.log(`deployed PositionManager at ${positionManager.address}`);
 
     let router = (await deployContract('Router', [addressProvider.address, orderManager.address])) as any as Router;
@@ -196,13 +196,14 @@ export async function deployTrading(
         orderManager.address,
         positionManager.address,
         tradingVault.address,
-        oraclePriceFeed.address,
-        indexPriceFeed.address,
         60,
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
+
+    await tradingVault.setExecutor(executor.address);
+    await orderManager.setExecutor(executor.address);
 
     return { tradingVault, router, executor, orderManager, positionManager };
 }

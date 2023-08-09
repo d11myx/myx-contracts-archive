@@ -3,7 +3,6 @@ pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
-
 import '../libraries/Position.sol';
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
@@ -15,7 +14,7 @@ import "hardhat/console.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../interfaces/ITradingVault.sol";
-import "../interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IOraclePriceFeed.sol";
 
 contract Executor is IExecutor {
     using SafeERC20 for IERC20;
@@ -37,8 +36,6 @@ contract Executor is IExecutor {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
-    IIndexPriceFeed public fastPriceFeed;
-    IVaultPriceFeed public vaultPriceFeed;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -47,8 +44,6 @@ contract Executor is IExecutor {
         IOrderManager _orderManager,
         IPositionManager _positionManager,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed,
-        IIndexPriceFeed _fastPriceFeed,
         uint256 _maxTimeDelay
     ) {
         ADDRESS_PROVIDER = addressProvider;
@@ -57,8 +52,6 @@ contract Executor is IExecutor {
         orderManager = _orderManager;
         positionManager = _positionManager;
         tradingVault = _tradingVault;
-        fastPriceFeed = _fastPriceFeed;
-        vaultPriceFeed = _vaultPriceFeed;
         maxTimeDelay = _maxTimeDelay;
     }
 
@@ -109,7 +102,6 @@ contract Executor is IExecutor {
     }
 
     function executeIncreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper {
-        console.log("executeIncreaseMarketOrders endIndex", endIndex, "timestamp", block.timestamp);
         uint256 index = increaseMarketOrderStartIndex;
         uint256 length = orderManager.increaseMarketOrdersIndex();
 
@@ -124,7 +116,6 @@ contract Executor is IExecutor {
             try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
                 console.log();
             } catch Error(string memory reason) {
-                console.log("executeIncreaseMarketOrder error ", reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
             }
             increaseMarketOrderStartIndex++;
@@ -132,8 +123,6 @@ contract Executor is IExecutor {
     }
 
     function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper {
-        console.log("executeIncreaseLimitOrders timestamp", block.timestamp);
-
         for (uint256 i = 0; i < orderIds.length; i++) {
             try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
                 console.log();
@@ -257,7 +246,7 @@ contract Executor is IExecutor {
 
         // transfer collateral
         if (order.collateral > 0) {
-            IERC20(pair.stableToken).safeTransfer(address(tradingVault), order.collateral.abs());
+            positionManager.transferTokenTo(pair.stableToken, address(tradingVault), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(
             order.account,
@@ -499,7 +488,7 @@ contract Executor is IExecutor {
         // transfer collateral
         if (order.collateral > 0) {
             IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-            IERC20(pair.stableToken).safeTransfer(address(tradingVault), order.collateral.abs());
+            positionManager.transferTokenTo(pair.stableToken, address(pairVault), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = tradingVault.decreasePosition(
             order.account,
@@ -741,12 +730,12 @@ contract Executor is IExecutor {
     }
 
     function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 oraclePrice = vaultPriceFeed.getPrice(pair.indexToken);
-        console.log('getValidPrice pairIndex %s isLong %s ', _pairIndex, _isLong);
+        IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
 
-        uint256 indexPrice = vaultPriceFeed.getIndexPrice(pair.indexToken, 0);
-        console.log('getValidPrice oraclePrice %s indexPrice %s', oraclePrice, indexPrice);
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 oraclePrice = oraclePriceFeed.getPrice(pair.indexToken);
+
+        uint256 indexPrice = oraclePriceFeed.getIndexPrice(pair.indexToken, 0);
 
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
