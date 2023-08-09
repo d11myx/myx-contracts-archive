@@ -57,7 +57,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             pairInfo.address,
             pairVault.address,
             tradingVault.address,
-            oraclePriceFeed.address,
         ],
         ...COMMON_DEPLOY_PARAMS,
     });
