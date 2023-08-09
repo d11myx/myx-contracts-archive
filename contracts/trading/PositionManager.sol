@@ -588,9 +588,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard {
             return;
         }
 
-        //TODO positionManager
-        // cancelAllPositionOrders
-        //        tradingRouter.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+        // cancel all positionOrders
+        orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
 
         uint256 orderId = orderManager.createOrder(
             TradingTypes.CreateOrderRequest({
