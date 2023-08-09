@@ -170,7 +170,6 @@ export async function deployTrading(
         pairInfo.address,
         pairVault.address,
         tradingVault.address,
-        oraclePriceFeed.address,
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 

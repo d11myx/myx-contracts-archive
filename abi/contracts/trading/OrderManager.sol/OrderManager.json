@@ -20,11 +20,6 @@
         "internalType": "contract ITradingVault",
         "name": "_tradingVault",
         "type": "address"
-      },
-      {
-        "internalType": "contract IOraclePriceFeed",
-        "name": "_vaultPriceFeed",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -1416,19 +1411,6 @@
     "name": "updatePositionManager",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vaultPriceFeed",
-    "outputs": [
-      {
-        "internalType": "contract IOraclePriceFeed",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]
