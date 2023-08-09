@@ -86,9 +86,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         positionManagerArtifact.address,
     )) as PositionManager;
 
-    await tradingVault.setPositionManager(positionManager.address);
-    await orderManager.setPositionManager(positionManager.address);
-
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
@@ -110,8 +107,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             orderManager.address,
             positionManager.address,
             tradingVault.address,
-            oraclePriceFeed.address,
-            indexPriceFeed.address,
             60,
         ],
         ...COMMON_DEPLOY_PARAMS,
@@ -122,6 +117,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
+
+    await tradingVault.setExecutor(executor.address);
+    await orderManager.setExecutor(executor.address);
 
     await pairVault.setTradingVault(tradingVault.address);
 };

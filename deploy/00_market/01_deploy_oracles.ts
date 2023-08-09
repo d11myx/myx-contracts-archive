@@ -10,7 +10,7 @@ import {
     ORACLE_PRICE_FEED_ID,
     waitForTx,
 } from '../../helpers';
-import { MockPriceFeed, OraclePriceFeed } from '../../types';
+import { IndexPriceFeed, MockPriceFeed, OraclePriceFeed } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -47,14 +47,19 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         await waitForTx(await mockPriceFeed.connect(deployerSigner).setAdmin(keeper, true));
     }
 
-    await deploy(`${INDEX_PRICE_FEED_ID}`, {
+    const indexPriceFeedArtifact = await deploy(`${INDEX_PRICE_FEED_ID}`, {
         from: deployer,
         contract: 'IndexPriceFeed',
         args: [addressesProvider.address],
         ...COMMON_DEPLOY_PARAMS,
     });
+    const indexPriceFeed = (await hre.ethers.getContractAt(
+        indexPriceFeedArtifact.abi,
+        indexPriceFeedArtifact.address,
+    )) as IndexPriceFeed;
 
     await addressesProvider.connect(deployerSigner).setPriceOracle(oraclePriceFeed.address);
+    await addressesProvider.connect(deployerSigner).setIndexPriceOracle(indexPriceFeed.address);
 };
 
 func.id = `Oracles`;
