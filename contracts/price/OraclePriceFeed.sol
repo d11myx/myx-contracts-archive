@@ -3,7 +3,7 @@
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "../interfaces/IVaultPriceFeed.sol";
+import "../interfaces/IOraclePriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IOraclePrice.sol";
 import "../interfaces/IChainlinkFlags.sol";
@@ -14,7 +14,7 @@ import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
-contract OraclePriceFeed is  IVaultPriceFeed {
+contract OraclePriceFeed is  IOraclePriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;

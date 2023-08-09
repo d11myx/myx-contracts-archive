@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 import '../libraries/Position.sol';
 import '../libraries/PositionKey.sol';
 import '../interfaces/ITradingVault.sol';
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
@@ -45,14 +45,14 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     address public tradingFeeReceiver;
-    IVaultPriceFeed public vaultPriceFeed;
+    IOraclePriceFeed public vaultPriceFeed;
     address public addressPositionManager;
 
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        IVaultPriceFeed _vaultPriceFeed,
+        IOraclePriceFeed _vaultPriceFeed,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {

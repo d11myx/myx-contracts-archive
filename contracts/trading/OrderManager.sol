@@ -5,7 +5,7 @@ import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 
-import '../interfaces/IVaultPriceFeed.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 import '../pair/interfaces/IPairInfo.sol';
 import '../pair/interfaces/IPairVault.sol';
 import '../libraries/PrecisionUtils.sol';
@@ -51,7 +51,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
-    IVaultPriceFeed public vaultPriceFeed;
+    IOraclePriceFeed public vaultPriceFeed;
     IPositionManager public positionManager;
     address public addressPositionManager;
     address public router;
@@ -61,7 +61,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         ITradingVault _tradingVault,
-        IVaultPriceFeed _vaultPriceFeed
+        IOraclePriceFeed _vaultPriceFeed
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
