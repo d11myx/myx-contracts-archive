@@ -28,7 +28,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
-    IOraclePriceFeed public vaultPriceFeed;
+    // IOraclePriceFeed public vaultPriceFeed;
 
     address public feeReceiver;
 
@@ -39,32 +39,6 @@ contract PairLiquidity is IPairLiquidity, Roleable {
     // pairToken => user => amount
     mapping(address => mapping(address => uint256)) public userPairTokens;
 
-    event AddLiquidity(
-        address indexed funder,
-        address indexed account,
-        uint256 indexed pairIndex,
-        uint256 indexAmount,
-        uint256 stableAmount,
-        uint256 lpAmount
-    );
-
-    event RemoveLiquidity(
-        address indexed account,
-        address indexed receiver,
-        uint256 indexed pairIndex,
-        uint256 indexAmount,
-        uint256 stableAmount,
-        uint256 lpAmount
-    );
-
-    event Swap(
-        address indexed funder,
-        address indexed receiver,
-        uint256 indexed pairIndex,
-        bool isBuy, // buy indexToken with stableToken
-        uint256 amountIn,
-        uint256 amountOut
-    );
 
     receive() external payable {}
 
@@ -72,14 +46,12 @@ contract PairLiquidity is IPairLiquidity, Roleable {
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        IOraclePriceFeed _vaultPriceFeed,
         address _feeReceiver,
         address _slipReceiver,
         address _weth
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
-        vaultPriceFeed = _vaultPriceFeed;
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
         weth = _weth;
@@ -727,6 +699,6 @@ contract PairLiquidity is IPairLiquidity, Roleable {
     }
 
     function _getPrice(address _token) internal view returns (uint256) {
-        return vaultPriceFeed.getPrice(_token);
+        return IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(_token);
     }
 }
