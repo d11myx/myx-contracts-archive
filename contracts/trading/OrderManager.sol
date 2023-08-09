@@ -51,7 +51,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
-    IOraclePriceFeed public vaultPriceFeed;
     IPositionManager public positionManager;
     address public addressExecutor;
     address public router;
@@ -60,13 +59,11 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        ITradingVault _tradingVault,
-        IOraclePriceFeed _vaultPriceFeed
+        ITradingVault _tradingVault
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         tradingVault = _tradingVault;
-        vaultPriceFeed = _vaultPriceFeed;
     }
 
     modifier onlyExecutor() {
@@ -88,7 +85,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
     }
 
     modifier onlyExecutorOrAccount(address account) {
-        require(msg.sender == address(addressExecutor) || account == msg.sender, "no access");
+        require(msg.sender == address(addressExecutor) || account == msg.sender, 'no access');
         _;
     }
 
@@ -122,7 +119,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
-            uint256 price = vaultPriceFeed.getPrice(pair.indexToken);
+            uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
             IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
@@ -246,7 +243,11 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         }
     }
 
-    function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external onlyExecutorOrAccount(account) {
+    function cancelAllPositionOrders(
+        address account,
+        uint256 pairIndex,
+        bool isLong
+    ) external onlyExecutorOrAccount(account) {
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
 
         while (positionOrders[key].length > 0) {
@@ -557,11 +558,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         delete decreaseLimitOrders[orderId];
     }
 
-    function setOrderNeedADL(
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        bool needADL
-    ) public onlyExecutor {
+    function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) public onlyExecutor {
         TradingTypes.DecreasePositionOrder storage order;
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];
