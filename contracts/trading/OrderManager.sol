@@ -73,6 +73,11 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         _;
     }
 
+    modifier onlyPositionManagerOrAccount(address account) {
+        require(msg.sender == address(positionManager) || account == msg.sender, "no access");
+        _;
+    }
+
     function getPositionOrders(bytes32 key) public view override returns (PositionOrder[] memory) {
         return positionOrders[key];
     }
@@ -192,7 +197,18 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Handleable {
         }
     }
 
-    function _checkTradingAmount(uint256 pairIndex, uint256 size) public returns (bool) {
+    function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external onlyPositionManagerOrAccount(account) {
+        bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
+
+        while (positionOrders[key].length > 0) {
+            uint256 lastIndex = positionOrders[key].length - 1;
+            PositionOrder memory positionOrder = positionOrders[key][lastIndex];
+
+            this.cancelOrder(positionOrder.orderId, positionOrder.tradeType, positionOrder.isIncrease);
+        }
+    }
+
+    function _checkTradingAmount(uint256 pairIndex, uint256 size) internal returns (bool) {
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
         return size >= tradingConfig.minTradeAmount && size <= tradingConfig.maxTradeAmount;
     }
