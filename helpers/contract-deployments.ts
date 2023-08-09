@@ -137,6 +137,7 @@ export async function deployPair(
         weth.address,
     ])) as any as PairLiquidity;
     console.log(`deployed PairLiquidity at ${pairLiquidity.address}`);
+    await pairVault.setPairLiquidityAndVault(pairLiquidity.address, pairVault.address);
 
     await waitForTx(await pairLiquidity.setHandler(pairInfo.address, true));
     await waitForTx(await pairVault.setHandler(pairLiquidity.address, true));
@@ -200,7 +201,6 @@ export async function deployTrading(
     console.log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
-
 
     await pairVault.setHandler(tradingVault.address, true);
     await tradingVault.setHandler(positionManager.address, true);

@@ -196,6 +196,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         fastPriceFeed,
     );
 
+    await pairVault.setTradingVault(tradingVault.address);
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 
     await roleManager.addKeeper(executor.address);

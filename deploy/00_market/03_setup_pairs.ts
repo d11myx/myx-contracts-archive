@@ -9,7 +9,7 @@ import {
     PAIR_LIQUIDITY_ID,
     PAIR_VAULT_ID,
 } from '../../helpers';
-import { PairInfo, PairVault } from '../../types';
+import { PairInfo, PairLiquidity, PairVault } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -38,7 +38,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pairVault = (await hre.ethers.getContractAt(pairVaultArtifact.abi, pairVaultArtifact.address)) as PairVault;
 
     // PairLiquidity
-    await deploy(`${PAIR_LIQUIDITY_ID}`, {
+    const pairLiquidityArtifact = await deploy(`${PAIR_LIQUIDITY_ID}`, {
         from: deployer,
         contract: 'PairLiquidity',
         args: [
@@ -52,6 +52,12 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ],
         ...COMMON_DEPLOY_PARAMS,
     });
+
+    const pairLiquidity = (await hre.ethers.getContractAt(
+        pairLiquidityArtifact.abi,
+        pairLiquidityArtifact.address,
+    )) as PairLiquidity;
+    await pairVault.setPairLiquidityAndVault(pairLiquidity.address, pairVault.address);
 };
 
 func.id = `Pairs`;
