@@ -2,6 +2,8 @@
 pragma solidity 0.8.17;
 
 interface IPairInfo {
+    // Events
+    event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
 
     struct Pair {
         address indexToken;
@@ -37,11 +39,11 @@ interface IPairInfo {
 
     struct FundingFeeConfig {
         // factor
-        int256 minFundingRate;             // Minimum capital rate 1,000,000 for 100%
-        int256 maxFundingRate;             // The maximum capital rate is 1,000,000 for 100%
-        int256 defaultFundingRate;          // default capital rate  1,000,000 for 100%
-        uint256 fundingWeightFactor;        // The weight coefficient of the fund rate of both sides is 10000 for 100%
-        uint256 liquidityPremiumFactor;     // The coefficient of liquidity to premium is 10,000 for 100%
+        int256 minFundingRate; // Minimum capital rate 1,000,000 for 100%
+        int256 maxFundingRate; // The maximum capital rate is 1,000,000 for 100%
+        int256 defaultFundingRate; // default capital rate  1,000,000 for 100%
+        uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is 10000 for 100%
+        uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 10,000 for 100%
         int256 interest;
         // Distribute
         uint256 lpDistributeP;
@@ -49,12 +51,11 @@ interface IPairInfo {
         uint256 treasuryDistributeP;
     }
 
-    function getPair(uint256) external view returns(Pair memory);
+    function getPair(uint256) external view returns (Pair memory);
 
-    function getTradingConfig(uint256 _pairIndex) external view returns(TradingConfig memory);
+    function getTradingConfig(uint256 _pairIndex) external view returns (TradingConfig memory);
 
-    function getTradingFeeConfig(uint256) external view returns(TradingFeeConfig memory);
+    function getTradingFeeConfig(uint256) external view returns (TradingFeeConfig memory);
 
-    function getFundingFeeConfig(uint256) external view returns(FundingFeeConfig memory);
-
+    function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
 }
