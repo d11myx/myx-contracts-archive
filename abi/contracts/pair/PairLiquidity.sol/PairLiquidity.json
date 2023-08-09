@@ -17,11 +17,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract IOraclePriceFeed",
-        "name": "_vaultPriceFeed",
-        "type": "address"
-      },
-      {
         "internalType": "address",
         "name": "_feeReceiver",
         "type": "address"
@@ -714,19 +709,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vaultPriceFeed",
-    "outputs": [
-      {
-        "internalType": "contract IOraclePriceFeed",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
