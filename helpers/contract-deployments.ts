@@ -159,7 +159,6 @@ export async function deployTrading(
         addressProvider.address,
         pairInfo.address,
         pairVault.address,
-        oraclePriceFeed.address,
         deployer.address,
         8 * 60 * 60,
     ])) as any as TradingVault;
