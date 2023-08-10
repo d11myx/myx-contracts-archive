@@ -12,7 +12,7 @@ import {
     RoleManager,
     Router,
     Token,
-    TradingVault,
+    PositionManager,
     WETH,
 } from '../types';
 import { getContract } from './utilities/tx';
@@ -95,8 +95,8 @@ export const getPairLiquidity = async (address?: string): Promise<PairLiquidity>
     );
 };
 
-export const getTradingVault = async (address?: string): Promise<TradingVault> => {
-    return getContract<TradingVault>('TradingVault', address || (await hre.deployments.get(TRADING_VAULT_ID)).address);
+export const getTradingVault = async (address?: string): Promise<PositionManager> => {
+    return getContract<PositionManager>('PositionManager', address || (await hre.deployments.get(TRADING_VAULT_ID)).address);
 };
 
 export const getRouter = async (address?: string): Promise<Router> => {

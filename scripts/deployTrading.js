@@ -18,7 +18,7 @@ async function main() {
 
 
   let args = [pairInfo.address, pairVault.address, user1.address, 8 * 60 * 60];
-  let tradingVault = await deployUpgradeableContract("TradingVault", args);
+  let tradingVault = await deployUpgradeableContract("PositionManager", args);
 
   args = [pairInfo.address, pairVault.address, tradingVault.address,];
   let tradingRouter = await deployUpgradeableContract("TradingRouter", args);
