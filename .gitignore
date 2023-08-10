@@ -20,6 +20,7 @@ artifacts-zk
 abi/@chainlink
 abi/@openzeppelin
 abi/@uniswap
+abi/contracts
 
 *MyTest.*
 *mytest.*
