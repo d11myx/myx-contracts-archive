@@ -641,6 +641,10 @@ contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
         return tradingFee;
     }
 
+    function transferTokenTo(address token, address to, uint256 amount) external {
+        IERC20(token).safeTransfer(to, amount);
+    }
+
     function getFundingFee(
         bool _increase,
         address _account,

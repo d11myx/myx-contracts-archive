@@ -191,7 +191,6 @@ export async function deployTrading(
         pairInfo.address,
         pairVault.address,
         orderManager.address,
-        positionManager.address,
         tradingVault.address,
         60,
     ])) as any as Executor;
