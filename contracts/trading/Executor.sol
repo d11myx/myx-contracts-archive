@@ -13,7 +13,7 @@ import "../interfaces/IIndexPriceFeed.sol";
 import "hardhat/console.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
-import "../interfaces/ITradingVault.sol";
+import "../interfaces/IPositionManager.sol";
 import "../interfaces/IOraclePriceFeed.sol";
 
 contract Executor is IExecutor {
@@ -32,25 +32,22 @@ contract Executor is IExecutor {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IOrderManager public orderManager;
-    // IPositionManager public positionManager;
     IPairInfo public pairInfo;
     IPairVault public pairVault;
-    ITradingVault public tradingVault;
+    IPositionManager public tradingVault;
 
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         IOrderManager _orderManager,
-        // IPositionManager _positionManager,
-        ITradingVault _tradingVault,
+        IPositionManager _tradingVault,
         uint256 _maxTimeDelay
     ) {
         ADDRESS_PROVIDER = addressProvider;
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         orderManager = _orderManager;
-        // positionManager = _positionManager;
         tradingVault = _tradingVault;
         maxTimeDelay = _maxTimeDelay;
     }

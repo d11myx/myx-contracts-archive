@@ -14,7 +14,7 @@ import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/TradingTypes.sol';
 
-import '../interfaces/ITradingVault.sol';
+import '../interfaces/IPositionManager.sol';
 import 'hardhat/console.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IAddressesProvider.sol';
@@ -50,7 +50,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
 
     IPairInfo public pairInfo;
     IPairVault public pairVault;
-    ITradingVault public tradingVault;
+    IPositionManager public tradingVault;
     IPositionManager public positionManager;
     address public addressExecutor;
     address public router;
@@ -59,7 +59,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         IPairVault _pairVault,
-        ITradingVault _tradingVault
+        IPositionManager _tradingVault
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
