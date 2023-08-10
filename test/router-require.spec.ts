@@ -2,9 +2,10 @@ import { ethers } from "hardhat";
 import { TestEnv, newTestEnv } from "./helpers/make-suite";
 import { mintAndApprove } from "./helpers/misc";
 import { MAX_UINT_AMOUNT, TradeType, waitForTx } from "../helpers";
-import { IPairInfo } from "../types";
+import {IOrderManager, IPairInfo, IRouter, Router} from "../types";
 import { expect } from "./shared/expect";
-import { TradingTypes } from "../types/contracts/interfaces/IOrderManager";
+import { TradingTypes } from "../types/contracts/interfaces/IRouter";
+import {it} from "mocha";
 
 
 describe('Router: check require condition, trigger errors', async () => {
@@ -28,9 +29,7 @@ describe('Router: check require condition, trigger errors', async () => {
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairLiquidity.address);
         await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
     });
-    after(async () => {
-
-    });
+    after(async () => {});
 
     describe('createIncreaseOrder permission check', async () => {
         it('check msg.sender whith request.account', async () => {
@@ -41,7 +40,6 @@ describe('Router: check require condition, trigger errors', async () => {
                 usdt,
                 router,
                 executor,
-                tradingVault,
                 orderManager,
             } = testEnv;
 
@@ -56,7 +54,7 @@ describe('Router: check require condition, trigger errors', async () => {
             await usdt.connect(user2.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
             // setting: request.account = user1
-            const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: user1.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -68,7 +66,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 tpPrice: 0,
                 sl: 0,
                 slPrice: 0
-            };
+            }
 
             // setting createIncreateOrder: msg.sender = user
             const orderId = await orderManager.increaseMarketOrdersIndex();
@@ -91,7 +89,6 @@ describe('Router: check require condition, trigger errors', async () => {
 
         //     const collateral = ethers.utils.parseUnits('10000', 18);
         //     const size = ethers.utils.parseUnits('10', 18);
-
         //     await waitForTx(await usdt.connect(deployer.signer).mint(user1.address, collateral));
         //     await usdt.connect(user1.signer).approve(tradingRouter.address, MAX_UINT_AMOUNT);
 
@@ -117,7 +114,6 @@ describe('Router: check require condition, trigger errors', async () => {
         //     const orderId = await tradingRouter.increaseMarketOrdersIndex();
         //     await expect(router.connect(user1.signer).createIncreaseOrder(increasePositionRequest)).to.be.reverted;
         // });
-
 
         describe('disable pair', async () => {
             after('afer enable pair', async () => {
@@ -174,7 +170,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+                const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                     account: trader.address,
                     pairIndex: pairIndex,
                     tradeType: TradeType.MARKET,
@@ -186,7 +182,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     tpPrice: 0,
                     sl: 0,
                     slPrice: 0
-                };
+                }
 
                 const orderId = await orderManager.increaseMarketOrdersIndex();
                 await expect(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('trade pair not supported');
@@ -210,7 +206,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+                const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                     account: trader.address,
                     pairIndex: pairIndex,
                     tradeType: TradeType.MARKET,
@@ -253,7 +249,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+                const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                     account: trader.address,
                     pairIndex: pairIndex,
                     tradeType: TradeType.MARKET,
@@ -297,7 +293,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+                const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                     account: trader.address,
                     pairIndex: pairIndex,
                     tradeType: TradeType.MARKET,
@@ -317,5 +313,99 @@ describe('Router: check require condition, trigger errors', async () => {
             });
         });
 
+        describe('check tp/sl with sizeAmount', async () => {
+            before('before create tp/sl order', async () => {
+                const {
+                    keeper,
+                    deployer,
+                    users: [trader],
+                    usdt,
+                    router,
+                    executor,
+                    orderManager,
+                    tradingVault
+                } = testEnv;
+
+                const collateral = ethers.utils.parseUnits('10000', 18);
+                const sizeAmount = ethers.utils.parseUnits('10', 18);
+
+                await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
+                await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+
+                const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                    account: trader.address,
+                    pairIndex: pairIndex,
+                    tradeType: TradeType.MARKET,
+                    collateral: collateral,
+                    openPrice: ethers.utils.parseUnits('30000', 30),
+                    isLong: true,
+                    sizeAmount: sizeAmount,
+                    tp: 1,
+                    tpPrice: ethers.utils.parseUnits('35000', 30),
+                    sl: 1,
+                    slPrice: ethers.utils.parseUnits('25000', 30)
+                };
+
+                const orderId= await orderManager.increaseMarketOrdersIndex();
+                await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)
+                await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET)
+            });
+
+            it('Check tp already exists', async () => {
+                const {
+                    keeper,
+                    users: [trader],
+                    router,
+                    executor,
+                    orderManager,
+                    tradingVault
+                } = testEnv;
+
+                const positionBef = await tradingVault.getPosition(trader.address, pairIndex, true);
+                console.log(`positionBef: `, positionBef);
+
+                const createTpSlRequest: TradingTypes.CreateTpSlRequestStruct = {
+                    account: trader.address,
+                    pairIndex: pairIndex,
+                    isLong: true,
+                    tpPrice: ethers.utils.parseUnits('35000', 30),
+                    tp: 1,
+                    slPrice: 0,
+                    sl: 0
+                }
+
+                const tpOrderId = await orderManager.increaseLimitOrdersIndex();
+                await expect(router.connect(trader.signer).createTpSl(createTpSlRequest)).to.be.revertedWith('tp already exists');
+                // await executor.connect(keeper.signer).executeDecreaseOrder(tpOrderId, TradeType.TP);
+            });
+
+            it('Check tp already exists', async () => {
+                const {
+                    keeper,
+                    users: [trader],
+                    router,
+                    executor,
+                    orderManager,
+                    tradingVault
+                } = testEnv;
+
+                const positionBef = await tradingVault.getPosition(trader.address, pairIndex, true);
+                console.log(`positionBef: `, positionBef);
+
+                const createTpSlRequest: TradingTypes.CreateTpSlRequestStruct = {
+                    account: trader.address,
+                    pairIndex: pairIndex,
+                    isLong: true,
+                    tpPrice: 0,
+                    tp: 0,
+                    slPrice: ethers.utils.parseUnits('25000', 30),
+                    sl: 1
+                }
+
+                const tpOrderId = await orderManager.increaseLimitOrdersIndex();
+                await expect(router.connect(trader.signer).createTpSl(createTpSlRequest)).to.be.revertedWith('sl already exists');
+                // await executor.connect(keeper.signer).executeDecreaseOrder(tpOrderId, TradeType.TP);
+            });
+        });
     });
 });
