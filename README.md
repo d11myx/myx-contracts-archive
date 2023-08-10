@@ -108,7 +108,7 @@ event: ExecuteDecreaseOrder id: 9b4ff42a2fc7960edd49c603150f69894e46d386129c040a
 event: ExecuteIncreaseOrder id: 462ad18c79032b6336d456416b46e1012c8ed1c03cd3ff073957ae8834539e72
 event: LiquidatePosition id: aac40228c5d58dfc6360c331165fa5a8fa13f51c87a6124cb1999a4c6117bb79
 
-contract: TradingVault
+contract: PositionManager
 event: ClosePosition id: 1ffb81f32d2d371994fb39b875fbe035d34386083d2a85a3cf2894709c4581a2
 event: DecreasePosition id: f1d296a817e8ecfa2709fcd52c61a6dddc7e87ed697b3ba601e88dbee8849c20
 event: IncreasePosition id: 07777c9f149d310fb8670fb9752de106d0ebc29093eb6df2be370406a7d742a3
@@ -355,7 +355,7 @@ ITradingRouter.TradeType _tradeType
 
 #### handling fee
 
--   TradingVault
+-   PositionManager
 
 ```solidity
 // Get transaction fees

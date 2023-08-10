@@ -9,7 +9,7 @@ import {
     PairVault,
     RoleManager,
     Token,
-    TradingVault,
+    PositionManager,
     OraclePriceFeed,
     WETH,
     Router,
@@ -65,7 +65,7 @@ export interface TestEnv {
     pairVault: PairVault;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
-    tradingVault: TradingVault;
+    tradingVault: PositionManager;
     router: Router;
     executor: Executor;
     orderManager: OrderManager;
@@ -89,7 +89,7 @@ export const testEnv: TestEnv = {
     pairVault: {} as PairVault,
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
-    tradingVault: {} as TradingVault,
+    tradingVault: {} as PositionManager,
     router: {} as Router,
     executor: {} as Executor,
     orderManager: {} as OrderManager,
