@@ -1,0 +1,80 @@
+Accounts
+┌─────────┬────────────────┬──────────────────────────────────────────────┬───────────┐
+│ (index) │      name      │                   account                    │  balance  │
+├─────────┼────────────────┼──────────────────────────────────────────────┼───────────┤
+│    0    │   'deployer'   │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '10000.0' │
+│    1    │  'poolAdmin'   │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '10000.0' │
+│    2    │   'operator'   │ '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' │ '10000.0' │
+│    3    │  'treasurer'   │ '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' │ '10000.0' │
+│    4    │    'keeper'    │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '10000.0' │
+│    5    │ 'feeReceiver'  │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '10000.0' │
+│    6    │ 'slipReceiver' │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '10000.0' │
+└─────────┴────────────────┴──────────────────────────────────────────────┴───────────┘
+Live network: false
+deploying "AddressesProvider" (tx: 0x2e46befa0abef81a3af62d0fe6c161dde4da7b542f0f546093a1487e7113bdb8)...: deployed at 0x5FbDB2315678afecb367f032d93F642f64180aa3 with 423472 gas
+deploying "RoleManager" (tx: 0x1e11202fc446cd9c98193cf20c46a19e47a387b12796fc383ef82ed6ef35abe0)...: deployed at 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 with 1028152 gas
+deploying "USDT" (tx: 0xd7f641f60ad120de82f4d24ea2890eaaefd21541ecfadd67cf94a9eb7e44b77c)...: deployed at 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 with 903724 gas
+deployed market token at 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+deploying "WETH" (tx: 0xf69cc30f786ecc32f766bfe1ffb30a2166a76429a5111353976398c4a5eab0a0)...: deployed at 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6 with 673804 gas
+deployed WETH at 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+deploying "MockToken-BTC" (tx: 0x6d6c600af55f00543833efe6859849807bc9a6d505b886aad970f10ba813816e)...: deployed at 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 with 903712 gas
+deploying "MockToken-ETH" (tx: 0x764ba9be4a5dde99ca8aca5fce090965b50cad6dc35aa2552684c2323258319c)...: deployed at 0x610178dA211FEF7D417bC0e6FeD39F05609AD788 with 903712 gas
+deploying "OraclePriceFeed" (tx: 0x15381fa17668994cbc6e021dc4600e7b1ac81e344dc5ff9a6d0d830fca1e86fc)...: deployed at 0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2 with 596357 gas
+deploying "MockPriceFeed-BTC" (tx: 0x2c0a37f4262c6e8e08cba3758a6763b68d9e0789f82e0132efdd6a64cb6c1844)...: deployed at 0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43 with 394516 gas
+deploying "MockPriceFeed-ETH" (tx: 0x2460d8cf97cea596e621c01259fec97b26b0aeda9c0cbf1fbbc4befa4c62368b)...: deployed at 0x51A1ceB83B83F1985a81C295d1fF28Afef186E02 with 394516 gas
+deploying "IndexPriceFeed" (tx: 0xdbfd8f26a4ea63f4ccca460df8be43635350e5e39b56b81e9b54468da6ad50f9)...: deployed at 0x8198f5d8F8CfFE8f9C413d98a0A55aEB8ab9FbB7 with 965054 gas
+deploying "PairInfo" (tx: 0xca2c2b9a69bb1f3e5d1b3b5b9e2db16e5fe19f561b285b071da77f9edfdd13cb)...: deployed at 0xC9a43158891282A2B1475592D5719c001986Aaec with 2380657 gas
+deploying "PairVault" (tx: 0x950d737911d49983aae408c0dd8e38850dbd75b8cba0a8f6ce3697a6808c7a1f)...: deployed at 0x1c85638e118b37167e9298c2268758e058DdfDA0 with 2110591 gas
+deploying "PairLiquidity" (tx: 0x47a34060bfcd9009e8521df3bf4c66277222afdca925e16a23aee4c69276b64d)...: deployed at 0x367761085BF3C12e5DA2Df99AC6E1a824612b8fb with 3867892 gas
+deploying "TradingVault" (tx: 0x04f98b50fd464d92a32a3c5a1562f2ba018bde5f6a927b4d12571e82354fc45d)...: deployed at 0x7A9Ec1d04904907De0ED7b6839CcdD59c3716AC9 with 5489734 gas
+deploying "OrderManager" (tx: 0xa7c5005dac853bd04b3097c05a7bfe54fb8b089f82a20848d007f5584e34f24e)...: deployed at 0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff with 4000008 gas
+deploying "PositionManager" (tx: 0x3314faba8ef486ecedaed307443ec6b1c123557d1629ce287acbdaad700c0a1a)...: deployed at 0x4631BCAbD6dF18D94796344963cB60d44a4136b6 with 466517 gas
+deploying "Router" (tx: 0x800106a51e54de765cee44dfe9b46b57500dcd9730a883da9bd6e60dd4b95823)...: deployed at 0x86A2EE8FAf9A840F7a2c64CA3d51209F9A02081D with 1102374 gas
+deploying "Executor" (tx: 0xbf9245471f9dec20f525d2c24eb7c3bcda75e8666ab2cebede6af2cab2c3c366)...: deployed at 0xf953b3A269d80e3eB0F2947630Da976B896A8C5b with 6450842 gas
+added pair [BTC/USDT] at index 0
+added pair [ETH/USDT] at index 1
+Configured all pairs [BTC,ETH]
+=== Post deployment hook ===
+
+Accounts after deployment
+┌─────────┬────────────────┬──────────────────────────────────────────────┬───────────────────────────┐
+│ (index) │      name      │                   account                    │          balance          │
+├─────────┼────────────────┼──────────────────────────────────────────────┼───────────────────────────┤
+│    0    │   'deployer'   │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '9999.997622785769630046' │
+│    1    │  'poolAdmin'   │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '9999.997622785769630046' │
+│    2    │   'operator'   │ '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' │         '10000.0'         │
+│    3    │  'treasurer'   │ '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' │         '10000.0'         │
+│    4    │    'keeper'    │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '9999.997622785769630046' │
+│    5    │ 'feeReceiver'  │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '9999.997622785769630046' │
+│    6    │ 'slipReceiver' │ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' │ '9999.997622785769630046' │
+└─────────┴────────────────┴──────────────────────────────────────────────┴───────────────────────────┘
+
+Deployments
+┌───────────────────┬──────────────────────────────────────────────┐
+│      (index)      │                   address                    │
+├───────────────────┼──────────────────────────────────────────────┤
+│ AddressesProvider │ '0x5FbDB2315678afecb367f032d93F642f64180aa3' │
+│    RoleManager    │ '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' │
+│       USDT        │ '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853' │
+│       WETH        │ '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6' │
+│  OraclePriceFeed  │ '0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2' │
+│ MockPriceFeed-BTC │ '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43' │
+│ MockPriceFeed-ETH │ '0x51A1ceB83B83F1985a81C295d1fF28Afef186E02' │
+│  IndexPriceFeed   │ '0x8198f5d8F8CfFE8f9C413d98a0A55aEB8ab9FbB7' │
+│     PairInfo      │ '0xC9a43158891282A2B1475592D5719c001986Aaec' │
+│     PairVault     │ '0x1c85638e118b37167e9298c2268758e058DdfDA0' │
+│   PairLiquidity   │ '0x367761085BF3C12e5DA2Df99AC6E1a824612b8fb' │
+│   TradingVault    │ '0x7A9Ec1d04904907De0ED7b6839CcdD59c3716AC9' │
+│   OrderManager    │ '0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff' │
+│  PositionManager  │ '0x4631BCAbD6dF18D94796344963cB60d44a4136b6' │
+│      Router       │ '0x86A2EE8FAf9A840F7a2c64CA3d51209F9A02081D' │
+│     Executor      │ '0xf953b3A269d80e3eB0F2947630Da976B896A8C5b' │
+└───────────────────┴──────────────────────────────────────────────┘
+
+MockedTokens
+┌───────────────┬──────────────────────────────────────────────┐
+│    (index)    │                   address                    │
+├───────────────┼──────────────────────────────────────────────┤
+│ MockToken-BTC │ '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318' │
+│ MockToken-ETH │ '0x610178dA211FEF7D417bC0e6FeD39F05609AD788' │
+└───────────────┴──────────────────────────────────────────────┘
