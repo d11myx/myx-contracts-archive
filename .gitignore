@@ -27,3 +27,5 @@ abi/@uniswap
 .DS_Store
 .vscode
 .openzeppelin
+deploment-logs
+abi
