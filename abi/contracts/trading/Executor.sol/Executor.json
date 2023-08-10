@@ -22,11 +22,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract IPositionManager",
-        "name": "_positionManager",
-        "type": "address"
-      },
-      {
         "internalType": "contract ITradingVault",
         "name": "_tradingVault",
         "type": "address"
@@ -491,19 +486,6 @@
     "outputs": [
       {
         "internalType": "contract IPairVault",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "positionManager",
-    "outputs": [
-      {
-        "internalType": "contract IPositionManager",
         "name": "",
         "type": "address"
       }

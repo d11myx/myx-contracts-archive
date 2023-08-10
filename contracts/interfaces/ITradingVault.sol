@@ -114,6 +114,8 @@ interface ITradingVault {
 
     function updateCumulativeFundingRate(uint256 _pairIndex, uint256 _price) external;
 
+    function transferTokenTo(address token, address to, uint256 amount) external;
+
 
 
 }
