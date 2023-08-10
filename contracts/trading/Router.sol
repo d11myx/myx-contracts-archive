@@ -6,7 +6,6 @@ import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IOrderManager.sol";
 import "../libraries/PositionKey.sol";
-import "hardhat/console.sol";
 
 contract Router is IRouter {
 
@@ -73,8 +72,6 @@ contract Router is IRouter {
         while (orders.length > 0) {
             uint256 lastIndex = orders.length - 1;
             IOrderManager.PositionOrder memory positionOrder = orders[lastIndex];
-            console.log("positionOrder lastIndex", lastIndex, "orderId", positionOrder.orderId);
-            console.log("positionOrder tradeType", uint8(positionOrder.tradeType), "isIncrease", positionOrder.isIncrease);
             if (positionOrder.isIncrease) {
                 orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
             } else {
@@ -89,8 +86,6 @@ contract Router is IRouter {
 
         for (uint256 i = 0; i < orders.length; i++) {
             IOrderManager.PositionOrder memory positionOrder = orders[i];
-            console.log("positionOrder index", i, "orderId", positionOrder.orderId);
-            console.log("positionOrder tradeType", uint8(positionOrder.tradeType), "isIncrease", positionOrder.isIncrease);
             if (isIncrease && positionOrder.isIncrease) {
                 orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
             } else if (!isIncrease && !positionOrder.isIncrease) {
