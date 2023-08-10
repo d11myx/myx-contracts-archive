@@ -617,6 +617,22 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         );
     }
 
+    function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
+        IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
+
+        // IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 oraclePrice = oraclePriceFeed.getPrice(token);
+
+        uint256 indexPrice = oraclePriceFeed.getIndexPrice(token, 0);
+
+        uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
+        diffP = diffP.calculatePercentage(oraclePrice);
+
+        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
+        return oraclePrice;
+    }
+
     function getPosition(
         address _account,
         uint256 _pairIndex,
