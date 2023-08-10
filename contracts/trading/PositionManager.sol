@@ -18,7 +18,7 @@ import 'hardhat/console.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
-contract TradingVault is ITradingVault, ReentrancyGuard, Roleable {
+contract PositionManager is ITradingVault, ReentrancyGuard, Roleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;

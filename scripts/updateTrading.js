@@ -10,11 +10,11 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
+  let tradingVault = await contractAt("PositionManager", await getConfig("PositionManager"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
 
-  await updateContract("TradingVault", tradingVault.address);
+  await updateContract("PositionManager", tradingVault.address);
   await updateContract("TradingRouter", tradingRouter.address);
   await updateContract("ExecuteRouter", executeRouter.address);
 

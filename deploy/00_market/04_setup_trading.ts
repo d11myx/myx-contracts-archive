@@ -15,7 +15,7 @@ import {
     TRADING_VAULT_ID,
     waitForTx,
 } from '../../helpers';
-import { Router, Executor, TradingVault, OrderManager } from '../../types';
+import { Router, Executor, PositionManager, OrderManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -29,10 +29,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
 
-    // TradingVault
+    // PositionManager
     const tradingVaultArtifact = await deploy(`${TRADING_VAULT_ID}`, {
         from: deployer,
-        contract: 'TradingVault',
+        contract: 'PositionManager',
         args: [
             addressProvider.address,
             pairInfo.address,
@@ -45,7 +45,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const tradingVault = (await hre.ethers.getContractAt(
         tradingVaultArtifact.abi,
         tradingVaultArtifact.address,
-    )) as TradingVault;
+    )) as PositionManager;
 
     // OrderManager
     const orderManagerArtifact = await deploy(`${ORDER_MANAGER_ID}`, {

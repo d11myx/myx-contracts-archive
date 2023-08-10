@@ -6,7 +6,7 @@ import {
     PairVault,
     MockPriceFeed,
     Token,
-    TradingVault,
+    PositionManager,
     OraclePriceFeed,
     WETH,
     AddressesProvider,
@@ -155,14 +155,14 @@ export async function deployTrading(
 ) {
     console.log(` - setup trading`);
 
-    let tradingVault = (await deployContract('TradingVault', [
+    let tradingVault = (await deployContract('PositionManager', [
         addressProvider.address,
         pairInfo.address,
         pairVault.address,
         deployer.address,
         8 * 60 * 60,
-    ])) as any as TradingVault;
-    console.log(`deployed TradingVault at ${tradingVault.address}`);
+    ])) as any as PositionManager;
+    console.log(`deployed PositionManager at ${tradingVault.address}`);
 
     let orderManager = (await deployContract('OrderManager', [
         addressProvider.address,
