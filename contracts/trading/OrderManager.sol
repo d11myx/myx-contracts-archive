@@ -14,7 +14,6 @@ import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/TradingTypes.sol';
 
-import '../interfaces/ITradingVault.sol';
 import 'hardhat/console.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IAddressesProvider.sol';
