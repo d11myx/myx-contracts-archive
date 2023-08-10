@@ -125,30 +125,28 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
             );
         }
 
-        position.collateral = (int256(position.collateral) + _collateral).abs();
         position.positionAmount = position.positionAmount + _sizeAmount;
 
-        uint256 transferOut = _collateral > 0 ? 0 : _collateral.abs();
+        int256 afterCollateral = int256(position.collateral);
+        uint256 transferOut;
 
         // funding fee
         updateCumulativeFundingRate(_pairIndex, _price);
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
 
         if (fundingFee >= 0) {
-            uint256 absFundingFee = uint256(fundingFee);
             if (_isLong) {
-                require(position.collateral >= absFundingFee, 'collateral not enough for funding fee');
-                position.collateral -= absFundingFee;
+                afterCollateral -= fundingFee;
             } else {
-                transferOut += absFundingFee; // todo distribute
+                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                transferOut += userAmount;
             }
         } else {
-            uint256 absFundingFee = uint256(-fundingFee);
             if (!_isLong) {
-                require(position.collateral >= absFundingFee, 'collateral not enough for funding fee');
-                position.collateral = position.collateral - absFundingFee;
+                afterCollateral += fundingFee;
             } else {
-                transferOut += absFundingFee; // todo distribute
+                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                transferOut += userAmount;
             }
         }
 
@@ -157,108 +155,140 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
 
         // trading fee
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
-        require(position.collateral + transferOut >= tradingFee, 'collateral not enough for trading fee');
+        afterCollateral -= int256(tradingFee);
 
-        if (transferOut >= tradingFee) {
-            transferOut -= tradingFee;
-        } else {
-            transferOut == 0;
-            position.collateral -= tradingFee - transferOut;
-        }
-        // todo distribute
         IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
 
-        int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
-        netExposureAmountChecker[_pairIndex] =
-            prevNetExposureAmountChecker +
-            (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
-        if (_isLong) {
-            longTracker[_pairIndex] += _sizeAmount;
-        } else {
-            shortTracker[_pairIndex] += _sizeAmount;
-        }
+        // final collateral & out
+        afterCollateral += _collateral;
+        transferOut += _collateral < 0 ? _collateral.abs() : 0;
+        console.log("increasePosition afterCollateral", afterCollateral.toString(), "transferOut", transferOut);
 
-        IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
-        uint256 extraIndexAmount;
-        if (prevNetExposureAmountChecker > 0) {
-            if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
-                pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+        require(afterCollateral > 0, "collateral not enough");
 
-                uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
-                pairVault.updateAveragePrice(_pairIndex, averagePrice);
-            } else if (netExposureAmountChecker[_pairIndex] > 0) {
-                pairVault.decreaseReserveAmount(_pairIndex, _sizeAmount, 0);
+        position.collateral = afterCollateral.abs();
 
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    extraIndexAmount = pairVault.decreaseProfit(_pairIndex, profit);
+        // update lp vault
+        if (_sizeAmount > 0) {
+            int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
+            netExposureAmountChecker[_pairIndex] = prevNetExposureAmountChecker + (_isLong ? int256(_sizeAmount) : - int256(_sizeAmount));
+            if (_isLong) {
+                longTracker[_pairIndex] += _sizeAmount;
+            } else {
+                shortTracker[_pairIndex] += _sizeAmount;
+            }
+
+            console.log("increasePosition prevNetExposureAmountChecker", prevNetExposureAmountChecker.toString());
+            console.log("increasePosition netExposureAmountChecker", netExposureAmountChecker[_pairIndex].toString());
+            console.log("increasePosition longTracker", longTracker[_pairIndex], "shortTracker", shortTracker[_pairIndex]);
+
+            IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
+            console.log("increasePosition lp averagePrice", lpVault.averagePrice, "price", _price);
+            if (prevNetExposureAmountChecker > 0) {
+                if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
+                    console.log("increasePosition BTO long increase");
+                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+
+                    uint256 averagePrice = (uint256(prevNetExposureAmountChecker)
+                    .mulPrice(lpVault.averagePrice) + sizeDelta)
+                        .calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
+                    console.log("increasePosition BTO update averagePrice", averagePrice);
+                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
+                    uint256 decreaseLong;
+                    uint256 increaseShort;
+
+                    if (netExposureAmountChecker[_pairIndex] >= 0) {
+                        decreaseLong = _sizeAmount;
+                    } else {
+                        decreaseLong = uint256(prevNetExposureAmountChecker);
+                        increaseShort = _sizeAmount - decreaseLong;
+                    }
+
+                    // decrease reserve & pnl
+                    console.log("increasePosition STO long decrease");
+                    pairVault.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                    if (_price > lpVault.averagePrice) {
+                        uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
+                        console.log("increasePosition STO decreaseProfit", profit);
+                        pairVault.decreaseProfit(_pairIndex, profit);
+                    } else {
+                        uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
+                        console.log("increasePosition STO increaseProfit", profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
+                        pairVault.increaseProfit(_pairIndex, profit);
+                    }
+
+                    // increase reserve
+                    if (increaseShort > 0) {
+                        pairVault.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                        console.log("increasePosition STO Long to Short update averagePrice", _price);
+                        pairVault.updateAveragePrice(_pairIndex, _price);
+                    }
+
+                    // zero exposure
+                    if (netExposureAmountChecker[_pairIndex] == 0) {
+                        pairVault.updateAveragePrice(_pairIndex, 0);
+                    }
+                }
+            } else if (prevNetExposureAmountChecker < 0) {
+                if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
+                    console.log("increasePosition STO short increase");
+                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+
+                    uint256 averagePrice = (uint256(- prevNetExposureAmountChecker)
+                    .mulPrice(lpVault.averagePrice) + sizeDelta)
+                        .calculatePrice(uint256(- prevNetExposureAmountChecker) + _sizeAmount);
+                    console.log("increasePosition STO update averagePrice", averagePrice);
+                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
+                } else {
+                    uint256 decreaseShort;
+                    uint256 increaseLong;
+
+                    if (netExposureAmountChecker[_pairIndex] <= 0) {
+                        decreaseShort = _sizeAmount;
+                    } else {
+                        decreaseShort = uint256(- prevNetExposureAmountChecker);
+                        increaseLong = _sizeAmount - decreaseShort;
+                    }
+
+                    // decrease reserve & pnl
+                    console.log("increasePosition BTO short decrease");
+                    pairVault.decreaseReserveAmount(_pairIndex, 0,
+                        netExposureAmountChecker[_pairIndex] >= 0 ? lpVault.stableReservedAmount : decreaseShort.mulPrice(lpVault.averagePrice));
+                    if (_price > lpVault.averagePrice) {
+                        uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
+                        console.log("increasePosition BTO increaseProfit", profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
+                        pairVault.increaseProfit(_pairIndex, profit);
+                    } else {
+                        uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
+                        console.log("increasePosition BTO decreaseProfit", profit);
+                        pairVault.decreaseProfit(_pairIndex, profit);
+                    }
+
+                    // increase reserve
+                    if (increaseLong > 0) {
+                        pairVault.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                        console.log("increasePosition BTO short to long update averagePrice", _price);
+                        pairVault.updateAveragePrice(_pairIndex, _price);
+                    }
+
+                    // zero exposure
+                    if (netExposureAmountChecker[_pairIndex] == 0) {
+                        pairVault.updateAveragePrice(_pairIndex, 0);
+                    }
                 }
             } else {
-                pairVault.decreaseReserveAmount(_pairIndex, lpVault.indexReservedAmount, 0);
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    extraIndexAmount = pairVault.decreaseProfit(_pairIndex, profit);
+                if (netExposureAmountChecker[_pairIndex] > 0) {
+                    console.log("increasePosition BTO zero to long");
+                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
+                    console.log("increasePosition STO zero to short");
+                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
                 }
-
-                pairVault.increaseReserveAmount(
-                    _pairIndex,
-                    0,
-                    (_sizeAmount - uint256(prevNetExposureAmountChecker)).mulPrice(_price)
-                );
                 pairVault.updateAveragePrice(_pairIndex, _price);
             }
-        } else if (prevNetExposureAmountChecker < 0) {
-            if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-
-                uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                pairVault.updateAveragePrice(_pairIndex, averagePrice);
-            } else if (netExposureAmountChecker[_pairIndex] < 0) {
-                pairVault.decreaseReserveAmount(_pairIndex, 0, _sizeAmount.mulPrice(lpVault.averagePrice));
-
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    extraIndexAmount = pairVault.decreaseProfit(_pairIndex, profit);
-                } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
-                }
-            } else {
-                pairVault.decreaseReserveAmount(_pairIndex, 0, lpVault.stableReservedAmount);
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
-                } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    extraIndexAmount = pairVault.decreaseProfit(_pairIndex, profit);
-                }
-
-                pairVault.increaseReserveAmount(
-                    _pairIndex,
-                    0,
-                    (_sizeAmount - uint256(-prevNetExposureAmountChecker)).mulPrice(_price)
-                );
-                pairVault.updateAveragePrice(_pairIndex, _price);
-            }
-        } else {
-            if (netExposureAmountChecker[_pairIndex] > 0) {
-                pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-            } else {
-                pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-            }
-            pairVault.updateAveragePrice(_pairIndex, _price);
         }
 
         if (transferOut > 0) {
@@ -318,30 +348,28 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         // update position size
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
-        position.collateral = (int256(position.collateral) + _collateral).abs();
         position.positionAmount -= _sizeAmount;
 
-        uint256 transferOut = _collateral > 0 ? 0 : _collateral.abs();
+        int256 afterCollateral = int256(position.collateral);
+        uint256 transferOut;
 
         // funding fee
         updateCumulativeFundingRate(_pairIndex, _price);
         fundingFee = getFundingFee(false, _account, _pairIndex, _isLong, _sizeAmount);
 
         if (fundingFee >= 0) {
-            uint256 absFundingFee = uint256(fundingFee);
             if (_isLong) {
-                require(position.collateral >= absFundingFee, 'collateral not enough for funding fee');
-                position.collateral -= absFundingFee;
+                afterCollateral -= fundingFee;
             } else {
-                transferOut += absFundingFee; // todo distribute
+                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                transferOut += userAmount;
             }
         } else {
-            uint256 absFundingFee = uint256(-fundingFee);
             if (!_isLong) {
-                require(position.collateral >= absFundingFee, 'collateral not enough for funding fee');
-                position.collateral = position.collateral - absFundingFee;
+                afterCollateral -= (- fundingFee);
             } else {
-                transferOut += absFundingFee; // todo distribute
+                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                transferOut += userAmount;
             }
         }
 
@@ -350,126 +378,163 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
 
         // trading fee
         tradingFee = _tradingFee(_pairIndex, !_isLong, _sizeAmount, _price);
-        require(position.collateral + transferOut >= tradingFee, 'collateral not enough for trading fee');
+        afterCollateral -= int256(tradingFee);
 
-        if (transferOut >= tradingFee) {
-            transferOut -= tradingFee;
-        } else {
-            transferOut == 0;
-            position.collateral -= tradingFee - transferOut;
-        }
-        // todo fee distribute
         IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
 
-        int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
-        netExposureAmountChecker[_pairIndex] =
-            prevNetExposureAmountChecker +
-            (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
-        if (_isLong) {
-            longTracker[_pairIndex] -= _sizeAmount;
-        } else {
-            shortTracker[_pairIndex] -= _sizeAmount;
-        }
+        // update lp vault
+        if (_sizeAmount > 0) {
+            int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
+            netExposureAmountChecker[_pairIndex] = prevNetExposureAmountChecker + (_isLong ? - int256(_sizeAmount) : int256(_sizeAmount));
+            if (_isLong) {
+                longTracker[_pairIndex] -= _sizeAmount;
+            } else {
+                shortTracker[_pairIndex] -= _sizeAmount;
+            }
 
-        IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
-        if (prevNetExposureAmountChecker > 0) {
-            if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
-                pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-                uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
-                pairVault.updateAveragePrice(_pairIndex, averagePrice);
-            } else if (netExposureAmountChecker[_pairIndex] > 0) {
-                pairVault.decreaseReserveAmount(_pairIndex, _sizeAmount, 0);
+            console.log("decreasePosition prevNetExposureAmountChecker", prevNetExposureAmountChecker.toString());
+            console.log("decreasePosition netExposureAmountChecker", netExposureAmountChecker[_pairIndex].toString());
+            console.log("decreasePosition longTracker", longTracker[_pairIndex], "shortTracker", shortTracker[_pairIndex]);
 
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    pairVault.decreaseProfit(_pairIndex, profit);
+            IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
+            if (prevNetExposureAmountChecker > 0) {
+                if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
+                    console.log("decreasePosition STC long increase");
+                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+
+                    uint256 averagePrice = (uint256(prevNetExposureAmountChecker)
+                    .mulPrice(lpVault.averagePrice) + sizeDelta)
+                        .calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
+                    console.log("decreasePosition STC update averagePrice", averagePrice);
+                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
+                    uint256 decreaseLong;
+                    uint256 increaseShort;
+
+                    if (netExposureAmountChecker[_pairIndex] >= 0) {
+                        decreaseLong = _sizeAmount;
+                    } else {
+                        decreaseLong = uint256(prevNetExposureAmountChecker);
+                        increaseShort = _sizeAmount - decreaseLong;
+                    }
+
+                    // decrease reserve & pnl
+                    console.log("decreasePosition STO long decrease");
+                    pairVault.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                    if (_price > lpVault.averagePrice) {
+                        uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
+                        console.log("decreasePosition STO decreaseProfit", profit);
+                        pairVault.decreaseProfit(_pairIndex, profit);
+                    } else {
+                        uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
+                        console.log("decreasePosition STO increaseProfit", profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
+                        pairVault.increaseProfit(_pairIndex, profit);
+                    }
+
+                    // increase reserve
+                    if (increaseShort > 0) {
+                        pairVault.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                        console.log("decreasePosition STO Long to Short update averagePrice", _price);
+                        pairVault.updateAveragePrice(_pairIndex, _price);
+                    }
+
+                    // zero exposure
+                    if (netExposureAmountChecker[_pairIndex] == 0) {
+                        pairVault.updateAveragePrice(_pairIndex, 0);
+                    }
+                }
+            } else if (prevNetExposureAmountChecker < 0) {
+                if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
+                    console.log("decreasePosition STO short increase");
+                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+
+                    uint256 averagePrice = (uint256(- prevNetExposureAmountChecker)
+                    .mulPrice(lpVault.averagePrice) + sizeDelta)
+                        .calculatePrice(uint256(- prevNetExposureAmountChecker) + _sizeAmount);
+                    console.log("decreasePosition STO update averagePrice", averagePrice);
+                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
+                } else {
+                    uint256 decreaseShort;
+                    uint256 increaseLong;
+
+                    if (netExposureAmountChecker[_pairIndex] <= 0) {
+                        decreaseShort = _sizeAmount;
+                    } else {
+                        decreaseShort = uint256(- prevNetExposureAmountChecker);
+                        increaseLong = _sizeAmount - decreaseShort;
+                    }
+
+                    // decrease reserve & pnl
+                    console.log("decreasePosition BTO short decrease");
+                    pairVault.decreaseReserveAmount(_pairIndex, 0,
+                        netExposureAmountChecker[_pairIndex] >= 0 ? lpVault.stableReservedAmount : decreaseShort.mulPrice(lpVault.averagePrice));
+                    if (_price > lpVault.averagePrice) {
+                        uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
+                        console.log("decreasePosition BTO increaseProfit", profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
+                        pairVault.increaseProfit(_pairIndex, profit);
+                    } else {
+                        uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
+                        console.log("decreasePosition BTO decreaseProfit", profit);
+                        pairVault.decreaseProfit(_pairIndex, profit);
+                    }
+
+                    // increase reserve
+                    if (increaseLong > 0) {
+                        pairVault.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                        console.log("decreasePosition BTO short to long update averagePrice", _price);
+                        pairVault.updateAveragePrice(_pairIndex, _price);
+                    }
+
+                    // zero exposure
+                    if (netExposureAmountChecker[_pairIndex] == 0) {
+                        pairVault.updateAveragePrice(_pairIndex, 0);
+                    }
                 }
             } else {
-                pairVault.decreaseReserveAmount(_pairIndex, lpVault.indexReservedAmount, 0);
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    pairVault.decreaseProfit(_pairIndex, profit);
+                if (netExposureAmountChecker[_pairIndex] > 0) {
+                    console.log("decreasePosition BTO zero to long");
+                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
+                    console.log("decreasePosition STO zero to short");
+                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
                 }
-                pairVault.increaseReserveAmount(
-                    _pairIndex,
-                    0,
-                    (_sizeAmount - uint256(prevNetExposureAmountChecker)).mulPrice(_price)
-                );
                 pairVault.updateAveragePrice(_pairIndex, _price);
             }
-        } else if (prevNetExposureAmountChecker < 0) {
-            if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-
-                uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                pairVault.updateAveragePrice(_pairIndex, averagePrice);
-            } else if (netExposureAmountChecker[_pairIndex] < 0) {
-                pairVault.decreaseReserveAmount(_pairIndex, 0, _sizeAmount.mulPrice(lpVault.averagePrice));
-
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    pairVault.decreaseProfit(_pairIndex, profit);
-                } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
-                }
-            } else {
-                pairVault.decreaseReserveAmount(_pairIndex, 0, lpVault.stableReservedAmount);
-                if (_price > lpVault.averagePrice) {
-                    uint256 profit = _sizeAmount.mulPrice(_price - lpVault.averagePrice);
-                    IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                    pairVault.increaseProfit(_pairIndex, profit);
-                } else {
-                    uint256 profit = _sizeAmount.mulPrice(lpVault.averagePrice - _price);
-                    pairVault.decreaseProfit(_pairIndex, profit);
-                }
-                pairVault.increaseReserveAmount(
-                    _pairIndex,
-                    0,
-                    (_sizeAmount - uint256(-prevNetExposureAmountChecker)).mulPrice(_price)
-                );
-                pairVault.updateAveragePrice(_pairIndex, _price);
-            }
-        } else {
-            if (netExposureAmountChecker[_pairIndex] > 0) {
-                pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-            } else {
-                pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-            }
-            pairVault.updateAveragePrice(_pairIndex, _price);
         }
+
+        // pnl
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         pnl = position.getUnrealizedPnl(_sizeAmount, price);
 
         if (pnl > 0) {
             transferOut += pnl.abs();
         } else {
-            position.collateral -= position.collateral.min(uint256(-pnl));
+            afterCollateral += pnl;
         }
         position.realisedPnl += pnl;
 
-        if (transferOut > 0) {
-            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
-        }
-
+        // final collateral & out
         if (position.positionAmount == 0) {
-            if (position.collateral > 0) {
-                IERC20(pair.stableToken).safeTransfer(position.account, position.collateral);
-            }
-
+            // transfer out all collateral and _collateral
+            int256 allTransferOut = int256(transferOut) + afterCollateral + (_collateral > 0 ? _collateral : int256(0));
+            transferOut = allTransferOut > 0 ? allTransferOut.abs() : 0;
+            console.log("decreasePosition afterCollateral allTransferOut", allTransferOut.toString());
+            console.log("decreasePosition position close");
             delete positions[positionKey];
             emit ClosePosition(positionKey, _account, _pairIndex, _isLong);
+        } else {
+            afterCollateral += _collateral;
+            transferOut += (_collateral < 0 ? uint256(- _collateral) : 0);
+            require(afterCollateral > 0, "collateral not enough");
+            position.collateral = afterCollateral.abs();
+
+            console.log("decreasePosition afterCollateral", afterCollateral.toString(), "transferOut", transferOut);
+        }
+
+        if (transferOut > 0) {
+            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
 
         emit DecreasePosition(
@@ -615,6 +680,21 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         fundingRate = (fundingRate - fundingFeeConfig.interest).min(fundingFeeConfig.minFundingRate).max(
             fundingFeeConfig.maxFundingRate
         );
+    }
+
+    function _distributeFundingFee(uint256 _pairIndex, uint256 _fundingFee) internal returns (uint256 userAmount, uint256 lpAmount) {
+        console.log("distributeFundingFee  fundingFee", _fundingFee);
+
+        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPairInfo.FundingFeeConfig memory fundingFeeConfig = pairInfo.getFundingFeeConfig(_pairIndex);
+
+        lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
+        userAmount = _fundingFee - lpAmount;
+
+        IERC20(pair.stableToken).safeTransfer(address(pairVault), lpAmount);
+        pairVault.increaseTotalAmount(_pairIndex, 0, lpAmount);
+        console.log("distributeFundingFee userAmount", userAmount, "lpAmount", lpAmount);
+        return (userAmount, lpAmount);
     }
 
     function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
