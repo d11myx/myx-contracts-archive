@@ -153,7 +153,7 @@ contract Executor is IExecutor {
 
         // check price
         // IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
-        uint256 price = getValidPrice(pair.indexToken, pairIndex, order.isLong);
+        uint256 price = tradingVault.getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.isLong
@@ -374,7 +374,7 @@ contract Executor is IExecutor {
         );
         // IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
         // check price
-        uint256 price = getValidPrice(pair.indexToken, pairIndex, order.isLong);
+        uint256 price = tradingVault.getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.abovePrice
@@ -581,7 +581,7 @@ contract Executor is IExecutor {
 
         require(sumAmount == order.sizeAmount, 'ADL position amount not match decrease order');
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
-        uint256 price = getValidPrice(pair.indexToken, order.pairIndex, !order.isLong);
+        uint256 price = tradingVault.getValidPrice(pair.indexToken, order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             Position.Info memory adlPosition = adlPositions[i];
@@ -612,7 +612,7 @@ contract Executor is IExecutor {
             return;
         }
         IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-        uint256 price = getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
+        uint256 price = tradingVault.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
 
         int256 unrealizedPnl;
         if (position.isLong) {
@@ -680,19 +680,5 @@ contract Executor is IExecutor {
         );
     }
 
-    function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
-        IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
 
-        // IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 oraclePrice = oraclePriceFeed.getPrice(token);
-
-        uint256 indexPrice = oraclePriceFeed.getIndexPrice(token, 0);
-
-        uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
-        diffP = diffP.calculatePercentage(oraclePrice);
-
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
-        require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
-        return oraclePrice;
-    }
 }
