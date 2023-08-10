@@ -14,7 +14,6 @@ import {
     Token,
     TradingVault,
     WETH,
-    PositionManager,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -112,9 +111,9 @@ export const getOrderManager = async (address?: string): Promise<OrderManager> =
     return getContract<OrderManager>('OrderManager', address || (await hre.deployments.get(ORDER_MANAGER_ID)).address);
 };
 
-export const getPositionManager = async (address?: string): Promise<PositionManager> => {
-    return getContract<PositionManager>(
-        'PositionManager',
-        address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
-    );
-};
+// export const getPositionManager = async (address?: string): Promise<PositionManager> => {
+//     return getContract<PositionManager>(
+//         'PositionManager',
+//         address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
+//     );
+// };
