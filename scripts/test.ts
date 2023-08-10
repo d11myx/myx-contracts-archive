@@ -29,7 +29,7 @@ async function main() {
     const prices = ['29896420000000000000000000000000000', '1862390000000000000000000000000000'];
 
     // await executor.setPricesAndExecuteMarketOrders(tokens, prices, 1691583375, 4, 0);
-    await executor.executeIncreaseOrder(4, TradeType.MARKET);
+    await executor.executeIncreaseOrder(1, TradeType.LIMIT);
     // await executor.updateMaxTimeDelay(60 * 10);
     //
     // console.log(await orderManager.increaseMarketOrders(1));

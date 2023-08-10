@@ -190,7 +190,7 @@ contract PairVault is IPairVault, Roleable {
     function decreaseProfit(
         uint256 _pairIndex,
         uint256 _profit
-    ) external onlyPairLiquidityAndVault returns (uint256 extraIndexAmount) {
+    ) external onlyPairLiquidityAndVault {
         Vault storage vault = vaults[_pairIndex];
         console.log('decreaseProfit _pairIndex', _pairIndex, '_profit', _profit);
         console.log(
