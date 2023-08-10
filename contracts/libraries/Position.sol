@@ -6,6 +6,7 @@ import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/TradingTypes.sol";
 import "../libraries/PositionKey.sol";
+import 'hardhat/console.sol';
 
 library Position {
     using Int256Utils for int256;
@@ -38,7 +39,10 @@ library Position {
     }
 
     function getUnrealizedPnl(Info memory self, uint256 _sizeAmount,uint256 price) internal pure returns (int256 pnl) {
-        if (price == self.averagePrice) {return 0;}
+        if (price == self.averagePrice || self.averagePrice == 0) {
+            return 0;
+        }
+
         if (self.isLong) {
             if (price > self.averagePrice) {
                 pnl = int256(_sizeAmount.mulPrice(price - self.averagePrice));
@@ -81,8 +85,8 @@ library Position {
         require(totalCollateral >= 0, "collateral not enough for decrease");
 
         // pnl
-        if (self.positionAmount > 0) {
-            totalCollateral += getUnrealizedPnl(self,self.positionAmount,price);
+        if (_sizeAmount > 0) {
+            totalCollateral += getUnrealizedPnl(self, _sizeAmount, price);
         }
 
         require(totalCollateral >= 0, "collateral not enough for pnl");

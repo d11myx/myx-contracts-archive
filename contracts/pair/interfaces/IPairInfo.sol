@@ -30,11 +30,6 @@ interface IPairInfo {
         // fee
         uint256 takerFeeP;
         uint256 makerFeeP;
-        // Distribute
-        uint256 lpDistributeP;
-        uint256 keeperDistributeP;
-        uint256 treasuryDistributeP;
-        uint256 refererDistributeP;
     }
 
     struct FundingFeeConfig {
@@ -45,10 +40,7 @@ interface IPairInfo {
         uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is 10000 for 100%
         uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 10,000 for 100%
         int256 interest;
-        // Distribute
         uint256 lpDistributeP;
-        uint256 userDistributeP;
-        uint256 treasuryDistributeP;
     }
 
     function getPair(uint256) external view returns (Pair memory);

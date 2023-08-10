@@ -36,9 +36,6 @@ contract PairLiquidity is IPairLiquidity, Roleable {
 
     address public weth;
 
-    // pairToken => user => amount
-    mapping(address => mapping(address => uint256)) public userPairTokens;
-
     receive() external payable {}
 
     constructor(
@@ -350,8 +347,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
                 afterFeeStableAmount
             );
         }
-        IPairToken(pair.pairToken).mint(address(this), mintAmount);
-        userPairTokens[pair.pairToken][_account] = userPairTokens[pair.pairToken][_account] + mintAmount;
+        IPairToken(pair.pairToken).mint(_account, mintAmount);
 
         pairVault.increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
@@ -379,7 +375,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        require(userPairTokens[pair.pairToken][_account] >= _amount, 'insufficient balance');
+        require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, "insufficient balance");
 
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
@@ -396,8 +392,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
 
         pairVault.decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
-        IPairToken(pair.pairToken).burn(address(this), _amount);
-        userPairTokens[pair.pairToken][_account] = userPairTokens[pair.pairToken][_account] - _amount;
+        IPairToken(pair.pairToken).burn(_account, _amount);
 
         pairVault.transferTokenTo(pair.indexToken, _receiver, receiveIndexTokenAmount);
         pairVault.transferTokenTo(pair.stableToken, _receiver, receiveStableTokenAmount);
@@ -439,7 +434,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount
     ) external view returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
-        require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
+        if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0);
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
@@ -553,7 +548,8 @@ contract PairLiquidity is IPairLiquidity, Roleable {
         uint256 _pairIndex,
         uint256 _lpAmount
     ) external view returns (uint256 depositIndexAmount, uint256 depositStableAmount) {
-        require(_lpAmount > 0, 'invalid amount');
+        if (_lpAmount == 0) return (0, 0);
+
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
@@ -631,7 +627,8 @@ contract PairLiquidity is IPairLiquidity, Roleable {
         uint256 _pairIndex,
         uint256 _lpAmount
     ) public view returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
-        require(_lpAmount > 0, 'invalid amount');
+        if (_lpAmount == 0) return (0, 0);
+
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 

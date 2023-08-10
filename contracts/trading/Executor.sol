@@ -614,31 +614,16 @@ contract Executor is IExecutor {
         IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
         uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
 
-        int256 unrealizedPnl;
-        if (position.isLong) {
-            if (price > position.averagePrice) {
-                unrealizedPnl = int256(position.positionAmount.mulPrice(price - position.averagePrice));
-            } else {
-                unrealizedPnl = -int256(position.positionAmount.mulPrice(position.averagePrice - price));
-            }
-        } else {
-            if (position.averagePrice > price) {
-                unrealizedPnl = int256(position.positionAmount.mulPrice(position.averagePrice - price));
-            } else {
-                unrealizedPnl = -int256(position.positionAmount.mulPrice(price - position.averagePrice));
-            }
-        }
-
+        int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
         int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
+
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
 
         bool needLiquidate;
         if (exposureAsset <= 0) {
             needLiquidate = true;
         } else {
-            uint256 riskRate = position
-                .positionAmount
-                .mulPrice(price)
+            uint256 riskRate = position.positionAmount.mulPrice(position.averagePrice)
                 .mulPercentage(tradingConfig.maintainMarginRate)
                 .calculatePercentage(uint256(exposureAsset));
             needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
