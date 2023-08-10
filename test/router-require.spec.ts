@@ -244,11 +244,11 @@ describe('Router: check require condition, trigger errors', async () => {
                 const minTradeAmount = tradingConfig.minTradeAmount;
                 const maxTradeAmount = tradingConfig.maxTradeAmount;
 
-                console.log(`minTradeAmount: `, minTradeAmount);
-                console.log(`maxTradeAmount: `, maxTradeAmount);
+                console.log(`--minTradeAmount: `, minTradeAmount);
+                console.log(`--maxTradeAmount: `, maxTradeAmount);
 
                 const collateral = ethers.utils.parseUnits('10000', 18);
-                const sizeAmount = ethers.utils.parseUnits('5', 17);
+                const sizeAmount = ethers.utils.parseUnits('5', 15);
 
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
