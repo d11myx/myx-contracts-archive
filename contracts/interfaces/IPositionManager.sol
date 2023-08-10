@@ -4,7 +4,6 @@ pragma solidity 0.8.17;
 import '../libraries/Position.sol';
 
 interface IPositionManager {
-
     event UpdatePairInfo(address oldPairInfo, address newPairInfo);
 
     event UpdatePairVault(address oldPairVault, address newPairVault);
@@ -68,7 +67,11 @@ interface IPositionManager {
 
     function shortTracker(uint256 pairIndex) external view returns (uint256);
 
-     function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount) external view returns (uint256 tradingFee);
+    function getTradingFee(
+        uint256 _pairIndex,
+        bool _isLong,
+        uint256 _sizeAmount
+    ) external view returns (uint256 tradingFee);
 
     function getFundingFee(
         bool _increase,
@@ -80,7 +83,11 @@ interface IPositionManager {
 
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
 
-    function getPosition(address _account, uint256 _pairIndex, bool _isLong) external view returns (Position.Info memory);
+    function getPosition(
+        address _account,
+        uint256 _pairIndex,
+        bool _isLong
+    ) external view returns (Position.Info memory);
 
     function getPositionByKey(bytes32 key) external view returns (Position.Info memory);
 
@@ -116,6 +123,5 @@ interface IPositionManager {
 
     function transferTokenTo(address token, address to, uint256 amount) external;
 
-
-
+    function getValidPrice(address token, uint256 _pairIndex, bool _isLong) external view returns (uint256);
 }
