@@ -4,23 +4,22 @@ pragma solidity 0.8.17;
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 import '../libraries/Position.sol';
-import "../interfaces/IExecutor.sol";
-import "../interfaces/IAddressesProvider.sol";
-import "../interfaces/IRoleManager.sol";
-import "../interfaces/IOrderManager.sol";
-import "../interfaces/IPositionManager.sol";
-import "../interfaces/IIndexPriceFeed.sol";
-import "../pair/interfaces/IPairInfo.sol";
-import "../pair/interfaces/IPairVault.sol";
-import "../interfaces/IPositionManager.sol";
-import "../interfaces/IOraclePriceFeed.sol";
+import '../interfaces/IExecutor.sol';
+import '../interfaces/IAddressesProvider.sol';
+import '../interfaces/IRoleManager.sol';
+import '../interfaces/IOrderManager.sol';
+import '../interfaces/IPositionManager.sol';
+import '../interfaces/IIndexPriceFeed.sol';
+import '../pair/interfaces/IPairInfo.sol';
+import '../pair/interfaces/IPairVault.sol';
+import '../interfaces/IPositionManager.sol';
+import '../interfaces/IOraclePriceFeed.sol';
 
 contract Executor is IExecutor {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
-    using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
     uint256 public override increaseMarketOrderStartIndex;
@@ -52,12 +51,12 @@ contract Executor is IExecutor {
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 
     modifier onlyPositionKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), "onlyPositionKeeper");
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'onlyPositionKeeper');
         _;
     }
 
@@ -74,7 +73,7 @@ contract Executor is IExecutor {
         uint256 increaseEndIndex,
         uint256 decreaseEndIndex
     ) external onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, "invalid params");
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -89,7 +88,7 @@ contract Executor is IExecutor {
         uint256[] memory increaseOrderIds,
         uint256[] memory decreaseOrderIds
     ) external onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, "invalid params");
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -109,8 +108,7 @@ contract Executor is IExecutor {
         }
 
         while (index < endIndex) {
-            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
-            } catch Error(string memory reason) {
+            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {} catch Error(string memory reason) {
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
             }
             index++;
@@ -119,9 +117,9 @@ contract Executor is IExecutor {
 
     function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper {
         for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-            } catch Error(string memory reason) {
-            }
+            try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
+                string memory reason
+            ) {}
         }
     }
 
@@ -149,19 +147,20 @@ contract Executor is IExecutor {
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
         require(
             order.sizeAmount == 0 ||
-            (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
+                (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
             'invalid trade size'
         );
 
         // check price
-        uint256 price = getValidPrice(pairIndex, order.isLong);
+        // IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
+        uint256 price = getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.isLong
                     ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <=
-                order.openPrice
+                        order.openPrice
                     : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >=
-                order.openPrice,
+                        order.openPrice,
                 'not reach trigger price'
             );
         } else {
@@ -323,8 +322,7 @@ contract Executor is IExecutor {
         }
 
         while (index < endIndex) {
-            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {
-            } catch Error(string memory reason) {
+            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {} catch Error(string memory reason) {
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
             }
             index++;
@@ -332,11 +330,10 @@ contract Executor is IExecutor {
     }
 
     function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper {
-
         for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-            } catch Error(string memory reason) {
-            }
+            try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
+                string memory reason
+            ) {}
         }
     }
 
@@ -372,19 +369,19 @@ contract Executor is IExecutor {
         order.sizeAmount = order.sizeAmount.min(position.positionAmount);
         require(
             order.sizeAmount == 0 ||
-            (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
+                (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
             'invalid trade size'
         );
-
+        // IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
         // check price
-        uint256 price = getValidPrice(pairIndex, order.isLong);
+        uint256 price = getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.abovePrice
                     ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <=
-                order.triggerPrice
+                        order.triggerPrice
                     : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >=
-                order.triggerPrice,
+                        order.triggerPrice,
                 'not reach trigger price'
             );
         } else {
@@ -530,7 +527,7 @@ contract Executor is IExecutor {
         uint256 timestamp,
         bytes32[] memory positionKeys
     ) external onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, "invalid params");
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -552,7 +549,7 @@ contract Executor is IExecutor {
         uint256 orderId,
         TradingTypes.TradeType tradeType
     ) external onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, "invalid params");
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -565,7 +562,6 @@ contract Executor is IExecutor {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
     ) public onlyPositionKeeper {
-
         require(_positionKeys.length == _sizeAmounts.length, 'length not match');
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
@@ -585,8 +581,7 @@ contract Executor is IExecutor {
 
         require(sumAmount == order.sizeAmount, 'ADL position amount not match decrease order');
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
-
-        uint256 price = getValidPrice(order.pairIndex, !order.isLong);
+        uint256 price = getValidPrice(pair.indexToken, order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             Position.Info memory adlPosition = adlPositions[i];
@@ -616,8 +611,8 @@ contract Executor is IExecutor {
         if (position.positionAmount == 0) {
             return;
         }
-
-        uint256 price = getValidPrice(position.pairIndex, position.isLong);
+        IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
+        uint256 price = getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
 
         int256 unrealizedPnl;
         if (position.isLong) {
@@ -685,13 +680,13 @@ contract Executor is IExecutor {
         );
     }
 
-    function getValidPrice(uint256 _pairIndex, bool _isLong) public view returns (uint256) {
+    function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
 
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        uint256 oraclePrice = oraclePriceFeed.getPrice(pair.indexToken);
+        // IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        uint256 oraclePrice = oraclePriceFeed.getPrice(token);
 
-        uint256 indexPrice = oraclePriceFeed.getIndexPrice(pair.indexToken, 0);
+        uint256 indexPrice = oraclePriceFeed.getIndexPrice(token, 0);
 
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
@@ -700,5 +695,4 @@ contract Executor is IExecutor {
         require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
         return oraclePrice;
     }
-
 }
