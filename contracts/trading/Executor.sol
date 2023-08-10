@@ -10,7 +10,6 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IOrderManager.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IIndexPriceFeed.sol";
-import "hardhat/console.sol";
 import "../pair/interfaces/IPairInfo.sol";
 import "../pair/interfaces/IPairVault.sol";
 import "../interfaces/IPositionManager.sol";
@@ -111,7 +110,6 @@ contract Executor is IExecutor {
 
         while (index < endIndex) {
             try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log();
             } catch Error(string memory reason) {
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
             }
@@ -122,9 +120,7 @@ contract Executor is IExecutor {
     function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper {
         for (uint256 i = 0; i < orderIds.length; i++) {
             try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-                console.log();
             } catch Error(string memory reason) {
-                console.log("executeIncreaseLimitOrders error ", reason);
             }
         }
     }
@@ -185,7 +181,6 @@ contract Executor is IExecutor {
         Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
-        console.log('executeIncreaseOrder sizeAmount', order.sizeAmount, 'sizeDelta', sizeDelta);
 
         // check position and leverage
         (uint256 afterPosition, ) = position.validLeverage(
@@ -212,15 +207,12 @@ contract Executor is IExecutor {
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log('executeIncreaseOrder preNetExposureAmountChecker', preNetExposureAmountChecker.abs());
         if (preNetExposureAmountChecker >= 0) {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log('executeIncreaseOrder availableIndex', availableIndex);
                 require(order.sizeAmount <= availableIndex, 'lp index token not enough');
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log('executeIncreaseOrder availableStable', availableStable);
                 require(
                     order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.divPrice(price),
                     'lp stable token not enough'
@@ -229,14 +221,12 @@ contract Executor is IExecutor {
         } else {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log('executeIncreaseOrder availableIndex', availableIndex);
                 require(
                     order.sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex,
                     'lp index token not enough'
                 );
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log('executeIncreaseOrder availableStable', availableStable);
                 require(order.sizeAmount <= availableStable.divPrice(price), 'lp stable token not enough');
             }
         }
@@ -323,7 +313,6 @@ contract Executor is IExecutor {
     }
 
     function executeDecreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper {
-        console.log("executeDecreaseMarketOrders endIndex", endIndex, "timestamp", block.timestamp);
         uint256 index = decreaseMarketOrderStartIndex;
         uint256 length = orderManager.decreaseMarketOrdersIndex();
         if (index >= length) {
@@ -335,9 +324,7 @@ contract Executor is IExecutor {
 
         while (index < endIndex) {
             try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log("executeDecreaseMarketOrders success index", index, "endIndex", endIndex);
             } catch Error(string memory reason) {
-                console.log("executeDecreaseMarketOrders error ", reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
             }
             index++;
@@ -345,13 +332,10 @@ contract Executor is IExecutor {
     }
 
     function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper {
-        console.log("executeDecreaseLimitOrders timestamp", block.timestamp);
 
         for (uint256 i = 0; i < orderIds.length; i++) {
             try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-                console.log("executeDecreaseLimitOrders success index", orderIds[i]);
             } catch Error(string memory reason) {
-                console.log("executeDecreaseLimitOrders error ", reason);
             }
         }
     }
@@ -362,7 +346,6 @@ contract Executor is IExecutor {
 
     function _executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) internal {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
-        console.log("executeDecreaseOrder account %s orderId %s tradeType %s", order.account, _orderId, uint8(order.tradeType));
 
         if (order.account == address(0)) {
             return;
@@ -380,7 +363,6 @@ contract Executor is IExecutor {
         // get position
         Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
-            console.log('position already closed', _orderId);
             return;
         }
 
@@ -422,7 +404,6 @@ contract Executor is IExecutor {
         }
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
-        console.log('executeDecreaseOrder sizeAmount', order.sizeAmount, 'sizeDelta', sizeDelta);
 
         // check position and leverage
         position.validLeverage(
@@ -438,32 +419,26 @@ contract Executor is IExecutor {
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
-        console.log('executeDecreaseOrder preNetExposureAmountChecker', preNetExposureAmountChecker.toString());
         bool needADL;
         if (preNetExposureAmountChecker >= 0) {
             if (!order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log('executeDecreaseOrder availableIndex', availableIndex);
                 needADL = order.sizeAmount > availableIndex;
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log('executeDecreaseOrder availableStable', availableStable);
                 needADL = order.sizeAmount > uint256(preNetExposureAmountChecker) + availableStable.divPrice(price);
             }
         } else {
             if (!order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                console.log('executeDecreaseOrder availableIndex', availableIndex);
                 needADL = order.sizeAmount > uint256(-preNetExposureAmountChecker) + availableIndex;
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                console.log('executeDecreaseOrder availableStable', availableStable);
                 needADL = order.sizeAmount > availableStable.divPrice(price);
             }
         }
 
         if (needADL) {
-            console.log('executeDecreaseOrder needADL');
             orderManager.setOrderNeedADL(_orderId, order.tradeType, needADL);
 
             emit ExecuteDecreaseOrder(
@@ -590,7 +565,6 @@ contract Executor is IExecutor {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
     ) public onlyPositionKeeper {
-        console.log('executeADLAndDecreaseOrder');
 
         require(_positionKeys.length == _sizeAmounts.length, 'length not match');
 
@@ -638,10 +612,8 @@ contract Executor is IExecutor {
 
     function _liquidatePosition(bytes32 _positionKey) internal {
         Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
-        console.log("liquidatePosition account %s pairIndex %s", position.account, position.pairIndex);
 
         if (position.positionAmount == 0) {
-            console.log('position not exists');
             return;
         }
 
@@ -661,11 +633,6 @@ contract Executor is IExecutor {
                 unrealizedPnl = -int256(position.positionAmount.mulPrice(price - position.averagePrice));
             }
         }
-        console.log(
-            'liquidatePosition averagePrice %s unrealizedPnl %s',
-            position.averagePrice,
-            unrealizedPnl.toString()
-        );
 
         int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
@@ -680,15 +647,7 @@ contract Executor is IExecutor {
                 .mulPercentage(tradingConfig.maintainMarginRate)
                 .calculatePercentage(uint256(exposureAsset));
             needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
-            console.log(
-                'liquidatePosition riskRate %s positionAmount %s exposureAsset %s',
-                riskRate,
-                position.positionAmount,
-                exposureAsset.toString()
-            );
         }
-        console.log('liquidatePosition needLiquidate', needLiquidate);
-
         if (!needLiquidate) {
             return;
         }
@@ -731,16 +690,13 @@ contract Executor is IExecutor {
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 oraclePrice = oraclePriceFeed.getPrice(pair.indexToken);
-        console.log('getValidPrice pairIndex %s isLong %s ', _pairIndex, _isLong);
 
         uint256 indexPrice = oraclePriceFeed.getIndexPrice(pair.indexToken, 0);
-        console.log('getValidPrice oraclePrice %s indexPrice %s', oraclePrice, indexPrice);
 
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
 
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
-        console.log('getValidPrice diffP %s maxPriceDeviationP %s', diffP, tradingConfig.maxPriceDeviationP);
         require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
         return oraclePrice;
     }

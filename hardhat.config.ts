@@ -6,12 +6,13 @@ import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 // import 'hardhat-gas-reporter';
 import '@openzeppelin/hardhat-upgrades';
-import "hardhat-contract-sizer";
+import 'hardhat-contract-sizer';
 import '@nomiclabs/hardhat-ethers';
 import 'hardhat-deploy';
 import 'hardhat-abi-exporter';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
+import 'hardhat-log-remover';
 import { getCurrentTimestamp } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
 import { DEFAULT_NAMED_ACCOUNTS, loadTasks } from './helpers';
 
@@ -124,7 +125,7 @@ const config: HardhatUserConfig = {
         alphaSort: true,
         runOnCompile: true,
         disambiguatePaths: false,
-      },
+    },
     networks: {
         hardhat: {
             allowUnlimitedContractSize: true,
