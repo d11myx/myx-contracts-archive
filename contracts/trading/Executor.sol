@@ -32,7 +32,7 @@ contract Executor is IExecutor {
     IOrderManager public orderManager;
     IPairInfo public pairInfo;
     IPairVault public pairVault;
-    IPositionManager public tradingVault;
+    IPositionManager public positionManager;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -46,7 +46,7 @@ contract Executor is IExecutor {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         orderManager = _orderManager;
-        tradingVault = _tradingVault;
+        positionManager = _tradingVault;
         maxTimeDelay = _maxTimeDelay;
     }
 
@@ -141,7 +141,7 @@ contract Executor is IExecutor {
         require(pair.enable, 'trade pair not supported');
 
         // check account enable
-        require(!tradingVault.isFrozen(order.account), 'account is frozen');
+        require(!positionManager.isFrozen(order.account), 'account is frozen');
 
         // check trading amount
         IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
@@ -153,7 +153,7 @@ contract Executor is IExecutor {
 
         // check price
         // IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
-        uint256 price = tradingVault.getValidPrice(pair.indexToken, pairIndex, order.isLong);
+        uint256 price = positionManager.getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.isLong
@@ -177,7 +177,7 @@ contract Executor is IExecutor {
         }
 
         // get position
-        Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         uint256 sizeDelta = order.sizeAmount.mulPrice(price);
 
@@ -205,7 +205,7 @@ contract Executor is IExecutor {
 
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
-        int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
+        int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
         if (preNetExposureAmountChecker >= 0) {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
@@ -232,9 +232,9 @@ contract Executor is IExecutor {
 
         // transfer collateral
         if (order.collateral > 0) {
-            tradingVault.transferTokenTo(pair.stableToken, address(tradingVault), order.collateral.abs());
+            positionManager.transferTokenTo(pair.stableToken, address(positionManager), order.collateral.abs());
         }
-        (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(
+        (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
             order.account,
             pairIndex,
             order.collateral,
@@ -358,7 +358,7 @@ contract Executor is IExecutor {
         IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
 
         // get position
-        Position.Info memory position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
             return;
         }
@@ -374,7 +374,7 @@ contract Executor is IExecutor {
         );
         // IPairInfo.Pair memory pair = pairInfo.getPair(pairIndex);
         // check price
-        uint256 price = tradingVault.getValidPrice(pair.indexToken, pairIndex, order.isLong);
+        uint256 price = positionManager.getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.abovePrice
@@ -415,7 +415,7 @@ contract Executor is IExecutor {
 
         IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
 
-        int256 preNetExposureAmountChecker = tradingVault.netExposureAmountChecker(order.pairIndex);
+        int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
         bool needADL;
         if (preNetExposureAmountChecker >= 0) {
             if (!order.isLong) {
@@ -457,9 +457,9 @@ contract Executor is IExecutor {
         // transfer collateral
         if (order.collateral > 0) {
             IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-            tradingVault.transferTokenTo(pair.stableToken, address(pairVault), order.collateral.abs());
+            positionManager.transferTokenTo(pair.stableToken, address(pairVault), order.collateral.abs());
         }
-        (uint256 tradingFee, int256 fundingFee, int256 pnl) = tradingVault.decreasePosition(
+        (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
             order.account,
             pairIndex,
             order.collateral,
@@ -491,7 +491,7 @@ contract Executor is IExecutor {
             )
         );
 
-        position = tradingVault.getPosition(order.account, order.pairIndex, order.isLong);
+        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         if (position.positionAmount == 0) {
             // cancel all decrease order
@@ -572,7 +572,7 @@ contract Executor is IExecutor {
         Position.Info[] memory adlPositions = new Position.Info[](_positionKeys.length);
         uint256 sumAmount;
         for (uint256 i = 0; i < _positionKeys.length; i++) {
-            Position.Info memory position = tradingVault.getPositionByKey(_positionKeys[i]);
+            Position.Info memory position = positionManager.getPositionByKey(_positionKeys[i]);
             require(_sizeAmounts[i] <= position.positionAmount, 'ADL size exceeds position');
             require(_sizeAmounts[i] <= tradingConfig.maxTradeAmount, 'exceeds max trade amount');
             sumAmount += _sizeAmounts[i];
@@ -581,7 +581,7 @@ contract Executor is IExecutor {
 
         require(sumAmount == order.sizeAmount, 'ADL position amount not match decrease order');
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
-        uint256 price = tradingVault.getValidPrice(pair.indexToken, order.pairIndex, !order.isLong);
+        uint256 price = positionManager.getValidPrice(pair.indexToken, order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             Position.Info memory adlPosition = adlPositions[i];
@@ -606,13 +606,13 @@ contract Executor is IExecutor {
     }
 
     function _liquidatePosition(bytes32 _positionKey) internal {
-        Position.Info memory position = tradingVault.getPositionByKey(_positionKey);
+        Position.Info memory position = positionManager.getPositionByKey(_positionKey);
 
         if (position.positionAmount == 0) {
             return;
         }
         IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-        uint256 price = tradingVault.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
+        uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
 
         int256 unrealizedPnl;
         if (position.isLong) {
