@@ -14,7 +14,7 @@ import {
     Executor,
     OrderManager,
     RoleManager,
-    PositionManager,
+
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -172,16 +172,16 @@ export async function deployTrading(
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
-    let positionManager = (await deployContract('PositionManager', [
-        addressProvider.address,
-        pairInfo.address,
-        pairVault.address,
-        tradingVault.address,
-        oraclePriceFeed.address,
-        indexPriceFeed.address,
-        orderManager.address,
-    ])) as any as PositionManager;
-    console.log(`deployed PositionManager at ${positionManager.address}`);
+    // let positionManager = (await deployContract('PositionManager', [
+    //     addressProvider.address,
+    //     pairInfo.address,
+    //     pairVault.address,
+    //     tradingVault.address,
+    //     oraclePriceFeed.address,
+    //     indexPriceFeed.address,
+    //     orderManager.address,
+    // ])) as any as PositionManager;
+    // console.log(`deployed PositionManager at ${positionManager.address}`);
 
     let router = (await deployContract('Router', [addressProvider.address, orderManager.address])) as any as Router;
     console.log(`deployed Router at ${router.address}`);
@@ -196,10 +196,10 @@ export async function deployTrading(
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
-    await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
+    await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(tradingVault.address));
 
     await tradingVault.setExecutor(executor.address);
     await orderManager.setExecutor(executor.address);
 
-    return { tradingVault, router, executor, orderManager, positionManager };
+    return { tradingVault, router, executor, orderManager };
 }

@@ -15,7 +15,7 @@ import {
     TRADING_VAULT_ID,
     waitForTx,
 } from '../../helpers';
-import { Router, Executor, TradingVault, OrderManager, PositionManager } from '../../types';
+import { Router, Executor, TradingVault, OrderManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -65,24 +65,21 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as OrderManager;
 
     // PositionManager
-    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
-        from: deployer,
-        contract: 'PositionManager',
-        args: [
-            addressProvider.address,
-            pairInfo.address,
-            pairVault.address,
-            tradingVault.address,
-            oraclePriceFeed.address,
-            indexPriceFeed.address,
-            orderManager.address,
-        ],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const positionManager = (await hre.ethers.getContractAt(
-        positionManagerArtifact.abi,
-        positionManagerArtifact.address,
-    )) as PositionManager;
+    // const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
+    //     from: deployer,
+    //     contract: 'PositionManager',
+    //     args: [
+    //         addressProvider.address,
+    //         pairInfo.address,
+    //         pairVault.address,
+    //         tradingVault.address,
+    //         oraclePriceFeed.address,
+    //         indexPriceFeed.address,
+    //         orderManager.address,
+    //     ],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
 
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
@@ -110,7 +107,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
 
-    await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(positionManager.address));
+    await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(tradingVault.address));
 
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
