@@ -14,7 +14,7 @@ import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/TradingTypes.sol';
 
-import '../interfaces/IPositionManager.sol';
+import '../interfaces/ITradingVault.sol';
 import 'hardhat/console.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IAddressesProvider.sol';
@@ -224,9 +224,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         TradingTypes.TradeType tradeType,
         bool isIncrease
     ) public nonReentrant onlyCreateOrderAddress(msg.sender) {
-        console.log('cancelIncreaseOrder orderId', orderId, 'tradeType', uint8(tradeType));
-        console.log('cancelIncreaseOrder orderId', orderId, 'isIncrease', isIncrease);
-
         if (isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = getIncreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
@@ -288,7 +285,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
             order.orderId = increaseLimitOrdersIndex;
 
             increaseLimitOrders[increaseLimitOrdersIndex++] = order;
-            console.log('orderId', order.orderId, 'increaseLimitOrdersIndex', increaseLimitOrdersIndex);
         } else {
             revert('invalid trade type');
         }
@@ -491,7 +487,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
         positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(order);
-        console.log('positionOrders add orderId', order.orderId, 'tradeType', uint8(order.tradeType));
 
         if (
             !order.isIncrease &&
@@ -502,12 +497,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
     }
 
     function removeOrderFromPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) {
-        console.log(
-            'removeOrderFromPosition account %s orderId %s tradeType %s ',
-            order.account,
-            order.orderId,
-            uint8(order.tradeType)
-        );
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
 
@@ -528,7 +517,6 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         }
         delete positionOrderIndex[positionKey][orderKey];
         positionOrders[positionKey].pop();
-        console.log('positionOrders remove orderId', order.orderId, 'tradeType', uint8(order.tradeType));
 
         if (
             !order.isIncrease &&
