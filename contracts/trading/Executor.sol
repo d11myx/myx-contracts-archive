@@ -32,7 +32,7 @@ contract Executor is IExecutor {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IOrderManager public orderManager;
-    IPositionManager public positionManager;
+    // IPositionManager public positionManager;
     IPairInfo public pairInfo;
     IPairVault public pairVault;
     ITradingVault public tradingVault;
@@ -42,7 +42,7 @@ contract Executor is IExecutor {
         IPairInfo _pairInfo,
         IPairVault _pairVault,
         IOrderManager _orderManager,
-        IPositionManager _positionManager,
+        // IPositionManager _positionManager,
         ITradingVault _tradingVault,
         uint256 _maxTimeDelay
     ) {
@@ -50,7 +50,7 @@ contract Executor is IExecutor {
         pairInfo = _pairInfo;
         pairVault = _pairVault;
         orderManager = _orderManager;
-        positionManager = _positionManager;
+        // positionManager = _positionManager;
         tradingVault = _tradingVault;
         maxTimeDelay = _maxTimeDelay;
     }
@@ -246,7 +246,7 @@ contract Executor is IExecutor {
 
         // transfer collateral
         if (order.collateral > 0) {
-            positionManager.transferTokenTo(pair.stableToken, address(tradingVault), order.collateral.abs());
+            tradingVault.transferTokenTo(pair.stableToken, address(tradingVault), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee) = tradingVault.increasePosition(
             order.account,
@@ -488,7 +488,7 @@ contract Executor is IExecutor {
         // transfer collateral
         if (order.collateral > 0) {
             IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-            positionManager.transferTokenTo(pair.stableToken, address(pairVault), order.collateral.abs());
+            tradingVault.transferTokenTo(pair.stableToken, address(pairVault), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = tradingVault.decreasePosition(
             order.account,

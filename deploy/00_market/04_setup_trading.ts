@@ -103,7 +103,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             pairInfo.address,
             pairVault.address,
             orderManager.address,
-            positionManager.address,
             tradingVault.address,
             60,
         ],
