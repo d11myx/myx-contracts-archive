@@ -118,7 +118,7 @@ contract Executor is IExecutor {
             } catch Error(string memory reason) {
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
             }
-            increaseMarketOrderStartIndex++;
+            index++;
         }
     }
 
@@ -343,7 +343,7 @@ contract Executor is IExecutor {
                 console.log("executeDecreaseMarketOrders error ", reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
             }
-            decreaseMarketOrderStartIndex++;
+            index++;
         }
     }
 
