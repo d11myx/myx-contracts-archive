@@ -1637,7 +1637,7 @@
 
 "@solidity-parser/parser@^0.16.0":
   version "0.16.1"
-  resolved "https://registry.npmjs.org/@solidity-parser/parser/-/parser-0.16.1.tgz"
+  resolved "https://registry.yarnpkg.com/@solidity-parser/parser/-/parser-0.16.1.tgz#f7c8a686974e1536da0105466c4db6727311253c"
   integrity sha512-PdhRFNhbTtu3x8Axm0uYpqOy/lODYQK+MlYSgqIsq2L8SFYEHJPHNUiOTAJbDGzNjjr1/n9AcIayxafR/fWmYw==
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
@@ -6896,7 +6896,7 @@ solidity-ast@^0.4.15:
 
 solidity-coverage@^0.8.4:
   version "0.8.4"
-  resolved "https://registry.npmjs.org/solidity-coverage/-/solidity-coverage-0.8.4.tgz"
+  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.8.4.tgz#c57a21979f5e86859c5198de9fbae2d3bc6324a5"
   integrity sha512-xeHOfBOjdMF6hWTbt42iH4x+7j1Atmrf5OldDPMxI+i/COdExUxszOswD9qqvcBTaLGiOrrpnh9UZjSpt4rBsg==
   dependencies:
     "@ethersproject/abi" "^5.0.9"
