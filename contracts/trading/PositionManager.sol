@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 
 import '../libraries/Position.sol';
 import '../libraries/PositionKey.sol';
-import '../interfaces/ITradingVault.sol';
+import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
@@ -18,7 +18,7 @@ import 'hardhat/console.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
-contract PositionManager is ITradingVault, ReentrancyGuard, Roleable {
+contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
