@@ -4,12 +4,11 @@ pragma solidity 0.8.17;
 import '../libraries/Roleable.sol';
 import '../token/interfaces/IPairToken.sol';
 import '../token/PairToken.sol';
-import './interfaces/IPairInfo.sol';
-import './interfaces/IPairLiquidity.sol';
-import './interfaces/IPairInfo.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairLiquidity.sol';
+import '../interfaces/IPairInfo.sol';
 
-contract PairInfo is IPairInfo, Roleable {
-
+contract Pool is IPairInfo, Roleable {
     uint256 public constant PERCENTAGE = 10000;
     uint256 public constant FUNDING_RATE_PERCENTAGE = 1000000;
 
@@ -21,7 +20,6 @@ contract PairInfo is IPairInfo, Roleable {
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
     mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
     mapping(address => mapping(address => bool)) public isPairListed;
-
 
     constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
 
@@ -74,7 +72,7 @@ contract PairInfo is IPairInfo, Roleable {
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
-        require(_pair.expectIndexTokenP <= PERCENTAGE && _pair.addLpFeeP <= PERCENTAGE, "exceed 100%");
+        require(_pair.expectIndexTokenP <= PERCENTAGE && _pair.addLpFeeP <= PERCENTAGE, 'exceed 100%');
 
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
@@ -83,8 +81,12 @@ contract PairInfo is IPairInfo, Roleable {
     }
 
     function updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyPoolAdmin {
-        require(_tradingConfig.maintainMarginRate <= PERCENTAGE && _tradingConfig.priceSlipP <= PERCENTAGE
-        && _tradingConfig.maxPriceDeviationP <= PERCENTAGE, "exceed 100%");
+        require(
+            _tradingConfig.maintainMarginRate <= PERCENTAGE &&
+                _tradingConfig.priceSlipP <= PERCENTAGE &&
+                _tradingConfig.maxPriceDeviationP <= PERCENTAGE,
+            'exceed 100%'
+        );
         tradingConfigs[_pairIndex] = _tradingConfig;
     }
 
@@ -92,7 +94,7 @@ contract PairInfo is IPairInfo, Roleable {
         uint256 _pairIndex,
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
-        require(_tradingFeeConfig.takerFeeP <= PERCENTAGE && _tradingFeeConfig.makerFeeP <= PERCENTAGE, "exceed 100%");
+        require(_tradingFeeConfig.takerFeeP <= PERCENTAGE && _tradingFeeConfig.makerFeeP <= PERCENTAGE, 'exceed 100%');
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
@@ -100,10 +102,22 @@ contract PairInfo is IPairInfo, Roleable {
         uint256 _pairIndex,
         FundingFeeConfig calldata _fundingFeeConfig
     ) external onlyPoolAdmin {
-        require(_fundingFeeConfig.minFundingRate <= 0 && _fundingFeeConfig.minFundingRate >= -int256(FUNDING_RATE_PERCENTAGE), "exceed min funding rate 100%");
-        require(_fundingFeeConfig.maxFundingRate >= 0 && _fundingFeeConfig.maxFundingRate <= int256(FUNDING_RATE_PERCENTAGE), "exceed max funding rate 100%");
-        require(_fundingFeeConfig.fundingWeightFactor <= PERCENTAGE && _fundingFeeConfig.liquidityPremiumFactor <= PERCENTAGE
-            &&  _fundingFeeConfig.lpDistributeP <= PERCENTAGE, "exceed 100%");
+        require(
+            _fundingFeeConfig.minFundingRate <= 0 &&
+                _fundingFeeConfig.minFundingRate >= -int256(FUNDING_RATE_PERCENTAGE),
+            'exceed min funding rate 100%'
+        );
+        require(
+            _fundingFeeConfig.maxFundingRate >= 0 &&
+                _fundingFeeConfig.maxFundingRate <= int256(FUNDING_RATE_PERCENTAGE),
+            'exceed max funding rate 100%'
+        );
+        require(
+            _fundingFeeConfig.fundingWeightFactor <= PERCENTAGE &&
+                _fundingFeeConfig.liquidityPremiumFactor <= PERCENTAGE &&
+                _fundingFeeConfig.lpDistributeP <= PERCENTAGE,
+            'exceed 100%'
+        );
 
         fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
     }

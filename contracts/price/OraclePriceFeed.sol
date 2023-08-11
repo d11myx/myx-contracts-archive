@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
-import "../interfaces/IOraclePriceFeed.sol";
-import "../interfaces/IPriceFeed.sol";
-import "../interfaces/IOraclePrice.sol";
-import "../interfaces/IChainlinkFlags.sol";
+import '../interfaces/IOraclePriceFeed.sol';
+import '../interfaces/IPriceFeed.sol';
+import '../interfaces/IOraclePrice.sol';
+import '../interfaces/IChainlinkFlags.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
-import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
 pragma solidity 0.8.17;
 
-contract OraclePriceFeed is  IOraclePriceFeed {
+contract OraclePriceFeed is IOraclePriceFeed {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
@@ -24,7 +24,8 @@ contract OraclePriceFeed is  IOraclePriceFeed {
     uint256 public constant MAX_ADJUSTMENT_BASIS_POINTS = 20;
 
     // Identifier of the Sequencer offline flag on the Flags contract
-    address constant private FLAG_ARBITRUM_SEQ_OFFLINE = address(bytes20(bytes32(uint256(keccak256("chainlink.flags.arbitrum-seq-offline")) - 1)));
+    address private constant FLAG_ARBITRUM_SEQ_OFFLINE =
+        address(bytes20(bytes32(uint256(keccak256('chainlink.flags.arbitrum-seq-offline')) - 1)));
 
     address public chainlinkFlags;
 
@@ -32,21 +33,20 @@ contract OraclePriceFeed is  IOraclePriceFeed {
 
     IAddressesProvider addressProvider;
 
-    mapping (address => address) public priceFeeds;
-    mapping (address => uint256) public priceDecimals;
+    mapping(address => address) public priceFeeds;
+    mapping(address => uint256) public priceDecimals;
 
-
-    constructor(IAddressesProvider _addressProvider)  {
+    constructor(IAddressesProvider _addressProvider) {
         addressProvider = _addressProvider;
     }
 
     modifier onlyKeeper() {
-        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), "onlyKeeper");
+        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), 'onlyKeeper');
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), "onlyPoolAdmin");
+        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 
@@ -65,23 +65,22 @@ contract OraclePriceFeed is  IOraclePriceFeed {
     ) external override onlyPoolAdmin {
         priceFeeds[_token] = _priceFeed;
         priceDecimals[_token] = _priceDecimals;
-
     }
 
-    function getPrice(address _token) public override view returns (uint256) {
+    function getPrice(address _token) public view override returns (uint256) {
         uint256 price = getPrimaryPrice(_token);
         return price;
     }
 
-    function getPrimaryPrice(address _token) public override view returns (uint256) {
+    function getPrimaryPrice(address _token) public view override returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
-        require(priceFeedAddress != address(0), "invalid price feed");
+        require(priceFeedAddress != address(0), 'invalid price feed');
 
         if (chainlinkFlags != address(0)) {
             bool isRaised = IChainlinkFlags(chainlinkFlags).getFlag(FLAG_ARBITRUM_SEQ_OFFLINE);
             if (isRaised) {
-                    // If flag is raised we shouldn't perform any critical operations
-                revert("Chainlink feeds are not being updated");
+                // If flag is raised we shouldn't perform any critical operations
+                revert('Chainlink feeds are not being updated');
             }
         }
 
@@ -89,17 +88,19 @@ contract OraclePriceFeed is  IOraclePriceFeed {
 
         uint256 price = 0;
         int256 _p = priceFeed.latestAnswer();
-        require(_p > 0, "invalid price");
+        require(_p > 0, 'invalid price');
         price = uint256(_p);
 
-        require(price > 0, "could not fetch price");
+        require(price > 0, 'could not fetch price');
 
         uint256 _priceDecimals = priceDecimals[_token];
         return price.mul(PRICE_PRECISION).div(10 ** _priceDecimals);
     }
 
     function getIndexPrice(address _token, uint256 _referencePrice) public view returns (uint256) {
-        if (indexPriceFeed == address(0)) { return _referencePrice; }
+        if (indexPriceFeed == address(0)) {
+            return _referencePrice;
+        }
         return IOraclePrice(indexPriceFeed).getPrice(_token);
     }
 }
