@@ -4,9 +4,9 @@ import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
     AddressesProvider,
     IndexPriceFeed,
-    PairInfo,
-    PairLiquidity,
-    PairVault,
+    Pool,
+    PoolLiquidity,
+    PoolVault,
     RoleManager,
     Token,
     PositionManager,
@@ -60,16 +60,15 @@ export interface TestEnv {
     addressesProvider: AddressesProvider;
     roleManager: RoleManager;
     pairTokens: SymbolMap<Token>;
-    pairInfo: PairInfo;
-    pairLiquidity: PairLiquidity;
-    pairVault: PairVault;
+    pairInfo: Pool;
+    pairLiquidity: PoolLiquidity;
+    pairVault: PoolVault;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
     tradingVault: PositionManager;
     router: Router;
     executor: Executor;
     orderManager: OrderManager;
-
 }
 
 export const testEnv: TestEnv = {
@@ -84,9 +83,9 @@ export const testEnv: TestEnv = {
     addressesProvider: {} as AddressesProvider,
     roleManager: {} as RoleManager,
     pairTokens: {} as SymbolMap<Token>,
-    pairInfo: {} as PairInfo,
-    pairLiquidity: {} as PairLiquidity,
-    pairVault: {} as PairVault,
+    pairInfo: {} as Pool,
+    pairLiquidity: {} as PoolLiquidity,
+    pairVault: {} as PoolVault,
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
     tradingVault: {} as PositionManager,

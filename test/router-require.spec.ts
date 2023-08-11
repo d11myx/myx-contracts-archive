@@ -1,15 +1,14 @@
-import { ethers } from "hardhat";
-import { TestEnv, newTestEnv } from "./helpers/make-suite";
-import { mintAndApprove } from "./helpers/misc";
-import { MAX_UINT_AMOUNT, TradeType, waitForTx } from "../helpers";
-import { IPairInfo } from "../types";
-import { expect } from "./shared/expect";
-import { TradingTypes } from "../types/contracts/interfaces/IOrderManager";
-
+import { ethers } from 'hardhat';
+import { TestEnv, newTestEnv } from './helpers/make-suite';
+import { mintAndApprove } from './helpers/misc';
+import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { IPairInfo } from '../types';
+import { expect } from './shared/expect';
+import { TradingTypes } from '../types/contracts/interfaces/IOrderManager';
 
 describe('Router: check require condition, trigger errors', async () => {
     const pairIndex = 0;
-    let testEnv: TestEnv
+    let testEnv: TestEnv;
 
     before(async () => {
         testEnv = await newTestEnv();
@@ -28,9 +27,7 @@ describe('Router: check require condition, trigger errors', async () => {
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairLiquidity.address);
         await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
     });
-    after(async () => {
-
-    });
+    after(async () => {});
 
     describe('createIncreaseOrder permission check', async () => {
         it('check msg.sender whith request.account', async () => {
@@ -67,7 +64,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 tp: 0,
                 tpPrice: 0,
                 sl: 0,
-                slPrice: 0
+                slPrice: 0,
             };
 
             // setting createIncreateOrder: msg.sender = user
@@ -118,15 +115,12 @@ describe('Router: check require condition, trigger errors', async () => {
         //     await expect(router.connect(user1.signer).createIncreaseOrder(increasePositionRequest)).to.be.reverted;
         // });
 
-
         describe('disable pair', async () => {
             after('afer enable pair', async () => {
-                const {
-                    pairInfo,
-                } = testEnv;
+                const { pairInfo } = testEnv;
 
                 const pair = await pairInfo.getPair(pairIndex);
-                console.log(`pair: `, pair)
+                console.log(`pair: `, pair);
                 const newPair: IPairInfo.PairStruct = {
                     indexToken: pair.indexToken,
                     stableToken: pair.stableToken,
@@ -134,8 +128,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     enable: true,
                     kOfSwap: pair.kOfSwap,
                     expectIndexTokenP: pair.expectIndexTokenP,
-                    addLpFeeP: pair.addLpFeeP
-                }
+                    addLpFeeP: pair.addLpFeeP,
+                };
                 await pairInfo.updatePair(pairIndex, newPair);
             });
 
@@ -147,12 +141,12 @@ describe('Router: check require condition, trigger errors', async () => {
                     usdt,
                     router,
                     pairInfo,
-                    orderManager
+                    orderManager,
                 } = testEnv;
 
                 // disable pair
                 const pairBef = await pairInfo.getPair(pairIndex);
-                console.log(`pair: `, pairBef)
+                console.log(`pair: `, pairBef);
                 const newPair: IPairInfo.PairStruct = {
                     indexToken: pairBef.indexToken,
                     stableToken: pairBef.stableToken,
@@ -160,13 +154,12 @@ describe('Router: check require condition, trigger errors', async () => {
                     enable: false,
                     kOfSwap: pairBef.kOfSwap,
                     expectIndexTokenP: pairBef.expectIndexTokenP,
-                    addLpFeeP: pairBef.addLpFeeP
-                }
+                    addLpFeeP: pairBef.addLpFeeP,
+                };
                 await pairInfo.updatePair(pairIndex, newPair);
 
                 const pairAft = await pairInfo.getPair(pairIndex);
-                console.log(`pairAft: `, pairAft)
-
+                console.log(`pairAft: `, pairAft);
 
                 const collateral = ethers.utils.parseUnits('10000', 18);
                 const size = ethers.utils.parseUnits('10', 18);
@@ -185,11 +178,13 @@ describe('Router: check require condition, trigger errors', async () => {
                     tp: 0,
                     tpPrice: 0,
                     sl: 0,
-                    slPrice: 0
+                    slPrice: 0,
                 };
 
                 const orderId = await orderManager.increaseMarketOrdersIndex();
-                await expect(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('trade pair not supported');
+                await expect(
+                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                ).to.be.revertedWith('trade pair not supported');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
         });
@@ -202,7 +197,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     users: [trader],
                     usdt,
                     router,
-                    orderManager
+                    orderManager,
                 } = testEnv;
 
                 const collateral = ethers.utils.parseUnits('10000', 18);
@@ -221,11 +216,13 @@ describe('Router: check require condition, trigger errors', async () => {
                     tp: 0,
                     tpPrice: 0,
                     sl: 0,
-                    slPrice: 0
+                    slPrice: 0,
                 };
 
                 const orderId = await orderManager.increaseMarketOrdersIndex();
-                await expect(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('size eq 0');
+                await expect(
+                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                ).to.be.revertedWith('size eq 0');
                 // await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET)
             });
 
@@ -237,7 +234,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     usdt,
                     router,
                     pairInfo,
-                    orderManager
+                    orderManager,
                 } = testEnv;
 
                 const tradingConfig = await pairInfo.getTradingConfig(pairIndex);
@@ -264,11 +261,13 @@ describe('Router: check require condition, trigger errors', async () => {
                     tp: 0,
                     tpPrice: 0,
                     sl: 0,
-                    slPrice: 0
+                    slPrice: 0,
                 };
 
                 const orderId = await orderManager.increaseMarketOrdersIndex();
-                await expect(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('invalid trade size');
+                await expect(
+                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                ).to.be.revertedWith('invalid trade size');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
 
@@ -280,7 +279,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     usdt,
                     pairInfo,
                     router,
-                    orderManager
+                    orderManager,
                 } = testEnv;
 
                 const tradingConfig = await pairInfo.getTradingConfig(pairIndex);
@@ -308,14 +307,15 @@ describe('Router: check require condition, trigger errors', async () => {
                     tp: 0,
                     tpPrice: 0,
                     sl: 0,
-                    slPrice: 0
+                    slPrice: 0,
                 };
 
                 const orderId = await orderManager.increaseMarketOrdersIndex();
-                await expect(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('invalid trade size');
+                await expect(
+                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                ).to.be.revertedWith('invalid trade size');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
         });
-
     });
 });

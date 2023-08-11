@@ -13,12 +13,12 @@ import '../interfaces/IOraclePriceFeed.sol';
 import '../token/PairToken.sol';
 import '../interfaces/IWETH.sol';
 
-import './interfaces/IPairInfo.sol';
-import './interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairVault.sol';
 import 'hardhat/console.sol';
 import '../libraries/Int256Utils.sol';
 
-contract PairVault is IPairVault, Roleable {
+contract PoolVault is IPairVault, Roleable {
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
@@ -187,10 +187,7 @@ contract PairVault is IPairVault, Roleable {
         );
     }
 
-    function decreaseProfit(
-        uint256 _pairIndex,
-        uint256 _profit
-    ) external onlyPairLiquidityAndVault {
+    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
         Vault storage vault = vaults[_pairIndex];
         console.log('decreaseProfit _pairIndex', _pairIndex, '_profit', _profit);
         console.log(
