@@ -11,13 +11,9 @@ import {IERC20Permit} from '@openzeppelin/contracts/token/ERC20/extensions/draft
 contract ERC20Faucet is IERC20Permit, ERC20 {
     bytes public constant EIP712_REVISION = bytes('1');
     bytes32 internal constant EIP712_DOMAIN =
-        keccak256(
-            'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
-        );
+        keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
     bytes32 public constant PERMIT_TYPEHASH =
-        keccak256(
-            'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
-        );
+        keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
     // Map of address nonces (address => nonce)
     mapping(address => uint256) internal _nonces;
@@ -38,7 +34,6 @@ contract ERC20Faucet is IERC20Permit, ERC20 {
         );
     }
 
-    
     function permit(
         address owner,
         address spender,
@@ -56,9 +51,7 @@ contract ERC20Faucet is IERC20Permit, ERC20 {
             abi.encodePacked(
                 '\x19\x01',
                 DOMAIN_SEPARATOR,
-                keccak256(
-                    abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline)
-                )
+                keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
             )
         );
         require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');

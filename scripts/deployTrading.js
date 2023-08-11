@@ -11,8 +11,8 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
-  let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
+  let pairInfo = await contractAt("Pool", await getConfig("Pool"));
+  let pairVault = await contractAt("PoolVault", await getConfig("PoolVault"));
   let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"));
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"));
 

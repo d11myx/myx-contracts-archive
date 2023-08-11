@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IRoleManager {
-
     function setRoleAdmin(bytes32 role, bytes32 adminRole) external;
 
     function addAdmin(address) external;
@@ -34,5 +33,4 @@ interface IRoleManager {
     function removeKeeper(address) external;
 
     function isKeeper(address) external view returns (bool);
-
 }

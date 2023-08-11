@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../libraries/TradingTypes.sol";
+import '../libraries/TradingTypes.sol';
 
 interface IRouter {
-
     event UpdateTradingRouter(address oldAddress, address newAddress);
 
     function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory request) external returns (uint256);
@@ -19,6 +18,7 @@ interface IRouter {
 
     function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
 
-    function createTpSl(TradingTypes.CreateTpSlRequest memory request) external returns (uint256 tpOrderId, uint256 slOrderId);
-
+    function createTpSl(
+        TradingTypes.CreateTpSlRequest memory request
+    ) external returns (uint256 tpOrderId, uint256 slOrderId);
 }

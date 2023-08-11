@@ -7,7 +7,7 @@ import { BigNumber } from 'ethers';
 import { deployMockToken } from '../helpers/contract-deployments';
 import { MARKET_NAME } from '../helpers/env';
 
-describe('PairInfo: Edge cases', () => {
+describe('Pool: Edge cases', () => {
     before('addPair', async () => {
         const { poolAdmin, pairInfo, usdt, pairLiquidity } = testEnv;
 

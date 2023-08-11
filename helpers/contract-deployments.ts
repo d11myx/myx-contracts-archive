@@ -1,9 +1,9 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     IndexPriceFeed,
-    PairInfo,
-    PairLiquidity,
-    PairVault,
+    Pool,
+    PoolLiquidity,
+    PoolVault,
     MockPriceFeed,
     Token,
     PositionManager,
@@ -14,7 +14,6 @@ import {
     Executor,
     OrderManager,
     RoleManager,
-
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -120,24 +119,24 @@ export async function deployPair(
 ) {
     console.log(` - setup pairs`);
 
-    const pairInfo = (await deployContract('PairInfo', [addressProvider.address])) as any as PairInfo;
-    console.log(`deployed PairInfo at ${pairInfo.address}`);
+    const pairInfo = (await deployContract('Pool', [addressProvider.address])) as any as Pool;
+    console.log(`deployed Pool at ${pairInfo.address}`);
 
-    const pairVault = (await deployContract('PairVault', [
+    const pairVault = (await deployContract('PoolVault', [
         addressProvider.address,
         pairInfo.address,
-    ])) as any as PairVault;
-    console.log(`deployed PairVault at ${pairVault.address}`);
+    ])) as any as PoolVault;
+    console.log(`deployed PoolVault at ${pairVault.address}`);
 
-    const pairLiquidity = (await deployContract('PairLiquidity', [
+    const pairLiquidity = (await deployContract('PoolLiquidity', [
         addressProvider.address,
         pairInfo.address,
         pairVault.address,
         deployer.address,
         deployer.address,
         weth.address,
-    ])) as any as PairLiquidity;
-    console.log(`deployed PairLiquidity at ${pairLiquidity.address}`);
+    ])) as any as PoolLiquidity;
+    console.log(`deployed PoolLiquidity at ${pairLiquidity.address}`);
     await pairVault.setPairLiquidityAndVault(pairLiquidity.address, pairVault.address);
 
     return { pairInfo, pairLiquidity, pairVault };
@@ -148,8 +147,8 @@ export async function deployTrading(
     poolAdmin: SignerWithAddress,
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
-    pairVault: PairVault,
-    pairInfo: PairInfo,
+    pairVault: PoolVault,
+    pairInfo: Pool,
     oraclePriceFeed: OraclePriceFeed,
     indexPriceFeed: IndexPriceFeed,
 ) {

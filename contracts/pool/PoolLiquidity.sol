@@ -7,9 +7,9 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
 import '../interfaces/IWETH.sol';
-import './interfaces/IPairInfo.sol';
-import './interfaces/IPairLiquidity.sol';
-import './interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairLiquidity.sol';
+import '../interfaces/IPairVault.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
@@ -18,7 +18,7 @@ import '../token/PairToken.sol';
 
 import 'hardhat/console.sol';
 
-contract PairLiquidity is IPairLiquidity, Roleable {
+contract PoolLiquidity is IPairLiquidity, Roleable {
     using Math for uint256;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
@@ -375,7 +375,7 @@ contract PairLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, "insufficient balance");
+        require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, 'insufficient balance');
 
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 

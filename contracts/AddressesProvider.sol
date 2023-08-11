@@ -6,7 +6,6 @@ import './interfaces/IAddressesProvider.sol';
 import './libraries/Errors.sol';
 
 contract AddressesProvider is Ownable, IAddressesProvider {
-
     bytes32 private constant ROLE_MANAGER = 'ROLE_MANAGER';
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
     bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
@@ -53,5 +52,4 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         setAddress(ROLE_MANAGER, newAddress);
         emit AddressSet(ROLE_MANAGER, oldAclManager, newAddress);
     }
-
 }
