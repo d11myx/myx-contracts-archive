@@ -426,7 +426,7 @@ contract OrderManager is IOrderManager, ReentrancyGuardUpgradeable, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(order.pairIndex);
 
         if (order.collateral > 0) {
-            IERC20(pair.stableToken).safeTransfer(order.account, order.collateral.abs());
+            positionManager.transferTokenTo(pair.stableToken, order.account, order.collateral.abs());
         }
 
         this.removeOrderFromPosition(
