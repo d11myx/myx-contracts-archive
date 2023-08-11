@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../libraries/TradingTypes.sol";
+import '../libraries/TradingTypes.sol';
 
 interface IExecutor {
-
     event UpdateMaxTimeDelay(uint256 oldDelay, uint256 newDelay);
 
     event ExecuteIncreaseOrder(
@@ -49,7 +48,7 @@ interface IExecutor {
 
     function decreaseMarketOrderStartIndex() external view returns (uint256);
 
-    function maxTimeDelay() external view returns(uint256);
+    function maxTimeDelay() external view returns (uint256);
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
