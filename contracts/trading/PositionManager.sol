@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/Pausable.sol";
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 
@@ -17,7 +18,7 @@ import '../interfaces/IPairVault.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
-contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
+contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -68,18 +69,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         addressExecutor = _addressExecutor;
     }
 
-    function updatePairInfo(address newPairInfo) external onlyPoolAdmin {
-        address oldPairInfo = address(pairInfo);
-        pairInfo = IPairInfo(newPairInfo);
-        emit UpdatePairInfo(oldPairInfo, newPairInfo);
-    }
-
-    function updatePairVault(address newPairVault) external onlyPoolAdmin {
-        address oldPairVault = address(pairVault);
-        pairVault = IPairVault(newPairVault);
-        emit UpdatePairVault(oldPairVault, newPairVault);
-    }
-
     function updateTradingFeeReceiver(address newReceiver) external onlyPoolAdmin {
         address oldReceiver = tradingFeeReceiver;
         tradingFeeReceiver = newReceiver;
@@ -99,7 +88,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         uint256 _sizeAmount,
         bool _isLong,
         uint256 _price
-    ) external nonReentrant onlyExecutor returns (uint256 tradingFee, int256 fundingFee) {
+    ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.enable, 'trade pair not supported');
 
@@ -340,7 +329,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         uint256 _sizeAmount,
         bool _isLong,
         uint256 _price
-    ) external onlyExecutor nonReentrant returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
+    ) external onlyExecutor nonReentrant whenNotPaused returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
 
         // check trading amount
@@ -586,7 +575,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         );
     }
 
-    function updateCumulativeFundingRate(uint256 _pairIndex, uint256 _price) public {
+    function updateCumulativeFundingRate(uint256 _pairIndex, uint256 _price) public whenNotPaused {
         if (lastFundingTimes[_pairIndex] == 0) {
             lastFundingTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
             return;
@@ -642,6 +631,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
         return tradingFee;
     }
 
+    //TODO will remove
     function transferTokenTo(address token, address to, uint256 amount) external {
         IERC20(token).safeTransfer(to, amount);
     }
@@ -752,5 +742,13 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable {
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
         return PositionKey.getPositionKey(_account, _pairIndex, _isLong);
+    }
+
+    function setPaused() external onlyAdmin {
+        _pause();
+    }
+
+    function setUnPaused() external onlyAdmin {
+        _unpause();
     }
 }

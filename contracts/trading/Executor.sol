@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 import '../libraries/Position.sol';
 import '../interfaces/IExecutor.sol';
@@ -15,7 +16,7 @@ import '../interfaces/IPairVault.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 
-contract Executor is IExecutor {
+contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -50,6 +51,11 @@ contract Executor is IExecutor {
         maxTimeDelay = _maxTimeDelay;
     }
 
+    modifier onlyAdmin() {
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isAdmin(msg.sender), 'onlyAdmin');
+        _;
+    }
+
     modifier onlyPoolAdmin() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
@@ -60,7 +66,7 @@ contract Executor is IExecutor {
         _;
     }
 
-    function updateMaxTimeDelay(uint256 newMaxTimeDelay) external override onlyPoolAdmin {
+    function updateMaxTimeDelay(uint256 newMaxTimeDelay) external whenNotPaused override onlyPoolAdmin {
         uint256 oldDelay = maxTimeDelay;
         maxTimeDelay = newMaxTimeDelay;
         emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
@@ -72,7 +78,7 @@ contract Executor is IExecutor {
         uint256 timestamp,
         uint256 increaseEndIndex,
         uint256 decreaseEndIndex
-    ) external onlyPositionKeeper {
+    ) external onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
@@ -87,7 +93,7 @@ contract Executor is IExecutor {
         uint256 timestamp,
         uint256[] memory increaseOrderIds,
         uint256[] memory decreaseOrderIds
-    ) external onlyPositionKeeper {
+    ) external onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
@@ -96,7 +102,7 @@ contract Executor is IExecutor {
         this.executeDecreaseLimitOrders(decreaseOrderIds);
     }
 
-    function executeIncreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper {
+    function executeIncreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper whenNotPaused {
         uint256 index = increaseMarketOrderStartIndex;
         uint256 length = orderManager.increaseMarketOrdersIndex();
 
@@ -115,7 +121,7 @@ contract Executor is IExecutor {
         }
     }
 
-    function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper {
+    function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
             try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
                 string memory reason
@@ -123,7 +129,7 @@ contract Executor is IExecutor {
         }
     }
 
-    function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external onlyPositionKeeper {
+    function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external onlyPositionKeeper whenNotPaused {
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
 
         if (order.account == address(0)) {
@@ -311,7 +317,7 @@ contract Executor is IExecutor {
         );
     }
 
-    function executeDecreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper {
+    function executeDecreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper whenNotPaused {
         uint256 index = decreaseMarketOrderStartIndex;
         uint256 length = orderManager.decreaseMarketOrdersIndex();
         if (index >= length) {
@@ -329,7 +335,7 @@ contract Executor is IExecutor {
         }
     }
 
-    function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper {
+    function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
             try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
                 string memory reason
@@ -337,7 +343,7 @@ contract Executor is IExecutor {
         }
     }
 
-    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external onlyPositionKeeper {
+    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external onlyPositionKeeper whenNotPaused {
         _executeDecreaseOrder(_orderId, _tradeType);
     }
 
@@ -526,7 +532,7 @@ contract Executor is IExecutor {
         uint256[] memory prices,
         uint256 timestamp,
         bytes32[] memory positionKeys
-    ) external onlyPositionKeeper {
+    ) external onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
@@ -534,7 +540,7 @@ contract Executor is IExecutor {
         this.liquidatePositions(positionKeys);
     }
 
-    function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper {
+    function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < positionKeys.length; i++) {
             _liquidatePosition(positionKeys[i]);
         }
@@ -548,7 +554,7 @@ contract Executor is IExecutor {
         uint256[] memory sizeAmounts,
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) external onlyPositionKeeper {
+    ) external onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
@@ -561,7 +567,7 @@ contract Executor is IExecutor {
         uint256[] memory _sizeAmounts,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
-    ) public onlyPositionKeeper {
+    ) public onlyPositionKeeper whenNotPaused {
         require(_positionKeys.length == _sizeAmounts.length, 'length not match');
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
@@ -665,5 +671,13 @@ contract Executor is IExecutor {
             price,
             orderId
         );
+    }
+
+    function setPaused() external onlyAdmin {
+        _pause();
+    }
+
+    function setUnPaused() external onlyAdmin {
+        _unpause();
     }
 }
