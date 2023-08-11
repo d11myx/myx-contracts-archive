@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import "@openzeppelin/contracts/security/Pausable.sol";
+import '@openzeppelin/contracts/security/Pausable.sol';
 
 import '../libraries/Position.sol';
 import '../interfaces/IExecutor.sol';
@@ -66,7 +66,7 @@ contract Executor is IExecutor, Pausable {
         _;
     }
 
-    function updateMaxTimeDelay(uint256 newMaxTimeDelay) external whenNotPaused override onlyPoolAdmin {
+    function updateMaxTimeDelay(uint256 newMaxTimeDelay) external override whenNotPaused onlyPoolAdmin {
         uint256 oldDelay = maxTimeDelay;
         maxTimeDelay = newMaxTimeDelay;
         emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
@@ -129,7 +129,10 @@ contract Executor is IExecutor, Pausable {
         }
     }
 
-    function executeIncreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external onlyPositionKeeper whenNotPaused {
+    function executeIncreaseOrder(
+        uint256 _orderId,
+        TradingTypes.TradeType _tradeType
+    ) external onlyPositionKeeper whenNotPaused {
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
 
         if (order.account == address(0)) {
@@ -343,7 +346,10 @@ contract Executor is IExecutor, Pausable {
         }
     }
 
-    function executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) external onlyPositionKeeper whenNotPaused {
+    function executeDecreaseOrder(
+        uint256 _orderId,
+        TradingTypes.TradeType _tradeType
+    ) external onlyPositionKeeper whenNotPaused {
         _executeDecreaseOrder(_orderId, _tradeType);
     }
 

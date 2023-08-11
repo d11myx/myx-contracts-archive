@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import "@openzeppelin/contracts/security/Pausable.sol";
+import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 
@@ -124,7 +124,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
-                (uint256 afterPosition,) = position.validLeverage(
+                (uint256 afterPosition, ) = position.validLeverage(
                     price,
                     request.collateral,
                     uint256(request.sizeAmount),
@@ -162,7 +162,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                 //TODO if request size exceed position size, can calculate the max size
                 require(
                     uint256(request.sizeAmount.abs()) <=
-                    position.positionAmount - positionDecreaseTotalAmount[positionKey],
+                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
                     'decrease amount exceed position'
                 );
             }
@@ -185,33 +185,33 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         if (request.sizeAmount > 0) {
             return
                 _createIncreaseOrder(
-                TradingTypes.IncreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: uint256(request.sizeAmount),
-                    tpPrice: request.tpPrice,
-                    tp: request.tp,
-                    slPrice: request.slPrice,
-                    sl: request.sl
-                })
-            );
+                    TradingTypes.IncreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        openPrice: request.openPrice,
+                        isLong: request.isLong,
+                        sizeAmount: uint256(request.sizeAmount),
+                        tpPrice: request.tpPrice,
+                        tp: request.tp,
+                        slPrice: request.slPrice,
+                        sl: request.sl
+                    })
+                );
         } else if (request.sizeAmount < 0) {
             return
                 _createDecreaseOrder(
-                TradingTypes.DecreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    triggerPrice: request.openPrice,
-                    sizeAmount: uint256(request.sizeAmount.abs()),
-                    isLong: request.isLong
-                })
-            );
+                    TradingTypes.DecreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        triggerPrice: request.openPrice,
+                        sizeAmount: uint256(request.sizeAmount.abs()),
+                        isLong: request.isLong
+                    })
+                );
         } else {
             //todo
             revert('size eq 0');
@@ -490,13 +490,15 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (
             !order.isIncrease &&
-        (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
         ) {
             positionDecreaseTotalAmount[positionKey] += order.sizeAmount;
         }
     }
 
-    function removeOrderFromPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
+    function removeOrderFromPosition(
+        PositionOrder memory order
+    ) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
 
@@ -520,13 +522,17 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (
             !order.isIncrease &&
-        (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
         ) {
             positionDecreaseTotalAmount[positionKey] -= order.sizeAmount;
         }
     }
 
-    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) public onlyExecutor whenNotPaused {
+    function setPositionHasTpSl(
+        bytes32 key,
+        TradingTypes.TradeType tradeType,
+        bool has
+    ) public onlyExecutor whenNotPaused {
         positionHasTpSl[key][tradeType] = has;
     }
 
@@ -546,7 +552,11 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         delete decreaseLimitOrders[orderId];
     }
 
-    function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) public onlyExecutor whenNotPaused {
+    function setOrderNeedADL(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool needADL
+    ) public onlyExecutor whenNotPaused {
         TradingTypes.DecreasePositionOrder storage order;
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];
