@@ -4,9 +4,6 @@ pragma solidity 0.8.17;
 import '../libraries/Position.sol';
 
 interface IPositionManager {
-    event UpdatePairInfo(address oldPairInfo, address newPairInfo);
-
-    event UpdatePairVault(address oldPairVault, address newPairVault);
 
     event UpdateTradingFeeReceiver(address oldReceiver, address newReceiver);
 
@@ -92,10 +89,6 @@ interface IPositionManager {
     function getPositionByKey(bytes32 key) external view returns (Position.Info memory);
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
-
-    function updatePairInfo(address newPairInfo) external;
-
-    function updatePairVault(address newPairVault) external;
 
     function updateTradingFeeReceiver(address newReceiver) external;
 
