@@ -5,9 +5,9 @@ import {
     IndexPriceFeed,
     MockPriceFeed,
     OraclePriceFeed,
-    PairInfo,
-    PairLiquidity,
-    PairVault,
+    Pool,
+    PoolLiquidity,
+    PoolVault,
     OrderManager,
     RoleManager,
     Router,
@@ -80,17 +80,17 @@ export const getIndexPriceFeed = async (address?: string): Promise<IndexPriceFee
     );
 };
 
-export const getPairInfo = async (address?: string): Promise<PairInfo> => {
-    return getContract<PairInfo>('PairInfo', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
+export const getPairInfo = async (address?: string): Promise<Pool> => {
+    return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
 };
 
-export const getPairVault = async (address?: string): Promise<PairVault> => {
-    return getContract<PairVault>('PairVault', address || (await hre.deployments.get(PAIR_VAULT_ID)).address);
+export const getPairVault = async (address?: string): Promise<PoolVault> => {
+    return getContract<PoolVault>('PoolVault', address || (await hre.deployments.get(PAIR_VAULT_ID)).address);
 };
 
-export const getPairLiquidity = async (address?: string): Promise<PairLiquidity> => {
-    return getContract<PairLiquidity>(
-        'PairLiquidity',
+export const getPairLiquidity = async (address?: string): Promise<PoolLiquidity> => {
+    return getContract<PoolLiquidity>(
+        'PoolLiquidity',
         address || (await hre.deployments.get(PAIR_LIQUIDITY_ID)).address,
     );
 };

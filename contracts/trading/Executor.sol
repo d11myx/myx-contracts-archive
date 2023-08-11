@@ -10,8 +10,8 @@ import '../interfaces/IRoleManager.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
-import '../pair/interfaces/IPairInfo.sol';
-import '../pair/interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairVault.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 

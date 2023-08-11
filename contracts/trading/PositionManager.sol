@@ -12,8 +12,8 @@ import '../interfaces/IOraclePriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
-import '../pair/interfaces/IPairInfo.sol';
-import '../pair/interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairVault.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
