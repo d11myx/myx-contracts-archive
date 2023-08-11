@@ -4,10 +4,9 @@ pragma solidity =0.8.17;
 import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/access/AccessControl.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import  './interfaces/IRoleManager.sol';
+import './interfaces/IRoleManager.sol';
 
 contract RoleManager is AccessControl, IRoleManager {
-
     bytes32 public constant POOL_ADMIN_ROLE = keccak256('POOL_ADMIN');
     bytes32 public constant OPERATOR_ROLE = keccak256('OPERATOR_ROLE');
     bytes32 public constant TREASURER_ROLE = keccak256('TREASURER_ROLE');
@@ -16,14 +15,11 @@ contract RoleManager is AccessControl, IRoleManager {
     using Address for address;
 
     constructor(Ownable provider) {
-        require(provider.owner() != address(0), "is 0");
+        require(provider.owner() != address(0), 'is 0');
         _setupRole(DEFAULT_ADMIN_ROLE, provider.owner());
     }
 
-    function setRoleAdmin(
-        bytes32 role,
-        bytes32 adminRole
-    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setRoleAdmin(bytes32 role, bytes32 adminRole) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         _setRoleAdmin(role, adminRole);
     }
 
@@ -86,5 +82,4 @@ contract RoleManager is AccessControl, IRoleManager {
     function isKeeper(address keeper) external view override returns (bool) {
         return hasRole(KEEPER_ROLE, keeper);
     }
-
 }

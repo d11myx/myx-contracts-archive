@@ -623,7 +623,9 @@ contract Executor is IExecutor {
         if (exposureAsset <= 0) {
             needLiquidate = true;
         } else {
-            uint256 riskRate = position.positionAmount.mulPrice(position.averagePrice)
+            uint256 riskRate = position
+                .positionAmount
+                .mulPrice(position.averagePrice)
                 .mulPercentage(tradingConfig.maintainMarginRate)
                 .calculatePercentage(uint256(exposureAsset));
             needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
@@ -664,6 +666,4 @@ contract Executor is IExecutor {
             orderId
         );
     }
-
-
 }
