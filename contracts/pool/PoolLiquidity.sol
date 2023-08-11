@@ -375,7 +375,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, "insufficient balance");
+        require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, 'insufficient balance');
 
         IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
 
