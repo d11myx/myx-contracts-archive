@@ -632,7 +632,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     //TODO will remove
-    function transferTokenTo(address token, address to, uint256 amount) external {
+    function transferTokenTo(address token, address to, uint256 amount) external onlyExecutor {
         IERC20(token).safeTransfer(to, amount);
     }
 
