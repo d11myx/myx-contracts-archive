@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IAddressesProvider {
-
     event AddressSet(bytes32 indexed id, address indexed oldAddress, address indexed newAddress);
 
     function getAddress(bytes32 id) external view returns (address);
@@ -20,5 +19,4 @@ interface IAddressesProvider {
     function getRoleManager() external view returns (address);
 
     function setRolManager(address) external;
-
 }
