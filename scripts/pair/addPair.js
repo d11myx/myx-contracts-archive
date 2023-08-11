@@ -11,8 +11,8 @@ async function main() {
 
     console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-    let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
-    let pairLiquidity = await contractAt("PairLiquidity", await getConfig("PairLiquidity"));
+    let pairInfo = await contractAt("Pool", await getConfig("Pool"));
+    let pairLiquidity = await contractAt("PoolLiquidity", await getConfig("PoolLiquidity"));
 
     let eth = await contractAt("WETH", await getConfig("Token-ETH"))
     let btc = await contractAt("Token", await getConfig("Token-BTC"))

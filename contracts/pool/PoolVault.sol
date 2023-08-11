@@ -13,12 +13,12 @@ import '../interfaces/IOraclePriceFeed.sol';
 import '../token/PairToken.sol';
 import '../interfaces/IWETH.sol';
 
-import './interfaces/IPairInfo.sol';
-import './interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairVault.sol';
 import 'hardhat/console.sol';
 import '../libraries/Int256Utils.sol';
 
-contract PairVault is IPairVault, Roleable {
+contract PoolVault is IPairVault, Roleable {
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;

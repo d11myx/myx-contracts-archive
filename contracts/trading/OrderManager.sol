@@ -6,8 +6,8 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 
 import '../interfaces/IOraclePriceFeed.sol';
-import '../pair/interfaces/IPairInfo.sol';
-import '../pair/interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairVault.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/PositionKey.sol';
 import '../libraries/Int256Utils.sol';

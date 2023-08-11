@@ -118,7 +118,7 @@ event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a
 
 #### Set parameters
 
--   PairInfo
+-   Pool
 ```solidity
 // Update the trade pair configuration
 updatePair(uint256 _pairIndex, Pair calldata _pair)

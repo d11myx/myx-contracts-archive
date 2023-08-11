@@ -9,7 +9,7 @@ import {
     PAIR_LIQUIDITY_ID,
     PAIR_VAULT_ID,
 } from '../../helpers';
-import { PairInfo, PairLiquidity, PairVault } from '../../types';
+import { Pool, PoolLiquidity, PoolVault } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -19,28 +19,28 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const oraclePriceFeed = await getOraclePriceFeed();
     const weth = await getWETH();
 
-    // PairInfo
+    // Pool
     const pairInfoArtifact = await deploy(`${PAIR_INFO_ID}`, {
         from: deployer,
-        contract: 'PairInfo',
+        contract: 'Pool',
         args: [addressProvider.address],
         ...COMMON_DEPLOY_PARAMS,
     });
-    const pairInfo = (await hre.ethers.getContractAt(pairInfoArtifact.abi, pairInfoArtifact.address)) as PairInfo;
+    const pairInfo = (await hre.ethers.getContractAt(pairInfoArtifact.abi, pairInfoArtifact.address)) as Pool;
 
-    // PairVault
+    // PoolVault
     const pairVaultArtifact = await deploy(`${PAIR_VAULT_ID}`, {
         from: deployer,
-        contract: 'PairVault',
+        contract: 'PoolVault',
         args: [addressProvider.address, pairInfo.address],
         ...COMMON_DEPLOY_PARAMS,
     });
-    const pairVault = (await hre.ethers.getContractAt(pairVaultArtifact.abi, pairVaultArtifact.address)) as PairVault;
+    const pairVault = (await hre.ethers.getContractAt(pairVaultArtifact.abi, pairVaultArtifact.address)) as PoolVault;
 
-    // PairLiquidity
+    // PoolLiquidity
     const pairLiquidityArtifact = await deploy(`${PAIR_LIQUIDITY_ID}`, {
         from: deployer,
-        contract: 'PairLiquidity',
+        contract: 'PoolLiquidity',
         args: [
             addressProvider.address,
             pairInfo.address,
@@ -55,7 +55,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pairLiquidity = (await hre.ethers.getContractAt(
         pairLiquidityArtifact.abi,
         pairLiquidityArtifact.address,
-    )) as PairLiquidity;
+    )) as PoolLiquidity;
     await pairVault.setPairLiquidityAndVault(pairLiquidity.address, pairVault.address);
 };
 
