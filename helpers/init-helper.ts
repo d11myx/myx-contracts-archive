@@ -1,4 +1,4 @@
-import { PairInfo, Token, PairLiquidity } from '../types';
+import { Pool, Token, PoolLiquidity } from '../types';
 import { loadReserveConfig } from './market-config-helper';
 import { MARKET_NAME } from './env';
 import { SignerWithAddress } from '../test/helpers/make-suite';
@@ -9,8 +9,8 @@ export async function initPairs(
     deployer: SignerWithAddress,
     pairTokens: SymbolMap<Token>,
     usdt: Token,
-    pairInfo: PairInfo,
-    pairLiquidity: PairLiquidity,
+    pairInfo: Pool,
+    pairLiquidity: PoolLiquidity,
 ) {
     console.log(`Initializing pairs`);
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;

@@ -4,11 +4,11 @@ pragma solidity 0.8.17;
 import '../libraries/Roleable.sol';
 import '../token/interfaces/IPairToken.sol';
 import '../token/PairToken.sol';
-import './interfaces/IPairInfo.sol';
-import './interfaces/IPairLiquidity.sol';
-import './interfaces/IPairInfo.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairLiquidity.sol';
+import '../interfaces/IPairInfo.sol';
 
-contract PairInfo is IPairInfo, Roleable {
+contract Pool is IPairInfo, Roleable {
 
     uint256 public constant PERCENTAGE = 10000;
     uint256 public constant FUNDING_RATE_PERCENTAGE = 1000000;

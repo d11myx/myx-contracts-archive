@@ -7,9 +7,9 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
 import '../interfaces/IWETH.sol';
-import './interfaces/IPairInfo.sol';
-import './interfaces/IPairLiquidity.sol';
-import './interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairLiquidity.sol';
+import '../interfaces/IPairVault.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
@@ -18,7 +18,7 @@ import '../token/PairToken.sol';
 
 import 'hardhat/console.sol';
 
-contract PairLiquidity is IPairLiquidity, Roleable {
+contract PoolLiquidity is IPairLiquidity, Roleable {
     using Math for uint256;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
