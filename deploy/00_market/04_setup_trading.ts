@@ -7,7 +7,6 @@ import {
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPairInfo,
-    getPairVault,
     getRoleManager,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
@@ -25,7 +24,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const addressProvider = await getAddressesProvider();
     const pairInfo = await getPairInfo();
-    const pairVault = await getPairVault();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
 
@@ -36,7 +34,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         args: [
             addressProvider.address,
             pairInfo.address,
-            pairVault.address,
+            pairInfo.address,
             feeReceiver,
             8 * 60 * 60,
         ],
@@ -54,7 +52,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         args: [
             addressProvider.address,
             pairInfo.address,
-            pairVault.address,
+            pairInfo.address,
             tradingVault.address,
         ],
         ...COMMON_DEPLOY_PARAMS,
@@ -98,7 +96,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         args: [
             addressProvider.address,
             pairInfo.address,
-            pairVault.address,
+            pairInfo.address,
             orderManager.address,
             tradingVault.address,
             60,
@@ -115,7 +113,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await tradingVault.setExecutor(executor.address);
     await orderManager.setExecutor(executor.address);
 
-    await pairVault.setTradingVault(tradingVault.address);
+    await pairInfo.setTradingVault(tradingVault.address);
 };
 
 func.id = `Pairs`;
