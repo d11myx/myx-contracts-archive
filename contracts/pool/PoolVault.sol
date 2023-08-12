@@ -228,7 +228,6 @@ contract PoolVault is IPairVault, Roleable {
         console.log('swap pairIndex %s amountIn %s amountOut %s', _amountIn, _amountOut);
 
         Vault memory vault = vaults[_pairIndex];
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
 
         if (_isBuy) {
             uint256 availableIndex = vault.indexTotalAmount - vault.indexReservedAmount;
