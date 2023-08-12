@@ -1,27 +1,65 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/utils/math/Math.sol';
+import '@openzeppelin/contracts/utils/Address.sol';
+
+import '../libraries/PrecisionUtils.sol';
 import '../libraries/Roleable.sol';
+import '../libraries/Int256Utils.sol';
 import '../token/interfaces/IPairToken.sol';
 import '../token/PairToken.sol';
 import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPairVault.sol';
 import '../interfaces/IPairLiquidity.sol';
 import '../interfaces/IPairInfo.sol';
 
-contract Pool is IPairInfo, Roleable {
+contract Pool is IPairInfo, IPairVault, Roleable {
+    using PrecisionUtils for uint256;
+    using SafeERC20 for IERC20;
+    using Int256Utils for int256;
+
     uint256 public constant PERCENTAGE = 10000;
     uint256 public constant FUNDING_RATE_PERCENTAGE = 1000000;
 
-    uint256 public pairsCount;
-
-    mapping(address => mapping(address => uint256)) public pairIndexes;
-    mapping(uint256 => Pair) public pairs;
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
     mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
+
+    mapping(address => mapping(address => uint256)) public pairIndexes;
     mapping(address => mapping(address => bool)) public isPairListed;
 
+    mapping(uint256 => Pair) public pairs;
+    uint256 public pairsCount;
+    mapping(uint256 => Vault) public vaults;
+
+    address public pairLiquidity;
+    address public pairVault;
+    address public tradingVault;
+
     constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
+
+    modifier onlyPairLiquidityAndVault() {
+        require(msg.sender == pairLiquidity || msg.sender == pairVault || msg.sender == tradingVault, 'forbidden');
+        _;
+    }
+
+    function setPairLiquidityAndVault(address _pairLiquidity, address _pairVaule) external onlyPoolAdmin {
+        pairLiquidity = _pairLiquidity;
+        pairVault = _pairVaule;
+    }
+
+    modifier onlyTradingVault() {
+        require(msg.sender == tradingVault, 'forbidden');
+        _;
+    }
+
+    function setTradingVault(address _tradingVault) external onlyPoolAdmin {
+        tradingVault = _tradingVault;
+    }
 
     function getPair(uint256 _pairIndex) external view override returns (Pair memory) {
         return pairs[_pairIndex];
@@ -127,5 +165,98 @@ contract Pool is IPairInfo, Roleable {
         require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
 
         IPairToken(pair.pairToken).setMiner(_account, _enable);
+    }
+
+    function increaseTotalAmount(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external onlyPairLiquidityAndVault {
+        Vault storage vault = vaults[_pairIndex];
+        vault.indexTotalAmount = vault.indexTotalAmount + _indexAmount;
+        vault.stableTotalAmount = vault.stableTotalAmount + _stableAmount;
+    }
+
+    function decreaseTotalAmount(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external onlyPairLiquidityAndVault {
+        Vault storage vault = vaults[_pairIndex];
+        vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
+        vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
+    }
+
+    function increaseReserveAmount(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external onlyTradingVault {
+        Vault storage vault = vaults[_pairIndex];
+        vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
+        vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
+    }
+
+    function decreaseReserveAmount(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external onlyTradingVault {
+        Vault storage vault = vaults[_pairIndex];
+        vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
+        vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
+    }
+
+    function transferTokenTo(address token, address to, uint256 amount) external onlyPairLiquidityAndVault {
+        IERC20(token).safeTransfer(to, amount);
+    }
+
+    function getVault(uint256 _pairIndex) external view returns (Vault memory vault) {
+        return vaults[_pairIndex];
+    }
+
+    function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPairLiquidityAndVault {
+        vaults[_pairIndex].averagePrice = _averagePrice;
+    }
+
+    function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
+        Vault storage vault = vaults[_pairIndex];
+        vault.stableTotalAmount += _profit;
+        vault.realisedPnl += int256(_profit);
+    }
+
+    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
+        Vault storage vault = vaults[_pairIndex];
+        uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
+
+        require(_profit <= availableStable, 'stable token not enough');
+
+        vault.stableTotalAmount -= _profit;
+        vault.realisedPnl -= int256(_profit);
+    }
+
+    function swap(
+        uint256 _pairIndex,
+        bool _isBuy,
+        uint256 _amountIn,
+        uint256 _amountOut
+    ) external onlyPairLiquidityAndVault {
+        Vault memory vault = vaults[_pairIndex];
+
+        if (_isBuy) {
+            uint256 availableIndex = vault.indexTotalAmount - vault.indexReservedAmount;
+
+            require(_amountOut <= availableIndex, 'swap index token not enough');
+
+            this.increaseTotalAmount(_pairIndex, 0, _amountIn);
+            this.decreaseTotalAmount(_pairIndex, _amountOut, 0);
+        } else {
+            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
+
+            require(_amountOut <= availableStable, 'swap stable token not enough');
+
+            this.increaseTotalAmount(_pairIndex, _amountIn, 0);
+            this.decreaseTotalAmount(_pairIndex, 0, _amountOut);
+        }
     }
 }
