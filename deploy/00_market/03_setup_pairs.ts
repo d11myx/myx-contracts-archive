@@ -9,7 +9,7 @@ import {
     PAIR_LIQUIDITY_ID,
     PAIR_VAULT_ID,
 } from '../../helpers';
-import { Pool, PoolLiquidity, PoolVault } from '../../types';
+import { Pool, PoolLiquidity } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -28,15 +28,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const pairInfo = (await hre.ethers.getContractAt(pairInfoArtifact.abi, pairInfoArtifact.address)) as Pool;
 
-    // PoolVault
-    const pairVaultArtifact = await deploy(`${PAIR_VAULT_ID}`, {
-        from: deployer,
-        contract: 'PoolVault',
-        args: [addressProvider.address, pairInfo.address],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const pairVault = (await hre.ethers.getContractAt(pairVaultArtifact.abi, pairVaultArtifact.address)) as PoolVault;
-
     // PoolLiquidity
     const pairLiquidityArtifact = await deploy(`${PAIR_LIQUIDITY_ID}`, {
         from: deployer,
@@ -44,7 +35,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         args: [
             addressProvider.address,
             pairInfo.address,
-            pairVault.address,
+            pairInfo.address,
             feeReceiver,
             slipReceiver,
             weth.address,
@@ -56,7 +47,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         pairLiquidityArtifact.abi,
         pairLiquidityArtifact.address,
     )) as PoolLiquidity;
-    await pairVault.setPairLiquidityAndVault(pairLiquidity.address, pairVault.address);
+    await pairInfo.setPairLiquidityAndVault(pairLiquidity.address, pairInfo.address);
 };
 
 func.id = `Pairs`;

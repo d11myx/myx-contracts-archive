@@ -5,7 +5,6 @@ import {
     getOrderManager,
     getPairInfo,
     getPairLiquidity,
-    getPairVault,
     getToken,
     loadReserveConfig,
     MARKET_NAME,
@@ -19,7 +18,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
     const pairInfo = await getPairInfo();
-    const pairVault = await getPairVault();
     const pairLiquidity = await getPairLiquidity();
     const orderManager = await getOrderManager();
     // const positionManager = await getPositionManager();
