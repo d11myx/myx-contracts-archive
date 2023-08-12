@@ -6,7 +6,6 @@ import {
     IndexPriceFeed,
     Pool,
     PoolLiquidity,
-    PoolVault,
     RoleManager,
     Token,
     PositionManager,
@@ -23,7 +22,6 @@ import {
     getOraclePriceFeed,
     getPairInfo,
     getPairLiquidity,
-    getPairVault,
     getRoleManager,
     getToken,
     getTradingVault,
@@ -62,7 +60,6 @@ export interface TestEnv {
     pairTokens: SymbolMap<Token>;
     pairInfo: Pool;
     pairLiquidity: PoolLiquidity;
-    pairVault: PoolVault;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
     tradingVault: PositionManager;
@@ -85,7 +82,7 @@ export const testEnv: TestEnv = {
     pairTokens: {} as SymbolMap<Token>,
     pairInfo: {} as Pool,
     pairLiquidity: {} as PoolLiquidity,
-    pairVault: {} as PoolVault,
+
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
     tradingVault: {} as PositionManager,
@@ -142,7 +139,7 @@ export async function setupTestEnv() {
     // pair
     testEnv.pairInfo = await getPairInfo();
     testEnv.pairLiquidity = await getPairLiquidity();
-    testEnv.pairVault = await getPairVault();
+
 
     // trading
     testEnv.tradingVault = await getTradingVault();
@@ -180,20 +177,19 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { oraclePriceFeed, indexPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    const { pairInfo, pairLiquidity, pairVault } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { pairInfo, pairLiquidity } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const { tradingVault, router, executor, orderManager } = await deployTrading(
         deployer,
         deployer,
         addressesProvider,
         roleManager,
-        pairVault,
         pairInfo,
         oraclePriceFeed,
         indexPriceFeed,
     );
 
-    await pairVault.setTradingVault(tradingVault.address);
+    await pairInfo.setTradingVault(tradingVault.address);
     await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
 
     await roleManager.addKeeper(executor.address);
@@ -211,7 +207,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         pairTokens: tokens,
         pairInfo: pairInfo,
         pairLiquidity: pairLiquidity,
-        pairVault: pairVault,
+
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
         tradingVault: tradingVault,
