@@ -53,11 +53,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         weth = _weth;
     }
 
-    function setContract(IPairInfo _pairStorage, IPairVault _pairVault) external onlyPoolAdmin {
-        pairInfo = _pairStorage;
-        pairVault = _pairVault;
-    }
-
     function setReceiver(address _feeReceiver, address _slipReceiver) external onlyPoolAdmin {
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
