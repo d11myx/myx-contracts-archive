@@ -43,19 +43,16 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     uint256 public fundingInterval;
 
     IPairInfo public pairInfo;
-    IPairInfo public pairVault;
     address public tradingFeeReceiver;
     address public addressExecutor;
 
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
-        IPairInfo _pairVault,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
-        pairVault = _pairVault;
         tradingFeeReceiver = _tradingFeeReceiver;
         fundingInterval = _fundingInterval;
     }
@@ -178,17 +175,17 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex]
             );
 
-            IPairInfo.Vault memory lpVault = pairVault.getVault(_pairIndex);
+            IPairInfo.Vault memory lpVault = pairInfo.getVault(_pairIndex);
             console.log('increasePosition lp averagePrice', lpVault.averagePrice, 'price', _price);
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
                     console.log('increasePosition BTO long increase');
-                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
                     uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
                     console.log('increasePosition BTO update averagePrice', averagePrice);
-                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
+                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseLong;
                     uint256 increaseShort;
@@ -202,39 +199,39 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
                     // decrease reserve & pnl
                     console.log('increasePosition STO long decrease');
-                    pairVault.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                    pairInfo.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
                         console.log('increasePosition STO decreaseProfit', profit);
-                        pairVault.decreaseProfit(_pairIndex, profit);
+                        pairInfo.decreaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
                         console.log('increasePosition STO increaseProfit', profit);
-                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                        pairVault.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
+                        pairInfo.increaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseShort > 0) {
-                        pairVault.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                        pairInfo.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
                         console.log('increasePosition STO Long to Short update averagePrice', _price);
-                        pairVault.updateAveragePrice(_pairIndex, _price);
+                        pairInfo.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairVault.updateAveragePrice(_pairIndex, 0);
+                        pairInfo.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else if (prevNetExposureAmountChecker < 0) {
                 if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
                     console.log('increasePosition STO short increase');
-                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
                     uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
                     console.log('increasePosition STO update averagePrice', averagePrice);
-                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
+                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseShort;
                     uint256 increaseLong;
@@ -248,7 +245,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
                     // decrease reserve & pnl
                     console.log('increasePosition BTO short decrease');
-                    pairVault.decreaseReserveAmount(
+                    pairInfo.decreaseReserveAmount(
                         _pairIndex,
                         0,
                         netExposureAmountChecker[_pairIndex] >= 0
@@ -258,35 +255,35 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
                         console.log('increasePosition BTO increaseProfit', profit);
-                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                        pairVault.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
+                        pairInfo.increaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
                         console.log('increasePosition BTO decreaseProfit', profit);
-                        pairVault.decreaseProfit(_pairIndex, profit);
+                        pairInfo.decreaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseLong > 0) {
-                        pairVault.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                        pairInfo.increaseReserveAmount(_pairIndex, increaseLong, 0);
                         console.log('increasePosition BTO short to long update averagePrice', _price);
-                        pairVault.updateAveragePrice(_pairIndex, _price);
+                        pairInfo.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairVault.updateAveragePrice(_pairIndex, 0);
+                        pairInfo.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else {
                 if (netExposureAmountChecker[_pairIndex] > 0) {
                     console.log('increasePosition BTO zero to long');
-                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 } else {
                     console.log('increasePosition STO zero to short');
-                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
                 }
-                pairVault.updateAveragePrice(_pairIndex, _price);
+                pairInfo.updateAveragePrice(_pairIndex, _price);
             }
         }
 
@@ -402,16 +399,16 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex]
             );
 
-            IPairInfo.Vault memory lpVault = pairVault.getVault(_pairIndex);
+            IPairInfo.Vault memory lpVault = pairInfo.getVault(_pairIndex);
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
                     console.log('decreasePosition STC long increase');
-                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
                     uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
                     console.log('decreasePosition STC update averagePrice', averagePrice);
-                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
+                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseLong;
                     uint256 increaseShort;
@@ -425,39 +422,39 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
                     // decrease reserve & pnl
                     console.log('decreasePosition STO long decrease');
-                    pairVault.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                    pairInfo.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
                         console.log('decreasePosition STO decreaseProfit', profit);
-                        pairVault.decreaseProfit(_pairIndex, profit);
+                        pairInfo.decreaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
                         console.log('decreasePosition STO increaseProfit', profit);
-                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                        pairVault.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
+                        pairInfo.increaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseShort > 0) {
-                        pairVault.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                        pairInfo.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
                         console.log('decreasePosition STO Long to Short update averagePrice', _price);
-                        pairVault.updateAveragePrice(_pairIndex, _price);
+                        pairInfo.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairVault.updateAveragePrice(_pairIndex, 0);
+                        pairInfo.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else if (prevNetExposureAmountChecker < 0) {
                 if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
                     console.log('decreasePosition STO short increase');
-                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
                     uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
                     console.log('decreasePosition STO update averagePrice', averagePrice);
-                    pairVault.updateAveragePrice(_pairIndex, averagePrice);
+                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseShort;
                     uint256 increaseLong;
@@ -471,7 +468,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
                     // decrease reserve & pnl
                     console.log('decreasePosition BTO short decrease');
-                    pairVault.decreaseReserveAmount(
+                    pairInfo.decreaseReserveAmount(
                         _pairIndex,
                         0,
                         netExposureAmountChecker[_pairIndex] >= 0
@@ -481,35 +478,35 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
                         console.log('decreasePosition BTO increaseProfit', profit);
-                        IERC20(pair.stableToken).safeTransfer(address(pairVault), profit);
-                        pairVault.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
+                        pairInfo.increaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
                         console.log('decreasePosition BTO decreaseProfit', profit);
-                        pairVault.decreaseProfit(_pairIndex, profit);
+                        pairInfo.decreaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseLong > 0) {
-                        pairVault.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                        pairInfo.increaseReserveAmount(_pairIndex, increaseLong, 0);
                         console.log('decreasePosition BTO short to long update averagePrice', _price);
-                        pairVault.updateAveragePrice(_pairIndex, _price);
+                        pairInfo.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairVault.updateAveragePrice(_pairIndex, 0);
+                        pairInfo.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else {
                 if (netExposureAmountChecker[_pairIndex] > 0) {
                     console.log('decreasePosition BTO zero to long');
-                    pairVault.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 } else {
                     console.log('decreasePosition STO zero to short');
-                    pairVault.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
                 }
-                pairVault.updateAveragePrice(_pairIndex, _price);
+                pairInfo.updateAveragePrice(_pairIndex, _price);
             }
         }
 
@@ -671,7 +668,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 q = longTracker[_pairIndex] + shortTracker[_pairIndex];
         uint256 k = fundingFeeConfig.liquidityPremiumFactor;
 
-        IPairInfo.Vault memory lpVault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory lpVault = pairInfo.getVault(_pairIndex);
         uint256 l = (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
             (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
 
@@ -704,8 +701,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
         userAmount = _fundingFee - lpAmount;
 
-        IERC20(pair.stableToken).safeTransfer(address(pairVault), lpAmount);
-        pairVault.increaseTotalAmount(_pairIndex, 0, lpAmount);
+        IERC20(pair.stableToken).safeTransfer(address(pairInfo), lpAmount);
+        pairInfo.increaseTotalAmount(_pairIndex, 0, lpAmount);
         console.log('distributeFundingFee userAmount', userAmount, 'lpAmount', lpAmount);
         return (userAmount, lpAmount);
     }
