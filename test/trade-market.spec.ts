@@ -15,16 +15,16 @@ describe('Trade: Market order cases', () => {
             users: [depositor],
             usdt,
             btc,
-            pairLiquidity,
+            pairInfo,
         } = testEnv;
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('10000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, pairLiquidity.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairLiquidity.address);
-        await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, pairInfo.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairInfo.address);
+        await pairInfo.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
     });
 
     describe('long > short', () => {
