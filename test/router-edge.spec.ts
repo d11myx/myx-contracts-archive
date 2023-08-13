@@ -28,7 +28,7 @@ describe('Router: Edge cases', () => {
             btc,
             usdt,
             users: [depositor],
-            pairLiquidity,
+
             pairInfo
         } = testEnv;
 
@@ -37,9 +37,9 @@ describe('Router: Edge cases', () => {
         await waitForTx(await btc.connect(deployer.signer).mint(depositor.address, btcAmount));
         await waitForTx(await usdt.connect(deployer.signer).mint(depositor.address, usdtAmount));
 
-        await btc.connect(depositor.signer).approve(pairLiquidity.address, MAX_UINT_AMOUNT);
-        await usdt.connect(depositor.signer).approve(pairLiquidity.address, MAX_UINT_AMOUNT);
-        await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, btcAmount, usdtAmount);
+        await btc.connect(depositor.signer).approve(pairInfo.address, MAX_UINT_AMOUNT);
+        await usdt.connect(depositor.signer).approve(pairInfo.address, MAX_UINT_AMOUNT);
+        await pairInfo.connect(depositor.signer).addLiquidity(pairIndex, btcAmount, usdtAmount);
 
         const pairVaultInfo = await pairInfo.getVault(pairIndex);
         console.log(

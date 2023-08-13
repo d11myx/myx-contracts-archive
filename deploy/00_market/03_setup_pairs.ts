@@ -45,7 +45,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     //     pairLiquidityArtifact.abi,
     //     pairLiquidityArtifact.address,
     // )) as PoolLiquidity;
-    // await pairInfo.setPairLiquidityAndVault(pairLiquidity.address, pairInfo.address);
+    await pairInfo.setPairLiquidityAndVault(pairInfo.address, pairInfo.address);
 };
 
 func.id = `Pairs`;
