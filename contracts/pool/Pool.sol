@@ -13,14 +13,11 @@ import './PoolToken.sol';
 import '../interfaces/IPairToken.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 
-import '../interfaces/IPairInfo.sol';
-import '../interfaces/IPairInfo.sol';
-import '../interfaces/IPairLiquidity.sol';
-import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPool.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 
-contract Pool is IPairLiquidity, IPairInfo, Roleable {
+contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
@@ -293,7 +290,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     }
 
     // function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
-    //     IPairInfo.Pair memory pair = getPair(_pairIndex);
+    //     IPool.Pair memory pair = getPair(_pairIndex);
     //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
 
     //     IWETH(weth).deposit{value: msg.value}();
@@ -318,7 +315,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, address(this), _pairIndex, _amount);
 
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
         // if (receivedIndexAmount > 0 && pair.indexToken == weth) {
         //     IWETH(weth).withdraw(receivedIndexAmount);
         //     payable(msg.sender).sendValue(receivedIndexAmount);
@@ -342,7 +339,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     //     uint256 _pairIndex,
     //     uint256 _minOut
     // ) external payable returns (uint256 amountIn, uint256 amountOut) {
-    //     IPairInfo.Pair memory pair = getPair(_pairIndex);
+    //     IPool.Pair memory pair = getPair(_pairIndex);
     //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
 
     //     IWETH(weth).deposit{value: msg.value}();
@@ -394,10 +391,10 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     ) internal returns (uint256 amountIn, uint256 amountOut) {
         require(_amountIn > 0, 'swap invalid amount in');
 
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'swap invalid pair');
 
-        IPairInfo.Vault memory vault = getVault(_pairIndex);
+        IPool.Vault memory vault = getVault(_pairIndex);
 
         uint256 price = _getPrice(pair.indexToken);
 
@@ -461,10 +458,10 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     ) private returns (uint256 mintAmount) {
         require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
 
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairInfo.Vault memory vault = getVault(_pairIndex);
+        IPool.Vault memory vault = getVault(_pairIndex);
 
         // transfer token
         if (_funder != address(this)) {
@@ -556,12 +553,12 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
         uint256 _amount
     ) private returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
         require(_amount > 0, 'invalid amount');
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
         require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, 'insufficient balance');
 
-        IPairInfo.Vault memory vault = getVault(_pairIndex);
+        IPool.Vault memory vault = getVault(_pairIndex);
 
         (receiveIndexTokenAmount, receiveStableTokenAmount) = getReceivedAmount(_pairIndex, _amount);
 
@@ -594,8 +591,8 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     }
 
     function lpFairPrice(uint256 _pairIndex) public view returns (uint256) {
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
-        IPairInfo.Vault memory vault = getVault(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
+        IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = _getPrice(pair.indexToken);
         uint256 lpFairDelta = _getDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
         return
@@ -620,10 +617,10 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     ) external view returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0);
 
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairInfo.Vault memory vault = getVault(_pairIndex);
+        IPool.Vault memory vault = getVault(_pairIndex);
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
@@ -699,10 +696,10 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     ) external view returns (uint256 depositIndexAmount, uint256 depositStableAmount) {
         if (_lpAmount == 0) return (0, 0);
 
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairInfo.Vault memory vault = getVault(_pairIndex);
+        IPool.Vault memory vault = getVault(_pairIndex);
 
         uint256 price = _getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
@@ -753,10 +750,10 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     ) public view returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
         if (_lpAmount == 0) return (0, 0);
 
-        IPairInfo.Pair memory pair = getPair(_pairIndex);
+        IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairInfo.Vault memory vault = getVault(_pairIndex);
+        IPool.Vault memory vault = getVault(_pairIndex);
 
         // usdt value of reserve
         uint256 price = _getPrice(pair.indexToken);

@@ -2,7 +2,7 @@ import { testEnv } from './helpers/make-suite';
 import { waitForTx } from '../helpers/utilities/tx';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 import { expect } from './shared/expect';
-import { IPairInfo } from '../types';
+import { IPool } from '../types';
 import { BigNumber } from 'ethers';
 import { deployMockToken } from '../helpers/contract-deployments';
 import { MARKET_NAME } from '../helpers/env';
@@ -74,14 +74,14 @@ describe('Pool: Edge cases', () => {
             const pairBefore = await pairInfo.getPair(pairIndex);
 
             // updatePair
-            let pairToUpdate: IPairInfo.PairStructOutput = { ...pairBefore };
+            let pairToUpdate: IPool.PairStructOutput = { ...pairBefore };
             pairToUpdate.enable = !pairBefore.enable;
             pairToUpdate.kOfSwap = BigNumber.from(99999999);
             pairToUpdate.expectIndexTokenP = BigNumber.from(4000);
             await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
 
             const pairAfterObj = await pairInfo.getPair(pairIndex);
-            let pairAfter: IPairInfo.PairStructOutput = { ...pairAfterObj };
+            let pairAfter: IPool.PairStructOutput = { ...pairAfterObj };
 
             console.log(pairAfter);
             console.log(pairToUpdate);
