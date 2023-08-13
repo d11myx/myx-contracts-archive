@@ -14,7 +14,7 @@ import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IOraclePriceFeed.sol';
-import '../token/PairToken.sol';
+import './PairToken.sol';
 
 contract PoolLiquidity is IPairLiquidity, Roleable {
     using Math for uint256;
@@ -27,7 +27,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
     address public feeReceiver;
     address public slipReceiver;
 
-    receive() external payable {}
+    // receive() external payable {}
 
     constructor(
         IAddressesProvider addressProvider,
