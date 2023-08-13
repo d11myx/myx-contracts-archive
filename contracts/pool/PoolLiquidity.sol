@@ -23,15 +23,9 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
     using Address for address payable;
 
     uint256 public constant PRICE_PRECISION = 1e30;
-
     IPairInfo public pairInfo;
-    // IOraclePriceFeed public vaultPriceFeed;
-
     address public feeReceiver;
-
     address public slipReceiver;
-
-    // address public weth;
 
     receive() external payable {}
 
@@ -41,18 +35,12 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         address _feeReceiver,
         address _slipReceiver
     )
-        // address _weth
         Roleable(addressProvider)
     {
         pairInfo = _pairInfo;
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
-        // weth = _weth;
     }
-
-    // function setContract(IPairInfo _pairStorage, IPairInfo _pairVault) external onlyPoolAdmin {
-    //      pairInfo = _pairStorage;
-    //  }
 
     function setReceiver(address _feeReceiver, address _slipReceiver) external onlyPoolAdmin {
         feeReceiver = _feeReceiver;
