@@ -235,7 +235,7 @@ contract Pool is IPairInfo, Roleable {
         vault.realisedPnl -= int256(_profit);
     }
 
-    function swap(
+    function liqiitySwap(
         uint256 _pairIndex,
         bool _isBuy,
         uint256 _amountIn,

@@ -185,7 +185,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
 
             require(amountOut >= _minOut, 'insufficient minOut');
 
-            pairInfo.swap(_pairIndex, _isBuy, amountIn, amountOut);
+            pairInfo.liqiitySwap(_pairIndex, _isBuy, amountIn, amountOut);
 
             pairInfo.transferTokenTo(pair.indexToken, _receiver, amountOut);
             IERC20(pair.stableToken).safeTransferFrom(_funder, address(pairInfo), amountIn);
