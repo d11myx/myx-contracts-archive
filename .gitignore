@@ -29,4 +29,5 @@ abi/contracts
 .vscode
 .openzeppelin
 deploment-logs
+deploments
 abi

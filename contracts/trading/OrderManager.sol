@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 
 import '../interfaces/IOraclePriceFeed.sol';
 import '../interfaces/IPairInfo.sol';
-import '../interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/PositionKey.sol';
 import '../libraries/Int256Utils.sol';
@@ -49,7 +49,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
     IPairInfo public pairInfo;
-    IPairVault public pairVault;
     IPositionManager public tradingVault;
     IPositionManager public positionManager;
     address public addressExecutor;
@@ -58,11 +57,9 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
-        IPairVault _pairVault,
         IPositionManager _tradingVault
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
-        pairVault = _pairVault;
         tradingVault = _tradingVault;
     }
 

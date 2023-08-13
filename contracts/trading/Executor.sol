@@ -12,7 +12,7 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPairInfo.sol';
-import '../interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 
@@ -32,20 +32,17 @@ contract Executor is IExecutor, Pausable {
 
     IOrderManager public orderManager;
     IPairInfo public pairInfo;
-    IPairVault public pairVault;
     IPositionManager public positionManager;
 
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
-        IPairVault _pairVault,
         IOrderManager _orderManager,
         IPositionManager _tradingVault,
         uint256 _maxTimeDelay
     ) {
         ADDRESS_PROVIDER = addressProvider;
         pairInfo = _pairInfo;
-        pairVault = _pairVault;
         orderManager = _orderManager;
         positionManager = _tradingVault;
         maxTimeDelay = _maxTimeDelay;
@@ -212,7 +209,7 @@ contract Executor is IExecutor, Pausable {
             'sl already exists'
         );
 
-        IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
+        IPairInfo.Vault memory lpVault = pairInfo.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
         if (preNetExposureAmountChecker >= 0) {
@@ -425,7 +422,7 @@ contract Executor is IExecutor, Pausable {
             tradingConfig.maxPositionAmount
         );
 
-        IPairVault.Vault memory lpVault = pairVault.getVault(pairIndex);
+        IPairInfo.Vault memory lpVault = pairInfo.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
         bool needADL;
@@ -469,7 +466,7 @@ contract Executor is IExecutor, Pausable {
         // transfer collateral
         if (order.collateral > 0) {
             IPairInfo.Pair memory pair = pairInfo.getPair(position.pairIndex);
-            positionManager.transferTokenTo(pair.stableToken, address(pairVault), order.collateral.abs());
+            positionManager.transferTokenTo(pair.stableToken, address(pairInfo), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
             order.account,
