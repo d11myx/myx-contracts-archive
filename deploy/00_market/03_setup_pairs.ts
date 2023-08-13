@@ -7,7 +7,6 @@ import {
     getWETH,
     PAIR_INFO_ID,
     PAIR_LIQUIDITY_ID,
-    PAIR_VAULT_ID,
 } from '../../helpers';
 import { Pool, PoolLiquidity } from '../../types';
 
@@ -34,7 +33,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         contract: 'PoolLiquidity',
         args: [
             addressProvider.address,
-            pairInfo.address,
             pairInfo.address,
             feeReceiver,
             slipReceiver,
