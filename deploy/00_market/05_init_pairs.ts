@@ -34,7 +34,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         const fundingFeeConfig = pairConfig.fundingFeeConfig;
 
         await waitForTx(
-            await pairInfo.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken, pairInfo.address),
+            await pairInfo.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken),
         );
 
         let pairIndex = await pairInfo.connect(poolAdminSigner).pairIndexes(pair.indexToken, pair.stableToken);
