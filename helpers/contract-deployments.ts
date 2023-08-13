@@ -119,24 +119,15 @@ export async function deployPair(
 ) {
     console.log(` - setup pairs`);
 
-    const pairInfo = (await deployContract('Pool', [
+    const pool = (await deployContract('Pool', [
         addressProvider.address,
         deployer.address,
         deployer.address,
     ])) as any as Pool;
-    console.log(`deployed Pool at ${pairInfo.address}`);
+    console.log(`deployed Pool at ${pool.address}`);
 
-    // const pairLiquidity = (await deployContract('PoolLiquidity', [
-    //     addressProvider.address,
-    //     pairInfo.address,
-    //     deployer.address,
-    //     deployer.address,
-    //     // weth.address,
-    // ])) as any as PoolLiquidity;
-    // console.log(`deployed PoolLiquidity at ${pairLiquidity.address}`);
-    await pairInfo.setPairLiquidityAndVault(pairInfo.address, pairInfo.address);
 
-    return { pairInfo };
+    return { pool };
 }
 
 export async function deployTrading(
@@ -144,7 +135,7 @@ export async function deployTrading(
     poolAdmin: SignerWithAddress,
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
-    pairInfo: Pool,
+    pool: Pool,
     oraclePriceFeed: OraclePriceFeed,
     indexPriceFeed: IndexPriceFeed,
 ) {
@@ -152,7 +143,7 @@ export async function deployTrading(
 
     let tradingVault = (await deployContract('PositionManager', [
         addressProvider.address,
-        pairInfo.address,
+        pool.address,
         deployer.address,
         8 * 60 * 60,
     ])) as any as PositionManager;
@@ -160,14 +151,14 @@ export async function deployTrading(
 
     let orderManager = (await deployContract('OrderManager', [
         addressProvider.address,
-        pairInfo.address,
+        pool.address,
         tradingVault.address,
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
     // let positionManager = (await deployContract('PositionManager', [
     //     addressProvider.address,
-    //     pairInfo.address,
+    //     pool.address,
     //     pairVault.address,
     //     tradingVault.address,
     //     oraclePriceFeed.address,
@@ -185,7 +176,7 @@ export async function deployTrading(
     await orderManager.setRouter(router.address);
     let executor = (await deployContract('Executor', [
         addressProvider.address,
-        pairInfo.address,
+        pool.address,
         orderManager.address,
         tradingVault.address,
         60,

@@ -9,7 +9,7 @@ export async function initPairs(
     deployer: SignerWithAddress,
     pairTokens: SymbolMap<Token>,
     usdt: Token,
-    pairInfo: Pool
+    pool: Pool
 ) {
     console.log(`Initializing pairs`);
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
@@ -23,15 +23,15 @@ export async function initPairs(
         const tradingFeeConfig = pairConfig.tradingFeeConfig;
         const fundingFeeConfig = pairConfig.fundingFeeConfig;
 
-        await waitForTx(await pairInfo.addPair(pair.indexToken, pair.stableToken));
+        await waitForTx(await pool.addPair(pair.indexToken, pair.stableToken));
 
-        let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-        await waitForTx(await pairInfo.updatePair(pairIndex, pair));
-        await waitForTx(await pairInfo.updateTradingConfig(pairIndex, tradingConfig));
-        await waitForTx(await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
-        await waitForTx(await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+        let pairIndex = await pool.pairIndexes(pair.indexToken, pair.stableToken);
+        await waitForTx(await pool.updatePair(pairIndex, pair));
+        await waitForTx(await pool.updateTradingConfig(pairIndex, tradingConfig));
+        await waitForTx(await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
+        await waitForTx(await pool.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
-        console.log(`added pair [${symbol}, ${MARKET_NAME}] at index`, (await pairInfo.pairsCount()).sub(1).toString());
+        console.log(`added pair [${symbol}, ${MARKET_NAME}] at index`, (await pool.pairsCount()).sub(1).toString());
     }
 
     console.log(`Configured all pairs [${Object.keys(pairConfigs)}]`);

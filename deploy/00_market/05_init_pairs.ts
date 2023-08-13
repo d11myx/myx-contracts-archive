@@ -16,7 +16,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
-    const pairInfo = await getPairInfo();
+    const pool = await getPairInfo();
     // const pairLiquidity = await getPairLiquidity();
     const orderManager = await getOrderManager();
     // const positionManager = await getPositionManager();
@@ -34,16 +34,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         const fundingFeeConfig = pairConfig.fundingFeeConfig;
 
         await waitForTx(
-            await pairInfo.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken),
+            await pool.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken),
         );
 
-        let pairIndex = await pairInfo.connect(poolAdminSigner).pairIndexes(pair.indexToken, pair.stableToken);
-        await waitForTx(await pairInfo.connect(poolAdminSigner).updatePair(pairIndex, pair));
-        await waitForTx(await pairInfo.connect(poolAdminSigner).updateTradingConfig(pairIndex, tradingConfig));
-        await waitForTx(await pairInfo.connect(poolAdminSigner).updateTradingFeeConfig(pairIndex, tradingFeeConfig));
-        await waitForTx(await pairInfo.connect(poolAdminSigner).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+        let pairIndex = await pool.connect(poolAdminSigner).pairIndexes(pair.indexToken, pair.stableToken);
+        await waitForTx(await pool.connect(poolAdminSigner).updatePair(pairIndex, pair));
+        await waitForTx(await pool.connect(poolAdminSigner).updateTradingConfig(pairIndex, tradingConfig));
+        await waitForTx(await pool.connect(poolAdminSigner).updateTradingFeeConfig(pairIndex, tradingFeeConfig));
+        await waitForTx(await pool.connect(poolAdminSigner).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
-        console.log(`added pair [${symbol}/${MARKET_NAME}] at index`, (await pairInfo.pairsCount()).sub(1).toString());
+        console.log(`added pair [${symbol}/${MARKET_NAME}] at index`, (await pool.pairsCount()).sub(1).toString());
     }
     console.log(`Configured all pairs [${Object.keys(pairConfigs)}]`);
 };

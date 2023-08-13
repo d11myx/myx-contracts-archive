@@ -25,27 +25,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         args: [addressProvider.address, feeReceiver, slipReceiver],
         ...COMMON_DEPLOY_PARAMS,
     });
-    const pairInfo = (await hre.ethers.getContractAt(pairInfoArtifact.abi, pairInfoArtifact.address)) as Pool;
+    const pool = (await hre.ethers.getContractAt(pairInfoArtifact.abi, pairInfoArtifact.address)) as Pool;
 
-    // PoolLiquidity
-    // const pairLiquidityArtifact = await deploy(`${PAIR_LIQUIDITY_ID}`, {
-    //     from: deployer,
-    //     contract: 'PoolLiquidity',
-    //     args: [
-    //         addressProvider.address,
-    //         pairInfo.address,
-    //         feeReceiver,
-    //         slipReceiver,
-    //         // weth.address,
-    //     ],
-    //     ...COMMON_DEPLOY_PARAMS,
-    // });
 
-    // const pairLiquidity = (await hre.ethers.getContractAt(
-    //     pairLiquidityArtifact.abi,
-    //     pairLiquidityArtifact.address,
-    // )) as PoolLiquidity;
-    await pairInfo.setPairLiquidityAndVault(pairInfo.address, pairInfo.address);
 };
 
 func.id = `Pairs`;
