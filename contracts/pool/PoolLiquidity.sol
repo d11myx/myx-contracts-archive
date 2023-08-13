@@ -9,7 +9,7 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '../interfaces/IWETH.sol';
 import '../interfaces/IPairInfo.sol';
 import '../interfaces/IPairLiquidity.sol';
-import '../interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
@@ -25,7 +25,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
     uint256 public constant PRICE_PRECISION = 1e30;
 
     IPairInfo public pairInfo;
-    IPairVault public pairVault;
     // IOraclePriceFeed public vaultPriceFeed;
 
     address public feeReceiver;
@@ -39,21 +38,18 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
-        IPairVault _pairVault,
         address _feeReceiver,
         address _slipReceiver,
         address _weth
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
-        pairVault = _pairVault;
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
         weth = _weth;
     }
 
-    function setContract(IPairInfo _pairStorage, IPairVault _pairVault) external onlyPoolAdmin {
+    function setContract(IPairInfo _pairStorage, IPairInfo _pairVault) external onlyPoolAdmin {
          pairInfo = _pairStorage;
-         pairVault = _pairVault;
      }
 
     function setReceiver(address _feeReceiver, address _slipReceiver) external onlyPoolAdmin {
@@ -171,7 +167,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'swap invalid pair');
 
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
 
         uint256 price = _getPrice(pair.indexToken);
 
@@ -205,10 +201,10 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
 
             require(amountOut >= _minOut, 'insufficient minOut');
 
-            pairVault.swap(_pairIndex, _isBuy, amountIn, amountOut);
+            pairInfo.swap(_pairIndex, _isBuy, amountIn, amountOut);
 
-            pairVault.transferTokenTo(pair.indexToken, _receiver, amountOut);
-            IERC20(pair.stableToken).safeTransferFrom(_funder, address(pairVault), amountIn);
+            pairInfo.transferTokenTo(pair.indexToken, _receiver, amountOut);
+            IERC20(pair.stableToken).safeTransferFrom(_funder, address(pairInfo), amountIn);
         } else {
             // index in stable out
             require(expectIndexDelta > indexTotalDelta, 'no need index token');
@@ -226,8 +222,8 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
             amountOut = amountOut.min(availableStable);
             amountIn = amountOut.divPrice(price);
 
-            IERC20(pair.indexToken).safeTransferFrom(_funder, address(pairVault), amountIn);
-            pairVault.transferTokenTo(pair.stableToken, _receiver, amountOut);
+            IERC20(pair.indexToken).safeTransferFrom(_funder, address(pairInfo), amountIn);
+            pairInfo.transferTokenTo(pair.stableToken, _receiver, amountOut);
         }
 
         emit Swap(_funder, _receiver, _pairIndex, _isBuy, amountIn, amountOut);
@@ -245,7 +241,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
 
 
         // transfer token
@@ -323,10 +319,10 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         }
         IPairToken(pair.pairToken).mint(_account, mintAmount);
 
-        pairVault.increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
+        pairInfo.increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
-        IERC20(pair.indexToken).safeTransfer(address(pairVault), afterFeeIndexAmount);
-        IERC20(pair.stableToken).safeTransfer(address(pairVault), afterFeeStableAmount);
+        IERC20(pair.indexToken).safeTransfer(address(pairInfo), afterFeeIndexAmount);
+        IERC20(pair.stableToken).safeTransfer(address(pairInfo), afterFeeStableAmount);
 
         emit AddLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
 
@@ -345,7 +341,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
 
         require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, 'insufficient balance');
 
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
 
         (receiveIndexTokenAmount, receiveStableTokenAmount) = getReceivedAmount(_pairIndex, _amount);
 
@@ -358,12 +354,12 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
             'insufficient stableToken amount'
         );
 
-        pairVault.decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
+        pairInfo.decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
         IPairToken(pair.pairToken).burn(_account, _amount);
 
-        pairVault.transferTokenTo(pair.indexToken, _receiver, receiveIndexTokenAmount);
-        pairVault.transferTokenTo(pair.stableToken, _receiver, receiveStableTokenAmount);
+        pairInfo.transferTokenTo(pair.indexToken, _receiver, receiveIndexTokenAmount);
+        pairInfo.transferTokenTo(pair.stableToken, _receiver, receiveStableTokenAmount);
 
         emit RemoveLiquidity(
             _account,
@@ -379,7 +375,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
 
     function lpFairPrice(uint256 _pairIndex) public view returns (uint256) {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
         uint256 price = _getPrice(pair.indexToken);
         uint256 lpFairDelta = _getDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
         return
@@ -407,7 +403,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
@@ -488,7 +484,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
 
         uint256 price = _getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
@@ -545,7 +541,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
-        IPairVault.Vault memory vault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
 
         // usdt value of reserve
         uint256 price = _getPrice(pair.indexToken);

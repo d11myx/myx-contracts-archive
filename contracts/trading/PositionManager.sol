@@ -14,7 +14,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
 import '../interfaces/IPairInfo.sol';
-import '../interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
@@ -43,14 +43,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     uint256 public fundingInterval;
 
     IPairInfo public pairInfo;
-    IPairVault public pairVault;
+    IPairInfo public pairVault;
     address public tradingFeeReceiver;
     address public addressExecutor;
 
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
-        IPairVault _pairVault,
+        IPairInfo _pairVault,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {
@@ -178,7 +178,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex]
             );
 
-            IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
+            IPairInfo.Vault memory lpVault = pairVault.getVault(_pairIndex);
             console.log('increasePosition lp averagePrice', lpVault.averagePrice, 'price', _price);
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
@@ -402,7 +402,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex]
             );
 
-            IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
+            IPairInfo.Vault memory lpVault = pairVault.getVault(_pairIndex);
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
                     console.log('decreasePosition STC long increase');
@@ -671,7 +671,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 q = longTracker[_pairIndex] + shortTracker[_pairIndex];
         uint256 k = fundingFeeConfig.liquidityPremiumFactor;
 
-        IPairVault.Vault memory lpVault = pairVault.getVault(_pairIndex);
+        IPairInfo.Vault memory lpVault = pairVault.getVault(_pairIndex);
         uint256 l = (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
             (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
 
