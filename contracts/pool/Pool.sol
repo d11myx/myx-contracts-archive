@@ -33,15 +33,12 @@ contract Pool is IPool, Roleable {
 
     mapping(address => mapping(address => uint256)) public pairIndexes;
     mapping(address => mapping(address => bool)) public isPairListed;
-
-    mapping(uint256 => Pair) public pairs;
     uint256 public pairsCount;
+    mapping(uint256 => Pair) public pairs;
+
     mapping(uint256 => Vault) public vaults;
 
-    address public pairLiquidity;
-    address public pairVault;
     address public tradingVault;
-
     address public feeReceiver;
     address public slipReceiver;
 
@@ -57,11 +54,6 @@ contract Pool is IPool, Roleable {
     modifier onlyPairLiquidityAndVault() {
         require(msg.sender == tradingVault, 'forbidden');
         _;
-    }
-
-    function setPairLiquidityAndVault(address _pairLiquidity, address _pairVaule) external onlyPoolAdmin {
-        pairLiquidity = _pairLiquidity;
-        pairVault = _pairVaule;
     }
 
     modifier onlyTradingVault() {
@@ -115,7 +107,7 @@ contract Pool is IPool, Roleable {
         assembly {
             pairToken := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        IPoolToken(pairToken).setMiner(pairLiquidity, true);
+        IPoolToken(pairToken).setMiner(address(this), true);
         return pairToken;
     }
 

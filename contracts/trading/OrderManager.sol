@@ -48,7 +48,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
-    IPool public pairInfo;
+    IPool public pool;
     IPositionManager public tradingVault;
     IPositionManager public positionManager;
     address public addressExecutor;
@@ -59,7 +59,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         IPool _pairInfo,
         IPositionManager _tradingVault
     ) Roleable(addressProvider) {
-        pairInfo = _pairInfo;
+        pool = _pairInfo;
         tradingVault = _tradingVault;
     }
 
@@ -104,7 +104,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         address account = request.account;
         require(!tradingVault.isFrozen(account), 'account is frozen');
 
-        IPool.Pair memory pair = pairInfo.getPair(request.pairIndex);
+        IPool.Pair memory pair = pool.getPair(request.pairIndex);
         require(pair.enable, 'trade pair not supported');
 
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -117,7 +117,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
             uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
-            IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
+            IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
@@ -253,7 +253,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _checkTradingAmount(uint256 pairIndex, uint256 size) internal returns (bool) {
-        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         return size >= tradingConfig.minTradeAmount && size <= tradingConfig.maxTradeAmount;
     }
 
@@ -393,7 +393,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _cancelIncreaseOrder(TradingTypes.IncreasePositionOrder memory order) internal {
-        IPool.Pair memory pair = pairInfo.getPair(order.pairIndex);
+        IPool.Pair memory pair = pool.getPair(order.pairIndex);
 
         if (order.collateral > 0) {
             positionManager.transferTokenTo(pair.stableToken, order.account, order.collateral.abs());
@@ -421,7 +421,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _cancelDecreaseOrder(TradingTypes.DecreasePositionOrder memory order) internal {
-        IPool.Pair memory pair = pairInfo.getPair(order.pairIndex);
+        IPool.Pair memory pair = pool.getPair(order.pairIndex);
 
         if (order.collateral > 0) {
             positionManager.transferTokenTo(pair.stableToken, order.account, order.collateral.abs());

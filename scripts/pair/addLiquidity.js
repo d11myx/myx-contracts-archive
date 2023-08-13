@@ -10,7 +10,7 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairInfo = await contractAt("Pool", await getConfig("Pool"));
+  let pool = await contractAt("Pool", await getConfig("Pool"));
   let pairVault = await contractAt("PoolVault", await getConfig("PoolVault"));
   let pairLiquidity = await contractAt("PoolLiquidity", await getConfig("PoolLiquidity"));
 
@@ -18,7 +18,7 @@ async function main() {
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
 
-  console.log(`pairStorage: ${pairInfo.address}, pairVault: ${pairVault.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
+  console.log(`pairStorage: ${pool.address}, pairVault: ${pairVault.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
 
   let btcAmount = expandDecimals(10000, 18);
   let usdtAmount = expandDecimals(300000000, 18);
@@ -29,7 +29,7 @@ async function main() {
   // add liquidity
   await btc.approve(pairLiquidity.address, btcAmount);
   await usdt.approve(pairLiquidity.address, usdtAmount);
-  let pairIndex = await pairInfo.pairIndexes(btc.address, usdt.address);
+  let pairIndex = await pool.pairIndexes(btc.address, usdt.address);
   console.log(`lpFairPrice, ${reduceDecimals(await pairLiquidity.lpFairPrice(pairIndex), 30)}`);
   console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, btcAmount, usdtAmount)}`);
   console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, btcAmount)}`);
@@ -37,7 +37,7 @@ async function main() {
   console.log(`deposit btc: ${formatBalance(await btc.balanceOf(pairVault.address))}, usdt: ${formatBalance(await usdt.balanceOf(pairVault.address))}`);
   console.log();
 
-  let pairToken = await contractAt("PoolToken", (await pairInfo.pairs(pairIndex)).pairToken);
+  let pairToken = await contractAt("PoolToken", (await pool.pairs(pairIndex)).pairToken);
   let lpAmount = await pairLiquidity.userPairTokens(pairToken.address, user0.address);
   console.log(`lp supply: ${formatBalance(await pairToken.balanceOf(pairLiquidity.address))}, lp amount of user: ${formatBalance(lpAmount)}`);
   console.log(`deposit fee btc: ${formatBalance(await btc.balanceOf(user1.address))}, usdt: ${formatBalance(await usdt.balanceOf(user1.address))}`);
@@ -64,7 +64,7 @@ async function main() {
 
   await eth.approve(pairLiquidity.address, ethAmount);
   await usdt.approve(pairLiquidity.address, usdtAmount);
-  pairIndex = await pairInfo.pairIndexes(eth.address, usdt.address);
+  pairIndex = await pool.pairIndexes(eth.address, usdt.address);
   console.log(`lpFairPrice, ${reduceDecimals(await pairLiquidity.lpFairPrice(pairIndex), 30)}`);
   console.log(`calculate mint lp amount: ${await pairLiquidity.getMintLpAmount(pairIndex, ethAmount, usdtAmount)}`);
   console.log(`calculate deposit amount: ${await pairLiquidity.getDepositAmount(pairIndex, ethAmount)}`);

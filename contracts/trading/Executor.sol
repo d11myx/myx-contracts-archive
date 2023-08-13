@@ -31,18 +31,18 @@ contract Executor is IExecutor, Pausable {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IOrderManager public orderManager;
-    IPool public pairInfo;
+    IPool public pool;
     IPositionManager public positionManager;
 
     constructor(
         IAddressesProvider addressProvider,
-        IPool _pairInfo,
+        IPool _pool,
         IOrderManager _orderManager,
         IPositionManager _tradingVault,
         uint256 _maxTimeDelay
     ) {
         ADDRESS_PROVIDER = addressProvider;
-        pairInfo = _pairInfo;
+        pool = _pool;
         orderManager = _orderManager;
         positionManager = _tradingVault;
         maxTimeDelay = _maxTimeDelay;
@@ -143,14 +143,14 @@ contract Executor is IExecutor, Pausable {
 
         // check pair enable
         uint256 pairIndex = order.pairIndex;
-        IPool.Pair memory pair = pairInfo.getPair(pairIndex);
+        IPool.Pair memory pair = pool.getPair(pairIndex);
         require(pair.enable, 'trade pair not supported');
 
         // check account enable
         require(!positionManager.isFrozen(order.account), 'account is frozen');
 
         // check trading amount
-        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         require(
             order.sizeAmount == 0 ||
                 (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
@@ -158,7 +158,7 @@ contract Executor is IExecutor, Pausable {
         );
 
         // check price
-        // IPool.Pair memory pair = pairInfo.getPair(pairIndex);
+        // IPool.Pair memory pair = pool.getPair(pairIndex);
         uint256 price = positionManager.getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
@@ -209,7 +209,7 @@ contract Executor is IExecutor, Pausable {
             'sl already exists'
         );
 
-        IPool.Vault memory lpVault = pairInfo.getVault(pairIndex);
+        IPool.Vault memory lpVault = pool.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
         if (preNetExposureAmountChecker >= 0) {
@@ -364,7 +364,7 @@ contract Executor is IExecutor, Pausable {
 
         // get pair
         uint256 pairIndex = order.pairIndex;
-        IPool.Pair memory pair = pairInfo.getPair(pairIndex);
+        IPool.Pair memory pair = pool.getPair(pairIndex);
 
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
@@ -373,7 +373,7 @@ contract Executor is IExecutor, Pausable {
         }
 
         // check trading amount
-        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
         order.sizeAmount = order.sizeAmount.min(position.positionAmount);
         require(
@@ -381,7 +381,7 @@ contract Executor is IExecutor, Pausable {
                 (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
             'invalid trade size'
         );
-        // IPool.Pair memory pair = pairInfo.getPair(pairIndex);
+        // IPool.Pair memory pair = pool.getPair(pairIndex);
         // check price
         uint256 price = positionManager.getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -422,7 +422,7 @@ contract Executor is IExecutor, Pausable {
             tradingConfig.maxPositionAmount
         );
 
-        IPool.Vault memory lpVault = pairInfo.getVault(pairIndex);
+        IPool.Vault memory lpVault = pool.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
         bool needADL;
@@ -465,8 +465,8 @@ contract Executor is IExecutor, Pausable {
 
         // transfer collateral
         if (order.collateral > 0) {
-            IPool.Pair memory pair = pairInfo.getPair(position.pairIndex);
-            positionManager.transferTokenTo(pair.stableToken, address(pairInfo), order.collateral.abs());
+            IPool.Pair memory pair = pool.getPair(position.pairIndex);
+            positionManager.transferTokenTo(pair.stableToken, address(pool), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
             order.account,
@@ -576,7 +576,7 @@ contract Executor is IExecutor, Pausable {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
         require(order.needADL, 'no need ADL');
 
-        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(order.pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(order.pairIndex);
 
         Position.Info[] memory adlPositions = new Position.Info[](_positionKeys.length);
         uint256 sumAmount;
@@ -589,7 +589,7 @@ contract Executor is IExecutor, Pausable {
         }
 
         require(sumAmount == order.sizeAmount, 'ADL position amount not match decrease order');
-        IPool.Pair memory pair = pairInfo.getPair(order.pairIndex);
+        IPool.Pair memory pair = pool.getPair(order.pairIndex);
         uint256 price = positionManager.getValidPrice(pair.indexToken, order.pairIndex, !order.isLong);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
@@ -620,13 +620,13 @@ contract Executor is IExecutor, Pausable {
         if (position.positionAmount == 0) {
             return;
         }
-        IPool.Pair memory pair = pairInfo.getPair(position.pairIndex);
+        IPool.Pair memory pair = pool.getPair(position.pairIndex);
         uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
 
         int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
         int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
 
-        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(position.pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
 
         bool needLiquidate;
         if (exposureAsset <= 0) {
