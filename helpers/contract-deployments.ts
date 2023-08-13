@@ -22,6 +22,7 @@ import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { address } from 'hardhat/internal/core/config/config-validation';
+import { getWETH } from './contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -126,7 +127,7 @@ export async function deployPair(
         pairInfo.address,
         deployer.address,
         deployer.address,
-        weth.address,
+        // weth.address,
     ])) as any as PoolLiquidity;
     console.log(`deployed PoolLiquidity at ${pairLiquidity.address}`);
     await pairInfo.setPairLiquidityAndVault(pairLiquidity.address, pairInfo.address);
@@ -170,8 +171,12 @@ export async function deployTrading(
     //     orderManager.address,
     // ])) as any as PositionManager;
     // console.log(`deployed PositionManager at ${positionManager.address}`);
-
-    let router = (await deployContract('Router', [addressProvider.address, orderManager.address])) as any as Router;
+    const weth = await getWETH();
+    let router = (await deployContract('Router', [
+        weth.address,
+        addressProvider.address,
+        orderManager.address,
+    ])) as Router;
     console.log(`deployed Router at ${router.address}`);
     await orderManager.setRouter(router.address);
     let executor = (await deployContract('Executor', [
