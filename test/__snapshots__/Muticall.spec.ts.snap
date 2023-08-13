@@ -2,4 +2,4 @@
 
 exports[`Multicall gas cost of pay w/ multicall 1`] = `46212`;
 
-exports[`Multicall gas cost of pay w/o multicall 1`] = `43451`;
+exports[`Multicall gas cost of pay w/o multicall 1`] = `43446`;
