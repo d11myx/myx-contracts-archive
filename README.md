@@ -370,3 +370,5 @@ bool _isLong,
 uint256_sizeAmount // Number of bits to be modified
 )
 ` ` `
+
+UPDATE_SNAPSHOT=1 yarn test
