@@ -49,7 +49,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
     IPairInfo public pairInfo;
-    IPairInfo public pairVault;
     IPositionManager public tradingVault;
     IPositionManager public positionManager;
     address public addressExecutor;
@@ -58,11 +57,9 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     constructor(
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
-        IPairInfo _pairVault,
         IPositionManager _tradingVault
     ) Roleable(addressProvider) {
         pairInfo = _pairInfo;
-        pairVault = _pairVault;
         tradingVault = _tradingVault;
     }
 
