@@ -31,13 +31,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const tradingVaultArtifact = await deploy(`${TRADING_VAULT_ID}`, {
         from: deployer,
         contract: 'PositionManager',
-        args: [
-            addressProvider.address,
-            pairInfo.address,
-            pairInfo.address,
-            feeReceiver,
-            8 * 60 * 60,
-        ],
+        args: [addressProvider.address, pairInfo.address, feeReceiver, 8 * 60 * 60],
         ...COMMON_DEPLOY_PARAMS,
     });
     const tradingVault = (await hre.ethers.getContractAt(
@@ -49,12 +43,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const orderManagerArtifact = await deploy(`${ORDER_MANAGER_ID}`, {
         from: deployer,
         contract: 'OrderManager',
-        args: [
-            addressProvider.address,
-            pairInfo.address,
-            pairInfo.address,
-            tradingVault.address,
-        ],
+        args: [addressProvider.address, pairInfo.address, tradingVault.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const orderManager = (await hre.ethers.getContractAt(
@@ -78,7 +67,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
@@ -93,14 +81,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
-        args: [
-            addressProvider.address,
-            pairInfo.address,
-            pairInfo.address,
-            orderManager.address,
-            tradingVault.address,
-            60,
-        ],
+        args: [addressProvider.address, pairInfo.address, orderManager.address, tradingVault.address, 60],
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
