@@ -9,7 +9,7 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/Int256Utils.sol';
-import './PairToken.sol';
+import './PoolToken.sol';
 import '../interfaces/IPairToken.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 
@@ -112,7 +112,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     }
 
     function _createPair(address indexToken, address stableToken) private returns (address) {
-        bytes memory bytecode = abi.encodePacked(type(PairToken).creationCode, abi.encode(indexToken, stableToken));
+        bytes memory bytecode = abi.encodePacked(type(PoolToken).creationCode, abi.encode(indexToken, stableToken));
         bytes32 salt = keccak256(abi.encodePacked(indexToken, stableToken));
         address pairToken;
         assembly {
