@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
+import '@openzeppelin/contracts/utils/Address.sol';
+import '@openzeppelin/contracts/utils/Multicall.sol';
+
 import '../interfaces/IRouter.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IOrderManager.sol';
-import '../libraries/PositionKey.sol';
 
-contract Router is IRouter {
+import '../libraries/PositionKey.sol';
+import '../libraries/ETHGetway.sol';
+
+contract Router is Multicall, IRouter, ETHGetway {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IOrderManager public orderManager;
@@ -17,7 +22,7 @@ contract Router is IRouter {
         _;
     }
 
-    constructor(IAddressesProvider addressProvider, IOrderManager _orderManager) {
+    constructor(address _weth, IAddressesProvider addressProvider, IOrderManager _orderManager) ETHGetway(_weth) {
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
     }
