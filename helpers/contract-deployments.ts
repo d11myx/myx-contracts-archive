@@ -122,17 +122,17 @@ export async function deployPair(
     const pairInfo = (await deployContract('Pool', [addressProvider.address])) as any as Pool;
     console.log(`deployed Pool at ${pairInfo.address}`);
 
-    const pairLiquidity = (await deployContract('PoolLiquidity', [
-        addressProvider.address,
-        pairInfo.address,
-        deployer.address,
-        deployer.address,
-        // weth.address,
-    ])) as any as PoolLiquidity;
-    console.log(`deployed PoolLiquidity at ${pairLiquidity.address}`);
-    await pairInfo.setPairLiquidityAndVault(pairLiquidity.address, pairInfo.address);
+    // const pairLiquidity = (await deployContract('PoolLiquidity', [
+    //     addressProvider.address,
+    //     pairInfo.address,
+    //     deployer.address,
+    //     deployer.address,
+    //     // weth.address,
+    // ])) as any as PoolLiquidity;
+    // console.log(`deployed PoolLiquidity at ${pairLiquidity.address}`);
+    await pairInfo.setPairLiquidityAndVault(pairInfo.address, pairInfo.address);
 
-    return { pairInfo, pairLiquidity };
+    return { pairInfo };
 }
 
 export async function deployTrading(
