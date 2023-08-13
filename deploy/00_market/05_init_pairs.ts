@@ -4,7 +4,6 @@ import {
     getMockToken,
     getOrderManager,
     getPairInfo,
-    getPairLiquidity,
     getToken,
     loadReserveConfig,
     MARKET_NAME,
@@ -18,7 +17,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
     const pairInfo = await getPairInfo();
-    const pairLiquidity = await getPairLiquidity();
+    // const pairLiquidity = await getPairLiquidity();
     const orderManager = await getOrderManager();
     // const positionManager = await getPositionManager();
 
@@ -35,7 +34,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         const fundingFeeConfig = pairConfig.fundingFeeConfig;
 
         await waitForTx(
-            await pairInfo.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken, pairLiquidity.address),
+            await pairInfo.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken, pairInfo.address),
         );
 
         let pairIndex = await pairInfo.connect(poolAdminSigner).pairIndexes(pair.indexToken, pair.stableToken);

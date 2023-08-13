@@ -9,7 +9,7 @@ import { MARKET_NAME } from '../helpers/env';
 
 describe('Pool: Edge cases', () => {
     before('addPair', async () => {
-        const { poolAdmin, pairInfo, usdt, pairLiquidity } = testEnv;
+        const { poolAdmin, pairInfo, usdt } = testEnv;
 
         const token = await deployMockToken('Test');
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
@@ -23,7 +23,7 @@ describe('Pool: Edge cases', () => {
 
         const countBefore = await pairInfo.pairsCount();
         await waitForTx(
-            await pairInfo.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken, pairLiquidity.address),
+            await pairInfo.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken, pairInfo.address),
         );
 
         let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);

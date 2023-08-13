@@ -5,7 +5,6 @@ import {
     AddressesProvider,
     IndexPriceFeed,
     Pool,
-    PoolLiquidity,
     RoleManager,
     Token,
     PositionManager,
@@ -21,7 +20,6 @@ import {
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPairInfo,
-    getPairLiquidity,
     getRoleManager,
     getToken,
     getTradingVault,
@@ -59,7 +57,6 @@ export interface TestEnv {
     roleManager: RoleManager;
     pairTokens: SymbolMap<Token>;
     pairInfo: Pool;
-    pairLiquidity: PoolLiquidity;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
     tradingVault: PositionManager;
@@ -81,8 +78,6 @@ export const testEnv: TestEnv = {
     roleManager: {} as RoleManager,
     pairTokens: {} as SymbolMap<Token>,
     pairInfo: {} as Pool,
-    pairLiquidity: {} as PoolLiquidity,
-
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
     tradingVault: {} as PositionManager,
@@ -138,7 +133,7 @@ export async function setupTestEnv() {
 
     // pair
     testEnv.pairInfo = await getPairInfo();
-    testEnv.pairLiquidity = await getPairLiquidity();
+
 
 
     // trading
