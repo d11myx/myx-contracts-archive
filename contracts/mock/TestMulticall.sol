@@ -1,7 +1,7 @@
 pragma solidity >=0.8.1;
 pragma abicoder v2;
 
-import '@openzeppelin/contracts/utils/Multicall.sol';
+import '../libraries/Multicall.sol';
 
 contract TestMulticall is Multicall {
     function functionThatRevertsWithError(string memory error) external pure {
