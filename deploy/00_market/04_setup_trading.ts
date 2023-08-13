@@ -8,6 +8,7 @@ import {
     getOraclePriceFeed,
     getPairInfo,
     getRoleManager,
+    getWETH,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
     ROUTER_ID,
@@ -67,11 +68,12 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
+    const weth = await getWETH();
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
         contract: 'Router',
-        args: [addressProvider.address, orderManager.address],
+        args: [weth.address, addressProvider.address, orderManager.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
