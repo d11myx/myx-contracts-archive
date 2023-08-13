@@ -10,7 +10,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/Int256Utils.sol';
 import './PoolToken.sol';
-import '../interfaces/IPairToken.sol';
+import '../interfaces/IPoolToken.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 
 import '../interfaces/IPool.sol';
@@ -115,7 +115,7 @@ contract Pool is IPool, Roleable {
         assembly {
             pairToken := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        IPairToken(pairToken).setMiner(pairLiquidity, true);
+        IPoolToken(pairToken).setMiner(pairLiquidity, true);
         return pairToken;
     }
 
@@ -176,7 +176,7 @@ contract Pool is IPool, Roleable {
         Pair memory pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
 
-        IPairToken(pair.pairToken).setMiner(_account, _enable);
+        IPoolToken(pair.pairToken).setMiner(_account, _enable);
     }
 
     function increaseTotalAmount(
@@ -534,7 +534,7 @@ contract Pool is IPool, Roleable {
             // mint lp
             mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
         }
-        IPairToken(pair.pairToken).mint(_account, mintAmount);
+        IPoolToken(pair.pairToken).mint(_account, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
@@ -573,7 +573,7 @@ contract Pool is IPool, Roleable {
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
-        IPairToken(pair.pairToken).burn(_account, _amount);
+        IPoolToken(pair.pairToken).burn(_account, _amount);
 
         transferTokenTo(pair.indexToken, _receiver, receiveIndexTokenAmount);
         transferTokenTo(pair.stableToken, _receiver, receiveStableTokenAmount);
