@@ -78,5 +78,5 @@ interface IPairInfo {
 
     function decreaseProfit(uint256 _pairIndex, uint256 _profit) external;
 
-    function swap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
+    function liqiitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
 }
