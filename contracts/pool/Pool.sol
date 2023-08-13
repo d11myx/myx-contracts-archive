@@ -13,11 +13,11 @@ import '../libraries/Int256Utils.sol';
 import '../token/interfaces/IPairToken.sol';
 import '../token/PairToken.sol';
 import '../interfaces/IPairInfo.sol';
-import '../interfaces/IPairVault.sol';
+import '../interfaces/IPairInfo.sol';
 import '../interfaces/IPairLiquidity.sol';
 import '../interfaces/IPairInfo.sol';
 
-contract Pool is IPairInfo, IPairVault, Roleable {
+contract Pool is IPairInfo, Roleable {
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
