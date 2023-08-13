@@ -37,7 +37,7 @@ async function main() {
   console.log(`deposit btc: ${formatBalance(await btc.balanceOf(pairVault.address))}, usdt: ${formatBalance(await usdt.balanceOf(pairVault.address))}`);
   console.log();
 
-  let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+  let pairToken = await contractAt("PoolToken", (await pairInfo.pairs(pairIndex)).pairToken);
   let lpAmount = await pairLiquidity.userPairTokens(pairToken.address, user0.address);
   console.log(`lp supply: ${formatBalance(await pairToken.balanceOf(pairLiquidity.address))}, lp amount of user: ${formatBalance(lpAmount)}`);
   console.log(`deposit fee btc: ${formatBalance(await btc.balanceOf(user1.address))}, usdt: ${formatBalance(await usdt.balanceOf(user1.address))}`);
