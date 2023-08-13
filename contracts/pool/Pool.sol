@@ -58,7 +58,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     }
 
     modifier onlyPairLiquidityAndVault() {
-        require(msg.sender == pairLiquidity || msg.sender == pairVault || msg.sender == tradingVault, 'forbidden');
+        require(msg.sender == tradingVault, 'forbidden');
         _;
     }
 
@@ -93,12 +93,12 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
     }
 
     // Manage pairs
-    function addPair(address _indexToken, address _stableToken, address _pairLiquidity) external onlyPoolAdmin {
+    function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != _stableToken, 'identical address');
         require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
         require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
 
-        address pairToken = _createPair(_indexToken, _stableToken, _pairLiquidity);
+        address pairToken = _createPair(_indexToken, _stableToken);
 
         isPairListed[_indexToken][_stableToken] = true;
         pairIndexes[_indexToken][_stableToken] = pairsCount;
@@ -111,7 +111,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
         emit PairAdded(_indexToken, _stableToken, pairToken, pairsCount++);
     }
 
-    function _createPair(address indexToken, address stableToken, address pairLiquidity) private returns (address) {
+    function _createPair(address indexToken, address stableToken) private returns (address) {
         bytes memory bytecode = abi.encodePacked(type(PairToken).creationCode, abi.encode(indexToken, stableToken));
         bytes32 salt = keccak256(abi.encodePacked(indexToken, stableToken));
         address pairToken;
@@ -187,6 +187,10 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount
     ) public onlyPairLiquidityAndVault {
+        _increaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
+    }
+
+    function _increaseTotalAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) internal {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount + _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount + _stableAmount;
@@ -197,6 +201,10 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount
     ) public onlyPairLiquidityAndVault {
+        _decreaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
+    }
+
+    function _decreaseTotalAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) internal {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
@@ -263,15 +271,15 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
 
             require(_amountOut <= availableIndex, 'swap index token not enough');
 
-            this.increaseTotalAmount(_pairIndex, 0, _amountIn);
-            this.decreaseTotalAmount(_pairIndex, _amountOut, 0);
+            _increaseTotalAmount(_pairIndex, 0, _amountIn);
+            _decreaseTotalAmount(_pairIndex, _amountOut, 0);
         } else {
             uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
 
             require(_amountOut <= availableStable, 'swap stable token not enough');
 
-            this.increaseTotalAmount(_pairIndex, _amountIn, 0);
-            this.decreaseTotalAmount(_pairIndex, 0, _amountOut);
+            _increaseTotalAmount(_pairIndex, _amountIn, 0);
+            _decreaseTotalAmount(_pairIndex, 0, _amountOut);
         }
     }
 
@@ -531,7 +539,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
         }
         IPairToken(pair.pairToken).mint(_account, mintAmount);
 
-        increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
+        _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
         IERC20(pair.indexToken).safeTransfer(address(this), afterFeeIndexAmount);
         IERC20(pair.stableToken).safeTransfer(address(this), afterFeeStableAmount);
@@ -566,7 +574,7 @@ contract Pool is IPairLiquidity, IPairInfo, Roleable {
             'insufficient stableToken amount'
         );
 
-        decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
+        _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
         IPairToken(pair.pairToken).burn(_account, _amount);
 
