@@ -124,7 +124,6 @@ export async function deployPair(
     const pairLiquidity = (await deployContract('PoolLiquidity', [
         addressProvider.address,
         pairInfo.address,
-        pairInfo.address,
         deployer.address,
         deployer.address,
         weth.address,
