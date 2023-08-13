@@ -126,7 +126,7 @@ export async function deployPair(
         pairInfo.address,
         deployer.address,
         deployer.address,
-        weth.address,
+        // weth.address,
     ])) as any as PoolLiquidity;
     console.log(`deployed PoolLiquidity at ${pairLiquidity.address}`);
     await pairInfo.setPairLiquidityAndVault(pairLiquidity.address, pairInfo.address);

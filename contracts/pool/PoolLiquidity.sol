@@ -31,7 +31,7 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
 
     address public slipReceiver;
 
-    address public weth;
+    // address public weth;
 
     receive() external payable {}
 
@@ -39,13 +39,15 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         IAddressesProvider addressProvider,
         IPairInfo _pairInfo,
         address _feeReceiver,
-        address _slipReceiver,
-        address _weth
-    ) Roleable(addressProvider) {
+        address _slipReceiver
+    )
+        // address _weth
+        Roleable(addressProvider)
+    {
         pairInfo = _pairInfo;
         feeReceiver = _feeReceiver;
         slipReceiver = _slipReceiver;
-        weth = _weth;
+        // weth = _weth;
     }
 
     // function setContract(IPairInfo _pairStorage, IPairInfo _pairVault) external onlyPoolAdmin {
@@ -61,15 +63,15 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         return _addLiquidity(msg.sender, msg.sender, _pairIndex, _indexAmount, _stableAmount);
     }
 
-    function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
+    // function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
+    //     IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+    //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
 
-        IWETH(weth).deposit{value: msg.value}();
+    //     IWETH(weth).deposit{value: msg.value}();
 
-        IWETH(pair.stableToken).transferFrom(msg.sender, address(this), _stableAmount);
-        return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
-    }
+    //     IWETH(pair.stableToken).transferFrom(msg.sender, address(this), _stableAmount);
+    //     return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
+    // }
 
     function addLiquidityForAccount(
         address _funder,
@@ -88,10 +90,10 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, address(this), _pairIndex, _amount);
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        if (receivedIndexAmount > 0 && pair.indexToken == weth) {
-            IWETH(weth).withdraw(receivedIndexAmount);
-            payable(msg.sender).sendValue(receivedIndexAmount);
-        }
+        // if (receivedIndexAmount > 0 && pair.indexToken == weth) {
+        //     IWETH(weth).withdraw(receivedIndexAmount);
+        //     payable(msg.sender).sendValue(receivedIndexAmount);
+        // }
         if (receivedStableAmount > 0) {
             IERC20(pair.stableToken).transfer(msg.sender, receivedStableAmount);
         }
@@ -107,26 +109,26 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         return _removeLiquidity(_account, _receiver, _pairIndex, _amount);
     }
 
-    function swapInEth(
-        uint256 _pairIndex,
-        uint256 _minOut
-    ) external payable returns (uint256 amountIn, uint256 amountOut) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
+    // function swapInEth(
+    //     uint256 _pairIndex,
+    //     uint256 _minOut
+    // ) external payable returns (uint256 amountIn, uint256 amountOut) {
+    //     IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+    //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
 
-        IWETH(weth).deposit{value: msg.value}();
-        IERC20(weth).approve(address(this), msg.value);
+    //     IWETH(weth).deposit{value: msg.value}();
+    //     IERC20(weth).approve(address(this), msg.value);
 
-        (amountIn, amountOut) = _swap(address(this), msg.sender, _pairIndex, false, msg.value, _minOut);
+    //     (amountIn, amountOut) = _swap(address(this), msg.sender, _pairIndex, false, msg.value, _minOut);
 
-        // send last eth back
-        if (amountIn < msg.value) {
-            uint256 lastETH = msg.value - amountIn;
-            IWETH(weth).withdraw(lastETH);
-            payable(msg.sender).sendValue(lastETH);
-        }
-        return (amountIn, amountOut);
-    }
+    //     // send last eth back
+    //     if (amountIn < msg.value) {
+    //         uint256 lastETH = msg.value - amountIn;
+    //         IWETH(weth).withdraw(lastETH);
+    //         payable(msg.sender).sendValue(lastETH);
+    //     }
+    //     return (amountIn, amountOut);
+    // }
 
     function swap(
         uint256 _pairIndex,
@@ -135,10 +137,10 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         uint256 _minOut
     ) external returns (uint256 amountIn, uint256 amountOut) {
         (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut);
-        if (amountOut > 0 && _isBuy && pairInfo.getPair(_pairIndex).indexToken == weth) {
-            IWETH(weth).withdraw(amountOut);
-            payable(msg.sender).sendValue(amountOut);
-        }
+        // if (amountOut > 0 && _isBuy && pairInfo.getPair(_pairIndex).indexToken == weth) {
+        // IWETH(weth).withdraw(amountOut);
+        // payable(msg.sender).sendValue(amountOut);
+        // }
         return (amountIn, amountOut);
     }
 
@@ -161,7 +163,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         uint256 _amountIn,
         uint256 _minOut
     ) internal returns (uint256 amountIn, uint256 amountOut) {
-
         require(_amountIn > 0, 'swap invalid amount in');
 
         IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
@@ -175,11 +176,9 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         uint256 indexTotalDelta = vault.indexTotalAmount.mulPrice(price);
         uint256 stableTotalDelta = vault.stableTotalAmount;
 
-
         uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
         uint256 expectStableDelta = totalDelta - expectIndexDelta;
-
 
         if (_isBuy) {
             // index out stable in
@@ -188,16 +187,13 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
             uint256 stableInDelta = _amountIn;
             stableInDelta = stableInDelta.min(expectStableDelta - stableTotalDelta);
 
-
             amountOut = stableInDelta.divPrice(price);
             uint256 availableIndex = vault.indexTotalAmount - vault.indexReservedAmount;
-
 
             require(availableIndex > 0, 'no available index token');
 
             amountOut = amountOut.min(availableIndex);
             amountIn = amountOut.divPrice(price);
-
 
             require(amountOut >= _minOut, 'insufficient minOut');
 
@@ -212,10 +208,8 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
             uint256 indexInDelta = _amountIn.mulPrice(price);
             indexInDelta = indexInDelta.min(expectIndexDelta - indexTotalDelta);
 
-
             amountOut = indexInDelta;
             uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-
 
             require(availableStable > 0, 'no stable token');
 
@@ -243,7 +237,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
 
         IPairInfo.Vault memory vault = pairInfo.getVault(_pairIndex);
 
-
         // transfer token
         if (_funder != address(this)) {
             IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), _indexAmount);
@@ -257,7 +250,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
             // transfer fee
             uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
             uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
-
 
             IERC20(pair.indexToken).safeTransfer(feeReceiver, indexFeeAmount);
             IERC20(pair.stableToken).safeTransfer(feeReceiver, stableFeeAmount);
@@ -315,7 +307,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
             }
             // mint lp
             mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
-
         }
         IPairToken(pair.pairToken).mint(_account, mintAmount);
 
@@ -425,7 +416,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         // usdt value of deposit
         uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
 
-
         {
             uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
 
@@ -444,7 +434,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
                     uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
                         ? (indexDepositDelta - needSwapIndexDelta)
                         : indexDepositDelta;
-
 
                     slipDelta = AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
                     slipAmount = _getAmount(slipDelta, price);
@@ -493,12 +482,10 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
         uint256 stableReserveDelta = vault.stableTotalAmount;
         uint256 depositDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex));
 
-
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta + depositDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
         uint256 expectStableDelta = totalDelta - expectIndexDelta;
-
 
         uint256 depositIndexTokenDelta;
         uint256 depositStableTokenDelta;
@@ -519,7 +506,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
                 depositIndexTokenDelta = depositDelta - extraStableReserveDelta;
                 depositStableTokenDelta = extraStableReserveDelta;
             }
-
         }
         depositIndexAmount = _getAmount(depositIndexTokenDelta, price);
         depositStableAmount = depositStableTokenDelta;
@@ -569,7 +555,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
                 receiveIndexTokenDelta = extraIndexReserveDelta;
                 receiveStableTokenDelta = receiveDelta - extraIndexReserveDelta;
             }
-
         } else {
             uint256 extraStableReserveDelta = stableReserveDelta - expectStableDelta;
             if (extraStableReserveDelta >= receiveDelta) {
@@ -578,7 +563,6 @@ contract PoolLiquidity is IPairLiquidity, Roleable {
                 receiveIndexTokenDelta = receiveDelta - extraStableReserveDelta;
                 receiveStableTokenDelta = extraStableReserveDelta;
             }
-
         }
         receiveIndexTokenAmount = _getAmount(receiveIndexTokenDelta, price);
         receiveStableTokenAmount = receiveStableTokenDelta;
