@@ -148,7 +148,6 @@ export async function deployTrading(
     let tradingVault = (await deployContract('PositionManager', [
         addressProvider.address,
         pairInfo.address,
-        pairInfo.address,
         deployer.address,
         8 * 60 * 60,
     ])) as any as PositionManager;
@@ -156,7 +155,6 @@ export async function deployTrading(
 
     let orderManager = (await deployContract('OrderManager', [
         addressProvider.address,
-        pairInfo.address,
         pairInfo.address,
         tradingVault.address,
     ])) as any as OrderManager;
@@ -178,7 +176,6 @@ export async function deployTrading(
     await orderManager.setRouter(router.address);
     let executor = (await deployContract('Executor', [
         addressProvider.address,
-        pairInfo.address,
         pairInfo.address,
         orderManager.address,
         tradingVault.address,
