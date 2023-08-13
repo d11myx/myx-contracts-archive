@@ -13,8 +13,8 @@ import '../interfaces/IOraclePriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
-import '../interfaces/IPairInfo.sol';
-import '../interfaces/IPairInfo.sol';
+import '../interfaces/IPool.sol';
+import '../interfaces/IPool.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
@@ -42,13 +42,13 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     uint256 public fundingInterval;
 
-    IPairInfo public pairInfo;
+    IPool public pairInfo;
     address public tradingFeeReceiver;
     address public addressExecutor;
 
     constructor(
         IAddressesProvider addressProvider,
-        IPairInfo _pairInfo,
+        IPool _pairInfo,
         address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {
@@ -86,7 +86,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         bool _isLong,
         uint256 _price
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
         require(pair.enable, 'trade pair not supported');
 
         // get position
@@ -164,7 +164,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex] += _sizeAmount;
             }
 
-            IPairInfo.Vault memory lpVault = pairInfo.getVault(_pairIndex);
+            IPool.Vault memory lpVault = pairInfo.getVault(_pairIndex);
 
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
@@ -307,10 +307,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         bool _isLong,
         uint256 _price
     ) external onlyExecutor nonReentrant whenNotPaused returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
 
         // check trading amount
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
         require(
             _sizeAmount >= tradingConfig.minTradeAmount && _sizeAmount <= tradingConfig.maxTradeAmount,
             'invalid size'
@@ -370,7 +370,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex] -= _sizeAmount;
             }
 
-            IPairInfo.Vault memory lpVault = pairInfo.getVault(_pairIndex);
+            IPool.Vault memory lpVault = pairInfo.getVault(_pairIndex);
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
                     pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
@@ -554,7 +554,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         bool _isLong,
         uint256 _sizeAmount
     ) external view override returns (uint256 tradingFee) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         return _tradingFee(_pairIndex, _isLong, _sizeAmount, price);
     }
@@ -567,7 +567,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     ) internal view returns (uint256 tradingFee) {
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
-        IPairInfo.TradingFeeConfig memory tradingFeeConfig = pairInfo.getTradingFeeConfig(_pairIndex);
+        IPool.TradingFeeConfig memory tradingFeeConfig = pairInfo.getTradingFeeConfig(_pairIndex);
         if (netExposureAmountChecker[_pairIndex] >= 0) {
             if (_isLong) {
                 // fee
@@ -612,20 +612,20 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         return _currentFundingRate(_pairIndex, price);
     }
 
     function _currentFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
-        IPairInfo.FundingFeeConfig memory fundingFeeConfig = pairInfo.getFundingFeeConfig(_pairIndex);
+        IPool.FundingFeeConfig memory fundingFeeConfig = pairInfo.getFundingFeeConfig(_pairIndex);
 
         uint256 absNetExposure = netExposureAmountChecker[_pairIndex].abs();
         uint256 w = fundingFeeConfig.fundingWeightFactor;
         uint256 q = longTracker[_pairIndex] + shortTracker[_pairIndex];
         uint256 k = fundingFeeConfig.liquidityPremiumFactor;
 
-        IPairInfo.Vault memory lpVault = pairInfo.getVault(_pairIndex);
+        IPool.Vault memory lpVault = pairInfo.getVault(_pairIndex);
         uint256 l = (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
             (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
 
@@ -650,8 +650,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 _pairIndex,
         uint256 _fundingFee
     ) internal returns (uint256 userAmount, uint256 lpAmount) {
-        IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
-        IPairInfo.FundingFeeConfig memory fundingFeeConfig = pairInfo.getFundingFeeConfig(_pairIndex);
+        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.FundingFeeConfig memory fundingFeeConfig = pairInfo.getFundingFeeConfig(_pairIndex);
 
         lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
         userAmount = _fundingFee - lpAmount;
@@ -665,7 +665,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
 
-        // IPairInfo.Pair memory pair = pairInfo.getPair(_pairIndex);
+        // IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
         uint256 oraclePrice = oraclePriceFeed.getPrice(token);
 
         uint256 indexPrice = oraclePriceFeed.getIndexPrice(token, 0);
@@ -673,7 +673,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
 
-        IPairInfo.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
         require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
         return oraclePrice;
     }

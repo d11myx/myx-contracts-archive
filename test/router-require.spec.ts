@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { mintAndApprove } from './helpers/misc';
 import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
-import { IPairInfo } from '../types';
+import { IPool } from '../types';
 import { expect } from './shared/expect';
 import { TradingTypes } from '../types/contracts/interfaces/IOrderManager';
 
@@ -121,7 +121,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 const pair = await pairInfo.getPair(pairIndex);
                 console.log(`pair: `, pair);
-                const newPair: IPairInfo.PairStruct = {
+                const newPair: IPool.PairStruct = {
                     indexToken: pair.indexToken,
                     stableToken: pair.stableToken,
                     pairToken: pair.pairToken,
@@ -147,7 +147,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 // disable pair
                 const pairBef = await pairInfo.getPair(pairIndex);
                 console.log(`pair: `, pairBef);
-                const newPair: IPairInfo.PairStruct = {
+                const newPair: IPool.PairStruct = {
                     indexToken: pairBef.indexToken,
                     stableToken: pairBef.stableToken,
                     pairToken: pairBef.pairToken,
