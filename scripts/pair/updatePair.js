@@ -65,7 +65,7 @@ async function main() {
     await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
     await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
 
-    let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+    let pairToken = await contractAt("PoolToken", (await pairInfo.pairs(pairIndex)).pairToken);
     console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken.address}`);
     console.log(`pairToken owner  ${await pairToken.owner()}`)
     await pairInfo.updatePairMiner(pairIndex, pairLiquidity.address, true);
@@ -83,7 +83,7 @@ async function main() {
     await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
     await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
 
-    pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+    pairToken = await contractAt("PoolToken", (await pairInfo.pairs(pairIndex)).pairToken);
     console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken.address}`);
     console.log(`pairToken owner  ${await pairToken.owner()}`)
     await pairInfo.updatePairMiner(pairIndex, pairLiquidity.address, true);
