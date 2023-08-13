@@ -29,7 +29,7 @@ describe('Router: Edge cases', () => {
             usdt,
             users: [depositor],
 
-            pairInfo
+            pool
         } = testEnv;
 
         const btcAmount = ethers.utils.parseUnits('34', await btc.decimals());
@@ -37,11 +37,11 @@ describe('Router: Edge cases', () => {
         await waitForTx(await btc.connect(deployer.signer).mint(depositor.address, btcAmount));
         await waitForTx(await usdt.connect(deployer.signer).mint(depositor.address, usdtAmount));
 
-        await btc.connect(depositor.signer).approve(pairInfo.address, MAX_UINT_AMOUNT);
-        await usdt.connect(depositor.signer).approve(pairInfo.address, MAX_UINT_AMOUNT);
-        await pairInfo.connect(depositor.signer).addLiquidity(pairIndex, btcAmount, usdtAmount);
+        await btc.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
+        await usdt.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
+        await pool.connect(depositor.signer).addLiquidity(pairIndex, btcAmount, usdtAmount);
 
-        const pairVaultInfo = await pairInfo.getVault(pairIndex);
+        const pairVaultInfo = await pool.getVault(pairIndex);
         console.log(
             `indexTotalAmount:`,
             ethers.utils.formatUnits(pairVaultInfo.indexTotalAmount, await btc.decimals()),
@@ -193,7 +193,7 @@ describe('Router: Edge cases', () => {
                 keeper,
                 users: [trader, shorter],
                 usdt,
-                pairInfo,
+                pool,
                 tradingVault,
                 orderManager,
                 router,
@@ -242,7 +242,7 @@ describe('Router: Edge cases', () => {
                 testEnv,
             );
 
-            const pairVaultInfo = await pairInfo.getVault(pairIndex);
+            const pairVaultInfo = await pool.getVault(pairIndex);
             console.log(
                 'indexTotalAmount',
                 pairVaultInfo.indexTotalAmount,

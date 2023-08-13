@@ -42,7 +42,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     uint256 public fundingInterval;
 
-    IPool public pairInfo;
+    IPool public pool;
     address public tradingFeeReceiver;
     address public addressExecutor;
 
@@ -52,7 +52,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {
-        pairInfo = _pairInfo;
+        pool = _pairInfo;
         tradingFeeReceiver = _tradingFeeReceiver;
         fundingInterval = _fundingInterval;
     }
@@ -86,7 +86,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         bool _isLong,
         uint256 _price
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
-        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
         require(pair.enable, 'trade pair not supported');
 
         // get position
@@ -164,16 +164,16 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex] += _sizeAmount;
             }
 
-            IPool.Vault memory lpVault = pairInfo.getVault(_pairIndex);
+            IPool.Vault memory lpVault = pool.getVault(_pairIndex);
 
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
-                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
                     uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
 
-                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
+                    pool.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseLong;
                     uint256 increaseShort;
@@ -187,37 +187,37 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
                     // decrease reserve & pnl
 
-                    pairInfo.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                    pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
 
-                        pairInfo.decreaseProfit(_pairIndex, profit);
+                        pool.decreaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
 
-                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
-                        pairInfo.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                        pool.increaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseShort > 0) {
-                        pairInfo.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                        pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
 
-                        pairInfo.updateAveragePrice(_pairIndex, _price);
+                        pool.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairInfo.updateAveragePrice(_pairIndex, 0);
+                        pool.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else if (prevNetExposureAmountChecker < 0) {
                 if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
                     uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
+                    pool.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseShort;
                     uint256 increaseLong;
@@ -230,7 +230,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     }
 
                     // decrease reserve & pnl
-                    pairInfo.decreaseReserveAmount(
+                    pool.decreaseReserveAmount(
                         _pairIndex,
                         0,
                         netExposureAmountChecker[_pairIndex] >= 0
@@ -239,31 +239,31 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     );
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
-                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
-                        pairInfo.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                        pool.increaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
-                        pairInfo.decreaseProfit(_pairIndex, profit);
+                        pool.decreaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseLong > 0) {
-                        pairInfo.increaseReserveAmount(_pairIndex, increaseLong, 0);
-                        pairInfo.updateAveragePrice(_pairIndex, _price);
+                        pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                        pool.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairInfo.updateAveragePrice(_pairIndex, 0);
+                        pool.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else {
                 if (netExposureAmountChecker[_pairIndex] > 0) {
-                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 } else {
-                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
                 }
-                pairInfo.updateAveragePrice(_pairIndex, _price);
+                pool.updateAveragePrice(_pairIndex, _price);
             }
         }
 
@@ -307,10 +307,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         bool _isLong,
         uint256 _price
     ) external onlyExecutor nonReentrant whenNotPaused returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
-        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
 
         // check trading amount
-        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(_pairIndex);
         require(
             _sizeAmount >= tradingConfig.minTradeAmount && _sizeAmount <= tradingConfig.maxTradeAmount,
             'invalid size'
@@ -370,14 +370,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex] -= _sizeAmount;
             }
 
-            IPool.Vault memory lpVault = pairInfo.getVault(_pairIndex);
+            IPool.Vault memory lpVault = pool.getVault(_pairIndex);
             if (prevNetExposureAmountChecker > 0) {
                 if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
-                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
                     uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
-                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
+                    pool.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseLong;
                     uint256 increaseShort;
@@ -390,34 +390,34 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     }
 
                     // decrease reserve & pnl
-                    pairInfo.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                    pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
-                        pairInfo.decreaseProfit(_pairIndex, profit);
+                        pool.decreaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
-                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
-                        pairInfo.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                        pool.increaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseShort > 0) {
-                        pairInfo.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
-                        pairInfo.updateAveragePrice(_pairIndex, _price);
+                        pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                        pool.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairInfo.updateAveragePrice(_pairIndex, 0);
+                        pool.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else if (prevNetExposureAmountChecker < 0) {
                 if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
                     uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
                         sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                    pairInfo.updateAveragePrice(_pairIndex, averagePrice);
+                    pool.updateAveragePrice(_pairIndex, averagePrice);
                 } else {
                     uint256 decreaseShort;
                     uint256 increaseLong;
@@ -431,7 +431,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
                     // decrease reserve & pnl
 
-                    pairInfo.decreaseReserveAmount(
+                    pool.decreaseReserveAmount(
                         _pairIndex,
                         0,
                         netExposureAmountChecker[_pairIndex] >= 0
@@ -441,33 +441,33 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     if (_price > lpVault.averagePrice) {
                         uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
 
-                        IERC20(pair.stableToken).safeTransfer(address(pairInfo), profit);
-                        pairInfo.increaseProfit(_pairIndex, profit);
+                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                        pool.increaseProfit(_pairIndex, profit);
                     } else {
                         uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
 
-                        pairInfo.decreaseProfit(_pairIndex, profit);
+                        pool.decreaseProfit(_pairIndex, profit);
                     }
 
                     // increase reserve
                     if (increaseLong > 0) {
-                        pairInfo.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                        pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
 
-                        pairInfo.updateAveragePrice(_pairIndex, _price);
+                        pool.updateAveragePrice(_pairIndex, _price);
                     }
 
                     // zero exposure
                     if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pairInfo.updateAveragePrice(_pairIndex, 0);
+                        pool.updateAveragePrice(_pairIndex, 0);
                     }
                 }
             } else {
                 if (netExposureAmountChecker[_pairIndex] > 0) {
-                    pairInfo.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
                 } else {
-                    pairInfo.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
                 }
-                pairInfo.updateAveragePrice(_pairIndex, _price);
+                pool.updateAveragePrice(_pairIndex, _price);
             }
         }
 
@@ -554,7 +554,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         bool _isLong,
         uint256 _sizeAmount
     ) external view override returns (uint256 tradingFee) {
-        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         return _tradingFee(_pairIndex, _isLong, _sizeAmount, price);
     }
@@ -567,7 +567,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     ) internal view returns (uint256 tradingFee) {
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
-        IPool.TradingFeeConfig memory tradingFeeConfig = pairInfo.getTradingFeeConfig(_pairIndex);
+        IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         if (netExposureAmountChecker[_pairIndex] >= 0) {
             if (_isLong) {
                 // fee
@@ -612,20 +612,20 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
-        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
         return _currentFundingRate(_pairIndex, price);
     }
 
     function _currentFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
-        IPool.FundingFeeConfig memory fundingFeeConfig = pairInfo.getFundingFeeConfig(_pairIndex);
+        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
 
         uint256 absNetExposure = netExposureAmountChecker[_pairIndex].abs();
         uint256 w = fundingFeeConfig.fundingWeightFactor;
         uint256 q = longTracker[_pairIndex] + shortTracker[_pairIndex];
         uint256 k = fundingFeeConfig.liquidityPremiumFactor;
 
-        IPool.Vault memory lpVault = pairInfo.getVault(_pairIndex);
+        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
         uint256 l = (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
             (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
 
@@ -650,14 +650,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 _pairIndex,
         uint256 _fundingFee
     ) internal returns (uint256 userAmount, uint256 lpAmount) {
-        IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
-        IPool.FundingFeeConfig memory fundingFeeConfig = pairInfo.getFundingFeeConfig(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
 
         lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
         userAmount = _fundingFee - lpAmount;
 
-        IERC20(pair.stableToken).safeTransfer(address(pairInfo), lpAmount);
-        pairInfo.increaseTotalAmount(_pairIndex, 0, lpAmount);
+        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
+        pool.increaseTotalAmount(_pairIndex, 0, lpAmount);
 
         return (userAmount, lpAmount);
     }
@@ -665,7 +665,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
 
-        // IPool.Pair memory pair = pairInfo.getPair(_pairIndex);
+        // IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 oraclePrice = oraclePriceFeed.getPrice(token);
 
         uint256 indexPrice = oraclePriceFeed.getIndexPrice(token, 0);
@@ -673,7 +673,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
 
-        IPool.TradingConfig memory tradingConfig = pairInfo.getTradingConfig(_pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(_pairIndex);
         require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
         return oraclePrice;
     }
