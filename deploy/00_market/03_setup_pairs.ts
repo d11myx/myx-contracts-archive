@@ -36,7 +36,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             pairInfo.address,
             feeReceiver,
             slipReceiver,
-            weth.address,
+            // weth.address,
         ],
         ...COMMON_DEPLOY_PARAMS,
     });
