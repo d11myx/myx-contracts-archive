@@ -1,4 +1,4 @@
-import { IPairInfo } from '../types';
+import { IPool } from '../types';
 import { eNetwork } from './constants';
 
 export interface SymbolMap<T> {
@@ -10,10 +10,10 @@ export type ParamsPerNetwork<T> = {
 };
 
 export interface PairInfoConfig {
-    pair: IPairInfo.PairStruct;
-    tradingConfig: IPairInfo.TradingConfigStruct;
-    tradingFeeConfig: IPairInfo.TradingFeeConfigStruct;
-    fundingFeeConfig: IPairInfo.FundingFeeConfigStruct;
+    pair: IPool.PairStruct;
+    tradingConfig: IPool.TradingConfigStruct;
+    tradingFeeConfig: IPool.TradingFeeConfigStruct;
+    fundingFeeConfig: IPool.FundingFeeConfigStruct;
 }
 
 export interface ReserveConfiguration {
