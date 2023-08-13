@@ -119,7 +119,11 @@ export async function deployPair(
 ) {
     console.log(` - setup pairs`);
 
-    const pairInfo = (await deployContract('Pool', [addressProvider.address])) as any as Pool;
+    const pairInfo = (await deployContract('Pool', [
+        addressProvider.address,
+        deployer.address,
+        deployer.address,
+    ])) as any as Pool;
     console.log(`deployed Pool at ${pairInfo.address}`);
 
     // const pairLiquidity = (await deployContract('PoolLiquidity', [

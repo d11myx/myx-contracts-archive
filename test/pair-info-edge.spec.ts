@@ -23,7 +23,7 @@ describe('Pool: Edge cases', () => {
 
         const countBefore = await pairInfo.pairsCount();
         await waitForTx(
-            await pairInfo.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken, pairInfo.address),
+            await pairInfo.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken),
         );
 
         let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);

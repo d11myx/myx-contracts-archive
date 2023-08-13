@@ -172,7 +172,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { oraclePriceFeed, indexPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    const { pairInfo, pairLiquidity } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { pairInfo } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const { tradingVault, router, executor, orderManager } = await deployTrading(
         deployer,
@@ -185,7 +185,7 @@ export async function newTestEnv(): Promise<TestEnv> {
     );
 
     await pairInfo.setTradingVault(tradingVault.address);
-    await initPairs(deployer, tokens, usdt, pairInfo, pairLiquidity);
+    await initPairs(deployer, tokens, usdt, pairInfo);
 
     await roleManager.addKeeper(executor.address);
     return {
@@ -201,7 +201,6 @@ export async function newTestEnv(): Promise<TestEnv> {
         roleManager: roleManager,
         pairTokens: tokens,
         pairInfo: pairInfo,
-        pairLiquidity: pairLiquidity,
 
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
