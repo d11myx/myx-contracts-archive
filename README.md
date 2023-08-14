@@ -1,10 +1,12 @@
-### 合约地址
+### Contract address
 
 -   [remote config](./scripts/config/remote_config.json)
--   RPC: http://18.166.30.91:8545/
+Xml-rpc: http://18.166.30.91:8545/
 -   ChainId: 31337
 
-### 测试账户
+### Test account
+
+- Private chain.
 
 ```text
 Account #0 (admin): 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
@@ -67,211 +69,311 @@ Private Key: 0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0
 Account #19 (keeper): 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199 (10000 ETH)
 Private Key: 0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e
 
-```
+` ` `
 
-### 合约接口
+-   goerli
+
+```text
+Account #0 (admin): 0x9a51ed860dfd64ac1faf6f2df906c31b588d1f26
+Private Key: 0x35fb41f603c91d8fdf29391ce17e96d50f028dd895762027806cde096dca8a3b
+
+Sign the Account # 1 (1) : 0 x229b2dd414fc6d64d49f252d6efd960bb80c49ad
+Private Key: 0x56e7a541829f9e675773c9e2542fe31c6cd8c742f156c1b5beafe3f4f483eea2
+
+Sign the Account # 2 (2) : 0 x1a5240e6427c8fb400770b6260385cd18b89ed91
+Private Key: 0xe9733eeed09ad95c2ef876eb7c9073a68a49651101f93dfdc56bea3b16baabcd
+
+Sign the Account # 3 (3) : 0 xf28c074e6d49332f89ba69faa7438e5038f9e2b2
+Private Key: 0x2f218d6f236015060f30827825d5d24711d01d502d0a5bd3ec85043ff45c2ae2
+
+Account #4 (user1): 0xC177e2A539Be587792808D94d3Ca076c6317227c
+Private Key: 0xa661ddc2b2524edf18074ac62ed919c8af1fedcd658d5361e0ed7eee249ff168
+
+Sign a contract, 0 xe72adf5f08db431258776205172d2f1ff1cc4541
+` ` `
+
+### Contract interface
 
 #### event code
 
 ```text
-contract: TradingRouter
+contract: PairLiquidity
+event: AddLiquidity id: ae2a8a26a2b64d8d971277b87c24d1a12181aef23cf76b898a32ce8dd14c7591
+event: RemoveLiquidity id: 6291bcce50c38c39d79a98ff5fad7f35319722e73285b50a6140dbfac75d511e
+event: Swap id: 2424e4440d8e90b9be053a61916674e21e7603a28f7dccf3ff7b88b755c2e619
+
+contract: OrderManager
 event: CancelDecreaseOrder id: b225fd6bcccad9342bc10ccc7e25ef77175b77348c8393d669ac2dbc98a1ae29
 event: CancelIncreaseOrder id: 7e93a6b00cb3caacf000d7018943b12e2b4ad29e7849df14ebd51caf4fd739b8
 event: CreateDecreaseOrder id: e71a68544c2c9cf2a006d283baa849468003198fa8d8026335170198a30349dd
 event: CreateIncreaseOrder id: e83629b11df9fcc6b9ebc666eb284c939d1710576a8d3eac23474d70fae8d478
 
-contract: ExecuteRouter
+contract: Executor
 event: ExecuteDecreaseOrder id: 9b4ff42a2fc7960edd49c603150f69894e46d386129c040ae7519a427fee0613
 event: ExecuteIncreaseOrder id: 462ad18c79032b6336d456416b46e1012c8ed1c03cd3ff073957ae8834539e72
 event: LiquidatePosition id: aac40228c5d58dfc6360c331165fa5a8fa13f51c87a6124cb1999a4c6117bb79
 
-contract: TradingVault
+contract: PositionManager
 event: ClosePosition id: 1ffb81f32d2d371994fb39b875fbe035d34386083d2a85a3cf2894709c4581a2
 event: DecreasePosition id: f1d296a817e8ecfa2709fcd52c61a6dddc7e87ed697b3ba601e88dbee8849c20
 event: IncreasePosition id: 07777c9f149d310fb8670fb9752de106d0ebc29093eb6df2be370406a7d742a3
 event: UpdateFundingRate id: 30ee8c76a6febcb0400fb07183d873b5c18cf9e5ca6a47104676795b989c606d
 event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a639ef285ad
-```
+` ` `
 
-#### 开仓
+#### Set parameters
 
--   TradingRouter
+-   Pool
+```solidity
+// Update the trade pair configuration
+updatePair(uint256 _pairIndex, Pair calldata _pair)
 
-```text
-// 创建开仓请求（前端用户)
+struct Pair {
+address indexToken;      // Trade against the base currency
+address stableToken;     // Trade against stablecoins
+address pairToken;       // lp token
+bool enable;             // Whether it is available
+uint256 kOfSwap;         // Initial k value of liquidity
+uint256 expectIndexTokenP;    // index Initial token ratio 5000 for 50%
+uint256 addLpFeeP;       // Add liquidity fee
+}
+
+// Update the trading configuration
+updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig)
+
+struct TradingConfig {
+uint256 minLeverage;         // Minimum leverage
+uint256 maxLeverage;         // Maximum leverage
+uint256 minTradeAmount;      // Minimum trading volume
+uint256 maxTradeAmount;      // Maximum trading volume
+uint256 maxPositionAmount;   // Maximum open position
+uint256 maintainMarginRate;  // Maintain the margin rate of 10000 for 100%
+uint256 priceSlipP;          // Price slip point
+uint256 maxPriceDeviationP;  // Maximum offset of index price
+}
+
+// Update the trading fee configuration
+updateTradingFeeConfig(uint256 _pairIndex, TradingFeeConfig calldata _tradingFeeConfig)
+
+struct TradingFeeConfig {
+// fee
+uint256 takerFeeP;           // taker Process rate
+uint256 makerFeeP;           // maker procedure rate
+// Distribute
+uint256 lpDistributeP;       // lp Allocation ratio
+uint256 keeperDistributeP;   // keeper Allocation ratio
+uint256 treasuryDistributeP; // Treasury allocation ratio
+uint256 refererDistributeP;  // Allocation ratio of invitees
+}
+
+// Update the capital fee configuration
+updateFundingFeeConfig(uint256 _pairIndex, FundingFeeConfig calldata _fundingFeeConfig)
+
+
+struct FundingFeeConfig {
+// factor
+uint256 minFundingRate;              // Minimum capital rate 1,000,000 for 100%
+uint256 maxFundingRate;              // The maximum capital rate is 1,000,000 for 100%
+uint256 fundingWeightFactor;         // The weight coefficient of the fund rate of both sides is 10000 for 100%
+uint256 liquidityPremiumFactor;      // The coefficient of liquidity to premium is 10,000 for 100%
+uint256 interest;
+// Distribute
+uint256 lpDistributeP;               // lp Allocation ratio
+uint256 userDistributeP;             // User allocation ratio
+uint256 treasuryDistributeP;         // Treasury allocation ratio
+}
+` ` `
+
+#### Open a position
+
+-   Router
+
+```solidity
+// Create open request (front-end user)
 createIncreaseOrder(IncreasePositionRequest memory request)
 
-// 取消订单（前端用户）
-TradingRouter.cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType)
+// Cancel order (Front-end user)
+cancelIncreaseOrder(uint256 _orderId, TradeType _tradeType)
 
 struct IncreasePositionRequest {
-    address account;               // 当前用户
-    uint256 pairIndex;             // 币对index
-    TradeType tradeType;           // 0: MARKET, 1: LIMIT
-    int256 collateral;             // 1e18 保证金数量，负数表示减仓
-    uint256 openPrice;             // 1e30 市价可接受价格/限价开仓价格
-    bool isLong;                   // 多/空
-    uint256 sizeAmount;            // 仓位数量
-    uint256 tpPrice;               // 止盈价 1e30
-    uint256 tp;                    // 止盈数量
-    uint256 slPrice;               // 止损价 1e30
-    uint256 sl;                    // 止损数量
+address account;                // Current user
+uint256 pairIndex;              // Currency pair index
+TradeType tradeType;            // 0: MARKET, 1: LIMIT
+int256 collateral;              // 1e18 Margin amount, a negative number indicates a reduction
+uint256 openPrice;              // 1e30 Market acceptable price/Limit opening price
+bool isLong;                    // Long/short
+uint256 sizeAmount;             // Number of positions
+uint256 tpPrice;                // Stop profit price 1e30
+uint256 tp;                     // The number of profit stops
+uint256 slPrice;                // Stop price 1e30
+uint256 sl;                     // Stop loss quantity
 }
 
-// 当前市价开仓请求最新index
-uint256 public increaseMarketOrdersIndex;
-// 当前市价关仓请求最新index
-uint256 public decreaseMarketOrdersIndex;
-// 当前市价开仓请求未执行起始index
+` ` `
+
+- Executor
+```solidity
+// Current market opening request not executed starting index
 uint256 public increaseMarketOrderStartIndex;
-// 当前市价关仓请求未执行起始index
+// The current market closing request did not execute the start index
 uint256 public decreaseMarketOrderStartIndex;
-// 当前限价开仓请求最新index
+` ` `
+
+- OrderManager
+```solidity
+// Current market open request latest index
+uint256 public increaseMarketOrdersIndex;
+// Current market price closing request latest index
+uint256 public decreaseMarketOrdersIndex;
+// Current limit open position request latest index
 uint256 public increaseLimitOrdersIndex;
-// 当前限价关仓请求最新index
+// Latest index of current limit closing requests
 uint256 public decreaseLimitOrdersIndex;
+` ` `
 
-```
+-   Executor
 
--   ExecuteRouter
-
-```text
-// 设置price并执行市价订单
-setPricesWithBitsAndExecuteMarketOrders(
-    uint256 _priceBits,
-    uint256 _timestamp,
-    uint256 _increaseEndIndex,  // 开仓市价单终止index
-    uint256 _decreaseEndIndex   // 减仓市价单终止index
+```solidity
+// Set the price and execute the market order
+setPricesAndExecuteMarketOrders(
+address[] memory _tokens,
+uint256[] memory _prices,
+uint256 _timestamp,
+uint256 _increaseEndIndex,
+uint256 _decreaseEndIndex
 )
 
-// 设置price并执行限价订单
-setPricesWithBitsAndExecuteLimitOrders(
-    uint256 _priceBits,
-    uint256 _timestamp,
-    uint256[] memory _increaseOrderIds,
-    uint256[] memory _decreaseOrderIds
+// Set the price and execute the limit order
+setPricesAndExecuteLimitOrders(
+address[] memory _tokens,
+uint256[] memory _prices,
+uint256 _timestamp,
+uint256[] memory _increaseOrderIds,
+uint256[] memory _decreaseOrderIds
 )
 
-// 批量执行市价开仓（keeper: Account 0 / Account 1）, endIndex: 终止index
-executeIncreaseMarkets(uint256 _endIndex)
+// Batch market open positions (keeper: Account 0 / Account 1), endIndex: end index
+executeIncreaseMarketOrders(uint256 _endIndex)
 
-// 批量执行限价开仓
+// Execute limit open positions in batches
 executeIncreaseLimitOrders(uint256[] memory _orderIds)
 
-// 执行限价开仓(keeper)
-executeIncreaseOrder(uint256 _orderId, TradeType tradeType)
-```
+// Execute limit open position (keeper)
+executeIncr
+#### stock reduction
 
-#### 减仓
+-   Router
 
--   TradingRouter
-
-```text
-// 创建减仓请求（前端用户)
+```solidity
+// Create inventory reduction request (front-end user)
 createIncreaseOrder(IncreasePositionRequest memory request)
 
-// 请求体
+// Request body
 struct DecreasePositionRequest {
-    address account;               // 当前用户
-    uint256 pairIndex;
-    TradeType tradeType;
-    int256 collateral;             // 1e18 保证金数量，负数表示减仓
-    uint256 triggerPrice;          // 限价触发价格
-    uint256 sizeAmount;            // 关单数量
-    bool isLong;
+address account;                // Current user
+uint256 pairIndex;
+TradeType tradeType;
+int256 collateral;              // 1e18 Margin amount, a negative number indicates a reduction
+uint256 triggerPrice;           // Limit trigger price
+uint256 sizeAmount;             // Number of customs documents
+bool isLong;
 }
 
-// 取消订单（前端用户）
+// Cancel order (Front-end user)
 cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType)
-```
+` ` `
 
--   ExecuteRouter
+-   Executor
 
-```text
+```solidity
 
-// 批量执行市价减仓（keeper: Account 0 / Account 1）, endIndex: 终止index
+// Batch market price reduction (keeper: Account 0 / Account 1), endIndex: end index
 executeDecreaseMarkets(uint256 _endIndex)
 
-// 批量执行限价减仓
+// Execute price limit reduction in batches
 executeDecreaseLimitOrders(uint256[] memory _orderIds)
 
-// 执行限价砍仓(keeper)
+// Execute price limit (keeper)
 executeDecreaseOrder(uint256 _orderId, TradeType tradeType)
-```
+` ` `
 
-#### 止盈止损
+#### Profit and loss
 
--   TradingRouter
+-   Router
 
-```text
-// 单独创建止盈止损
+```solidity
+// Create a profit stop loss separately
 createTpSl(CreateTpSlRequest memory _request)
 
 struct CreateTpSlRequest {
-    address account;
-    uint256 pairIndex;             // 币对index
-    bool isLong;
-    uint256 tpPrice;               // 止盈价 1e30
-    uint256 tp;                    // 止盈数量
-    uint256 slPrice;               // 止损价 1e30
-    uint256 sl;                    // 止损数量
+address account;
+uint256 pairIndex;              // Currency pair index
+bool isLong;
+uint256 tpPrice;                // Stop profit price 1e30
+uint256 tp;                     // The number of profit stops
+uint256 slPrice;                // Stop price 1e30
+uint256 sl;                     // Stop loss quantity
 }
-```
+` ` `
 
-#### 清算
+#### liquidation
 
--   ExecuteRouter
+-   Executor
 
-```text
-// 设置price并执行清算
-setPricesWithBitsAndLiquidatePositions(
-    uint256 _priceBits,
-    uint256 _timestamp,
-    bytes32[] memory _positionKeys
+```solidity
+// Set the price and execute the liquidation
+setPricesAndLiquidatePositions(
+address[] memory _tokens,
+uint256[] memory _prices,
+uint256 _timestamp,
+bytes32[] memory _positionKeys
 )
 
-// _positionKeys 仓位key数组
+// _positionKeys Array of position keys
 function liquidatePositions(bytes32[] memory _positionKeys)
-```
+` ` `
 
 #### ADL
 
--   ExecuteRouter
+-   Executor
 
-```text
-// 设置price并执行ADL
-setPricesWithBitsAndExecuteADL(
-    uint256 _priceBits,
-    uint256 _timestamp,
-    bytes32[] memory _positionKeys,
-    uint256[] memory _sizeAmounts,
-    uint256 _orderId,
-    ITradingRouter.TradeType _tradeType
+```solidity
+// Set price and execute ADL
+setPricesAndExecuteADL(
+address[] memory _tokens,
+uint256[] memory _prices,
+uint256 _timestamp,
+bytes32[] memory _positionKeys,
+uint256[] memory _sizeAmounts,
+uint256 _orderId,
+ITradingRouter.TradeType _tradeType
 )
 
-// 执行ADL及减仓订单
-function executeADLAndDecreaseOrder(
-    bytes32[] memory _positionKeys,         // 待执行ADL仓位key
-    uint256[] memory _sizeAmounts,          // 待执行ADL仓位数量
-    uint256 _orderId,                       // 待执行订单
-    ITradingRouter.TradeType _tradeType
+// Execute ADL and stock reduction orders
+executeADLAndDecreaseOrder(
+bytes32[] memory _positionKeys, // ADL location key to be executed
+uint256[] memory _sizeAmounts, // Number of ADL positions to be executed
+uint256_orderId, // Order to be executed
+ITradingRouter.TradeType _tradeType
 )
-```
+` ` `
 
-#### 手续费
+#### handling fee
 
--   TradingVault
+-   PositionManager
 
-```text
-// 获取交易手续费
+```solidity
+// Get transaction fees
 function getTradingFee(uint256 _pairIndex, bool _isLong, uint256 _sizeAmount)
 
-// 获取资金费率
+// Get the fund rate
 function getFundingFee(
-    bool _increase,         // 加仓true，减仓false
-    address _account,
-    uint256 _pairIndex,
-    bool _isLong,
-    uint256 _sizeAmount     // 待修改仓位数
+bool _increase, // Add true, reduce false
+address _account,
+uint256 _pairIndex,
+bool _isLong,
+uint256_sizeAmount // Number of bits to be modified
 )
-```
+` ` `
+
+UPDATE_SNAPSHOT=1 yarn test

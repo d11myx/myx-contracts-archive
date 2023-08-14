@@ -1,5 +1,5 @@
 const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helpers");
-const { expandDecimals, formatBalance} = require("../utils/utilities");
+const { expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
 
@@ -13,13 +13,17 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-BTC"));
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
   let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   await usdt.mint(user3.address, expandDecimals(30000, 18))
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
+  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
+    [expandDecimals(30000, 30)],
+    await getBlockTime(await hre.ethers.provider) + 100)
 
   await usdt.connect(user3).approve(tradingRouter.address, expandDecimals(30000, 30));
 

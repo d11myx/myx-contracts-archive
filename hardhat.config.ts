@@ -5,15 +5,16 @@ import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 // import 'hardhat-gas-reporter';
-
 import '@openzeppelin/hardhat-upgrades';
-// import "@matterlabs/hardhat-zksync-deploy";
-// import "@matterlabs/hardhat-zksync-solc";
-// import "@matterlabs/hardhat-zksync-verify";
+import 'hardhat-contract-sizer';
 import '@nomiclabs/hardhat-ethers';
+import 'hardhat-deploy';
 import 'hardhat-abi-exporter';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
+import 'hardhat-log-remover';
+import { getCurrentTimestamp } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
+import { DEFAULT_NAMED_ACCOUNTS, loadTasks } from './helpers';
 
 dotenv.config();
 
@@ -37,6 +38,20 @@ const LOCAL_PRIVATE_KEY17 = '0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1b
 const LOCAL_PRIVATE_KEY18 = '0x689af8efa8c651a91ad287602527f3af2fe9f6501a7ac4b061667b5a93e037fd';
 const LOCAL_PRIVATE_KEY19 = '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0';
 const LOCAL_PRIVATE_KEY20 = '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e';
+
+const GOERLI_PRIVATE_KEY1 = '0x35fb41f603c91d8fdf29391ce17e96d50f028dd895762027806cde096dca8a3b';
+const GOERLI_PRIVATE_KEY2 = '0x56e7a541829f9e675773c9e2542fe31c6cd8c742f156c1b5beafe3f4f483eea2';
+const GOERLI_PRIVATE_KEY3 = '0xe9733eeed09ad95c2ef876eb7c9073a68a49651101f93dfdc56bea3b16baabcd';
+const GOERLI_PRIVATE_KEY4 = '0x2f218d6f236015060f30827825d5d24711d01d502d0a5bd3ec85043ff45c2ae2';
+const GOERLI_PRIVATE_KEY5 = '0xa661ddc2b2524edf18074ac62ed919c8af1fedcd658d5361e0ed7eee249ff168';
+
+const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
+const TASK_FOLDERS = ['./misc'];
+
+// Prevent to load tasks before compilation and typechain
+if (!SKIP_LOAD) {
+    loadTasks(TASK_FOLDERS);
+}
 
 // const GOERLI_DEPLOY_KEY = "";
 const abiDecoder = require('abi-decoder');
@@ -76,6 +91,22 @@ task('encode-event', 'get method artifact detail by method name')
         });
     });
 
+task('update-evm-time', 'update evm time')
+    .addParam('increase', 'increase or decrease minutes')
+    .setAction(async (param, hre) => {
+        let blockNumber = await hre.ethers.provider.getBlockNumber();
+        let block = await hre.ethers.provider.getBlock(blockNumber);
+        console.log(`block time ${block.timestamp} diff ${block.timestamp - getCurrentTimestamp()}`);
+
+        await hre.network.provider.send('evm_increaseTime', [parseInt(param.increase)]);
+
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        blockNumber = await hre.ethers.provider.getBlockNumber();
+        block = await hre.ethers.provider.getBlock(blockNumber);
+        console.log(`block time ${block.timestamp} diff ${block.timestamp - getCurrentTimestamp()}`);
+    });
+
 const gas = 'auto';
 const gasPrice = 'auto';
 
@@ -85,26 +116,20 @@ const config: HardhatUserConfig = {
         settings: {
             optimizer: {
                 enabled: true,
-                runs: 20,
+                runs: 200,
             },
             viaIR: true,
         },
     },
-    // defaultNetwork: "local",
-    // zksolc: {
-    //   version: "1.3.8",
-    //   compilerSource: "binary",
-    //   settings: {
-    //     libraries: {}, // optional. References to non-inlinable libraries
-    //     isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-    //     forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-    //     optimizer: {
-    //       enabled: true, // optional. True by default
-    //       mode: '3' // optional. 3 by default, z to optimize bytecode size
-    //     }
-    //   }
-    // },
+    contractSizer: {
+        alphaSort: true,
+        runOnCompile: true,
+        disambiguatePaths: false,
+    },
     networks: {
+        hardhat: {
+            allowUnlimitedContractSize: true,
+        },
         local: {
             url: 'http://127.0.0.1:8545/',
             accounts: [
@@ -160,6 +185,46 @@ const config: HardhatUserConfig = {
             // gas: gas,
             // gasPrice: gasPrice
         },
+        remote_test: {
+            url: 'https://test-rpc.myx.cash',
+            chainId: 31338,
+            accounts: [
+                LOCAL_PRIVATE_KEY1,
+                LOCAL_PRIVATE_KEY2,
+                LOCAL_PRIVATE_KEY3,
+                LOCAL_PRIVATE_KEY4,
+                LOCAL_PRIVATE_KEY5,
+                LOCAL_PRIVATE_KEY6,
+                LOCAL_PRIVATE_KEY7,
+                LOCAL_PRIVATE_KEY8,
+                LOCAL_PRIVATE_KEY9,
+                LOCAL_PRIVATE_KEY10,
+                LOCAL_PRIVATE_KEY11,
+                LOCAL_PRIVATE_KEY12,
+                LOCAL_PRIVATE_KEY13,
+                LOCAL_PRIVATE_KEY14,
+                LOCAL_PRIVATE_KEY15,
+                LOCAL_PRIVATE_KEY16,
+                LOCAL_PRIVATE_KEY17,
+                LOCAL_PRIVATE_KEY18,
+                LOCAL_PRIVATE_KEY19,
+                LOCAL_PRIVATE_KEY20,
+            ],
+        },
+        goerli: {
+            // url: "https://rpc.ankr.com/eth_goerli",
+            url: 'https://goerli.infura.io/v3/c0beb1509e87416b83e1d9e02203bef7',
+            accounts: [
+                GOERLI_PRIVATE_KEY1,
+                GOERLI_PRIVATE_KEY2,
+                GOERLI_PRIVATE_KEY3,
+                GOERLI_PRIVATE_KEY4,
+                GOERLI_PRIVATE_KEY5,
+            ],
+        },
+    },
+    namedAccounts: {
+        ...DEFAULT_NAMED_ACCOUNTS,
     },
     etherscan: {
         apiKey: 'M5SDQD75WPPKN8XTUZM86BE46VAGUEBCE8',

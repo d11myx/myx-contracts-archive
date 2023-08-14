@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import '@openzeppelin/contracts/utils/math/Math.sol';
 
 library PrecisionUtils {
-
     uint256 public constant ONE_HUNDRED_PERCENTAGE = 10000;
     uint256 public constant FUNDING_RATE_PRECISION = 1000000;
     uint256 public constant PRICE_PRECISION = 1e30;
@@ -33,7 +32,7 @@ library PrecisionUtils {
         return Math.mulDiv(amount0, ONE_HUNDRED_PERCENTAGE, amount1);
     }
 
-    function oneHundredPercentage() internal pure returns (uint256) {
+    function percentage() internal pure returns (uint256) {
         return ONE_HUNDRED_PERCENTAGE;
     }
 

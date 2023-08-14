@@ -13,12 +13,13 @@ async function main() {
 
   let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
   let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"));
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"));
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"));
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"));
+  let roleManager = await contractAt('RoleManager', await getConfig("RoleManager"));
 
   let tradingUtils = await deployUpgradeableContract("TradingUtils", []);
 
-  let args = [pairInfo.address, pairVault.address, tradingUtils.address, user1.address];
+  let args = [pairInfo.address, pairVault.address, tradingUtils.address, user1.address, 8 * 60 * 60];
   let tradingVault = await deployUpgradeableContract("TradingVault", args);
 
   args = [pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address];
@@ -35,7 +36,8 @@ async function main() {
   await executeRouter.setPositionKeeper(user0.address, true);
   await executeRouter.setPositionKeeper(user1.address, true);
 
-  await fastPriceFeed.setUpdater(executeRouter.address, true);
+
+  await roleManager.addKeeper(executeRouter.address);
 }
 
 main()
