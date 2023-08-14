@@ -2,14 +2,14 @@ import { testEnv } from './helpers/make-suite';
 import { waitForTx } from '../helpers/utilities/tx';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 import { expect } from './shared/expect';
-import { IPairInfo } from '../types';
+import { IPool } from '../types';
 import { BigNumber } from 'ethers';
 import { deployMockToken } from '../helpers/contract-deployments';
 import { MARKET_NAME } from '../helpers/env';
 
 describe('Pool: Edge cases', () => {
     before('addPair', async () => {
-        const { poolAdmin, pairInfo, usdt, pairLiquidity } = testEnv;
+        const { poolAdmin, pool, usdt } = testEnv;
 
         const token = await deployMockToken('Test');
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
@@ -21,33 +21,33 @@ describe('Pool: Edge cases', () => {
         const tradingFeeConfig = btcPair.tradingFeeConfig;
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
-        const countBefore = await pairInfo.pairsCount();
+        const countBefore = await pool.pairsCount();
         await waitForTx(
-            await pairInfo.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken, pairLiquidity.address),
+            await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken),
         );
 
-        let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-        await waitForTx(await pairInfo.connect(poolAdmin.signer).updatePair(pairIndex, pair));
-        await waitForTx(await pairInfo.connect(poolAdmin.signer).updateTradingConfig(pairIndex, tradingConfig));
-        await waitForTx(await pairInfo.connect(poolAdmin.signer).updateTradingFeeConfig(pairIndex, tradingFeeConfig));
-        await waitForTx(await pairInfo.connect(poolAdmin.signer).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+        let pairIndex = await pool.pairIndexes(pair.indexToken, pair.stableToken);
+        await waitForTx(await pool.connect(poolAdmin.signer).updatePair(pairIndex, pair));
+        await waitForTx(await pool.connect(poolAdmin.signer).updateTradingConfig(pairIndex, tradingConfig));
+        await waitForTx(await pool.connect(poolAdmin.signer).updateTradingFeeConfig(pairIndex, tradingFeeConfig));
+        await waitForTx(await pool.connect(poolAdmin.signer).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
-        const countAfter = await pairInfo.pairsCount();
+        const countAfter = await pool.pairsCount();
         expect(countAfter).to.be.eq(countBefore.add(1));
     });
 
     it('check pair info', async () => {
-        const { pairInfo, btc, usdt } = testEnv;
+        const { pool, btc, usdt } = testEnv;
 
         const pairIndex = 0;
 
-        expect(await pairInfo.pairs(pairIndex)).deep.be.eq(await pairInfo.getPair(pairIndex));
-        expect(await pairInfo.tradingConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingConfig(pairIndex));
-        expect(await pairInfo.tradingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getTradingFeeConfig(pairIndex));
-        expect(await pairInfo.fundingFeeConfigs(pairIndex)).deep.be.eq(await pairInfo.getFundingFeeConfig(pairIndex));
+        expect(await pool.pairs(pairIndex)).deep.be.eq(await pool.getPair(pairIndex));
+        expect(await pool.tradingConfigs(pairIndex)).deep.be.eq(await pool.getTradingConfig(pairIndex));
+        expect(await pool.tradingFeeConfigs(pairIndex)).deep.be.eq(await pool.getTradingFeeConfig(pairIndex));
+        expect(await pool.fundingFeeConfigs(pairIndex)).deep.be.eq(await pool.getFundingFeeConfig(pairIndex));
 
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
-        const pair = await pairInfo.getPair(pairIndex);
+        const pair = await pool.getPair(pairIndex);
         expect(pair.indexToken).to.be.eq(btc.address);
         expect(pair.stableToken).to.be.eq(usdt.address);
         expect(pair.enable).to.be.eq(btcPair.pair.enable);
@@ -56,32 +56,32 @@ describe('Pool: Edge cases', () => {
     describe('test updatePair', async () => {
         it('unHandler updatePair should be reverted', async () => {
             const {
-                pairInfo,
+                pool,
                 users: [unHandler],
             } = testEnv;
 
             const pairIndex = 0;
-            const pair = await pairInfo.getPair(pairIndex);
-            await expect(pairInfo.connect(unHandler.signer).updatePair(pairIndex, pair)).to.be.revertedWith(
+            const pair = await pool.getPair(pairIndex);
+            await expect(pool.connect(unHandler.signer).updatePair(pairIndex, pair)).to.be.revertedWith(
                 'onlyPoolAdmin',
             );
         });
 
         it('check update pair', async () => {
-            const { deployer, pairInfo } = testEnv;
+            const { deployer, pool } = testEnv;
 
             const pairIndex = 0;
-            const pairBefore = await pairInfo.getPair(pairIndex);
+            const pairBefore = await pool.getPair(pairIndex);
 
             // updatePair
-            let pairToUpdate: IPairInfo.PairStructOutput = { ...pairBefore };
+            let pairToUpdate: IPool.PairStructOutput = { ...pairBefore };
             pairToUpdate.enable = !pairBefore.enable;
             pairToUpdate.kOfSwap = BigNumber.from(99999999);
             pairToUpdate.expectIndexTokenP = BigNumber.from(4000);
-            await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
+            await waitForTx(await pool.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
 
-            const pairAfterObj = await pairInfo.getPair(pairIndex);
-            let pairAfter: IPairInfo.PairStructOutput = { ...pairAfterObj };
+            const pairAfterObj = await pool.getPair(pairIndex);
+            let pairAfter: IPool.PairStructOutput = { ...pairAfterObj };
 
             console.log(pairAfter);
             console.log(pairToUpdate);
@@ -94,7 +94,7 @@ describe('Pool: Edge cases', () => {
             pairToUpdate.expectIndexTokenP = BigNumber.from(5000);
 
             pairToUpdate.enable = true;
-            await waitForTx(await pairInfo.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
+            await waitForTx(await pool.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
         });
     });
 });

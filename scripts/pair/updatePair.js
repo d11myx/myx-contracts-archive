@@ -11,14 +11,14 @@ async function main() {
 
     console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-    let pairInfo = await contractAt("Pool", await getConfig("Pool"));
+    let pool = await contractAt("Pool", await getConfig("Pool"));
     let pairLiquidity = await contractAt("PoolLiquidity", await getConfig("PoolLiquidity"));
 
     let eth = await contractAt("WETH", await getConfig("Token-ETH"))
     let btc = await contractAt("Token", await getConfig("Token-BTC"))
     let usdt = await contractAt("Token", await getConfig("Token-USDT"))
 
-    console.log(`pairStorage: ${pairInfo.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
+    console.log(`pairStorage: ${pool.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
 
     let pair = {
         indexToken: btc.address,
@@ -59,39 +59,39 @@ async function main() {
     }
 
     // btc - usdt
-    let pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-    await pairInfo.updatePair(pairIndex, pair);
-    await pairInfo.updateTradingConfig(pairIndex, tradingConfig);
-    await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
-    await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
+    let pairIndex = await pool.pairIndexes(pair.indexToken, pair.stableToken);
+    await pool.updatePair(pairIndex, pair);
+    await pool.updateTradingConfig(pairIndex, tradingConfig);
+    await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
+    await pool.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
 
-    let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+    let pairToken = await contractAt("PoolToken", (await pool.pairs(pairIndex)).pairToken);
     console.log(`pair0 index: ${pairIndex} pairToken: ${pairToken.address}`);
     console.log(`pairToken owner  ${await pairToken.owner()}`)
-    await pairInfo.updatePairMiner(pairIndex, pairLiquidity.address, true);
+    await pool.updatePairMiner(pairIndex, pairLiquidity.address, true);
 
-    console.log(`pair0: ${await pairInfo.getPair(pairIndex)},
-    tradingConfig: ${await pairInfo.getTradingConfig(pairIndex)},
-    tradingFeeConfig: ${await pairInfo.getTradingFeeConfig(pairIndex)},
-    fundingFeeConfig: ${await pairInfo.getFundingFeeConfig(pairIndex)}`);
+    console.log(`pair0: ${await pool.getPair(pairIndex)},
+    tradingConfig: ${await pool.getTradingConfig(pairIndex)},
+    tradingFeeConfig: ${await pool.getTradingFeeConfig(pairIndex)},
+    fundingFeeConfig: ${await pool.getFundingFeeConfig(pairIndex)}`);
 
     // eth - usdt
     pair.indexToken = eth.address;
-    pairIndex = await pairInfo.pairIndexes(pair.indexToken, pair.stableToken);
-    await pairInfo.updatePair(pairIndex, pair);
-    await pairInfo.updateTradingConfig(pairIndex, tradingConfig);
-    await pairInfo.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
-    await pairInfo.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
+    pairIndex = await pool.pairIndexes(pair.indexToken, pair.stableToken);
+    await pool.updatePair(pairIndex, pair);
+    await pool.updateTradingConfig(pairIndex, tradingConfig);
+    await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig);
+    await pool.updateFundingFeeConfig(pairIndex, fundingFeeConfig);
 
-    pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+    pairToken = await contractAt("PoolToken", (await pool.pairs(pairIndex)).pairToken);
     console.log(`pair1 index: ${pairIndex} pairToken: ${pairToken.address}`);
     console.log(`pairToken owner  ${await pairToken.owner()}`)
-    await pairInfo.updatePairMiner(pairIndex, pairLiquidity.address, true);
+    await pool.updatePairMiner(pairIndex, pairLiquidity.address, true);
 
-    console.log(`pair1: ${await pairInfo.getPair(pairIndex)},
-    tradingConfig: ${await pairInfo.getTradingConfig(pairIndex)},
-    tradingFeeConfig: ${await pairInfo.getTradingFeeConfig(pairIndex)},
-    fundingFeeConfig: ${await pairInfo.getFundingFeeConfig(pairIndex)}`);
+    console.log(`pair1: ${await pool.getPair(pairIndex)},
+    tradingConfig: ${await pool.getTradingConfig(pairIndex)},
+    tradingFeeConfig: ${await pool.getTradingFeeConfig(pairIndex)},
+    fundingFeeConfig: ${await pool.getFundingFeeConfig(pairIndex)}`);
 
 }
 
