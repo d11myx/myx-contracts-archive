@@ -219,10 +219,6 @@ contract Pool is IPool, Roleable {
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
     }
 
-    function transferTokenTo(address token, address to, uint256 amount) public onlyPairLiquidityAndVault {
-        IERC20(token).safeTransfer(to, amount);
-    }
-
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
         return vaults[_pairIndex];
     }
@@ -324,14 +320,14 @@ contract Pool is IPool, Roleable {
         return (receivedIndexAmount, receivedStableAmount);
     }
 
-    function removeLiquidityForAccount(
-        address _account,
-        address _receiver,
-        uint256 _pairIndex,
-        uint256 _amount
-    ) external returns (uint256, uint256) {
-        return _removeLiquidity(_account, _receiver, _pairIndex, _amount);
-    }
+    // function removeLiquidityForAccount(
+    //     address _account,
+    //     address _receiver,
+    //     uint256 _pairIndex,
+    //     uint256 _amount
+    // ) external returns (uint256, uint256) {
+    //     return _removeLiquidity(_account, _receiver, _pairIndex, _amount);
+    // }
 
     // function swapInEth(
     //     uint256 _pairIndex,
@@ -422,8 +418,8 @@ contract Pool is IPool, Roleable {
             require(amountOut >= _minOut, 'insufficient minOut');
 
             liqiitySwap(_pairIndex, _isBuy, amountIn, amountOut);
+            IERC20(pair.indexToken).safeTransfer(_receiver, amountOut);
 
-            transferTokenTo(pair.indexToken, _receiver, amountOut);
             IERC20(pair.stableToken).safeTransferFrom(_funder, address(this), amountIn);
         } else {
             // index in stable out
@@ -441,7 +437,7 @@ contract Pool is IPool, Roleable {
             amountIn = amountOut.divPrice(price);
 
             IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), amountIn);
-            transferTokenTo(pair.stableToken, _receiver, amountOut);
+            IERC20(pair.stableToken).safeTransfer(_receiver, amountOut);
         }
 
         emit Swap(_funder, _receiver, _pairIndex, _isBuy, amountIn, amountOut);
@@ -616,9 +612,8 @@ contract Pool is IPool, Roleable {
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
         IPoolToken(pair.pairToken).burn(_account, _amount);
-
-        transferTokenTo(pair.indexToken, _receiver, receiveIndexTokenAmount);
-        transferTokenTo(pair.stableToken, _receiver, receiveStableTokenAmount);
+        IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+        IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
 
         emit RemoveLiquidity(
             _account,
