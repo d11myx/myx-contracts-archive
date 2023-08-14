@@ -22,7 +22,8 @@ library AMMUtils {
         uint256 reserveIn,
         uint256 reserveOut
     ) internal pure returns (uint256 amountOut) {
-        require(amountIn > 0, 'Invalid amount');
+        if (amountIn == 0) {return 0;}
+
         require(reserveIn > 0 && reserveOut > 0, 'Invalid reserve');
         amountOut = Math.mulDiv(amountIn, reserveOut, reserveIn + amountIn);
     }

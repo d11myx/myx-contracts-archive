@@ -16,13 +16,6 @@ async function main() {
     let usdtPriceFeed = await deployContract('MockPriceFeed', ['USDT']);
     let ethPriceFeed = await deployContract('MockPriceFeed', ['ETH']);
 
-    let vaultPriceFeed = await deployContract('OraclePriceFeed', []);
-
-    await vaultPriceFeed.setTokenConfig(eth.address, ethPriceFeed.address, 8);
-    await vaultPriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8);
-    await vaultPriceFeed.setTokenConfig(usdt.address, usdtPriceFeed.address, 8);
-
-
     await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000));
     await ethPriceFeed.setAdmin(user1.address, true);
 
@@ -31,23 +24,30 @@ async function main() {
 
     await usdtPriceFeed.setLatestAnswer(toChainLinkPrice(1));
     await usdtPriceFeed.setAdmin(user1.address, true);
-    let addressProvider = await deployContract('AddressesProvider');
-    let rolemanager = await deployContract('RoleManager', [addressProvider.address]);
+    let addressProvider = await deployContract('AddressesProvider', []);
+    let roleManager = await deployContract('RoleManager', [addressProvider.address]);
 
-    await addressProvider.setRolManager(rolemanager.address);
+    await addressProvider.setRolManager(roleManager.address);
     let fastPriceFeed = await deployContract('IndexPriceFeed', [
         addressProvider.address
     ]);
-    console.log(`fastPriceFeed gov: ${await fastPriceFeed.gov()}`);
-    await rolemanager.addRiskAdmin(user0.address);
-    await rolemanager.addKeeper(user0.address);
-    await rolemanager.addKeeper(user1.address);
+
+    let oraclePriceFeed = await deployContract('OraclePriceFeed', [addressProvider.address]);
+
+    await roleManager.addAdmin(user0.address);
+    await roleManager.addPoolAdmin(user0.address);
+    await roleManager.addKeeper(user0.address);
+    await roleManager.addKeeper(user1.address);
+
+    await oraclePriceFeed.setTokenConfig(eth.address, ethPriceFeed.address, 8);
+    await oraclePriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8);
+    await oraclePriceFeed.setTokenConfig(usdt.address, usdtPriceFeed.address, 8);
 
     await fastPriceFeed.connect(user0).setTokens([btc.address, eth.address], [10, 10]);
 
     await fastPriceFeed.setMaxTimeDeviation(300);
 
-
+}
 main()
     .then(() => process.exit(0))
     .catch((error) => {

@@ -11,7 +11,11 @@ interface IPool {
         uint256 indexed pairIndex,
         uint256 indexAmount,
         uint256 stableAmount,
-        uint256 lpAmount
+        uint256 lpAmount,
+        uint256 indexFeeAmount,
+        uint256 stableFeeAmount,
+        address slipToken,
+        uint256 slipFeeAmount
     );
 
     event RemoveLiquidity(
@@ -39,6 +43,7 @@ interface IPool {
         uint256 kOfSwap; //Initial k value of liquidity
         uint256 expectIndexTokenP; //  10000 for 100%
         uint256 addLpFeeP; // Add liquidity fee
+        uint256 lpFeeDistributeP;
     }
 
     struct TradingConfig {

@@ -10,12 +10,12 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairVault = await contractAt("PoolVault", await getConfig("PoolVault"));
-  let tradingVault = await contractAt("PositionManager", await getConfig("PositionManager"));
+  let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
+  let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
-
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-BTC"));
+  let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   // create
@@ -31,7 +31,7 @@ async function main() {
 
   console.log(`balance of usdt: ${await usdt.balanceOf(tradingRouter.address)}`);
 
-  let key = await tradingVault.getPositionKey(user3.address, 0, false);
+  let key = await tradingUtils.getPositionKey(user3.address, 0, false);
 
   console.log(`position: ${await tradingVault.getPositionByKey(key)}`)
 

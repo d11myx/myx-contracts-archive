@@ -9,12 +9,12 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairVault = await contractAt("PoolVault", await getConfig("PoolVault"));
-  let tradingVault = await contractAt("PositionManager", await getConfig("PositionManager"));
+  let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
+  let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
-
+  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-ETH"));
+  let tradingUtils = await contractAt("TradingUtils", await getConfig("TradingUtils"));
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   let eth = await contractAt("WETH", await getConfig("Token-ETH"))
@@ -46,7 +46,7 @@ async function main() {
   // ADL
   console.log("\n execute ADL")
   let pairIndex = 1;
-  let positionKey = await tradingVault.getPositionKey(user0.address, pairIndex, true);
+  let positionKey = await tradingUtils.getPositionKey(user0.address, pairIndex, true);
   let position = await tradingVault.getPosition(user0.address, pairIndex, false);
   console.log(`position before ADL: ${await tradingVault.getPosition(user0.address, pairIndex, true)}`)
   console.log(`position collateral: ${formatBalance(position.collateral)} amount: ${formatBalance(position.positionAmount)}`);
@@ -66,8 +66,8 @@ async function main() {
 }
 
 async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
-  let pairVault = await contractAt("PoolVault", await getConfig("PoolVault"));
-  let tradingVault = await contractAt("PositionManager", await getConfig("PositionManager"));
+  let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
+  let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
 

@@ -1,12 +1,5 @@
 import { ethers } from 'hardhat';
-import {
-    getExecutor,
-    getOraclePriceFeed,
-    getOrderManager,
-    getRoleManager,
-    getRouter,
-    TradeType,
-} from '../helpers';
+import { getExecutor, getOraclePriceFeed, getOrderManager, getRoleManager, getRouter, TradeType } from '../helpers';
 import { MockPriceFeed } from '../types';
 
 async function main() {
