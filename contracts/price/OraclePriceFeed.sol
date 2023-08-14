@@ -69,6 +69,7 @@ contract OraclePriceFeed is IOraclePriceFeed {
 
     function getPrice(address _token) public view override returns (uint256) {
         uint256 price = getPrimaryPrice(_token);
+        require(price > 0, "invalid price");
         return price;
     }
 

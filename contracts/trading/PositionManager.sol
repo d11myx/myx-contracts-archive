@@ -601,10 +601,11 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         uint256 interval = block.timestamp - position.entryFundingTime;
         if (interval < fundingInterval) {
-            if (!_increase) {
-                int256 fundingRate = (lastFundingRates[_pairIndex] * int256(interval)) / int256(fundingInterval);
-                return (int256(_sizeAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
-            }
+//            if (!_increase) {
+//                int256 fundingRate = (lastFundingRates[_pairIndex] * int256(interval)) / int256(fundingInterval);
+//                return (int256(_sizeAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
+//            }
+            return 0;
         }
 
         int256 fundingRate = cumulativeFundingRates[_pairIndex] - position.entryFundingRate;
@@ -641,7 +642,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             fundingRate = netExposureAmountChecker[_pairIndex] >= 0 ? int256(absFundingRate) : -int256(absFundingRate);
         }
 
-        fundingRate = (fundingRate - fundingFeeConfig.interest).min(fundingFeeConfig.minFundingRate).max(
+        fundingRate = (fundingRate - fundingFeeConfig.interest).max(fundingFeeConfig.minFundingRate).min(
             fundingFeeConfig.maxFundingRate
         );
     }

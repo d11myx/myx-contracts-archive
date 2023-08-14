@@ -97,6 +97,11 @@ Sign a contract, 0 xe72adf5f08db431258776205172d2f1ff1cc4541
 #### event code
 
 ```text
+contract: PairLiquidity
+event: AddLiquidity id: ae2a8a26a2b64d8d971277b87c24d1a12181aef23cf76b898a32ce8dd14c7591
+event: RemoveLiquidity id: 6291bcce50c38c39d79a98ff5fad7f35319722e73285b50a6140dbfac75d511e
+event: Swap id: 2424e4440d8e90b9be053a61916674e21e7603a28f7dccf3ff7b88b755c2e619
+
 contract: OrderManager
 event: CancelDecreaseOrder id: b225fd6bcccad9342bc10ccc7e25ef77175b77348c8393d669ac2dbc98a1ae29
 event: CancelIncreaseOrder id: 7e93a6b00cb3caacf000d7018943b12e2b4ad29e7849df14ebd51caf4fd739b8
