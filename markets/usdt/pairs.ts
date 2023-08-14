@@ -11,6 +11,7 @@ export const btcPairInfo: PairInfoConfig = {
         kOfSwap: ethers.utils.parseUnits('1', 50),
         expectIndexTokenP: 5000,
         addLpFeeP: 100,
+        lpFeeDistributeP: 10000,
     },
     tradingConfig: {
         minLeverage: 0,
@@ -46,6 +47,7 @@ export const ethPairInfo: PairInfoConfig = {
         kOfSwap: ethers.utils.parseUnits('1', 50),
         expectIndexTokenP: 5000,
         addLpFeeP: 100,
+        lpFeeDistributeP: 10000,
     },
     tradingConfig: {
         minLeverage: 0,
