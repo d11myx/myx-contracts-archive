@@ -15,13 +15,13 @@ async function main() {
 
   let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"));
 
-  let pool = await deployUpgradeableContract("Pool", []);
-  let pairVault = await deployUpgradeableContract("PoolVault", [pool.address]);
+  let pairInfo = await deployUpgradeableContract("PairInfo", []);
+  let pairVault = await deployUpgradeableContract("PairVault", [pairInfo.address]);
 
-  let pairLiquidity = await deployUpgradeableContract("PoolLiquidity",
-    [pool.address, pairVault.address, vaultPriceFeed.address, user1.address, user2.address, eth.address]);
+  let pairLiquidity = await deployUpgradeableContract("PairLiquidity",
+    [pairInfo.address, pairVault.address, vaultPriceFeed.address, user1.address, user2.address, eth.address]);
 
-  await pairLiquidity.setHandler(pool.address, true);
+  await pairLiquidity.setHandler(pairInfo.address, true);
   await pairVault.setHandler(pairLiquidity.address, true);
 }
 
