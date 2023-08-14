@@ -110,4 +110,10 @@ interface IPool {
     function decreaseProfit(uint256 _pairIndex, uint256 _profit) external;
 
     function liqiitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
+     function addLiquidity(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount,
+        bytes calldata data
+    ) external returns (uint256);
 }
