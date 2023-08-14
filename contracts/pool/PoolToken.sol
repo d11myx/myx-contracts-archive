@@ -7,18 +7,18 @@ import '../interfaces/IPoolToken.sol';
 import '../libraries/Roleable.sol';
 
 contract PoolToken is IPoolToken, Roleable, ERC20 {
-    address public token0;
-    address public token1;
+    address public indexToken;
+    address public stableToken;
 
     mapping(address => bool) public miners;
 
     constructor(
         IAddressesProvider addressProvider,
-        address _token0,
-        address _token1
+        address _indexToken,
+        address _stableToken
     ) Roleable(addressProvider) ERC20('MYX LPs', 'MYX-LP') {
-        token0 = _token0;
-        token1 = _token1;
+        indexToken = _indexToken;
+        stableToken = _stableToken;
         miners[msg.sender] = true;
     }
 
