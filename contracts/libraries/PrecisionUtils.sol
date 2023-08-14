@@ -32,7 +32,7 @@ library PrecisionUtils {
         return Math.mulDiv(amount0, ONE_HUNDRED_PERCENTAGE, amount1);
     }
 
-    function oneHundredPercentage() internal pure returns (uint256) {
+    function percentage() internal pure returns (uint256) {
         return ONE_HUNDRED_PERCENTAGE;
     }
 
