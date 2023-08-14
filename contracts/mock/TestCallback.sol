@@ -14,14 +14,8 @@ contract TestCallBack is IliquityCallback {
         tokenStable = _tokenStable;
     }
 
-    function addLiquidity(
-        address pool,
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount,
-        bytes calldata data
-    ) external {
-        IPool(pool).addLiquidity(_pairIndex, _indexAmount, _stableAmount, data);
+    function addLiquidity(address pool, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external {
+        IPool(pool).addLiquidity(_pairIndex, _indexAmount, _stableAmount, abi.encode(msg.sender));
     }
 
     function addLiquityCallback(uint256 amountIndex, uint256 amountStable, bytes calldata data) external override {
