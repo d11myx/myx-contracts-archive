@@ -3,7 +3,6 @@ import {
     getExecutor,
     getOraclePriceFeed,
     getOrderManager,
-    getPairLiquidity,
     getRoleManager,
     getRouter,
     TradeType,
@@ -20,7 +19,7 @@ async function main() {
     const orderManager = await getOrderManager();
     const executor = await getExecutor();
     const oraclePriceFeed = await getOraclePriceFeed();
-    const pairLiquidity = await getPairLiquidity();
+
     const roleManager = await getRoleManager();
 
     console.log(`router:`, router.address);

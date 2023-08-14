@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
-import './interfaces/IPairToken.sol';
+import '../interfaces/IPoolToken.sol';
 
-contract PairToken is IPairToken, ERC20, Ownable {
+contract PoolToken is IPoolToken, ERC20, Ownable {
     address public token0;
     address public token1;
 

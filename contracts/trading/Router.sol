@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/utils/Address.sol';
-import '@openzeppelin/contracts/utils/Multicall.sol';
 
 import '../interfaces/IRouter.sol';
 import '../interfaces/IAddressesProvider.sol';
@@ -11,6 +10,7 @@ import '../interfaces/IOrderManager.sol';
 
 import '../libraries/PositionKey.sol';
 import '../libraries/ETHGetway.sol';
+import '../libraries/Multicall.sol';
 
 contract Router is Multicall, IRouter, ETHGetway {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
