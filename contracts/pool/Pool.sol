@@ -304,10 +304,12 @@ contract Pool is IPool, Roleable {
     }
 
     function removeLiquidity(
+        address _receiver,
         uint256 _pairIndex,
-        uint256 _amount
+        uint256 _amount,
+        bytes calldata data
     ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
-        (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(msg.sender, address(this), _pairIndex, _amount);
+        (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(_receiver, _pairIndex, _amount, data);
 
         IPool.Pair memory pair = getPair(_pairIndex);
         // if (receivedIndexAmount > 0 && pair.indexToken == weth) {
@@ -585,16 +587,14 @@ contract Pool is IPool, Roleable {
     }
 
     function _removeLiquidity(
-        address _account,
         address _receiver,
         uint256 _pairIndex,
-        uint256 _amount
+        uint256 _amount,
+        bytes calldata data
     ) private returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
         require(_amount > 0, 'invalid amount');
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
-
-        require(IERC20(pair.pairToken).balanceOf(_account) >= _amount, 'insufficient balance');
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
@@ -610,13 +610,13 @@ contract Pool is IPool, Roleable {
         );
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
-
-        IPoolToken(pair.pairToken).burn(_account, _amount);
+        IliquityCallback(msg.sender).removeLiquityCallback(pair.pairToken, _amount, data);
+        IPoolToken(pair.pairToken).burn(_amount);
         IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
         IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
 
         emit RemoveLiquidity(
-            _account,
+            msg.sender,
             _receiver,
             _pairIndex,
             receiveIndexTokenAmount,

@@ -35,6 +35,10 @@ contract PoolToken is IPoolToken, Roleable, ERC20 {
         _burn(account, amount);
     }
 
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
+    }
+
     //todo lock time
     function setMiner(address account, bool enable) external onlyAdmin {
         miners[account] = enable;
