@@ -84,7 +84,7 @@ describe('Modify LP Average Price', async () => {
                 usdt,
                 router,
                 executor,
-                tradingVault,
+                positionManager,
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
@@ -109,7 +109,7 @@ describe('Modify LP Average Price', async () => {
                     ),
             );
 
-            const positionBef = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
             const positionBefAmount = positionBef.positionAmount;
 
@@ -136,7 +136,7 @@ describe('Modify LP Average Price', async () => {
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
-            const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             expect(positionAft.averagePrice).to.be.eq(
                 positionBefAvgPrice
                     .mul(positionBefAmount)
@@ -153,7 +153,7 @@ describe('Modify LP Average Price', async () => {
                 usdt,
                 router,
                 executor,
-                tradingVault,
+                positionManager,
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
@@ -178,7 +178,7 @@ describe('Modify LP Average Price', async () => {
                     ),
             );
 
-            const positionBef = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
             const positionBefAmount = positionBef.positionAmount;
 
@@ -207,7 +207,7 @@ describe('Modify LP Average Price', async () => {
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
-            const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             const uintNum = ethers.utils.parseUnits('1', 18);
             expect(positionAft.averagePrice.div(uintNum)).to.be.eq(
                 positionBefAvgPrice
@@ -226,7 +226,7 @@ describe('Modify LP Average Price', async () => {
                 usdt,
                 router,
                 executor,
-                tradingVault,
+                positionManager,
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
@@ -251,7 +251,7 @@ describe('Modify LP Average Price', async () => {
                     ),
             );
 
-            const positionBef = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
             const positionBefAmount = positionBef.positionAmount;
 
@@ -274,7 +274,7 @@ describe('Modify LP Average Price', async () => {
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
-            const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             expect(positionBef.averagePrice).to.be.lt(
                 positionBefAvgPrice
                     .mul(positionBefAmount)
@@ -291,7 +291,7 @@ describe('Modify LP Average Price', async () => {
                 usdt,
                 router,
                 executor,
-                tradingVault,
+                positionManager,
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
@@ -316,7 +316,7 @@ describe('Modify LP Average Price', async () => {
                     ),
             );
 
-            const positionBef = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
             const positionBefAmount = positionBef.positionAmount;
 
@@ -339,7 +339,7 @@ describe('Modify LP Average Price', async () => {
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
-            const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
+            const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`---positionAft: `, positionAft);
             expect(positionBef.averagePrice).to.be.gt(
                 positionBefAvgPrice
