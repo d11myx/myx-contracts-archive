@@ -2,7 +2,6 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     IndexPriceFeed,
     Pool,
-    PoolLiquidity,
     MockPriceFeed,
     Token,
     PositionManager,
@@ -13,6 +12,7 @@ import {
     Executor,
     OrderManager,
     RoleManager,
+    TestCallBack,
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -126,7 +126,6 @@ export async function deployPair(
     ])) as any as Pool;
     console.log(`deployed Pool at ${pool.address}`);
 
-
     return { pool };
 }
 
@@ -189,4 +188,8 @@ export async function deployTrading(
     await orderManager.setExecutor(executor.address);
 
     return { tradingVault, router, executor, orderManager };
+}
+export async function deployMockCallback(indexToken: string, stableToken: string) {
+    let testCallBack = (await deployContract('TestCallBack', [indexToken, stableToken])) as TestCallBack;
+    return testCallBack;
 }
