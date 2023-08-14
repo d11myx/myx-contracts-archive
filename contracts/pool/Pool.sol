@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
 import '../libraries/PrecisionUtils.sol';
@@ -17,11 +18,14 @@ import '../interfaces/IPool.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 
+import '../interfaces/IliquityCallback.sol';
+
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
     using Math for uint256;
+    using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 1e30;
     uint256 public constant PERCENTAGE = 10000;
@@ -277,8 +281,13 @@ contract Pool is IPool, Roleable {
         slipReceiver = _slipReceiver;
     }
 
-    function addLiquidity(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external returns (uint256) {
-        return _addLiquidity(msg.sender, msg.sender, _pairIndex, _indexAmount, _stableAmount);
+    function addLiquidity(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount,
+        bytes calldata data
+    ) external returns (uint256) {
+        return _addLiquidity(msg.sender, msg.sender, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     // function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
@@ -296,9 +305,10 @@ contract Pool is IPool, Roleable {
         address _account,
         uint256 _pairIndex,
         uint256 _indexAmount,
-        uint256 _stableAmount
+        uint256 _stableAmount,
+        bytes calldata data
     ) external returns (uint256) {
-        return _addLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount);
+        return _addLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function removeLiquidity(
@@ -441,12 +451,32 @@ contract Pool is IPool, Roleable {
         emit Swap(_funder, _receiver, _pairIndex, _isBuy, amountIn, amountOut);
     }
 
+    function _transferToken(
+        address indexToken,
+        address stableToken,
+        uint256 indexAmount,
+        uint256 stableAmount,
+        bytes calldata data
+    ) internal {
+        uint256 balanceIndexBefore;
+        uint256 balanceStableBefore;
+        if (indexAmount > 0) balanceIndexBefore = IERC20(indexToken).balanceOf(address(this));
+        if (stableAmount > 0) balanceStableBefore = IERC20(stableToken).balanceOf(address(this));
+        IliquityCallback(msg.sender).addLiquityCallback(indexAmount, stableAmount, data);
+
+        if (indexAmount > 0)
+            require(balanceIndexBefore.add(indexAmount) <= IERC20(indexToken).balanceOf(address(this)), 'ti');
+        if (stableAmount > 0)
+            require(balanceStableBefore.add(stableAmount) <= IERC20(stableToken).balanceOf(address(this)), 'ts');
+    }
+
     function _addLiquidity(
-        address _funder,
+        address recipient,
         address _account,
         uint256 _pairIndex,
         uint256 _indexAmount,
-        uint256 _stableAmount
+        uint256 _stableAmount,
+        bytes calldata data
     ) private returns (uint256 mintAmount) {
         require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
 
@@ -454,13 +484,8 @@ contract Pool is IPool, Roleable {
         require(pair.pairToken != address(0), 'invalid pair');
 
         IPool.Vault memory vault = getVault(_pairIndex);
+        _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
 
-        // transfer token
-        if (_funder != address(this)) {
-            IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), _indexAmount);
-            IERC20(pair.stableToken).safeTransferFrom(_funder, address(this), _stableAmount);
-        }
-        // fee
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
@@ -530,10 +555,7 @@ contract Pool is IPool, Roleable {
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
-        IERC20(pair.indexToken).safeTransfer(address(this), afterFeeIndexAmount);
-        IERC20(pair.stableToken).safeTransfer(address(this), afterFeeStableAmount);
-
-        emit AddLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
+        emit AddLiquidity(recipient, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
 
         return mintAmount;
     }
