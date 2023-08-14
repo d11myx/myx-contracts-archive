@@ -1,5 +1,5 @@
-const { deployContract, deployUpgradeableContract, toChainLinkPrice} = require("../utils/helpers");
-const { expandDecimals, getBlockTime, reduceDecimals} = require("../utils/utilities");
+const {deployContract, deployUpgradeableContract, toChainLinkPrice} = require("../utils/helpers");
+const {expandDecimals, getBlockTime, reduceDecimals} = require("../utils/utilities");
 const hre = require("hardhat");
 const {mintWETH, getConfig, repeatString} = require("../utils/utils");
 const {contractAt} = require("../utils/helpers");
@@ -10,23 +10,24 @@ const BNB_PRICE = 300;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 async function main() {
-  console.log("\n updateConfig")
-  const signers = await hre.ethers.getSigners()
+    console.log("\n trading updateConfig")
+    const signers = await hre.ethers.getSigners()
 
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
-  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
-  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
-  let usdtPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-USDT"));
-  let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
+    let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
+    let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
+    let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
+    let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
 
-  await executeRouter.setMaxTimeDelay(5 * 60);
+    let feeDistributor = await contractAt("Distributor", await getConfig("Distributor:Fee"));
 
+    await executeRouter.setMaxTimeDelay(60);
+
+    await tradingVault.setTradingFeeReceiver(feeDistributor.address);
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error)
-    process.exit(1)
-  })
+    .then(() => process.exit(0))
+    .catch(error => {
+        console.error(error)
+        process.exit(1)
+    })

@@ -1,3 +1,5 @@
+hh run scripts/price/setPrices.js --network $1
+hh run scripts/pair/addLiquidity.js --network $1
 hh run scripts/trading/increaseMarketLong.js --network $1
 hh run scripts/trading/increaseLimitShort.js --network $1
 hh run scripts/trading/decreaseMarketLong.js --network $1
