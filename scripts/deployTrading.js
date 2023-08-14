@@ -11,22 +11,24 @@ async function main() {
 
   console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pool = await contractAt("Pool", await getConfig("Pool"));
-  let pairVault = await contractAt("PoolVault", await getConfig("PoolVault"));
+  let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
+  let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
   let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"));
   let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"));
+  let roleManager = await contractAt('RoleManager', await getConfig("RoleManager"));
 
+  let tradingUtils = await deployUpgradeableContract("TradingUtils", []);
 
-  let args = [pool.address, pairVault.address, user1.address, 8 * 60 * 60];
-  let tradingVault = await deployUpgradeableContract("PositionManager", args);
+  let args = [pairInfo.address, pairVault.address, tradingUtils.address, user1.address, 8 * 60 * 60];
+  let tradingVault = await deployUpgradeableContract("TradingVault", args);
 
-  args = [pool.address, pairVault.address, tradingVault.address,];
+  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingUtils.address];
   let tradingRouter = await deployUpgradeableContract("TradingRouter", args);
 
-  args = [pool.address, pairVault.address, tradingVault.address, tradingRouter.address, fastPriceFeed.address, 60];
+  args = [pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, fastPriceFeed.address, tradingUtils.address, 60];
   let executeRouter = await deployUpgradeableContract("ExecuteRouter", args);
 
-//   await tradingUtils.setContract(pool.address, pairVault.address, tradingVault.address, tradingRouter.address, vaultPriceFeed.address);
+  await tradingUtils.setContract(pairInfo.address, pairVault.address, tradingVault.address, tradingRouter.address, vaultPriceFeed.address);
 
   await pairVault.setHandler(tradingVault.address, true);
   await tradingVault.setHandler(executeRouter.address, true);
@@ -34,7 +36,8 @@ async function main() {
   await executeRouter.setPositionKeeper(user0.address, true);
   await executeRouter.setPositionKeeper(user1.address, true);
 
-  await fastPriceFeed.setUpdater(executeRouter.address, true);
+
+  await roleManager.addKeeper(executeRouter.address);
 }
 
 main()

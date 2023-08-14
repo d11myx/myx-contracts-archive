@@ -30,7 +30,7 @@ async function main() {
     console.log(repeatString('-'))
     console.log(symbol)
     let token = await getConfig("Token-" + symbol);
-    let priceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-" + symbol))
+    let priceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-" + symbol))
     let decimals = await vaultPriceFeed.priceDecimals(token);
     let lastRound = await priceFeed.latestRound();
     console.log(`decimals: ${decimals}`)
@@ -40,9 +40,9 @@ async function main() {
       console.log(`oracle round: ${lastRound - 2} latestAnswer: ${reduceDecimals((await priceFeed.getRoundData(lastRound - 2))[1], decimals)}`)
     }
     console.log(`fastPriceFeed price: ${reduceDecimals(await fastPriceFeed.prices(token), 30)}`);
-    console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, true), 30)}`)
-    console.log(`vaultPriceFeed getIndexPrice: ${reduceDecimals(await vaultPriceFeed.getIndexPrice(token, 0, true), 30)}`)
-    console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true), 30)}`)
+    console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token), 30)}`)
+    console.log(`vaultPriceFeed getIndexPrice: ${reduceDecimals(await vaultPriceFeed.getIndexPrice(token, 0), 30)}`)
+    console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token), 30)}`)
   }
 }
 
