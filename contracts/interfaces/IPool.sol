@@ -1,10 +1,36 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-interface IPairInfo {
+interface IPool {
     // Events
     event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
 
+    event AddLiquidity(
+        address indexed funder,
+        address indexed account,
+        uint256 indexed pairIndex,
+        uint256 indexAmount,
+        uint256 stableAmount,
+        uint256 lpAmount
+    );
+
+    event RemoveLiquidity(
+        address indexed account,
+        address indexed receiver,
+        uint256 indexed pairIndex,
+        uint256 indexAmount,
+        uint256 stableAmount,
+        uint256 lpAmount
+    );
+
+    event Swap(
+        address indexed funder,
+        address indexed receiver,
+        uint256 indexed pairIndex,
+        bool isBuy, // buy indexToken with stableToken
+        uint256 amountIn,
+        uint256 amountOut
+    );
     struct Pair {
         address indexToken;
         address stableToken;
@@ -78,5 +104,5 @@ interface IPairInfo {
 
     function decreaseProfit(uint256 _pairIndex, uint256 _profit) external;
 
-    function swap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
+    function liqiitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
 }

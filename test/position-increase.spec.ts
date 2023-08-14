@@ -14,15 +14,15 @@ describe('Router: increase position ar', () => {
             users: [depositor],
             btc,
             usdt,
-            pairLiquidity,
+            pool
         } = testEnv;
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('10000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, pairLiquidity.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairLiquidity.address);
-        await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, pool.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pool.address);
+        await pool.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
     });
 
     describe('Router: collateral test cases', () => {

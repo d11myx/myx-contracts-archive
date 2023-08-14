@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { mintAndApprove } from './helpers/misc';
 import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
-import { IPairInfo } from '../types';
+import { IPool } from '../types';
 import { expect } from './shared/expect';
 import { TradingTypes } from '../types/contracts/interfaces/IOrderManager';
 
@@ -16,16 +16,16 @@ describe('Router: check require condition, trigger errors', async () => {
             users: [depositor],
             usdt,
             btc,
-            pairLiquidity,
+            pool,
         } = testEnv;
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('20000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, pairLiquidity.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairLiquidity.address);
-        await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, pool.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pool.address);
+        await pool.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
     });
     after(async () => {});
 
@@ -117,11 +117,11 @@ describe('Router: check require condition, trigger errors', async () => {
 
         describe('disable pair', async () => {
             after('afer enable pair', async () => {
-                const { pairInfo } = testEnv;
+                const { pool } = testEnv;
 
-                const pair = await pairInfo.getPair(pairIndex);
+                const pair = await pool.getPair(pairIndex);
                 console.log(`pair: `, pair);
-                const newPair: IPairInfo.PairStruct = {
+                const newPair: IPool.PairStruct = {
                     indexToken: pair.indexToken,
                     stableToken: pair.stableToken,
                     pairToken: pair.pairToken,
@@ -130,7 +130,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     expectIndexTokenP: pair.expectIndexTokenP,
                     addLpFeeP: pair.addLpFeeP,
                 };
-                await pairInfo.updatePair(pairIndex, newPair);
+                await pool.updatePair(pairIndex, newPair);
             });
 
             it('pair is enable', async () => {
@@ -140,14 +140,14 @@ describe('Router: check require condition, trigger errors', async () => {
                     users: [trader],
                     usdt,
                     router,
-                    pairInfo,
+                    pool,
                     orderManager,
                 } = testEnv;
 
                 // disable pair
-                const pairBef = await pairInfo.getPair(pairIndex);
+                const pairBef = await pool.getPair(pairIndex);
                 console.log(`pair: `, pairBef);
-                const newPair: IPairInfo.PairStruct = {
+                const newPair: IPool.PairStruct = {
                     indexToken: pairBef.indexToken,
                     stableToken: pairBef.stableToken,
                     pairToken: pairBef.pairToken,
@@ -156,9 +156,9 @@ describe('Router: check require condition, trigger errors', async () => {
                     expectIndexTokenP: pairBef.expectIndexTokenP,
                     addLpFeeP: pairBef.addLpFeeP,
                 };
-                await pairInfo.updatePair(pairIndex, newPair);
+                await pool.updatePair(pairIndex, newPair);
 
-                const pairAft = await pairInfo.getPair(pairIndex);
+                const pairAft = await pool.getPair(pairIndex);
                 console.log(`pairAft: `, pairAft);
 
                 const collateral = ethers.utils.parseUnits('10000', 18);
@@ -233,11 +233,11 @@ describe('Router: check require condition, trigger errors', async () => {
                     users: [trader],
                     usdt,
                     router,
-                    pairInfo,
+                    pool,
                     orderManager,
                 } = testEnv;
 
-                const tradingConfig = await pairInfo.getTradingConfig(pairIndex);
+                const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const minTradeAmount = tradingConfig.minTradeAmount;
                 const maxTradeAmount = tradingConfig.maxTradeAmount;
 
@@ -277,12 +277,12 @@ describe('Router: check require condition, trigger errors', async () => {
                     deployer,
                     users: [trader],
                     usdt,
-                    pairInfo,
+                    pool,
                     router,
                     orderManager,
                 } = testEnv;
 
-                const tradingConfig = await pairInfo.getTradingConfig(pairIndex);
+                const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const minTradeAmount = tradingConfig.minTradeAmount;
                 const maxTradeAmount = tradingConfig.maxTradeAmount;
 

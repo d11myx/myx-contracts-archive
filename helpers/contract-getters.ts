@@ -6,7 +6,6 @@ import {
     MockPriceFeed,
     OraclePriceFeed,
     Pool,
-    PoolLiquidity,
     OrderManager,
     RoleManager,
     Router,
@@ -21,8 +20,6 @@ import {
     MOCK_PRICE_FEED_PREFIX,
     ORACLE_PRICE_FEED_ID,
     PAIR_INFO_ID,
-    PAIR_LIQUIDITY_ID,
-    PAIR_VAULT_ID,
     ROLE_MANAGER_ID,
     MOCK_TOKEN_PREFIX,
     TRADING_VAULT_ID,
@@ -81,13 +78,6 @@ export const getIndexPriceFeed = async (address?: string): Promise<IndexPriceFee
 
 export const getPairInfo = async (address?: string): Promise<Pool> => {
     return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
-};
-
-export const getPairLiquidity = async (address?: string): Promise<PoolLiquidity> => {
-    return getContract<PoolLiquidity>(
-        'PoolLiquidity',
-        address || (await hre.deployments.get(PAIR_LIQUIDITY_ID)).address,
-    );
 };
 
 export const getTradingVault = async (address?: string): Promise<PositionManager> => {
