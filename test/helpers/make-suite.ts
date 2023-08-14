@@ -134,8 +134,6 @@ export async function setupTestEnv() {
     // pair
     testEnv.pool = await getPairInfo();
 
-
-
     // trading
     testEnv.tradingVault = await getTradingVault();
     testEnv.router = await getRouter();

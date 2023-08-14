@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { mintAndApprove } from './helpers/misc';
-import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { MAX_UINT_AMOUNT, TradeType, deployMockCallback, waitForTx } from '../helpers';
 import { IPool } from '../types';
 import { expect } from './shared/expect';
 import { TradingTypes } from '../types/contracts/interfaces/IOrderManager';
@@ -22,10 +22,10 @@ describe('Router: check require condition, trigger errors', async () => {
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('20000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
-
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, pool.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pool.address);
-        await pool.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+        let testCallBack = await deployMockCallback(btc.address, usdt.address);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await testCallBack.connect(depositor.signer).addLiquidity(pool.address, pairIndex, indexAmount, stableAmount);
     });
     after(async () => {});
 
