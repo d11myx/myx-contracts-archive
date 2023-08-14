@@ -163,9 +163,9 @@ contract Executor is IExecutor, Pausable {
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.isLong
-                    ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <=
+                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <=
                         order.openPrice
-                    : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >=
+                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >=
                         order.openPrice,
                 'not reach trigger price'
             );
@@ -387,9 +387,9 @@ contract Executor is IExecutor, Pausable {
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.abovePrice
-                    ? price.mulPercentage(PrecisionUtils.oneHundredPercentage() - tradingConfig.priceSlipP) <=
+                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <=
                         order.triggerPrice
-                    : price.mulPercentage(PrecisionUtils.oneHundredPercentage() + tradingConfig.priceSlipP) >=
+                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >=
                         order.triggerPrice,
                 'not reach trigger price'
             );
@@ -624,7 +624,9 @@ contract Executor is IExecutor, Pausable {
         uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
 
         int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
-        int256 exposureAsset = int256(position.collateral) + unrealizedPnl;
+        uint256 tradingFee = positionManager.getTradingFee(position.pairIndex, position.isLong, position.positionAmount);
+        int256 fundingFee = positionManager.getFundingFee(false, position.account, position.pairIndex, position.isLong, position.positionAmount);
+        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + (position.isLong ? -fundingFee : fundingFee);
 
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
 
@@ -637,7 +639,7 @@ contract Executor is IExecutor, Pausable {
                 .mulPrice(position.averagePrice)
                 .mulPercentage(tradingConfig.maintainMarginRate)
                 .calculatePercentage(uint256(exposureAsset));
-            needLiquidate = riskRate >= PrecisionUtils.oneHundredPercentage();
+            needLiquidate = riskRate >= PrecisionUtils.percentage();
         }
         if (!needLiquidate) {
             return;

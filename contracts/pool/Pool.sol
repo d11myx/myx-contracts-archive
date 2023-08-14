@@ -16,6 +16,8 @@ import '../interfaces/IOraclePriceFeed.sol';
 import '../interfaces/IPool.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
+import "../token/interfaces/IBaseToken.sol";
+import "../token/PairToken.sol";
 
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
@@ -39,16 +41,16 @@ contract Pool is IPool, Roleable {
     mapping(uint256 => Vault) public vaults;
 
     address public tradingVault;
-    address public feeReceiver;
-    address public slipReceiver;
+    address public feeReceiver0;
+    address public feeReceiver1;
 
     constructor(
         IAddressesProvider addressProvider,
-        address _feeReceiver,
-        address _slipReceiver
+        address _feeReceiver0,
+        address _feeReceiver1
     ) Roleable(addressProvider) {
-        feeReceiver = _feeReceiver;
-        slipReceiver = _slipReceiver;
+        feeReceiver0 = _feeReceiver0;
+        feeReceiver1 = _feeReceiver1;
     }
 
     modifier onlyPairLiquidityAndVault() {
@@ -107,7 +109,7 @@ contract Pool is IPool, Roleable {
         assembly {
             pairToken := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        IPoolToken(pairToken).setMiner(address(this), true);
+        IBaseToken(pairToken).setMiner(address(this), true);
         return pairToken;
     }
 
@@ -145,16 +147,6 @@ contract Pool is IPool, Roleable {
         FundingFeeConfig calldata _fundingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _fundingFeeConfig.minFundingRate <= 0 &&
-                _fundingFeeConfig.minFundingRate >= -int256(FUNDING_RATE_PERCENTAGE),
-            'exceed min funding rate 100%'
-        );
-        require(
-            _fundingFeeConfig.maxFundingRate >= 0 &&
-                _fundingFeeConfig.maxFundingRate <= int256(FUNDING_RATE_PERCENTAGE),
-            'exceed max funding rate 100%'
-        );
-        require(
             _fundingFeeConfig.fundingWeightFactor <= PERCENTAGE &&
                 _fundingFeeConfig.liquidityPremiumFactor <= PERCENTAGE &&
                 _fundingFeeConfig.lpDistributeP <= PERCENTAGE,
@@ -168,7 +160,7 @@ contract Pool is IPool, Roleable {
         Pair memory pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
 
-        IPoolToken(pair.pairToken).setMiner(_account, _enable);
+        IBaseToken(pair.pairToken).setMiner(_account, _enable);
     }
 
     function increaseTotalAmount(
@@ -272,9 +264,9 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function setReceiver(address _feeReceiver, address _slipReceiver) external onlyPoolAdmin {
-        feeReceiver = _feeReceiver;
-        slipReceiver = _slipReceiver;
+    function setReceiver(address _feeReceiver0, address _feeReceiver1) external onlyPoolAdmin {
+        feeReceiver0 = _feeReceiver0;
+        feeReceiver1 = _feeReceiver1;
     }
 
     function addLiquidity(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external returns (uint256) {
@@ -464,76 +456,77 @@ contract Pool is IPool, Roleable {
         uint256 afterFeeIndexAmount;
         uint256 afterFeeStableAmount;
 
-        {
-            // transfer fee
-            uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
-            uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
+        // transfer fee
+        uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
+        uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
 
-            IERC20(pair.indexToken).safeTransfer(feeReceiver, indexFeeAmount);
-            IERC20(pair.stableToken).safeTransfer(feeReceiver, stableFeeAmount);
+        IERC20(pair.indexToken).safeTransfer(feeReceiver0, indexFeeAmount.mulPercentage(pair.lpFeeDistributeP));
+        IERC20(pair.indexToken).safeTransfer(feeReceiver1, indexFeeAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP));
+        IERC20(pair.stableToken).safeTransfer(feeReceiver0, stableFeeAmount.mulPercentage(pair.lpFeeDistributeP));
+        IERC20(pair.stableToken).safeTransfer(feeReceiver1, stableFeeAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP));
 
-            afterFeeIndexAmount = _indexAmount - indexFeeAmount;
-            afterFeeStableAmount = _stableAmount - stableFeeAmount;
-        }
+        afterFeeIndexAmount = _indexAmount - indexFeeAmount;
+        afterFeeStableAmount = _stableAmount - stableFeeAmount;
 
         // usdt value of reserve
-        {
-            uint256 price = _getPrice(pair.indexToken);
-            require(price > 0, 'invalid price');
+        uint256 price = _getPrice(pair.indexToken);
+        require(price > 0, "invalid price");
 
-            uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
 
-            // usdt value of deposit
-            uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
+        // usdt value of deposit
+        uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
 
-            // calculate deposit usdt value without slippage
-            uint256 slipDelta;
-            if (indexReserveDelta + vault.stableTotalAmount > 0) {
-                // after deposit
-                uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
-                uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
-                // expect delta
-                uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
-                uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-                uint256 expectStableDelta = totalDelta - expectIndexDelta;
+        // calculate deposit usdt value without slippage
+        uint256 slipDelta;
+        address slipToken;
+        uint256 slipAmount;
+        if (indexReserveDelta + vault.stableTotalAmount > 0) {
 
-                (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
-                if (indexTotalDelta > expectIndexDelta) {
-                    uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
-                    uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
-                        ? (indexDepositDelta - needSwapIndexDelta)
-                        : indexDepositDelta;
+            // after deposit
+            uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
+            uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
 
-                    slipDelta = AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
-                    uint256 slipAmount = _getAmount(slipDelta, price);
+            // expect delta
+            uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
+            uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
+            uint256 expectStableDelta = totalDelta - expectIndexDelta;
 
-                    afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                    IERC20(pair.indexToken).safeTransfer(slipReceiver, slipAmount);
-                } else if (stableTotalDelta > expectStableDelta) {
-                    uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
-                    uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
-                        ? (afterFeeStableAmount - needSwapStableDelta)
-                        : afterFeeStableAmount;
+            (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
+            if (indexTotalDelta > expectIndexDelta) {
+                uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
+                uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta ? (indexDepositDelta - needSwapIndexDelta) : indexDepositDelta;
 
-                    slipDelta =
-                        swapStableDelta -
-                        _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+                slipDelta = swapIndexDelta - AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
+                slipToken = pair.indexToken;
+                slipAmount = _getAmount(slipDelta, price);
 
-                    afterFeeStableAmount = afterFeeStableAmount - slipDelta;
-                    IERC20(pair.stableToken).safeTransfer(slipReceiver, slipDelta);
-                }
+                afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
+                IERC20(pair.indexToken).safeTransfer(feeReceiver0, slipAmount.mulPercentage(pair.lpFeeDistributeP));
+                IERC20(pair.indexToken).safeTransfer(feeReceiver1, slipAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP));
+            } else if (stableTotalDelta > expectStableDelta) {
+                uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
+                uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta ? (afterFeeStableAmount - needSwapStableDelta) : afterFeeStableAmount;
+
+                slipDelta = swapStableDelta - _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+                slipToken = pair.stableToken;
+                slipAmount = slipDelta;
+
+                afterFeeStableAmount = afterFeeStableAmount - slipDelta;
+                IERC20(pair.stableToken).safeTransfer(feeReceiver0, slipDelta.mulPercentage(pair.lpFeeDistributeP));
+                IERC20(pair.stableToken).safeTransfer(feeReceiver1, slipDelta.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP));
             }
-            // mint lp
-            mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
         }
-        IPoolToken(pair.pairToken).mint(_account, mintAmount);
+        // mint lp
+        mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
+        IBaseToken(pair.pairToken).mint(_account, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
         IERC20(pair.indexToken).safeTransfer(address(this), afterFeeIndexAmount);
         IERC20(pair.stableToken).safeTransfer(address(this), afterFeeStableAmount);
 
-        emit AddLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
+        emit AddLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount, indexFeeAmount, stableFeeAmount, slipToken, slipAmount);
 
         return mintAmount;
     }
@@ -653,7 +646,7 @@ contract Pool is IPool, Roleable {
                         ? (indexDepositDelta - needSwapIndexDelta)
                         : indexDepositDelta;
 
-                    slipDelta = AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
+                    slipDelta = swapIndexDelta - AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
                     slipAmount = _getAmount(slipDelta, price);
                     slipToken = pair.indexToken;
 
@@ -729,8 +722,8 @@ contract Pool is IPool, Roleable {
         depositStableAmount = depositStableTokenDelta;
 
         // add fee
-        depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - pair.addLpFeeP);
-        depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.oneHundredPercentage() - pair.addLpFeeP);
+        depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.percentage() - pair.addLpFeeP);
+        depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.percentage() - pair.addLpFeeP);
 
         return (depositIndexAmount, depositStableAmount);
     }
