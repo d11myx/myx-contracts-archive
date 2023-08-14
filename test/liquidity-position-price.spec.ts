@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { before } from 'mocha';
 import { increasePosition, mintAndApprove } from './helpers/misc';
-import { getBlockTimestamp, TradeType, waitForTx } from '../helpers';
+import { deployMockCallback, getBlockTimestamp, TradeType, waitForTx } from '../helpers';
 import { IRouter, TradingTypes } from '../types/contracts/interfaces/IRouter';
 import { MockPriceFeed, Router__factory } from '../types';
 import { expect } from './shared/expect';
@@ -24,10 +24,12 @@ describe('Modify LP Average Price', async () => {
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('20000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        console.log("usdt:"+usdt.address);
 
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, pool.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pool.address);
-        await pool.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+        let testCallBack = await deployMockCallback(btc.address, usdt.address);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await testCallBack.connect(depositor.signer).addLiquidity(pool.address, pairIndex, indexAmount, stableAmount);
     });
 
     after(async () => {});

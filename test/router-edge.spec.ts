@@ -2,7 +2,7 @@ import { newTestEnv, SignerWithAddress, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { MockPriceFeed } from '../types';
 import { BigNumber } from 'ethers';
-import { getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { deployMockCallback, getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { expect } from './shared/expect';
 import { increasePosition, mintAndApprove } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/trading/Router';
@@ -29,17 +29,18 @@ describe('Router: Edge cases', () => {
             usdt,
             users: [depositor],
 
-            pool
+            pool,
         } = testEnv;
 
         const btcAmount = ethers.utils.parseUnits('34', await btc.decimals());
         const usdtAmount = ethers.utils.parseUnits('1000000', await usdt.decimals());
         await waitForTx(await btc.connect(deployer.signer).mint(depositor.address, btcAmount));
         await waitForTx(await usdt.connect(deployer.signer).mint(depositor.address, usdtAmount));
+        let testCallBack = await deployMockCallback(btc.address, usdt.address);
 
-        await btc.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
-        await usdt.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
-        await pool.connect(depositor.signer).addLiquidity(pairIndex, btcAmount, usdtAmount);
+        await btc.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT);
+        await usdt.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT);
+        await testCallBack.connect(depositor.signer).addLiquidity(pool.address, pairIndex, btcAmount, usdtAmount);
 
         const pairVaultInfo = await pool.getVault(pairIndex);
         console.log(
