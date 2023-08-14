@@ -34,6 +34,7 @@ import {
     getRouter,
     getExecutor,
     getOrderManager,
+    getPositionManager,
 } from '../../helpers';
 import { address } from 'hardhat/internal/core/config/config-validation';
 
@@ -59,10 +60,10 @@ export interface TestEnv {
     pool: Pool;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
-    tradingVault: PositionManager;
     router: Router;
     executor: Executor;
     orderManager: OrderManager;
+    positionManager: PositionManager;
 }
 
 export const testEnv: TestEnv = {
@@ -80,11 +81,10 @@ export const testEnv: TestEnv = {
     pool: {} as Pool,
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
-    tradingVault: {} as PositionManager,
     router: {} as Router,
     executor: {} as Executor,
     orderManager: {} as OrderManager,
-    // positionManager: {} as PositionManager,
+    positionManager: {} as PositionManager,
 } as TestEnv;
 
 export async function setupTestEnv() {
@@ -134,14 +134,11 @@ export async function setupTestEnv() {
     // pair
     testEnv.pool = await getPairInfo();
 
-
-
     // trading
-    testEnv.tradingVault = await getTradingVault();
     testEnv.router = await getRouter();
     testEnv.executor = await getExecutor();
     testEnv.orderManager = await getOrderManager();
-    // testEnv.positionManager = await getPositionManager();
+    testEnv.positionManager = await getPositionManager();
 }
 
 export async function newTestEnv(): Promise<TestEnv> {
@@ -174,7 +171,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
-    const { tradingVault, router, executor, orderManager } = await deployTrading(
+    const { positionManager, router, executor, orderManager } = await deployTrading(
         deployer,
         deployer,
         addressesProvider,
@@ -184,7 +181,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         indexPriceFeed,
     );
 
-    await pool.setTradingVault(tradingVault.address);
+    await pool.setTradingVault(positionManager.address);
     await initPairs(deployer, tokens, usdt, pool);
 
     await roleManager.addKeeper(executor.address);
@@ -204,7 +201,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
-        tradingVault: tradingVault,
+        positionManager: positionManager,
         router: router,
         executor: executor,
         orderManager: orderManager,
