@@ -1,37 +1,36 @@
-import {ethers} from 'hardhat';
-import {newTestEnv, TestEnv} from "./helpers/make-suite";
-import {before} from "mocha";
-import {increasePosition, mintAndApprove} from "./helpers/misc";
-import {getBlockTimestamp, TradeType, waitForTx} from "../helpers";
-import {IRouter, TradingTypes} from "../types/contracts/interfaces/IRouter";
-import {MockPriceFeed, Router__factory} from "../types";
-import {expect} from "./shared/expect";
-import usdt from "../markets/usdt";
-
+import { ethers } from 'hardhat';
+import { newTestEnv, TestEnv } from './helpers/make-suite';
+import { before } from 'mocha';
+import { increasePosition, mintAndApprove } from './helpers/misc';
+import { getBlockTimestamp, TradeType, waitForTx } from '../helpers';
+import { IRouter, TradingTypes } from '../types/contracts/interfaces/IRouter';
+import { MockPriceFeed, Router__factory } from '../types';
+import { expect } from './shared/expect';
+import usdt from '../markets/usdt';
 
 describe('Modify LP Average Price', async () => {
-    const  pairIndex = 0;
-    let testEnv: TestEnv
+    const pairIndex = 0;
+    let testEnv: TestEnv;
 
-    before( async () => {
+    before(async () => {
         testEnv = await newTestEnv();
         const {
-            users: [ depositor],
+            users: [depositor],
             btc,
             usdt,
-            pairLiquidity
+            pool,
         } = testEnv;
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('20000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, pairLiquidity.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pairLiquidity.address);
-        await pairLiquidity.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, pool.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pool.address);
+        await pool.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
     });
 
-    after(async ()=>{});
+    after(async () => {});
 
     describe('Platform is long position', async () => {
         let btcPriceFeed: MockPriceFeed;
@@ -39,12 +38,12 @@ describe('Modify LP Average Price', async () => {
         before(async () => {
             const {
                 deployer,
-                users: [ trader],
+                users: [trader],
                 usdt,
                 btc,
                 router,
                 executor,
-                orderManager
+                orderManager,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('20000', 18);
@@ -54,13 +53,8 @@ describe('Modify LP Average Price', async () => {
             await increasePosition(testEnv, trader, pairIndex, collateral, sizeAmount, TradeType.MARKET, true);
         });
 
-        after(async ()=>{
-            const {
-                keeper,
-                btc,
-                indexPriceFeed,
-                oraclePriceFeed
-            } = testEnv;
+        after(async () => {
+            const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
             // update btc price
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
             const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
@@ -92,7 +86,7 @@ describe('Modify LP Average Price', async () => {
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
-                pairInfo
+                pool,
             } = testEnv;
 
             // update btc price
@@ -133,7 +127,7 @@ describe('Modify LP Average Price', async () => {
                 tpPrice: 0,
                 tp: 0,
                 slPrice: 0,
-                sl: 0
+                sl: 0,
             };
 
             const orderId = await orderManager.increaseMarketOrdersIndex();
@@ -141,7 +135,12 @@ describe('Modify LP Average Price', async () => {
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
-            expect(positionAft.averagePrice).to.be.eq((positionBefAvgPrice.mul(positionBefAmount).add(openPrice.mul(sizeAmount))).div(positionBefAmount.add(sizeAmount)));
+            expect(positionAft.averagePrice).to.be.eq(
+                positionBefAvgPrice
+                    .mul(positionBefAmount)
+                    .add(openPrice.mul(sizeAmount))
+                    .div(positionBefAmount.add(sizeAmount)),
+            );
         });
 
         it('BTO: increase long position, newAveragePrice < openPositionAveragePrice', async () => {
@@ -156,7 +155,7 @@ describe('Modify LP Average Price', async () => {
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
-                pairInfo
+                pool,
             } = testEnv;
 
             // update btc price
@@ -199,7 +198,7 @@ describe('Modify LP Average Price', async () => {
                 tpPrice: 0,
                 tp: 0,
                 slPrice: 0,
-                sl: 0
+                sl: 0,
             };
 
             const orderId = await orderManager.increaseMarketOrdersIndex();
@@ -208,7 +207,13 @@ describe('Modify LP Average Price', async () => {
 
             const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
             const uintNum = ethers.utils.parseUnits('1', 18);
-            expect(positionAft.averagePrice.div(uintNum)).to.be.eq((positionBefAvgPrice.mul(positionBefAmount).add(openPrice.mul(sizeAmount))).div(positionBefAmount.add(sizeAmount)).div(uintNum));
+            expect(positionAft.averagePrice.div(uintNum)).to.be.eq(
+                positionBefAvgPrice
+                    .mul(positionBefAmount)
+                    .add(openPrice.mul(sizeAmount))
+                    .div(positionBefAmount.add(sizeAmount))
+                    .div(uintNum),
+            );
         });
 
         it('STC: decrease long position, newAveragePrice > openPositionAveragePrice', async () => {
@@ -223,7 +228,7 @@ describe('Modify LP Average Price', async () => {
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
-                pairInfo
+                pool,
             } = testEnv;
 
             // update btc price
@@ -268,7 +273,12 @@ describe('Modify LP Average Price', async () => {
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
             const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
-            expect(positionBef.averagePrice).to.be.lt((positionBefAvgPrice.mul(positionBefAmount).add(openPrice.mul(sizeAmount))).div(positionBefAmount.add(sizeAmount)));
+            expect(positionBef.averagePrice).to.be.lt(
+                positionBefAvgPrice
+                    .mul(positionBefAmount)
+                    .add(openPrice.mul(sizeAmount))
+                    .div(positionBefAmount.add(sizeAmount)),
+            );
         });
 
         it('STC: decrease long position, newAveragePrice < openPositionAveragePrice', async () => {
@@ -283,7 +293,7 @@ describe('Modify LP Average Price', async () => {
                 orderManager,
                 oraclePriceFeed,
                 indexPriceFeed,
-                pairInfo
+                pool,
             } = testEnv;
 
             // update btc price
@@ -328,11 +338,14 @@ describe('Modify LP Average Price', async () => {
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
             const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
-            console.log(`---positionAft: `, positionAft)
-            expect(positionBef.averagePrice).to.be.gt((positionBefAvgPrice.mul(positionBefAmount).add(openPrice.mul(sizeAmount))).div(positionBefAmount.add(sizeAmount)));
+            console.log(`---positionAft: `, positionAft);
+            expect(positionBef.averagePrice).to.be.gt(
+                positionBefAvgPrice
+                    .mul(positionBefAmount)
+                    .add(openPrice.mul(sizeAmount))
+                    .div(positionBefAmount.add(sizeAmount)),
+            );
         });
-
-
     });
 
     // TODO: To be implemented
