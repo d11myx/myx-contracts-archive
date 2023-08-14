@@ -12,6 +12,7 @@ import {
     Executor,
     OrderManager,
     RoleManager,
+    TestCallBack,
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -186,4 +187,8 @@ export async function deployTrading(
     await orderManager.setExecutor(executor.address);
 
     return { positionManager, router, executor, orderManager };
+}
+export async function deployMockCallback(indexToken: string, stableToken: string) {
+    let testCallBack = (await deployContract('TestCallBack', [indexToken, stableToken])) as TestCallBack;
+    return testCallBack;
 }
