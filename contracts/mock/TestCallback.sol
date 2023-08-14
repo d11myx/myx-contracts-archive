@@ -23,10 +23,9 @@ contract TestCallBack is IliquityCallback {
 
         if (amountIndex > 0) {
             IERC20(tokenIndex).transferFrom(sender, msg.sender, uint256(amountIndex));
-        } else if (amountStable > 0) {
+        }
+        if (amountStable > 0) {
             IERC20(tokenStable).transferFrom(sender, msg.sender, uint256(amountStable));
-        } else {
-            assert(amountIndex == 0 && amountStable == 0);
         }
     }
 }
