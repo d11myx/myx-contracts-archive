@@ -2,7 +2,14 @@ import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
-import { getBlockTimestamp, MAX_UINT_AMOUNT, ORDER_MANAGER_ID, TradeType, waitForTx } from '../helpers';
+import {
+    deployMockCallback,
+    getBlockTimestamp,
+    MAX_UINT_AMOUNT,
+    ORDER_MANAGER_ID,
+    TradeType,
+    waitForTx,
+} from '../helpers';
 import { mintAndApprove } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/trading/Router';
 
@@ -14,15 +21,15 @@ describe('Router: increase position ar', () => {
             users: [depositor],
             btc,
             usdt,
-            pool
+            pool,
         } = testEnv;
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('10000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
-
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, pool.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, pool.address);
-        await pool.connect(depositor.signer).addLiquidity(pairIndex, indexAmount, stableAmount);
+        let testCallBack = await deployMockCallback(btc.address, usdt.address);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await testCallBack.connect(depositor.signer).addLiquidity(pool.address, pairIndex, indexAmount, stableAmount);
     });
 
     describe('Router: collateral test cases', () => {
