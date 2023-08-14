@@ -2,21 +2,40 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Signer } from 'ethers';
 import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import {
-    ExecuteRouter,
-    FastPriceFeed,
-    PairInfo,
-    PairLiquidity,
-    PairVault,
+    AddressesProvider,
+    IndexPriceFeed,
+    Pool,
+    RoleManager,
     Token,
-    TradingRouter,
-    TradingUtils,
-    TradingVault,
-    VaultPriceFeed,
+    PositionManager,
+    OraclePriceFeed,
     WETH,
+    Router,
+    Executor,
+    OrderManager,
 } from '../../types';
-import { SymbolMap } from '../shared/types';
-import { deployPair, deployPrice, deployToken, deployTrading } from './contract-deployments';
-import { initPairs } from './init-helper';
+import {
+    SymbolMap,
+    getAddressesProvider,
+    getIndexPriceFeed,
+    getOraclePriceFeed,
+    getPairInfo,
+    getRoleManager,
+    getToken,
+    getTradingVault,
+    getWETH,
+    MOCK_TOKEN_PREFIX,
+    initPairs,
+    deployTrading,
+    deployPair,
+    deployPrice,
+    deployToken,
+    deployContract,
+    getRouter,
+    getExecutor,
+    getOrderManager,
+} from '../../helpers';
+import { address } from 'hardhat/internal/core/config/config-validation';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -27,43 +46,105 @@ export interface SignerWithAddress {
 
 export interface TestEnv {
     deployer: SignerWithAddress;
+    poolAdmin: SignerWithAddress;
     keeper: SignerWithAddress;
     users: SignerWithAddress[];
     weth: WETH;
     btc: Token;
+    eth: Token;
     usdt: Token;
+    addressesProvider: AddressesProvider;
+    roleManager: RoleManager;
     pairTokens: SymbolMap<Token>;
-    pairInfo: PairInfo;
-    pairLiquidity: PairLiquidity;
-    pairVault: PairVault;
-    vaultPriceFeed: VaultPriceFeed;
-    fastPriceFeed: FastPriceFeed;
-    tradingUtils: TradingUtils;
-    tradingVault: TradingVault;
-    tradingRouter: TradingRouter;
-    executeRouter: ExecuteRouter;
+    pool: Pool;
+    oraclePriceFeed: OraclePriceFeed;
+    indexPriceFeed: IndexPriceFeed;
+    tradingVault: PositionManager;
+    router: Router;
+    executor: Executor;
+    orderManager: OrderManager;
 }
 
 export const testEnv: TestEnv = {
     deployer: {} as SignerWithAddress,
+    poolAdmin: {} as SignerWithAddress,
     keeper: {} as SignerWithAddress,
     users: [] as SignerWithAddress[],
     weth: {} as WETH,
     btc: {} as Token,
+    eth: {} as Token,
     usdt: {} as Token,
+    addressesProvider: {} as AddressesProvider,
+    roleManager: {} as RoleManager,
     pairTokens: {} as SymbolMap<Token>,
-    pairInfo: {} as PairInfo,
-    pairLiquidity: {} as PairLiquidity,
-    pairVault: {} as PairVault,
-    vaultPriceFeed: {} as VaultPriceFeed,
-    fastPriceFeed: {} as FastPriceFeed,
-    tradingUtils: {} as TradingUtils,
-    tradingVault: {} as TradingVault,
-    tradingRouter: {} as TradingRouter,
-    executeRouter: {} as ExecuteRouter,
+    pool: {} as Pool,
+    oraclePriceFeed: {} as OraclePriceFeed,
+    indexPriceFeed: {} as IndexPriceFeed,
+    tradingVault: {} as PositionManager,
+    router: {} as Router,
+    executor: {} as Executor,
+    orderManager: {} as OrderManager,
+    // positionManager: {} as PositionManager,
 } as TestEnv;
 
 export async function setupTestEnv() {
+    const [_deployer, , ...restSigners] = await getSigners(hre);
+    const deployer: SignerWithAddress = {
+        address: await _deployer.getAddress(),
+        signer: _deployer,
+    };
+
+    for (const signer of restSigners) {
+        testEnv.users.push({
+            signer,
+            address: await signer.getAddress(),
+        });
+    }
+
+    // users
+    testEnv.deployer = deployer;
+    testEnv.poolAdmin = deployer;
+    testEnv.keeper = deployer;
+
+    const allDeployments = await hre.deployments.all();
+    const mockTokenKeys = Object.keys(allDeployments).filter((key) => key.includes(MOCK_TOKEN_PREFIX));
+
+    let pairTokens: SymbolMap<Token> = {};
+    for (let [key, deployment] of Object.entries(allDeployments)) {
+        if (mockTokenKeys.includes(key)) {
+            pairTokens[key.replace(MOCK_TOKEN_PREFIX, '')] = await getToken(deployment.address);
+        }
+    }
+
+    // tokens
+    testEnv.weth = await getWETH();
+    testEnv.usdt = await getToken();
+    testEnv.pairTokens = pairTokens;
+    testEnv.btc = pairTokens['BTC'];
+    testEnv.eth = pairTokens['ETH'];
+
+    // provider
+    testEnv.addressesProvider = await getAddressesProvider();
+    testEnv.roleManager = await getRoleManager();
+
+    // oracle
+    testEnv.oraclePriceFeed = await getOraclePriceFeed();
+    testEnv.indexPriceFeed = await getIndexPriceFeed();
+
+    // pair
+    testEnv.pool = await getPairInfo();
+
+
+
+    // trading
+    testEnv.tradingVault = await getTradingVault();
+    testEnv.router = await getRouter();
+    testEnv.executor = await getExecutor();
+    testEnv.orderManager = await getOrderManager();
+    // testEnv.positionManager = await getPositionManager();
+}
+
+export async function newTestEnv(): Promise<TestEnv> {
     const [_deployer, _keeper, ...restSigners] = await getSigners(hre);
     const deployer: SignerWithAddress = {
         address: await _deployer.getAddress(),
@@ -74,48 +155,58 @@ export async function setupTestEnv() {
         signer: _keeper,
     };
 
+    const users: SignerWithAddress[] = [];
     for (const signer of restSigners) {
-        testEnv.users.push({
+        users.push({
             signer,
             address: await signer.getAddress(),
         });
     }
-    // setup tokens
     const { weth, usdt, tokens } = await deployToken();
-    testEnv.deployer = deployer;
-    testEnv.keeper = keeper;
-    testEnv.weth = weth;
-    testEnv.usdt = usdt;
-    testEnv.pairTokens = tokens;
-    testEnv.btc = tokens['BTC'];
 
-    // setup price
-    const { vaultPriceFeed, fastPriceFeed } = await deployPrice(deployer, keeper);
-    testEnv.vaultPriceFeed = vaultPriceFeed;
-    testEnv.fastPriceFeed = fastPriceFeed;
+    const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
+    const roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
+    await addressesProvider.setRolManager(roleManager.address);
+    await roleManager.addPoolAdmin(deployer.address);
+    await roleManager.addKeeper(keeper.address);
 
-    // setup pair
-    const { pairInfo, pairLiquidity, pairVault } = await deployPair(vaultPriceFeed, deployer, weth);
-    testEnv.pairInfo = pairInfo;
-    testEnv.pairLiquidity = pairLiquidity;
-    testEnv.pairVault = pairVault;
+    const { oraclePriceFeed, indexPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    // setup trading
-    const { tradingUtils, tradingVault, tradingRouter, executeRouter } = await deployTrading(
+    const { pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+
+    const { tradingVault, router, executor, orderManager } = await deployTrading(
         deployer,
-        pairVault,
-        pairInfo,
-        vaultPriceFeed,
-        fastPriceFeed,
+        deployer,
+        addressesProvider,
+        roleManager,
+        pool,
+        oraclePriceFeed,
+        indexPriceFeed,
     );
-    testEnv.tradingUtils = tradingUtils;
-    testEnv.tradingVault = tradingVault;
-    testEnv.tradingRouter = tradingRouter;
-    testEnv.executeRouter = executeRouter;
 
-    await initPairs(deployer, tokens, usdt, pairInfo);
-}
+    await pool.setTradingVault(tradingVault.address);
+    await initPairs(deployer, tokens, usdt, pool);
 
-export async function getPairToken(pair: string): Promise<Token> {
-    return testEnv.pairTokens[pair];
+    await roleManager.addKeeper(executor.address);
+    return {
+        deployer: deployer,
+        poolAdmin: deployer,
+        keeper: keeper,
+        users: users,
+        weth: weth,
+        btc: tokens['BTC'],
+        eth: tokens['ETH'],
+        usdt: usdt,
+        addressesProvider: addressesProvider,
+        roleManager: roleManager,
+        pairTokens: tokens,
+        pool: pool,
+
+        oraclePriceFeed: oraclePriceFeed,
+        indexPriceFeed: indexPriceFeed,
+        tradingVault: tradingVault,
+        router: router,
+        executor: executor,
+        orderManager: orderManager,
+    } as TestEnv;
 }

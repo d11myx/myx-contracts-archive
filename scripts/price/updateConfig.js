@@ -13,24 +13,24 @@ async function main() {
   console.log("\n updateConfig")
   const signers = await hre.ethers.getSigners()
 
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
-  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
-  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
-  let usdtPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-USDT"));
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"))
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-BTC"));
+  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-ETH"));
+  let usdtPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-USDT"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
 
-  await fastPriceFeed.setVaultPriceFeed(vaultPriceFeed.address);
-  await vaultPriceFeed.setSecondaryPriceFeed(fastPriceFeed.address);
-  await vaultPriceFeed.setIsSecondaryPriceEnabled(false);
+  let roleManager = await contractAt('RoleManager', await getConfig("RoleManager"));
+
+  await vaultPriceFeed.setIndexPriceFeed(fastPriceFeed.address);
 
   for (let i = 10; i < signers.length; i++) {
-      await fastPriceFeed.setUpdater(signers[i].address, true)
+      await roleManager.addKeeper(signers[i].address)
       await btcPriceFeed.setAdmin(signers[i].address, true)
       await usdtPriceFeed.setAdmin(signers[i].address, true)
       await ethPriceFeed.setAdmin(signers[i].address, true)
       await executeRouter.setPositionKeeper(signers[i].address, true);
-      console.log("set updater:", signers[i].address)
+      console.log("add keeper:", signers[i].address)
   }
 
 }

@@ -20,9 +20,14 @@ artifacts-zk
 abi/@chainlink
 abi/@openzeppelin
 abi/@uniswap
+abi/contracts
 
 *MyTest.*
 *mytest.*
 
 .DS_Store
 .vscode
+.openzeppelin
+deploment-logs
+deploments
+abi

@@ -17,20 +17,18 @@ async function main() {
   const provider = await hre.ethers.provider
 
   // set oracle price
-  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
-  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-ETH"));
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-BTC"));
+  let ethPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-ETH"));
 
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(30000))
   await ethPriceFeed.setLatestAnswer(toChainLinkPrice(2000))
 
   // set keeper price
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
   let blockTime = await getBlockTime(provider)
   console.log(`lastUpdatedAt: ${await fastPriceFeed.lastUpdatedAt()}`)
-  console.log(`lastUpdatedBlock: ${await fastPriceFeed.lastUpdatedBlock()}`)
   console.log(`blockTime: ${blockTime}`)
   console.log(`maxTimeDeviation: ${await fastPriceFeed.maxTimeDeviation()}`)
-  console.log(`gov: ${await fastPriceFeed.gov()}`)
 
   // await fastPriceFeed.setMaxTimeDeviation(300);
 
@@ -39,25 +37,25 @@ async function main() {
 
   await fastPriceFeed.connect(user1).setPrices(
     [await getConfig("Token-BTC"), await getConfig("Token-ETH")],
-    [expandDecimals(29990, 30), expandDecimals(1995, 30)],
+    [expandDecimals(30000, 30), expandDecimals(2000, 30)],
     blockTime + 100)
 
   let tokens = ["BTC", "ETH"]
-  let vaultPriceFeed = await contractAt("VaultPriceFeed", await getConfig("VaultPriceFeed"))
+  let vaultPriceFeed = await contractAt("OraclePriceFeed", await getConfig("OraclePriceFeed"))
   for (let symbol of tokens) {
     console.log(repeatString('-'))
     console.log(symbol)
     let token = await getConfig("Token-" + symbol);
-    let priceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-" + symbol))
+    let priceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-" + symbol))
     let decimals = await vaultPriceFeed.priceDecimals(token);
     let latestAnswer = await priceFeed.latestAnswer()
     console.log(`decimals: ${decimals}`)
     console.log(`oracle latestRound: ${await priceFeed.latestRound()}`)
     console.log(`oracle latestAnswer: ${latestAnswer} ${reduceDecimals(latestAnswer, decimals)}`)
     console.log(`fastPriceFeed price: ${reduceDecimals(await fastPriceFeed.prices(token), 30)}`);
-    console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token, true), 30)}`)
-    console.log(`vaultPriceFeed getSecondaryPrice: ${reduceDecimals(await vaultPriceFeed.getSecondaryPrice(token, 0, true), 30)}`)
-    console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token, true), 30)}`)
+    console.log(`vaultPriceFeed getPrimaryPrice: ${reduceDecimals(await vaultPriceFeed.getPrimaryPrice(token), 30)}`)
+    console.log(`vaultPriceFeed getIndexPrice: ${reduceDecimals(await vaultPriceFeed.getIndexPrice(token, 0), 30)}`)
+    console.log(`vaultPriceFeed price: ${reduceDecimals(await vaultPriceFeed.getPrice(token), 30)}`)
   }
 
 }
