@@ -4,9 +4,6 @@ const {getCurrentTimestamp} = require("hardhat/internal/hardhat-network/provider
 const {sleep, syncBlockTime} = require("./utils/helpers");
 
 async function main() {
-    await hre.network.provider.send('evm_setIntervalMining', [3000]);
-
-    // sync block time
     await syncBlockTime();
 }
 
