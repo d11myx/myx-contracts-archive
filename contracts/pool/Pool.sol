@@ -550,7 +550,7 @@ contract Pool is IPool, Roleable {
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
-        emit AddLiquidity(recipient, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount);
+        emit AddLiquidity(recipient, _account, _pairIndex, _indexAmount, _stableAmount, mintAmount, indexFeeAmount, stableFeeAmount, slipToken, slipAmount);
 
 
         return mintAmount;
