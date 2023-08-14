@@ -2,6 +2,7 @@ pragma solidity >=0.8.0;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
+import '../interfaces/IPool.sol';
 import '../interfaces/IliquityCallback.sol';
 
 contract TestCallBack is IliquityCallback {
@@ -11,6 +12,16 @@ contract TestCallBack is IliquityCallback {
     constructor(address _tokenIndex, address _tokenStable) {
         tokenIndex = _tokenIndex;
         tokenStable = _tokenStable;
+    }
+
+    function addLiquidity(
+        address pool,
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount,
+        bytes calldata data
+    ) external {
+        IPool(pool).addLiquidity(_pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function addLiquityCallback(uint256 amountIndex, uint256 amountStable, bytes calldata data) external override {
