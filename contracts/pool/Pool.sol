@@ -19,6 +19,7 @@ import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 
 import '../interfaces/IliquityCallback.sol';
+// import "hardhat/console.sol";
 
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
@@ -466,9 +467,10 @@ contract Pool is IPool, Roleable {
 
         if (indexAmount > 0)
             require(balanceIndexBefore.add(indexAmount) <= IERC20(indexToken).balanceOf(address(this)), 'ti');
-        if (stableAmount > 0)
+        if (stableAmount > 0){
+
             require(balanceStableBefore.add(stableAmount) <= IERC20(stableToken).balanceOf(address(this)), 'ts');
-    }
+    }}
 
     function _addLiquidity(
         address recipient,
