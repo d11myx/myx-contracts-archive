@@ -14,8 +14,8 @@ async function main() {
   let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
   let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
   let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("PriceFeed-BTC"));
-  let fastPriceFeed = await contractAt("FastPriceFeed", await getConfig("FastPriceFeed"))
+  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-BTC"));
+  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
 
   // create
   let btc = await contractAt("Token", await getConfig("Token-BTC"))
@@ -43,8 +43,8 @@ async function main() {
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
 
   // execute
-  // await executeRouter.executeIncreaseOrder(orderId, 1);
-  // await executeRouter.executeIncreaseLimitOrders([orderId]);
+  await executeRouter.executeDecreaseOrder(orderId, 1);
+  // await executeRouter.executeDecreaseLimitOrders([orderId]);
   console.log(`order: ${await tradingRouter.decreaseLimitOrders(orderId)}`);
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
   console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
