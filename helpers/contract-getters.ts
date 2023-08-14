@@ -80,13 +80,6 @@ export const getPairInfo = async (address?: string): Promise<Pool> => {
     return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
 };
 
-export const getTradingVault = async (address?: string): Promise<PositionManager> => {
-    return getContract<PositionManager>(
-        'PositionManager',
-        address || (await hre.deployments.get(TRADING_VAULT_ID)).address,
-    );
-};
-
 export const getRouter = async (address?: string): Promise<Router> => {
     return getContract<Router>('Router', address || (await hre.deployments.get(ROUTER_ID)).address);
 };

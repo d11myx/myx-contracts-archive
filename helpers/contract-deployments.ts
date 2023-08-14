@@ -21,7 +21,6 @@ import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
-import { address } from 'hardhat/internal/core/config/config-validation';
 import { getWETH } from './contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -140,18 +139,18 @@ export async function deployTrading(
 ) {
     console.log(` - setup trading`);
 
-    let tradingVault = (await deployContract('PositionManager', [
+    let positionManager = (await deployContract('PositionManager', [
         addressProvider.address,
         pool.address,
         deployer.address,
         8 * 60 * 60,
     ])) as any as PositionManager;
-    console.log(`deployed PositionManager at ${tradingVault.address}`);
+    console.log(`deployed PositionManager at ${positionManager.address}`);
 
     let orderManager = (await deployContract('OrderManager', [
         addressProvider.address,
         pool.address,
-        tradingVault.address,
+        positionManager.address,
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
@@ -177,17 +176,17 @@ export async function deployTrading(
         addressProvider.address,
         pool.address,
         orderManager.address,
-        tradingVault.address,
+        positionManager.address,
         60,
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
-    await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(tradingVault.address));
+    await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
 
-    await tradingVault.setExecutor(executor.address);
+    await positionManager.setExecutor(executor.address);
     await orderManager.setExecutor(executor.address);
 
-    return { tradingVault, router, executor, orderManager };
+    return { positionManager, router, executor, orderManager };
 }
 export async function deployMockCallback(indexToken: string, stableToken: string) {
     let testCallBack = (await deployContract('TestCallBack', [indexToken, stableToken])) as TestCallBack;
