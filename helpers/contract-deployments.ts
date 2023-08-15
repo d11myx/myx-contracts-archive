@@ -13,6 +13,7 @@ import {
     OrderManager,
     RoleManager,
     TestCallBack,
+    PoolTokenFactory,
 } from '../types';
 import { ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -117,15 +118,16 @@ export async function deployPair(
     weth: WETH,
 ) {
     console.log(` - setup pairs`);
-
+    const poolTokenFactory = (await deployContract('PoolTokenFactory', [addressProvider.address])) as PoolTokenFactory;
     const pool = (await deployContract('Pool', [
         addressProvider.address,
+        poolTokenFactory.address,
         deployer.address,
         deployer.address,
     ])) as any as Pool;
     console.log(`deployed Pool at ${pool.address}`);
 
-    return { pool };
+    return { poolTokenFactory, pool };
 }
 
 export async function deployTrading(
