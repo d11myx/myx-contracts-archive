@@ -2,8 +2,33 @@ import { Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import { ethers } from 'hardhat';
-import { TradeType } from '../../helpers';
+import { getBlockTimestamp, TradeType, waitForTx } from '../../helpers';
 import { TradingTypes } from '../../types/contracts/trading/Router';
+import { MockPriceFeed } from '../../types';
+
+export async function updateBTCPrice(
+    testEnv: TestEnv,
+    btcPrice: string
+) {
+    const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
+    let btcPriceFeed: MockPriceFeed;
+    const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
+    const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
+    btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
+    await waitForTx(
+        await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits(btcPrice, 8)),
+    );
+    await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits(btcPrice, 8)));
+    await waitForTx(
+        await indexPriceFeed
+            .connect(keeper.signer)
+            .setPrices(
+                [btc.address],
+                [ethers.utils.parseUnits(btcPrice, 30)],
+                (await getBlockTimestamp()) + 100,
+            ),
+    );
+}
 
 export async function mintAndApprove(
     testEnv: TestEnv,

@@ -1,13 +1,11 @@
 import { ethers } from 'hardhat';
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { before } from 'mocha';
-import { increasePosition, mintAndApprove } from './helpers/misc';
+import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { deployMockCallback, getBlockTimestamp, TradeType, waitForTx } from '../helpers';
-import { IRouter, TradingTypes } from '../types/contracts/interfaces/IRouter';
-import { MockPriceFeed, Router__factory } from '../types';
-import usdt from '../markets/usdt';
-import {testCallbackSol} from "../types/contracts/mock";
-import {expect} from "./shared/expect";
+import { TradingTypes } from '../types/contracts/interfaces/IRouter';
+import { MockPriceFeed } from '../types';
+import { expect } from './shared/expect';
 
 describe('Modify LP Average Price', async () => {
     const pairIndex = 0;
@@ -35,16 +33,10 @@ describe('Modify LP Average Price', async () => {
     after(async () => {});
 
     describe('Platform is long position', async () => {
-        let btcPriceFeed: MockPriceFeed;
-
         before('increase long position: +20 BTC, openPrice: 30000', async () => {
             const {
-                deployer,
                 users: [trader],
                 usdt,
-                btc,
-                router,
-                executor,
                 orderManager,
             } = testEnv;
 
@@ -56,58 +48,21 @@ describe('Modify LP Average Price', async () => {
         });
 
         after(async () => {
-            const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
-            // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('30000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('30000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '30000');
         });
 
         it('BTO: increase long position: +10 BTC, openPrice: 40000, newAveragePrice > openPositionAveragePrice', async () => {
             const {
                 keeper,
                 users: [trader],
-                btc,
-                usdt,
                 router,
                 executor,
                 positionManager,
-                orderManager,
-                oraclePriceFeed,
-                indexPriceFeed,
-                pool,
+                orderManager
             } = testEnv;
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('40000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('40000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('40000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '40000');
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
@@ -125,15 +80,11 @@ describe('Modify LP Average Price', async () => {
                 collateral: collateral,
                 openPrice: openPrice,
                 isLong: true,
-                sizeAmount: sizeAmount,
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0,
+                sizeAmount: sizeAmount
             };
 
             const orderId = await orderManager.increaseMarketOrdersIndex();
-            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -149,34 +100,15 @@ describe('Modify LP Average Price', async () => {
             const {
                 keeper,
                 users: [trader],
-                btc,
                 usdt,
                 router,
                 executor,
                 positionManager,
-                orderManager,
-                oraclePriceFeed,
-                indexPriceFeed,
-                pool,
+                orderManager
             } = testEnv;
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('29000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('29000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('29000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '29000');
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
@@ -196,15 +128,11 @@ describe('Modify LP Average Price', async () => {
                 collateral: collateral,
                 openPrice: openPrice,
                 isLong: true,
-                sizeAmount: sizeAmount,
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0,
+                sizeAmount: sizeAmount
             };
 
             const orderId = await orderManager.increaseMarketOrdersIndex();
-            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -222,34 +150,14 @@ describe('Modify LP Average Price', async () => {
             const {
                 keeper,
                 users: [trader],
-                btc,
-                usdt,
                 router,
                 executor,
                 positionManager,
-                orderManager,
-                oraclePriceFeed,
-                indexPriceFeed,
-                pool,
+                orderManager
             } = testEnv;
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('40000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('40000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('40000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '40000')
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
@@ -304,22 +212,7 @@ describe('Modify LP Average Price', async () => {
             } = testEnv;
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('29000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('29000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('29000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '29000');
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionBefAvgPrice = positionBef.averagePrice;
@@ -382,29 +275,7 @@ describe('Modify LP Average Price', async () => {
         });
 
         after(async ()=>{
-            const {
-                keeper,
-                btc,
-                indexPriceFeed,
-                oraclePriceFeed
-            } = testEnv;
-            // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('30000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('30000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '60000');
         });
 
 
@@ -412,35 +283,17 @@ describe('Modify LP Average Price', async () => {
             const {
                 keeper,
                 users: [trader],
-                btc,
                 usdt,
                 router,
                 executor,
                 orderManager,
-                positionManager,
-                oraclePriceFeed,
-                indexPriceFeed,
+                positionManager
             } = testEnv;
 
             const position = await positionManager.getPosition(trader.address, pairIndex, false)
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('20000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('20000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('20000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '20000')
 
             const collateral = ethers.utils.parseUnits('200000', 18);
             const shortAmount = ethers.utils.parseUnits('10', 18)
@@ -455,15 +308,11 @@ describe('Modify LP Average Price', async () => {
                 collateral: collateral,
                 openPrice: openPrice,
                 isLong: false,
-                sizeAmount: shortAmount,
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0
+                sizeAmount: shortAmount
             };
 
             const orderId = await orderManager.increaseMarketOrdersIndex();
-            await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -474,35 +323,17 @@ describe('Modify LP Average Price', async () => {
             const {
                 keeper,
                 users: [trader],
-                btc,
                 usdt,
                 router,
                 executor,
                 orderManager,
                 positionManager,
-                oraclePriceFeed,
-                indexPriceFeed,
             } = testEnv;
 
             const position = await positionManager.getPosition(trader.address, pairIndex, false)
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('40000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('40000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('40000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '40000');
 
             const collateral = ethers.utils.parseUnits('200000', 18);
             const shortAmount = ethers.utils.parseUnits('10', 18)
@@ -517,15 +348,11 @@ describe('Modify LP Average Price', async () => {
                 collateral: collateral,
                 openPrice: openPrice,
                 isLong: false,
-                sizeAmount: shortAmount,
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0
+                sizeAmount: shortAmount
             };
 
             const orderId = await orderManager.increaseMarketOrdersIndex();
-            await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -536,35 +363,17 @@ describe('Modify LP Average Price', async () => {
             const {
                 keeper,
                 users: [trader],
-                btc,
                 usdt,
                 router,
                 executor,
                 orderManager,
                 positionManager,
-                oraclePriceFeed,
-                indexPriceFeed,
             } = testEnv;
 
             const position = await positionManager.getPosition(trader.address, pairIndex, false)
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('45000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('45000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('45000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '45000');
 
             const collateral = ethers.utils.parseUnits('200000', 18);
             const decreaseAmount = ethers.utils.parseUnits('20', 18)
@@ -599,35 +408,17 @@ describe('Modify LP Average Price', async () => {
             const {
                 keeper,
                 users: [trader],
-                btc,
                 usdt,
                 router,
                 executor,
                 orderManager,
                 positionManager,
-                oraclePriceFeed,
-                indexPriceFeed,
             } = testEnv;
 
             const position = await positionManager.getPosition(trader.address, pairIndex, false)
 
             // update btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(
-                await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits('10000', 8)),
-            );
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('10000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('10000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '10000');
 
             const collateral = ethers.utils.parseUnits('200000', 18);
             const decreaseAmount = ethers.utils.parseUnits('5', 18)
