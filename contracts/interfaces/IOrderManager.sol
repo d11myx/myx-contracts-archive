@@ -56,6 +56,8 @@ interface IOrderManager {
 
     function positionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType) external view returns (bool);
 
+    function getOrderTpSl(bytes32 orderKey) external view returns (TradingTypes.OrderWithTpSl memory);
+
     function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory);
 
     function updatePositionManager(address newAddress) external;
@@ -91,4 +93,8 @@ interface IOrderManager {
     function removeDecreaseLimitOrders(uint256 orderId) external;
 
     function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) external;
+
+    function saveOrderTpSl(bytes32 orderKey, TradingTypes.OrderWithTpSl memory tpSl) external;
+
+    function removeOrderTpSl(bytes32 orderKey) external;
 }
