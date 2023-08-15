@@ -2,19 +2,27 @@
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-
 import '../interfaces/IPoolToken.sol';
 
-contract PoolToken is IPoolToken, ERC20, Ownable {
-    address public token0;
-    address public token1;
+import '../libraries/Roleable.sol';
+
+contract PoolToken is IPoolToken, Roleable, ERC20 {
+    address public indexToken;
+    address public stableToken;
 
     mapping(address => bool) public miners;
 
-    constructor(address _token0, address _token1) ERC20('MYX LPs', 'MYX-LP') {
-        token0 = _token0;
-        token1 = _token1;
+    constructor(
+        IAddressesProvider addressProvider,
+        address _indexToken,
+        address _stableToken,
+        address _miner,
+        string memory name_,
+        string memory symbol_
+    ) Roleable(addressProvider) ERC20(name_, symbol_) {
+        indexToken = _indexToken;
+        stableToken = _stableToken;
+        miners[_miner] = true;
     }
 
     modifier onlyMiner() {
@@ -30,7 +38,12 @@ contract PoolToken is IPoolToken, ERC20, Ownable {
         _burn(account, amount);
     }
 
-    function setMiner(address account, bool enable) external onlyOwner {
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
+    }
+
+    //todo lock time
+    function setMiner(address account, bool enable) external onlyAdmin {
         miners[account] = enable;
     }
 }
