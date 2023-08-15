@@ -6,7 +6,7 @@ import {
     getAddressesProvider,
     getIndexPriceFeed,
     getOraclePriceFeed,
-    getPairInfo,
+    getPool,
     getRoleManager,
     getWETH,
     ORDER_MANAGER_ID,
@@ -24,7 +24,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
 
     const addressProvider = await getAddressesProvider();
-    const pool = await getPairInfo();
+    const pool = await getPool();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
 
@@ -51,22 +51,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         orderManagerArtifact.abi,
         orderManagerArtifact.address,
     )) as OrderManager;
-
-    // PositionManager
-    // const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
-    //     from: deployer,
-    //     contract: 'PositionManager',
-    //     args: [
-    //         addressProvider.address,
-    //         pool.address,
-    //         pairVault.address,
-    //         tradingVault.address,
-    //         oraclePriceFeed.address,
-    //         indexPriceFeed.address,
-    //         orderManager.address,
-    //     ],
-    //     ...COMMON_DEPLOY_PARAMS,
-    // });
 
     const weth = await getWETH();
     // Router
