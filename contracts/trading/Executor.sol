@@ -199,16 +199,6 @@ contract Executor is IExecutor, Pausable {
         );
         require(afterPosition > 0, 'zero position amount');
 
-        // check tp sl
-        require(
-            order.tp == 0 || !orderManager.positionHasTpSl(position.key, TradingTypes.TradeType.TP),
-            'tp already exists'
-        );
-        require(
-            order.sl == 0 || !orderManager.positionHasTpSl(position.key, TradingTypes.TradeType.SL),
-            'sl already exists'
-        );
-
         IPool.Vault memory lpVault = pool.getVault(pairIndex);
 
         int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
@@ -261,40 +251,36 @@ contract Executor is IExecutor, Pausable {
             )
         );
 
-        if (order.tp > 0) {
+        bytes32 orderKey = PositionKey.getOrderKey(true, order.tradeType, _orderId);
+        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(orderKey);
+        if (orderTpSl.tp > 0) {
             orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
                     account: order.account,
                     pairIndex: order.pairIndex,
                     tradeType: TradingTypes.TradeType.TP,
                     collateral: 0,
-                    openPrice: order.tpPrice,
+                    openPrice: orderTpSl.tpPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(order.tp),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
+                    sizeAmount: -int256(orderTpSl.tp)
                 })
             );
         }
-        if (order.sl > 0) {
+        if (orderTpSl.sl > 0) {
             orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
                     account: order.account,
                     pairIndex: order.pairIndex,
                     tradeType: TradingTypes.TradeType.SL,
                     collateral: 0,
-                    openPrice: order.slPrice,
+                    openPrice: orderTpSl.slPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(order.sl),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
+                    sizeAmount: -int256(orderTpSl.sl)
                 })
             );
         }
+
+        orderManager.removeOrderTpSl(orderKey);
 
         // delete order
         if (_tradeType == TradingTypes.TradeType.MARKET) {
@@ -602,11 +588,7 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: price,
                     isLong: adlPosition.isLong,
-                    sizeAmount: -int256(adlPosition.positionAmount),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
+                    sizeAmount: -int256(adlPosition.positionAmount)
                 })
             );
             _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
@@ -656,11 +638,7 @@ contract Executor is IExecutor, Pausable {
                 collateral: 0,
                 openPrice: price,
                 isLong: position.isLong,
-                sizeAmount: -int256(position.positionAmount),
-                tpPrice: 0,
-                tp: 0,
-                slPrice: 0,
-                sl: 0
+                sizeAmount: -int256(position.positionAmount)
             })
         );
 
