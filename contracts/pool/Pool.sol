@@ -10,7 +10,7 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/Int256Utils.sol';
-import './PoolToken.sol';
+// import './PoolToken.sol';
 import '../interfaces/IPoolToken.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 
@@ -19,6 +19,7 @@ import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../token/interfaces/IBaseToken.sol';
 import '../token/PairToken.sol';
+import '../interfaces/IPoolTokenFactory.sol';
 
 import '../interfaces/IliquityCallback.sol';
 
@@ -34,6 +35,8 @@ contract Pool is IPool, Roleable {
     uint256 public constant PRICE_PRECISION = 1e30;
     uint256 public constant PERCENTAGE = 10000;
     uint256 public constant FUNDING_RATE_PERCENTAGE = 1000000;
+
+    IPoolTokenFactory public immutable poolTokenFactory;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -52,9 +55,11 @@ contract Pool is IPool, Roleable {
 
     constructor(
         IAddressesProvider addressProvider,
+        IPoolTokenFactory _poolTokenFactory,
         address _feeReceiver0,
         address _feeReceiver1
     ) Roleable(addressProvider) {
+        poolTokenFactory = _poolTokenFactory;
         feeReceiver0 = _feeReceiver0;
         feeReceiver1 = _feeReceiver1;
     }
@@ -95,7 +100,7 @@ contract Pool is IPool, Roleable {
         require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
         require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
 
-        address pairToken = _createPair(_indexToken, _stableToken);
+        address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
         isPairListed[_indexToken][_stableToken] = true;
         pairIndexes[_indexToken][_stableToken] = pairsCount;
@@ -106,19 +111,6 @@ contract Pool is IPool, Roleable {
         pair.pairToken = pairToken;
 
         emit PairAdded(_indexToken, _stableToken, pairToken, pairsCount++);
-    }
-
-    function _createPair(address indexToken, address stableToken) private returns (address) {
-        bytes memory bytecode = abi.encodePacked(
-            type(PoolToken).creationCode,
-            abi.encode(address(ADDRESS_PROVIDER), indexToken, stableToken)
-        );
-        bytes32 salt = keccak256(abi.encodePacked(address(ADDRESS_PROVIDER), indexToken, stableToken));
-        address pairToken;
-        assembly {
-            pairToken := create2(0, add(bytecode, 32), mload(bytecode), salt)
-        }
-        return pairToken;
     }
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {

@@ -15,11 +15,14 @@ contract PoolToken is IPoolToken, Roleable, ERC20 {
     constructor(
         IAddressesProvider addressProvider,
         address _indexToken,
-        address _stableToken
-    ) Roleable(addressProvider) ERC20('MYX LPs', 'MYX-LP') {
+        address _stableToken,
+        address _miner,
+        string memory name_,
+        string memory symbol_
+    ) Roleable(addressProvider) ERC20(name_, symbol_) {
         indexToken = _indexToken;
         stableToken = _stableToken;
-        miners[msg.sender] = true;
+        miners[_miner] = true;
     }
 
     modifier onlyMiner() {
