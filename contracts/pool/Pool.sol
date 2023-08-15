@@ -7,17 +7,19 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
+import '../interfaces/IPool.sol';
+import '../interfaces/ISwapCallback.sol';
+import '../interfaces/IPoolToken.sol';
+import '../interfaces/IOraclePriceFeed.sol';
+import '../token/interfaces/IBaseToken.sol';
+
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/Int256Utils.sol';
-// import './PoolToken.sol';
-import '../interfaces/IPoolToken.sol';
-import '../interfaces/IOraclePriceFeed.sol';
 
-import '../interfaces/IPool.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
-import '../token/interfaces/IBaseToken.sol';
+
 import '../token/PairToken.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 
@@ -348,9 +350,10 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         bool _isBuy,
         uint256 _amountIn,
-        uint256 _minOut
+        uint256 _minOut,
+        bytes calldata data
     ) external returns (uint256 amountIn, uint256 amountOut) {
-        (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut);
+        (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut, data);
         // if (amountOut > 0 && _isBuy && getPair(_pairIndex).indexToken == weth) {
         // IWETH(weth).withdraw(amountOut);
         // payable(msg.sender).sendValue(amountOut);
@@ -364,9 +367,10 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         bool _isBuy,
         uint256 _amountIn,
-        uint256 _minOut
+        uint256 _minOut,
+        bytes calldata data
     ) external returns (uint256 amountIn, uint256 amountOut) {
-        return _swap(_funder, _receiver, _pairIndex, _isBuy, _amountIn, _minOut);
+        return _swap(_funder, _receiver, _pairIndex, _isBuy, _amountIn, _minOut, data);
     }
 
     function _swap(
@@ -375,7 +379,8 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         bool _isBuy,
         uint256 _amountIn,
-        uint256 _minOut
+        uint256 _minOut,
+        bytes calldata data
     ) internal returns (uint256 amountIn, uint256 amountOut) {
         require(_amountIn > 0, 'swap invalid amount in');
 
@@ -413,8 +418,7 @@ contract Pool is IPool, Roleable {
 
             liqiitySwap(_pairIndex, _isBuy, amountIn, amountOut);
             IERC20(pair.indexToken).safeTransfer(_receiver, amountOut);
-
-            IERC20(pair.stableToken).safeTransferFrom(_funder, address(this), amountIn);
+            ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, 0, amountIn, data);
         } else {
             // index in stable out
             require(expectIndexDelta > indexTotalDelta, 'no need index token');
@@ -429,8 +433,7 @@ contract Pool is IPool, Roleable {
 
             amountOut = amountOut.min(availableStable);
             amountIn = amountOut.divPrice(price);
-
-            IERC20(pair.indexToken).safeTransferFrom(_funder, address(this), amountIn);
+            ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, amountIn, 0, data);
             IERC20(pair.stableToken).safeTransfer(_receiver, amountOut);
         }
 
