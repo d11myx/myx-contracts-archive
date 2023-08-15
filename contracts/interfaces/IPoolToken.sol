@@ -6,5 +6,7 @@ interface IPoolToken {
 
     function burn(address account, uint256 amount) external;
 
+    function burn(uint256 amount) external;
+
     function setMiner(address account, bool enable) external;
 }

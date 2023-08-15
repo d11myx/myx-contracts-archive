@@ -9,7 +9,8 @@ contract TestCallBack is IliquityCallback {
     address public tokenIndex;
     address public tokenStable;
 
-    constructor(address _tokenIndex, address _tokenStable) {
+
+    constructor( address _tokenIndex, address _tokenStable) {
         tokenIndex = _tokenIndex;
         tokenStable = _tokenStable;
     }
@@ -27,5 +28,10 @@ contract TestCallBack is IliquityCallback {
         if (amountStable > 0) {
             IERC20(tokenStable).transferFrom(sender, msg.sender, uint256(amountStable));
         }
+    }
+
+    function removeLiquityCallback(address pairToken,uint256 amount, bytes calldata data) external {
+        address sender = abi.decode(data, (address));
+        IERC20(pairToken).transferFrom(sender, msg.sender, amount);
     }
 }

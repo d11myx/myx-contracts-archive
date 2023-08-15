@@ -7,6 +7,7 @@ export const ORACLE_PRICE_FEED_ID = `OraclePriceFeed`;
 export const MOCK_PRICE_FEED_PREFIX = `MockPriceFeed-`;
 export const INDEX_PRICE_FEED_ID = `IndexPriceFeed`;
 export const PAIR_INFO_ID = `Pool`;
+export const POOL_TOKEN_FACTORY = `PoolTokenFactory`;
 export const PAIR_LIQUIDITY_ID = `PoolLiquidity`;
 export const TRADING_VAULT_ID = `PositionManager`;
 export const ROUTER_ID = `Router`;

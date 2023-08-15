@@ -41,6 +41,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
     uint256 public override decreaseLimitOrdersIndex;
 
+    mapping(bytes32 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderKey -> TpSl
+
     mapping(bytes32 => PositionOrder[]) public positionOrders;
     mapping(bytes32 => mapping(bytes32 => uint256)) public positionOrderIndex;
 
@@ -63,8 +65,13 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         tradingVault = _tradingVault;
     }
 
+    modifier onlyRouter() {
+        require(msg.sender == router, 'onlyRouter');
+        _;
+    }
+
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutor, 'Position Manager: forbidden');
+        require(msg.sender == addressExecutor, 'onlyExecutor');
         _;
     }
 
@@ -90,6 +97,10 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         address oldAddress = address(positionManager);
         positionManager = IPositionManager(newAddress);
         emit UpdatePositionManager(oldAddress, newAddress);
+    }
+
+    function getOrderTpSl(bytes32 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
+        return orderWithTpSl[orderKey];
     }
 
     function getPositionOrders(bytes32 key) public view override returns (PositionOrder[] memory) {
@@ -121,7 +132,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
-                (uint256 afterPosition, ) = position.validLeverage(
+                (uint256 afterPosition,) = position.validLeverage(
                     price,
                     request.collateral,
                     uint256(request.sizeAmount),
@@ -132,17 +143,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                 );
                 // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
                 require(afterPosition > 0, 'zero position amount');
-
-                // check tp sl
-                require(request.tp <= afterPosition && request.sl <= afterPosition, 'tp/sl exceeds max size');
-                require(
-                    request.tp == 0 || !positionHasTpSl[positionKey][TradingTypes.TradeType.TP],
-                    'tp already exists'
-                );
-                require(
-                    request.sl == 0 || !positionHasTpSl[positionKey][TradingTypes.TradeType.SL],
-                    'sl already exists'
-                );
             }
             if (request.sizeAmount <= 0) {
                 // check leverage
@@ -159,7 +159,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                 //TODO if request size exceed position size, can calculate the max size
                 require(
                     uint256(request.sizeAmount.abs()) <=
-                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
+                    position.positionAmount - positionDecreaseTotalAmount[positionKey],
                     'decrease amount exceed position'
                 );
             }
@@ -173,47 +173,50 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         if (request.tradeType == TradingTypes.TradeType.TP || request.tradeType == TradingTypes.TradeType.SL) {
             Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
             require(
-                request.tp <= position.positionAmount && request.sl <= position.positionAmount,
+                uint256(request.sizeAmount.abs()) <= position.positionAmount,
                 'tp/sl exceeds max size'
             );
             require(request.collateral == 0, 'no collateral required');
         }
 
         if (request.sizeAmount > 0) {
-            return
-                _createIncreaseOrder(
-                    TradingTypes.IncreasePositionRequest({
-                        account: account,
-                        pairIndex: request.pairIndex,
-                        tradeType: request.tradeType,
-                        collateral: request.collateral,
-                        openPrice: request.openPrice,
-                        isLong: request.isLong,
-                        sizeAmount: uint256(request.sizeAmount),
-                        tpPrice: request.tpPrice,
-                        tp: request.tp,
-                        slPrice: request.slPrice,
-                        sl: request.sl
-                    })
-                );
+            return _createIncreaseOrder(
+                TradingTypes.IncreasePositionRequest({
+                    account: account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.openPrice,
+                    isLong: request.isLong,
+                    sizeAmount: uint256(request.sizeAmount)
+                })
+            );
         } else if (request.sizeAmount < 0) {
-            return
-                _createDecreaseOrder(
-                    TradingTypes.DecreasePositionRequest({
-                        account: account,
-                        pairIndex: request.pairIndex,
-                        tradeType: request.tradeType,
-                        collateral: request.collateral,
-                        triggerPrice: request.openPrice,
-                        sizeAmount: uint256(request.sizeAmount.abs()),
-                        isLong: request.isLong
-                    })
-                );
+            return _createDecreaseOrder(
+                TradingTypes.DecreasePositionRequest({
+                    account: account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    triggerPrice: request.openPrice,
+                    sizeAmount: uint256(request.sizeAmount.abs()),
+                    isLong: request.isLong
+                })
+            );
         } else {
-            //todo
-            revert('size eq 0');
+            require(request.collateral != 0, 'not support');
+            return _createIncreaseOrder(
+                TradingTypes.IncreasePositionRequest({
+                    account: account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.openPrice,
+                    isLong: request.isLong,
+                    sizeAmount: 0
+                })
+            );
         }
-        return 0;
     }
 
     function cancelOrder(
@@ -267,10 +270,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             _request.openPrice,
             _request.isLong,
             _request.sizeAmount,
-            _request.tpPrice,
-            _request.tp,
-            _request.slPrice,
-            _request.sl,
             block.timestamp
         );
 
@@ -298,6 +297,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             )
         );
 
+        //TODO remove tp sl from event
         emit CreateIncreaseOrder(
             order.account,
             order.orderId,
@@ -307,10 +307,10 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             _request.openPrice,
             _request.isLong,
             _request.sizeAmount,
-            _request.tpPrice,
-            _request.tp,
-            _request.slPrice,
-            _request.sl
+            0,
+            0,
+            0,
+            0
         );
         return order.orderId;
     }
@@ -529,23 +529,23 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         bytes32 key,
         TradingTypes.TradeType tradeType,
         bool has
-    ) public onlyExecutor whenNotPaused {
+    ) external onlyExecutor whenNotPaused {
         positionHasTpSl[key][tradeType] = has;
     }
 
-    function removeIncreaseMarketOrders(uint256 orderId) public onlyExecutor whenNotPaused {
+    function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
         delete increaseMarketOrders[orderId];
     }
 
-    function removeIncreaseLimitOrders(uint256 orderId) public onlyExecutor whenNotPaused {
+    function removeIncreaseLimitOrders(uint256 orderId) external onlyExecutor whenNotPaused {
         delete increaseLimitOrders[orderId];
     }
 
-    function removeDecreaseMarketOrders(uint256 orderId) public onlyExecutor whenNotPaused {
+    function removeDecreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
         delete decreaseMarketOrders[orderId];
     }
 
-    function removeDecreaseLimitOrders(uint256 orderId) public onlyExecutor whenNotPaused {
+    function removeDecreaseLimitOrders(uint256 orderId) external onlyExecutor whenNotPaused {
         delete decreaseLimitOrders[orderId];
     }
 
@@ -553,7 +553,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         bool needADL
-    ) public onlyExecutor whenNotPaused {
+    ) external onlyExecutor whenNotPaused {
         TradingTypes.DecreasePositionOrder storage order;
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];
@@ -562,6 +562,14 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             require(order.tradeType == tradeType, 'trade type not match');
         }
         order.needADL = needADL;
+    }
+
+    function saveOrderTpSl(bytes32 orderKey, TradingTypes.OrderWithTpSl memory tpSl) external onlyRouter whenNotPaused {
+        orderWithTpSl[orderKey] = tpSl;
+    }
+
+    function removeOrderTpSl(bytes32 orderKey) external onlyExecutor whenNotPaused {
+        delete orderWithTpSl[orderKey];
     }
 
     function setPaused() external onlyAdmin {
