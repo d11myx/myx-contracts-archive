@@ -3,7 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     getMockToken,
     getOrderManager,
-    getPairInfo,
+    getPool,
     getToken,
     loadReserveConfig,
     MARKET_NAME,
@@ -16,7 +16,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
-    const pool = await getPairInfo();
+    const pool = await getPool();
     // const pairLiquidity = await getPairLiquidity();
     const orderManager = await getOrderManager();
     // const positionManager = await getPositionManager();

@@ -76,7 +76,7 @@ export const getIndexPriceFeed = async (address?: string): Promise<IndexPriceFee
     );
 };
 
-export const getPairInfo = async (address?: string): Promise<Pool> => {
+export const getPool = async (address?: string): Promise<Pool> => {
     return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
 };
 
