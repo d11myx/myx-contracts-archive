@@ -5,6 +5,7 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 
 import '../libraries/Position.sol';
+
 import '../interfaces/IExecutor.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
@@ -12,8 +13,6 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
-import '../interfaces/IPool.sol';
-import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 
 contract Executor is IExecutor, Pausable {
