@@ -4,8 +4,8 @@ interface ISwapCallback {
     function swapCallback(
         address indexToken,
         address stableToken,
-        int256 indexAmount,
-        int256 stableAmount,
+        uint256 indexAmount,
+        uint256 stableAmount,
         bytes calldata data
     ) external;
 }
