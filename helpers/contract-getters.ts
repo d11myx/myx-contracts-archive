@@ -12,6 +12,7 @@ import {
     Token,
     PositionManager,
     WETH,
+    PoolTokenFactory,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -27,6 +28,7 @@ import {
     EXECUTOR_ID,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
+    POOL_TOKEN_FACTORY,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -76,7 +78,14 @@ export const getIndexPriceFeed = async (address?: string): Promise<IndexPriceFee
     );
 };
 
-export const getPairInfo = async (address?: string): Promise<Pool> => {
+export const getPoolTokenFactory = async (address?: string): Promise<PoolTokenFactory> => {
+    return getContract<PoolTokenFactory>(
+        'PoolTokenFactory',
+        address || (await hre.deployments.get(POOL_TOKEN_FACTORY)).address,
+    );
+};
+
+export const getPool = async (address?: string): Promise<Pool> => {
     return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
 };
 

@@ -19,7 +19,7 @@ import {
     getAddressesProvider,
     getIndexPriceFeed,
     getOraclePriceFeed,
-    getPairInfo,
+    getPool,
     getRoleManager,
     getToken,
     getTradingVault,
@@ -132,7 +132,7 @@ export async function setupTestEnv() {
     testEnv.indexPriceFeed = await getIndexPriceFeed();
 
     // pair
-    testEnv.pool = await getPairInfo();
+    testEnv.pool = await getPool();
 
     // trading
     testEnv.router = await getRouter();
@@ -169,7 +169,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { oraclePriceFeed, indexPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    const { pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const { positionManager, router, executor, orderManager } = await deployTrading(
         deployer,
