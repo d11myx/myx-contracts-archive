@@ -38,7 +38,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 usdt,
                 router,
                 executor,
-                tradingVault,
+                positionManager,
                 orderManager,
             } = testEnv;
 
