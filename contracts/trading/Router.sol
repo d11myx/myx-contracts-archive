@@ -27,44 +27,83 @@ contract Router is Multicall, IRouter, ETHGetway {
         orderManager = _orderManager;
     }
 
-    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory request) external returns (uint256) {
-        //TODO decoupling tp sl
+    function createIncreaseOrder(TradingTypes.IncreasePositionWithTpSlRequest memory request) external returns (uint256 orderId) {
+        request.account = msg.sender;
 
-        return
-            orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: request.account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: int256(request.sizeAmount),
+        require(request.tradeType != TradingTypes.TradeType.TP && request.tradeType != TradingTypes.TradeType.SL, 'not support');
+
+        orderId = orderManager.createOrder(
+            TradingTypes.CreateOrderRequest({
+                account: request.account,
+                pairIndex: request.pairIndex,
+                tradeType: request.tradeType,
+                collateral: request.collateral,
+                openPrice: request.openPrice,
+                isLong: request.isLong,
+                sizeAmount: int256(request.sizeAmount)
+            })
+        );
+
+        // order with tp sl
+        if (request.tp > 0 || request.sl > 0) {
+            bytes32 positionKey = PositionKey.getPositionKey(request.account, request.pairIndex, request.isLong);
+
+            require(
+                request.tp == 0 || !orderManager.positionHasTpSl(positionKey, TradingTypes.TradeType.TP),
+                'tp already exists'
+            );
+            require(
+                request.sl == 0 || !orderManager.positionHasTpSl(positionKey, TradingTypes.TradeType.SL),
+                'sl already exists'
+            );
+
+            bytes32 orderKey = PositionKey.getOrderKey(true, request.tradeType, orderId);
+
+            orderManager.saveOrderTpSl(
+                orderKey,
+                TradingTypes.OrderWithTpSl({
                     tpPrice: request.tpPrice,
                     tp: request.tp,
                     slPrice: request.slPrice,
                     sl: request.sl
                 })
             );
+        }
+        return orderId;
+    }
+
+    function createIncreaseOrderWithoutTpSl(TradingTypes.IncreasePositionRequest memory request) external returns (uint256 orderId) {
+        request.account = msg.sender;
+
+        require(request.tradeType != TradingTypes.TradeType.TP && request.tradeType != TradingTypes.TradeType.SL, 'not support');
+
+        return orderManager.createOrder(
+            TradingTypes.CreateOrderRequest({
+                account: request.account,
+                pairIndex: request.pairIndex,
+                tradeType: request.tradeType,
+                collateral: request.collateral,
+                openPrice: request.openPrice,
+                isLong: request.isLong,
+                sizeAmount: int256(request.sizeAmount)
+            })
+        );
     }
 
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256) {
-        return
-            orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: request.account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.triggerPrice,
-                    isLong: request.isLong,
-                    sizeAmount: -int256(request.sizeAmount),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
-                })
-            );
+        request.account = msg.sender;
+
+        return orderManager.createOrder(
+            TradingTypes.CreateOrderRequest({
+                account: request.account,
+                pairIndex: request.pairIndex,
+                tradeType: request.tradeType,
+                collateral: request.collateral,
+                openPrice: request.triggerPrice,
+                isLong: request.isLong,
+                sizeAmount: - int256(request.sizeAmount)
+            })
+        );
     }
 
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
@@ -120,11 +159,7 @@ contract Router is Multicall, IRouter, ETHGetway {
                     collateral: 0,
                     openPrice: request.tpPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.tp),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
+                    sizeAmount: - int256(request.tp)
                 })
             );
         }
@@ -137,11 +172,7 @@ contract Router is Multicall, IRouter, ETHGetway {
                     collateral: 0,
                     openPrice: request.slPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.sl),
-                    tpPrice: 0,
-                    tp: 0,
-                    slPrice: 0,
-                    sl: 0
+                    sizeAmount: - int256(request.sl)
                 })
             );
         }
