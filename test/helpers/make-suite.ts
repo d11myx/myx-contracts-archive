@@ -169,7 +169,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { oraclePriceFeed, indexPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
 
-    const { pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const { positionManager, router, executor, orderManager } = await deployTrading(
         deployer,
