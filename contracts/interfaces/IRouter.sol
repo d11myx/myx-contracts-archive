@@ -6,7 +6,9 @@ import '../libraries/TradingTypes.sol';
 interface IRouter {
     event UpdateTradingRouter(address oldAddress, address newAddress);
 
-    function createIncreaseOrder(TradingTypes.IncreasePositionRequest memory request) external returns (uint256);
+    function createIncreaseOrder(TradingTypes.IncreasePositionWithTpSlRequest memory request) external returns (uint256 orderId);
+
+    function createIncreaseOrderWithoutTpSl(TradingTypes.IncreasePositionRequest memory request) external returns (uint256 orderId);
 
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256);
 
