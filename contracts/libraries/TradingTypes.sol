@@ -17,6 +17,9 @@ library TradingTypes {
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
         int256 sizeAmount; // size
+    }
+
+    struct OrderWithTpSl {
         uint256 tpPrice; // 1e30, tp price
         uint256 tp; // tp size
         uint256 slPrice; // 1e30, sl price
@@ -24,6 +27,16 @@ library TradingTypes {
     }
 
     struct IncreasePositionRequest {
+        address account;
+        uint256 pairIndex; // pair index
+        TradeType tradeType; // 0: MARKET, 1: LIMIT 2: TP 3: SL
+        int256 collateral; // 1e18 collateral amount，negative number is withdrawal
+        uint256 openPrice; // 1e30, price
+        bool isLong; // long or short
+        uint256 sizeAmount; // size
+    }
+
+    struct IncreasePositionWithTpSlRequest {
         address account;
         uint256 pairIndex; // pair index
         TradeType tradeType; // 0: MARKET, 1: LIMIT 2: TP 3: SL
@@ -46,6 +59,7 @@ library TradingTypes {
         uint256 sizeAmount; // size
         bool isLong;
     }
+
     struct CreateTpSlRequest {
         address account;
         uint256 pairIndex; // pair index
@@ -65,10 +79,6 @@ library TradingTypes {
         uint256 openPrice; // 1e30 Market acceptable price/Limit opening price
         bool isLong; // Long/short
         uint256 sizeAmount; // Number of positions
-        uint256 tpPrice; // Stop profit price 1e30
-        uint256 tp; // The number of profit stops
-        uint256 slPrice; // Stop price 1e30
-        uint256 sl; // Stop loss quantity
         uint256 blockTime;
     }
 

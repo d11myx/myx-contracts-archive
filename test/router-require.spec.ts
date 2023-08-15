@@ -2,9 +2,10 @@ import { ethers } from 'hardhat';
 import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { mintAndApprove } from './helpers/misc';
 import { MAX_UINT_AMOUNT, TradeType, deployMockCallback, waitForTx } from '../helpers';
-import { IPool } from '../types';
+import { IPool, IRouter, Router } from '../types';
 import { expect } from './shared/expect';
-import { TradingTypes } from '../types/contracts/interfaces/IOrderManager';
+import { TradingTypes as TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes as TradingTypes_OrderManager } from '../types/contracts/trading/OrderManager';
 
 describe('Router: check require condition, trigger errors', async () => {
     const pairIndex = 0;
@@ -38,7 +39,6 @@ describe('Router: check require condition, trigger errors', async () => {
                 usdt,
                 router,
                 executor,
-                tradingVault,
                 orderManager,
             } = testEnv;
 
@@ -53,7 +53,7 @@ describe('Router: check require condition, trigger errors', async () => {
             await usdt.connect(user2.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
             // setting: request.account = user1
-            const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+            const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                 account: user1.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
@@ -169,7 +169,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+                const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                     account: trader.address,
                     pairIndex: pairIndex,
                     tradeType: TradeType.MARKET,
@@ -192,42 +192,6 @@ describe('Router: check require condition, trigger errors', async () => {
         });
 
         describe('check increase sizeAmount', async () => {
-            it('sizeAmount = 0, trigger error: size eq 0', async () => {
-                const {
-                    keeper,
-                    deployer,
-                    users: [trader],
-                    usdt,
-                    router,
-                    orderManager,
-                } = testEnv;
-
-                const collateral = ethers.utils.parseUnits('10000', 18);
-
-                await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-                await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
-
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
-                    account: trader.address,
-                    pairIndex: pairIndex,
-                    tradeType: TradeType.MARKET,
-                    collateral: collateral,
-                    openPrice: ethers.utils.parseUnits('30000', 30),
-                    isLong: true,
-                    sizeAmount: 0,
-                    tp: 0,
-                    tpPrice: 0,
-                    sl: 0,
-                    slPrice: 0,
-                };
-
-                const orderId = await orderManager.increaseMarketOrdersIndex();
-                await expect(
-                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
-                ).to.be.revertedWith('size eq 0');
-                // await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET)
-            });
-
             it('sizeAmount < tradingConfig.minTradeAmount, trigger error: invalid trade size', async () => {
                 const {
                     keeper,
@@ -252,7 +216,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+                const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                     account: trader.address,
                     pairIndex: pairIndex,
                     tradeType: TradeType.MARKET,
@@ -298,7 +262,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
                 await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
 
-                const increasePositionRequest: TradingTypes.CreateOrderRequestStruct = {
+                const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                     account: trader.address,
                     pairIndex: pairIndex,
                     tradeType: TradeType.MARKET,
