@@ -186,6 +186,7 @@ export async function deployTrading(
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
 
     await positionManager.setExecutor(executor.address);
+    await positionManager.setOrderManager(orderManager.address);
     await orderManager.setExecutor(executor.address);
 
     return { positionManager, router, executor, orderManager };
