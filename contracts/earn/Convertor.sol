@@ -121,7 +121,7 @@ contract Convertor is ReentrancyGuard, Ownable {
             }
             claimableAmount += nextVestedAmount;
             console.log("convert nextVestedAmount %s claimableAmount %s", nextVestedAmount, claimableAmount);
-            if (conversions.length == 0) {
+            if (conversions.length == 0 || i == 0) {
                 break;
             }
         }
@@ -134,8 +134,8 @@ contract Convertor is ReentrancyGuard, Ownable {
 
     function claimableAmount(address _account) public view returns(uint256 claimableAmount) {
         Conversion[] memory conversions = userConversions[_account];
-
-        for(uint256 i = conversions.length - 1; i >= 0; i--) {
+        for(uint256 i = 0; i < conversions.length; i++) {
+            console.log("claimableAmount i %s", i);
             Conversion memory conversion = conversions[i];
             uint256 timeDiff = block.timestamp - conversion.lastVestingTimes;
             uint256 nextVestedAmount = conversion.convertAmount * timeDiff / conversion.lockPeriod;
@@ -144,13 +144,13 @@ contract Convertor is ReentrancyGuard, Ownable {
                 nextVestedAmount = conversion.convertAmount - conversion.claimedAmount;
             }
             claimableAmount += nextVestedAmount;
+            console.log("nextVestedAmount %s claimableAmount %s", nextVestedAmount, claimableAmount);
         }
     }
 
     function totalConverts(address _account) public view returns(uint256 amount, uint256 convertAmount, uint256 claimedAmount) {
         Conversion[] memory conversions = userConversions[_account];
-
-        for(uint256 i = conversions.length - 1; i >= 0; i--) {
+        for(uint256 i = 0; i < conversions.length; i++) {
             Conversion memory conversion = conversions[i];
             amount += conversion.initAmount;
             convertAmount += conversion.convertAmount;
