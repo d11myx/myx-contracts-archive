@@ -2,8 +2,46 @@
 pragma solidity 0.8.17;
 
 interface IPool {
+
     // Events
     event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
+
+    event UpdateTotalAmount(
+        uint256 indexed pairIndex,
+        int256 indexAmount,
+        int256 stableAmount,
+        uint256 indexTotalAmount,
+        uint256 stableTotalAmount
+    );
+
+    event UpdateReserveAmount(
+        uint256 indexed pairIndex,
+        int256 indexAmount,
+        int256 stableAmount,
+        uint256 indexReservedAmount,
+        uint256 stableReservedAmount
+    );
+
+    event UpdateProfit(
+        uint256 indexed pairIndex,
+        int256 profit,
+        int256 realisedPnl,
+        uint256 stableTotalAmount
+    );
+
+    event UpdateAveragePrice(
+        uint256 indexed pairIndex,
+        uint256 averagePrice
+    );
+
+    event Swap(
+        address indexed funder,
+        address indexed receiver,
+        uint256 indexed pairIndex,
+        bool isBuy, // buy indexToken with stableToken
+        uint256 amountIn,
+        uint256 amountOut
+    );
 
     event AddLiquidity(
         address indexed funder,
@@ -27,15 +65,8 @@ interface IPool {
         uint256 lpAmount
     );
 
-    event Swap(
-        address indexed funder,
-        address indexed receiver,
-        uint256 indexed pairIndex,
-        bool isBuy, // buy indexToken with stableToken
-        uint256 amountIn,
-        uint256 amountOut
-    );
     struct Pair {
+        uint256 pairIndex;
         address indexToken;
         address stableToken;
         address pairToken;
@@ -61,6 +92,9 @@ interface IPool {
         // fee
         uint256 takerFeeP;
         uint256 makerFeeP;
+        // distribute
+        uint256 lpFeeDistributeP;
+        uint256 keeperFeeDistributeP;
     }
 
     struct FundingFeeConfig {

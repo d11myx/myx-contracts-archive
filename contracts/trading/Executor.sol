@@ -230,6 +230,7 @@ contract Executor is IExecutor, Pausable {
             positionManager.transferTokenTo(pair.stableToken, address(positionManager), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
+            tx.origin,
             order.account,
             pairIndex,
             order.collateral,
@@ -454,6 +455,7 @@ contract Executor is IExecutor, Pausable {
             positionManager.transferTokenTo(pair.stableToken, address(pool), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
+            tx.origin,
             order.account,
             pairIndex,
             order.collateral,
@@ -653,6 +655,10 @@ contract Executor is IExecutor, Pausable {
             price,
             orderId
         );
+    }
+
+    function claimTradingFee(address claimToken) external override onlyPositionKeeper whenNotPaused returns (uint256) {
+        return positionManager.claimKeeperTradingFee(claimToken, msg.sender);
     }
 
     function setPaused() external onlyAdmin {
