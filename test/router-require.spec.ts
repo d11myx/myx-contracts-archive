@@ -122,6 +122,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const pair = await pool.getPair(pairIndex);
                 console.log(`pair: `, pair);
                 const newPair: IPool.PairStruct = {
+                    pairIndex: pairIndex,
                     indexToken: pair.indexToken,
                     stableToken: pair.stableToken,
                     pairToken: pair.pairToken,
@@ -149,6 +150,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const pairBef = await pool.getPair(pairIndex);
                 console.log(`pair: `, pairBef);
                 const newPair: IPool.PairStruct = {
+                    pairIndex: pairIndex,
                     indexToken: pairBef.indexToken,
                     stableToken: pairBef.stableToken,
                     pairToken: pairBef.pairToken,
