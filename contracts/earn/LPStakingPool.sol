@@ -10,7 +10,7 @@ import "../token/interfaces/IBaseToken.sol";
 import "../interfaces/IPool.sol";
 
 // staking pool for MLP
-contract MLPStakingPool is Pausable, ReentrancyGuard, Ownable {
+contract LPStakingPool is Pausable, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     IPool public pool;
@@ -31,7 +31,7 @@ contract MLPStakingPool is Pausable, ReentrancyGuard, Ownable {
     }
 
     modifier onlyHandler() {
-        require(isHandler[msg.sender], 'MLPStakingPool: handler forbidden');
+        require(isHandler[msg.sender], 'LPStakingPool: handler forbidden');
         _;
     }
 
@@ -64,11 +64,11 @@ contract MLPStakingPool is Pausable, ReentrancyGuard, Ownable {
     }
 
     function _stake(uint256 pairIndex, address funder, address account, uint256 amount) private {
-        require(amount > 0, "MLPStakingPool: invalid stake amount");
+        require(amount > 0, "LPStakingPool: invalid stake amount");
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        require(pair.enable && pair.pairToken != address(0), "MLPStakingPool: invalid pair");
-        require(userStaked[pairIndex][account] + amount <= maxStakeAmount[pairIndex], "MLPStakingPool :exceed max stake amount");
+        require(pair.enable && pair.pairToken != address(0), "LPStakingPool: invalid pair");
+        require(userStaked[pairIndex][account] + amount <= maxStakeAmount[pairIndex], "LPStakingPool :exceed max stake amount");
 
         userStaked[pairIndex][account] += amount;
         totalStaked[pairIndex] += amount;
@@ -80,10 +80,10 @@ contract MLPStakingPool is Pausable, ReentrancyGuard, Ownable {
 
     function _unstake(uint256 pairIndex, address account, address receiver, uint256 amount) private {
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        require(pair.pairToken != address(0), "MLPStakingPool: invalid pair");
+        require(pair.pairToken != address(0), "LPStakingPool: invalid pair");
 
-        require(userStaked[pairIndex][account] > 0, "MLPStakingPool: none staked");
-        require(amount > 0 && amount <= userStaked[pairIndex][account], "MLPStakingPool: invalid unstake amount");
+        require(userStaked[pairIndex][account] > 0, "LPStakingPool: none staked");
+        require(amount > 0 && amount <= userStaked[pairIndex][account], "LPStakingPool: invalid unstake amount");
 
         userStaked[pairIndex][account] -= amount;
         totalStaked[pairIndex] -= amount;

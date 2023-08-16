@@ -42,19 +42,19 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     uint256 public fundingInterval;
 
+    mapping(address => uint256) public override stakingTradingFee;
+    mapping(address => mapping(address => uint256)) public override keeperTradingFee;
+
     IPool public pool;
-    address public tradingFeeReceiver;
     address public addressExecutor;
     address public addressOrderManager;
 
     constructor(
         IAddressesProvider addressProvider,
         IPool _pairInfo,
-        address _tradingFeeReceiver,
         uint256 _fundingInterval
     ) Roleable(addressProvider) {
         pool = _pairInfo;
-        tradingFeeReceiver = _tradingFeeReceiver;
         fundingInterval = _fundingInterval;
     }
 
@@ -76,12 +76,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         addressOrderManager = _addressOrderManager;
     }
 
-    function updateTradingFeeReceiver(address newReceiver) external onlyPoolAdmin {
-        address oldReceiver = tradingFeeReceiver;
-        tradingFeeReceiver = newReceiver;
-        emit UpdateTradingFeeReceiver(oldReceiver, newReceiver);
-    }
-
     function updateFundingInterval(uint256 newInterval) external onlyPoolAdmin {
         uint256 oldInterval = fundingInterval;
         fundingInterval = newInterval;
@@ -89,6 +83,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function increasePosition(
+        address _keeper,
         address _account,
         uint256 _pairIndex,
         int256 _collateral,
@@ -134,14 +129,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             if (_isLong) {
                 afterCollateral -= fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
                 transferOut += userAmount;
             }
         } else {
             if (!_isLong) {
                 afterCollateral += fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
                 transferOut += userAmount;
             }
         }
@@ -153,7 +148,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
         afterCollateral -= int256(tradingFee);
 
-        IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
+        _distributeTradingFee(pair, tradingFee, _keeper);
 
         // final collateral & out
         afterCollateral += _collateral;
@@ -310,6 +305,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function decreasePosition(
+        address _keeper,
         address _account,
         uint256 _pairIndex,
         int256 _collateral,
@@ -347,14 +343,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             if (_isLong) {
                 afterCollateral -= fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
                 transferOut += userAmount;
             }
         } else {
             if (!_isLong) {
                 afterCollateral -= (-fundingFee);
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(_pairIndex, fundingFee.abs());
+                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
                 transferOut += userAmount;
             }
         }
@@ -366,7 +362,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         tradingFee = _tradingFee(_pairIndex, !_isLong, _sizeAmount, _price);
         afterCollateral -= int256(tradingFee);
 
-        IERC20(pair.stableToken).safeTransfer(tradingFeeReceiver, tradingFee);
+        _distributeTradingFee(pair, tradingFee, _keeper);
 
         // update lp vault
         if (_sizeAmount > 0) {
@@ -497,32 +493,47 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             // transfer out all collateral and _collateral
             int256 allTransferOut = int256(transferOut) + afterCollateral + (_collateral > 0 ? _collateral : int256(0));
             transferOut = allTransferOut > 0 ? allTransferOut.abs() : 0;
-            delete positions[positionKey];
+
             emit ClosePosition(positionKey, _account, _pairIndex, _isLong);
+
+            emit DecreasePosition(
+                positionKey,
+                _account,
+                _pairIndex,
+                _isLong,
+                -int256(position.collateral),
+                _sizeAmount,
+                _price,
+                tradingFee,
+                fundingFee,
+                pnl,
+                transferOut
+            );
+            delete positions[positionKey];
         } else {
             afterCollateral += _collateral;
             transferOut += (_collateral < 0 ? uint256(-_collateral) : 0);
             require(afterCollateral > 0, 'collateral not enough');
             position.collateral = afterCollateral.abs();
+
+            emit DecreasePosition(
+                positionKey,
+                _account,
+                _pairIndex,
+                _isLong,
+                _collateral,
+                _sizeAmount,
+                _price,
+                tradingFee,
+                fundingFee,
+                pnl,
+                transferOut
+            );
         }
 
         if (transferOut > 0) {
             IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
-
-        emit DecreasePosition(
-            positionKey,
-            _account,
-            _pairIndex,
-            _isLong,
-            _collateral,
-            _sizeAmount,
-            _price,
-            tradingFee,
-            fundingFee,
-            pnl,
-            transferOut
-        );
 
         emit UpdatePosition(
             positionKey,
@@ -595,6 +606,41 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         return tradingFee;
     }
 
+    function _distributeTradingFee(IPool.Pair memory pair, uint256 tradingFee, address keeper) internal {
+        console.log("distributeTradingFee tradingFee", tradingFee, "keeper", keeper);
+        IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
+
+        uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
+        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
+        pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
+
+        uint256 keeperAmount = tradingFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
+        uint256 stakingAmount = tradingFee - keeperAmount;
+
+        keeperTradingFee[pair.stableToken][keeper] += keeperAmount;
+        stakingTradingFee[pair.stableToken] += stakingAmount;
+        console.log("distributeTradingFee lpAmount %s keeperAmount %s stakingAmount %s", lpAmount, keeperAmount, stakingAmount);
+    }
+
+    // TODO receiver? ?onlyPoolAdmin
+    function claimStakingTradingFee(address claimToken) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
+        uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
+        if (claimableStakingTradingFee > 0) {
+            IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
+            delete stakingTradingFee[claimToken];
+        }
+        return claimableStakingTradingFee;
+    }
+
+    function claimKeeperTradingFee(address claimToken, address keeper) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
+        uint256 claimableKeeperTradingFee = keeperTradingFee[claimToken][keeper];
+        if (claimableKeeperTradingFee > 0) {
+            IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
+            delete keeperTradingFee[claimToken][keeper];
+        }
+        return claimableKeeperTradingFee;
+    }
+
     //TODO will remove
     function transferTokenTo(address token, address to, uint256 amount) external onlyExecutorOrOrderManager {
         IERC20(token).safeTransfer(to, amount);
@@ -658,17 +704,16 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function _distributeFundingFee(
-        uint256 _pairIndex,
+        IPool.Pair memory pair,
         uint256 _fundingFee
     ) internal returns (uint256 userAmount, uint256 lpAmount) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
-        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
+        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(pair.pairIndex);
 
         lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
         userAmount = _fundingFee - lpAmount;
 
         IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
-        pool.increaseTotalAmount(_pairIndex, 0, lpAmount);
+        pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
 
         return (userAmount, lpAmount);
     }

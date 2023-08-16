@@ -5,8 +5,6 @@ import '../libraries/Position.sol';
 
 interface IPositionManager {
 
-    event UpdateTradingFeeReceiver(address oldReceiver, address newReceiver);
-
     event UpdateFundingInterval(uint256 oldInterval, uint256 newInterval);
 
     event IncreasePosition(
@@ -64,11 +62,19 @@ interface IPositionManager {
 
     function shortTracker(uint256 pairIndex) external view returns (uint256);
 
+    function stakingTradingFee(address _token) external view returns (uint256);
+
+    function keeperTradingFee(address _token, address _account) external view returns (uint256);
+
     function getTradingFee(
         uint256 _pairIndex,
         bool _isLong,
         uint256 _sizeAmount
     ) external view returns (uint256 tradingFee);
+
+    function claimStakingTradingFee(address claimToken) external returns (uint256);
+
+    function claimKeeperTradingFee(address claimToken, address keeper) external returns (uint256);
 
     function getFundingFee(
         bool _increase,
@@ -90,11 +96,10 @@ interface IPositionManager {
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
 
-    function updateTradingFeeReceiver(address newReceiver) external;
-
     function updateFundingInterval(uint256 newInterval) external;
 
     function increasePosition(
+        address _keeper,
         address _account,
         uint256 _pairIndex,
         int256 _collateral,
@@ -104,6 +109,7 @@ interface IPositionManager {
     ) external returns (uint256 tradingFee, int256 fundingFee);
 
     function decreasePosition(
+        address _keeper,
         address _account,
         uint256 _pairIndex,
         int256 _collateral,

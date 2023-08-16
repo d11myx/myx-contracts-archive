@@ -9,11 +9,11 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 import "../token/interfaces/IBaseToken.sol";
-import "./interfaces/IDistributor.sol";
+import "./interfaces/IRewardDistributor.sol";
 import "./interfaces/IStakingPool.sol";
 
 // distribute reward myx for staking
-contract Distributor is IDistributor, Pausable, ReentrancyGuard, Ownable {
+contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     address public rewardToken;
@@ -45,7 +45,7 @@ contract Distributor is IDistributor, Pausable, ReentrancyGuard, Ownable {
     }
 
     modifier onlyHandler() {
-        require(isHandler[msg.sender], 'Distributor: handler forbidden');
+        require(isHandler[msg.sender], 'RewardDistributor: handler forbidden');
         _;
     }
 
@@ -59,7 +59,7 @@ contract Distributor is IDistributor, Pausable, ReentrancyGuard, Ownable {
 
     // update root by handler
     function updateRoot(bytes32 _merkleRoot) external override onlyHandler {
-        require(!merkleRootUsed[_merkleRoot], "Distributor: root already used");
+        require(!merkleRootUsed[_merkleRoot], "RewardDistributor: root already used");
 
         round++;
         merkleRoots[round] = _merkleRoot;
@@ -77,19 +77,19 @@ contract Distributor is IDistributor, Pausable, ReentrancyGuard, Ownable {
     }
 
     function compound(uint256 _amount, bytes32[] calldata _merkleProof) external whenNotPaused nonReentrant {
-        require(address(stakingPool) != address(0), "Distributor: stakingPool not exist");
+        require(address(stakingPool) != address(0), "RewardDistributor: stakingPool not exist");
         uint256 claimAmount = _claim(msg.sender, address(this), _amount, _merkleProof);
         IERC20(rewardToken).approve(address(stakingPool), claimAmount);
-        stakingPool.stakeForAccount(address(this), msg.sender, claimAmount);
+        stakingPool.stakeForAccount(address(this), msg.sender, rewardToken, claimAmount);
         emit Compound(msg.sender, round, _amount);
     }
 
     function _claim(address account, address receiver, uint256 _amount, bytes32[] calldata _merkleProof) private returns(uint256) {
-        require(!userClaimed[round][account], "Distributor: already claimed");
+        require(!userClaimed[round][account], "RewardDistributor: already claimed");
 
         (bool canClaim, uint256 adjustedAmount) = _canClaim(account, _amount, _merkleProof);
 
-        require(canClaim, "Distributor: cannot claim");
+        require(canClaim, "RewardDistributor: cannot claim");
 
         userClaimed[round][account] = true;
 
