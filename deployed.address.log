@@ -2,39 +2,39 @@ Accounts after deployment
 ┌─────────┬────────────────┬──────────────────────────────────────────────┬─────────────────────────────┐
 │ (index) │      name      │                   account                    │           balance           │
 ├─────────┼────────────────┼──────────────────────────────────────────────┼─────────────────────────────┤
-│    0    │   'deployer'   │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997589550969322671' │
-│    1    │  'poolAdmin'   │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997589550969322671' │
-│    2    │   'operator'   │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
-│    3    │  'treasurer'   │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
-│    4    │    'keeper'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997589550969322671' │
-│    5    │ 'feeReceiver'  │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997589550969322671' │
-│    6    │ 'slipReceiver' │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997589550969322671' │
+│    0    │   'deployer'   │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.925661406298534154' │
+│    1    │  'poolAdmin'   │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.925661406298534154' │
+│    2    │   'operator'   │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │ '999999.797880040211953836' │
+│    3    │  'treasurer'   │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │ '999999.797880040211953836' │
+│    4    │    'keeper'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.925661406298534154' │
+│    5    │ 'feeReceiver'  │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.925661406298534154' │
+│    6    │ 'slipReceiver' │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.925661406298534154' │
 └─────────┴────────────────┴──────────────────────────────────────────────┴─────────────────────────────┘
 
 Deployments
 ┌───────────────────┬──────────────────────────────────────────────┐
 │      (index)      │                   address                    │
 ├───────────────────┼──────────────────────────────────────────────┤
-│ AddressesProvider │ '0x87ae754028dAC18f1D1D8EB76B557C280906a6aa' │
-│    RoleManager    │ '0x7025c220763196F126571B34A708fD700f67d363' │
-│       USDT        │ '0x1a79d1dc57AACc14601A3A0B0a45A19873CC7AFc' │
-│       WETH        │ '0xCa34c5dD737FB1dA3A2aEF3a328B0A70A45bce1C' │
-│  OraclePriceFeed  │ '0xa240c075D10C4c735DA6C9Bcef41A177aCb88687' │
-│ MockPriceFeed-BTC │ '0xDfeAA34359305f9189ACD2Fb3681B1C94835c1E0' │
-│ MockPriceFeed-ETH │ '0xe5C9EcAae098d8eAb2F6dD7D56f6b5E6e48E0d05' │
-│  IndexPriceFeed   │ '0x039a6D7f018Cf536D1Ea4503Fc372de120c32eCF' │
-│ PoolTokenFactory  │ '0xFaF592e792936e684D59c1211796154975F4426b' │
-│       Pool        │ '0x26bcd5ac4a813df6d526B34cAb5F526a1f7042a8' │
-│  PositionManager  │ '0x74c3Bc926A7bDF81D6A9a212F0dCb8166E538b28' │
-│   OrderManager    │ '0x0dA35C9F10678f915fe457C3524EF91683B0b3E7' │
-│      Router       │ '0xaBae19Af70Eaa6aE2140de47B1d7A602180C26C6' │
-│     Executor      │ '0x9F183F317A723830C486c28765dFc9686945b6c1' │
+│ AddressesProvider │ '0xCE63800Cf68BbCa066B02E41C9dD38fE5bb0bD75' │
+│    RoleManager    │ '0x295Dfb1DCdBF3e9f8abfDDcCc4E87f1Fca1a9fE5' │
+│       USDT        │ '0x0C26F344fA1d31CC9D4a3f3ce54Ee4E1BC7110F6' │
+│       WETH        │ '0x682A9a8989d80af0199c9f4A20f3260FA49f9Ff5' │
+│  OraclePriceFeed  │ '0xfB66a09315BEb305eE3Bd87C7Cc9CF88d8C59582' │
+│ MockPriceFeed-BTC │ '0xE5560E28E717beb63e8580AfD5edd0dA85E672f1' │
+│ MockPriceFeed-ETH │ '0xe6c79411356ab2bb7e2e806c5520b5ff48Fc1f81' │
+│  IndexPriceFeed   │ '0x7c4F8cF8987Ff1Df86b7dC7ad749178F9f6c40e8' │
+│ PoolTokenFactory  │ '0x55880128F43bD9a7Fed2F0DB231C5d26892513AA' │
+│       Pool        │ '0xd1D413D4cae2CaF56c08F1De2cc46280fa303aB5' │
+│  PositionManager  │ '0x36878A1e7Dc3439Aac0f2B2E5477ccCa5f0F260b' │
+│   OrderManager    │ '0x51CCA72F7Bb913953F3E428D9E6894F739f0a025' │
+│      Router       │ '0x8618C6302D06013f55021502309ed6963020184b' │
+│     Executor      │ '0x3846C065984528Efb553a53c1cb1A1709e9f6AA5' │
 └───────────────────┴──────────────────────────────────────────────┘
 
 MockedTokens
 ┌───────────────┬──────────────────────────────────────────────┐
 │    (index)    │                   address                    │
 ├───────────────┼──────────────────────────────────────────────┤
-│ MockToken-BTC │ '0x9bC7f5381Ad51E0B0e2ABAa1BB4356177c285FF3' │
-│ MockToken-ETH │ '0x2572481e069456b87350976b304521D818fd4d45' │
+│ MockToken-BTC │ '0x3943423A5ba23bDc5d4fc4Aa048663eae405601f' │
+│ MockToken-ETH │ '0x1a47eaEED82391F683fEF80f7a3A2CAbd7D4cE5F' │
 └───────────────┴──────────────────────────────────────────────┘

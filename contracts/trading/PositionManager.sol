@@ -45,6 +45,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     IPool public pool;
     address public tradingFeeReceiver;
     address public addressExecutor;
+    address public addressOrderManager;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -62,8 +63,17 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         _;
     }
 
+    modifier onlyExecutorOrOrderManager() {
+        require(msg.sender == addressExecutor || msg.sender == addressOrderManager, 'Position Manager: forbidden');
+        _;
+    }
+
     function setExecutor(address _addressExecutor) external onlyPoolAdmin {
         addressExecutor = _addressExecutor;
+    }
+
+    function setOrderManager(address _addressOrderManager) external onlyPoolAdmin {
+        addressOrderManager = _addressOrderManager;
     }
 
     function updateTradingFeeReceiver(address newReceiver) external onlyPoolAdmin {
@@ -586,7 +596,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     //TODO will remove
-    function transferTokenTo(address token, address to, uint256 amount) external onlyExecutor {
+    function transferTokenTo(address token, address to, uint256 amount) external onlyExecutorOrOrderManager {
         IERC20(token).safeTransfer(to, amount);
     }
 
