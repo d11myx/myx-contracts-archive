@@ -105,4 +105,6 @@ interface IExecutor {
         uint256 orderId,
         TradingTypes.TradeType tradeType
     ) external;
+
+    function claimTradingFee(address claimToken) external returns (uint256);
 }

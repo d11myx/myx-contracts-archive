@@ -144,7 +144,6 @@ export async function deployTrading(
     let positionManager = (await deployContract('PositionManager', [
         addressProvider.address,
         pool.address,
-        deployer.address,
         8 * 60 * 60,
     ])) as any as PositionManager;
     console.log(`deployed PositionManager at ${positionManager.address}`);

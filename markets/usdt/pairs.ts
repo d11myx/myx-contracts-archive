@@ -1,9 +1,10 @@
-import { PairInfoConfig } from '../../helpers/types';
-import { ZERO_ADDRESS } from '../../helpers/constants';
+import { PairInfoConfig } from '../../helpers';
+import { ZERO_ADDRESS } from '../../helpers';
 import { ethers } from 'ethers';
 
 export const btcPairInfo: PairInfoConfig = {
     pair: {
+        pairIndex: 0,
         indexToken: ZERO_ADDRESS,
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
@@ -24,8 +25,10 @@ export const btcPairInfo: PairInfoConfig = {
         maxPriceDeviationP: 50,
     },
     tradingFeeConfig: {
-        takerFeeP: 30, // 0.3%
+        takerFeeP: 30,
         makerFeeP: 10,
+        lpFeeDistributeP: 5000,
+        keeperFeeDistributeP: 4000,
     },
     fundingFeeConfig: {
         minFundingRate: 0,
@@ -40,6 +43,7 @@ export const btcPairInfo: PairInfoConfig = {
 
 export const ethPairInfo: PairInfoConfig = {
     pair: {
+        pairIndex: 1,
         indexToken: ZERO_ADDRESS,
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
@@ -62,6 +66,8 @@ export const ethPairInfo: PairInfoConfig = {
     tradingFeeConfig: {
         takerFeeP: 30, // 0.3%
         makerFeeP: 10,
+        lpFeeDistributeP: 5000,
+        keeperFeeDistributeP: 4000,
     },
     fundingFeeConfig: {
         minFundingRate: 0,

@@ -32,7 +32,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const positionManagerArtifact = await deploy(`${TRADING_VAULT_ID}`, {
         from: deployer,
         contract: 'PositionManager',
-        args: [addressProvider.address, pool.address, feeReceiver, 8 * 60 * 60],
+        args: [addressProvider.address, pool.address, 8 * 60 * 60],
         ...COMMON_DEPLOY_PARAMS,
     });
     const positionManager = (await hre.ethers.getContractAt(
