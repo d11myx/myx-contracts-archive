@@ -108,6 +108,7 @@ contract Pool is IPool, Roleable {
         pairIndexes[_indexToken][_stableToken] = pairsCount;
 
         Pair storage pair = pairs[pairsCount];
+        pair.pairIndex = pairsCount;
         pair.indexToken = _indexToken;
         pair.stableToken = _stableToken;
         pair.pairToken = pairToken;
@@ -177,6 +178,7 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount + _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount + _stableAmount;
+        emit UpdateTotalAmount(_pairIndex, int256(_indexAmount), int256(_stableAmount), vault.indexTotalAmount, vault.stableTotalAmount);
     }
 
     function decreaseTotalAmount(
@@ -191,6 +193,7 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
+        emit UpdateTotalAmount(_pairIndex, - int256(_indexAmount), - int256(_stableAmount), vault.indexTotalAmount, vault.stableTotalAmount);
     }
 
     function increaseReserveAmount(
@@ -201,6 +204,7 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
+        emit UpdateReserveAmount(_pairIndex, int256(_indexAmount), int256(_stableAmount), vault.indexReservedAmount, vault.stableReservedAmount);
     }
 
     function decreaseReserveAmount(
@@ -211,6 +215,7 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
+        emit UpdateReserveAmount(_pairIndex, - int256(_indexAmount), - int256(_stableAmount), vault.indexReservedAmount, vault.stableReservedAmount);
     }
 
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
@@ -219,12 +224,14 @@ contract Pool is IPool, Roleable {
 
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPairLiquidityAndVault {
         vaults[_pairIndex].averagePrice = _averagePrice;
+        emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
     function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
         Vault storage vault = vaults[_pairIndex];
         vault.stableTotalAmount += _profit;
         vault.realisedPnl += int256(_profit);
+        emit UpdateProfit(_pairIndex, int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
     }
 
     function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
@@ -235,6 +242,7 @@ contract Pool is IPool, Roleable {
 
         vault.stableTotalAmount -= _profit;
         vault.realisedPnl -= int256(_profit);
+        emit UpdateProfit(_pairIndex, -int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
     }
 
     function liqiitySwap(

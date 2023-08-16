@@ -5,11 +5,13 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "hardhat/console.sol";
 
 contract Vester is ReentrancyGuard, Ownable, Initializable {
     using SafeERC20 for IERC20;
+    using Math for uint256;
 
     enum DistributeType {
         TEAM_ADVISOR,
@@ -108,6 +110,7 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
         || distributeType == DistributeType.COMMUNITY
         || distributeType == DistributeType.INITIAL_LIQUIDITY
             || distributeType == DistributeType.DEVELOPMENT_RESERVE) {
+            console.log("releaseToken timestamp", block.timestamp, "nextReleaseTime", nextReleaseTime[distributeType]);
 
             require(block.timestamp >= nextReleaseTime[distributeType], "Vester: locking time");
 
@@ -131,7 +134,7 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
         emit Release(distributeType, receiver[distributeType], releaseAmount, totalRelease[distributeType], releasedAmount[distributeType]);
     }
 
-    function getReleaseAmount(DistributeType distributeType) public view returns (uint256) {
+    function getReleaseAmount(DistributeType distributeType) public view returns (uint256 releaseAmount) {
         console.log("getReleaseAmount releasedAmount", releasedAmount[distributeType], "totalRelease", totalRelease[distributeType]);
         if (releasedAmount[distributeType] >= totalRelease[distributeType]) {
             return 0;
@@ -143,13 +146,18 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
                 return 0;
             }
 
+            // first release
+            if (releasedAmount[distributeType] == 0) {
+                return totalRelease[distributeType] / releaseRounds[distributeType];
+            }
+
             uint256 interval = block.timestamp - nextReleaseTime[distributeType];
             console.log("getReleaseAmount releaseInterval", releaseInterval[distributeType], "interval", interval);
             if (interval < releaseInterval[distributeType]) {
                 return 0;
             }
             // todo releaseAmount.min(total - released)
-            return totalRelease[distributeType] / releaseRounds[distributeType];
+            releaseAmount = totalRelease[distributeType] / releaseRounds[distributeType];
         } else if (distributeType == DistributeType.MARKET_OPERATION || distributeType == DistributeType.ECO_KEEPER) {
             console.log("getReleaseAmount timestamp", block.timestamp, "nextReleaseTime", nextReleaseTime[distributeType]);
 
@@ -167,11 +175,12 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
                 return 0;
             }
 
-            return (totalRelease[distributeType] - tge[distributeType]) / releaseRounds[distributeType];
+            releaseAmount = (totalRelease[distributeType] - tge[distributeType]) / releaseRounds[distributeType];
         } else if (distributeType == DistributeType.COMMUNITY
         || distributeType == DistributeType.INITIAL_LIQUIDITY
             || distributeType == DistributeType.DEVELOPMENT_RESERVE) {
-            return totalRelease[distributeType] - releasedAmount[distributeType];
+            releaseAmount = totalRelease[distributeType] - releasedAmount[distributeType];
         }
+        return releaseAmount.min(totalRelease[distributeType] - releasedAmount[distributeType]);
     }
 }
