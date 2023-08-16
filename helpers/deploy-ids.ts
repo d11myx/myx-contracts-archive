@@ -14,3 +14,4 @@ export const ROUTER_ID = `Router`;
 export const EXECUTOR_ID = `Executor`;
 export const ORDER_MANAGER_ID = `OrderManager`;
 export const POSITION_MANAGER_ID = `PositionManager`;
+export const TEST_CALLBACK_PREFIX = `TestCallBack-`;
