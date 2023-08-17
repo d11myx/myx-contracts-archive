@@ -1,21 +1,26 @@
 ### Contract address
 
--   [remote config](./scripts/config/remote_config.json)
-Xml-rpc: http://18.166.30.91:8545/
--   ChainId: 31337
+- [remote config](./scripts/config/remote_config.json)
+  Xml-rpc: http://18.166.30.91:8545/
+- ChainId: 31337
+
+
+- [dev config](./scripts/config/dev_config.json)
+  Xml-rpc: http://43.198.67.105:8545/
+- ChainId: 31337
 
 ### Test account
 
-- Private chain.
+- Dev Private chain.
 
 ```text
-Account #0 (admin): 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
+Account #0 (admin / keeper): 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
 Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
-Account #1: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (10000 ETH)
+Account #1 (operator / treasurer): 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (10000 ETH)
 Private Key: 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
 
-Account #2: 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC (10000 ETH)
+Account #2: (community) 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC (10000 ETH)
 Private Key: 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
 
 Account #3: 0x90F79bf6EB2c4f870365E785982E1f101E93b906 (10000 ETH)
@@ -39,39 +44,39 @@ Private Key: 0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97
 Account #9: 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720 (10000 ETH)
 Private Key: 0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
 
-Account #10 (keeper): 0xBcd4042DE499D14e55001CcbB24a551F3b954096 (10000 ETH)
+Account #10: 0xBcd4042DE499D14e55001CcbB24a551F3b954096 (10000 ETH)
 Private Key: 0xf214f2b2cd398c806f84e317254e0f0b801d0643303237d97a22a48e01628897
 
-Account #11 (keeper): 0x71bE63f3384f5fb98995898A86B02Fb2426c5788 (10000 ETH)
+Account #11: 0x71bE63f3384f5fb98995898A86B02Fb2426c5788 (10000 ETH)
 Private Key: 0x701b615bbdfb9de65240bc28bd21bbc0d996645a3dd57e7b12bc2bdf6f192c82
 
-Account #12 (keeper): 0xFABB0ac9d68B0B445fB7357272Ff202C5651694a (10000 ETH)
+Account #12: 0xFABB0ac9d68B0B445fB7357272Ff202C5651694a (10000 ETH)
 Private Key: 0xa267530f49f8280200edf313ee7af6b827f2a8bce2897751d06a843f644967b1
 
-Account #13 (keeper): 0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec (10000 ETH)
+Account #13: 0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec (10000 ETH)
 Private Key: 0x47c99abed3324a2707c28affff1267e45918ec8c3f20b8aa892e8b065d2942dd
 
-Account #14 (keeper): 0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097 (10000 ETH)
+Account #14: 0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097 (10000 ETH)
 Private Key: 0xc526ee95bf44d8fc405a158bb884d9d1238d99f0612e9f33d006bb0789009aaa
 
-Account #15 (keeper): 0xcd3B766CCDd6AE721141F452C550Ca635964ce71 (10000 ETH)
+Account #15: 0xcd3B766CCDd6AE721141F452C550Ca635964ce71 (10000 ETH)
 Private Key: 0x8166f546bab6da521a8369cab06c5d2b9e46670292d85c875ee9ec20e84ffb61
 
-Account #16 (keeper): 0x2546BcD3c84621e976D8185a91A922aE77ECEc30 (10000 ETH)
+Account #16: 0x2546BcD3c84621e976D8185a91A922aE77ECEc30 (10000 ETH)
 Private Key: 0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1baec7c37d42484a0
 
-Account #17 (keeper): 0xbDA5747bFD65F08deb54cb465eB87D40e51B197E (10000 ETH)
+Account #17: 0xbDA5747bFD65F08deb54cb465eB87D40e51B197E (10000 ETH)
 Private Key: 0x689af8efa8c651a91ad287602527f3af2fe9f6501a7ac4b061667b5a93e037fd
 
-Account #18 (keeper): 0xdD2FD4581271e230360230F9337D5c0430Bf44C0 (10000 ETH)
+Account #18: 0xdD2FD4581271e230360230F9337D5c0430Bf44C0 (10000 ETH)
 Private Key: 0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0
 
-Account #19 (keeper): 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199 (10000 ETH)
+Account #19: 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199 (10000 ETH)
 Private Key: 0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e
 
-` ` `
+```
 
--   goerli
+- goerli
 
 ```text
 Account #0 (admin): 0x9a51ed860dfd64ac1faf6f2df906c31b588d1f26
@@ -90,7 +95,7 @@ Account #4 (user1): 0xC177e2A539Be587792808D94d3Ca076c6317227c
 Private Key: 0xa661ddc2b2524edf18074ac62ed919c8af1fedcd658d5361e0ed7eee249ff168
 
 Sign a contract, 0 xe72adf5f08db431258776205172d2f1ff1cc4541
-` ` `
+```
 
 ### Contract interface
 
@@ -119,7 +124,7 @@ event: DecreasePosition id: f1d296a817e8ecfa2709fcd52c61a6dddc7e87ed697b3ba601e8
 event: IncreasePosition id: 07777c9f149d310fb8670fb9752de106d0ebc29093eb6df2be370406a7d742a3
 event: UpdateFundingRate id: 30ee8c76a6febcb0400fb07183d873b5c18cf9e5ca6a47104676795b989c606d
 event: UpdatePosition id: 9a23c22b6372bd11ffa0aced0db638ca7c144fc3996ecc8fbe3f9a639ef285ad
-` ` `
+```
 
 #### Set parameters
 
@@ -182,7 +187,7 @@ uint256 lpDistributeP;               // lp Allocation ratio
 uint256 userDistributeP;             // User allocation ratio
 uint256 treasuryDistributeP;         // Treasury allocation ratio
 }
-` ` `
+```
 
 #### Open a position
 
@@ -209,7 +214,7 @@ uint256 slPrice;                // Stop price 1e30
 uint256 sl;                     // Stop loss quantity
 }
 
-` ` `
+```
 
 - Executor
 ```solidity
@@ -229,7 +234,7 @@ uint256 public decreaseMarketOrdersIndex;
 uint256 public increaseLimitOrdersIndex;
 // Latest index of current limit closing requests
 uint256 public decreaseLimitOrdersIndex;
-` ` `
+```
 
 -   Executor
 
@@ -281,7 +286,7 @@ bool isLong;
 
 // Cancel order (Front-end user)
 cancelDecreaseOrder(uint256 _orderId, TradeType _tradeType)
-` ` `
+```
 
 -   Executor
 
@@ -314,7 +319,7 @@ uint256 tp;                     // The number of profit stops
 uint256 slPrice;                // Stop price 1e30
 uint256 sl;                     // Stop loss quantity
 }
-` ` `
+```
 
 #### liquidation
 
@@ -331,7 +336,7 @@ bytes32[] memory _positionKeys
 
 // _positionKeys Array of position keys
 function liquidatePositions(bytes32[] memory _positionKeys)
-` ` `
+```
 
 #### ADL
 
@@ -356,7 +361,7 @@ uint256[] memory _sizeAmounts, // Number of ADL positions to be executed
 uint256_orderId, // Order to be executed
 ITradingRouter.TradeType _tradeType
 )
-` ` `
+```
 
 #### handling fee
 
@@ -374,6 +379,6 @@ uint256 _pairIndex,
 bool _isLong,
 uint256_sizeAmount // Number of bits to be modified
 )
-` ` `
+```
 
 UPDATE_SNAPSHOT=1 yarn test

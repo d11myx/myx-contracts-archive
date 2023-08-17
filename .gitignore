@@ -31,3 +31,6 @@ abi/contracts
 deploment-logs
 deploments
 abi
+
+deployments/local
+deployments/localhost
