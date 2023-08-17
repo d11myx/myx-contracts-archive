@@ -20,12 +20,15 @@ async function main() {
     console.log(`router:`, router.address);
     console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
-    const allDeployments = await hre.deployments.get();
-    // console.log(await pool.getPair(0));
-    // console.log(await pool.getPair(1));
+    console.log(await pool.getPair(0));
+    console.log(await pool.getPair(1));
 
-    // console.log(await orderManager.increaseMarketOrdersIndex());
-    // console.log(await orderManager.increaseMarketOrders(0));
+    // console.log(await oraclePriceFeed.getPrice('0xB010E4aC01bD4410eA04bdD12d1CB39EA0857950'));
+    // console.log(await oraclePriceFeed.getPrice('0x16C72f9b628Df203370b9e504a6815191a22F252'));
+    // console.log(await oraclePriceFeed.getPrice('0xf20BadFC3D7b86C45a903f95F6c5E4668E421E9C'));
+    // console.log(await orderManager.increaseLimitOrdersIndex());
+    // console.log(await orderManager.increaseLimitOrders(4));
+    // await executor.connect(deployer).executeIncreaseLimitOrders([4]);
     //
     // console.log(keeper.address);
     // console.log(await positionManager.addressExecutor());

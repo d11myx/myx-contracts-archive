@@ -110,7 +110,10 @@ contract Executor is IExecutor, Pausable {
         }
 
         while (index < endIndex) {
-            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {} catch Error(string memory reason) {
+            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
+                console.log("executeIncreaseMarketOrders completed. index:", index);
+            } catch Error(string memory reason) {
+                console.log("executeIncreaseMarketOrders error:", reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
             }
             index++;
@@ -119,9 +122,11 @@ contract Executor is IExecutor, Pausable {
 
     function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
-                string memory reason
-            ) {}
+            try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
+                console.log("executeIncreaseLimitOrders completed. index:", orderIds[i]);
+            } catch Error(string memory reason) {
+                console.log("executeIncreaseLimitOrders error:", reason);
+            }
         }
     }
 
@@ -314,7 +319,10 @@ contract Executor is IExecutor, Pausable {
         }
 
         while (index < endIndex) {
-            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {} catch Error(string memory reason) {
+            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {
+                console.log("executeDecreaseMarketOrders completed. index:", index);
+            } catch Error(string memory reason) {
+                console.log("executeDecreaseMarketOrders error:", reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
             }
             index++;
@@ -323,9 +331,11 @@ contract Executor is IExecutor, Pausable {
 
     function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
-                string memory reason
-            ) {}
+            try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
+                console.log("executeDecreaseLimitOrders completed. index:", orderIds[i]);
+            } catch Error(string memory reason) {
+                console.log("executeDecreaseLimitOrders error:", reason);
+            }
         }
     }
 
