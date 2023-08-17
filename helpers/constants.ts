@@ -57,4 +57,25 @@ export const DEFAULT_NAMED_ACCOUNTS = {
     slipReceiver: {
         default: 0,
     },
+    teamAndAdvisor: {
+        default: 2,
+    },
+    privatePlacement: {
+        default: 2,
+    },
+    community: {
+        default: 2,
+    },
+    initLiquidity: {
+        default: 2,
+    },
+    marketOperation: {
+        default: 2,
+    },
+    ecoKeeper: {
+        default: 2,
+    },
+    developmentReserve: {
+        default: 2,
+    },
 };
