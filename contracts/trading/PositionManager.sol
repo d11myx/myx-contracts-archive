@@ -632,7 +632,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         return claimableStakingTradingFee;
     }
 
-    function claimKeeperTradingFee(address claimToken, address keeper) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
+    function claimKeeperTradingFee(address claimToken, address keeper) external nonReentrant onlyExecutor whenNotPaused returns (uint256) {
         uint256 claimableKeeperTradingFee = keeperTradingFee[claimToken][keeper];
         if (claimableKeeperTradingFee > 0) {
             IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
