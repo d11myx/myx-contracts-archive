@@ -35,28 +35,28 @@ async function main() {
     console.log(`index:`, await orderManager.increaseMarketOrdersIndex());
 
     const { usdt, btc, eth } = await getTokens();
-    const keeper = '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63';
-    //
-    // console.log(`executor:`, executor.address);
-    // console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
-    // console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
-    //
-    // await roleManager.addKeeper(keeper);
-    // await roleManager.addPoolAdmin(keeper);
-    //
-    // const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-    // const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);
-    //
-    // const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
-    //
-    // const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
-    // const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
-    //
-    // await btcFeed.setAdmin(keeper, true);
-    // await ethFeed.setAdmin(keeper, true);
-    //
-    // console.log(await btcFeed.isAdmin(keeper));
-    // console.log(await ethFeed.isAdmin(keeper));
+    const keeper = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+
+    console.log(`executor:`, executor.address);
+    console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
+    console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
+
+    await roleManager.addKeeper(keeper);
+    await roleManager.addPoolAdmin(keeper);
+
+    const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
+    const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);
+
+    const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
+
+    const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
+    const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
+
+    await btcFeed.setAdmin(keeper, true);
+    await ethFeed.setAdmin(keeper, true);
+
+    console.log(await btcFeed.isAdmin(keeper));
+    console.log(await ethFeed.isAdmin(keeper));
 
     let testBtcCallBack = await deployMockCallback(btc.address, usdt.address);
     let testEthCallBack = await deployMockCallback(eth.address, usdt.address);
