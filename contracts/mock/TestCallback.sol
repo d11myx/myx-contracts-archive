@@ -16,7 +16,7 @@ contract TestCallBack is IliquityCallback, ISwapCallback {
     }
 
     function addLiquidity(address pool, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external {
-        IPool(pool).addLiquidity(_pairIndex, _indexAmount, _stableAmount, abi.encode(msg.sender));
+        IPool(pool).addLiquidity(msg.sender, _pairIndex, _indexAmount, _stableAmount, abi.encode(msg.sender));
     }
 
     function addLiquityCallback(uint256 amountIndex, uint256 amountStable, bytes calldata data) external override {
