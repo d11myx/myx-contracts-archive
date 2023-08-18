@@ -3,10 +3,10 @@ import { derivePrivateKeys } from 'hardhat/internal/core/providers/util';
 import { bufferToHex } from '@nomicfoundation/ethereumjs-util';
 
 async function main() {
-    let mnemonic: string = 'upgrade feel analyst sick undo picture when please vendor lizard spy strategy';
-    let hdpath: string = "m/44'/60'/0'/0/0";
+    let mnemonic: string = 'crane simple raise squeeze myself old hurry virtual heart panel finish unfold';
+    let hdpath: string = "m/44'/60'/0'/0";
     let initialIndex: number = 0;
-    let count: number = 30;
+    let count: number = 20;
     let passphrase: string = '';
 
     const privateKeys = derivePrivateKeys(mnemonic.trim(), hdpath, initialIndex, count, passphrase);
