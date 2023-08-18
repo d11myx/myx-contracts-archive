@@ -3,34 +3,73 @@ pragma solidity >=0.8.0;
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 import '../interfaces/IPool.sol';
-import '../interfaces/IliquityCallback.sol';
+import '../interfaces/ILiquidityCallback.sol';
 import '../interfaces/ISwapCallback.sol';
 
-contract TestCallBack is IliquityCallback, ISwapCallback {
-    address public tokenIndex;
-    address public tokenStable;
+contract TestCallBack is ILiquidityCallback, ISwapCallback {
 
-    constructor(address _tokenIndex, address _tokenStable) {
-        tokenIndex = _tokenIndex;
-        tokenStable = _tokenStable;
+    function addLiquidity(
+        address pool,
+        address indexToken,
+        address stableToken,
+        uint256 indexAmount,
+        uint256 stableAmount
+    ) external {
+        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        IPool(pool).addLiquidity(msg.sender, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
     }
 
-    function addLiquidity(address pool, uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) external {
-        IPool(pool).addLiquidity(msg.sender, _pairIndex, _indexAmount, _stableAmount, abi.encode(msg.sender));
+    function addLiquidityForAccount(
+        address pool,
+        address indexToken,
+        address stableToken,
+        address receiver,
+        uint256 indexAmount,
+        uint256 stableAmount
+    ) external {
+        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        IPool(pool).addLiquidity(receiver, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
     }
 
-    function addLiquityCallback(uint256 amountIndex, uint256 amountStable, bytes calldata data) external override {
+    function addLiquidityCallback(
+        address indexToken,
+        address stableToken,
+        uint256 amountIndex,
+        uint256 amountStable,
+        bytes calldata data
+    ) external override {
         address sender = abi.decode(data, (address));
 
         if (amountIndex > 0) {
-            IERC20(tokenIndex).transferFrom(sender, msg.sender, uint256(amountIndex));
+            IERC20(indexToken).transferFrom(sender, msg.sender, uint256(amountIndex));
         }
         if (amountStable > 0) {
-            IERC20(tokenStable).transferFrom(sender, msg.sender, uint256(amountStable));
+            IERC20(stableToken).transferFrom(sender, msg.sender, uint256(amountStable));
         }
     }
 
-    function removeLiquityCallback(address pairToken, uint256 amount, bytes calldata data) external {
+    function removeLiquidity(
+        address pool,
+        address indexToken,
+        address stableToken,
+        uint256 amount
+    ) external {
+        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        IPool(pool).removeLiquidity(msg.sender, pairIndex, amount, abi.encode(msg.sender));
+    }
+
+    function removeLiquidityForAccount(
+        address pool,
+        address indexToken,
+        address stableToken,
+        address receiver,
+        uint256 amount
+    ) external {
+        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
+    }
+
+    function removeLiquidityCallback(address pairToken, uint256 amount, bytes calldata data) external {
         address sender = abi.decode(data, (address));
         IERC20(pairToken).transferFrom(sender, msg.sender, amount);
     }

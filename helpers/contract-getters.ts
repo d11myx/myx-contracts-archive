@@ -13,6 +13,7 @@ import {
     PositionManager,
     WETH,
     PoolTokenFactory,
+    TestCallBack,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -23,12 +24,12 @@ import {
     PAIR_INFO_ID,
     ROLE_MANAGER_ID,
     MOCK_TOKEN_PREFIX,
-    TRADING_VAULT_ID,
     ROUTER_ID,
     EXECUTOR_ID,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
     POOL_TOKEN_FACTORY,
+    TEST_CALLBACK_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -106,4 +107,8 @@ export const getPositionManager = async (address?: string): Promise<PositionMana
         'PositionManager',
         address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
     );
+};
+
+export const getTestCallBack = async (address?: string): Promise<TestCallBack> => {
+    return getContract<TestCallBack>('TestCallBack', address || (await hre.deployments.get(TEST_CALLBACK_ID)).address);
 };

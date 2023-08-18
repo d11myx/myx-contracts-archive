@@ -26,8 +26,10 @@ async function main() {
     console.log(`router:`, router.address);
     console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
-    console.log(await pool.getPair(0));
-    console.log(await pool.getPair(1));
+    // console.log(await pool.getPair(0));
+    // console.log(await pool.getPair(1));
+
+    console.log(await positionManager.getPosition('0x9335264956AF1E68579CdeF0F5c908f1668DDE3F', 0, true));
 
     // console.log(await oraclePriceFeed.getPrice('0xB010E4aC01bD4410eA04bdD12d1CB39EA0857950'));
     // console.log(await oraclePriceFeed.getPrice('0x16C72f9b628Df203370b9e504a6815191a22F252'));

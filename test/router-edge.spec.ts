@@ -36,11 +36,14 @@ describe('Router: Edge cases', () => {
         const usdtAmount = ethers.utils.parseUnits('1000000', await usdt.decimals());
         await waitForTx(await btc.connect(deployer.signer).mint(depositor.address, btcAmount));
         await waitForTx(await usdt.connect(deployer.signer).mint(depositor.address, usdtAmount));
-        let testCallBack = await deployMockCallback(btc.address, usdt.address);
+        let testCallBack = await deployMockCallback();
+        const pair = await pool.getPair(pairIndex);
 
         await btc.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT);
         await usdt.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT);
-        await testCallBack.connect(depositor.signer).addLiquidity(pool.address, pairIndex, btcAmount, usdtAmount);
+        await testCallBack
+            .connect(depositor.signer)
+            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, btcAmount, usdtAmount);
 
         const pairVaultInfo = await pool.getVault(pairIndex);
         console.log(
