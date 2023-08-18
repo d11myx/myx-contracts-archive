@@ -9,6 +9,7 @@ import {
     MARKET_NAME,
     MOCK_PRICES,
     getBlockTimestamp,
+    waitForTx,
 } from '../../helpers';
 import { ethers } from 'ethers';
 
@@ -36,13 +37,15 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
         );
     }
-    await indexPriceFeed.connect(poolAdminSigner).setTokens(pairTokenAddresses, [10, 10]);
-    await indexPriceFeed.connect(poolAdminSigner).setMaxTimeDeviation(10000);
-    await indexPriceFeed
-        .connect(keeperSigner)
-        .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
+    await waitForTx(await indexPriceFeed.connect(poolAdminSigner).setTokens(pairTokenAddresses, [10, 10]));
+    await waitForTx(await indexPriceFeed.connect(poolAdminSigner).setMaxTimeDeviation(10000));
+    await waitForTx(
+        await indexPriceFeed
+            .connect(keeperSigner)
+            .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100),
+    );
 
-    await oraclePriceFeed.setIndexPriceFeed(indexPriceFeed.address);
+    await waitForTx(await oraclePriceFeed.setIndexPriceFeed(indexPriceFeed.address));
 };
 func.id = `InitOracles`;
 func.tags = ['market', 'init-oracles'];

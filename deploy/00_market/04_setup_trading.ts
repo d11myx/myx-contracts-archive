@@ -53,6 +53,13 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as OrderManager;
 
     const weth = await getWETH();
+
+    await deploy('LiquidationLogic', {
+        from: deployer,
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const liquidationLibraryArtifact = await deployments.get('LiquidationLogic');
+
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
@@ -61,13 +68,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
-    await orderManager.setRouter(router.address);
+    await waitForTx(await orderManager.setRouter(router.address));
 
     // Executor
     const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
         args: [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
+        libraries: {
+            LiquidationLogic: liquidationLibraryArtifact.address,
+        },
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
@@ -77,11 +87,11 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
-    await positionManager.setExecutor(executor.address);
-    await positionManager.setOrderManager(orderManager.address);
-    await orderManager.setExecutor(executor.address);
+    await waitForTx(await positionManager.setExecutor(executor.address));
+    await waitForTx(await positionManager.setOrderManager(orderManager.address));
+    await waitForTx(await orderManager.setExecutor(executor.address));
 
-    await pool.setTradingVault(positionManager.address);
+    await waitForTx(await pool.setTradingVault(positionManager.address));
 };
 
 func.id = `Pairs`;
