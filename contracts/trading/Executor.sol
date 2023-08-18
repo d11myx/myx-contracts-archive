@@ -37,13 +37,13 @@ contract Executor is IExecutor, Pausable {
         IAddressesProvider addressProvider,
         IPool _pool,
         IOrderManager _orderManager,
-        IPositionManager _tradingVault,
+        IPositionManager _positionManager,
         uint256 _maxTimeDelay
     ) {
         ADDRESS_PROVIDER = addressProvider;
         pool = _pool;
         orderManager = _orderManager;
-        positionManager = _tradingVault;
+        positionManager = _positionManager;
         maxTimeDelay = _maxTimeDelay;
     }
 
