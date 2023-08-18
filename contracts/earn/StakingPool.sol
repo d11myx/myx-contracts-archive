@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import '@openzeppelin/contracts/security/Pausable.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/utils/math/Math.sol';
 
-import "../token/interfaces/IBaseToken.sol";
-import "./interfaces/IStakingPool.sol";
-import "./interfaces/IRewardDistributor.sol";
-import "hardhat/console.sol";
-import "../interfaces/IPositionManager.sol";
+import '../token/interfaces/IBaseToken.sol';
+import './interfaces/IStakingPool.sol';
+import './interfaces/IRewardDistributor.sol';
+import 'hardhat/console.sol';
+import '../interfaces/IPositionManager.sol';
 
 // staking pool for MYX / raMYX
 contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
@@ -36,13 +36,18 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
     uint256 public cumulativeRewardPerToken;
     mapping(address => uint256) public userCumulativeRewardPerTokens;
 
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
     event Stake(address indexed stakeToken, address indexed account, uint256 amount);
     event Unstake(address indexed stakeToken, address indexed account, uint256 amount);
     event Claim(address receiver, uint256 amount);
 
-    constructor(address[] memory _stakeTokens, address _stToken, address _rewardToken, IPositionManager _positionManager) public {
+    constructor(
+        address[] memory _stakeTokens,
+        address _stToken,
+        address _rewardToken,
+        IPositionManager _positionManager
+    ) {
         for (uint256 i = 0; i < _stakeTokens.length; i++) {
             address stakeToken = _stakeTokens[i];
             isStakeToken[stakeToken] = true;
@@ -73,7 +78,12 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         _stake(msg.sender, msg.sender, stakeToken, amount);
     }
 
-    function stakeForAccount(address funder, address account, address stakeToken, uint256 amount) external override onlyHandler whenNotPaused {
+    function stakeForAccount(
+        address funder,
+        address account,
+        address stakeToken,
+        uint256 amount
+    ) external override onlyHandler whenNotPaused {
         _stake(funder, account, stakeToken, amount);
     }
 
@@ -81,14 +91,22 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         _unstake(msg.sender, msg.sender, stakeToken, amount);
     }
 
-    function unstakeForAccount(address account, address receiver, address stakeToken, uint256 amount) external override onlyHandler whenNotPaused {
+    function unstakeForAccount(
+        address account,
+        address receiver,
+        address stakeToken,
+        uint256 amount
+    ) external override onlyHandler whenNotPaused {
         _unstake(account, receiver, stakeToken, amount);
     }
 
     function _stake(address funder, address account, address stakeToken, uint256 amount) private {
-        require(isStakeToken[stakeToken], "StakingPool: invalid depositToken");
-        require(amount > 0, "StakingPool: invalid stake amount");
-        require(userStaked[stakeToken][account] + amount <= maxStakeAmount[stakeToken], "StakingPool: exceed max stake amount");
+        require(isStakeToken[stakeToken], 'StakingPool: invalid depositToken');
+        require(amount > 0, 'StakingPool: invalid stake amount');
+        require(
+            userStaked[stakeToken][account] + amount <= maxStakeAmount[stakeToken],
+            'StakingPool: exceed max stake amount'
+        );
         _claimReward(account);
 
         userStaked[stakeToken][account] += amount;
@@ -101,9 +119,9 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
     }
 
     function _unstake(address account, address receiver, address stakeToken, uint256 amount) private {
-        require(isStakeToken[stakeToken], "StakingPool: invalid depositToken");
-        require(amount > 0, "StakingPool: invalid stake amount");
-        require(amount <= userStaked[stakeToken][account], "StakingPool: exceed staked amount");
+        require(isStakeToken[stakeToken], 'StakingPool: invalid depositToken');
+        require(amount > 0, 'StakingPool: invalid stake amount');
+        require(amount <= userStaked[stakeToken][account], 'StakingPool: exceed staked amount');
 
         _claimReward(account);
 
@@ -131,10 +149,17 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
             cumulativeRewardPerToken += pendingReward.mulDiv(PRECISION, totalSupply);
         }
         uint256 balance = IERC20(stToken).balanceOf(account);
-        uint256 claimableReward = balance.mulDiv(cumulativeRewardPerToken - userCumulativeRewardPerTokens[account], PRECISION);
+        uint256 claimableReward = balance.mulDiv(
+            cumulativeRewardPerToken - userCumulativeRewardPerTokens[account],
+            PRECISION
+        );
         IERC20(rewardToken).safeTransfer(account, claimableReward);
-        console.log("claimReward cumulativeRewardPerToken %s userCumulativeRewardPerTokens %s", cumulativeRewardPerToken, userCumulativeRewardPerTokens[account]);
-        console.log("claimReward balance %s claimableReward %s", balance, claimableReward);
+        console.log(
+            'claimReward cumulativeRewardPerToken %s userCumulativeRewardPerTokens %s',
+            cumulativeRewardPerToken,
+            userCumulativeRewardPerTokens[account]
+        );
+        console.log('claimReward balance %s claimableReward %s', balance, claimableReward);
 
         userCumulativeRewardPerTokens[account] = cumulativeRewardPerToken;
     }
@@ -148,7 +173,12 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         uint256 pendingReward = positionManager.stakingTradingFee(rewardToken);
         uint256 nextCumulativeFeePerToken = cumulativeRewardPerToken + pendingReward.mulDiv(PRECISION, totalSupply);
         claimableReward = balance.mulDiv(nextCumulativeFeePerToken - userCumulativeRewardPerTokens[account], PRECISION);
-        console.log("claimableReward claimableReward %s pendingReward %s nextCumulativeFeePerToken %s", claimableReward, pendingReward, nextCumulativeFeePerToken);
+        console.log(
+            'claimableReward claimableReward %s pendingReward %s nextCumulativeFeePerToken %s',
+            claimableReward,
+            pendingReward,
+            nextCumulativeFeePerToken
+        );
     }
 
     function pause() external onlyOwner whenNotPaused {
