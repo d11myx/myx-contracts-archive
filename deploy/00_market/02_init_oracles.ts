@@ -10,6 +10,7 @@ import {
     MOCK_PRICES,
     getBlockTimestamp,
     waitForTx,
+    getToken,
 } from '../../helpers';
 import { ethers } from 'ethers';
 
@@ -23,10 +24,13 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
 
+    const priceFeedPairs: string[] = [MARKET_NAME];
+    priceFeedPairs.push(...Object.keys(pairConfigs));
+
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
-    for (let pair of Object.keys(pairConfigs)) {
-        const pairToken = await getMockToken(pair);
+    for (let pair of priceFeedPairs) {
+        const pairToken = pair == MARKET_NAME ? await getToken() : await getMockToken(pair);
         const mockPriceFeed = await getMockPriceFeed(pair);
 
         await mockPriceFeed.connect(keeperSigner).setLatestAnswer(MOCK_PRICES[pair]);
@@ -37,7 +41,11 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
         );
     }
-    await waitForTx(await indexPriceFeed.connect(poolAdminSigner).setTokens(pairTokenAddresses, [10, 10]));
+    await waitForTx(
+        await indexPriceFeed
+            .connect(poolAdminSigner)
+            .setTokens(pairTokenAddresses, Array(pairTokenAddresses.length).fill(10)),
+    );
     await waitForTx(await indexPriceFeed.connect(poolAdminSigner).setMaxTimeDeviation(10000));
     await waitForTx(
         await indexPriceFeed
