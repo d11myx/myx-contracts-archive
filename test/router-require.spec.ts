@@ -23,10 +23,13 @@ describe('Router: check require condition, trigger errors', async () => {
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('20000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
-        let testCallBack = await deployMockCallback(btc.address, usdt.address);
+        let testCallBack = await deployMockCallback();
+        var pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
-        await testCallBack.connect(depositor.signer).addLiquidity(pool.address, pairIndex, indexAmount, stableAmount);
+        await testCallBack
+            .connect(depositor.signer)
+            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
     after(async () => {});
 

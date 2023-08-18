@@ -5,12 +5,7 @@ import { SignerWithAddress } from '../test/helpers/make-suite';
 import { SymbolMap } from './types';
 import { waitForTx } from './utilities/tx';
 
-export async function initPairs(
-    deployer: SignerWithAddress,
-    pairTokens: SymbolMap<Token>,
-    usdt: Token,
-    pool: Pool
-) {
+export async function initPairs(deployer: SignerWithAddress, pairTokens: SymbolMap<Token>, usdt: Token, pool: Pool) {
     console.log(`Initializing pairs`);
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
@@ -25,7 +20,7 @@ export async function initPairs(
 
         await waitForTx(await pool.addPair(pair.indexToken, pair.stableToken));
 
-        let pairIndex = await pool.pairIndexes(pair.indexToken, pair.stableToken);
+        let pairIndex = await pool.getPairIndex(pair.indexToken, pair.stableToken);
         await waitForTx(await pool.updatePair(pairIndex, pair));
         await waitForTx(await pool.updateTradingConfig(pairIndex, tradingConfig));
         await waitForTx(await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig));

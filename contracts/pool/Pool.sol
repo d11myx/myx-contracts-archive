@@ -23,7 +23,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../token/PairToken.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 
-import '../interfaces/IliquityCallback.sol';
+import '../interfaces/ILiquidityCallback.sol';
 
 // import "hardhat/console.sol";
 
@@ -44,7 +44,7 @@ contract Pool is IPool, Roleable {
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
     mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
-    mapping(address => mapping(address => uint256)) public pairIndexes;
+    mapping(address => mapping(address => uint256)) public override getPairIndex;
     mapping(address => mapping(address => bool)) public isPairListed;
     uint256 public pairsCount;
     mapping(uint256 => Pair) public pairs;
@@ -92,7 +92,7 @@ contract Pool is IPool, Roleable {
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
         isPairListed[_indexToken][_stableToken] = true;
-        pairIndexes[_indexToken][_stableToken] = pairsCount;
+        getPairIndex[_indexToken][_stableToken] = pairsCount;
 
         Pair storage pair = pairs[pairsCount];
         pair.pairIndex = pairsCount;
@@ -418,7 +418,7 @@ contract Pool is IPool, Roleable {
         uint256 balanceStableBefore;
         if (indexAmount > 0) balanceIndexBefore = IERC20(indexToken).balanceOf(address(this));
         if (stableAmount > 0) balanceStableBefore = IERC20(stableToken).balanceOf(address(this));
-        IliquityCallback(msg.sender).addLiquityCallback(indexAmount, stableAmount, data);
+        ILiquidityCallback(msg.sender).addLiquidityCallback(indexToken, stableToken, indexAmount, stableAmount, data);
 
         if (indexAmount > 0)
             require(balanceIndexBefore.add(indexAmount) <= IERC20(indexToken).balanceOf(address(this)), 'ti');
@@ -557,7 +557,7 @@ contract Pool is IPool, Roleable {
         );
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
-        IliquityCallback(msg.sender).removeLiquityCallback(pair.pairToken, _amount, data);
+        ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
         IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
         IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
