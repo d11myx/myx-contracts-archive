@@ -99,6 +99,8 @@ interface IPool {
         uint256 lpDistributeP;
     }
 
+    function getPairIndex(address indexToken, address stableToken) external view returns (uint256);
+
     function getPair(uint256) external view returns (Pair memory);
 
     function getTradingConfig(uint256 _pairIndex) external view returns (TradingConfig memory);
@@ -141,4 +143,20 @@ interface IPool {
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256);
+
+    function addLiquidityForAccount(
+        address _funder,
+        address recipient,
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount,
+        bytes calldata data
+    ) external returns (uint256);
+
+    function removeLiquidity(
+        address _receiver,
+        uint256 _pairIndex,
+        uint256 _amount,
+        bytes calldata data
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
 }
