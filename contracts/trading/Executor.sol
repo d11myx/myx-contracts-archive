@@ -62,11 +62,6 @@ contract Executor is IExecutor, Pausable {
         _;
     }
 
-    modifier onlyPositionKeeperOrSelf() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender) || msg.sender == address(this), 'onlyPositionKeeper');
-        _;
-    }
-
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external override whenNotPaused onlyPoolAdmin {
         uint256 oldDelay = maxTimeDelay;
         maxTimeDelay = newMaxTimeDelay;
@@ -116,9 +111,9 @@ contract Executor is IExecutor, Pausable {
 
         while (index < endIndex) {
             try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log("executeIncreaseMarketOrders completed. index:", index);
+                console.log('executeIncreaseMarketOrders completed. index:', index);
             } catch Error(string memory reason) {
-                console.log("executeIncreaseMarketOrders error:", reason);
+                console.log('executeIncreaseMarketOrders error:', reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
             }
             index++;
@@ -128,9 +123,9 @@ contract Executor is IExecutor, Pausable {
     function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
             try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-                console.log("executeIncreaseLimitOrders completed. index:", orderIds[i]);
+                console.log('executeIncreaseLimitOrders completed. index:', orderIds[i]);
             } catch Error(string memory reason) {
-                console.log("executeIncreaseLimitOrders error:", reason);
+                console.log('executeIncreaseLimitOrders error:', reason);
             }
         }
     }
@@ -172,10 +167,8 @@ contract Executor is IExecutor, Pausable {
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.isLong
-                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <=
-                        order.openPrice
-                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >=
-                        order.openPrice,
+                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <= order.openPrice
+                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >= order.openPrice,
                 'not reach trigger price'
             );
         } else {
@@ -325,9 +318,9 @@ contract Executor is IExecutor, Pausable {
 
         while (index < endIndex) {
             try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log("executeDecreaseMarketOrders completed. index:", index);
+                console.log('executeDecreaseMarketOrders completed. index:', index);
             } catch Error(string memory reason) {
-                console.log("executeDecreaseMarketOrders error:", reason);
+                console.log('executeDecreaseMarketOrders error:', reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
             }
             index++;
@@ -337,9 +330,9 @@ contract Executor is IExecutor, Pausable {
     function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
             try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-                console.log("executeDecreaseLimitOrders completed. index:", orderIds[i]);
+                console.log('executeDecreaseLimitOrders completed. index:', orderIds[i]);
             } catch Error(string memory reason) {
-                console.log("executeDecreaseLimitOrders error:", reason);
+                console.log('executeDecreaseLimitOrders error:', reason);
             }
         }
     }
@@ -347,7 +340,7 @@ contract Executor is IExecutor, Pausable {
     function executeDecreaseOrder(
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
-    ) external onlyPositionKeeperOrSelf whenNotPaused {
+    ) external onlyPositionKeeper whenNotPaused {
         _executeDecreaseOrder(_orderId, _tradeType);
     }
 
@@ -388,10 +381,8 @@ contract Executor is IExecutor, Pausable {
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 order.abovePrice
-                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <=
-                        order.triggerPrice
-                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >=
-                        order.triggerPrice,
+                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <= order.triggerPrice
+                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >= order.triggerPrice,
                 'not reach trigger price'
             );
         } else {

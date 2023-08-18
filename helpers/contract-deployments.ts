@@ -122,9 +122,7 @@ export async function deployPair(
     const poolTokenFactory = (await deployContract('PoolTokenFactory', [addressProvider.address])) as PoolTokenFactory;
     const pool = (await deployContract('Pool', [
         addressProvider.address,
-        poolTokenFactory.address,
-        deployer.address,
-        deployer.address,
+        poolTokenFactory.address
     ])) as any as Pool;
     console.log(`deployed Pool at ${pool.address}`);
 
