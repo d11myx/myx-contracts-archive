@@ -23,7 +23,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../token/PairToken.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 
-import '../interfaces/IliquityCallback.sol';
+import '../interfaces/ILiquidityCallback.sol';
 
 // import "hardhat/console.sol";
 
@@ -44,40 +44,27 @@ contract Pool is IPool, Roleable {
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
     mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
-    mapping(address => mapping(address => uint256)) public pairIndexes;
+    mapping(address => mapping(address => uint256)) public override getPairIndex;
     mapping(address => mapping(address => bool)) public isPairListed;
     uint256 public pairsCount;
     mapping(uint256 => Pair) public pairs;
 
     mapping(uint256 => Vault) public vaults;
 
-    address public tradingVault;
-    address public feeReceiver0;
-    address public feeReceiver1;
+    address public positionManager;
+    mapping(address => uint256) public feeTokenAmounts;
 
-    constructor(
-        IAddressesProvider addressProvider,
-        IPoolTokenFactory _poolTokenFactory,
-        address _feeReceiver0,
-        address _feeReceiver1
-    ) Roleable(addressProvider) {
+    constructor(IAddressesProvider addressProvider, IPoolTokenFactory _poolTokenFactory) Roleable(addressProvider) {
         poolTokenFactory = _poolTokenFactory;
-        feeReceiver0 = _feeReceiver0;
-        feeReceiver1 = _feeReceiver1;
     }
 
-    modifier onlyPairLiquidityAndVault() {
-        require(msg.sender == tradingVault, 'forbidden');
+    modifier onlyPositionManager() {
+        require(msg.sender == positionManager, 'forbidden');
         _;
     }
 
-    modifier onlyTradingVault() {
-        require(msg.sender == tradingVault, 'forbidden');
-        _;
-    }
-
-    function setTradingVault(address _tradingVault) external onlyPoolAdmin {
-        tradingVault = _tradingVault;
+    function setPositionManager(address _tradingVault) external onlyPoolAdmin {
+        positionManager = _tradingVault;
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
@@ -105,7 +92,7 @@ contract Pool is IPool, Roleable {
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
         isPairListed[_indexToken][_stableToken] = true;
-        pairIndexes[_indexToken][_stableToken] = pairsCount;
+        getPairIndex[_indexToken][_stableToken] = pairsCount;
 
         Pair storage pair = pairs[pairsCount];
         pair.pairIndex = pairsCount;
@@ -171,7 +158,7 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) public onlyPairLiquidityAndVault {
+    ) public onlyPositionManager {
         _increaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
@@ -179,14 +166,20 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount + _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount + _stableAmount;
-        emit UpdateTotalAmount(_pairIndex, int256(_indexAmount), int256(_stableAmount), vault.indexTotalAmount, vault.stableTotalAmount);
+        emit UpdateTotalAmount(
+            _pairIndex,
+            int256(_indexAmount),
+            int256(_stableAmount),
+            vault.indexTotalAmount,
+            vault.stableTotalAmount
+        );
     }
 
     function decreaseTotalAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) public onlyPairLiquidityAndVault {
+    ) public onlyPositionManager {
         _decreaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
@@ -194,48 +187,66 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
-        emit UpdateTotalAmount(_pairIndex, - int256(_indexAmount), - int256(_stableAmount), vault.indexTotalAmount, vault.stableTotalAmount);
+        emit UpdateTotalAmount(
+            _pairIndex,
+            -int256(_indexAmount),
+            -int256(_stableAmount),
+            vault.indexTotalAmount,
+            vault.stableTotalAmount
+        );
     }
 
     function increaseReserveAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) external onlyTradingVault {
+    ) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
-        emit UpdateReserveAmount(_pairIndex, int256(_indexAmount), int256(_stableAmount), vault.indexReservedAmount, vault.stableReservedAmount);
+        emit UpdateReserveAmount(
+            _pairIndex,
+            int256(_indexAmount),
+            int256(_stableAmount),
+            vault.indexReservedAmount,
+            vault.stableReservedAmount
+        );
     }
 
     function decreaseReserveAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) external onlyTradingVault {
+    ) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
-        emit UpdateReserveAmount(_pairIndex, - int256(_indexAmount), - int256(_stableAmount), vault.indexReservedAmount, vault.stableReservedAmount);
+        emit UpdateReserveAmount(
+            _pairIndex,
+            -int256(_indexAmount),
+            -int256(_stableAmount),
+            vault.indexReservedAmount,
+            vault.stableReservedAmount
+        );
     }
 
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
         return vaults[_pairIndex];
     }
 
-    function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPairLiquidityAndVault {
+    function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPositionManager {
         vaults[_pairIndex].averagePrice = _averagePrice;
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
+    function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.stableTotalAmount += _profit;
         vault.realisedPnl += int256(_profit);
         emit UpdateProfit(_pairIndex, int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
     }
 
-    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
+    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
 
@@ -251,7 +262,7 @@ contract Pool is IPool, Roleable {
         bool _isBuy,
         uint256 _amountIn,
         uint256 _amountOut
-    ) public onlyPairLiquidityAndVault {
+    ) public onlyPositionManager {
         Vault memory vault = vaults[_pairIndex];
 
         if (_isBuy) {
@@ -271,39 +282,25 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function setReceiver(address _feeReceiver0, address _feeReceiver1) external onlyPoolAdmin {
-        feeReceiver0 = _feeReceiver0;
-        feeReceiver1 = _feeReceiver1;
-    }
-
     function addLiquidity(
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256) {
-        return _addLiquidity(msg.sender, msg.sender, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
-
-    // function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
-    //     IPool.Pair memory pair = getPair(_pairIndex);
-    //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
-
-    //     IWETH(weth).deposit{value: msg.value}();
-
-    //     IWETH(pair.stableToken).transferFrom(msg.sender, address(this), _stableAmount);
-    //     return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
-    // }
 
     function addLiquidityForAccount(
         address _funder,
-        address _account,
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256) {
-        return _addLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(_funder, recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function removeLiquidity(
@@ -315,45 +312,11 @@ contract Pool is IPool, Roleable {
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(_receiver, _pairIndex, _amount, data);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        // if (receivedIndexAmount > 0 && pair.indexToken == weth) {
-        //     IWETH(weth).withdraw(receivedIndexAmount);
-        //     payable(msg.sender).sendValue(receivedIndexAmount);
-        // }
         if (receivedStableAmount > 0) {
             IERC20(pair.stableToken).transfer(msg.sender, receivedStableAmount);
         }
         return (receivedIndexAmount, receivedStableAmount);
     }
-
-    // function removeLiquidityForAccount(
-    //     address _account,
-    //     address _receiver,
-    //     uint256 _pairIndex,
-    //     uint256 _amount
-    // ) external returns (uint256, uint256) {
-    //     return _removeLiquidity(_account, _receiver, _pairIndex, _amount);
-    // }
-
-    // function swapInEth(
-    //     uint256 _pairIndex,
-    //     uint256 _minOut
-    // ) external payable returns (uint256 amountIn, uint256 amountOut) {
-    //     IPool.Pair memory pair = getPair(_pairIndex);
-    //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
-
-    //     IWETH(weth).deposit{value: msg.value}();
-    //     IERC20(weth).approve(address(this), msg.value);
-
-    //     (amountIn, amountOut) = _swap(address(this), msg.sender, _pairIndex, false, msg.value, _minOut);
-
-    //     // send last eth back
-    //     if (amountIn < msg.value) {
-    //         uint256 lastETH = msg.value - amountIn;
-    //         IWETH(weth).withdraw(lastETH);
-    //         payable(msg.sender).sendValue(lastETH);
-    //     }
-    //     return (amountIn, amountOut);
-    // }
 
     function swap(
         uint256 _pairIndex,
@@ -363,10 +326,6 @@ contract Pool is IPool, Roleable {
         bytes calldata data
     ) external returns (uint256 amountIn, uint256 amountOut) {
         (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut, data);
-        // if (amountOut > 0 && _isBuy && getPair(_pairIndex).indexToken == weth) {
-        // IWETH(weth).withdraw(amountOut);
-        // payable(msg.sender).sendValue(amountOut);
-        // }
         return (amountIn, amountOut);
     }
 
@@ -460,7 +419,7 @@ contract Pool is IPool, Roleable {
         uint256 balanceStableBefore;
         if (indexAmount > 0) balanceIndexBefore = IERC20(indexToken).balanceOf(address(this));
         if (stableAmount > 0) balanceStableBefore = IERC20(stableToken).balanceOf(address(this));
-        IliquityCallback(msg.sender).addLiquityCallback(indexAmount, stableAmount, data);
+        ILiquidityCallback(msg.sender).addLiquidityCallback(indexToken, stableToken, indexAmount, stableAmount, data);
 
         if (indexAmount > 0)
             require(balanceIndexBefore.add(indexAmount) <= IERC20(indexToken).balanceOf(address(this)), 'ti');
@@ -470,8 +429,8 @@ contract Pool is IPool, Roleable {
     }
 
     function _addLiquidity(
-        address recipient,
         address _account,
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
@@ -492,16 +451,9 @@ contract Pool is IPool, Roleable {
         uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
         uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
 
-        IERC20(pair.indexToken).safeTransfer(feeReceiver0, indexFeeAmount.mulPercentage(pair.lpFeeDistributeP));
-        IERC20(pair.indexToken).safeTransfer(
-            feeReceiver1,
-            indexFeeAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-        );
-        IERC20(pair.stableToken).safeTransfer(feeReceiver0, stableFeeAmount.mulPercentage(pair.lpFeeDistributeP));
-        IERC20(pair.stableToken).safeTransfer(
-            feeReceiver1,
-            stableFeeAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-        );
+        feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(indexFeeAmount);
+
+        feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(stableFeeAmount);
 
         afterFeeIndexAmount = _indexAmount - indexFeeAmount;
         afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -543,11 +495,7 @@ contract Pool is IPool, Roleable {
                 slipAmount = _getAmount(slipDelta, price);
 
                 afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                IERC20(pair.indexToken).safeTransfer(feeReceiver0, slipAmount.mulPercentage(pair.lpFeeDistributeP));
-                IERC20(pair.indexToken).safeTransfer(
-                    feeReceiver1,
-                    slipAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-                );
+                feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(slipAmount);
             } else if (stableTotalDelta > expectStableDelta) {
                 uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
                 uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
@@ -561,16 +509,12 @@ contract Pool is IPool, Roleable {
                 slipAmount = slipDelta;
 
                 afterFeeStableAmount = afterFeeStableAmount - slipDelta;
-                IERC20(pair.stableToken).safeTransfer(feeReceiver0, slipDelta.mulPercentage(pair.lpFeeDistributeP));
-                IERC20(pair.stableToken).safeTransfer(
-                    feeReceiver1,
-                    slipDelta.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-                );
+                feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(slipDelta);
             }
         }
         // mint lp
         mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
-        IBaseToken(pair.pairToken).mint(_account, mintAmount);
+        IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
@@ -614,7 +558,7 @@ contract Pool is IPool, Roleable {
         );
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
-        IliquityCallback(msg.sender).removeLiquityCallback(pair.pairToken, _amount, data);
+        ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
         IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
         IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);

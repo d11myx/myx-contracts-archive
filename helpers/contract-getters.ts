@@ -22,6 +22,7 @@ import {
     Convertor,
     LPStakingPool,
     FeeDistributor,
+    TestCallBack,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -32,7 +33,6 @@ import {
     PAIR_INFO_ID,
     ROLE_MANAGER_ID,
     MOCK_TOKEN_PREFIX,
-    TRADING_VAULT_ID,
     ROUTER_ID,
     EXECUTOR_ID,
     ORDER_MANAGER_ID,
@@ -45,7 +45,9 @@ import {
     REWARD_DISTRIBUTOR_ID,
     STAKING_POOL_ID,
     CONVERTOR_ID,
-    LP_STAKING_POOL_ID, FEE_DISTRIBUTOR_ID,
+    LP_STAKING_POOL_ID,
+    FEE_DISTRIBUTOR_ID,
+    TEST_CALLBACK_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -160,4 +162,8 @@ export const getLPStakingPool = async (address?: string): Promise<LPStakingPool>
 
 export const getConvertor = async (address?: string): Promise<Convertor> => {
     return getContract<Convertor>('Convertor', address || (await hre.deployments.get(CONVERTOR_ID)).address);
+};
+
+export const getTestCallBack = async (address?: string): Promise<TestCallBack> => {
+    return getContract<TestCallBack>('TestCallBack', address || (await hre.deployments.get(TEST_CALLBACK_ID)).address);
 };
