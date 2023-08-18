@@ -13,7 +13,7 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
-import '../interfaces/IOraclePriceFeed.sol';
+import {LiquidationLogic} from './logic/LiquidationLogic.sol';
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
@@ -59,6 +59,11 @@ contract Executor is IExecutor, Pausable {
 
     modifier onlyPositionKeeper() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'onlyPositionKeeper');
+        _;
+    }
+
+    modifier onlyPositionKeeperOrSelf() {
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender) || msg.sender == address(this), 'onlyPositionKeeper');
         _;
     }
 
@@ -110,7 +115,10 @@ contract Executor is IExecutor, Pausable {
         }
 
         while (index < endIndex) {
-            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {} catch Error(string memory reason) {
+            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
+                console.log("executeIncreaseMarketOrders completed. index:", index);
+            } catch Error(string memory reason) {
+                console.log("executeIncreaseMarketOrders error:", reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
             }
             index++;
@@ -119,9 +127,11 @@ contract Executor is IExecutor, Pausable {
 
     function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
-                string memory reason
-            ) {}
+            try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
+                console.log("executeIncreaseLimitOrders completed. index:", orderIds[i]);
+            } catch Error(string memory reason) {
+                console.log("executeIncreaseLimitOrders error:", reason);
+            }
         }
     }
 
@@ -314,7 +324,10 @@ contract Executor is IExecutor, Pausable {
         }
 
         while (index < endIndex) {
-            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {} catch Error(string memory reason) {
+            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {
+                console.log("executeDecreaseMarketOrders completed. index:", index);
+            } catch Error(string memory reason) {
+                console.log("executeDecreaseMarketOrders error:", reason);
                 orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
             }
             index++;
@@ -323,16 +336,18 @@ contract Executor is IExecutor, Pausable {
 
     function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {} catch Error(
-                string memory reason
-            ) {}
+            try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
+                console.log("executeDecreaseLimitOrders completed. index:", orderIds[i]);
+            } catch Error(string memory reason) {
+                console.log("executeDecreaseLimitOrders error:", reason);
+            }
         }
     }
 
     function executeDecreaseOrder(
         uint256 _orderId,
         TradingTypes.TradeType _tradeType
-    ) external onlyPositionKeeper whenNotPaused {
+    ) external onlyPositionKeeperOrSelf whenNotPaused {
         _executeDecreaseOrder(_orderId, _tradeType);
     }
 
@@ -532,7 +547,8 @@ contract Executor is IExecutor, Pausable {
 
     function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < positionKeys.length; i++) {
-            _liquidatePosition(positionKeys[i]);
+            Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
+            LiquidationLogic.liquidatePosition(position, this, pool, orderManager, positionManager, positionKeys[i]);
         }
     }
 
@@ -592,69 +608,9 @@ contract Executor is IExecutor, Pausable {
                     sizeAmount: -int256(adlPosition.positionAmount)
                 })
             );
-            _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+            this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
         }
-        _executeDecreaseOrder(_orderId, order.tradeType);
-    }
-
-    function _liquidatePosition(bytes32 _positionKey) internal {
-        Position.Info memory position = positionManager.getPositionByKey(_positionKey);
-
-        if (position.positionAmount == 0) {
-            return;
-        }
-        IPool.Pair memory pair = pool.getPair(position.pairIndex);
-        uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
-
-        int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
-        uint256 tradingFee = positionManager.getTradingFee(position.pairIndex, position.isLong, position.positionAmount);
-        int256 fundingFee = positionManager.getFundingFee(false, position.account, position.pairIndex, position.isLong, position.positionAmount);
-        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + (position.isLong ? -fundingFee : fundingFee);
-
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
-
-        bool needLiquidate;
-        if (exposureAsset <= 0) {
-            needLiquidate = true;
-        } else {
-            uint256 riskRate = position
-                .positionAmount
-                .mulPrice(position.averagePrice)
-                .mulPercentage(tradingConfig.maintainMarginRate)
-                .calculatePercentage(uint256(exposureAsset));
-            needLiquidate = riskRate >= PrecisionUtils.percentage();
-        }
-        if (!needLiquidate) {
-            return;
-        }
-
-        // cancel all positionOrders
-        orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
-
-        uint256 orderId = orderManager.createOrder(
-            TradingTypes.CreateOrderRequest({
-                account: position.account,
-                pairIndex: position.pairIndex,
-                tradeType: TradingTypes.TradeType.MARKET,
-                collateral: 0,
-                openPrice: price,
-                isLong: position.isLong,
-                sizeAmount: -int256(position.positionAmount)
-            })
-        );
-
-        _executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
-
-        emit LiquidatePosition(
-            _positionKey,
-            position.account,
-            position.pairIndex,
-            position.isLong,
-            position.positionAmount,
-            position.collateral,
-            price,
-            orderId
-        );
+        this.executeDecreaseOrder(_orderId, order.tradeType);
     }
 
     function claimTradingFee(address claimToken) external override onlyPositionKeeper whenNotPaused returns (uint256) {

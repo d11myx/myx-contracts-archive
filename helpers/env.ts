@@ -8,4 +8,5 @@ MARKET_NAME = MARKET_NAME ? MARKET_NAME : ConfigNames.USDT;
 export const COMMON_DEPLOY_PARAMS = {
     log: true,
     skipIfAlreadyDeployed: true,
+    waitConfirmations: 1,
 };
