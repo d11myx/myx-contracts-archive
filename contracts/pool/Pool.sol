@@ -178,7 +178,13 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount + _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount + _stableAmount;
-        emit UpdateTotalAmount(_pairIndex, int256(_indexAmount), int256(_stableAmount), vault.indexTotalAmount, vault.stableTotalAmount);
+        emit UpdateTotalAmount(
+            _pairIndex,
+            int256(_indexAmount),
+            int256(_stableAmount),
+            vault.indexTotalAmount,
+            vault.stableTotalAmount
+        );
     }
 
     function decreaseTotalAmount(
@@ -193,7 +199,13 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
-        emit UpdateTotalAmount(_pairIndex, - int256(_indexAmount), - int256(_stableAmount), vault.indexTotalAmount, vault.stableTotalAmount);
+        emit UpdateTotalAmount(
+            _pairIndex,
+            -int256(_indexAmount),
+            -int256(_stableAmount),
+            vault.indexTotalAmount,
+            vault.stableTotalAmount
+        );
     }
 
     function increaseReserveAmount(
@@ -204,7 +216,13 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
-        emit UpdateReserveAmount(_pairIndex, int256(_indexAmount), int256(_stableAmount), vault.indexReservedAmount, vault.stableReservedAmount);
+        emit UpdateReserveAmount(
+            _pairIndex,
+            int256(_indexAmount),
+            int256(_stableAmount),
+            vault.indexReservedAmount,
+            vault.stableReservedAmount
+        );
     }
 
     function decreaseReserveAmount(
@@ -215,7 +233,13 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
-        emit UpdateReserveAmount(_pairIndex, - int256(_indexAmount), - int256(_stableAmount), vault.indexReservedAmount, vault.stableReservedAmount);
+        emit UpdateReserveAmount(
+            _pairIndex,
+            -int256(_indexAmount),
+            -int256(_stableAmount),
+            vault.indexReservedAmount,
+            vault.stableReservedAmount
+        );
     }
 
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
@@ -276,12 +300,13 @@ contract Pool is IPool, Roleable {
     }
 
     function addLiquidity(
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256) {
-        return _addLiquidity(msg.sender, msg.sender, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     // function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
@@ -296,13 +321,13 @@ contract Pool is IPool, Roleable {
 
     function addLiquidityForAccount(
         address _funder,
-        address _account,
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256) {
-        return _addLiquidity(_funder, _account, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(_funder, recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function removeLiquidity(
@@ -469,8 +494,8 @@ contract Pool is IPool, Roleable {
     }
 
     function _addLiquidity(
-        address recipient,
         address _account,
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
