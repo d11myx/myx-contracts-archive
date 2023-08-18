@@ -304,16 +304,6 @@ contract Pool is IPool, Roleable {
         return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
-    // function addLiquidityETH(uint256 _pairIndex, uint256 _stableAmount) external payable returns (uint256) {
-    //     IPool.Pair memory pair = getPair(_pairIndex);
-    //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
-
-    //     IWETH(weth).deposit{value: msg.value}();
-
-    //     IWETH(pair.stableToken).transferFrom(msg.sender, address(this), _stableAmount);
-    //     return _addLiquidity(address(this), msg.sender, _pairIndex, msg.value, _stableAmount);
-    // }
-
     function addLiquidityForAccount(
         address _funder,
         address recipient,
@@ -334,45 +324,11 @@ contract Pool is IPool, Roleable {
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(_receiver, _pairIndex, _amount, data);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        // if (receivedIndexAmount > 0 && pair.indexToken == weth) {
-        //     IWETH(weth).withdraw(receivedIndexAmount);
-        //     payable(msg.sender).sendValue(receivedIndexAmount);
-        // }
         if (receivedStableAmount > 0) {
             IERC20(pair.stableToken).transfer(msg.sender, receivedStableAmount);
         }
         return (receivedIndexAmount, receivedStableAmount);
     }
-
-    // function removeLiquidityForAccount(
-    //     address _account,
-    //     address _receiver,
-    //     uint256 _pairIndex,
-    //     uint256 _amount
-    // ) external returns (uint256, uint256) {
-    //     return _removeLiquidity(_account, _receiver, _pairIndex, _amount);
-    // }
-
-    // function swapInEth(
-    //     uint256 _pairIndex,
-    //     uint256 _minOut
-    // ) external payable returns (uint256 amountIn, uint256 amountOut) {
-    //     IPool.Pair memory pair = getPair(_pairIndex);
-    //     require(pair.indexToken == weth && pair.pairToken != address(0), 'invalid pair');
-
-    //     IWETH(weth).deposit{value: msg.value}();
-    //     IERC20(weth).approve(address(this), msg.value);
-
-    //     (amountIn, amountOut) = _swap(address(this), msg.sender, _pairIndex, false, msg.value, _minOut);
-
-    //     // send last eth back
-    //     if (amountIn < msg.value) {
-    //         uint256 lastETH = msg.value - amountIn;
-    //         IWETH(weth).withdraw(lastETH);
-    //         payable(msg.sender).sendValue(lastETH);
-    //     }
-    //     return (amountIn, amountOut);
-    // }
 
     function swap(
         uint256 _pairIndex,
@@ -382,10 +338,6 @@ contract Pool is IPool, Roleable {
         bytes calldata data
     ) external returns (uint256 amountIn, uint256 amountOut) {
         (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut, data);
-        // if (amountOut > 0 && _isBuy && getPair(_pairIndex).indexToken == weth) {
-        // IWETH(weth).withdraw(amountOut);
-        // payable(msg.sender).sendValue(amountOut);
-        // }
         return (amountIn, amountOut);
     }
 
