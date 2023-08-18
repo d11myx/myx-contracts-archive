@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import '@openzeppelin/contracts/security/Pausable.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
-import "../token/interfaces/IBaseToken.sol";
-import "../interfaces/IPool.sol";
+import '../token/interfaces/IBaseToken.sol';
+import '../interfaces/IPool.sol';
 
 // staking pool for MLP
 contract LPStakingPool is Pausable, ReentrancyGuard, Ownable {
@@ -21,12 +21,12 @@ contract LPStakingPool is Pausable, ReentrancyGuard, Ownable {
 
     mapping(uint256 => uint256) public totalStaked;
 
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
     event Stake(uint256 indexed pairIndex, address indexed pairToken, address indexed account, uint256 amount);
     event Unstake(uint256 indexed pairIndex, address indexed pairToken, address indexed account, uint256 amount);
 
-    constructor(IPool _pool) public {
+    constructor(IPool _pool) {
         pool = _pool;
     }
 
@@ -51,7 +51,12 @@ contract LPStakingPool is Pausable, ReentrancyGuard, Ownable {
         _stake(pairIndex, msg.sender, msg.sender, amount);
     }
 
-    function stakeForAccount(uint256 pairIndex, address funder, address account, uint256 amount) external onlyHandler whenNotPaused {
+    function stakeForAccount(
+        uint256 pairIndex,
+        address funder,
+        address account,
+        uint256 amount
+    ) external onlyHandler whenNotPaused {
         _stake(pairIndex, funder, account, amount);
     }
 
@@ -59,16 +64,24 @@ contract LPStakingPool is Pausable, ReentrancyGuard, Ownable {
         _unstake(pairIndex, msg.sender, msg.sender, amount);
     }
 
-    function unstakeForAccount(uint256 pairIndex, address account, address receiver, uint256 amount) external onlyHandler whenNotPaused {
+    function unstakeForAccount(
+        uint256 pairIndex,
+        address account,
+        address receiver,
+        uint256 amount
+    ) external onlyHandler whenNotPaused {
         _unstake(pairIndex, account, receiver, amount);
     }
 
     function _stake(uint256 pairIndex, address funder, address account, uint256 amount) private {
-        require(amount > 0, "LPStakingPool: invalid stake amount");
+        require(amount > 0, 'LPStakingPool: invalid stake amount');
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        require(pair.enable && pair.pairToken != address(0), "LPStakingPool: invalid pair");
-        require(userStaked[pairIndex][account] + amount <= maxStakeAmount[pairIndex], "LPStakingPool :exceed max stake amount");
+        require(pair.enable && pair.pairToken != address(0), 'LPStakingPool: invalid pair');
+        require(
+            userStaked[pairIndex][account] + amount <= maxStakeAmount[pairIndex],
+            'LPStakingPool :exceed max stake amount'
+        );
 
         userStaked[pairIndex][account] += amount;
         totalStaked[pairIndex] += amount;
@@ -80,10 +93,10 @@ contract LPStakingPool is Pausable, ReentrancyGuard, Ownable {
 
     function _unstake(uint256 pairIndex, address account, address receiver, uint256 amount) private {
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        require(pair.pairToken != address(0), "LPStakingPool: invalid pair");
+        require(pair.pairToken != address(0), 'LPStakingPool: invalid pair');
 
-        require(userStaked[pairIndex][account] > 0, "LPStakingPool: none staked");
-        require(amount > 0 && amount <= userStaked[pairIndex][account], "LPStakingPool: invalid unstake amount");
+        require(userStaked[pairIndex][account] > 0, 'LPStakingPool: none staked');
+        require(amount > 0 && amount <= userStaked[pairIndex][account], 'LPStakingPool: invalid unstake amount');
 
         userStaked[pairIndex][account] -= amount;
         totalStaked[pairIndex] -= amount;
