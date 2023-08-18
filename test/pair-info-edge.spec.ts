@@ -6,6 +6,7 @@ import { IPool } from '../types';
 import { BigNumber } from 'ethers';
 import { deployMockToken } from '../helpers/contract-deployments';
 import { MARKET_NAME } from '../helpers/env';
+import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('Pool: Edge cases', () => {
     before('addPair', async () => {
@@ -22,9 +23,7 @@ describe('Pool: Edge cases', () => {
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
         const countBefore = await pool.pairsCount();
-        await waitForTx(
-            await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken),
-        );
+        await waitForTx(await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken));
 
         let pairIndex = await pool.pairIndexes(pair.indexToken, pair.stableToken);
         await waitForTx(await pool.connect(poolAdmin.signer).updatePair(pairIndex, pair));
@@ -96,5 +95,11 @@ describe('Pool: Edge cases', () => {
             pairToUpdate.enable = true;
             await waitForTx(await pool.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
         });
+    });
+    it('gas cost setPositionManager', async () => {
+        const { poolAdmin, pool, usdt } = testEnv;
+        const ethPair = loadReserveConfig(MARKET_NAME).PairsConfig['ETH'];
+        let pair = ethPair.pair;
+        // await snapshotGasCost(pool.connect(poolAdmin.signer).setPositionManager(poolAdmin.address));
     });
 });
