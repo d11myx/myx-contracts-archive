@@ -2,34 +2,49 @@ const { deployContract, contractAt, toChainLinkPrice} = require("../utils/helper
 const { expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const {mintWETH, getConfig} = require("../utils/utils");
 const hre = require("hardhat");
+const {ethers} = require("hardhat");
+const {
+  getRouter,
+  getExecutor,
+  getOrderManager,
+  getPositionManager,
+  getIndexPriceFeed,
+  getMockPriceFeed,
+  getRoleManager,
+  getPool,
+  getMockToken,
+  getToken
+} = require("../../helpers");
 
 async function main() {
   console.log("\n decreaseMarketLong")
 
-  const [user0, user1, user2, user3] = await hre.ethers.getSigners()
+  const [keeper, trader] = await ethers.getSigners();
 
-  console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
 
-  let pairVault = await contractAt("PairVault", await getConfig("PairVault"));
-  let tradingVault = await contractAt("TradingVault", await getConfig("TradingVault"));
-  let tradingRouter = await contractAt("TradingRouter", await getConfig("TradingRouter"));
-  let executeRouter = await contractAt("ExecuteRouter", await getConfig("ExecuteRouter"));
-  let btcPriceFeed = await contractAt("MockPriceFeed", await getConfig("MockPriceFeed-BTC"));
-  let fastPriceFeed = await contractAt("IndexPriceFeed", await getConfig("IndexPriceFeed"))
+  const router = await getRouter();
+  const executor = await getExecutor();
+  const orderManager = await getOrderManager();
+  const positionManager = await getPositionManager();
+  const indexPriceFeed = await getIndexPriceFeed();
+  const btcPriceFeed = await getMockPriceFeed("BTC");
+  const roleManager = await getRoleManager();
+  const pool = await getPool();
+
+  const btc = await getMockToken("BTC")
+  const usdt = await getToken()
 
   // create
-  let btc = await contractAt("Token", await getConfig("Token-BTC"))
-  let usdt = await contractAt("Token", await getConfig("Token-USDT"))
   await btcPriceFeed.setLatestAnswer(toChainLinkPrice(31000))
-  await fastPriceFeed.connect(user1).setPrices([await getConfig("Token-BTC")],
-    [expandDecimals(30950, 30)],
+  await indexPriceFeed.connect(keeper).setPrices([btc.address],
+    [expandDecimals(31000, 30)],
     await getBlockTime(await hre.ethers.provider) + 100)
 
-  console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
+  console.log(`position: ${await positionManager.getPosition(trader.address, 0, true)}`)
 
-  let orderId = await tradingRouter.decreaseMarketOrdersIndex();
+  let orderId = await orderManager.decreaseMarketOrdersIndex();
   let request = {
-    account: user3.address,
+    account: trader.address,
     pairIndex: 0,
     tradeType: 0,
     collateral: expandDecimals(-3000, 18),
@@ -37,22 +52,22 @@ async function main() {
     sizeAmount: expandDecimals(1, 18),
     isLong: true
   };
-  await tradingRouter.connect(user3).createDecreaseOrder(request)
+  await router.connect(trader).createDecreaseOrder(request)
 
-  console.log(`order: ${await tradingRouter.decreaseMarketOrders(orderId)}`)
-  console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
+  console.log(`order: ${await orderManager.decreaseMarketOrders(orderId)}`)
+  console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(router.address))}`);
 
   // execute
-  let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
+  let startIndex = await executor.decreaseMarketOrderStartIndex();
   console.log("startIndex:", startIndex);
-  await executeRouter.executeDecreaseOrder(orderId, 0);
-  // await executeRouter.executeDecreaseMarketOrders(orderId.add(1));
-  console.log(`order after execute: ${await tradingRouter.decreaseMarketOrders(orderId)}`);
-  console.log(`position: ${await tradingVault.getPosition(user3.address, 0, true)}`)
-  console.log(`btc balance of trading vault: ${formatBalance(await btc.balanceOf(tradingVault.address))}`);
-  console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
+  await executor.executeDecreaseOrder(orderId, 0);
+  // await executor.executeDecreaseMarketOrders(orderId.add(1));
+  console.log(`order after execute: ${await orderManager.decreaseMarketOrders(orderId)}`);
+  console.log(`position: ${await positionManager.getPosition(trader.address, 0, true)}`)
+  console.log(`btc balance of position manager: ${formatBalance(await btc.balanceOf(positionManager.address))}`);
+  console.log(`usdt balance of position manager: ${formatBalance(await usdt.balanceOf(positionManager.address))}`);
 
-  let vault = await pairVault.getVault(0);
+  let vault = await pool.getVault(0);
   console.log(`total btc: ${formatBalance(vault.indexTotalAmount)} reserve of btc: ${formatBalance(vault.indexReservedAmount)}`);
   console.log(`total usdt: ${formatBalance(vault.stableTotalAmount)}  reserve of usdt: ${formatBalance(vault.stableReservedAmount)}`);
 

@@ -12,15 +12,15 @@ function bigNumberify(n) {
 }
 
 function expandDecimals(n, decimals) {
-    return bigNumberify(n).mul(bigNumberify(10).pow(decimals))
+    return hre.ethers.utils.parseUnits(String(n), decimals)
 }
 
 function reduceDecimals(n, decimals) {
-    return hre.ethers.utils.formatUnits(bigNumberify(n), decimals)
+    return hre.ethers.utils.formatUnits(String(n), decimals)
 }
 
 function formatBalance(n) {
-    return hre.ethers.utils.formatEther(bigNumberify(n));
+    return hre.ethers.utils.formatEther(String(n));
 }
 
 async function send(provider, method, params = []) {
