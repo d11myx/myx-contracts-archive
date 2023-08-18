@@ -15,25 +15,28 @@ describe('Pool: Liquidity cases', () => {
             users: [, depositor],
         } = testEnv;
 
-        const btcCallBack = await getTestCallBack('BTC');
+        const testCallBack = await getTestCallBack();
 
-        const pairTokenAddress = (await pool.getPair(pairIndex)).pairToken;
+        const pair = await pool.getPair(pairIndex);
+
+        const pairTokenAddress = pair.pairToken;
         const pairToken = await getToken(pairTokenAddress);
 
-        await waitForTx(await usdt.connect(depositor.signer).approve(btcCallBack.address, MAX_UINT_AMOUNT));
-        await waitForTx(await btc.connect(depositor.signer).approve(btcCallBack.address, MAX_UINT_AMOUNT));
+        await waitForTx(await usdt.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT));
+        await waitForTx(await btc.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT));
 
         const usdtBalanceBef = await usdt.balanceOf(depositor.address);
         const btcBalanceBef = await btc.balanceOf(depositor.address);
         const depositorLpBef = await pairToken.balanceOf(depositor.address);
-        const callbackLpBef = await pairToken.balanceOf(btcCallBack.address);
+        const callbackLpBef = await pairToken.balanceOf(testCallBack.address);
 
         await waitForTx(
-            await btcCallBack
+            await testCallBack
                 .connect(depositor.signer)
                 .addLiquidity(
                     pool.address,
-                    pairIndex,
+                    pair.indexToken,
+                    pair.stableToken,
                     ethers.utils.parseEther('1000'),
                     ethers.utils.parseEther('30000000'),
                 ),
@@ -42,11 +45,15 @@ describe('Pool: Liquidity cases', () => {
         const usdtBalanceAft = await usdt.balanceOf(depositor.address);
         const btcBalanceAft = await btc.balanceOf(depositor.address);
         const depositorLpAft = await pairToken.balanceOf(depositor.address);
-        const callbackLpAft = await pairToken.balanceOf(btcCallBack.address);
+        const callbackLpAft = await pairToken.balanceOf(testCallBack.address);
 
         expect(usdtBalanceAft).to.be.eq(usdtBalanceBef.sub(ethers.utils.parseEther('30000000')));
         expect(btcBalanceAft).to.be.eq(btcBalanceBef.sub(ethers.utils.parseEther('1000')));
         expect(depositorLpAft).to.be.eq(depositorLpBef.add(ethers.utils.parseEther('59400000')));
         expect(callbackLpAft).to.be.eq(callbackLpBef);
     });
+
+    it('user added liquidity for other, other should be received lp', async () => {});
+
+    it('user remove liquidity', async () => {});
 });

@@ -24,13 +24,12 @@ import {
     PAIR_INFO_ID,
     ROLE_MANAGER_ID,
     MOCK_TOKEN_PREFIX,
-    TRADING_VAULT_ID,
     ROUTER_ID,
     EXECUTOR_ID,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
     POOL_TOKEN_FACTORY,
-    TEST_CALLBACK_PREFIX,
+    TEST_CALLBACK_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -110,9 +109,6 @@ export const getPositionManager = async (address?: string): Promise<PositionMana
     );
 };
 
-export const getTestCallBack = async (pair: string, address?: string): Promise<TestCallBack> => {
-    return getContract<TestCallBack>(
-        'TestCallBack',
-        address || (await hre.deployments.get(TEST_CALLBACK_PREFIX + pair)).address,
-    );
+export const getTestCallBack = async (address?: string): Promise<TestCallBack> => {
+    return getContract<TestCallBack>('TestCallBack', address || (await hre.deployments.get(TEST_CALLBACK_ID)).address);
 };
