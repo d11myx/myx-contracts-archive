@@ -6,6 +6,9 @@ import '../interfaces/IPoolTokenFactory.sol';
 import './PoolToken.sol';
 
 contract PoolTokenFactory is IPoolTokenFactory {
+
+    mapping(address => mapping(address => address)) public override getPoolToken; // indexToken -> stableToken -> poolToken
+
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     constructor(IAddressesProvider addressProvider) {
@@ -20,6 +23,8 @@ contract PoolTokenFactory is IPoolTokenFactory {
             abi.encodePacked(IERC20Metadata(indexToken).symbol(), '-', IERC20Metadata(stableToken).symbol(), '-lp')
         );
         PoolToken pairToken = new PoolToken(ADDRESS_PROVIDER, indexToken, stableToken, msg.sender, name, symbol);
+
+        getPoolToken[indexToken][stableToken] = address(pairToken);
         return address(pairToken);
     }
 }
