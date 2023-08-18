@@ -7,6 +7,12 @@ declare var hre: HardhatRuntimeEnvironment;
 async function main() {
     const [deployer, keeper] = await ethers.getSigners();
 
+    // const addresses = await ethers.getSigners();
+    // for (let address of addresses) {
+    //     console.log(address.address);
+    //     // console.log(await address.getBalance());
+    // }
+
     console.log(deployer.address);
     console.log(await deployer.getBalance());
 
