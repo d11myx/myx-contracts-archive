@@ -32,7 +32,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         oraclePriceFeedArtifact.address,
     )) as OraclePriceFeed;
 
-    for (let pair of Object.keys(pairConfigs)) {
+    const priceFeedPairs: string[] = [MARKET_NAME];
+    priceFeedPairs.push(...Object.keys(pairConfigs));
+
+    for (let pair of priceFeedPairs) {
         const mockPriceFeedArtifact = await deploy(`${MOCK_PRICE_FEED_PREFIX}${pair}`, {
             from: deployer,
             contract: 'MockPriceFeed',

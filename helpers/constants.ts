@@ -31,6 +31,7 @@ export type eNetwork = eEthereumNetwork | eBscNetwork;
 // }
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {
+    USDT: parseUnits('1', 8),
     BTC: parseUnits('30000', 8),
     ETH: parseUnits('2000', 8),
 };
