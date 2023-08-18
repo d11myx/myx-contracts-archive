@@ -22,7 +22,6 @@ import {
     getPool,
     getRoleManager,
     getToken,
-    getTradingVault,
     getWETH,
     MOCK_TOKEN_PREFIX,
     initPairs,
