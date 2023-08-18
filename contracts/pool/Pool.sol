@@ -594,7 +594,7 @@ contract Pool is IPool, Roleable {
         }
         // mint lp
         mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
-        IBaseToken(pair.pairToken).mint(_account, mintAmount);
+        IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
