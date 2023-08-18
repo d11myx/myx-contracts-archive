@@ -35,7 +35,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pairInfoArtifact = await deploy(`${PAIR_INFO_ID}`, {
         from: deployer,
         contract: 'Pool',
-        args: [addressProvider.address, poolTokenFactory.address, feeReceiver, slipReceiver],
+        args: [addressProvider.address, poolTokenFactory.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const pool = (await hre.ethers.getContractAt(pairInfoArtifact.abi, pairInfoArtifact.address)) as Pool;

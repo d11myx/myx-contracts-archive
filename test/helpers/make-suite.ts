@@ -22,7 +22,6 @@ import {
     getPool,
     getRoleManager,
     getToken,
-    getTradingVault,
     getWETH,
     MOCK_TOKEN_PREFIX,
     initPairs,
@@ -181,7 +180,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         indexPriceFeed,
     );
 
-    await pool.setTradingVault(positionManager.address);
+    await pool.setPositionManager(positionManager.address);
     await initPairs(deployer, tokens, usdt, pool);
 
     await roleManager.addKeeper(executor.address);

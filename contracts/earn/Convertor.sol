@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/utils/math/Math.sol';
 
-import "../token/interfaces/IBaseToken.sol";
-import "hardhat/console.sol";
+import '../token/interfaces/IBaseToken.sol';
+import 'hardhat/console.sol';
 
 contract Convertor is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
@@ -33,14 +33,11 @@ contract Convertor is ReentrancyGuard, Ownable {
         uint256 remainingAmount
     );
 
-    event Claim(
-        address indexed account,
-        uint256 amount
-    );
+    event Claim(address indexed account, uint256 amount);
 
     mapping(address => Conversion[]) public userConversions;
 
-    constructor(address _convertToken, address _claimToken) public {
+    constructor(address _convertToken, address _claimToken) {
         convertToken = _convertToken;
         claimToken = _claimToken;
     }
@@ -50,8 +47,11 @@ contract Convertor is ReentrancyGuard, Ownable {
     }
 
     function convert(uint256 amount, uint256 lockDays) external {
-        console.log("convert amount %s lockDays %s", amount, lockDays);
-        require(lockDays == 0 || lockDays == 14 || lockDays == 30 || lockDays == 90 || lockDays == 180, "Convertor: invalid unlock period");
+        console.log('convert amount %s lockDays %s', amount, lockDays);
+        require(
+            lockDays == 0 || lockDays == 14 || lockDays == 30 || lockDays == 90 || lockDays == 180,
+            'Convertor: invalid unlock period'
+        );
 
         // claim before convert
         _claim(msg.sender);
@@ -60,20 +60,20 @@ contract Convertor is ReentrancyGuard, Ownable {
 
         uint256 convertAmount;
         if (lockDays == 0) {
-            convertAmount = amount * 50 / 100;
+            convertAmount = (amount * 50) / 100;
         } else if (lockDays == 14) {
-            convertAmount = amount * 60 / 100;
+            convertAmount = (amount * 60) / 100;
         } else if (lockDays == 30) {
-            convertAmount = amount * 70 / 100;
+            convertAmount = (amount * 70) / 100;
         } else if (lockDays == 90) {
-            convertAmount = amount * 85 / 100;
+            convertAmount = (amount * 85) / 100;
         } else if (lockDays == 180) {
             convertAmount = amount;
         }
 
         // burn remaining raMYX and transfer myx
         uint256 remainingAmount = amount - convertAmount;
-        console.log("convert convertAmount %s remaining %s", convertAmount, remainingAmount);
+        console.log('convert convertAmount %s remaining %s', convertAmount, remainingAmount);
         IBaseToken(convertToken).burn(address(this), remainingAmount);
         IERC20(claimToken).safeTransfer(communityPool, remainingAmount);
 
@@ -93,7 +93,7 @@ contract Convertor is ReentrancyGuard, Ownable {
     }
 
     function _claim(address account) internal {
-        console.log("claim account %s timestamp %s", account, block.timestamp);
+        console.log('claim account %s timestamp %s', account, block.timestamp);
 
         address account = msg.sender;
 
@@ -103,10 +103,10 @@ contract Convertor is ReentrancyGuard, Ownable {
             return;
         }
         uint256 claimableAmount;
-        for(uint256 i = conversions.length - 1; i >= 0; i--) {
+        for (uint256 i = conversions.length - 1; i >= 0; i--) {
             Conversion storage conversion = conversions[i];
             uint256 timeDiff = block.timestamp - conversion.lastVestingTimes;
-            uint256 nextVestedAmount = conversion.convertAmount * timeDiff / conversion.lockPeriod;
+            uint256 nextVestedAmount = (conversion.convertAmount * timeDiff) / conversion.lockPeriod;
 
             if (nextVestedAmount + conversion.claimedAmount >= conversion.convertAmount) {
                 nextVestedAmount = conversion.convertAmount - conversion.claimedAmount;
@@ -114,13 +114,13 @@ contract Convertor is ReentrancyGuard, Ownable {
                 Conversion storage lastConversion = conversions[conversions.length - 1];
                 conversions[i] = lastConversion;
                 conversions.pop();
-                console.log("convert pop i %s", i);
+                console.log('convert pop i %s', i);
             } else {
                 conversion.claimedAmount += nextVestedAmount;
                 conversion.lastVestingTimes = block.timestamp;
             }
             claimableAmount += nextVestedAmount;
-            console.log("convert nextVestedAmount %s claimableAmount %s", nextVestedAmount, claimableAmount);
+            console.log('convert nextVestedAmount %s claimableAmount %s', nextVestedAmount, claimableAmount);
             if (conversions.length == 0 || i == 0) {
                 break;
             }
@@ -132,30 +132,31 @@ contract Convertor is ReentrancyGuard, Ownable {
         emit Claim(msg.sender, claimableAmount);
     }
 
-    function claimableAmount(address _account) public view returns(uint256 claimableAmount) {
+    function claimableAmount(address _account) public view returns (uint256 claimableAmount) {
         Conversion[] memory conversions = userConversions[_account];
-        for(uint256 i = 0; i < conversions.length; i++) {
-            console.log("claimableAmount i %s", i);
+        for (uint256 i = 0; i < conversions.length; i++) {
+            console.log('claimableAmount i %s', i);
             Conversion memory conversion = conversions[i];
             uint256 timeDiff = block.timestamp - conversion.lastVestingTimes;
-            uint256 nextVestedAmount = conversion.convertAmount * timeDiff / conversion.lockPeriod;
+            uint256 nextVestedAmount = (conversion.convertAmount * timeDiff) / conversion.lockPeriod;
 
             if (nextVestedAmount + conversion.claimedAmount >= conversion.convertAmount) {
                 nextVestedAmount = conversion.convertAmount - conversion.claimedAmount;
             }
             claimableAmount += nextVestedAmount;
-            console.log("nextVestedAmount %s claimableAmount %s", nextVestedAmount, claimableAmount);
+            console.log('nextVestedAmount %s claimableAmount %s', nextVestedAmount, claimableAmount);
         }
     }
 
-    function totalConverts(address _account) public view returns(uint256 amount, uint256 convertAmount, uint256 claimedAmount) {
+    function totalConverts(
+        address _account
+    ) public view returns (uint256 amount, uint256 convertAmount, uint256 claimedAmount) {
         Conversion[] memory conversions = userConversions[_account];
-        for(uint256 i = 0; i < conversions.length; i++) {
+        for (uint256 i = 0; i < conversions.length; i++) {
             Conversion memory conversion = conversions[i];
             amount += conversion.initAmount;
             convertAmount += conversion.convertAmount;
             claimedAmount += conversion.claimedAmount;
         }
     }
-
 }

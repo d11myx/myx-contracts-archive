@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 interface IPool {
-
     // Events
     event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
 
@@ -22,17 +21,9 @@ interface IPool {
         uint256 stableReservedAmount
     );
 
-    event UpdateProfit(
-        uint256 indexed pairIndex,
-        int256 profit,
-        int256 realisedPnl,
-        uint256 stableTotalAmount
-    );
+    event UpdateProfit(uint256 indexed pairIndex, int256 profit, int256 realisedPnl, uint256 stableTotalAmount);
 
-    event UpdateAveragePrice(
-        uint256 indexed pairIndex,
-        uint256 averagePrice
-    );
+    event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
     event Swap(
         address indexed funder,
@@ -109,6 +100,8 @@ interface IPool {
         uint256 lpDistributeP;
     }
 
+    function getPairIndex(address indexToken, address stableToken) external view returns (uint256);
+
     function getPair(uint256) external view returns (Pair memory);
 
     function getTradingConfig(uint256 _pairIndex) external view returns (TradingConfig memory);
@@ -143,10 +136,28 @@ interface IPool {
     function decreaseProfit(uint256 _pairIndex, uint256 _profit) external;
 
     function liqiitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
-     function addLiquidity(
+
+    function addLiquidity(
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256);
+
+    function addLiquidityForAccount(
+        address _funder,
+        address recipient,
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount,
+        bytes calldata data
+    ) external returns (uint256);
+
+    function removeLiquidity(
+        address _receiver,
+        uint256 _pairIndex,
+        uint256 _amount,
+        bytes calldata data
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
 }
