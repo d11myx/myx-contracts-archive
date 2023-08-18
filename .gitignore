@@ -34,3 +34,4 @@ abi
 
 deployments/local
 deployments/localhost
+deployments/**/*
