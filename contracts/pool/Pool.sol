@@ -51,7 +51,7 @@ contract Pool is IPool, Roleable {
 
     mapping(uint256 => Vault) public vaults;
 
-    address public tradingVault;
+    address public positionManager;
     address public feeReceiver0;
     address public feeReceiver1;
 
@@ -66,18 +66,13 @@ contract Pool is IPool, Roleable {
         feeReceiver1 = _feeReceiver1;
     }
 
-    modifier onlyPairLiquidityAndVault() {
-        require(msg.sender == tradingVault, 'forbidden');
+    modifier onlyPositionManager() {
+        require(msg.sender == positionManager, 'forbidden');
         _;
     }
 
-    modifier onlyTradingVault() {
-        require(msg.sender == tradingVault, 'forbidden');
-        _;
-    }
-
-    function setTradingVault(address _tradingVault) external onlyPoolAdmin {
-        tradingVault = _tradingVault;
+    function setPositionManager(address _tradingVault) external onlyPoolAdmin {
+        positionManager = _tradingVault;
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
@@ -170,7 +165,7 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) public onlyPairLiquidityAndVault {
+    ) public onlyPositionManager {
         _increaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
@@ -191,7 +186,7 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) public onlyPairLiquidityAndVault {
+    ) public onlyPositionManager {
         _decreaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
@@ -212,7 +207,7 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) external onlyTradingVault {
+    ) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
@@ -229,7 +224,7 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) external onlyTradingVault {
+    ) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
@@ -246,19 +241,19 @@ contract Pool is IPool, Roleable {
         return vaults[_pairIndex];
     }
 
-    function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPairLiquidityAndVault {
+    function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPositionManager {
         vaults[_pairIndex].averagePrice = _averagePrice;
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
+    function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.stableTotalAmount += _profit;
         vault.realisedPnl += int256(_profit);
         emit UpdateProfit(_pairIndex, int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
     }
 
-    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPairLiquidityAndVault {
+    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
 
@@ -274,7 +269,7 @@ contract Pool is IPool, Roleable {
         bool _isBuy,
         uint256 _amountIn,
         uint256 _amountOut
-    ) public onlyPairLiquidityAndVault {
+    ) public onlyPositionManager {
         Vault memory vault = vaults[_pairIndex];
 
         if (_isBuy) {
