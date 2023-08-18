@@ -51,7 +51,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
     IPool public pool;
-    IPositionManager public tradingVault;
+
     IPositionManager public positionManager;
     address public addressExecutor;
     address public router;
@@ -59,10 +59,10 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     constructor(
         IAddressesProvider addressProvider,
         IPool _pairInfo,
-        IPositionManager _tradingVault
+        IPositionManager _positionManager
     ) Roleable(addressProvider) {
         pool = _pairInfo;
-        tradingVault = _tradingVault;
+        positionManager = _positionManager;
     }
 
     modifier onlyRouter() {
@@ -113,7 +113,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         require(address(positionManager) != address(0), 'zero address');
 
         address account = request.account;
-        require(!tradingVault.isFrozen(account), 'account is frozen');
+        require(!positionManager.isFrozen(account), 'account is frozen');
 
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
         require(pair.enable, 'trade pair not supported');
@@ -126,7 +126,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             );
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
-            Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
+            Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
             uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
             //TODO if size = 0
@@ -171,7 +171,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         }
 
         if (request.tradeType == TradingTypes.TradeType.TP || request.tradeType == TradingTypes.TradeType.SL) {
-            Position.Info memory position = tradingVault.getPosition(account, request.pairIndex, request.isLong);
+            Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
             require(
                 uint256(request.sizeAmount.abs()) <= position.positionAmount,
                 'tp/sl exceeds max size'
