@@ -1,23 +1,23 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
-    IndexPriceFeed,
-    Pool,
-    MockPriceFeed,
-    Token,
-    PositionManager,
-    OraclePriceFeed,
-    WETH,
     AddressesProvider,
-    Router,
     Executor,
-    OrderManager,
-    RoleManager,
-    TestCallBack,
-    PoolTokenFactory,
+    IndexPriceFeed,
     LiquidationLogic,
+    MockPriceFeed,
+    OraclePriceFeed,
+    OrderManager,
+    Pool,
+    PoolTokenFactory,
+    PositionManager,
+    RoleManager,
+    Router,
+    TestCallBack,
+    Token,
+    WETH,
 } from '../types';
 import { ethers } from 'ethers';
-import { COMMON_DEPLOY_PARAMS, MARKET_NAME } from './env';
+import { MARKET_NAME } from './env';
 import { deployContract, getBlockTimestamp, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
@@ -180,7 +180,6 @@ export async function deployTrading(
 
     return { positionManager, router, executor, orderManager };
 }
-export async function deployMockCallback(indexToken: string, stableToken: string) {
-    let testCallBack = (await deployContract('TestCallBack', [indexToken, stableToken])) as TestCallBack;
-    return testCallBack;
+export async function deployMockCallback() {
+    return (await deployContract('TestCallBack', [])) as TestCallBack;
 }

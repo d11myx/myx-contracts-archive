@@ -7,6 +7,7 @@ import {
     getPool,
     getRoleManager,
     getRouter,
+    getTestCallBack,
     getToken,
     MAX_UINT_AMOUNT,
     MOCK_TOKEN_PREFIX,
@@ -31,6 +32,7 @@ async function main() {
     const oraclePriceFeed = await getOraclePriceFeed();
     const roleManager = await getRoleManager();
     const pool = await getPool();
+    const testCallBack = await getTestCallBack();
 
     console.log(`router:`, router.address);
     console.log(`index:`, await orderManager.increaseMarketOrdersIndex());
@@ -59,30 +61,37 @@ async function main() {
     console.log(await btcFeed.isAdmin(keeper));
     console.log(await ethFeed.isAdmin(keeper));
 
-    let testBtcCallBack = await deployMockCallback(btc.address, usdt.address);
-    let testEthCallBack = await deployMockCallback(eth.address, usdt.address);
-    console.log(`testBtcCallBack:`, testBtcCallBack.address);
-    console.log(`testEthCallBack:`, testEthCallBack.address);
+    console.log(`testCallBack:`, testCallBack.address);
 
-    await waitForTx(await usdt.approve(testBtcCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await btc.approve(testBtcCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await eth.approve(testBtcCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await usdt.approve(testEthCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await btc.approve(testEthCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await eth.approve(testEthCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
 
     await waitForTx(
-        await testBtcCallBack.addLiquidity(
+        await testCallBack.addLiquidity(
             pool.address,
-            0,
+            (
+                await pool.getPair(0)
+            ).indexToken,
+            (
+                await pool.getPair(0)
+            ).stableToken,
             ethers.utils.parseEther('1000'),
             ethers.utils.parseEther('30000000'),
         ),
     );
     await waitForTx(
-        await testEthCallBack.addLiquidity(
+        await testCallBack.addLiquidity(
             pool.address,
-            1,
+            (
+                await pool.getPair(1)
+            ).indexToken,
+            (
+                await pool.getPair(1)
+            ).stableToken,
             ethers.utils.parseEther('1000'),
             ethers.utils.parseEther('2000000'),
         ),
