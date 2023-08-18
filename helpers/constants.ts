@@ -78,4 +78,10 @@ export const DEFAULT_NAMED_ACCOUNTS = {
     developmentReserve: {
         default: 2,
     },
+    trader: {
+        default: 10,
+    },
+    lpUser: {
+        default: 10,
+    },
 };
