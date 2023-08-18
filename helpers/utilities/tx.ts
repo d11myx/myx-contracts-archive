@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { BaseContract, Contract, ContractTransaction } from 'ethers';
+import { Contract, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -9,10 +9,17 @@ export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
 export const deployContract = async <ContractType extends Contract>(
     contract: string,
     args?: any,
+    libs?: { [libraryName: string]: string },
 ): Promise<ContractType> => {
     const [deployer] = await hre.ethers.getSigners();
 
-    const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
+    const contractFactory = await hre.ethers.getContractFactory(contract, {
+        signer: deployer,
+        libraries: {
+            ...libs,
+        },
+    });
+
     const contractDeployed = await contractFactory.deploy(...args);
 
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
