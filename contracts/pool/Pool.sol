@@ -52,18 +52,10 @@ contract Pool is IPool, Roleable {
     mapping(uint256 => Vault) public vaults;
 
     address public positionManager;
-    address public feeReceiver0;
-    address public feeReceiver1;
+    mapping(address => uint256) public feeTokenAmounts;
 
-    constructor(
-        IAddressesProvider addressProvider,
-        IPoolTokenFactory _poolTokenFactory,
-        address _feeReceiver0,
-        address _feeReceiver1
-    ) Roleable(addressProvider) {
+    constructor(IAddressesProvider addressProvider, IPoolTokenFactory _poolTokenFactory) Roleable(addressProvider) {
         poolTokenFactory = _poolTokenFactory;
-        feeReceiver0 = _feeReceiver0;
-        feeReceiver1 = _feeReceiver1;
     }
 
     modifier onlyPositionManager() {
@@ -289,11 +281,6 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function setReceiver(address _feeReceiver0, address _feeReceiver1) external onlyPoolAdmin {
-        feeReceiver0 = _feeReceiver0;
-        feeReceiver1 = _feeReceiver1;
-    }
-
     function addLiquidity(
         address recipient,
         uint256 _pairIndex,
@@ -463,16 +450,9 @@ contract Pool is IPool, Roleable {
         uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
         uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
 
-        IERC20(pair.indexToken).safeTransfer(feeReceiver0, indexFeeAmount.mulPercentage(pair.lpFeeDistributeP));
-        IERC20(pair.indexToken).safeTransfer(
-            feeReceiver1,
-            indexFeeAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-        );
-        IERC20(pair.stableToken).safeTransfer(feeReceiver0, stableFeeAmount.mulPercentage(pair.lpFeeDistributeP));
-        IERC20(pair.stableToken).safeTransfer(
-            feeReceiver1,
-            stableFeeAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-        );
+        feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(indexFeeAmount);
+
+        feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(stableFeeAmount);
 
         afterFeeIndexAmount = _indexAmount - indexFeeAmount;
         afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -514,11 +494,7 @@ contract Pool is IPool, Roleable {
                 slipAmount = _getAmount(slipDelta, price);
 
                 afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                IERC20(pair.indexToken).safeTransfer(feeReceiver0, slipAmount.mulPercentage(pair.lpFeeDistributeP));
-                IERC20(pair.indexToken).safeTransfer(
-                    feeReceiver1,
-                    slipAmount.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-                );
+                feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(slipAmount);
             } else if (stableTotalDelta > expectStableDelta) {
                 uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
                 uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
@@ -532,11 +508,7 @@ contract Pool is IPool, Roleable {
                 slipAmount = slipDelta;
 
                 afterFeeStableAmount = afterFeeStableAmount - slipDelta;
-                IERC20(pair.stableToken).safeTransfer(feeReceiver0, slipDelta.mulPercentage(pair.lpFeeDistributeP));
-                IERC20(pair.stableToken).safeTransfer(
-                    feeReceiver1,
-                    slipDelta.mulPercentage(PrecisionUtils.percentage() - pair.lpFeeDistributeP)
-                );
+                feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(slipDelta);
             }
         }
         // mint lp
