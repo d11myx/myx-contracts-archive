@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { COMMON_DEPLOY_PARAMS, loadReserveConfig, MARKET_NAME, MOCK_TOKEN_PREFIX } from '../../../helpers';
+import { COMMON_DEPLOY_PARAMS, loadReserveConfig, MARKET_NAME, MOCK_TOKEN_PREFIX, waitForTx } from '../../../helpers';
 import { Token } from '../../../types';
 import { ethers } from 'ethers';
 
@@ -47,9 +47,11 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         tokens.push(token);
     }
 
+    console.log(` - setup balance`);
     for (let signer of signers) {
         for (let token of tokens) {
-            await token.mint(signer.address, ethers.utils.parseEther('100000000'));
+            console.log(` mint for ${signer.address} 100000000.0${await token.symbol()}`);
+            await waitForTx(await token.mint(signer.address, ethers.utils.parseEther('100000000')));
         }
     }
 };
