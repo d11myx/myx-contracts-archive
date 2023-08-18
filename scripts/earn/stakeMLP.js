@@ -3,43 +3,42 @@ const {expandDecimals, formatBalance} = require("../utils/utilities");
 const {mintWETH, getConfig, setConfig} = require("../utils/utils");
 const hre = require("hardhat");
 const {BigNumber} = require("ethers");
+const {getLPStakingPool, getPool} = require("../../helpers");
 
 async function main() {
     console.log("\n stakeMLP")
 
-    const [user0, user1, user2, user3] = await hre.ethers.getSigners()
+    const [trader] = await hre.ethers.getSigners()
+    let lpStakingPool = await getLPStakingPool();
 
-    console.log(`signers: ${user0.address} ${user1.address} ${user2.address} ${user3.address}`)
-    let mlpStakingPool = await contractAt("MLPStakingPool", await getConfig("MLPStakingPool"));
-
-    let pairInfo = await contractAt("PairInfo", await getConfig("PairInfo"));
+    let pool = await getPool();
 
     let pairIndex = 0;
-    let pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+    let pairToken = await contractAt("PairToken", (await pool.pairs(pairIndex)).pairToken);
 
-    console.log(`btc mlp Balance: ${formatBalance(await pairToken.balanceOf(user0.address))}`);
+    console.log(`btc mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
     let stakeAmount = expandDecimals(100, 18);
-    await pairToken.approve(mlpStakingPool.address, stakeAmount);
-    await mlpStakingPool.stake(pairIndex, stakeAmount);
-    console.log(`btc mlp Balance: ${formatBalance(await pairToken.balanceOf(user0.address))}`);
+    await pairToken.connect(trader).approve(lpStakingPool.address, stakeAmount);
+    await lpStakingPool.connect(trader).stake(pairIndex, stakeAmount);
+    console.log(`btc mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
 
-    console.log(`userStaked: ${formatBalance(await mlpStakingPool.userStaked(pairIndex, user0.address))}`);
-    await mlpStakingPool.unstake(pairIndex, stakeAmount);
-    console.log(`btc mlp Balance: ${formatBalance(await pairToken.balanceOf(user0.address))}`);
+    console.log(`userStaked: ${formatBalance(await lpStakingPool.userStaked(pairIndex, trader.address))}`);
+    await lpStakingPool.connect(trader).unstake(pairIndex, stakeAmount);
+    console.log(`btc mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
 
 
     pairIndex = 1;
-    pairToken = await contractAt("PairToken", (await pairInfo.pairs(pairIndex)).pairToken);
+    pairToken = await contractAt("PairToken", (await pool.pairs(pairIndex)).pairToken);
 
-    console.log(`eth mlp Balance: ${formatBalance(await pairToken.balanceOf(user0.address))}`);
+    console.log(`eth mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
     stakeAmount = expandDecimals(100, 18);
-    await pairToken.approve(mlpStakingPool.address, stakeAmount);
-    await mlpStakingPool.stake(pairIndex, stakeAmount);
-    console.log(`eth mlp Balance: ${formatBalance(await pairToken.balanceOf(user0.address))}`);
+    await pairToken.connect(trader).approve(lpStakingPool.address, stakeAmount);
+    await lpStakingPool.connect(trader).stake(pairIndex, stakeAmount);
+    console.log(`eth mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
 
-    console.log(`userStaked: ${formatBalance(await mlpStakingPool.userStaked(pairIndex, user0.address))}`);
-    await mlpStakingPool.unstake(pairIndex, stakeAmount);
-    console.log(`eth mlp Balance: ${formatBalance(await pairToken.balanceOf(user0.address))}`);
+    console.log(`userStaked: ${formatBalance(await lpStakingPool.userStaked(pairIndex, trader.address))}`);
+    await lpStakingPool.connect(trader).unstake(pairIndex, stakeAmount);
+    console.log(`eth mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
 }
 
 main()

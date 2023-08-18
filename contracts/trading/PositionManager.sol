@@ -43,6 +43,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     uint256 public fundingInterval;
 
     mapping(address => uint256) public override stakingTradingFee;
+    mapping(address => uint256) public override distributorTradingFee;
     mapping(address => mapping(address => uint256)) public override keeperTradingFee;
 
     IPool public pool;
@@ -615,11 +616,15 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
 
         uint256 keeperAmount = tradingFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
-        uint256 stakingAmount = tradingFee - keeperAmount;
+        uint256 stakingAmount = tradingFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
+        uint256 distributorAmount = tradingFee - keeperAmount- stakingAmount;
 
         keeperTradingFee[pair.stableToken][keeper] += keeperAmount;
         stakingTradingFee[pair.stableToken] += stakingAmount;
+        distributorTradingFee[pair.stableToken] += distributorAmount;
         console.log("distributeTradingFee lpAmount %s keeperAmount %s stakingAmount %s", lpAmount, keeperAmount, stakingAmount);
+
+        emit DistributeTradingFee(pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
     }
 
     // TODO receiver? ?onlyPoolAdmin
@@ -630,6 +635,15 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             delete stakingTradingFee[claimToken];
         }
         return claimableStakingTradingFee;
+    }
+
+    function claimDistributorTradingFee(address claimToken) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
+        uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
+        if (claimableDistributorTradingFee > 0) {
+            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
+            delete distributorTradingFee[claimToken];
+        }
+        return claimableDistributorTradingFee;
     }
 
     function claimKeeperTradingFee(address claimToken, address keeper) external nonReentrant onlyExecutor whenNotPaused returns (uint256) {

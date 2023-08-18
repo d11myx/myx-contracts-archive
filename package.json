@@ -57,6 +57,8 @@
         "hardhat-abi-exporter": "^2.10.1",
         "hardhat-contract-sizer": "^2.10.0",
         "hardhat-gas-reporter": "^1.0.9",
+        "keccak256": "^1.0.6",
+        "merkletreejs": "^0.3.10",
         "solidity-coverage": "^0.8.4",
         "typechain": "^8.3.0",
         "typescript": "^5.0.4"

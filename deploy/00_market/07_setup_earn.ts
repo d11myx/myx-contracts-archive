@@ -2,7 +2,7 @@ import {DeployFunction} from 'hardhat-deploy/types';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {
   COMMON_DEPLOY_PARAMS, CONVERTOR_ID,
-  EXECUTOR_ID,
+  EXECUTOR_ID, FEE_DISTRIBUTOR_ID,
   getAddressesProvider,
   getIndexPriceFeed,
   getOraclePriceFeed,
@@ -15,7 +15,17 @@ import {
   TRADING_VAULT_ID, VESTER_ID,
   waitForTx,
 } from '../../helpers';
-import {MYX, RaMYX, StMYX, Vester, StakingPool, LPStakingPool, RewardDistributor, Convertor} from '../../types';
+import {
+  MYX,
+  RaMYX,
+  StMYX,
+  Vester,
+  StakingPool,
+  LPStakingPool,
+  RewardDistributor,
+  Convertor,
+  FeeDistributor
+} from '../../types';
 
 const func: DeployFunction = async function ({getNamedAccounts, deployments, ...hre}: HardhatRuntimeEnvironment) {
   const {deploy} = deployments;
@@ -132,7 +142,7 @@ const func: DeployFunction = async function ({getNamedAccounts, deployments, ...
     convertorArtifact.address,
   )) as Convertor;
 
-  // rewardDistributor
+  // rewardDistributor-RaMYX
   const rewardDistributorArtifact = await deploy(`${REWARD_DISTRIBUTOR_ID}`, {
     from: deployer,
     contract: 'RewardDistributor',
@@ -144,20 +154,37 @@ const func: DeployFunction = async function ({getNamedAccounts, deployments, ...
     rewardDistributorArtifact.address,
   )) as RewardDistributor;
 
-  await waitForTx(await convertor.setCommunityPool(community));
-  await waitForTx(await rewardDistributor.setStakingPool(stakingPool.address));
+  // feeDistributor
+  const feeDistributorArtifact = await deploy(`${FEE_DISTRIBUTOR_ID}`, {
+    from: deployer,
+    contract: 'FeeDistributor',
+    args: [usdt.address],
+    ...COMMON_DEPLOY_PARAMS,
+  });
+  const feeDistributor = (await hre.ethers.getContractAt(
+    feeDistributorArtifact.abi,
+    feeDistributorArtifact.address,
+  )) as FeeDistributor;
 
   //// config
+  // convertor
+  await waitForTx(await convertor.setCommunityPool(community));
+
   // StakingPool
   await waitForTx(await stakingPool.setMaxStakeAmount(myx.address, hre.ethers.utils.parseUnits("1000000", 18)));
   await waitForTx(await stakingPool.setMaxStakeAmount(raMYX.address, hre.ethers.utils.parseUnits("1000000", 18)));
+  await waitForTx(await stakingPool.setHandler(rewardDistributor.address, true));
 
   await waitForTx(await lpStakingPool.setMaxStakeAmount(0, hre.ethers.utils.parseUnits("1000000", 18)));
   await waitForTx(await lpStakingPool.setMaxStakeAmount(1, hre.ethers.utils.parseUnits("1000000", 18)));
 
   // distributor
+  await waitForTx(await rewardDistributor.setStakingPool(stakingPool.address));
   await waitForTx(await rewardDistributor.setHandler(deployer, true));
+  await waitForTx(await feeDistributor.setPositionManager(positionManager.address));
+  await waitForTx(await feeDistributor.setHandler(deployer, true));
 
+  // token
   await waitForTx(await raMYX.setPrivateTransferMode(true));
   await waitForTx(await raMYX.setMiner(rewardDistributor.address, true));
   await waitForTx(await raMYX.setMiner(convertor.address, true));
@@ -168,10 +195,9 @@ const func: DeployFunction = async function ({getNamedAccounts, deployments, ...
   await waitForTx(await stMYX.setMiner(stakingPool.address, true));
   await waitForTx(await stMYX.setHandler(stakingPool.address, true));
 
-  await waitForTx(await stakingPool.setHandler(rewardDistributor.address, true));
-
   const roleManager = await getRoleManager();
   await waitForTx(await roleManager.connect(deployerSigner).addPoolAdmin(stakingPool.address));
+  await waitForTx(await roleManager.connect(deployerSigner).addPoolAdmin(feeDistributor.address));
 
 };
 
