@@ -1,31 +1,17 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import {
-    COMMON_DEPLOY_PARAMS,
-    getMockToken,
-    getToken,
-    loadReserveConfig,
-    MARKET_NAME,
-    TEST_CALLBACK_PREFIX,
-} from '../../helpers';
+import { COMMON_DEPLOY_PARAMS, TEST_CALLBACK_ID } from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
-
-    for (let pair of Object.keys(pairConfigs)) {
-        const pairToken = await getMockToken(pair);
-        const basicToken = await getToken();
-
-        await deploy(`${TEST_CALLBACK_PREFIX}${pair}`, {
-            from: deployer,
-            contract: 'TestCallBack',
-            args: [pairToken.address, basicToken.address],
-            ...COMMON_DEPLOY_PARAMS,
-        });
-    }
+    await deploy(`${TEST_CALLBACK_ID}`, {
+        from: deployer,
+        contract: 'TestCallBack',
+        args: [],
+        ...COMMON_DEPLOY_PARAMS,
+    });
 };
 
 func.id = `Mocks`;
