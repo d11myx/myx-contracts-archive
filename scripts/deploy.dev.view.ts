@@ -1,5 +1,13 @@
 import { ethers } from 'hardhat';
-import { getExecutor, getOraclePriceFeed, getOrderManager, getPool, getPositionManager, getRouter } from '../helpers';
+import {
+    getExecutor,
+    getOraclePriceFeed,
+    getOrderManager,
+    getPool,
+    getPositionManager,
+    getRouter,
+    TradeType,
+} from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -29,7 +37,14 @@ async function main() {
     // console.log(await pool.getPair(0));
     // console.log(await pool.getPair(1));
 
-    console.log(await positionManager.getPosition('0x9335264956AF1E68579CdeF0F5c908f1668DDE3F', 0, true));
+    // console.log(await positionManager.getPosition('0x2068f8e9C9e61A330F2F713C998D372C04e3C9Cc', 0, true));
+
+    console.log(await orderManager.decreaseMarketOrders(9));
+
+    console.log(await executor.connect(keeper).executeDecreaseOrder(9, TradeType.MARKET));
+
+    console.log(await orderManager.decreaseMarketOrdersIndex());
+    console.log(await executor.decreaseMarketOrderStartIndex());
 
     // console.log(await oraclePriceFeed.getPrice('0xB010E4aC01bD4410eA04bdD12d1CB39EA0857950'));
     // console.log(await oraclePriceFeed.getPrice('0x16C72f9b628Df203370b9e504a6815191a22F252'));

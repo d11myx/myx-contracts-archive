@@ -99,24 +99,23 @@ contract Executor is IExecutor, Pausable {
     }
 
     function executeIncreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper whenNotPaused {
-        uint256 index = increaseMarketOrderStartIndex;
         uint256 length = orderManager.increaseMarketOrdersIndex();
 
-        if (index >= length) {
+        if (increaseMarketOrderStartIndex >= length) {
             return;
         }
         if (endIndex > length) {
             endIndex = length;
         }
 
-        while (index < endIndex) {
-            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log('executeIncreaseMarketOrders completed. index:', index);
+        while (increaseMarketOrderStartIndex < endIndex) {
+            try this.executeIncreaseOrder(increaseMarketOrderStartIndex, TradingTypes.TradeType.MARKET) {
+                console.log('executeIncreaseMarketOrders completed. index:', increaseMarketOrderStartIndex);
             } catch Error(string memory reason) {
                 console.log('executeIncreaseMarketOrders error:', reason);
-                orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
+                orderManager.cancelOrder(increaseMarketOrderStartIndex, TradingTypes.TradeType.MARKET, true);
             }
-            index++;
+            increaseMarketOrderStartIndex++;
         }
     }
 
@@ -307,23 +306,22 @@ contract Executor is IExecutor, Pausable {
     }
 
     function executeDecreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper whenNotPaused {
-        uint256 index = decreaseMarketOrderStartIndex;
         uint256 length = orderManager.decreaseMarketOrdersIndex();
-        if (index >= length) {
+        if (decreaseMarketOrderStartIndex >= length) {
             return;
         }
         if (endIndex > length) {
             endIndex = length;
         }
 
-        while (index < endIndex) {
-            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log('executeDecreaseMarketOrders completed. index:', index);
+        while (decreaseMarketOrderStartIndex < endIndex) {
+            try this.executeDecreaseOrder(decreaseMarketOrderStartIndex, TradingTypes.TradeType.MARKET) {
+                console.log('executeDecreaseMarketOrders completed. index:', decreaseMarketOrderStartIndex);
             } catch Error(string memory reason) {
                 console.log('executeDecreaseMarketOrders error:', reason);
-                orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
+                orderManager.cancelOrder(decreaseMarketOrderStartIndex, TradingTypes.TradeType.MARKET, false);
             }
-            index++;
+            decreaseMarketOrderStartIndex++;
         }
     }
 
