@@ -43,7 +43,7 @@ interface IPositionManager {
         uint256 positionAmount,
         uint256 averagePrice,
         int256 entryFundingRate,
-        uint256 entryFundingTime,
+        // uint256 entryFundingTime,
         int256 realisedPnl,
         uint256 price
     );
