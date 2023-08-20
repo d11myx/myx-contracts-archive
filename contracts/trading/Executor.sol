@@ -98,16 +98,6 @@ contract Executor is IExecutor, Pausable {
     }
 
     function executeIncreaseMarketOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
-        // uint256 index = increaseMarketOrderStartIndex;
-        // uint256 length = orderManager.ordersIndex();
-
-        // if (index >= length) {
-        //     return;
-        // }
-        // if (endIndex > length) {
-        //     endIndex = length;
-        // }
-
         for (uint256 index = 0; index < orderIds.length; index++) {
             try this.executeIncreaseOrder(orderIds[index], TradingTypes.TradeType.MARKET) {
                 console.log('executeIncreaseMarketOrders completed. orderIds:', orderIds[index]);
@@ -115,7 +105,6 @@ contract Executor is IExecutor, Pausable {
                 console.log('executeIncreaseMarketOrders error:', reason);
                 orderManager.cancelOrder(orderIds[index], TradingTypes.TradeType.MARKET, true);
             }
-            // index++;
         }
     }
 
@@ -185,8 +174,6 @@ contract Executor is IExecutor, Pausable {
 
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
-
-        uint256 sizeDelta = order.sizeAmount.mulPrice(price);
 
         // check position and leverage
         (uint256 afterPosition, ) = position.validLeverage(
@@ -390,8 +377,6 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
-        uint256 sizeDelta = order.sizeAmount.mulPrice(price);
-
         // check position and leverage
         position.validLeverage(
             price,
@@ -446,7 +431,6 @@ contract Executor is IExecutor, Pausable {
 
         // transfer collateral
         if (order.collateral > 0) {
-            IPool.Pair memory pair = pool.getPair(position.pairIndex);
             positionManager.transferTokenTo(pair.stableToken, address(pool), order.collateral.abs());
         }
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
