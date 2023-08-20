@@ -46,7 +46,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
     IPool public pool;
-
     IPositionManager public positionManager;
     address public addressExecutor;
     address public router;
