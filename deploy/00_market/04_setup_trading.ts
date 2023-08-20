@@ -54,11 +54,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const weth = await getWETH();
 
-    await deploy('LiquidationLogic', {
-        from: deployer,
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const liquidationLibraryArtifact = await deployments.get('LiquidationLogic');
 
     // Router
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
@@ -75,9 +70,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         from: deployer,
         contract: 'Executor',
         args: [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
-        libraries: {
-            LiquidationLogic: liquidationLibraryArtifact.address,
-        },
+
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;

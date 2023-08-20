@@ -227,9 +227,9 @@ uint256 public decreaseMarketOrderStartIndex;
 - OrderManager
 ```solidity
 // Current market open request latest index
-uint256 public increaseMarketOrdersIndex;
+uint256 public ordersIndex;
 // Current market price closing request latest index
-uint256 public decreaseMarketOrdersIndex;
+uint256 public ordersIndex;
 // Current limit open position request latest index
 uint256 public increaseLimitOrdersIndex;
 // Latest index of current limit closing requests

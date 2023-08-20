@@ -42,7 +42,7 @@ async function main() {
 
   console.log(`position: ${await positionManager.getPosition(trader.address, 0, true)}`)
 
-  let orderId = await orderManager.decreaseMarketOrdersIndex();
+  let orderId = await tradingRouter.decreaseMarketOrdersIndex();
   let request = {
     account: trader.address,
     pairIndex: 0,
@@ -58,7 +58,7 @@ async function main() {
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(router.address))}`);
 
   // execute
-  let startIndex = await executor.decreaseMarketOrderStartIndex();
+  let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
   console.log("startIndex:", startIndex);
   await executor.executeDecreaseOrder(orderId, 0);
   // await executor.executeDecreaseMarketOrders(orderId.add(1));

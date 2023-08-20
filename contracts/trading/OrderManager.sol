@@ -29,17 +29,12 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
+    uint256 public override ordersIndex;
+
     mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseMarketOrders;
-    uint256 public override increaseMarketOrdersIndex;
-
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseMarketOrders;
-    uint256 public override decreaseMarketOrdersIndex;
-
     mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseLimitOrders;
-    uint256 public override increaseLimitOrdersIndex;
-
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
-    uint256 public override decreaseLimitOrdersIndex;
 
     mapping(bytes32 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderKey -> TpSl
 
@@ -51,7 +46,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
     IPool public pool;
-
     IPositionManager public positionManager;
     address public addressExecutor;
     address public router;
@@ -132,7 +126,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
-                (uint256 afterPosition,) = position.validLeverage(
+                (uint256 afterPosition, ) = position.validLeverage(
                     price,
                     request.collateral,
                     uint256(request.sizeAmount),
@@ -159,7 +153,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                 //TODO if request size exceed position size, can calculate the max size
                 require(
                     uint256(request.sizeAmount.abs()) == position.positionAmount ||
-                    uint256(request.sizeAmount.abs()) <= position.positionAmount - positionDecreaseTotalAmount[positionKey],
+                        uint256(request.sizeAmount.abs()) <=
+                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
                     'decrease amount exceed position'
                 );
             }
@@ -172,50 +167,50 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (request.tradeType == TradingTypes.TradeType.TP || request.tradeType == TradingTypes.TradeType.SL) {
             Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
-            require(
-                uint256(request.sizeAmount.abs()) <= position.positionAmount,
-                'tp/sl exceeds max size'
-            );
+            require(uint256(request.sizeAmount.abs()) <= position.positionAmount, 'tp/sl exceeds max size');
             require(request.collateral == 0, 'no collateral required');
         }
 
         if (request.sizeAmount > 0) {
-            return _createIncreaseOrder(
-                TradingTypes.IncreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: uint256(request.sizeAmount)
-                })
-            );
+            return
+                _createIncreaseOrder(
+                    TradingTypes.IncreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        openPrice: request.openPrice,
+                        isLong: request.isLong,
+                        sizeAmount: uint256(request.sizeAmount)
+                    })
+                );
         } else if (request.sizeAmount < 0) {
-            return _createDecreaseOrder(
-                TradingTypes.DecreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    triggerPrice: request.openPrice,
-                    sizeAmount: uint256(request.sizeAmount.abs()),
-                    isLong: request.isLong
-                })
-            );
+            return
+                _createDecreaseOrder(
+                    TradingTypes.DecreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        triggerPrice: request.openPrice,
+                        sizeAmount: uint256(request.sizeAmount.abs()),
+                        isLong: request.isLong
+                    })
+                );
         } else {
             require(request.collateral != 0, 'not support');
-            return _createIncreaseOrder(
-                TradingTypes.IncreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: 0
-                })
-            );
+            return
+                _createIncreaseOrder(
+                    TradingTypes.IncreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        openPrice: request.openPrice,
+                        isLong: request.isLong,
+                        sizeAmount: 0
+                    })
+                );
         }
     }
 
@@ -274,13 +269,15 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         );
 
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
-            order.orderId = increaseMarketOrdersIndex;
+            order.orderId = ordersIndex;
 
-            increaseMarketOrders[increaseMarketOrdersIndex++] = order;
+            increaseMarketOrders[ordersIndex] = order;
+            ordersIndex++;
         } else if (_request.tradeType == TradingTypes.TradeType.LIMIT) {
-            order.orderId = increaseLimitOrdersIndex;
+            order.orderId = ordersIndex;
 
-            increaseLimitOrders[increaseLimitOrdersIndex++] = order;
+            increaseLimitOrders[ordersIndex] = order;
+            ordersIndex++;
         } else {
             revert('invalid trade type');
         }
@@ -336,28 +333,31 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         //     tp：long: false, short: true
         //     sl：long: true,  short: false
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
-            order.orderId = decreaseMarketOrdersIndex;
+            order.orderId = ordersIndex;
             order.abovePrice = _request.isLong;
 
-            decreaseMarketOrders[decreaseMarketOrdersIndex++] = order;
+            decreaseMarketOrders[ordersIndex] = order;
+            ordersIndex++;
         } else if (_request.tradeType == TradingTypes.TradeType.LIMIT) {
-            order.orderId = decreaseLimitOrdersIndex;
+            order.orderId = ordersIndex;
             order.abovePrice = !_request.isLong;
 
-            decreaseLimitOrders[decreaseLimitOrdersIndex++] = order;
+            decreaseLimitOrders[ordersIndex] = order;
+            ordersIndex++;
         } else if (_request.tradeType == TradingTypes.TradeType.TP) {
-            order.orderId = decreaseLimitOrdersIndex;
+            order.orderId = ordersIndex;
             order.abovePrice = !_request.isLong;
 
-            decreaseLimitOrders[decreaseLimitOrdersIndex++] = order;
-
+            decreaseLimitOrders[ordersIndex] = order;
+            ordersIndex++;
             bytes32 positionKey = PositionKey.getPositionKey(_request.account, _request.pairIndex, _request.isLong);
             positionHasTpSl[positionKey][TradingTypes.TradeType.TP] = true;
         } else if (_request.tradeType == TradingTypes.TradeType.SL) {
-            order.orderId = decreaseLimitOrdersIndex;
+            order.orderId = ordersIndex;
             order.abovePrice = _request.isLong;
 
-            decreaseLimitOrders[decreaseLimitOrdersIndex++] = order;
+            decreaseLimitOrders[ordersIndex] = order;
+            ordersIndex++;
 
             bytes32 positionKey = PositionKey.getPositionKey(_request.account, _request.pairIndex, _request.isLong);
             positionHasTpSl[positionKey][TradingTypes.TradeType.SL] = true;
