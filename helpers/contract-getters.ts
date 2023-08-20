@@ -13,6 +13,15 @@ import {
     PositionManager,
     WETH,
     PoolTokenFactory,
+    MYX,
+    RaMYX,
+    StMYX,
+    Vester,
+    RewardDistributor,
+    StakingPool,
+    Convertor,
+    LPStakingPool,
+    FeeDistributor,
     TestCallBack,
 } from '../types';
 import { getContract } from './utilities/tx';
@@ -29,6 +38,15 @@ import {
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
     POOL_TOKEN_FACTORY,
+    MYX_ID,
+    RAMYX_ID,
+    STMYX_ID,
+    VESTER_ID,
+    REWARD_DISTRIBUTOR_ID,
+    STAKING_POOL_ID,
+    CONVERTOR_ID,
+    LP_STAKING_POOL_ID,
+    FEE_DISTRIBUTOR_ID,
     TEST_CALLBACK_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
@@ -107,6 +125,43 @@ export const getPositionManager = async (address?: string): Promise<PositionMana
         'PositionManager',
         address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
     );
+};
+
+export const getMYX = async (address?: string): Promise<MYX> => {
+    return getContract<MYX>('MYX', address || (await hre.deployments.get(MYX_ID)).address);
+};
+
+export const getRaMYX = async (address?: string): Promise<RaMYX> => {
+    return getContract<RaMYX>('RaMYX', address || (await hre.deployments.get(RAMYX_ID)).address);
+};
+
+export const getStMYX = async (address?: string): Promise<StMYX> => {
+    return getContract<StMYX>('StMYX', address || (await hre.deployments.get(STMYX_ID)).address);
+};
+
+export const getVester = async (address?: string): Promise<Vester> => {
+    return getContract<Vester>('Vester', address || (await hre.deployments.get(VESTER_ID)).address);
+};
+
+export const getRewardDistributor = async (address?: string): Promise<RewardDistributor> => {
+    return getContract<RewardDistributor>('RewardDistributor', address || (await hre.deployments.get(REWARD_DISTRIBUTOR_ID)).address);
+};
+
+export const getFeeDistributor = async (address?: string): Promise<FeeDistributor> => {
+    return getContract<FeeDistributor>('FeeDistributor', address || (await hre.deployments.get(FEE_DISTRIBUTOR_ID)).address);
+};
+
+export const getStakingPool = async (address?: string): Promise<StakingPool> => {
+    return getContract<StakingPool>('StakingPool', address || (await hre.deployments.get(STAKING_POOL_ID)).address);
+};
+
+
+export const getLPStakingPool = async (address?: string): Promise<LPStakingPool> => {
+    return getContract<LPStakingPool>('LPStakingPool', address || (await hre.deployments.get(LP_STAKING_POOL_ID)).address);
+};
+
+export const getConvertor = async (address?: string): Promise<Convertor> => {
+    return getContract<Convertor>('Convertor', address || (await hre.deployments.get(CONVERTOR_ID)).address);
 };
 
 export const getTestCallBack = async (address?: string): Promise<TestCallBack> => {

@@ -1,16 +1,18 @@
-const {deployContract, contractAt, sleep, syncBlockTime, increaseBlockTime} = require("../utils/helpers");
+const {syncBlockTime, increaseBlockTime} = require("../utils/helpers");
 const {expandDecimals, formatBalance} = require("../utils/utilities");
-const {mintWETH, getConfig, setConfig} = require("../utils/utils");
 const hre = require("hardhat");
-const {BigNumber} = require("ethers");
+const {getMYX, getVester} = require("../../helpers");
 
 async function main() {
     console.log("\n releaseMYX")
 
-    const signers = await hre.ethers.getSigners()
+    const [teamAndAdvisor, privatePlacement, community, initLiquidity,
+        marketOperation, ecoKeeper, developmentReserve] = await hre.ethers.getSigners()
+    const signers = {teamAndAdvisor, privatePlacement, community, initLiquidity,
+        marketOperation, ecoKeeper, developmentReserve}
 
-    let myx = await contractAt("MYX", await getConfig("MYX"));
-    let vester = await contractAt("Vester", await getConfig("Vester"));
+    let myx = await getMYX();
+    let vester = await getVester();
 
     await syncBlockTime();
     console.log('init release')
@@ -57,13 +59,13 @@ async function queryReleaseToken(tokenVester) {
 }
 
 async function queryTokenBalance(signers, myx) {
-    let teamAndAdvisor = signers[20];
-    let privatePlacement = signers[21];
-    let community = signers[22];
-    let initLiquidity = signers[23];
-    let marketOperation = signers[24];
-    let ecoKeeper = signers[25];
-    let developmentReserve = signers[26];
+    let teamAndAdvisor = signers.teamAndAdvisor;
+    let privatePlacement = signers.privatePlacement;
+    let community = signers.community;
+    let initLiquidity = signers.initLiquidity;
+    let marketOperation = signers.marketOperation;
+    let ecoKeeper = signers.ecoKeeper;
+    let developmentReserve = signers.developmentReserve;
 
     console.log(`myx balance of TEAM_ADVISOR ${teamAndAdvisor.address} : ${formatBalance(await myx.balanceOf(teamAndAdvisor.address))}`);
     console.log(`myx balance of PRIVATE_PLACEMENT ${privatePlacement.address} : ${formatBalance(await myx.balanceOf(privatePlacement.address))}`);
