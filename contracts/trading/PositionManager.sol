@@ -36,7 +36,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     // cumulativeFundingRates tracks the funding rates based on utilization
     mapping(uint256 => int256) public cumulativeFundingRates;
-    mapping(uint256 => int256) public lastFundingRates;
+    // mapping(uint256 => int256) public lastFundingRates;
     // lastFundingTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingTimes;
 
@@ -564,7 +564,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 intervals = (block.timestamp - lastFundingTimes[_pairIndex]) / fundingInterval;
         int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
 
-        lastFundingRates[_pairIndex] = nextFundingRate;
+        // lastFundingRates[_pairIndex] = nextFundingRate;
         cumulativeFundingRates[_pairIndex] = cumulativeFundingRates[_pairIndex] + nextFundingRate * int256(intervals);
         lastFundingTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
 
