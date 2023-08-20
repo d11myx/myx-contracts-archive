@@ -142,7 +142,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             }
         }
 
-        position.entryFundingRate = gobleFundingRateIndex[_pairIndex];
+        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
         // position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
@@ -298,7 +298,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             position.collateral,
             position.positionAmount,
             position.averagePrice,
-            position.entryFundingRate,
+            position.fundRateIndex,
             // position.entryFundingTime,
             position.realisedPnl,
             _price
@@ -356,7 +356,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             }
         }
 
-        position.entryFundingRate = gobleFundingRateIndex[_pairIndex];
+        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
         // position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
@@ -544,7 +544,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             position.collateral,
             position.positionAmount,
             position.averagePrice,
-            position.entryFundingRate,
+            position.fundRateIndex,
             // position.entryFundingTime,
             position.realisedPnl,
             _price
@@ -678,7 +678,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             // return 0;
         // }
 
-        int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.entryFundingRate;
+        int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.fundRateIndex;
         return (int256(position.positionAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
     }
 
