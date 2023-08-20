@@ -72,15 +72,15 @@ contract Executor is IExecutor, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        uint256 increaseEndIndex,
-        uint256 decreaseEndIndex
+        uint256[] memory increaseOrders,
+        uint256[] memory decreaseOrders
     ) external onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
-        this.executeIncreaseMarketOrders(increaseEndIndex);
-        this.executeDecreaseMarketOrders(decreaseEndIndex);
+        this.executeIncreaseMarketOrders(increaseOrders);
+        this.executeDecreaseMarketOrders(decreaseOrders);
     }
 
     function setPricesAndExecuteLimitOrders(
@@ -98,25 +98,25 @@ contract Executor is IExecutor, Pausable {
         this.executeDecreaseLimitOrders(decreaseOrderIds);
     }
 
-    function executeIncreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper whenNotPaused {
-        uint256 index = increaseMarketOrderStartIndex;
-        uint256 length = orderManager.increaseMarketOrdersIndex();
+    function executeIncreaseMarketOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
+        // uint256 index = increaseMarketOrderStartIndex;
+        // uint256 length = orderManager.ordersIndex();
 
-        if (index >= length) {
-            return;
-        }
-        if (endIndex > length) {
-            endIndex = length;
-        }
+        // if (index >= length) {
+        //     return;
+        // }
+        // if (endIndex > length) {
+        //     endIndex = length;
+        // }
 
-        while (index < endIndex) {
-            try this.executeIncreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log('executeIncreaseMarketOrders completed. index:', index);
+        for (uint256 index = 0; index < orderIds.length; index++) {
+            try this.executeIncreaseOrder(orderIds[index], TradingTypes.TradeType.MARKET) {
+                console.log('executeIncreaseMarketOrders completed. orderIds:', orderIds[index]);
             } catch Error(string memory reason) {
                 console.log('executeIncreaseMarketOrders error:', reason);
-                orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, true);
+                orderManager.cancelOrder(orderIds[index], TradingTypes.TradeType.MARKET, true);
             }
-            index++;
+            // index++;
         }
     }
 
@@ -306,24 +306,14 @@ contract Executor is IExecutor, Pausable {
         );
     }
 
-    function executeDecreaseMarketOrders(uint256 endIndex) external onlyPositionKeeper whenNotPaused {
-        uint256 index = decreaseMarketOrderStartIndex;
-        uint256 length = orderManager.decreaseMarketOrdersIndex();
-        if (index >= length) {
-            return;
-        }
-        if (endIndex > length) {
-            endIndex = length;
-        }
-
-        while (index < endIndex) {
-            try this.executeDecreaseOrder(index, TradingTypes.TradeType.MARKET) {
-                console.log('executeDecreaseMarketOrders completed. index:', index);
+    function executeDecreaseMarketOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
+        for (uint256 index = 0; index < orderIds.length; index++) {
+            try this.executeDecreaseOrder(orderIds[index], TradingTypes.TradeType.MARKET) {
+                console.log('executeDecreaseMarketOrders completed. index:', orderIds[index]);
             } catch Error(string memory reason) {
                 console.log('executeDecreaseMarketOrders error:', reason);
-                orderManager.cancelOrder(index, TradingTypes.TradeType.MARKET, false);
+                orderManager.cancelOrder(orderIds[index], TradingTypes.TradeType.MARKET, false);
             }
-            index++;
         }
     }
 
