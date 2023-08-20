@@ -27,8 +27,9 @@ export const btcPairInfo: PairInfoConfig = {
     tradingFeeConfig: {
         takerFeeP: 30,
         makerFeeP: 10,
-        lpFeeDistributeP: 5000,
-        keeperFeeDistributeP: 4000,
+        lpFeeDistributeP: 3000,
+        keeperFeeDistributeP: 2000,
+        stakingFeeDistributeP: 1000,
     },
     fundingFeeConfig: {
         minFundingRate: 0,
@@ -66,8 +67,9 @@ export const ethPairInfo: PairInfoConfig = {
     tradingFeeConfig: {
         takerFeeP: 30, // 0.3%
         makerFeeP: 10,
-        lpFeeDistributeP: 5000,
-        keeperFeeDistributeP: 4000,
+        lpFeeDistributeP: 3000,
+        keeperFeeDistributeP: 2000,
+        stakingFeeDistributeP: 1000,
     },
     fundingFeeConfig: {
         minFundingRate: 0,

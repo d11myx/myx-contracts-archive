@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/security/Pausable.sol';
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-import '../token/interfaces/IBaseToken.sol';
-import './interfaces/IRewardDistributor.sol';
-import './interfaces/IStakingPool.sol';
+import "../token/interfaces/IBaseToken.sol";
+import "./interfaces/IRewardDistributor.sol";
+import "../interfaces/IPositionManager.sol";
 
 // distribute reward myx for staking
-contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownable {
+contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     address public rewardToken;
@@ -31,16 +31,18 @@ contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Own
     // total rewards claimed by user
     mapping(address => uint256) public userClaimedAmount;
 
+    uint256 public totalReward;
+
     uint256 public totalClaimed;
 
-    mapping(address => bool) public isHandler;
+    mapping (address => bool) public isHandler;
 
-    IStakingPool public stakingPool;
+    IPositionManager public positionManager;
 
     event Claim(address indexed account, uint256 indexed round, uint256 amount);
     event Compound(address indexed account, uint256 indexed round, uint256 amount);
 
-    constructor(address _rewardToken) {
+    constructor(address _rewardToken) public {
         rewardToken = _rewardToken;
     }
 
@@ -53,17 +55,22 @@ contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Own
         isHandler[_handler] = enable;
     }
 
-    function setStakingPool(IStakingPool _stakingPool) external onlyOwner {
-        stakingPool = _stakingPool;
+    function setPositionManager(IPositionManager _positionManager) external onlyOwner {
+        positionManager = _positionManager;
     }
 
     // update root by handler
-    function updateRoot(bytes32 _merkleRoot, uint256 amount) external override onlyHandler {
+    // amount: total reward
+    function updateRoot(bytes32 _merkleRoot, uint256 _amount) external override onlyHandler {
         require(!merkleRootUsed[_merkleRoot], "RewardDistributor: root already used");
+        require(totalReward + positionManager.distributorTradingFee(rewardToken) >= _amount, "RewardDistributor: reward not enough");
 
         round++;
         merkleRoots[round] = _merkleRoot;
         merkleRootUsed[_merkleRoot] = true;
+
+        uint256 claimAmount = positionManager.claimDistributorTradingFee(rewardToken);
+        totalReward += claimAmount;
     }
 
     // claim reward by user
@@ -72,34 +79,16 @@ contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Own
     }
 
     // claim reward by handler
-    function claimForAccount(
-        address account,
-        address receiver,
-        uint256 _amount,
-        bytes32[] calldata _merkleProof
-    ) external override onlyHandler whenNotPaused nonReentrant {
+    function claimForAccount(address account, address receiver, uint256 _amount, bytes32[] calldata _merkleProof) external override onlyHandler whenNotPaused nonReentrant {
         _claim(account, receiver, _amount, _merkleProof);
     }
 
-    function compound(uint256 _amount, bytes32[] calldata _merkleProof) external whenNotPaused nonReentrant {
-        require(address(stakingPool) != address(0), 'RewardDistributor: stakingPool not exist');
-        uint256 claimAmount = _claim(msg.sender, address(this), _amount, _merkleProof);
-        IERC20(rewardToken).approve(address(stakingPool), claimAmount);
-        stakingPool.stakeForAccount(address(this), msg.sender, rewardToken, claimAmount);
-        emit Compound(msg.sender, round, _amount);
-    }
-
-    function _claim(
-        address account,
-        address receiver,
-        uint256 _amount,
-        bytes32[] calldata _merkleProof
-    ) private returns (uint256) {
-        require(!userClaimed[round][account], 'RewardDistributor: already claimed');
+    function _claim(address account, address receiver, uint256 _amount, bytes32[] calldata _merkleProof) private returns(uint256) {
+        require(!userClaimed[round][account], "RewardDistributor: already claimed");
 
         (bool canClaim, uint256 adjustedAmount) = _canClaim(account, _amount, _merkleProof);
 
-        require(canClaim, 'RewardDistributor: cannot claim');
+        require(canClaim, "RewardDistributor: cannot claim");
 
         userClaimed[round][account] = true;
 
@@ -112,7 +101,10 @@ contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Own
         return adjustedAmount;
     }
 
-    function canClaim(uint256 _amount, bytes32[] calldata _merkleProof) external view returns (bool, uint256) {
+    function canClaim(
+        uint256 _amount,
+        bytes32[] calldata _merkleProof
+    ) external view returns (bool, uint256) {
         return _canClaim(msg.sender, _amount, _merkleProof);
     }
 
