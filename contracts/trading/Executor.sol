@@ -14,7 +14,6 @@ import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
 
-
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -529,7 +528,7 @@ contract Executor is IExecutor, Pausable {
     function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < positionKeys.length; i++) {
             Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
-            liquidatePosition(position, this, pool, orderManager, positionManager, positionKeys[i]);
+            liquidatePosition(position, positionKeys[i]);
         }
     }
 
@@ -594,15 +593,8 @@ contract Executor is IExecutor, Pausable {
         this.executeDecreaseOrder(_orderId, order.tradeType);
     }
 
-     function liquidatePosition(
-        Position.Info memory position,
-        IExecutor executor,
-        IPool pool,
-        IOrderManager orderManager,
-        IPositionManager positionManager,
-        bytes32 _positionKey
-    ) public {
-//        Position.Info memory position = positionManager.getPositionByKey(_positionKey);
+    function liquidatePosition(Position.Info memory position, bytes32 _positionKey) public {
+        //        Position.Info memory position = positionManager.getPositionByKey(_positionKey);
 
         if (position.positionAmount == 0) {
             return;
@@ -611,9 +603,22 @@ contract Executor is IExecutor, Pausable {
         uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
 
         int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
-        uint256 tradingFee = positionManager.getTradingFee(position.pairIndex, position.isLong, position.positionAmount);
-        int256 fundingFee = positionManager.getFundingFee(false, position.account, position.pairIndex, position.isLong, position.positionAmount);
-        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + (position.isLong ? -fundingFee : fundingFee);
+        uint256 tradingFee = positionManager.getTradingFee(
+            position.pairIndex,
+            position.isLong,
+            position.positionAmount
+        );
+        int256 fundingFee = positionManager.getFundingFee(
+            false,
+            position.account,
+            position.pairIndex,
+            position.isLong,
+            position.positionAmount
+        );
+        int256 exposureAsset = int256(position.collateral) +
+            unrealizedPnl -
+            int256(tradingFee) +
+            (position.isLong ? -fundingFee : fundingFee);
 
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
 
@@ -647,7 +652,7 @@ contract Executor is IExecutor, Pausable {
             })
         );
 
-        executor.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
 
         emit LiquidatePosition(
             _positionKey,
