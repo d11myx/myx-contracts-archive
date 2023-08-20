@@ -34,9 +34,9 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     mapping(uint256 => uint256) public override longTracker;
     mapping(uint256 => uint256) public override shortTracker;
 
-    // cumulativeFundingRates tracks the funding rates based on utilization
-    mapping(uint256 => int256) public cumulativeFundingRates;
-    // mapping(uint256 => int256) public lastFundingRates;
+    // gobleFundingRateIndex tracks the funding rates based on utilization
+    mapping(uint256 => int256) public gobleFundingRateIndex;
+
     // lastFundingTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingTimes;
 
@@ -98,7 +98,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         // get position
         bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
         Position.Info storage position = positions[positionKey];
-        position.key = positionKey;
+        // position.key = positionKey;
 
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
@@ -142,7 +142,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             }
         }
 
-        position.entryFundingRate = cumulativeFundingRates[_pairIndex];
+        position.entryFundingRate = gobleFundingRateIndex[_pairIndex];
         position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
@@ -356,7 +356,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             }
         }
 
-        position.entryFundingRate = cumulativeFundingRates[_pairIndex];
+        position.entryFundingRate = gobleFundingRateIndex[_pairIndex];
         position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
@@ -565,10 +565,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
 
         // lastFundingRates[_pairIndex] = nextFundingRate;
-        cumulativeFundingRates[_pairIndex] = cumulativeFundingRates[_pairIndex] + nextFundingRate * int256(intervals);
+        gobleFundingRateIndex[_pairIndex] = gobleFundingRateIndex[_pairIndex] + nextFundingRate * int256(intervals);
         lastFundingTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
 
-        emit UpdateFundingRate(_pairIndex, cumulativeFundingRates[_pairIndex], lastFundingTimes[_pairIndex]);
+        emit UpdateFundingRate(_pairIndex, gobleFundingRateIndex[_pairIndex], lastFundingTimes[_pairIndex]);
     }
 
     function getTradingFee(
@@ -678,7 +678,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             return 0;
         }
 
-        int256 fundingRate = cumulativeFundingRates[_pairIndex] - position.entryFundingRate;
+        int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.entryFundingRate;
         return (int256(position.positionAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
     }
 
