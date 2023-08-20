@@ -152,7 +152,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
                 //TODO if request size exceed position size, can calculate the max size
                 require(
-                    uint256(request.sizeAmount.abs()) <=
+                    uint256(request.sizeAmount.abs()) == position.positionAmount ||
+                        uint256(request.sizeAmount.abs()) <=
                         position.positionAmount - positionDecreaseTotalAmount[positionKey],
                     'decrease amount exceed position'
                 );

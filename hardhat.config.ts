@@ -13,6 +13,8 @@ import 'hardhat-abi-exporter';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
 import 'hardhat-log-remover';
+import "keccak256";
+import "merkletreejs";
 import { getCurrentTimestamp } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
 import { DEFAULT_NAMED_ACCOUNTS, loadTasks } from './helpers';
 

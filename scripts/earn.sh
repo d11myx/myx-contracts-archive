@@ -1,7 +1,7 @@
 #hh run scripts/deployEarn.js --network $1
 #hh run scripts/earn/updateConfig.js --network $1
-hh run scripts/earn/vestMYX.js --network $1
-hh run scripts/earn/claimRaMYX.js --network $1
+#hh run scripts/earn/vestMYX.js --network $1
+#hh run scripts/earn/claimRaMYX.js --network $1
 hh run scripts/earn/stakeRaMYX.js --network $1
 hh run scripts/earn/convertRaMYX.js --network $1
 hh run scripts/earn/stakeMYX.js --network $1

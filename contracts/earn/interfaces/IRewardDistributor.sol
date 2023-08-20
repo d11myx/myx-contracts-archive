@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 interface IRewardDistributor {
-    function updateRoot(bytes32 _merkleRoot) external;
+    function updateRoot(bytes32 _merkleRoot, uint256 _amount) external;
 
     function claimForAccount(
         address account,
