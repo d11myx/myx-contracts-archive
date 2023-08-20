@@ -14,7 +14,7 @@ library Position {
     using PrecisionUtils for uint256;
 
     struct Info {
-        bytes32 key;
+        // bytes32 key;
         address account;
         uint256 pairIndex;
         bool isLong;
