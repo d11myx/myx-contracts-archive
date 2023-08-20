@@ -42,7 +42,7 @@ interface IPositionManager {
         uint256 collateral,
         uint256 positionAmount,
         uint256 averagePrice,
-        int256 entryFundingRate,
+        int256 fundRateIndex,
         // uint256 entryFundingTime,
         int256 realisedPnl,
         uint256 price
