@@ -4,7 +4,6 @@ pragma solidity 0.8.17;
 import '../libraries/Position.sol';
 
 interface IPositionManager {
-
     event UpdateFundingInterval(uint256 oldInterval, uint256 newInterval);
 
     event IncreasePosition(
@@ -54,7 +53,13 @@ interface IPositionManager {
 
     event NeedBuyIndexToken(uint256 pairIndex, uint256 profit, uint256 lastFundingTime);
 
-    event DistributeTradingFee(uint256 pairIndex, uint256 lpAmount, uint256 keeperAmount, uint256 stakingAmount, uint256 distributorAmount);
+    event DistributeTradingFee(
+        uint256 pairIndex,
+        uint256 lpAmount,
+        uint256 keeperAmount,
+        uint256 stakingAmount,
+        uint256 distributorAmount
+    );
 
     function isFrozen(address account) external view returns (bool);
 
@@ -124,7 +129,7 @@ interface IPositionManager {
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
-    function updateCumulativeFundingRate(uint256 _pairIndex, uint256 _price) external;
+    function updateFundingRate(uint256 _pairIndex, uint256 _price) external;
 
     function transferTokenTo(address token, address to, uint256 amount) external;
 

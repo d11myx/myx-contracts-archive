@@ -129,15 +129,13 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             if (_isLong) {
                 afterCollateral -= fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral += fundingFee;
             }
         } else {
             if (!_isLong) {
                 afterCollateral += fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral -= fundingFee;
             }
         }
 
@@ -338,20 +336,18 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         // funding fee
         updateFundingRate(_pairIndex, _price);
         fundingFee = getFundingFee(false, _account, _pairIndex, _isLong, _sizeAmount);
-
+        //todo Whether the user's funding fee should be given to lp
         if (fundingFee >= 0) {
             if (_isLong) {
                 afterCollateral -= fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral += fundingFee;
             }
         } else {
             if (!_isLong) {
                 afterCollateral -= (-fundingFee);
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral -= (fundingFee);
             }
         }
 
@@ -659,7 +655,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 _sizeAmount
     ) public view override returns (int256) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
-
+        //todo  if the selettlement time is not reached , the fund rate fo the rate of the user shall be settled according to the time
         // uint256 interval = block.timestamp - position.entryFundingTime;
         // if (interval < fundingInterval) {
         //            if (!_increase) {
@@ -669,6 +665,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         // return 0;
         // }
 
+        //todo  Position is converted to margin currency
         int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.fundRateIndex;
         return (int256(position.positionAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
     }
@@ -684,6 +681,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
         gobleFundingRateIndex[_pairIndex] = gobleFundingRateIndex[_pairIndex] + nextFundingRate;
         lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
+        //todo  fund rate for settlement lp
 
         emit UpdateFundingRate(_pairIndex, gobleFundingRateIndex[_pairIndex], lastFundingRateUpdateTimes[_pairIndex]);
     }
@@ -723,20 +721,20 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         );
     }
 
-    function _distributeFundingFee(
-        IPool.Pair memory pair,
-        uint256 _fundingFee
-    ) internal returns (uint256 userAmount, uint256 lpAmount) {
-        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(pair.pairIndex);
+    // function _distributeFundingFee(
+    //     IPool.Pair memory pair,
+    //     uint256 _fundingFee
+    // ) internal returns (uint256 userAmount, uint256 lpAmount) {
+    //     IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(pair.pairIndex);
 
-        lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
-        userAmount = _fundingFee - lpAmount;
+    //     lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
+    //     userAmount = _fundingFee - lpAmount;
 
-        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
-        pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
+    //     IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
+    //     pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
 
-        return (userAmount, lpAmount);
-    }
+    //     return (userAmount, lpAmount);
+    // }
 
     function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
