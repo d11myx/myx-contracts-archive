@@ -13,7 +13,7 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
-import {LiquidationLogic} from './logic/LiquidationLogic.sol';
+
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
@@ -529,7 +529,7 @@ contract Executor is IExecutor, Pausable {
     function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < positionKeys.length; i++) {
             Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
-            LiquidationLogic.liquidatePosition(position, this, pool, orderManager, positionManager, positionKeys[i]);
+            liquidatePosition(position, this, pool, orderManager, positionManager, positionKeys[i]);
         }
     }
 
@@ -592,6 +592,73 @@ contract Executor is IExecutor, Pausable {
             this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
         }
         this.executeDecreaseOrder(_orderId, order.tradeType);
+    }
+
+     function liquidatePosition(
+        Position.Info memory position,
+        IExecutor executor,
+        IPool pool,
+        IOrderManager orderManager,
+        IPositionManager positionManager,
+        bytes32 _positionKey
+    ) public {
+//        Position.Info memory position = positionManager.getPositionByKey(_positionKey);
+
+        if (position.positionAmount == 0) {
+            return;
+        }
+        IPool.Pair memory pair = pool.getPair(position.pairIndex);
+        uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
+
+        int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
+        uint256 tradingFee = positionManager.getTradingFee(position.pairIndex, position.isLong, position.positionAmount);
+        int256 fundingFee = positionManager.getFundingFee(false, position.account, position.pairIndex, position.isLong, position.positionAmount);
+        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + (position.isLong ? -fundingFee : fundingFee);
+
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
+
+        bool needLiquidate;
+        if (exposureAsset <= 0) {
+            needLiquidate = true;
+        } else {
+            uint256 riskRate = position
+                .positionAmount
+                .mulPrice(position.averagePrice)
+                .mulPercentage(tradingConfig.maintainMarginRate)
+                .calculatePercentage(uint256(exposureAsset));
+            needLiquidate = riskRate >= PrecisionUtils.percentage();
+        }
+        if (!needLiquidate) {
+            return;
+        }
+
+        // cancel all positionOrders
+        orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+
+        uint256 orderId = orderManager.createOrder(
+            TradingTypes.CreateOrderRequest({
+                account: position.account,
+                pairIndex: position.pairIndex,
+                tradeType: TradingTypes.TradeType.MARKET,
+                collateral: 0,
+                openPrice: price,
+                isLong: position.isLong,
+                sizeAmount: -int256(position.positionAmount)
+            })
+        );
+
+        executor.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+
+        emit LiquidatePosition(
+            _positionKey,
+            position.account,
+            position.pairIndex,
+            position.isLong,
+            position.positionAmount,
+            position.collateral,
+            price,
+            orderId
+        );
     }
 
     function claimTradingFee(address claimToken) external override onlyPositionKeeper whenNotPaused returns (uint256) {
