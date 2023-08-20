@@ -77,7 +77,7 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
   let pairIndex = 1;
   let orderId;
   if (isIncrease) {
-    orderId = await tradingRouter.increaseMarketOrdersIndex();
+    orderId = await tradingRouter.ordersIndex();
     let request = {
       account: user.address,
       pairIndex: pairIndex,
@@ -101,7 +101,7 @@ async function executeOrder(isIncrease, user, isLong, collateral, sizeAmount) {
 
     console.log(`order after execute: ${await tradingRouter.increaseMarketOrders(orderId)}`);
   } else {
-    orderId = await tradingRouter.decreaseMarketOrdersIndex();
+    orderId = await tradingRouter.ordersIndex();
     let request = {
       account: user.address,
       pairIndex: pairIndex,

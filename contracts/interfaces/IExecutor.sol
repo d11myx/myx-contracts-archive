@@ -33,6 +33,18 @@ interface IExecutor {
         int256 fundingFee
     );
 
+     event LiquidatePosition(
+        bytes32 positionKey,
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        uint256 sizeAmount,
+        uint256 collateral,
+        uint256 price,
+        uint256 orderId
+    );
+
+
     function increaseMarketOrderStartIndex() external view returns (uint256);
 
     function decreaseMarketOrderStartIndex() external view returns (uint256);
@@ -41,13 +53,13 @@ interface IExecutor {
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
-    function setPricesAndExecuteMarketOrders(
-        address[] memory tokens,
-        uint256[] memory prices,
-        uint256 timestamp,
-        uint256 increaseEndIndex,
-        uint256 decreaseEndIndex
-    ) external;
+    // function setPricesAndExecuteMarketOrders(
+    //     address[] memory tokens,
+    //     uint256[] memory prices,
+    //     uint256 timestamp,
+    //     uint256 increaseEndIndex,
+    //     uint256 decreaseEndIndex
+    // ) external;
 
     function setPricesAndExecuteLimitOrders(
         address[] memory tokens,
@@ -57,13 +69,13 @@ interface IExecutor {
         uint256[] memory decreaseOrderIds
     ) external;
 
-    function executeIncreaseMarketOrders(uint256 endIndex) external;
+    // function executeIncreaseMarketOrders(uint256 endIndex) external;
 
     function executeIncreaseLimitOrders(uint256[] memory orderIds) external;
 
     function executeIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
 
-    function executeDecreaseMarketOrders(uint256 endIndex) external;
+    // function executeDecreaseMarketOrders(uint256 endIndex) external;
 
     function executeDecreaseLimitOrders(uint256[] memory orderIds) external;
 
