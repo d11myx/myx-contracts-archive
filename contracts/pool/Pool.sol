@@ -128,7 +128,8 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
-        require(_tradingFeeConfig.takerFeeP <= PERCENTAGE && _tradingFeeConfig.makerFeeP <= PERCENTAGE, 'exceed 100%');
+        require(_tradingFeeConfig.takerFeeP <= PERCENTAGE && _tradingFeeConfig.makerFeeP <= PERCENTAGE, 'trading fee exceed 100%');
+        require(_tradingFeeConfig.lpFeeDistributeP + _tradingFeeConfig.keeperFeeDistributeP + _tradingFeeConfig.stakingFeeDistributeP <= PERCENTAGE, 'distribute exceed 100%');
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
