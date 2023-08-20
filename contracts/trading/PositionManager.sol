@@ -143,7 +143,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         }
 
         position.entryFundingRate = gobleFundingRateIndex[_pairIndex];
-        position.entryFundingTime = lastFundingTimes[_pairIndex];
+        // position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
@@ -299,7 +299,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             position.positionAmount,
             position.averagePrice,
             position.entryFundingRate,
-            position.entryFundingTime,
+            // position.entryFundingTime,
             position.realisedPnl,
             _price
         );
@@ -357,7 +357,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         }
 
         position.entryFundingRate = gobleFundingRateIndex[_pairIndex];
-        position.entryFundingTime = lastFundingTimes[_pairIndex];
+        // position.entryFundingTime = lastFundingTimes[_pairIndex];
 
         // trading fee
         tradingFee = _tradingFee(_pairIndex, !_isLong, _sizeAmount, _price);
@@ -545,7 +545,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             position.positionAmount,
             position.averagePrice,
             position.entryFundingRate,
-            position.entryFundingTime,
+            // position.entryFundingTime,
             position.realisedPnl,
             _price
         );
@@ -669,14 +669,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     ) public view override returns (int256) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
 
-        uint256 interval = block.timestamp - position.entryFundingTime;
-        if (interval < fundingInterval) {
+        // uint256 interval = block.timestamp - position.entryFundingTime;
+        // if (interval < fundingInterval) {
 //            if (!_increase) {
 //                int256 fundingRate = (lastFundingRates[_pairIndex] * int256(interval)) / int256(fundingInterval);
 //                return (int256(_sizeAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
 //            }
-            return 0;
-        }
+            // return 0;
+        // }
 
         int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.entryFundingRate;
         return (int256(position.positionAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
