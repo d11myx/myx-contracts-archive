@@ -31,7 +31,7 @@ async function main() {
     [expandDecimals(30000, 30)],
     await getBlockTime(await hre.ethers.provider) + 100)
 
-  let orderId = await orderManager.increaseMarketOrdersIndex();
+  let orderId = await tradingRouter.increaseMarketOrdersIndex();
   let request = {
     account: trader.address,
     pairIndex: 0,

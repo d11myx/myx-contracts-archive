@@ -125,7 +125,7 @@ describe('Router: Edge cases', () => {
             slPrice: 0,
             sl: 0,
         };
-        const orderId = await orderManager.increaseMarketOrdersIndex();
+        const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
         await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
@@ -158,7 +158,7 @@ describe('Router: Edge cases', () => {
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('3', 18),
         };
-        const orderId = await orderManager.decreaseMarketOrdersIndex();
+        const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createDecreaseOrder(increasePositionRequest);
 
         await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
@@ -265,7 +265,7 @@ describe('Router: Edge cases', () => {
                 isLong: false,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
             };
-            const decreaseOrderId = await orderManager.decreaseMarketOrdersIndex();
+            const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(shorter.signer).createDecreaseOrder(decreasePositionRequest);
 
             await executor.connect(keeper.signer).executeDecreaseOrder(decreaseOrderId, TradeType.MARKET);
@@ -316,7 +316,7 @@ describe('Router: Edge cases', () => {
                 isLong: true,
                 sizeAmount: position.positionAmount,
             };
-            const orderId = await orderManager.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(increasePositionRequest);
 
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
@@ -390,7 +390,7 @@ describe('Router: Edge cases', () => {
             };
 
             // await tradingRouter.setHandler(trader.address, true);
-            const orderId = await orderManager.increaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
@@ -453,7 +453,7 @@ export async function increaseUserPosition(
 
     // await router.setHandler(user.address, true);
 
-    const increaseOrderId = await orderManager.increaseMarketOrdersIndex();
+    const increaseOrderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createIncreaseOrder(increasePositionRequest);
     await executor.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET);
 }

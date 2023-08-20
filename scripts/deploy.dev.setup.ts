@@ -35,7 +35,7 @@ async function main() {
     const testCallBack = await getTestCallBack();
 
     console.log(`router:`, router.address);
-    console.log(`index:`, await orderManager.increaseMarketOrdersIndex());
+    console.log(`index:`, await orderManager.ordersIndex());
 
     const { usdt, btc, eth } = await getTokens();
     const keeper = '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63';

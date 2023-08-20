@@ -46,13 +46,7 @@ interface IOrderManager {
         uint256 sizeAmount;
     }
 
-    function increaseMarketOrdersIndex() external view returns (uint256);
-
-    function decreaseMarketOrdersIndex() external view returns (uint256);
-
-    function increaseLimitOrdersIndex() external view returns (uint256);
-
-    function decreaseLimitOrdersIndex() external view returns (uint256);
+    function ordersIndex() external view returns (uint256);
 
     function positionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType) external view returns (bool);
 

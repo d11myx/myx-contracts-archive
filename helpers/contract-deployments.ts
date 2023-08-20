@@ -3,7 +3,6 @@ import {
     AddressesProvider,
     Executor,
     IndexPriceFeed,
-    LiquidationLogic,
     MockPriceFeed,
     OraclePriceFeed,
     OrderManager,
@@ -154,7 +153,7 @@ export async function deployTrading(
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
-    let liquidationLogic = (await deployContract('LiquidationLogic', [])) as any as LiquidationLogic;
+
 
     const weth = await getWETH();
     let router = (await deployContract('Router', [
@@ -168,7 +167,7 @@ export async function deployTrading(
     let executor = (await deployContract(
         'Executor',
         [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
-        { LiquidationLogic: liquidationLogic.address },
+
     )) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
