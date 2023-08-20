@@ -27,7 +27,7 @@ async function main() {
 
   console.log(`position: ${await tradingVault.getPosition(user0.address, 0, true)}`)
 
-  let orderId = await tradingRouter.decreaseMarketOrdersIndex();
+  let orderId = await tradingRouter.ordersIndex();
   let request = {
     account: user3.address,
     pairIndex: 0,
@@ -43,7 +43,7 @@ async function main() {
   console.log(`balance of usdt: ${formatBalance(await usdt.balanceOf(tradingRouter.address))}`);
 
   // execute
-  let startIndex = await tradingRouter.decreaseMarketOrdersIndex();
+  let startIndex = await tradingRouter.ordersIndex();
   console.log("startIndex:", startIndex);
   await executeRouter.executeDecreaseOrder(orderId, 0);
   // await executeRouter.executeDecreaseMarketOrders(orderId.add(1));

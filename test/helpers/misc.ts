@@ -68,7 +68,7 @@ export async function increasePosition(
     };
 
     // create increase order
-    const orderId = await orderManager.increaseMarketOrdersIndex();
+    const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createIncreaseOrder(request);
     // execute order
     await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType);
@@ -96,7 +96,7 @@ export async function decreasePosition(
     };
 
     // create increase order
-    const orderId = await orderManager.decreaseMarketOrdersIndex();
+    const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
     // execute order
     await executor.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType);

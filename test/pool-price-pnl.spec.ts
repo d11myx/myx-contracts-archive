@@ -95,7 +95,7 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: sizeAmount,
             };
 
-            const orderId = await orderManager.increaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -143,7 +143,7 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: sizeAmount,
             };
 
-            const orderId = await orderManager.increaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -190,7 +190,7 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: sizeAmount,
             };
 
-            const orderId = await orderManager.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
@@ -248,7 +248,7 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: descreaseAmount,
             };
 
-            const orderId = await orderManager.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
@@ -326,7 +326,7 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: shortAmount,
             };
 
-            const orderId = await orderManager.increaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -371,7 +371,7 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: shortAmount,
             };
 
-            const orderId = await orderManager.increaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -416,7 +416,7 @@ describe('Modify LP Average Price', async () => {
                 isLong: false,
             };
 
-            const orderId = await orderManager.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
@@ -468,7 +468,7 @@ describe('Modify LP Average Price', async () => {
                 isLong: false,
             };
 
-            const orderId = await orderManager.decreaseMarketOrdersIndex();
+            const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
             await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
 
