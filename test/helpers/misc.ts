@@ -79,6 +79,7 @@ export async function decreasePosition(
     user: SignerWithAddress,
     pairIndex: number,
     collateral: BigNumber,
+    openPrice: BigNumber,
     size: BigNumber,
     tradeType: TradeType,
     isLong: boolean,
@@ -90,7 +91,7 @@ export async function decreasePosition(
         pairIndex: pairIndex,
         tradeType: tradeType,
         collateral: collateral,
-        triggerPrice: ethers.utils.parseUnits('30000', 30),
+        triggerPrice: openPrice,
         isLong: isLong,
         sizeAmount: size,
     };
