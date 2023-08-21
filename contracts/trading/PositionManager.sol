@@ -349,35 +349,23 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         position.positionAmount -= _sizeAmount;
 
-        int256 afterCollateral = int256(position.collateral);
         uint256 transferOut;
 
         // funding fee
         updateFundingRate(_pairIndex, _price);
-        fundingFee = getFundingFee(false, _account, _pairIndex, _isLong, _sizeAmount);
-        //todo Whether the user's funding fee should be given to lp
-        if (fundingFee >= 0) {
-            if (_isLong) {
-                afterCollateral -= fundingFee;
-            } else {
-                afterCollateral += fundingFee;
-            }
-        } else {
-            if (!_isLong) {
-                afterCollateral -= (-fundingFee);
-            } else {
-                afterCollateral -= (fundingFee);
-            }
-        }
+        int256 afterCollateral;
+        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
+            _keeper,
+            _account,
+            _pairIndex,
+            int256(position.collateral),
+            _sizeAmount,
+            _isLong,
+            _price
+        );
 
         position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
         // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
-
-        // trading fee
-        tradingFee = _tradingFee(_pairIndex, !_isLong, _sizeAmount, _price);
-        afterCollateral -= int256(tradingFee);
-
-        _distributeTradingFee(pair, tradingFee, _keeper);
 
         // update lp vault
         if (_sizeAmount > 0) {
