@@ -114,68 +114,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         _distributeTradingFee(pair, tradingFee, _keeper);
     }
 
-    function increasePosition(
-        address _keeper,
-        address _account,
-        uint256 _pairIndex,
-        int256 _collateral,
-        uint256 _sizeAmount,
-        bool _isLong,
-        uint256 _price
-    ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
+    function _settleLPPosition(uint256 _pairIndex, uint256 _sizeAmount, bool _isLong, uint256 _price) internal {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        require(pair.enable, 'trade pair not supported');
-
-        // get position
-        bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
-        Position.Info storage position = positions[positionKey];
-        // position.key = positionKey;
-
-        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
-
-        if (position.positionAmount == 0) {
-            position.account = _account;
-            position.pairIndex = _pairIndex;
-            position.isLong = _isLong;
-            position.averagePrice = _price;
-        }
-
-        if (position.positionAmount > 0 && sizeDelta > 0) {
-            position.averagePrice = (position.positionAmount.mulPrice(position.averagePrice) + sizeDelta).mulDiv(
-                PrecisionUtils.pricePrecision(),
-                (position.positionAmount + _sizeAmount)
-            );
-        }
-
-        position.positionAmount = position.positionAmount + _sizeAmount;
-
-        // funding fee
-        updateFundingRate(_pairIndex, _price);
-
-        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
-        int256 afterCollateral;
-        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
-            _keeper,
-            _account,
-            _pairIndex,
-            int256(position.collateral),
-            _sizeAmount,
-            _isLong,
-            _price
-        );
-
-        // trading fee
-
-        uint256 transferOut;
-        // final collateral & out
-        afterCollateral += _collateral;
-        transferOut += _collateral < 0 ? _collateral.abs() : 0;
-        require(afterCollateral > 0, 'collateral not enough');
-
-        position.collateral = afterCollateral.abs();
-
-        // update lp vault
         if (_sizeAmount > 0) {
+            uint256 sizeDelta = _sizeAmount.mulPrice(_price);
             int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
             netExposureAmountChecker[_pairIndex] =
                 prevNetExposureAmountChecker +
@@ -288,7 +230,70 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 pool.updateAveragePrice(_pairIndex, _price);
             }
         }
+    }
 
+    function increasePosition(
+        address _keeper,
+        address _account,
+        uint256 _pairIndex,
+        int256 _collateral,
+        uint256 _sizeAmount,
+        bool _isLong,
+        uint256 _price
+    ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        require(pair.enable, 'trade pair not supported');
+
+        // get position
+        bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
+        Position.Info storage position = positions[positionKey];
+        // position.key = positionKey;
+
+        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+
+        if (position.positionAmount == 0) {
+            position.account = _account;
+            position.pairIndex = _pairIndex;
+            position.isLong = _isLong;
+            position.averagePrice = _price;
+        }
+
+        if (position.positionAmount > 0 && sizeDelta > 0) {
+            position.averagePrice = (position.positionAmount.mulPrice(position.averagePrice) + sizeDelta).mulDiv(
+                PrecisionUtils.pricePrecision(),
+                (position.positionAmount + _sizeAmount)
+            );
+        }
+
+        position.positionAmount = position.positionAmount + _sizeAmount;
+
+        // funding fee
+        updateFundingRate(_pairIndex, _price);
+
+        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
+        int256 afterCollateral;
+        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
+            _keeper,
+            _account,
+            _pairIndex,
+            int256(position.collateral),
+            _sizeAmount,
+            _isLong,
+            _price
+        );
+
+        // trading fee
+
+        uint256 transferOut;
+        // final collateral & out
+        afterCollateral += _collateral;
+        transferOut += _collateral < 0 ? _collateral.abs() : 0;
+        require(afterCollateral > 0, 'collateral not enough');
+
+        position.collateral = afterCollateral.abs();
+
+        // update lp vault
+        _settleLPPosition(_pairIndex, _sizeAmount, _isLong, _price);
         if (transferOut > 0) {
             IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
@@ -536,7 +541,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         if (transferOut > 0) {
             //TODO fix: Insufficient vault balance
-            require(IERC20(pair.stableToken).balanceOf(address(this)) > transferOut, 'todo: to be fixed, Insufficient vault balance');
+            require(
+                IERC20(pair.stableToken).balanceOf(address(this)) > transferOut,
+                'todo: to be fixed, Insufficient vault balance'
+            );
             IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
 
