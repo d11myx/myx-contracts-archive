@@ -84,13 +84,15 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function _takeFundingFeeAddTraderFee(
+        address _keeper,
         address _account,
         uint256 _pairIndex,
         int256 _collateral,
         uint256 _sizeAmount,
         bool _isLong,
         uint256 _price
-    ) internal returns (int256 afterCollateral, int256 fundingFee) {
+    ) internal returns (int256 afterCollateral, uint256 tradingFee, int256 fundingFee) {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         afterCollateral = _collateral;
         if (fundingFee >= 0) {
@@ -106,6 +108,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 afterCollateral -= fundingFee;
             }
         }
+        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
+        afterCollateral -= int256(tradingFee);
+
+        _distributeTradingFee(pair, tradingFee, _keeper);
     }
 
     function increasePosition(
@@ -143,8 +149,13 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         position.positionAmount = position.positionAmount + _sizeAmount;
 
+        // funding fee
+        updateFundingRate(_pairIndex, _price);
+
+        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
         int256 afterCollateral;
-        (afterCollateral, fundingFee) = _takeFundingFeeAddTraderFee(
+        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
+            _keeper,
             _account,
             _pairIndex,
             int256(position.collateral),
@@ -152,20 +163,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             _isLong,
             _price
         );
-        uint256 transferOut;
-
-        // funding fee
-        updateFundingRate(_pairIndex, _price);
-
-        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
-        // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
 
         // trading fee
-        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
-        afterCollateral -= int256(tradingFee);
 
-        _distributeTradingFee(pair, tradingFee, _keeper);
-
+        uint256 transferOut;
         // final collateral & out
         afterCollateral += _collateral;
         transferOut += _collateral < 0 ? _collateral.abs() : 0;
