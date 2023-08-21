@@ -50,10 +50,10 @@ describe('Router: check require condition, trigger errors', async () => {
             const size = ethers.utils.parseUnits('10', 18);
 
             await waitForTx(await usdt.connect(deployer.signer).mint(user1.address, collateral));
-            await usdt.connect(user1.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+            await usdt.connect(user1.signer).approve(router.address, MAX_UINT_AMOUNT);
 
             await waitForTx(await usdt.connect(deployer.signer).mint(user2.address, collateral));
-            await usdt.connect(user2.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+            await usdt.connect(user2.signer).approve(router.address, MAX_UINT_AMOUNT);
 
             // setting: request.account = user1
             const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
@@ -172,7 +172,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const size = ethers.utils.parseUnits('10', 18);
 
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-                await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+                await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
                 const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                     account: trader.address,
@@ -219,7 +219,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const sizeAmount = ethers.utils.parseUnits('5', 15);
 
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-                await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+                await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
                 const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                     account: trader.address,
@@ -265,7 +265,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const sizeAmount = ethers.utils.parseUnits('100001', 18);
 
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
-                await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+                await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
                 const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                     account: trader.address,
