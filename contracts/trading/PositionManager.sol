@@ -528,6 +528,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         }
 
         if (transferOut > 0) {
+            //TODO fix: Insufficient vault balance
+            require(IERC20(pair.stableToken).balanceOf(address(this)) > transferOut, 'todo: to be fixed, Insufficient vault balance');
             IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
 
