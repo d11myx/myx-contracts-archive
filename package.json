@@ -14,6 +14,7 @@
         "compile": "SKIP_LOAD=true npx hardhat compile",
         "test": "npx hardhat test",
         "test:pool:liquidity": "npm run compile && npx hardhat test test/__setup.spec.ts test/pool-liquidity.spec.ts",
+        "test:trade:pnl": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-pnl.spec.ts",
         "deploy": "npx hardhat deploy",
         "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'",
         "sizer": "hardhat size-contracts"
