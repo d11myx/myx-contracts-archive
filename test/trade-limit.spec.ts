@@ -60,8 +60,7 @@ describe('Trade: Limit order cases', () => {
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`---positionAft: `, positionAft);
 
-            // executor.connect(keeper.signer).executeIncreaseLimitOrders([orderId]);
-
+            await snapshotGasCost(executor.connect(keeper.signer).executeIncreaseLimitOrders([orderId]));
             // expect(positionAft.positionAmount).to.be.eq(size);
         });
 
