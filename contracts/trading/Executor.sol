@@ -428,7 +428,7 @@ contract Executor is IExecutor, Pausable {
             );
             return;
         }
-
+        bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         // transfer collateral
         if (order.collateral > 0) {
             positionManager.transferTokenTo(pair.stableToken, address(pool), order.collateral.abs());
@@ -449,7 +449,7 @@ contract Executor is IExecutor, Pausable {
         } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             orderManager.removeDecreaseLimitOrders(_orderId);
         } else {
-            orderManager.setPositionHasTpSl(position.key, order.tradeType, false);
+            orderManager.setPositionHasTpSl(key, order.tradeType, false);
             orderManager.removeDecreaseLimitOrders(_orderId);
         }
 
@@ -470,7 +470,7 @@ contract Executor is IExecutor, Pausable {
 
         if (position.positionAmount == 0) {
             // cancel all decrease order
-            bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
+
             IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
 
             for (uint256 i = 0; i < orders.length; i++) {
