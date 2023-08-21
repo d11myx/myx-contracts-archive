@@ -23,4 +23,55 @@ interface IRouter {
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId);
+
+    function addLiquidity(
+        address pool,
+        address indexToken,
+        address stableToken,
+        uint256 indexAmount,
+        uint256 stableAmount
+    ) external;
+
+    function addLiquidityForAccount(
+        address pool,
+        address indexToken,
+        address stableToken,
+        address receiver,
+        uint256 indexAmount,
+        uint256 stableAmount
+    ) external;
+
+    function removeLiquidity(
+        address pool,
+        address indexToken,
+        address stableToken,
+        uint256 amount
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
+
+    function removeLiquidityForAccount(
+        address pool,
+        address indexToken,
+        address stableToken,
+        address receiver,
+        uint256 amount
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
+
+    function swap(
+        address pool,
+        address indexToken,
+        address stableToken,
+        bool isBuy,
+        uint256 amountIn,
+        uint256 minOut
+    ) external returns (uint256, uint256);
+
+    function swapForAccount(
+        address pool,
+        address indexToken,
+        address stableToken,
+        address receiver,
+        bool isBuy,
+        uint256 amountIn,
+        uint256 minOut
+    ) external returns (uint256, uint256);
 }
