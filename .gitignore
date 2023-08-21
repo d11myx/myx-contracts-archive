@@ -32,6 +32,7 @@ deploment-logs
 deploments
 abi
 
+deployments/
 deployments/local
 deployments/localhost
 deployments/**/*
