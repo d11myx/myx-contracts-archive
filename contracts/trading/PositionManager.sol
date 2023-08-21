@@ -114,22 +114,39 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         _distributeTradingFee(pair, tradingFee, _keeper);
     }
 
-    function _settleLPPosition(uint256 _pairIndex, uint256 _sizeAmount, bool _isLong, uint256 _price) internal {
+    function _settleLPPosition(
+        uint256 _pairIndex,
+        uint256 _sizeAmount,
+        bool _isLong,
+        bool isIncrease,
+        uint256 _price
+    ) internal {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         if (_sizeAmount == 0) {
             return;
         }
-        if (_isLong) {
-            longTracker[_pairIndex] += _sizeAmount;
+        int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
+        if (isIncrease) {
+            if (_isLong) {
+                longTracker[_pairIndex] += _sizeAmount;
+            } else {
+                shortTracker[_pairIndex] += _sizeAmount;
+            }
+            netExposureAmountChecker[_pairIndex] =
+                prevNetExposureAmountChecker +
+                (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
         } else {
-            shortTracker[_pairIndex] += _sizeAmount;
+            netExposureAmountChecker[_pairIndex] =
+                prevNetExposureAmountChecker +
+                (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
+            if (_isLong) {
+                longTracker[_pairIndex] -= _sizeAmount;
+            } else {
+                shortTracker[_pairIndex] -= _sizeAmount;
+            }
         }
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
-        int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
-        netExposureAmountChecker[_pairIndex] =
-            prevNetExposureAmountChecker +
-            (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
         PositionStatus currenrntPositionStatus = PositionStatus.Blance;
         if (prevNetExposureAmountChecker > 0) {
             currenrntPositionStatus = PositionStatus.NetLong;
@@ -311,7 +328,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         position.collateral = afterCollateral.abs();
 
         // update lp vault
-        _settleLPPosition(_pairIndex, _sizeAmount, _isLong, _price);
+        _settleLPPosition(_pairIndex, _sizeAmount, _isLong, true, _price);
         if (transferOut > 0) {
             IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
