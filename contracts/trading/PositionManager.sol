@@ -116,119 +116,120 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     function _settleLPPosition(uint256 _pairIndex, uint256 _sizeAmount, bool _isLong, uint256 _price) internal {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        if (_sizeAmount > 0) {
-            uint256 sizeDelta = _sizeAmount.mulPrice(_price);
-            int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
-            netExposureAmountChecker[_pairIndex] =
-                prevNetExposureAmountChecker +
-                (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
-            if (_isLong) {
-                longTracker[_pairIndex] += _sizeAmount;
+        if (_sizeAmount == 0) {
+            return;
+        }
+        if (_isLong) {
+            longTracker[_pairIndex] += _sizeAmount;
+        } else {
+            shortTracker[_pairIndex] += _sizeAmount;
+        }
+        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+        int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
+        netExposureAmountChecker[_pairIndex] =
+            prevNetExposureAmountChecker +
+            (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
+
+        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
+
+        if (prevNetExposureAmountChecker > 0) {
+            if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
+                pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+
+                uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
+                    sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
+
+                pool.updateAveragePrice(_pairIndex, averagePrice);
             } else {
-                shortTracker[_pairIndex] += _sizeAmount;
+                uint256 decreaseLong;
+                uint256 increaseShort;
+
+                if (netExposureAmountChecker[_pairIndex] >= 0) {
+                    decreaseLong = _sizeAmount;
+                } else {
+                    decreaseLong = uint256(prevNetExposureAmountChecker);
+                    increaseShort = _sizeAmount - decreaseLong;
+                }
+
+                // decrease reserve & pnl
+
+                pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                if (_price > lpVault.averagePrice) {
+                    uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
+
+                    pool.decreaseProfit(_pairIndex, profit);
+                } else {
+                    uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
+
+                    IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                    pool.increaseProfit(_pairIndex, profit);
+                }
+
+                // increase reserve
+                if (increaseShort > 0) {
+                    pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+
+                    pool.updateAveragePrice(_pairIndex, _price);
+                }
+
+                // zero exposure
+                if (netExposureAmountChecker[_pairIndex] == 0) {
+                    pool.updateAveragePrice(_pairIndex, 0);
+                }
             }
+        } else if (prevNetExposureAmountChecker < 0) {
+            if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
-            IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-
-            if (prevNetExposureAmountChecker > 0) {
-                if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
-                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-
-                    uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                        sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
-
-                    pool.updateAveragePrice(_pairIndex, averagePrice);
-                } else {
-                    uint256 decreaseLong;
-                    uint256 increaseShort;
-
-                    if (netExposureAmountChecker[_pairIndex] >= 0) {
-                        decreaseLong = _sizeAmount;
-                    } else {
-                        decreaseLong = uint256(prevNetExposureAmountChecker);
-                        increaseShort = _sizeAmount - decreaseLong;
-                    }
-
-                    // decrease reserve & pnl
-
-                    pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
-                    if (_price > lpVault.averagePrice) {
-                        uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
-
-                        pool.decreaseProfit(_pairIndex, profit);
-                    } else {
-                        uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
-
-                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                        pool.increaseProfit(_pairIndex, profit);
-                    }
-
-                    // increase reserve
-                    if (increaseShort > 0) {
-                        pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
-
-                        pool.updateAveragePrice(_pairIndex, _price);
-                    }
-
-                    // zero exposure
-                    if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pool.updateAveragePrice(_pairIndex, 0);
-                    }
-                }
-            } else if (prevNetExposureAmountChecker < 0) {
-                if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-
-                    uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                        sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                    pool.updateAveragePrice(_pairIndex, averagePrice);
-                } else {
-                    uint256 decreaseShort;
-                    uint256 increaseLong;
-
-                    if (netExposureAmountChecker[_pairIndex] <= 0) {
-                        decreaseShort = _sizeAmount;
-                    } else {
-                        decreaseShort = uint256(-prevNetExposureAmountChecker);
-                        increaseLong = _sizeAmount - decreaseShort;
-                    }
-
-                    // decrease reserve & pnl
-                    pool.decreaseReserveAmount(
-                        _pairIndex,
-                        0,
-                        netExposureAmountChecker[_pairIndex] >= 0
-                            ? lpVault.stableReservedAmount
-                            : decreaseShort.mulPrice(lpVault.averagePrice)
-                    );
-                    if (_price > lpVault.averagePrice) {
-                        uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
-                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                        pool.increaseProfit(_pairIndex, profit);
-                    } else {
-                        uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
-                        pool.decreaseProfit(_pairIndex, profit);
-                    }
-
-                    // increase reserve
-                    if (increaseLong > 0) {
-                        pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
-                        pool.updateAveragePrice(_pairIndex, _price);
-                    }
-
-                    // zero exposure
-                    if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pool.updateAveragePrice(_pairIndex, 0);
-                    }
-                }
+                uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
+                    sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
+                pool.updateAveragePrice(_pairIndex, averagePrice);
             } else {
-                if (netExposureAmountChecker[_pairIndex] > 0) {
-                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+                uint256 decreaseShort;
+                uint256 increaseLong;
+
+                if (netExposureAmountChecker[_pairIndex] <= 0) {
+                    decreaseShort = _sizeAmount;
                 } else {
-                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                    decreaseShort = uint256(-prevNetExposureAmountChecker);
+                    increaseLong = _sizeAmount - decreaseShort;
                 }
-                pool.updateAveragePrice(_pairIndex, _price);
+
+                // decrease reserve & pnl
+                pool.decreaseReserveAmount(
+                    _pairIndex,
+                    0,
+                    netExposureAmountChecker[_pairIndex] >= 0
+                        ? lpVault.stableReservedAmount
+                        : decreaseShort.mulPrice(lpVault.averagePrice)
+                );
+                if (_price > lpVault.averagePrice) {
+                    uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
+                    IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                    pool.increaseProfit(_pairIndex, profit);
+                } else {
+                    uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
+                    pool.decreaseProfit(_pairIndex, profit);
+                }
+
+                // increase reserve
+                if (increaseLong > 0) {
+                    pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                    pool.updateAveragePrice(_pairIndex, _price);
+                }
+
+                // zero exposure
+                if (netExposureAmountChecker[_pairIndex] == 0) {
+                    pool.updateAveragePrice(_pairIndex, 0);
+                }
             }
+        } else {
+            if (netExposureAmountChecker[_pairIndex] > 0) {
+                pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+            } else {
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+            }
+            pool.updateAveragePrice(_pairIndex, _price);
         }
     }
 
