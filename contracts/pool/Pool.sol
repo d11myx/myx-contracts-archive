@@ -128,8 +128,17 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
-        require(_tradingFeeConfig.takerFeeP <= PERCENTAGE && _tradingFeeConfig.makerFeeP <= PERCENTAGE, 'trading fee exceed 100%');
-        require(_tradingFeeConfig.lpFeeDistributeP + _tradingFeeConfig.keeperFeeDistributeP + _tradingFeeConfig.stakingFeeDistributeP <= PERCENTAGE, 'distribute exceed 100%');
+        require(
+            _tradingFeeConfig.takerFeeP <= PERCENTAGE && _tradingFeeConfig.makerFeeP <= PERCENTAGE,
+            'trading fee exceed 100%'
+        );
+        require(
+            _tradingFeeConfig.lpFeeDistributeP +
+                _tradingFeeConfig.keeperFeeDistributeP +
+                _tradingFeeConfig.stakingFeeDistributeP <=
+                PERCENTAGE,
+            'distribute exceed 100%'
+        );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
@@ -367,6 +376,8 @@ contract Pool is IPool, Roleable {
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
         uint256 expectStableDelta = totalDelta - expectIndexDelta;
 
+        uint256 balanceBefore;
+
         if (_isBuy) {
             // index out stable in
             require(expectStableDelta > stableTotalDelta, 'no need stable token');
@@ -385,8 +396,12 @@ contract Pool is IPool, Roleable {
             require(amountOut >= _minOut, 'insufficient minOut');
 
             liqiitySwap(_pairIndex, _isBuy, amountIn, amountOut);
+            if (amountIn > 0) balanceBefore = IERC20(pair.stableToken).balanceOf(address(this));
+            ISwapCallback(msg.sender).swapCallback(pair.stableToken, pair.stableToken, 0, amountIn, data);
+            if (amountIn > 0) {
+                require(balanceBefore.add(amountIn) <= IERC20(pair.stableToken).balanceOf(address(this)), 'ti');
+            }
             IERC20(pair.indexToken).safeTransfer(_receiver, amountOut);
-            ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, 0, amountIn, data);
         } else {
             // index in stable out
             require(expectIndexDelta > indexTotalDelta, 'no need index token');
@@ -401,7 +416,11 @@ contract Pool is IPool, Roleable {
 
             amountOut = amountOut.min(availableStable);
             amountIn = amountOut.divPrice(price);
+            if (amountIn > 0) balanceBefore = IERC20(pair.indexToken).balanceOf(address(this));
             ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, amountIn, 0, data);
+            if (amountIn > 0) {
+                require(balanceBefore.add(amountIn) <= IERC20(pair.indexToken).balanceOf(address(this)), 'ts');
+            }
             IERC20(pair.stableToken).safeTransfer(_receiver, amountOut);
         }
 
