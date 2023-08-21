@@ -129,7 +129,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
-                (uint256 afterPosition, ) = position.validLeverage(
+                (uint256 afterPosition,) = position.validLeverage(
                     price,
                     request.collateral,
                     uint256(request.sizeAmount),
@@ -156,8 +156,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                 //TODO if request size exceed position size, can calculate the max size
                 require(
                     uint256(request.sizeAmount.abs()) == position.positionAmount ||
-                        uint256(request.sizeAmount.abs()) <=
-                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
+                    uint256(request.sizeAmount.abs()) <=
+                    position.positionAmount - positionDecreaseTotalAmount[positionKey],
                     'decrease amount exceed position'
                 );
             }
@@ -177,43 +177,43 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         if (request.sizeAmount > 0) {
             return
                 _createIncreaseOrder(
-                    TradingTypes.IncreasePositionRequest({
-                        account: account,
-                        pairIndex: request.pairIndex,
-                        tradeType: request.tradeType,
-                        collateral: request.collateral,
-                        openPrice: request.openPrice,
-                        isLong: request.isLong,
-                        sizeAmount: uint256(request.sizeAmount)
-                    })
-                );
+                TradingTypes.IncreasePositionRequest({
+                    account: account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.openPrice,
+                    isLong: request.isLong,
+                    sizeAmount: uint256(request.sizeAmount)
+                })
+            );
         } else if (request.sizeAmount < 0) {
             return
                 _createDecreaseOrder(
-                    TradingTypes.DecreasePositionRequest({
-                        account: account,
-                        pairIndex: request.pairIndex,
-                        tradeType: request.tradeType,
-                        collateral: request.collateral,
-                        triggerPrice: request.openPrice,
-                        sizeAmount: uint256(request.sizeAmount.abs()),
-                        isLong: request.isLong
-                    })
-                );
+                TradingTypes.DecreasePositionRequest({
+                    account: account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    triggerPrice: request.openPrice,
+                    sizeAmount: uint256(request.sizeAmount.abs()),
+                    isLong: request.isLong
+                })
+            );
         } else {
             require(request.collateral != 0, 'not support');
             return
                 _createIncreaseOrder(
-                    TradingTypes.IncreasePositionRequest({
-                        account: account,
-                        pairIndex: request.pairIndex,
-                        tradeType: request.tradeType,
-                        collateral: request.collateral,
-                        openPrice: request.openPrice,
-                        isLong: request.isLong,
-                        sizeAmount: 0
-                    })
-                );
+                TradingTypes.IncreasePositionRequest({
+                    account: account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.openPrice,
+                    isLong: request.isLong,
+                    sizeAmount: 0
+                })
+            );
         }
     }
 
@@ -269,7 +269,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     function _createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) internal returns (uint256) {
         TradingTypes.IncreasePositionOrder memory order = TradingTypes.IncreasePositionOrder(
-            0,
+            ordersIndex,
             _request.account,
             _request.pairIndex,
             _request.tradeType,
@@ -280,7 +280,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             block.timestamp
         );
 
-        order.orderId = ordersIndex;
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
             increaseMarketOrders[ordersIndex] = order;
         } else if (_request.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -322,7 +321,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     function _createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) internal returns (uint256) {
         TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder(
-            0, // orderId
+            ordersIndex, // orderId
             _request.account,
             _request.pairIndex,
             _request.tradeType,
@@ -340,7 +339,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         //  limit：long: false, short: true
         //     tp：long: false, short: true
         //     sl：long: true,  short: false
-        order.orderId = ordersIndex;
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
             order.abovePrice = _request.isLong;
 
@@ -395,22 +393,19 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _cancelIncreaseOrder(TradingTypes.IncreasePositionOrder memory order) internal {
-        IPool.Pair memory pair = pool.getPair(order.pairIndex);
-
-        if (order.collateral > 0) {
-            positionManager.transferTokenTo(pair.stableToken, order.account, order.collateral.abs());
-        }
-
-        this.removeOrderFromPosition(
-            PositionOrder(
-                order.account,
-                order.pairIndex,
-                order.isLong,
-                true,
-                order.tradeType,
-                order.orderId,
-                order.sizeAmount
-            )
+        _removeOrderAndRefundCollateral(
+            order.account,
+            order.pairIndex,
+            order.collateral,
+            PositionOrder({
+                account: order.account,
+                pairIndex: order.pairIndex,
+                isLong: order.isLong,
+                isIncrease: true,
+                tradeType: order.tradeType,
+                orderId: order.orderId,
+                sizeAmount: order.sizeAmount
+            })
         );
 
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
@@ -423,22 +418,19 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _cancelDecreaseOrder(TradingTypes.DecreasePositionOrder memory order) internal {
-        IPool.Pair memory pair = pool.getPair(order.pairIndex);
-
-        if (order.collateral > 0) {
-            positionManager.transferTokenTo(pair.stableToken, order.account, order.collateral.abs());
-        }
-
-        this.removeOrderFromPosition(
-            PositionOrder(
-                order.account,
-                order.pairIndex,
-                order.isLong,
-                false,
-                order.tradeType,
-                order.orderId,
-                order.sizeAmount
-            )
+        _removeOrderAndRefundCollateral(
+            order.account,
+            order.pairIndex,
+            order.collateral,
+            PositionOrder({
+                account: order.account,
+                pairIndex: order.pairIndex,
+                isLong: order.isLong,
+                isIncrease: false,
+                tradeType: order.tradeType,
+                orderId: order.orderId,
+                sizeAmount: order.sizeAmount
+            })
         );
 
         bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
@@ -453,6 +445,20 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         }
 
         emit CancelDecreaseOrder(order.account, order.orderId, order.tradeType);
+    }
+
+    function _removeOrderAndRefundCollateral(
+        address account,
+        uint256 pairIndex,
+        int256 collateral,
+        PositionOrder memory positionOrder
+    ) internal {
+        this.removeOrderFromPosition(positionOrder);
+
+        if (collateral > 0) {
+            IPool.Pair memory pair = pool.getPair(pairIndex);
+            positionManager.transferTokenTo(pair.stableToken, account, collateral.abs());
+        }
     }
 
     function getIncreaseOrder(
@@ -489,7 +495,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (
             !order.isIncrease &&
-            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+        (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
         ) {
             positionDecreaseTotalAmount[positionKey] += order.sizeAmount;
         }
@@ -521,7 +527,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (
             !order.isIncrease &&
-            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+        (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
         ) {
             positionDecreaseTotalAmount[positionKey] -= order.sizeAmount;
         }
