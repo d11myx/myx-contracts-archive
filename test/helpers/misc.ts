@@ -1,10 +1,10 @@
-import { Token } from '../../types';
+import { MockPriceFeed, Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import { ethers } from 'hardhat';
 import { getBlockTimestamp, TradeType, waitForTx } from '../../helpers';
 import { TradingTypes } from '../../types/contracts/trading/Router';
-import { MockPriceFeed } from '../../types';
+import snapshotGasCost from '../shared/snapshotGasCost';
 
 export async function updateBTCPrice(
     testEnv: TestEnv,
@@ -47,6 +47,7 @@ export async function increasePosition(
     user: SignerWithAddress,
     pairIndex: number,
     collateral: BigNumber,
+    openPrice: BigNumber,
     size: BigNumber,
     tradeType: TradeType,
     isLong: boolean,
@@ -58,7 +59,7 @@ export async function increasePosition(
         pairIndex: pairIndex,
         tradeType: tradeType,
         collateral: collateral,
-        openPrice: ethers.utils.parseUnits('30000', 30),
+        openPrice: openPrice,
         isLong: isLong,
         sizeAmount: size,
         tpPrice: 0,
@@ -67,11 +68,23 @@ export async function increasePosition(
         sl: 0,
     };
 
-    // create increase order
-    const orderId = await orderManager.ordersIndex();
-    await router.connect(user.signer).createIncreaseOrder(request);
-    // execute order
-    await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType);
+    if (tradeType == TradeType.MARKET) {
+        // create increase order
+        const orderId = await orderManager.ordersIndex();
+        await router.connect(user.signer).createIncreaseOrder(request);
+        // execute order
+        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType);
+
+        return orderId;
+    } else {
+        // create increase order
+        const orderId = await orderManager.ordersIndex()
+        await router.connect(user.signer).createIncreaseOrder(request);
+        // execute order
+        await executor.connect(keeper.signer).executeIncreaseLimitOrders([orderId.toNumber()]);
+
+        return orderId;
+    }
 }
 
 export async function decreasePosition(
