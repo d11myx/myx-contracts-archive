@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Trade: Limit order cases long > short long > short, increase order, open long position 1`] = `71530`;
