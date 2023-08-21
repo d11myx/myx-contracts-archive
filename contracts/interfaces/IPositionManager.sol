@@ -4,6 +4,11 @@ pragma solidity 0.8.17;
 import '../libraries/Position.sol';
 
 interface IPositionManager {
+    enum PositionTracker {
+        Blance,
+        NetLong,
+        NetShort
+    }
     event UpdateFundingInterval(uint256 oldInterval, uint256 newInterval);
 
     event IncreasePosition(
