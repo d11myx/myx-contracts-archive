@@ -17,6 +17,7 @@ library TradingTypes {
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
         int256 sizeAmount; // size
+        bytes data;
     }
 
     struct OrderWithTpSl {
