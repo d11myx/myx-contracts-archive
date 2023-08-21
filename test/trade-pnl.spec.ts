@@ -74,10 +74,10 @@ describe('Trade: profit & Loss', () => {
                     trader,
                     pairIndex,
                     BigNumber.from(0),
-                    ethers.utils.parseUnits(btcPrice, 30),
                     size,
                     TradeType.MARKET,
                     true,
+                    ethers.utils.parseUnits(btcPrice, 30),
                 ),
             ).to.be.revertedWith('todo: to be fixed, Insufficient vault balance');
         });
