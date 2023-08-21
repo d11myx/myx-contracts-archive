@@ -30,8 +30,8 @@ describe('Trade: Limit order cases', () => {
 
         await snapshotGasCost(
             await testCallBack
-            .connect(depositor.signer)
-            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount)
+                .connect(depositor.signer)
+                .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount),
         );
     });
 
@@ -44,7 +44,7 @@ describe('Trade: Limit order cases', () => {
                 positionManager,
                 orderManager,
                 router,
-                executor
+                executor,
             } = testEnv;
 
             // update BTC price
@@ -54,8 +54,17 @@ describe('Trade: Limit order cases', () => {
             const increaseAmount = ethers.utils.parseUnits('10', 18);
             const triggerPrice = ethers.utils.parseUnits('32000', 30);
 
-            await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
-            const orderId = await increasePosition(testEnv, trader, pairIndex, collateral, triggerPrice, increaseAmount, TradeType.LIMIT, true)
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const orderId = await increasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                collateral,
+                triggerPrice,
+                increaseAmount,
+                TradeType.LIMIT,
+                true,
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`---positionAft: `, positionAft);
@@ -69,31 +78,30 @@ describe('Trade: Limit order cases', () => {
         it('long > short, decrease order, open long position', async () => {});
 
         it('long > short, decrease order, open short position', async () => {});
-
     });
 
     describe('long < short', () => {
-    //     before(async () => {
-    //         const {
-    //             users: [trader],
-    //             usdt,
-    //             positionManager,
-    //             orderManager,
-    //         } = testEnv;
-    //
-    //         const netExposureAmountBefore = await positionManager.netExposureAmountChecker(pairIndex);
-    //         expect(netExposureAmountBefore).to.be.eq(ethers.utils.parseUnits('1000', 18));
-    //
-    //         const collateral = ethers.utils.parseUnits('3000000', 18);
-    //         const size = ethers.utils.parseUnits('2000', 18);
-    //
-    //         await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
-    //         await increasePosition(testEnv, trader, pairIndex, collateral, size, TradeType.MARKET, false);
-    //
-    //         const netExposureAmountAfter = await positionManager.netExposureAmountChecker(pairIndex);
-    //         expect(netExposureAmountAfter).to.be.eq(netExposureAmountBefore.sub(size));
-    //         expect(netExposureAmountAfter).to.be.lt(0);
-    //     });
+        //     before(async () => {
+        //         const {
+        //             users: [trader],
+        //             usdt,
+        //             positionManager,
+        //             orderManager,
+        //         } = testEnv;
+        //
+        //         const netExposureAmountBefore = await positionManager.netExposureAmountChecker(pairIndex);
+        //         expect(netExposureAmountBefore).to.be.eq(ethers.utils.parseUnits('1000', 18));
+        //
+        //         const collateral = ethers.utils.parseUnits('3000000', 18);
+        //         const size = ethers.utils.parseUnits('2000', 18);
+        //
+        //         await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
+        //         await increasePosition(testEnv, trader, pairIndex, collateral, size, TradeType.MARKET, false);
+        //
+        //         const netExposureAmountAfter = await positionManager.netExposureAmountChecker(pairIndex);
+        //         expect(netExposureAmountAfter).to.be.eq(netExposureAmountBefore.sub(size));
+        //         expect(netExposureAmountAfter).to.be.lt(0);
+        //     });
 
         it('long < short, increase order, open long position', async () => {});
 
@@ -102,7 +110,6 @@ describe('Trade: Limit order cases', () => {
         it('long < short, decrease order, open long position', async () => {});
 
         it('long < short, decrease order, open short position', async () => {});
-
     });
 
     describe('long = short', () => {
@@ -130,5 +137,4 @@ describe('Trade: Limit order cases', () => {
 
         it('long = short, decrease order, open short position', async () => {});
     });
-
 });
