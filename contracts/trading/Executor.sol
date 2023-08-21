@@ -251,7 +251,8 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: orderTpSl.tpPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.tp)
+                    sizeAmount: -int256(orderTpSl.tp),
+                    data: abi.encode(order.account)
                 })
             );
         }
@@ -264,7 +265,8 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: orderTpSl.slPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.sl)
+                    sizeAmount: -int256(orderTpSl.sl),
+                    data: abi.encode(order.account)
                 })
             );
         }
@@ -569,7 +571,8 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: price,
                     isLong: adlPosition.isLong,
-                    sizeAmount: -int256(adlPosition.positionAmount)
+                    sizeAmount: -int256(adlPosition.positionAmount),
+                    data: abi.encode(adlPosition.account)
                 })
             );
             this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
@@ -632,7 +635,8 @@ contract Executor is IExecutor, Pausable {
                 collateral: 0,
                 openPrice: price,
                 isLong: position.isLong,
-                sizeAmount: -int256(position.positionAmount)
+                sizeAmount: -int256(position.positionAmount),
+                data: abi.encode(position.account)
             })
         );
 
