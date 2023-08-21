@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import '../interfaces/IWETH.sol';
 
-abstract contract ETHGetway {
+abstract contract ETHGateway {
     using SafeERC20 for IERC20;
 
     address public immutable WETH;

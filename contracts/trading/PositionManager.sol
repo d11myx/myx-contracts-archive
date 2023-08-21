@@ -34,11 +34,11 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     mapping(uint256 => uint256) public override longTracker;
     mapping(uint256 => uint256) public override shortTracker;
 
-    // cumulativeFundingRates tracks the funding rates based on utilization
-    mapping(uint256 => int256) public cumulativeFundingRates;
-    mapping(uint256 => int256) public lastFundingRates;
-    // lastFundingTimes tracks the last time funding was updated for a token
-    mapping(uint256 => uint256) public lastFundingTimes;
+    // gobleFundingRateIndex tracks the funding rates based on utilization
+    mapping(uint256 => int256) public gobleFundingRateIndex;
+
+    // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
+    mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
     uint256 public fundingInterval;
 
@@ -98,11 +98,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         // get position
         bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
         Position.Info storage position = positions[positionKey];
-        position.key = positionKey;
+        // position.key = positionKey;
 
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
-        // 修改仓位
         if (position.positionAmount == 0) {
             position.account = _account;
             position.pairIndex = _pairIndex;
@@ -123,27 +122,25 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 transferOut;
 
         // funding fee
-        updateCumulativeFundingRate(_pairIndex, _price);
+        updateFundingRate(_pairIndex, _price);
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
 
         if (fundingFee >= 0) {
             if (_isLong) {
                 afterCollateral -= fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral += fundingFee;
             }
         } else {
             if (!_isLong) {
                 afterCollateral += fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral -= fundingFee;
             }
         }
 
-        position.entryFundingRate = cumulativeFundingRates[_pairIndex];
-        position.entryFundingTime = lastFundingTimes[_pairIndex];
+        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
+        // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
 
         // trading fee
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
@@ -298,8 +295,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             position.collateral,
             position.positionAmount,
             position.averagePrice,
-            position.entryFundingRate,
-            position.entryFundingTime,
+            position.fundRateIndex,
+            // position.entryFundingTime,
             position.realisedPnl,
             _price
         );
@@ -337,27 +334,25 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 transferOut;
 
         // funding fee
-        updateCumulativeFundingRate(_pairIndex, _price);
+        updateFundingRate(_pairIndex, _price);
         fundingFee = getFundingFee(false, _account, _pairIndex, _isLong, _sizeAmount);
-
+        //todo Whether the user's funding fee should be given to lp
         if (fundingFee >= 0) {
             if (_isLong) {
                 afterCollateral -= fundingFee;
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral += fundingFee;
             }
         } else {
             if (!_isLong) {
                 afterCollateral -= (-fundingFee);
             } else {
-                (uint256 userAmount, ) = _distributeFundingFee(pair, fundingFee.abs());
-                transferOut += userAmount;
+                afterCollateral -= (fundingFee);
             }
         }
 
-        position.entryFundingRate = cumulativeFundingRates[_pairIndex];
-        position.entryFundingTime = lastFundingTimes[_pairIndex];
+        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
+        // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
 
         // trading fee
         tradingFee = _tradingFee(_pairIndex, !_isLong, _sizeAmount, _price);
@@ -544,31 +539,11 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             position.collateral,
             position.positionAmount,
             position.averagePrice,
-            position.entryFundingRate,
-            position.entryFundingTime,
+            position.fundRateIndex,
+            // position.entryFundingTime,
             position.realisedPnl,
             _price
         );
-    }
-
-    function updateCumulativeFundingRate(uint256 _pairIndex, uint256 _price) public whenNotPaused {
-        if (lastFundingTimes[_pairIndex] == 0) {
-            lastFundingTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
-            return;
-        }
-
-        if (block.timestamp - lastFundingTimes[_pairIndex] < fundingInterval) {
-            return;
-        }
-
-        uint256 intervals = (block.timestamp - lastFundingTimes[_pairIndex]) / fundingInterval;
-        int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
-
-        lastFundingRates[_pairIndex] = nextFundingRate;
-        cumulativeFundingRates[_pairIndex] = cumulativeFundingRates[_pairIndex] + nextFundingRate * int256(intervals);
-        lastFundingTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
-
-        emit UpdateFundingRate(_pairIndex, cumulativeFundingRates[_pairIndex], lastFundingTimes[_pairIndex]);
     }
 
     function getTradingFee(
@@ -608,7 +583,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function _distributeTradingFee(IPool.Pair memory pair, uint256 tradingFee, address keeper) internal {
-        console.log("distributeTradingFee tradingFee", tradingFee, "keeper", keeper);
+        console.log('distributeTradingFee tradingFee', tradingFee, 'keeper', keeper);
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
         uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
@@ -617,18 +592,25 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         uint256 keeperAmount = tradingFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
         uint256 stakingAmount = tradingFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
-        uint256 distributorAmount = tradingFee - keeperAmount- stakingAmount;
+        uint256 distributorAmount = tradingFee - keeperAmount - stakingAmount;
 
         keeperTradingFee[pair.stableToken][keeper] += keeperAmount;
         stakingTradingFee[pair.stableToken] += stakingAmount;
         distributorTradingFee[pair.stableToken] += distributorAmount;
-        console.log("distributeTradingFee lpAmount %s keeperAmount %s stakingAmount %s", lpAmount, keeperAmount, stakingAmount);
+        console.log(
+            'distributeTradingFee lpAmount %s keeperAmount %s stakingAmount %s',
+            lpAmount,
+            keeperAmount,
+            stakingAmount
+        );
 
         emit DistributeTradingFee(pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
     }
 
     // TODO receiver? ?onlyPoolAdmin
-    function claimStakingTradingFee(address claimToken) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
+    function claimStakingTradingFee(
+        address claimToken
+    ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
         if (claimableStakingTradingFee > 0) {
             IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
@@ -637,7 +619,9 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         return claimableStakingTradingFee;
     }
 
-    function claimDistributorTradingFee(address claimToken) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
+    function claimDistributorTradingFee(
+        address claimToken
+    ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
         uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
         if (claimableDistributorTradingFee > 0) {
             IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
@@ -646,7 +630,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         return claimableDistributorTradingFee;
     }
 
-    function claimKeeperTradingFee(address claimToken, address keeper) external nonReentrant onlyExecutor whenNotPaused returns (uint256) {
+    function claimKeeperTradingFee(
+        address claimToken,
+        address keeper
+    ) external nonReentrant onlyExecutor whenNotPaused returns (uint256) {
         uint256 claimableKeeperTradingFee = keeperTradingFee[claimToken][keeper];
         if (claimableKeeperTradingFee > 0) {
             IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
@@ -668,18 +655,35 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 _sizeAmount
     ) public view override returns (int256) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
+        //todo  if the selettlement time is not reached , the fund rate fo the rate of the user shall be settled according to the time
+        // uint256 interval = block.timestamp - position.entryFundingTime;
+        // if (interval < fundingInterval) {
+        //            if (!_increase) {
+        //                int256 fundingRate = (lastFundingRates[_pairIndex] * int256(interval)) / int256(fundingInterval);
+        //                return (int256(_sizeAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
+        //            }
+        // return 0;
+        // }
 
-        uint256 interval = block.timestamp - position.entryFundingTime;
-        if (interval < fundingInterval) {
-//            if (!_increase) {
-//                int256 fundingRate = (lastFundingRates[_pairIndex] * int256(interval)) / int256(fundingInterval);
-//                return (int256(_sizeAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
-//            }
-            return 0;
-        }
-
-        int256 fundingRate = cumulativeFundingRates[_pairIndex] - position.entryFundingRate;
+        //todo  Position is converted to margin currency
+        int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.fundRateIndex;
         return (int256(position.positionAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
+    }
+
+    function updateFundingRate(uint256 _pairIndex, uint256 _price) public whenNotPaused {
+        if (lastFundingRateUpdateTimes[_pairIndex] == 0) {
+            lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
+            return;
+        }
+        if (block.timestamp - lastFundingRateUpdateTimes[_pairIndex] < fundingInterval) {
+            return;
+        }
+        int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
+        gobleFundingRateIndex[_pairIndex] = gobleFundingRateIndex[_pairIndex] + nextFundingRate;
+        lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
+        //todo  fund rate for settlement lp
+
+        emit UpdateFundingRate(_pairIndex, gobleFundingRateIndex[_pairIndex], lastFundingRateUpdateTimes[_pairIndex]);
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
@@ -717,20 +721,20 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         );
     }
 
-    function _distributeFundingFee(
-        IPool.Pair memory pair,
-        uint256 _fundingFee
-    ) internal returns (uint256 userAmount, uint256 lpAmount) {
-        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(pair.pairIndex);
+    // function _distributeFundingFee(
+    //     IPool.Pair memory pair,
+    //     uint256 _fundingFee
+    // ) internal returns (uint256 userAmount, uint256 lpAmount) {
+    //     IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(pair.pairIndex);
 
-        lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
-        userAmount = _fundingFee - lpAmount;
+    //     lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
+    //     userAmount = _fundingFee - lpAmount;
 
-        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
-        pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
+    //     IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
+    //     pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
 
-        return (userAmount, lpAmount);
-    }
+    //     return (userAmount, lpAmount);
+    // }
 
     function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
         IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());

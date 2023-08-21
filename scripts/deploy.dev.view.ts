@@ -34,14 +34,14 @@ async function main() {
     console.log(`router:`, router.address);
     console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
-    // console.log(await pool.getPair(0));
-    // console.log(await pool.getPair(1));
+    console.log(await pool.getPair(0));
+    console.log(await pool.getPair(1));
 
     // console.log(await positionManager.getPosition('0x2068f8e9C9e61A330F2F713C998D372C04e3C9Cc', 0, true));
 
-    console.log(await orderManager.decreaseMarketOrders(9));
-
-    console.log(await executor.connect(keeper).executeDecreaseOrder(9, TradeType.MARKET));
+    // console.log(await orderManager.decreaseMarketOrders(9));
+    //
+    // console.log(await executor.connect(keeper).executeDecreaseOrder(9, TradeType.MARKET));
 
     console.log(await orderManager.decreaseMarketOrdersIndex());
     console.log(await executor.decreaseMarketOrderStartIndex());
