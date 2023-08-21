@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 
 import '../libraries/Position.sol';
 import '../libraries/PositionKey.sol';
-import '../interfaces/IPositionManager.sol';
+import {PositionStatus, IPositionManager} from '../interfaces/IPositionManager.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
@@ -125,14 +125,37 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             shortTracker[_pairIndex] += _sizeAmount;
         }
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+
         int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
         netExposureAmountChecker[_pairIndex] =
             prevNetExposureAmountChecker +
             (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
+        PositionStatus currenrntPositionStatus = PositionStatus.Blance;
+        if (prevNetExposureAmountChecker > 0) {
+            currenrntPositionStatus = PositionStatus.NetLong;
+        } else {
+            currenrntPositionStatus = PositionStatus.NetShort;
+        }
+        PositionStatus nextPositionStatus = PositionStatus.Blance;
+        if (netExposureAmountChecker[_pairIndex] > 0) {
+            nextPositionStatus = PositionStatus.NetLong;
+        } else {
+            nextPositionStatus = PositionStatus.NetShort;
+        }
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
 
-        if (prevNetExposureAmountChecker > 0) {
+        if (currenrntPositionStatus == PositionStatus.Blance) {
+            if (netExposureAmountChecker[_pairIndex] > 0) {
+                pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+            } else {
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+            }
+            pool.updateAveragePrice(_pairIndex, _price);
+            return;
+        }
+
+        if (currenrntPositionStatus == PositionStatus.NetLong) {
             if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
                 pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
@@ -177,7 +200,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     pool.updateAveragePrice(_pairIndex, 0);
                 }
             }
-        } else if (prevNetExposureAmountChecker < 0) {
+        } else {
             if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
                 pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
@@ -223,13 +246,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                     pool.updateAveragePrice(_pairIndex, 0);
                 }
             }
-        } else {
-            if (netExposureAmountChecker[_pairIndex] > 0) {
-                pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-            } else {
-                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-            }
-            pool.updateAveragePrice(_pairIndex, _price);
         }
     }
 
