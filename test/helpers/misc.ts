@@ -79,13 +79,16 @@ export async function decreasePosition(
     user: SignerWithAddress,
     pairIndex: number,
     collateral: BigNumber,
-    openPrice: BigNumber,
     size: BigNumber,
     tradeType: TradeType,
     isLong: boolean,
+    openPrice?: BigNumber,
 ) {
     const { keeper, router, executor, orderManager } = testEnv;
 
+    if (!openPrice) {
+        openPrice = ethers.utils.parseUnits('30000', 30);
+    }
     const request: TradingTypes.DecreasePositionRequestStruct = {
         account: user.address,
         pairIndex: pairIndex,
