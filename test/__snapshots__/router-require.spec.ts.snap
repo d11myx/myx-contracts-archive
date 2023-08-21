@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Router: check require condition, trigger errors createIncreaseOrder permission check check increase sizeAmount sizeAmount > tradingConfig.maxTradeAmount, trigger error: invalid trade size 1`] = `307694`;
