@@ -32,7 +32,7 @@ describe('Trade: profit & Loss', () => {
     });
 
     describe('user profit > 0', () => {
-        it('price goes up, user get profit', async () => {
+        it('price goes up, user profit > vault balance', async () => {
             const {
                 users: [trader],
                 usdt,
