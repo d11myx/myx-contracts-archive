@@ -54,9 +54,10 @@ describe('Modify LP Average Price', async () => {
 
             const collateral = ethers.utils.parseUnits('20000', 18);
             const sizeAmount = ethers.utils.parseUnits('20', 18);
+            const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
-            await increasePosition(testEnv, trader, pairIndex, collateral, sizeAmount, TradeType.MARKET, true);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
         });
 
         after(async () => {
@@ -285,9 +286,10 @@ describe('Modify LP Average Price', async () => {
 
             const collateral = ethers.utils.parseUnits('20000', 18);
             const sizeAmount = ethers.utils.parseUnits('10', 18);
+            const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
-            await increasePosition(testEnv, trader, pairIndex, collateral, sizeAmount, TradeType.MARKET, false);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, false);
         });
 
         after(async () => {

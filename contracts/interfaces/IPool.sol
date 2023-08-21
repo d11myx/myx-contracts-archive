@@ -160,4 +160,22 @@ interface IPool {
         uint256 _amount,
         bytes calldata data
     ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
+
+    function swap(
+        uint256 _pairIndex,
+        bool _isBuy,
+        uint256 _amountIn,
+        uint256 _minOut,
+        bytes calldata data
+    ) external returns (uint256 amountIn, uint256 amountOut);
+
+    function swapForAccount(
+        address _funder,
+        address _receiver,
+        uint256 _pairIndex,
+        bool _isBuy,
+        uint256 _amountIn,
+        uint256 _minOut,
+        bytes calldata data
+    ) external returns (uint256 amountIn, uint256 amountOut);
 }
