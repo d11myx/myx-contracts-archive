@@ -83,6 +83,37 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         emit UpdateFundingInterval(oldInterval, newInterval);
     }
 
+    function _calFundfeeeAmdTradeFee(
+        address _keeper,
+        address _account,
+        uint256 _pairIndex,
+        int256 _positionCollaternal,
+        uint256 _sizeAmount,
+        bool _isLong,
+        uint256 _price
+    ) internal returns (int256 afterCollateral, uint256 tradingFee, int256 fundingFee) {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        afterCollateral = _positionCollaternal;
+        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
+
+        if (fundingFee >= 0) {
+            if (_isLong) {
+                afterCollateral -= fundingFee;
+            } else {
+                afterCollateral += fundingFee;
+            }
+        } else {
+            if (!_isLong) {
+                afterCollateral += fundingFee;
+            } else {
+                afterCollateral -= fundingFee;
+            }
+        }
+        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
+        afterCollateral -= int256(tradingFee);
+        _distributeTradingFee(pair, tradingFee, _keeper);
+    }
+
     function increasePosition(
         address _keeper,
         address _account,
@@ -118,35 +149,20 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         position.positionAmount = position.positionAmount + _sizeAmount;
 
-        int256 afterCollateral = int256(position.collateral);
+        int256 afterCollateral;
         uint256 transferOut;
 
-        // funding fee
         updateFundingRate(_pairIndex, _price);
-        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
-
-        if (fundingFee >= 0) {
-            if (_isLong) {
-                afterCollateral -= fundingFee;
-            } else {
-                afterCollateral += fundingFee;
-            }
-        } else {
-            if (!_isLong) {
-                afterCollateral += fundingFee;
-            } else {
-                afterCollateral -= fundingFee;
-            }
-        }
-
+        (afterCollateral, tradingFee, fundingFee) = _calFundfeeeAmdTradeFee(
+            _keeper,
+            _account,
+            _pairIndex,
+            int256(position.positionAmount),
+            _sizeAmount,
+            _isLong,
+            _price
+        );
         position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
-        // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
-
-        // trading fee
-        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
-        afterCollateral -= int256(tradingFee);
-
-        _distributeTradingFee(pair, tradingFee, _keeper);
 
         // final collateral & out
         afterCollateral += _collateral;
