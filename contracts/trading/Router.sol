@@ -13,8 +13,9 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../interfaces/ISwapCallback.sol';
 import '../interfaces/IPool.sol';
+import "../interfaces/IOrderCallback.sol";
 
-contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, ETHGateway {
+contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrderCallback, ETHGateway {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IOrderManager public orderManager;
@@ -42,7 +43,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, ETHGat
                 collateral: request.collateral,
                 openPrice: request.openPrice,
                 isLong: request.isLong,
-                sizeAmount: int256(request.sizeAmount)
+                sizeAmount: int256(request.sizeAmount),
+                data: abi.encode(request.account)
             })
         );
 
@@ -87,7 +89,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, ETHGat
                 collateral: request.collateral,
                 openPrice: request.openPrice,
                 isLong: request.isLong,
-                sizeAmount: int256(request.sizeAmount)
+                sizeAmount: int256(request.sizeAmount),
+                data: abi.encode(request.account)
             })
         );
     }
@@ -103,7 +106,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, ETHGat
                 collateral: request.collateral,
                 openPrice: request.triggerPrice,
                 isLong: request.isLong,
-                sizeAmount: - int256(request.sizeAmount)
+                sizeAmount: - int256(request.sizeAmount),
+                data: abi.encode(request.account)
             })
         );
     }
@@ -161,7 +165,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, ETHGat
                     collateral: 0,
                     openPrice: request.tpPrice,
                     isLong: request.isLong,
-                    sizeAmount: - int256(request.tp)
+                    sizeAmount: - int256(request.tp),
+                    data: abi.encode(msg.sender)
                 })
             );
         }
@@ -174,7 +179,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, ETHGat
                     collateral: 0,
                     openPrice: request.slPrice,
                     isLong: request.isLong,
-                    sizeAmount: - int256(request.sl)
+                    sizeAmount: - int256(request.sl),
+                    data: abi.encode(msg.sender)
                 })
             );
         }
@@ -248,6 +254,19 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, ETHGat
     ) external override returns (uint256, uint256) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return IPool(pool).swapForAccount(msg.sender, receiver, pairIndex, isBuy, amountIn, minOut, abi.encode(msg.sender));
+    }
+
+    function createOrderCallback(
+        address collateral,
+        uint256 amount,
+        address to,
+        bytes calldata data
+    ) external override {
+        address sender = abi.decode(data, (address));
+
+        if (amount > 0) {
+            IERC20(collateral).transferFrom(sender, to, uint256(amount));
+        }
     }
 
     function addLiquidityCallback(

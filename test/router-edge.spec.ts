@@ -71,7 +71,7 @@ describe('Router: Edge cases', () => {
         const amount = ethers.utils.parseUnits('30000', 18);
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
 
-        await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+        await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
         const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
             account: trader.address,
@@ -204,7 +204,7 @@ describe('Router: Edge cases', () => {
             expect(traderPosition.positionAmount).to.be.eq(ethers.utils.parseUnits('15', 18));
 
             let collateral = ethers.utils.parseUnits('30000', 18);
-            await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
             // trader take all indexToken
             await increaseUserPosition(
@@ -220,7 +220,7 @@ describe('Router: Edge cases', () => {
             // shorter open position
             collateral = ethers.utils.parseUnits('27000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(shorter.address, collateral));
-            await usdt.connect(shorter.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+            await usdt.connect(shorter.signer).approve(router.address, MAX_UINT_AMOUNT);
             await increaseUserPosition(
                 shorter,
                 pairIndex,
@@ -302,7 +302,7 @@ describe('Router: Edge cases', () => {
             const size = ethers.utils.parseUnits('15', 18);
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
-            await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -371,7 +371,7 @@ describe('Router: Edge cases', () => {
 
             const collateral = ethers.utils.parseUnits('1000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
-            await usdt.connect(trader.signer).approve(orderManager.address, MAX_UINT_AMOUNT);
+            await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
             const size = collateral.div(30000).mul(100).mul(90).div(100);
 
