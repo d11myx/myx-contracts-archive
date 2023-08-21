@@ -142,6 +142,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         } else {
             nextPositionStatus = PositionStatus.NetShort;
         }
+        bool isAddPosition = netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker;
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
 
@@ -156,7 +157,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         }
 
         if (currenrntPositionStatus == PositionStatus.NetLong) {
-            if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
+            if (isAddPosition) {
                 pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
                 uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
@@ -201,13 +202,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 }
             }
         } else {
-            if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-
-                uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                pool.updateAveragePrice(_pairIndex, averagePrice);
-            } else {
+            if (isAddPosition) {
                 uint256 decreaseShort;
                 uint256 increaseLong;
 
@@ -245,6 +240,12 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 if (netExposureAmountChecker[_pairIndex] == 0) {
                     pool.updateAveragePrice(_pairIndex, 0);
                 }
+            } else {
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+
+                uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
+                    sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
+                pool.updateAveragePrice(_pairIndex, averagePrice);
             }
         }
     }
