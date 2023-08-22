@@ -13,13 +13,24 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../interfaces/ISwapCallback.sol';
 import '../interfaces/IPool.sol';
-import "../interfaces/IOrderCallback.sol";
+import '../interfaces/IOrderCallback.sol';
 
 contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrderCallback, ETHGateway {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
-    IOrderManager public orderManager;
-    IPool public pool;
+    IOrderManager public immutable orderManager;
+    IPool public immutable pool;
+
+    constructor(
+        address _weth,
+        IAddressesProvider addressProvider,
+        IOrderManager _orderManager,
+        IPool _pool
+    ) ETHGateway(_weth) {
+        ADDRESS_PROVIDER = addressProvider;
+        orderManager = _orderManager;
+        pool = _pool;
+    }
 
     modifier onlyPoolAdmin() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
@@ -36,16 +47,15 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         _;
     }
 
-    constructor(address _weth, IAddressesProvider addressProvider, IOrderManager _orderManager, IPool _pool) ETHGateway(_weth) {
-        ADDRESS_PROVIDER = addressProvider;
-        orderManager = _orderManager;
-        pool = _pool;
-    }
-
-    function createIncreaseOrder(TradingTypes.IncreasePositionWithTpSlRequest memory request) external returns (uint256 orderId) {
+    function createIncreaseOrder(
+        TradingTypes.IncreasePositionWithTpSlRequest memory request
+    ) external returns (uint256 orderId) {
         request.account = msg.sender;
 
-        require(request.tradeType != TradingTypes.TradeType.TP && request.tradeType != TradingTypes.TradeType.SL, 'not support');
+        require(
+            request.tradeType != TradingTypes.TradeType.TP && request.tradeType != TradingTypes.TradeType.SL,
+            'not support'
+        );
 
         orderId = orderManager.createOrder(
             TradingTypes.CreateOrderRequest({
@@ -88,40 +98,47 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         return orderId;
     }
 
-    function createIncreaseOrderWithoutTpSl(TradingTypes.IncreasePositionRequest memory request) external returns (uint256 orderId) {
+    function createIncreaseOrderWithoutTpSl(
+        TradingTypes.IncreasePositionRequest memory request
+    ) external returns (uint256 orderId) {
         request.account = msg.sender;
 
-        require(request.tradeType != TradingTypes.TradeType.TP && request.tradeType != TradingTypes.TradeType.SL, 'not support');
-
-        return orderManager.createOrder(
-            TradingTypes.CreateOrderRequest({
-                account: request.account,
-                pairIndex: request.pairIndex,
-                tradeType: request.tradeType,
-                collateral: request.collateral,
-                openPrice: request.openPrice,
-                isLong: request.isLong,
-                sizeAmount: int256(request.sizeAmount),
-                data: abi.encode(request.account)
-            })
+        require(
+            request.tradeType != TradingTypes.TradeType.TP && request.tradeType != TradingTypes.TradeType.SL,
+            'not support'
         );
+
+        return
+            orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: request.account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.openPrice,
+                    isLong: request.isLong,
+                    sizeAmount: int256(request.sizeAmount),
+                    data: abi.encode(request.account)
+                })
+            );
     }
 
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256) {
         request.account = msg.sender;
 
-        return orderManager.createOrder(
-            TradingTypes.CreateOrderRequest({
-                account: request.account,
-                pairIndex: request.pairIndex,
-                tradeType: request.tradeType,
-                collateral: request.collateral,
-                openPrice: request.triggerPrice,
-                isLong: request.isLong,
-                sizeAmount: - int256(request.sizeAmount),
-                data: abi.encode(request.account)
-            })
-        );
+        return
+            orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: request.account,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.triggerPrice,
+                    isLong: request.isLong,
+                    sizeAmount: -int256(request.sizeAmount),
+                    data: abi.encode(request.account)
+                })
+            );
     }
 
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
@@ -177,7 +194,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
                     collateral: 0,
                     openPrice: request.tpPrice,
                     isLong: request.isLong,
-                    sizeAmount: - int256(request.tp),
+                    sizeAmount: -int256(request.tp),
                     data: abi.encode(msg.sender)
                 })
             );
@@ -191,7 +208,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
                     collateral: 0,
                     openPrice: request.slPrice,
                     isLong: request.isLong,
-                    sizeAmount: - int256(request.sl),
+                    sizeAmount: -int256(request.sl),
                     data: abi.encode(msg.sender)
                 })
             );
@@ -200,7 +217,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function addLiquidity(
-        address pool,
         address indexToken,
         address stableToken,
         uint256 indexAmount,
@@ -211,7 +227,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function addLiquidityForAccount(
-        address pool,
         address indexToken,
         address stableToken,
         address receiver,
@@ -223,7 +238,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function removeLiquidity(
-        address pool,
         address indexToken,
         address stableToken,
         uint256 amount
@@ -233,7 +247,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function removeLiquidityForAccount(
-        address pool,
         address indexToken,
         address stableToken,
         address receiver,
@@ -244,7 +257,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function swap(
-        address pool,
         address indexToken,
         address stableToken,
         bool isBuy,
@@ -256,7 +268,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function swapForAccount(
-        address pool,
         address indexToken,
         address stableToken,
         address receiver,
@@ -265,7 +276,16 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         uint256 minOut
     ) external override returns (uint256, uint256) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).swapForAccount(msg.sender, receiver, pairIndex, isBuy, amountIn, minOut, abi.encode(msg.sender));
+        return
+            IPool(pool).swapForAccount(
+                msg.sender,
+                receiver,
+                pairIndex,
+                isBuy,
+                amountIn,
+                minOut,
+                abi.encode(msg.sender)
+            );
     }
 
     function createOrderCallback(
@@ -298,7 +318,11 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         }
     }
 
-    function removeLiquidityCallback(address pairToken, uint256 amount, bytes calldata data) external override onlyPool {
+    function removeLiquidityCallback(
+        address pairToken,
+        uint256 amount,
+        bytes calldata data
+    ) external override onlyPool {
         address sender = abi.decode(data, (address));
         IERC20(pairToken).transferFrom(sender, msg.sender, amount);
     }

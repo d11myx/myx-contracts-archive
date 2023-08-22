@@ -28,7 +28,7 @@ describe('Trade: profit & Loss', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
     describe('user profit > 0', () => {
