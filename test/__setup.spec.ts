@@ -2,7 +2,7 @@ import { setupTestEnv } from './helpers/make-suite';
 import { deployments } from 'hardhat';
 
 before(async () => {
-    await deployments.fixture(['market']);
+    await deployments.fixture(['core', 'market']);
 
     console.log('-> Initializing test environment');
     await setupTestEnv();
