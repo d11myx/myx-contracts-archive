@@ -19,15 +19,27 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IOrderManager public orderManager;
+    IPool public pool;
 
     modifier onlyPoolAdmin() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 
-    constructor(address _weth, IAddressesProvider addressProvider, IOrderManager _orderManager) ETHGateway(_weth) {
+    modifier onlyOrderManager() {
+        require(msg.sender == address(orderManager), 'onlyOrderManager');
+        _;
+    }
+
+    modifier onlyPool() {
+        require(msg.sender == address(pool), 'onlyPool');
+        _;
+    }
+
+    constructor(address _weth, IAddressesProvider addressProvider, IOrderManager _orderManager, IPool _pool) ETHGateway(_weth) {
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
+        pool = _pool;
     }
 
     function createIncreaseOrder(TradingTypes.IncreasePositionWithTpSlRequest memory request) external returns (uint256 orderId) {
@@ -261,7 +273,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         uint256 amount,
         address to,
         bytes calldata data
-    ) external override {
+    ) external override onlyOrderManager {
         address sender = abi.decode(data, (address));
 
         if (amount > 0) {
@@ -275,7 +287,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         uint256 amountIndex,
         uint256 amountStable,
         bytes calldata data
-    ) external override {
+    ) external override onlyPool {
         address sender = abi.decode(data, (address));
 
         if (amountIndex > 0) {
@@ -286,7 +298,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         }
     }
 
-    function removeLiquidityCallback(address pairToken, uint256 amount, bytes calldata data) external override {
+    function removeLiquidityCallback(address pairToken, uint256 amount, bytes calldata data) external override onlyPool {
         address sender = abi.decode(data, (address));
         IERC20(pairToken).transferFrom(sender, msg.sender, amount);
     }
@@ -297,7 +309,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         uint256 indexAmount,
         uint256 stableAmount,
         bytes calldata data
-    ) external override {
+    ) external override onlyPool {
         address sender = abi.decode(data, (address));
 
         if (indexAmount > 0) {
