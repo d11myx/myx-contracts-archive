@@ -73,7 +73,7 @@ library Position {
         uint256 minLeverage,
         uint256 maxLeverage,
         uint256 maxPositionAmount
-    ) internal view returns (uint256, uint256) {
+    ) internal pure returns (uint256, uint256) {
         // position >= decrease size
         require(_increase ? true : self.positionAmount >= _sizeAmount, 'decrease amount exceed position');
 
