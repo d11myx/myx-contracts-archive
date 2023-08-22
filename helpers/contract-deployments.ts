@@ -15,7 +15,7 @@ import {
     Token,
     WETH,
 } from '../types';
-import { ethers } from 'ethers';
+import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
 import { deployContract, getBlockTimestamp, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
@@ -33,6 +33,17 @@ export const deployMockToken = async (symbol: string): Promise<Token> => {
 export const deployWETH = async (): Promise<WETH> => {
     return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
 };
+
+export async function deployLibraries() {
+    console.log(` - setup libraries`);
+
+    const validationHelper = await deployContract('ValidationHelper', []);
+    console.log(`deployed ValidationHelper at ${validationHelper.address}`);
+
+    return {
+        validationHelper,
+    };
+}
 
 export async function deployToken() {
     console.log(` - setup tokens`);
@@ -131,8 +142,7 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
-    oraclePriceFeed: OraclePriceFeed,
-    indexPriceFeed: IndexPriceFeed,
+    validationHelper: Contract,
 ) {
     console.log(` - setup trading`);
 
@@ -143,11 +153,11 @@ export async function deployTrading(
     ])) as any as PositionManager;
     console.log(`deployed PositionManager at ${positionManager.address}`);
 
-    let orderManager = (await deployContract('OrderManager', [
-        addressProvider.address,
-        pool.address,
-        positionManager.address,
-    ])) as any as OrderManager;
+    let orderManager = (await deployContract(
+        'OrderManager',
+        [addressProvider.address, pool.address, positionManager.address],
+        { ValidationHelper: validationHelper.address },
+    )) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
     const weth = await getWETH();
@@ -160,13 +170,11 @@ export async function deployTrading(
     console.log(`deployed Router at ${router.address}`);
     await orderManager.setRouter(router.address);
 
-    let executor = (await deployContract('Executor', [
-        addressProvider.address,
-        pool.address,
-        orderManager.address,
-        positionManager.address,
-        60,
-    ])) as any as Executor;
+    let executor = (await deployContract(
+        'Executor',
+        [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
+        { ValidationHelper: validationHelper.address },
+    )) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
