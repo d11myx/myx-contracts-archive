@@ -34,8 +34,8 @@ import {
     getExecutor,
     getOrderManager,
     getPositionManager,
+    deployLibraries,
 } from '../../helpers';
-import { address } from 'hardhat/internal/core/config/config-validation';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -158,6 +158,9 @@ export async function newTestEnv(): Promise<TestEnv> {
             address: await signer.getAddress(),
         });
     }
+
+    const { validationHelper } = await deployLibraries();
+
     const { weth, usdt, tokens } = await deployToken();
 
     const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
@@ -176,8 +179,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         addressesProvider,
         roleManager,
         pool,
-        oraclePriceFeed,
-        indexPriceFeed,
+        validationHelper,
     );
 
     await pool.setPositionManager(positionManager.address);
