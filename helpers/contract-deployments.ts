@@ -119,10 +119,7 @@ export async function deployPair(
 ) {
     console.log(` - setup pairs`);
     const poolTokenFactory = (await deployContract('PoolTokenFactory', [addressProvider.address])) as PoolTokenFactory;
-    const pool = (await deployContract('Pool', [
-        addressProvider.address,
-        poolTokenFactory.address
-    ])) as any as Pool;
+    const pool = (await deployContract('Pool', [addressProvider.address, poolTokenFactory.address])) as any as Pool;
     console.log(`deployed Pool at ${pool.address}`);
 
     return { poolTokenFactory, pool };
@@ -153,22 +150,23 @@ export async function deployTrading(
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
-
-
     const weth = await getWETH();
     let router = (await deployContract('Router', [
         weth.address,
         addressProvider.address,
         orderManager.address,
+        pool.address,
     ])) as Router;
     console.log(`deployed Router at ${router.address}`);
     await orderManager.setRouter(router.address);
 
-    let executor = (await deployContract(
-        'Executor',
-        [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
-
-    )) as any as Executor;
+    let executor = (await deployContract('Executor', [
+        addressProvider.address,
+        pool.address,
+        orderManager.address,
+        positionManager.address,
+        60,
+    ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
