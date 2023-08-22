@@ -26,7 +26,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const addressProvider = await getAddressesProvider();
     const pool = await getPool();
 
-    const validationHelperArtifact = await get('ValidationHelper');
+    // const validationHelperArtifact = await get('ValidationHelper');
 
     // PositionManager
     const positionManagerArtifact = await deploy(`${TRADING_VAULT_ID}`, {
@@ -45,9 +45,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         from: deployer,
         contract: 'OrderManager',
         args: [addressProvider.address, pool.address, positionManager.address],
-        libraries: {
-            ValidationHelper: validationHelperArtifact.address,
-        },
+        // libraries: {
+        //     ValidationHelper: validationHelperArtifact.address,
+        // },
         ...COMMON_DEPLOY_PARAMS,
     });
     const orderManager = (await hre.ethers.getContractAt(
@@ -72,9 +72,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         from: deployer,
         contract: 'Executor',
         args: [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
-        libraries: {
-            ValidationHelper: validationHelperArtifact.address,
-        },
+        // libraries: {
+        //     ValidationHelper: validationHelperArtifact.address,
+        // },
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
