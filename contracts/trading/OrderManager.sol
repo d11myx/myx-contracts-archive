@@ -9,7 +9,6 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
 import '../interfaces/IOraclePriceFeed.sol';
 import '../interfaces/IPool.sol';
-import '../interfaces/IPool.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/PositionKey.sol';
 import '../libraries/Int256Utils.sol';
@@ -22,6 +21,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOrderCallback.sol';
+import './ValidationHelper.sol';
 
 contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     using SafeERC20 for IERC20;
@@ -107,26 +107,25 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     function createOrder(
         TradingTypes.CreateOrderRequest calldata request
     ) public nonReentrant onlyCreateOrderAddress(request.account) whenNotPaused returns (uint256 orderId) {
-        require(address(positionManager) != address(0), 'zero address');
-
         address account = request.account;
-        require(!positionManager.isFrozen(account), 'account is frozen');
 
+        // account is frozen
+        ValidationHelper.validateAccountFrozen(positionManager, account);
+
+        // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
-        require(pair.enable, 'trade pair not supported');
+        ValidationHelper.validatePairEnabled(pair);
 
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
-            // check size
+            IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
             require(
-                request.sizeAmount == 0 || _checkTradingAmount(request.pairIndex, request.sizeAmount.abs()),
+                request.sizeAmount == 0 || ValidationHelper.validTradeSize(tradingConfig, request.sizeAmount.abs()),
                 'invalid trade size'
             );
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
             Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
             uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
-            IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
-            //TODO if size = 0
             if (request.sizeAmount >= 0) {
                 // check leverage
                 (uint256 afterPosition,) = position.validLeverage(
@@ -141,7 +140,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                 // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
                 require(afterPosition > 0, 'zero position amount');
             }
-            if (request.sizeAmount <= 0) {
+            if (request.sizeAmount < 0) {
                 // check leverage
                 position.validLeverage(
                     price,
@@ -153,7 +152,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                     tradingConfig.maxPositionAmount
                 );
 
-                //TODO if request size exceed position size, can calculate the max size
                 require(
                     uint256(request.sizeAmount.abs()) == position.positionAmount ||
                     uint256(request.sizeAmount.abs()) <=
@@ -251,11 +249,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
             this.cancelOrder(positionOrder.orderId, positionOrder.tradeType, positionOrder.isIncrease);
         }
-    }
-
-    function _checkTradingAmount(uint256 pairIndex, uint256 size) internal returns (bool) {
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
-        return size >= tradingConfig.minTradeAmount && size <= tradingConfig.maxTradeAmount;
     }
 
     function _transferOrderCollateral(address collateral, uint256 collateralAmount, address to, bytes calldata data) internal {

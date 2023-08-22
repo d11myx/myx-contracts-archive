@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import '../libraries/Position.sol';
 
 enum PositionStatus {
-    Blance,
+    Balance,
     NetLong,
     NetShort
 }

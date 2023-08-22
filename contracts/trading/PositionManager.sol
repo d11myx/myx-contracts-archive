@@ -147,13 +147,13 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         }
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
-        PositionStatus currenrntPositionStatus = PositionStatus.Blance;
+        PositionStatus currentPositionStatus = PositionStatus.Balance;
         if (prevNetExposureAmountChecker > 0) {
-            currenrntPositionStatus = PositionStatus.NetLong;
+            currentPositionStatus = PositionStatus.NetLong;
         } else {
-            currenrntPositionStatus = PositionStatus.NetShort;
+            currentPositionStatus = PositionStatus.NetShort;
         }
-        PositionStatus nextPositionStatus = PositionStatus.Blance;
+        PositionStatus nextPositionStatus = PositionStatus.Balance;
         if (netExposureAmountChecker[_pairIndex] > 0) {
             nextPositionStatus = PositionStatus.NetLong;
         } else {
@@ -163,7 +163,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
 
-        if (currenrntPositionStatus == PositionStatus.Blance) {
+        if (currentPositionStatus == PositionStatus.Balance) {
             if (netExposureAmountChecker[_pairIndex] > 0) {
                 pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
             } else {
@@ -173,7 +173,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             return;
         }
 
-        if (currenrntPositionStatus == PositionStatus.NetLong) {
+        if (currentPositionStatus == PositionStatus.NetLong) {
             if (isAddPosition) {
                 pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
@@ -193,7 +193,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 }
 
                 pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
-                _calLpProft(_pairIndex, _price, true, decreaseLong);
+                _calLpProfit(_pairIndex, _price, true, decreaseLong);
 
                 // increase reserve
                 if (increaseShort > 0) {
@@ -221,7 +221,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                         ? lpVault.stableReservedAmount
                         : decreaseShort.mulPrice(lpVault.averagePrice)
                 );
-                _calLpProft(_pairIndex, _price, false, decreaseShort);
+                _calLpProfit(_pairIndex, _price, false, decreaseShort);
                 // increase reserve
                 if (increaseLong > 0) {
                     pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
@@ -236,12 +236,12 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             }
         }
         // zero exposure
-        if (nextPositionStatus == PositionStatus.Blance) {
+        if (nextPositionStatus == PositionStatus.Balance) {
             pool.updateAveragePrice(_pairIndex, 0);
         }
     }
 
-    function _calLpProft(uint256 _pairIndex, uint256 _price, bool positive, uint amount) internal {
+    function _calLpProfit(uint256 _pairIndex, uint256 _price, bool positive, uint amount) internal {
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         if (positive) {
