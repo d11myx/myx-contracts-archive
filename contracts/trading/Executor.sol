@@ -13,6 +13,7 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
+import './ValidationHelper.sol';
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
@@ -324,36 +325,29 @@ contract Executor is IExecutor, Pausable {
 
     function _executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) internal {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
-
         if (order.account == address(0)) {
             return;
         }
 
-        // expire
+        // is expired
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            require(order.blockTime + maxTimeDelay >= block.timestamp, 'order expired');
+            ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
         }
-
-        // get pair
-        uint256 pairIndex = order.pairIndex;
-        IPool.Pair memory pair = pool.getPair(pairIndex);
 
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
+            orderManager.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
             return;
         }
 
-        // check trading amount
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+        uint256 pairIndex = order.pairIndex;
+        // calculate max order size
+        order.sizeAmount = Math.min(order.sizeAmount, position.positionAmount);
 
-        order.sizeAmount = order.sizeAmount.min(position.positionAmount);
-        require(
-            order.sizeAmount == 0 ||
-                (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
-            'invalid trade size'
-        );
-        // IPool.Pair memory pair = pool.getPair(pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+
         // check price
         uint256 price = positionManager.getValidPrice(pair.indexToken, pairIndex, order.isLong);
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {

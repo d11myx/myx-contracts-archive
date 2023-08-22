@@ -15,7 +15,7 @@ import {
     Token,
     WETH,
 } from '../types';
-import { ethers } from 'ethers';
+import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
 import { deployContract, getBlockTimestamp, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
@@ -33,6 +33,17 @@ export const deployMockToken = async (symbol: string): Promise<Token> => {
 export const deployWETH = async (): Promise<WETH> => {
     return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
 };
+
+export async function deployLibraries() {
+    console.log(` - setup libraries`);
+
+    const validationHelper = await deployContract('ValidationHelper', []);
+    console.log(`deployed ValidationHelper at ${validationHelper.address}`);
+
+    return {
+        validationHelper,
+    };
+}
 
 export async function deployToken() {
     console.log(` - setup tokens`);
@@ -131,8 +142,7 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
-    oraclePriceFeed: OraclePriceFeed,
-    indexPriceFeed: IndexPriceFeed,
+    validationHelper: Contract,
 ) {
     console.log(` - setup trading`);
 
@@ -165,7 +175,7 @@ export async function deployTrading(
         pool.address,
         orderManager.address,
         positionManager.address,
-        60,
+        60 * 10, //todo testing time
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
