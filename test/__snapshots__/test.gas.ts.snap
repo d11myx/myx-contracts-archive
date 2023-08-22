@@ -2,6 +2,6 @@
 
 exports[`Multicall gas cost of maping(address=>uint256) 1`] = `45700`;
 
-exports[`Multicall gas cost of maping(address=>uint256) 2`] = `307722`;
+exports[`Multicall gas cost of maping(address=>uint256) 2`] = `307700`;
 
 exports[`Multicall gas cost of uint256 1`] = `43477`;
