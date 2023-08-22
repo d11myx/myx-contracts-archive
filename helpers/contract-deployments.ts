@@ -153,11 +153,11 @@ export async function deployTrading(
     ])) as any as PositionManager;
     console.log(`deployed PositionManager at ${positionManager.address}`);
 
-    let orderManager = (await deployContract(
-        'OrderManager',
-        [addressProvider.address, pool.address, positionManager.address],
-        { ValidationHelper: validationHelper.address },
-    )) as any as OrderManager;
+    let orderManager = (await deployContract('OrderManager', [
+        addressProvider.address,
+        pool.address,
+        positionManager.address,
+    ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
     const weth = await getWETH();
@@ -170,11 +170,13 @@ export async function deployTrading(
     console.log(`deployed Router at ${router.address}`);
     await orderManager.setRouter(router.address);
 
-    let executor = (await deployContract(
-        'Executor',
-        [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
-        { ValidationHelper: validationHelper.address },
-    )) as any as Executor;
+    let executor = (await deployContract('Executor', [
+        addressProvider.address,
+        pool.address,
+        orderManager.address,
+        positionManager.address,
+        60 * 10, //todo testing time
+    ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));

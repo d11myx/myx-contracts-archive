@@ -6,19 +6,19 @@ import "../interfaces/IPool.sol";
 
 library ValidationHelper {
 
-    function validateAccountFrozen(IPositionManager positionManager, address account) external {
+    function validateAccountFrozen(IPositionManager positionManager, address account) internal view {
         require(!positionManager.isFrozen(account), 'account is frozen');
     }
 
-    function validatePairEnabled(IPool.Pair calldata pair) external {
+    function validatePairEnabled(IPool.Pair memory pair) internal view {
         require(pair.enable, 'trade pair not supported');
     }
 
-    function validateOrderExpired(uint256 orderTime, uint256 maxTimeDelay) external {
+    function validateOrderExpired(uint256 orderTime, uint256 maxTimeDelay) internal view {
         require(orderTime + maxTimeDelay >= block.timestamp, 'order expired');
     }
 
-    function validTradeSize(IPool.TradingConfig calldata tradingConfig, uint256 size) external returns (bool) {
+    function validTradeSize(IPool.TradingConfig memory tradingConfig, uint256 size) internal view returns (bool) {
         return size >= tradingConfig.minTradeAmount && size <= tradingConfig.maxTradeAmount;
     }
 
