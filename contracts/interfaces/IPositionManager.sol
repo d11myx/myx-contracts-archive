@@ -3,6 +3,12 @@ pragma solidity 0.8.17;
 
 import '../libraries/Position.sol';
 
+enum PositionStatus {
+    Blance,
+    NetLong,
+    NetShort
+}
+
 interface IPositionManager {
     event UpdateFundingInterval(uint256 oldInterval, uint256 newInterval);
 

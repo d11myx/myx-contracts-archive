@@ -419,7 +419,7 @@ contract Pool is IPool, Roleable {
             if (amountIn > 0) balanceBefore = IERC20(pair.indexToken).balanceOf(address(this));
             ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, amountIn, 0, data);
             if (amountIn > 0) {
-                require(balanceBefore.add(amountIn) <= IERC20(pair.indexToken).balanceOf(address(this)), 'ts');
+                require(balanceBefore.add(amountIn) <= IERC20(pair.indexToken).balanceOf(address(this)), 't');
             }
             IERC20(pair.stableToken).safeTransfer(_receiver, amountOut);
         }

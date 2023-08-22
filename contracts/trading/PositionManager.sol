@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 
 import '../libraries/Position.sol';
 import '../libraries/PositionKey.sol';
-import '../interfaces/IPositionManager.sol';
+import {PositionStatus, IPositionManager} from '../interfaces/IPositionManager.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
@@ -83,6 +83,193 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         emit UpdateFundingInterval(oldInterval, newInterval);
     }
 
+    function _takeFundingFeeAddTraderFee(
+        address _keeper,
+        address _account,
+        uint256 _pairIndex,
+        int256 _collateral,
+        uint256 _sizeAmount,
+        bool _isLong,
+        uint256 _price
+    ) internal returns (int256 afterCollateral, uint256 tradingFee, int256 fundingFee) {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
+        afterCollateral = _collateral;
+        if (fundingFee >= 0) {
+            if (_isLong) {
+                afterCollateral -= fundingFee;
+            } else {
+                afterCollateral += fundingFee;
+            }
+        } else {
+            if (!_isLong) {
+                afterCollateral += fundingFee;
+            } else {
+                afterCollateral -= fundingFee;
+            }
+        }
+        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
+        afterCollateral -= int256(tradingFee);
+
+        _distributeTradingFee(pair, tradingFee, _keeper);
+    }
+
+    function _settleLPPosition(
+        uint256 _pairIndex,
+        uint256 _sizeAmount,
+        bool _isLong,
+        bool isIncrease,
+        uint256 _price
+    ) internal {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        if (_sizeAmount == 0) {
+            return;
+        }
+        int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
+        if (isIncrease) {
+            if (_isLong) {
+                longTracker[_pairIndex] += _sizeAmount;
+            } else {
+                shortTracker[_pairIndex] += _sizeAmount;
+            }
+            netExposureAmountChecker[_pairIndex] =
+                prevNetExposureAmountChecker +
+                (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
+        } else {
+            netExposureAmountChecker[_pairIndex] =
+                prevNetExposureAmountChecker +
+                (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
+            if (_isLong) {
+                longTracker[_pairIndex] -= _sizeAmount;
+            } else {
+                shortTracker[_pairIndex] -= _sizeAmount;
+            }
+        }
+        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+
+        PositionStatus currenrntPositionStatus = PositionStatus.Blance;
+        if (prevNetExposureAmountChecker > 0) {
+            currenrntPositionStatus = PositionStatus.NetLong;
+        } else {
+            currenrntPositionStatus = PositionStatus.NetShort;
+        }
+        PositionStatus nextPositionStatus = PositionStatus.Blance;
+        if (netExposureAmountChecker[_pairIndex] > 0) {
+            nextPositionStatus = PositionStatus.NetLong;
+        } else {
+            nextPositionStatus = PositionStatus.NetShort;
+        }
+        bool isAddPosition = netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker;
+
+        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
+
+        if (currenrntPositionStatus == PositionStatus.Blance) {
+            if (netExposureAmountChecker[_pairIndex] > 0) {
+                pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+            } else {
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+            }
+            pool.updateAveragePrice(_pairIndex, _price);
+            return;
+        }
+
+        if (currenrntPositionStatus == PositionStatus.NetLong) {
+            if (isAddPosition) {
+                pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
+
+                uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
+                    sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
+
+                pool.updateAveragePrice(_pairIndex, averagePrice);
+            } else {
+                uint256 decreaseLong;
+                uint256 increaseShort;
+
+                if (nextPositionStatus != PositionStatus.NetShort) {
+                    decreaseLong = _sizeAmount;
+                } else {
+                    decreaseLong = uint256(prevNetExposureAmountChecker);
+                    increaseShort = _sizeAmount - decreaseLong;
+                }
+
+                pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
+                _calLpProft(_pairIndex, _price, true, decreaseLong);
+
+                // increase reserve
+                if (increaseShort > 0) {
+                    pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                    pool.updateAveragePrice(_pairIndex, _price);
+                }
+            }
+        } else {
+            if (isAddPosition) {
+                uint256 decreaseShort;
+                uint256 increaseLong;
+
+                if (netExposureAmountChecker[_pairIndex] <= 0) {
+                    decreaseShort = _sizeAmount;
+                } else {
+                    decreaseShort = uint256(-prevNetExposureAmountChecker);
+                    increaseLong = _sizeAmount - decreaseShort;
+                }
+
+                // decrease reserve & pnl
+                pool.decreaseReserveAmount(
+                    _pairIndex,
+                    0,
+                    netExposureAmountChecker[_pairIndex] >= 0
+                        ? lpVault.stableReservedAmount
+                        : decreaseShort.mulPrice(lpVault.averagePrice)
+                );
+                _calLpProft(_pairIndex, _price, false, decreaseShort);
+                // increase reserve
+                if (increaseLong > 0) {
+                    pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
+                    pool.updateAveragePrice(_pairIndex, _price);
+                }
+            } else {
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+
+                uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
+                    sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
+                pool.updateAveragePrice(_pairIndex, averagePrice);
+            }
+        }
+        // zero exposure
+        if (nextPositionStatus == PositionStatus.Blance) {
+            pool.updateAveragePrice(_pairIndex, 0);
+        }
+    }
+
+    function _calLpProft(uint256 _pairIndex, uint256 _price, bool positive, uint amount) internal {
+        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        if (positive) {
+            if (_price > lpVault.averagePrice) {
+                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
+
+                pool.decreaseProfit(_pairIndex, profit);
+            } else {
+                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
+
+                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                pool.increaseProfit(_pairIndex, profit);
+            }
+        } else {
+            if (_price < lpVault.averagePrice) {
+                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
+
+                pool.decreaseProfit(_pairIndex, profit);
+            } else {
+                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
+
+                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+                pool.increaseProfit(_pairIndex, profit);
+            }
+        }
+    }
+
+    //todo why not oracle price
     function increasePosition(
         address _keeper,
         address _account,
@@ -118,36 +305,24 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         position.positionAmount = position.positionAmount + _sizeAmount;
 
-        int256 afterCollateral = int256(position.collateral);
-        uint256 transferOut;
-
         // funding fee
         updateFundingRate(_pairIndex, _price);
-        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
-
-        if (fundingFee >= 0) {
-            if (_isLong) {
-                afterCollateral -= fundingFee;
-            } else {
-                afterCollateral += fundingFee;
-            }
-        } else {
-            if (!_isLong) {
-                afterCollateral += fundingFee;
-            } else {
-                afterCollateral -= fundingFee;
-            }
-        }
 
         position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
-        // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
+        int256 afterCollateral;
+        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
+            _keeper,
+            _account,
+            _pairIndex,
+            int256(position.collateral),
+            _sizeAmount,
+            _isLong,
+            _price
+        );
 
         // trading fee
-        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
-        afterCollateral -= int256(tradingFee);
 
-        _distributeTradingFee(pair, tradingFee, _keeper);
-
+        uint256 transferOut;
         // final collateral & out
         afterCollateral += _collateral;
         transferOut += _collateral < 0 ? _collateral.abs() : 0;
@@ -156,120 +331,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         position.collateral = afterCollateral.abs();
 
         // update lp vault
-        if (_sizeAmount > 0) {
-            int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
-            netExposureAmountChecker[_pairIndex] =
-                prevNetExposureAmountChecker +
-                (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
-            if (_isLong) {
-                longTracker[_pairIndex] += _sizeAmount;
-            } else {
-                shortTracker[_pairIndex] += _sizeAmount;
-            }
-
-            IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-
-            if (prevNetExposureAmountChecker > 0) {
-                if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
-                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-
-                    uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                        sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
-
-                    pool.updateAveragePrice(_pairIndex, averagePrice);
-                } else {
-                    uint256 decreaseLong;
-                    uint256 increaseShort;
-
-                    if (netExposureAmountChecker[_pairIndex] >= 0) {
-                        decreaseLong = _sizeAmount;
-                    } else {
-                        decreaseLong = uint256(prevNetExposureAmountChecker);
-                        increaseShort = _sizeAmount - decreaseLong;
-                    }
-
-                    // decrease reserve & pnl
-
-                    pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
-                    if (_price > lpVault.averagePrice) {
-                        uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
-
-                        pool.decreaseProfit(_pairIndex, profit);
-                    } else {
-                        uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
-
-                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                        pool.increaseProfit(_pairIndex, profit);
-                    }
-
-                    // increase reserve
-                    if (increaseShort > 0) {
-                        pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
-
-                        pool.updateAveragePrice(_pairIndex, _price);
-                    }
-
-                    // zero exposure
-                    if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pool.updateAveragePrice(_pairIndex, 0);
-                    }
-                }
-            } else if (prevNetExposureAmountChecker < 0) {
-                if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-
-                    uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                        sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                    pool.updateAveragePrice(_pairIndex, averagePrice);
-                } else {
-                    uint256 decreaseShort;
-                    uint256 increaseLong;
-
-                    if (netExposureAmountChecker[_pairIndex] <= 0) {
-                        decreaseShort = _sizeAmount;
-                    } else {
-                        decreaseShort = uint256(-prevNetExposureAmountChecker);
-                        increaseLong = _sizeAmount - decreaseShort;
-                    }
-
-                    // decrease reserve & pnl
-                    pool.decreaseReserveAmount(
-                        _pairIndex,
-                        0,
-                        netExposureAmountChecker[_pairIndex] >= 0
-                            ? lpVault.stableReservedAmount
-                            : decreaseShort.mulPrice(lpVault.averagePrice)
-                    );
-                    if (_price > lpVault.averagePrice) {
-                        uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
-                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                        pool.increaseProfit(_pairIndex, profit);
-                    } else {
-                        uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
-                        pool.decreaseProfit(_pairIndex, profit);
-                    }
-
-                    // increase reserve
-                    if (increaseLong > 0) {
-                        pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
-                        pool.updateAveragePrice(_pairIndex, _price);
-                    }
-
-                    // zero exposure
-                    if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pool.updateAveragePrice(_pairIndex, 0);
-                    }
-                }
-            } else {
-                if (netExposureAmountChecker[_pairIndex] > 0) {
-                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-                } else {
-                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-                }
-                pool.updateAveragePrice(_pairIndex, _price);
-            }
-        }
-
+        _settleLPPosition(_pairIndex, _sizeAmount, _isLong, true, _price);
         if (transferOut > 0) {
             IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
@@ -330,148 +392,26 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         position.positionAmount -= _sizeAmount;
 
-        int256 afterCollateral = int256(position.collateral);
         uint256 transferOut;
 
         // funding fee
         updateFundingRate(_pairIndex, _price);
-        fundingFee = getFundingFee(false, _account, _pairIndex, _isLong, _sizeAmount);
-        //todo Whether the user's funding fee should be given to lp
-        if (fundingFee >= 0) {
-            if (_isLong) {
-                afterCollateral -= fundingFee;
-            } else {
-                afterCollateral += fundingFee;
-            }
-        } else {
-            if (!_isLong) {
-                afterCollateral -= (-fundingFee);
-            } else {
-                afterCollateral -= (fundingFee);
-            }
-        }
+        int256 afterCollateral;
+        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
+            _keeper,
+            _account,
+            _pairIndex,
+            int256(position.collateral),
+            _sizeAmount,
+            _isLong,
+            _price
+        );
 
         position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
         // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
 
-        // trading fee
-        tradingFee = _tradingFee(_pairIndex, !_isLong, _sizeAmount, _price);
-        afterCollateral -= int256(tradingFee);
-
-        _distributeTradingFee(pair, tradingFee, _keeper);
-
         // update lp vault
-        if (_sizeAmount > 0) {
-            int256 prevNetExposureAmountChecker = netExposureAmountChecker[_pairIndex];
-            netExposureAmountChecker[_pairIndex] =
-                prevNetExposureAmountChecker +
-                (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
-            if (_isLong) {
-                longTracker[_pairIndex] -= _sizeAmount;
-            } else {
-                shortTracker[_pairIndex] -= _sizeAmount;
-            }
-
-            IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-            if (prevNetExposureAmountChecker > 0) {
-                if (netExposureAmountChecker[_pairIndex] > prevNetExposureAmountChecker) {
-                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-
-                    uint256 averagePrice = (uint256(prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                        sizeDelta).calculatePrice(uint256(prevNetExposureAmountChecker) + _sizeAmount);
-                    pool.updateAveragePrice(_pairIndex, averagePrice);
-                } else {
-                    uint256 decreaseLong;
-                    uint256 increaseShort;
-
-                    if (netExposureAmountChecker[_pairIndex] >= 0) {
-                        decreaseLong = _sizeAmount;
-                    } else {
-                        decreaseLong = uint256(prevNetExposureAmountChecker);
-                        increaseShort = _sizeAmount - decreaseLong;
-                    }
-
-                    // decrease reserve & pnl
-                    pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
-                    if (_price > lpVault.averagePrice) {
-                        uint256 profit = decreaseLong.mulPrice(_price - lpVault.averagePrice);
-                        pool.decreaseProfit(_pairIndex, profit);
-                    } else {
-                        uint256 profit = decreaseLong.mulPrice(lpVault.averagePrice - _price);
-                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                        pool.increaseProfit(_pairIndex, profit);
-                    }
-
-                    // increase reserve
-                    if (increaseShort > 0) {
-                        pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
-                        pool.updateAveragePrice(_pairIndex, _price);
-                    }
-
-                    // zero exposure
-                    if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pool.updateAveragePrice(_pairIndex, 0);
-                    }
-                }
-            } else if (prevNetExposureAmountChecker < 0) {
-                if (netExposureAmountChecker[_pairIndex] < prevNetExposureAmountChecker) {
-                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-
-                    uint256 averagePrice = (uint256(-prevNetExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                        sizeDelta).calculatePrice(uint256(-prevNetExposureAmountChecker) + _sizeAmount);
-                    pool.updateAveragePrice(_pairIndex, averagePrice);
-                } else {
-                    uint256 decreaseShort;
-                    uint256 increaseLong;
-
-                    if (netExposureAmountChecker[_pairIndex] <= 0) {
-                        decreaseShort = _sizeAmount;
-                    } else {
-                        decreaseShort = uint256(-prevNetExposureAmountChecker);
-                        increaseLong = _sizeAmount - decreaseShort;
-                    }
-
-                    // decrease reserve & pnl
-
-                    pool.decreaseReserveAmount(
-                        _pairIndex,
-                        0,
-                        netExposureAmountChecker[_pairIndex] >= 0
-                            ? lpVault.stableReservedAmount
-                            : decreaseShort.mulPrice(lpVault.averagePrice)
-                    );
-                    if (_price > lpVault.averagePrice) {
-                        uint256 profit = decreaseShort.mulPrice(_price - lpVault.averagePrice);
-
-                        IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                        pool.increaseProfit(_pairIndex, profit);
-                    } else {
-                        uint256 profit = decreaseShort.mulPrice(lpVault.averagePrice - _price);
-
-                        pool.decreaseProfit(_pairIndex, profit);
-                    }
-
-                    // increase reserve
-                    if (increaseLong > 0) {
-                        pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
-
-                        pool.updateAveragePrice(_pairIndex, _price);
-                    }
-
-                    // zero exposure
-                    if (netExposureAmountChecker[_pairIndex] == 0) {
-                        pool.updateAveragePrice(_pairIndex, 0);
-                    }
-                }
-            } else {
-                if (netExposureAmountChecker[_pairIndex] > 0) {
-                    pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
-                } else {
-                    pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-                }
-                pool.updateAveragePrice(_pairIndex, _price);
-            }
-        }
+        _settleLPPosition(_pairIndex, _sizeAmount, _isLong, false, _price);
 
         // pnl
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
@@ -529,7 +469,10 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         if (transferOut > 0) {
             //TODO fix: Insufficient vault balance
-            require(IERC20(pair.stableToken).balanceOf(address(this)) > transferOut, 'todo: to be fixed, Insufficient vault balance');
+            require(
+                IERC20(pair.stableToken).balanceOf(address(this)) > transferOut,
+                'todo: to be fixed, Insufficient vault balance'
+            );
             IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
 
