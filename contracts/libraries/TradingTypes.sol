@@ -93,10 +93,10 @@ library TradingTypes {
         uint256 sizeAmount; // Number of customs documents
         bool isLong;
         bool abovePrice; // Above or below the trigger price
-        // Market order: open long true empty false
-        // Limit order: open multiple false empty true
-        // Stop profit: multiple single false empty single true
-        // Stop loss: multiple orders true and short orders false
+        // market：long: true,  short: false
+        //  limit：long: false, short: true
+        //     tp：long: false, short: true
+        //     sl：long: true,  short: false
         uint256 blockTime;
         bool needADL;
     }

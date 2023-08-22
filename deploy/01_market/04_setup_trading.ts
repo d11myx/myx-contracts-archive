@@ -18,15 +18,15 @@ import {
 import { Router, Executor, PositionManager, OrderManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
-    const { deploy } = deployments;
-    const { deployer, poolAdmin, feeReceiver } = await getNamedAccounts();
+    const { deploy, get } = deployments;
+    const { deployer, poolAdmin } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
     const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
 
     const addressProvider = await getAddressesProvider();
     const pool = await getPool();
-    const oraclePriceFeed = await getOraclePriceFeed();
-    const indexPriceFeed = await getIndexPriceFeed();
+
+    // const validationHelperArtifact = await get('ValidationHelper');
 
     // PositionManager
     const positionManagerArtifact = await deploy(`${TRADING_VAULT_ID}`, {
@@ -45,6 +45,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         from: deployer,
         contract: 'OrderManager',
         args: [addressProvider.address, pool.address, positionManager.address],
+        // libraries: {
+        //     ValidationHelper: validationHelperArtifact.address,
+        // },
         ...COMMON_DEPLOY_PARAMS,
     });
     const orderManager = (await hre.ethers.getContractAt(
@@ -69,7 +72,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         from: deployer,
         contract: 'Executor',
         args: [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
-
+        // libraries: {
+        //     ValidationHelper: validationHelperArtifact.address,
+        // },
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
