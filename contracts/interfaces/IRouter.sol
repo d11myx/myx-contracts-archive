@@ -25,7 +25,6 @@ interface IRouter {
     ) external returns (uint256 tpOrderId, uint256 slOrderId);
 
     function addLiquidity(
-        address pool,
         address indexToken,
         address stableToken,
         uint256 indexAmount,
@@ -33,7 +32,6 @@ interface IRouter {
     ) external;
 
     function addLiquidityForAccount(
-        address pool,
         address indexToken,
         address stableToken,
         address receiver,
@@ -42,14 +40,12 @@ interface IRouter {
     ) external;
 
     function removeLiquidity(
-        address pool,
         address indexToken,
         address stableToken,
         uint256 amount
     ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
 
     function removeLiquidityForAccount(
-        address pool,
         address indexToken,
         address stableToken,
         address receiver,
@@ -57,7 +53,6 @@ interface IRouter {
     ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
 
     function swap(
-        address pool,
         address indexToken,
         address stableToken,
         bool isBuy,
@@ -66,7 +61,6 @@ interface IRouter {
     ) external returns (uint256, uint256);
 
     function swapForAccount(
-        address pool,
         address indexToken,
         address stableToken,
         address receiver,
