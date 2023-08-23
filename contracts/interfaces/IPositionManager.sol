@@ -138,6 +138,4 @@ interface IPositionManager {
     function updateFundingRate(uint256 _pairIndex, uint256 _price) external;
 
     function transferTokenTo(address token, address to, uint256 amount) external;
-
-    function getValidPrice(address token, uint256 _pairIndex, bool _isLong) external view returns (uint256);
 }
