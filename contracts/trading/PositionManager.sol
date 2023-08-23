@@ -5,6 +5,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
 import '../libraries/Position.sol';
 import '../libraries/PositionKey.sol';
@@ -22,6 +23,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
+    using SafeMath for uint256;
     using Int256Utils for int256;
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
@@ -627,6 +629,32 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         gobleFundingRateIndex[_pairIndex] = gobleFundingRateIndex[_pairIndex] + nextFundingRate;
         lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
         //todo  fund rate for settlement lp
+
+        uint256 lpPosition;
+
+        if (longTracker[_pairIndex] > shortTracker[_pairIndex]) {
+            lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
+            nextFundingRate > 0
+                ? pool.increaseLPProfit(
+                    _pairIndex,
+                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
+                )
+                : pool.decreaseLPProfit(
+                    _pairIndex,
+                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
+                );
+        } else {
+            lpPosition = shortTracker[_pairIndex] - longTracker[_pairIndex];
+            nextFundingRate > 0
+                ? pool.decreaseLPProfit(
+                    _pairIndex,
+                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
+                )
+                : pool.increaseLPProfit(
+                    _pairIndex,
+                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
+                );
+        }
 
         emit UpdateFundingRate(_pairIndex, gobleFundingRateIndex[_pairIndex], lastFundingRateUpdateTimes[_pairIndex]);
     }
