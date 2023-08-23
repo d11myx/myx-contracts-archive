@@ -62,7 +62,7 @@ interface IPool {
         uint256 stableTotalAmount;
         uint256 stableReservedAmount;
         uint256 averagePrice;
-        // int256 realisedPnl;
+
     }
 
     struct Pair {
