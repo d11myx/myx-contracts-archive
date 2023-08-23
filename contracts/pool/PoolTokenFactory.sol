@@ -6,8 +6,7 @@ import '../interfaces/IPoolTokenFactory.sol';
 import './PoolToken.sol';
 
 contract PoolTokenFactory is IPoolTokenFactory {
-
-    mapping(address => mapping(address => address)) public override getPoolToken; // indexToken -> stableToken -> poolToken
+    //mapping(address => mapping(address => address)) public override getPoolToken; // indexToken -> stableToken -> poolToken
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
@@ -24,7 +23,7 @@ contract PoolTokenFactory is IPoolTokenFactory {
         );
         PoolToken pairToken = new PoolToken(ADDRESS_PROVIDER, indexToken, stableToken, msg.sender, name, symbol);
 
-        getPoolToken[indexToken][stableToken] = address(pairToken);
+        //getPoolToken[indexToken][stableToken] = address(pairToken);
         return address(pairToken);
     }
 }
