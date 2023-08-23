@@ -21,7 +21,6 @@ import '../libraries/Int256Utils.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 
-import '../token/PairToken.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 
 import '../interfaces/ILiquidityCallback.sol';
