@@ -681,22 +681,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     //     return (userAmount, lpAmount);
     // }
 
-    function getValidPrice(address token, uint256 _pairIndex, bool _isLong) public view returns (uint256) {
-        IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle());
-
-        // IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 oraclePrice = oraclePriceFeed.getPrice(token);
-
-        uint256 indexPrice = oraclePriceFeed.getIndexPrice(token, 0);
-
-        uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
-        diffP = diffP.calculatePercentage(oraclePrice);
-
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(_pairIndex);
-        require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
-        return oraclePrice;
-    }
-
     function getPosition(
         address _account,
         uint256 _pairIndex,
