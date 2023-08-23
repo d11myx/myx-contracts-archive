@@ -13,7 +13,8 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
-import './ValidationHelper.sol';
+import "./helpers/ValidationHelper.sol";
+import "./helpers/TradingHelper.sol";
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
@@ -124,45 +125,29 @@ contract Executor is IExecutor, Pausable {
         TradingTypes.TradeType _tradeType
     ) external onlyPositionKeeper whenNotPaused {
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
-
         if (order.account == address(0)) {
             return;
         }
 
-        // expire
-        if (_tradeType == TradingTypes.TradeType.MARKET) {
-            require(order.blockTime + maxTimeDelay >= block.timestamp, 'order expired');
+        // is expired
+        if (order.tradeType == TradingTypes.TradeType.MARKET) {
+            ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
         }
 
         // check pair enable
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        require(pair.enable, 'trade pair not supported');
-
-        // check account enable
-        require(!positionManager.isFrozen(order.account), 'account is frozen');
-
-        // check trading amount
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
-        require(
-            order.sizeAmount == 0 ||
-                (order.sizeAmount >= tradingConfig.minTradeAmount && order.sizeAmount <= tradingConfig.maxTradeAmount),
-            'invalid trade size'
-        );
-
-        // check price
-        // IPool.Pair memory pair = pool.getPair(pairIndex);
-        uint256 price = positionManager.getValidPrice(pair.indexToken, pairIndex, order.isLong);
-        if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
-            require(
-                order.isLong
-                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <= order.openPrice
-                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >= order.openPrice,
-                'not reach trigger price'
-            );
-        } else {
-            require(order.isLong ? price >= order.openPrice : price <= order.openPrice, 'not reach trigger price');
+        if (!pair.enable) {
+            orderManager.cancelOrder(order.orderId, order.tradeType, true);
+            return;
         }
+
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+
+        // validate can be triggered
+        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        bool isAbove = order.isLong && (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
+        ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, isAbove, price, order.openPrice);
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -334,6 +319,14 @@ contract Executor is IExecutor, Pausable {
             ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
         }
 
+        // check pair enable
+        uint256 pairIndex = order.pairIndex;
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        if (!pair.enable) {
+            orderManager.cancelOrder(order.orderId, order.tradeType, false);
+            return;
+        }
+
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
@@ -341,35 +334,21 @@ contract Executor is IExecutor, Pausable {
             return;
         }
 
-        uint256 pairIndex = order.pairIndex;
-        // calculate max order size
+        // calculate valid order size
         order.sizeAmount = Math.min(order.sizeAmount, position.positionAmount);
 
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
-        IPool.Pair memory pair = pool.getPair(pairIndex);
 
-        // check price
-        uint256 price = positionManager.getValidPrice(pair.indexToken, pairIndex, order.isLong);
-        if (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT) {
-            require(
-                order.abovePrice
-                    ? price.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <= order.triggerPrice
-                    : price.mulPercentage(PrecisionUtils.percentage() + tradingConfig.priceSlipP) >= order.triggerPrice,
-                'not reach trigger price'
-            );
-        } else {
-            require(
-                order.abovePrice ? price <= order.triggerPrice : price >= order.triggerPrice,
-                'not reach trigger price'
-            );
-        }
+        // validate can be triggered
+        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, order.abovePrice, price, order.triggerPrice);
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             if (!order.isLong) {
-                price = order.triggerPrice.min(price);
+                price = Math.min(order.triggerPrice, price);
             } else {
-                price = order.triggerPrice.max(price);
+                price = Math.max(order.triggerPrice, price);
             }
         }
 
@@ -468,7 +447,6 @@ contract Executor is IExecutor, Pausable {
 
         if (position.positionAmount == 0) {
             // cancel all decrease order
-
             IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
 
             for (uint256 i = 0; i < orders.length; i++) {
@@ -555,7 +533,7 @@ contract Executor is IExecutor, Pausable {
 
         require(sumAmount == order.sizeAmount, 'ADL position amount not match decrease order');
         IPool.Pair memory pair = pool.getPair(order.pairIndex);
-        uint256 price = positionManager.getValidPrice(pair.indexToken, order.pairIndex, !order.isLong);
+        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             Position.Info memory adlPosition = adlPositions[i];
@@ -583,7 +561,8 @@ contract Executor is IExecutor, Pausable {
             return;
         }
         IPool.Pair memory pair = pool.getPair(position.pairIndex);
-        uint256 price = positionManager.getValidPrice(pair.indexToken, position.pairIndex, position.isLong);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
+        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
 
         int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
         uint256 tradingFee = positionManager.getTradingFee(
@@ -602,8 +581,6 @@ contract Executor is IExecutor, Pausable {
             unrealizedPnl -
             int256(tradingFee) +
             (position.isLong ? -fundingFee : fundingFee);
-
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
 
         bool needLiquidate;
         if (exposureAsset <= 0) {
