@@ -21,7 +21,7 @@ interface IPool {
         uint256 stableReservedAmount
     );
 
-    event UpdateProfit(uint256 indexed pairIndex, int256 profit, uint256 stableTotalAmount);
+    event UpdateLPProfit(uint256 indexed pairIndex, int256 profit, uint256 stableTotalAmount);
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
@@ -131,9 +131,9 @@ interface IPool {
 
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external;
 
-    function increaseProfit(uint256 _pairIndex, uint256 _profit) external;
+    function increaseLPProfit(uint256 _pairIndex, uint256 _profit) external;
 
-    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external;
+    function decreaseLPProfit(uint256 _pairIndex, uint256 _profit) external;
 
     function liqiitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
 
