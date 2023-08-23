@@ -21,7 +21,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOrderCallback.sol';
-import './ValidationHelper.sol';
+import "./helpers/ValidationHelper.sol";
 
 contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     using SafeERC20 for IERC20;
@@ -174,7 +174,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (request.sizeAmount > 0) {
             return
-                _createIncreaseOrder(
+                _saveIncreaseOrder(
                 TradingTypes.IncreasePositionRequest({
                     account: account,
                     pairIndex: request.pairIndex,
@@ -187,7 +187,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             );
         } else if (request.sizeAmount < 0) {
             return
-                _createDecreaseOrder(
+                _saveDecreaseOrder(
                 TradingTypes.DecreasePositionRequest({
                     account: account,
                     pairIndex: request.pairIndex,
@@ -201,7 +201,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         } else {
             require(request.collateral != 0, 'not support');
             return
-                _createIncreaseOrder(
+                _saveIncreaseOrder(
                 TradingTypes.IncreasePositionRequest({
                     account: account,
                     pairIndex: request.pairIndex,
@@ -260,7 +260,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         require(balanceBefore.add(collateralAmount) <= IERC20(collateral).balanceOf(to), 'tc');
     }
 
-    function _createIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) internal returns (uint256) {
+    function _saveIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) internal returns (uint256) {
         TradingTypes.IncreasePositionOrder memory order = TradingTypes.IncreasePositionOrder(
             ordersIndex,
             _request.account,
@@ -312,7 +312,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         return order.orderId;
     }
 
-    function _createDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) internal returns (uint256) {
+    function _saveDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) internal returns (uint256) {
         TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder(
             ordersIndex, // orderId
             _request.account,
