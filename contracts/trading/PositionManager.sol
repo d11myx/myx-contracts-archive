@@ -93,8 +93,13 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 _price
     ) internal returns (int256 afterCollateral, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         afterCollateral = _collateral;
+
+        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
+        afterCollateral -= int256(tradingFee);
+        _distributeTradingFee(_account, pair, tradingFee, _keeper);
+
+        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         if (fundingFee >= 0) {
             if (_isLong) {
                 afterCollateral -= fundingFee;
@@ -108,10 +113,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 afterCollateral -= fundingFee;
             }
         }
-        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
-        afterCollateral -= int256(tradingFee);
 
-        _distributeTradingFee(pair, tradingFee, _keeper);
     }
 
     function _settleLPPosition(
@@ -527,7 +529,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         return tradingFee;
     }
 
-    function _distributeTradingFee(IPool.Pair memory pair, uint256 tradingFee, address keeper) internal {
+    function _distributeTradingFee(address account, IPool.Pair memory pair, uint256 tradingFee, address keeper) internal {
         console.log('distributeTradingFee tradingFee', tradingFee, 'keeper', keeper);
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
@@ -549,7 +551,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             stakingAmount
         );
 
-        emit DistributeTradingFee(pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
+        emit DistributeTradingFee(account, pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
     }
 
     // TODO receiver? ?onlyPoolAdmin
