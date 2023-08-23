@@ -13,6 +13,7 @@ import '../interfaces/IPoolToken.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 import '../token/interfaces/IBaseToken.sol';
 
+import '../libraries/AmountMath.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/Int256Utils.sol';
@@ -34,7 +35,6 @@ contract Pool is IPool, Roleable {
     using Math for uint256;
     using SafeMath for uint256;
 
-    uint256 public constant PRICE_PRECISION = 1e30;
     uint256 public constant PERCENTAGE = 10000;
     uint256 public constant FUNDING_RATE_PERCENTAGE = 1000000;
 
@@ -46,12 +46,12 @@ contract Pool is IPool, Roleable {
 
     mapping(address => mapping(address => uint256)) public override getPairIndex;
     mapping(address => mapping(address => bool)) public isPairListed;
+
     uint256 public pairsCount;
     mapping(uint256 => Pair) public pairs;
-
     mapping(uint256 => Vault) public vaults;
-
     address public positionManager;
+
     mapping(address => uint256) public feeTokenAmounts;
 
     constructor(IAddressesProvider addressProvider, IPoolTokenFactory _poolTokenFactory) Roleable(addressProvider) {
@@ -65,22 +65,6 @@ contract Pool is IPool, Roleable {
 
     function setPositionManager(address _tradingVault) external onlyPoolAdmin {
         positionManager = _tradingVault;
-    }
-
-    function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
-        return pairs[_pairIndex];
-    }
-
-    function getTradingConfig(uint256 _pairIndex) external view override returns (TradingConfig memory) {
-        return tradingConfigs[_pairIndex];
-    }
-
-    function getTradingFeeConfig(uint256 _pairIndex) external view override returns (TradingFeeConfig memory) {
-        return tradingFeeConfigs[_pairIndex];
-    }
-
-    function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
-        return fundingFeeConfigs[_pairIndex];
     }
 
     // Manage pairs
@@ -239,31 +223,25 @@ contract Pool is IPool, Roleable {
         );
     }
 
-    function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
-        return vaults[_pairIndex];
-    }
-
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPositionManager {
         vaults[_pairIndex].averagePrice = _averagePrice;
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
+    function increaseLPProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.stableTotalAmount += _profit;
-        vault.realisedPnl += int256(_profit);
-        emit UpdateProfit(_pairIndex, int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
+
+        emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
     }
 
-    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
+    function decreaseLPProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-
         require(_profit <= availableStable, 'stable token not enough');
-
         vault.stableTotalAmount -= _profit;
-        vault.realisedPnl -= int256(_profit);
-        emit UpdateProfit(_pairIndex, -int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
+        // vault.realisedPnl -= int256(_profit);
+        emit UpdateLPProfit(_pairIndex, -int256(_profit), vault.stableTotalAmount);
     }
 
     function liqiitySwap(
@@ -481,10 +459,10 @@ contract Pool is IPool, Roleable {
         uint256 price = _getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
 
-        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
 
         // usdt value of deposit
-        uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
+        uint256 indexDepositDelta = AmountMath.getStableDelta(afterFeeIndexAmount, price);
 
         // calculate deposit usdt value without slippage
         uint256 slipDelta;
@@ -500,7 +478,7 @@ contract Pool is IPool, Roleable {
             uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
             uint256 expectStableDelta = totalDelta - expectIndexDelta;
 
-            (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
+            (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, AmountMath.PRICE_PRECISION);
             if (indexTotalDelta > expectIndexDelta) {
                 uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
                 uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
@@ -509,9 +487,9 @@ contract Pool is IPool, Roleable {
 
                 slipDelta =
                     swapIndexDelta -
-                    AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
+                    AMMUtils.getAmountOut(AmountMath.getIndexAmount(swapIndexDelta, price), reserveA, reserveB);
                 slipToken = pair.indexToken;
-                slipAmount = _getAmount(slipDelta, price);
+                slipAmount = AmountMath.getIndexAmount(slipDelta, price);
 
                 afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
                 feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(slipAmount);
@@ -523,7 +501,7 @@ contract Pool is IPool, Roleable {
 
                 slipDelta =
                     swapStableDelta -
-                    _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+                    AmountMath.getStableDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
                 slipToken = pair.stableToken;
                 slipAmount = slipDelta;
 
@@ -532,7 +510,10 @@ contract Pool is IPool, Roleable {
             }
         }
         // mint lp
-        mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
+        mintAmount = AmountMath.getIndexAmount(
+            indexDepositDelta + afterFeeStableAmount - slipDelta,
+            lpFairPrice(_pairIndex)
+        );
         IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
@@ -598,19 +579,11 @@ contract Pool is IPool, Roleable {
         IPool.Pair memory pair = getPair(_pairIndex);
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = _getPrice(pair.indexToken);
-        uint256 lpFairDelta = _getDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
+        uint256 lpFairDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
         return
             lpFairDelta > 0
-                ? Math.mulDiv(lpFairDelta, PRICE_PRECISION, IERC20(pair.pairToken).totalSupply())
-                : 1 * PRICE_PRECISION;
-    }
-
-    function _getDelta(uint256 amount, uint256 price) internal pure returns (uint256) {
-        return Math.mulDiv(amount, price, PRICE_PRECISION);
-    }
-
-    function _getAmount(uint256 delta, uint256 price) internal pure returns (uint256) {
-        return Math.mulDiv(delta, PRICE_PRECISION, price);
+                ? Math.mulDiv(lpFairDelta, AmountMath.PRICE_PRECISION, IERC20(pair.pairToken).totalSupply())
+                : 1 * AmountMath.PRICE_PRECISION;
     }
 
     // calculate lp amount for add liquidity
@@ -644,10 +617,10 @@ contract Pool is IPool, Roleable {
         uint256 slipDelta;
 
         // usdt value of deposit
-        uint256 indexDepositDelta = _getDelta(afterFeeIndexAmount, price);
+        uint256 indexDepositDelta = AmountMath.getStableDelta(afterFeeIndexAmount, price);
 
         {
-            uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+            uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
 
             if (indexReserveDelta + vault.stableTotalAmount > 0) {
                 // after deposit
@@ -658,7 +631,11 @@ contract Pool is IPool, Roleable {
                 uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
                 uint256 expectStableDelta = totalDelta - expectIndexDelta;
 
-                (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, PRICE_PRECISION);
+                (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(
+                    pair.kOfSwap,
+                    price,
+                    AmountMath.PRICE_PRECISION
+                );
                 if (indexTotalDelta > expectIndexDelta) {
                     uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
                     uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
@@ -667,8 +644,8 @@ contract Pool is IPool, Roleable {
 
                     slipDelta =
                         swapIndexDelta -
-                        AMMUtils.getAmountOut(_getAmount(swapIndexDelta, price), reserveA, reserveB);
-                    slipAmount = _getAmount(slipDelta, price);
+                        AMMUtils.getAmountOut(AmountMath.getIndexAmount(swapIndexDelta, price), reserveA, reserveB);
+                    slipAmount = AmountMath.getIndexAmount(slipDelta, price);
                     slipToken = pair.indexToken;
 
                     afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
@@ -680,7 +657,7 @@ contract Pool is IPool, Roleable {
 
                     slipDelta =
                         swapStableDelta -
-                        _getDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+                        AmountMath.getStableDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
                     slipAmount = slipDelta;
                     slipToken = pair.stableToken;
 
@@ -690,7 +667,10 @@ contract Pool is IPool, Roleable {
         }
 
         // mint lp
-        mintAmount = _getAmount(indexDepositDelta + afterFeeStableAmount - slipDelta, lpFairPrice(_pairIndex));
+        mintAmount = AmountMath.getIndexAmount(
+            indexDepositDelta + afterFeeStableAmount - slipDelta,
+            lpFairPrice(_pairIndex)
+        );
 
         return (mintAmount, slipToken, slipAmount);
     }
@@ -710,9 +690,9 @@ contract Pool is IPool, Roleable {
         uint256 price = _getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
 
-        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
-        uint256 depositDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex));
+        uint256 depositDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
 
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta + depositDelta);
@@ -739,7 +719,7 @@ contract Pool is IPool, Roleable {
                 depositStableTokenDelta = extraStableReserveDelta;
             }
         }
-        depositIndexAmount = _getAmount(depositIndexTokenDelta, price);
+        depositIndexAmount = AmountMath.getIndexAmount(depositIndexTokenDelta, price);
         depositStableAmount = depositStableTokenDelta;
 
         // add fee
@@ -765,10 +745,10 @@ contract Pool is IPool, Roleable {
         uint256 price = _getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
 
-        uint256 indexReserveDelta = _getDelta(vault.indexTotalAmount, price);
+        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
 
-        uint256 receiveDelta = _getDelta(_lpAmount, lpFairPrice(_pairIndex));
+        uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
 
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
@@ -796,13 +776,33 @@ contract Pool is IPool, Roleable {
                 receiveStableTokenDelta = extraStableReserveDelta;
             }
         }
-        receiveIndexTokenAmount = _getAmount(receiveIndexTokenDelta, price);
+        receiveIndexTokenAmount = AmountMath.getIndexAmount(receiveIndexTokenDelta, price);
         receiveStableTokenAmount = receiveStableTokenDelta;
 
         return (receiveIndexTokenAmount, receiveStableTokenAmount);
     }
 
+    function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
+        return vaults[_pairIndex];
+    }
+
     function _getPrice(address _token) internal view returns (uint256) {
         return IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(_token);
+    }
+
+    function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
+        return pairs[_pairIndex];
+    }
+
+    function getTradingConfig(uint256 _pairIndex) external view override returns (TradingConfig memory) {
+        return tradingConfigs[_pairIndex];
+    }
+
+    function getTradingFeeConfig(uint256 _pairIndex) external view override returns (TradingFeeConfig memory) {
+        return tradingFeeConfigs[_pairIndex];
+    }
+
+    function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
+        return fundingFeeConfigs[_pairIndex];
     }
 }

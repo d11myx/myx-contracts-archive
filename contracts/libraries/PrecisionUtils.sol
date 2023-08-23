@@ -20,12 +20,12 @@ library PrecisionUtils {
         return Math.mulDiv(delta, PRICE_PRECISION, amount);
     }
 
-    function mulPercentage(uint256 amount, uint256 percentage) internal pure returns (uint256) {
-        return Math.mulDiv(amount, percentage, ONE_HUNDRED_PERCENTAGE);
+    function mulPercentage(uint256 amount, uint256 _percentage) internal pure returns (uint256) {
+        return Math.mulDiv(amount, _percentage, ONE_HUNDRED_PERCENTAGE);
     }
 
-    function divPercentage(uint256 amount, uint256 percentage) internal pure returns (uint256) {
-        return Math.mulDiv(amount, ONE_HUNDRED_PERCENTAGE, percentage);
+    function divPercentage(uint256 amount, uint256 _percentage) internal pure returns (uint256) {
+        return Math.mulDiv(amount, ONE_HUNDRED_PERCENTAGE, _percentage);
     }
 
     function calculatePercentage(uint256 amount0, uint256 amount1) internal pure returns (uint256) {

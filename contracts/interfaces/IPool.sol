@@ -21,7 +21,7 @@ interface IPool {
         uint256 stableReservedAmount
     );
 
-    event UpdateProfit(uint256 indexed pairIndex, int256 profit, int256 realisedPnl, uint256 stableTotalAmount);
+    event UpdateLPProfit(uint256 indexed pairIndex, int256 profit, uint256 stableTotalAmount);
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
@@ -55,6 +55,15 @@ interface IPool {
         uint256 stableAmount,
         uint256 lpAmount
     );
+
+    struct Vault {
+        uint256 indexTotalAmount; // total amount of tokens
+        uint256 indexReservedAmount; // amount of tokens reserved for open positions
+        uint256 stableTotalAmount;
+        uint256 stableReservedAmount;
+        uint256 averagePrice;
+
+    }
 
     struct Pair {
         uint256 pairIndex;
@@ -110,15 +119,6 @@ interface IPool {
 
     function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
 
-    struct Vault {
-        uint256 indexTotalAmount; // total amount of tokens
-        uint256 indexReservedAmount; // amount of tokens reserved for open positions
-        uint256 stableTotalAmount;
-        uint256 stableReservedAmount;
-        uint256 averagePrice;
-        int256 realisedPnl;
-    }
-
     function getVault(uint256 _pairIndex) external view returns (Vault memory vault);
 
     function increaseTotalAmount(uint256 _pairToken, uint256 _indexAmount, uint256 _stableAmount) external;
@@ -131,9 +131,9 @@ interface IPool {
 
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external;
 
-    function increaseProfit(uint256 _pairIndex, uint256 _profit) external;
+    function increaseLPProfit(uint256 _pairIndex, uint256 _profit) external;
 
-    function decreaseProfit(uint256 _pairIndex, uint256 _profit) external;
+    function decreaseLPProfit(uint256 _pairIndex, uint256 _profit) external;
 
     function liqiitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
 

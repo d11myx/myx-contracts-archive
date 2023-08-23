@@ -248,23 +248,23 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             if (_price > lpVault.averagePrice) {
                 uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
 
-                pool.decreaseProfit(_pairIndex, profit);
+                pool.decreaseLPProfit(_pairIndex, profit);
             } else {
                 uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
 
                 IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                pool.increaseProfit(_pairIndex, profit);
+                pool.increaseLPProfit(_pairIndex, profit);
             }
         } else {
             if (_price < lpVault.averagePrice) {
                 uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
 
-                pool.decreaseProfit(_pairIndex, profit);
+                pool.decreaseLPProfit(_pairIndex, profit);
             } else {
                 uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
 
                 IERC20(pair.stableToken).safeTransfer(address(pool), profit);
-                pool.increaseProfit(_pairIndex, profit);
+                pool.increaseLPProfit(_pairIndex, profit);
             }
         }
     }
