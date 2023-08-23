@@ -231,8 +231,8 @@ contract Pool is IPool, Roleable {
     function increaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
         vault.stableTotalAmount += _profit;
-        vault.realisedPnl += int256(_profit);
-        emit UpdateProfit(_pairIndex, int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
+
+        emit UpdateProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
     }
 
     function decreaseProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
@@ -240,8 +240,8 @@ contract Pool is IPool, Roleable {
         uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
         require(_profit <= availableStable, 'stable token not enough');
         vault.stableTotalAmount -= _profit;
-        vault.realisedPnl -= int256(_profit);
-        emit UpdateProfit(_pairIndex, -int256(_profit), vault.realisedPnl, vault.stableTotalAmount);
+        // vault.realisedPnl -= int256(_profit);
+        emit UpdateProfit(_pairIndex, -int256(_profit), vault.stableTotalAmount);
     }
 
     function liqiitySwap(
