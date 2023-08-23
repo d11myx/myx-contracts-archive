@@ -20,7 +20,7 @@ describe('Multicall', async () => {
         await snapshotGasCost(testGas.testKey("1"));
     });
 
-    it('gas cost of maping(address=>uint256)', async () => {
-        await snapshotGasCost(testGas.testKeys("1"));
-    });
+    // it('gas cost of maping(address=>uint256)', async () => {
+    //     await snapshotGasCost(testGas.testKeys("1"));
+    // });
 });
