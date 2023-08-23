@@ -21,7 +21,7 @@ interface IPool {
         uint256 stableReservedAmount
     );
 
-    event UpdateProfit(uint256 indexed pairIndex, int256 profit, int256 realisedPnl, uint256 stableTotalAmount);
+    event UpdateProfit(uint256 indexed pairIndex, int256 profit, uint256 stableTotalAmount);
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
@@ -55,6 +55,15 @@ interface IPool {
         uint256 stableAmount,
         uint256 lpAmount
     );
+
+    struct Vault {
+        uint256 indexTotalAmount; // total amount of tokens
+        uint256 indexReservedAmount; // amount of tokens reserved for open positions
+        uint256 stableTotalAmount;
+        uint256 stableReservedAmount;
+        uint256 averagePrice;
+        // int256 realisedPnl;
+    }
 
     struct Pair {
         uint256 pairIndex;
@@ -109,15 +118,6 @@ interface IPool {
     function getTradingFeeConfig(uint256) external view returns (TradingFeeConfig memory);
 
     function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
-
-    struct Vault {
-        uint256 indexTotalAmount; // total amount of tokens
-        uint256 indexReservedAmount; // amount of tokens reserved for open positions
-        uint256 stableTotalAmount;
-        uint256 stableReservedAmount;
-        uint256 averagePrice;
-        int256 realisedPnl;
-    }
 
     function getVault(uint256 _pairIndex) external view returns (Vault memory vault);
 
