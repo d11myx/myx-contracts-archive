@@ -137,6 +137,4 @@ interface IPositionManager {
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
     function updateFundingRate(uint256 _pairIndex, uint256 _price) external;
-
-    function transferTokenTo(address token, address to, uint256 amount) external;
 }

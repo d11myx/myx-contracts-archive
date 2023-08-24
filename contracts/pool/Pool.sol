@@ -17,15 +17,13 @@ import '../libraries/AmountMath.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/Int256Utils.sol';
-
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 
 import '../interfaces/IPoolTokenFactory.sol';
-
 import '../interfaces/ILiquidityCallback.sol';
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
@@ -50,6 +48,7 @@ contract Pool is IPool, Roleable {
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
     address public positionManager;
+    address public orderManager;
 
     mapping(address => uint256) public feeTokenAmounts;
 
@@ -57,13 +56,22 @@ contract Pool is IPool, Roleable {
         poolTokenFactory = _poolTokenFactory;
     }
 
+    modifier onlyPositionManagerOrOrderManager() {
+        require(msg.sender == positionManager || msg.sender == orderManager, 'onlyPositionManagerOrOrderManager');
+        _;
+    }
+
     modifier onlyPositionManager() {
         require(msg.sender == positionManager, 'forbidden');
         _;
     }
 
-    function setPositionManager(address _tradingVault) external onlyPoolAdmin {
-        positionManager = _tradingVault;
+    function setPositionManager(address _positionManager) external onlyPoolAdmin {
+        positionManager = _positionManager;
+    }
+
+    function setOrderManager(address _orderManager) external onlyPoolAdmin {
+        orderManager = _orderManager;
     }
 
     // Manage pairs
@@ -690,6 +698,10 @@ contract Pool is IPool, Roleable {
         receiveStableTokenAmount = receiveStableTokenDelta;
 
         return (receiveIndexTokenAmount, receiveStableTokenAmount);
+    }
+
+    function transferTokenTo(address token, address to, uint256 amount) external onlyPositionManagerOrOrderManager {
+        IERC20(token).safeTransfer(to, amount);
     }
 
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {

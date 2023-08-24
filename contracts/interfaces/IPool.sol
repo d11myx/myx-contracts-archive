@@ -121,6 +121,8 @@ interface IPool {
 
     function getVault(uint256 _pairIndex) external view returns (Vault memory vault);
 
+    function transferTokenTo(address token, address to, uint256 amount) external;
+
     function increaseTotalAmount(uint256 _pairToken, uint256 _indexAmount, uint256 _stableAmount) external;
 
     function decreaseTotalAmount(uint256 _pairToken, uint256 _indexAmount, uint256 _stableAmount) external;

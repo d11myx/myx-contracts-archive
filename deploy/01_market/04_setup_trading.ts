@@ -89,6 +89,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await orderManager.setExecutor(executor.address));
 
     await waitForTx(await pool.setPositionManager(positionManager.address));
+    await waitForTx(await pool.setOrderManager(orderManager.address));
 };
 
 func.id = `Pairs`;
