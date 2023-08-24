@@ -29,7 +29,7 @@ describe('Trade: Limit order cases', () => {
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
 
         await snapshotGasCost(
-            await testCallBack
+            testCallBack
                 .connect(depositor.signer)
                 .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount),
         );
