@@ -200,10 +200,6 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
-        // transfer collateral
-//        if (order.collateral > 0) {
-//            positionManager.transferTokenTo(pair.stableToken, address(positionManager), order.collateral.abs());
-//        }
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
             tx.origin,
             order.account,
@@ -404,10 +400,6 @@ contract Executor is IExecutor, Pausable {
             return;
         }
 
-//        // transfer collateral
-//        if (order.collateral > 0) {
-//            positionManager.transferTokenTo(pair.stableToken, address(pool), order.collateral.abs());
-//        }
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
             tx.origin,
             order.account,
