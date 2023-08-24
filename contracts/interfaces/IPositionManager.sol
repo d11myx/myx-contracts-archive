@@ -60,6 +60,7 @@ interface IPositionManager {
     event NeedBuyIndexToken(uint256 pairIndex, uint256 profit, uint256 lastFundingTime);
 
     event DistributeTradingFee(
+        address account,
         uint256 pairIndex,
         uint256 lpAmount,
         uint256 keeperAmount,
