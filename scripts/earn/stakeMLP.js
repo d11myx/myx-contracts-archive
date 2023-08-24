@@ -14,7 +14,7 @@ async function main() {
     let pool = await getPool();
 
     let pairIndex = 0;
-    let pairToken = await contractAt("PairToken", (await pool.pairs(pairIndex)).pairToken);
+
 
     console.log(`btc mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
     let stakeAmount = expandDecimals(100, 18);
@@ -28,7 +28,7 @@ async function main() {
 
 
     pairIndex = 1;
-    pairToken = await contractAt("PairToken", (await pool.pairs(pairIndex)).pairToken);
+
 
     console.log(`eth mlp Balance: ${formatBalance(await pairToken.balanceOf(trader.address))}`);
     stakeAmount = expandDecimals(100, 18);
