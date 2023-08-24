@@ -66,11 +66,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         _;
     }
 
-    modifier onlyExecutorOrOrderManager() {
-        require(msg.sender == addressExecutor || msg.sender == addressOrderManager, 'Position Manager: forbidden');
-        _;
-    }
-
     function setExecutor(address _addressExecutor) external onlyPoolAdmin {
         addressExecutor = _addressExecutor;
     }
@@ -256,7 +251,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             } else {
                 uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
 
-                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+//                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
                 pool.increaseLPProfit(_pairIndex, profit);
             }
         } else {
@@ -267,7 +262,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             } else {
                 uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
 
-                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
+//                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
                 pool.increaseLPProfit(_pairIndex, profit);
             }
         }
@@ -337,7 +332,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         // update lp vault
         _settleLPPosition(_pairIndex, _sizeAmount, _isLong, true, _price);
         if (transferOut > 0) {
-            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
+            pool.transferTokenTo(pair.stableToken, _account, transferOut);
+//            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
 
         emit IncreasePosition(
@@ -472,12 +468,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         }
 
         if (transferOut > 0) {
-            //TODO fix: Insufficient vault balance
-            require(
-                IERC20(pair.stableToken).balanceOf(address(this)) > transferOut,
-                'todo: to be fixed, Insufficient vault balance'
-            );
-            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
+//            //TODO fix: Insufficient vault balance
+//            require(
+//                IERC20(pair.stableToken).balanceOf(address(this)) > transferOut,
+//                'todo: to be fixed, Insufficient vault balance'
+//            );
+//            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
+//
+            pool.transferTokenTo(pair.stableToken, _account, transferOut);
         }
 
         emit UpdatePosition(
@@ -536,7 +534,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
         uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
-        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
+//        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
         pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
 
         uint256 keeperAmount = tradingFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
@@ -562,7 +560,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
         if (claimableStakingTradingFee > 0) {
-            IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
+            pool.transferTokenTo(claimToken, msg.sender, claimableStakingTradingFee);
+//            IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
             delete stakingTradingFee[claimToken];
         }
         return claimableStakingTradingFee;
@@ -573,7 +572,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
         uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
         if (claimableDistributorTradingFee > 0) {
-            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
+            pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
+//            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
             delete distributorTradingFee[claimToken];
         }
         return claimableDistributorTradingFee;
@@ -585,15 +585,11 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256) {
         uint256 claimableKeeperTradingFee = keeperTradingFee[claimToken][keeper];
         if (claimableKeeperTradingFee > 0) {
-            IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
+            pool.transferTokenTo(claimToken, keeper, claimableKeeperTradingFee);
+//            IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
             delete keeperTradingFee[claimToken][keeper];
         }
         return claimableKeeperTradingFee;
-    }
-
-    //TODO will remove
-    function transferTokenTo(address token, address to, uint256 amount) external onlyExecutorOrOrderManager {
-        IERC20(token).safeTransfer(to, amount);
     }
 
     function getFundingFee(

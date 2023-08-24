@@ -67,19 +67,16 @@ describe('Trade: profit & Loss', () => {
             expect(userPnl).to.be.gt(positionBalance);
             expect(userPnl).to.be.lt(poolBalance);
 
-            //TODO should not reverted，Waiting for the contract to be fixed
-            await expect(
-                decreasePosition(
-                    testEnv,
-                    trader,
-                    pairIndex,
-                    BigNumber.from(0),
-                    size,
-                    TradeType.MARKET,
-                    true,
-                    ethers.utils.parseUnits(btcPrice, 30),
-                ),
-            ).to.be.revertedWith('todo: to be fixed, Insufficient vault balance');
+            await decreasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                BigNumber.from(0),
+                size,
+                TradeType.MARKET,
+                true,
+                ethers.utils.parseUnits(btcPrice, 30),
+            );
         });
     });
 });
