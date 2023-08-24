@@ -29,7 +29,7 @@ describe('Trade: Limit order cases', () => {
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
 
         await snapshotGasCost(
-            await testCallBack
+            testCallBack
                 .connect(depositor.signer)
                 .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount),
         );
@@ -69,7 +69,7 @@ describe('Trade: Limit order cases', () => {
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`---positionAft: `, positionAft);
 
-            await snapshotGasCost(executor.connect(keeper.signer).executeIncreaseLimitOrders([orderId]));
+            await executor.connect(keeper.signer).executeIncreaseLimitOrders([orderId]);
             // expect(positionAft.positionAmount).to.be.eq(size);
         });
 

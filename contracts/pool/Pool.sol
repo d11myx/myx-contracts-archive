@@ -21,7 +21,6 @@ import '../libraries/Int256Utils.sol';
 import '../libraries/AMMUtils.sol';
 import '../libraries/PrecisionUtils.sol';
 
-import '../token/PairToken.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 
 import '../interfaces/ILiquidityCallback.sol';
@@ -584,95 +583,6 @@ contract Pool is IPool, Roleable {
             lpFairDelta > 0
                 ? Math.mulDiv(lpFairDelta, AmountMath.PRICE_PRECISION, IERC20(pair.pairToken).totalSupply())
                 : 1 * AmountMath.PRICE_PRECISION;
-    }
-
-    // calculate lp amount for add liquidity
-    function getMintLpAmount(
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount
-    ) external view returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
-        if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0);
-
-        IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), 'invalid pair');
-
-        IPool.Vault memory vault = getVault(_pairIndex);
-        uint256 afterFeeIndexAmount;
-        uint256 afterFeeStableAmount;
-
-        {
-            // transfer fee
-            uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
-            uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
-
-            afterFeeIndexAmount = _indexAmount - indexFeeAmount;
-            afterFeeStableAmount = _stableAmount - stableFeeAmount;
-        }
-
-        uint256 price = _getPrice(pair.indexToken);
-        require(price > 0, 'invalid price');
-
-        // calculate deposit usdt value without slippage
-        uint256 slipDelta;
-
-        // usdt value of deposit
-        uint256 indexDepositDelta = AmountMath.getStableDelta(afterFeeIndexAmount, price);
-
-        {
-            uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
-
-            if (indexReserveDelta + vault.stableTotalAmount > 0) {
-                // after deposit
-                uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
-                uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
-
-                uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
-                uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-                uint256 expectStableDelta = totalDelta - expectIndexDelta;
-
-                (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(
-                    pair.kOfSwap,
-                    price,
-                    AmountMath.PRICE_PRECISION
-                );
-                if (indexTotalDelta > expectIndexDelta) {
-                    uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
-                    uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
-                        ? (indexDepositDelta - needSwapIndexDelta)
-                        : indexDepositDelta;
-
-                    slipDelta =
-                        swapIndexDelta -
-                        AMMUtils.getAmountOut(AmountMath.getIndexAmount(swapIndexDelta, price), reserveA, reserveB);
-                    slipAmount = AmountMath.getIndexAmount(slipDelta, price);
-                    slipToken = pair.indexToken;
-
-                    afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                } else if (stableTotalDelta > expectStableDelta) {
-                    uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
-                    uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
-                        ? (afterFeeStableAmount - needSwapStableDelta)
-                        : afterFeeStableAmount;
-
-                    slipDelta =
-                        swapStableDelta -
-                        AmountMath.getStableDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
-                    slipAmount = slipDelta;
-                    slipToken = pair.stableToken;
-
-                    afterFeeStableAmount = afterFeeStableAmount - slipAmount;
-                }
-            }
-        }
-
-        // mint lp
-        mintAmount = AmountMath.getIndexAmount(
-            indexDepositDelta + afterFeeStableAmount - slipDelta,
-            lpFairPrice(_pairIndex)
-        );
-
-        return (mintAmount, slipToken, slipAmount);
     }
 
     // calculate deposit amount for add liquidity
