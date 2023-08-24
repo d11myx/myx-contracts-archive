@@ -169,7 +169,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         // transfer collateral
         if (request.collateral > 0) {
-            _transferOrderCollateral(pair.stableToken, request.collateral.abs(), address(positionManager), request.data);
+            _transferOrderCollateral(pair.stableToken, request.collateral.abs(), address(pool), request.data);
         }
 
         if (request.sizeAmount > 0) {
@@ -450,7 +450,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (collateral > 0) {
             IPool.Pair memory pair = pool.getPair(pairIndex);
-            positionManager.transferTokenTo(pair.stableToken, account, collateral.abs());
+            pool.transferTokenTo(pair.stableToken, account, collateral.abs());
         }
     }
 
