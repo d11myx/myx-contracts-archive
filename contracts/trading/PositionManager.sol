@@ -241,16 +241,12 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     function _calLpProfit(uint256 _pairIndex, uint256 _price, bool positive, uint amount) internal {
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        // IPool.Pair memory pair = pool.getPair(_pairIndex);
         if (positive) {
             if (_price > lpVault.averagePrice) {
                 uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
-
                 pool.decreaseLPProfit(_pairIndex, profit);
             } else {
                 uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
-
-                //                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
                 pool.increaseLPProfit(_pairIndex, profit);
             }
         } else {
@@ -260,8 +256,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 pool.decreaseLPProfit(_pairIndex, profit);
             } else {
                 uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
-
-                //                IERC20(pair.stableToken).safeTransfer(address(pool), profit);
                 pool.increaseLPProfit(_pairIndex, profit);
             }
         }
