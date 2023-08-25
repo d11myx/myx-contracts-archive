@@ -119,7 +119,7 @@ describe('Router: Edge cases', () => {
             collateral: 0,
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
-            sizeAmount: ethers.utils.parseUnits('8', 18)
+            sizeAmount: ethers.utils.parseUnits('8', 18),
         };
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
@@ -293,7 +293,7 @@ describe('Router: Edge cases', () => {
                 positionManager,
                 orderManager,
                 router,
-                executor
+                executor,
             } = testEnv;
 
             await updateBTCPrice(testEnv, '30000');
@@ -355,7 +355,7 @@ describe('Router: Edge cases', () => {
             );
         });
 
-        it("user's position leverage exceeded 100x, liquidated", async () => {
+        it("user's position leverage exceeded 50x, liquidated", async () => {
             const {
                 deployer,
                 keeper,
@@ -373,7 +373,7 @@ describe('Router: Edge cases', () => {
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
             await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
-            const size = collateral.div(30000).mul(100).mul(90).div(100);
+            const size = collateral.div(30000).mul(50).mul(90).div(100);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -382,7 +382,7 @@ describe('Router: Edge cases', () => {
                 collateral: collateral,
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: size
+                sizeAmount: size,
             };
 
             // await tradingRouter.setHandler(trader.address, true);
@@ -394,8 +394,8 @@ describe('Router: Edge cases', () => {
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
 
             const leverageBef = positionBef.positionAmount.div(positionBef.collateral.div(30000));
-            expect(leverageBef).to.be.eq(98);
-            expect(positionBef.positionAmount).to.be.eq('2999999999999999970');
+            expect(leverageBef).to.be.eq(46);
+            expect(positionBef.positionAmount).to.be.eq('1499999999999999985');
 
             // price goes down, trader's position can be liquidated
             await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('20000', 8)));
@@ -410,7 +410,7 @@ describe('Router: Edge cases', () => {
             );
 
             const leverageAft = positionBef.positionAmount.div(positionBef.collateral.div(30000 + 10000));
-            expect(leverageAft).to.be.eq(131);
+            expect(leverageAft).to.be.eq(61);
             // liquidation
             const traderPositionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
             await executor.connect(keeper.signer).liquidatePositions([traderPositionKey]);
@@ -419,9 +419,7 @@ describe('Router: Edge cases', () => {
             // const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
             // expect(positionAft.positionAmount).to.be.eq(0);
         });
-
     });
-
 });
 
 export async function increaseUserPosition(
@@ -442,7 +440,7 @@ export async function increaseUserPosition(
         collateral: collateral,
         openPrice: price,
         isLong: isLong,
-        sizeAmount: size
+        sizeAmount: size,
     };
 
     // await router.setHandler(user.address, true);

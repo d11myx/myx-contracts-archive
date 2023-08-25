@@ -32,9 +32,6 @@ contract Pool is IPool, Roleable {
     using Math for uint256;
     using SafeMath for uint256;
 
-    uint256 public constant PERCENTAGE = 10000;
-    uint256 public constant FUNDING_RATE_PERCENTAGE = 1000000;
-
     IPoolTokenFactory public immutable poolTokenFactory;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
@@ -97,7 +94,7 @@ contract Pool is IPool, Roleable {
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
-        require(_pair.expectIndexTokenP <= PERCENTAGE && _pair.addLpFeeP <= PERCENTAGE, 'exceed 100%');
+        require(_pair.expectIndexTokenP <= PrecisionUtils.percentage() && _pair.addLpFeeP <= PrecisionUtils.percentage(), 'exceed 100%');
 
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
@@ -107,9 +104,9 @@ contract Pool is IPool, Roleable {
 
     function updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyPoolAdmin {
         require(
-            _tradingConfig.maintainMarginRate <= PERCENTAGE &&
-                _tradingConfig.priceSlipP <= PERCENTAGE &&
-                _tradingConfig.maxPriceDeviationP <= PERCENTAGE,
+            _tradingConfig.maintainMarginRate <= PrecisionUtils.percentage() &&
+                _tradingConfig.priceSlipP <= PrecisionUtils.percentage() &&
+                _tradingConfig.maxPriceDeviationP <= PrecisionUtils.percentage(),
             'exceed 100%'
         );
         tradingConfigs[_pairIndex] = _tradingConfig;
@@ -120,14 +117,14 @@ contract Pool is IPool, Roleable {
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _tradingFeeConfig.takerFeeP <= PERCENTAGE && _tradingFeeConfig.makerFeeP <= PERCENTAGE,
+            _tradingFeeConfig.takerFeeP <= PrecisionUtils.percentage() && _tradingFeeConfig.makerFeeP <= PrecisionUtils.percentage(),
             'trading fee exceed 100%'
         );
         require(
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
                 _tradingFeeConfig.stakingFeeDistributeP <=
-                PERCENTAGE,
+                PrecisionUtils.percentage(),
             'distribute exceed 100%'
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
@@ -138,9 +135,9 @@ contract Pool is IPool, Roleable {
         FundingFeeConfig calldata _fundingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _fundingFeeConfig.fundingWeightFactor <= PERCENTAGE &&
-                _fundingFeeConfig.liquidityPremiumFactor <= PERCENTAGE &&
-                _fundingFeeConfig.lpDistributeP <= PERCENTAGE,
+            _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
+                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage() &&
+                _fundingFeeConfig.lpDistributeP <= PrecisionUtils.percentage(),
             'exceed 100%'
         );
 
