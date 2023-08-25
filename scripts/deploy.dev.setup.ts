@@ -8,10 +8,12 @@ import {
     getRouter,
     getTestCallBack,
     getToken,
+    MAX_UINT_AMOUNT,
     MOCK_TOKEN_PREFIX,
     SymbolMap,
+    waitForTx,
 } from '../helpers';
-import { IPool, Token } from '../types';
+import { IPool, MockPriceFeed, Token } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -36,62 +38,62 @@ async function main() {
     const { usdt, btc, eth } = await getTokens();
     const keeper = '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63';
 
-    // console.log(`executor:`, executor.address);
-    // console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
-    // console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
-    //
-    // await waitForTx(await roleManager.addKeeper(keeper));
-    // await waitForTx(await roleManager.addPoolAdmin(keeper));
-    //
-    // const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-    // const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);
-    //
-    // const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
-    //
-    // const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
-    // const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
-    //
-    // await waitForTx(await btcFeed.setAdmin(keeper, true));
-    // await waitForTx(await ethFeed.setAdmin(keeper, true));
-    //
-    // console.log(await btcFeed.isAdmin(keeper));
-    // console.log(await ethFeed.isAdmin(keeper));
-    //
-    // console.log(`testCallBack:`, testCallBack.address);
-    //
-    // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    // await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    // await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    //
-    // await waitForTx(
-    //     await testCallBack.addLiquidity(
-    //         pool.address,
-    //         (
-    //             await pool.getPair(0)
-    //         ).indexToken,
-    //         (
-    //             await pool.getPair(0)
-    //         ).stableToken,
-    //         ethers.utils.parseEther('1000'),
-    //         ethers.utils.parseEther('30000000'),
-    //     ),
-    // );
-    // await waitForTx(
-    //     await testCallBack.addLiquidity(
-    //         pool.address,
-    //         (
-    //             await pool.getPair(1)
-    //         ).indexToken,
-    //         (
-    //             await pool.getPair(1)
-    //         ).stableToken,
-    //         ethers.utils.parseEther('1000'),
-    //         ethers.utils.parseEther('2000000'),
-    //     ),
-    // );
+    console.log(`executor:`, executor.address);
+    console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
+    console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
+
+    await waitForTx(await roleManager.addKeeper(keeper));
+    await waitForTx(await roleManager.addPoolAdmin(keeper));
+
+    const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
+    const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);
+
+    const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
+
+    const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
+    const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
+
+    await waitForTx(await btcFeed.setAdmin(keeper, true));
+    await waitForTx(await ethFeed.setAdmin(keeper, true));
+
+    console.log(await btcFeed.isAdmin(keeper));
+    console.log(await ethFeed.isAdmin(keeper));
+
+    console.log(`testCallBack:`, testCallBack.address);
+
+    await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
+
+    await waitForTx(
+        await testCallBack.addLiquidity(
+            pool.address,
+            (
+                await pool.getPair(0)
+            ).indexToken,
+            (
+                await pool.getPair(0)
+            ).stableToken,
+            ethers.utils.parseEther('1000'),
+            ethers.utils.parseEther('30000000'),
+        ),
+    );
+    await waitForTx(
+        await testCallBack.addLiquidity(
+            pool.address,
+            (
+                await pool.getPair(1)
+            ).indexToken,
+            (
+                await pool.getPair(1)
+            ).stableToken,
+            ethers.utils.parseEther('1000'),
+            ethers.utils.parseEther('2000000'),
+        ),
+    );
 
     const btcTradingConfig: IPool.TradingConfigStruct = {
         minLeverage: 3,
@@ -100,7 +102,7 @@ async function main() {
         maxTradeAmount: '100000000000000000000000',
         maxPositionAmount: '100000000000000000000000000',
         maintainMarginRate: 100,
-        priceSlipP: 5,
+        priceSlipP: 10,
         maxPriceDeviationP: 50,
     };
     await pool.updateTradingConfig(0, btcTradingConfig);
@@ -112,7 +114,7 @@ async function main() {
         maxTradeAmount: '100000000000000000000000',
         maxPositionAmount: '100000000000000000000000000',
         maintainMarginRate: 100,
-        priceSlipP: 5,
+        priceSlipP: 10,
         maxPriceDeviationP: 50,
     };
     await pool.updateTradingConfig(1, ethTradingConfig);

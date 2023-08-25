@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import '../../interfaces/IPositionManager.sol';
-import '../../interfaces/IPool.sol';
+import '../interfaces/IPositionManager.sol';
+import '../interfaces/IPool.sol';
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 import 'hardhat/console.sol';
 
 library ValidationHelper {
     using PrecisionUtils for uint256;
 
-    function validateAccountFrozen(IPositionManager positionManager, address account) internal view {
-        require(!positionManager.isFrozen(account), 'account is frozen');
+    function validateAccountBlacklist(IAddressesProvider addressesProvider, address account) internal view {
+        require(!IRoleManager(addressesProvider.getRoleManager()).isBlackList(account), 'blacklist account');
     }
 
     function validatePairEnabled(IPool.Pair memory pair) internal view {

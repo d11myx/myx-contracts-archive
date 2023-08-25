@@ -13,8 +13,8 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
-import "./helpers/ValidationHelper.sol";
-import "./helpers/TradingHelper.sol";
+import "../helpers/ValidationHelper.sol";
+import "../helpers/TradingHelper.sol";
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;

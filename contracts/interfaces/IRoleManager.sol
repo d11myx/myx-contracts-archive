@@ -33,4 +33,10 @@ interface IRoleManager {
     function removeKeeper(address) external;
 
     function isKeeper(address) external view returns (bool);
+
+    function addAccountBlackList(address account) external;
+
+    function removeAccountBlackList(address account) external;
+
+    function isBlackList(address account) external view returns (bool);
 }
