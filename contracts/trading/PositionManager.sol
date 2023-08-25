@@ -125,7 +125,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         bool isIncrease,
         uint256 _price
     ) internal {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
         if (_sizeAmount == 0) {
             return;
         }
@@ -136,13 +135,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             } else {
                 shortTracker[_pairIndex] += _sizeAmount;
             }
-            // getExposedPositions[_pairIndex] =
-            //     currentExposureAmountChecker +
-            //     (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
         } else {
-            // getExposedPositions[_pairIndex] =
-            //     currentExposureAmountChecker +
-            //     (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
             if (_isLong) {
                 longTracker[_pairIndex] -= _sizeAmount;
             } else {
