@@ -136,7 +136,7 @@ describe('Router: increase position ar', () => {
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`user's current postion: `, traderPosition);
 
-            const amount = ethers.utils.parseUnits('300', 18);
+            const amount = ethers.utils.parseUnits('30000', 18);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -272,7 +272,7 @@ describe('Router: increase position ar', () => {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
-                collateral: ethers.utils.parseUnits('-9300', 18),
+                collateral: ethers.utils.parseUnits('-93000', 18),
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
