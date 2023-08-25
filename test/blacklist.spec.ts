@@ -5,7 +5,18 @@ import { TradeType } from '../helpers';
 import { TradingTypes } from '../types/contracts/trading/Router';
 
 describe('Blacklist cases', () => {
-    after(async () => {});
+    after(async () => {
+        const {
+            roleManager,
+            users: [blackUser],
+        } = testEnv;
+
+        const { operator } = await getNamedAccounts();
+        const operatorSigner = await ethers.getSigner(operator);
+
+        await roleManager.connect(operatorSigner).removeAccountBlackList(blackUser.address);
+        expect(await roleManager.isBlackList(blackUser.address)).to.be.eq(false);
+    });
 
     it('operator can manage blacklist', async () => {
         const {
