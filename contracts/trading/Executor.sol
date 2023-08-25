@@ -480,7 +480,7 @@ contract Executor is IExecutor, Pausable {
     function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < positionKeys.length; i++) {
             Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
-            liquidatePosition(position, positionKeys[i]);
+            _liquidatePosition(position, positionKeys[i]);
         }
     }
 
@@ -546,9 +546,7 @@ contract Executor is IExecutor, Pausable {
         this.executeDecreaseOrder(_orderId, order.tradeType);
     }
 
-    function liquidatePosition(Position.Info memory position, bytes32 _positionKey) public {
-        //        Position.Info memory position = positionManager.getPositionByKey(_positionKey);
-
+    function _liquidatePosition(Position.Info memory position, bytes32 _positionKey) internal {
         if (position.positionAmount == 0) {
             return;
         }
@@ -578,8 +576,7 @@ contract Executor is IExecutor, Pausable {
         if (exposureAsset <= 0) {
             needLiquidate = true;
         } else {
-            uint256 riskRate = position
-                .positionAmount
+            uint256 riskRate = position.positionAmount
                 .mulPrice(position.averagePrice)
                 .mulPercentage(tradingConfig.maintainMarginRate)
                 .calculatePercentage(uint256(exposureAsset));
