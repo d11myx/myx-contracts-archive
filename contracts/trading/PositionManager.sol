@@ -30,8 +30,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     mapping(bytes32 => Position.Info) public positions;
 
-    mapping(address => bool) public override isFrozen;
-
     mapping(uint256 => int256) public override netExposureAmountChecker;
     mapping(uint256 => uint256) public override longTracker;
     mapping(uint256 => uint256) public override shortTracker;
