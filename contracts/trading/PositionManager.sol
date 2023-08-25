@@ -30,7 +30,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     mapping(bytes32 => Position.Info) public positions;
 
-    // mapping(uint256 => int256) public override netExposureAmountChecker;
+    // mapping(uint256 => int256) public override getExposedPositions;
     mapping(uint256 => uint256) public override longTracker;
     mapping(uint256 => uint256) public override shortTracker;
 
@@ -110,7 +110,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         }
     }
 
-    function netExposureAmountChecker(uint256 _pairIndex) public view override returns (int256) {
+    function getExposedPositions(uint256 _pairIndex) public view override returns (int256) {
         if (longTracker[_pairIndex] > shortTracker[_pairIndex]) {
             return int256(longTracker[_pairIndex] - shortTracker[_pairIndex]);
         } else {
@@ -129,18 +129,18 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         if (_sizeAmount == 0) {
             return;
         }
-        int256 currentExposureAmountChecker = netExposureAmountChecker(_pairIndex);
+        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (isIncrease) {
             if (_isLong) {
                 longTracker[_pairIndex] += _sizeAmount;
             } else {
                 shortTracker[_pairIndex] += _sizeAmount;
             }
-            // netExposureAmountChecker[_pairIndex] =
+            // getExposedPositions[_pairIndex] =
             //     currentExposureAmountChecker +
             //     (_isLong ? int256(_sizeAmount) : -int256(_sizeAmount));
         } else {
-            // netExposureAmountChecker[_pairIndex] =
+            // getExposedPositions[_pairIndex] =
             //     currentExposureAmountChecker +
             //     (_isLong ? -int256(_sizeAmount) : int256(_sizeAmount));
             if (_isLong) {
@@ -149,7 +149,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 shortTracker[_pairIndex] -= _sizeAmount;
             }
         }
-        int256 nextExposureAmountChecker = netExposureAmountChecker(_pairIndex);
+        int256 nextExposureAmountChecker = getExposedPositions(_pairIndex);
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
         PositionStatus currentPositionStatus = PositionStatus.Balance;
@@ -518,7 +518,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
-        int256 currentExposureAmountChecker = netExposureAmountChecker(_pairIndex);
+        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
             if (_isLong) {
                 // fee
@@ -677,7 +677,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     function _currentFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
         IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
-        int256 currentExposureAmountChecker = netExposureAmountChecker(_pairIndex);
+        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         uint256 absNetExposure = currentExposureAmountChecker.abs();
         uint256 w = fundingFeeConfig.fundingWeightFactor;
         uint256 q = longTracker[_pairIndex] + shortTracker[_pairIndex];

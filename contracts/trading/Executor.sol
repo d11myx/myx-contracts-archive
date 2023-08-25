@@ -175,7 +175,7 @@ contract Executor is IExecutor, Pausable {
 
         IPool.Vault memory lpVault = pool.getVault(pairIndex);
 
-        int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
+        int256 preNetExposureAmountChecker = positionManager.getExposedPositions(order.pairIndex);
         if (preNetExposureAmountChecker >= 0) {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
@@ -361,7 +361,7 @@ contract Executor is IExecutor, Pausable {
 
         IPool.Vault memory lpVault = pool.getVault(pairIndex);
 
-        int256 preNetExposureAmountChecker = positionManager.netExposureAmountChecker(order.pairIndex);
+        int256 preNetExposureAmountChecker = positionManager.getExposedPositions(order.pairIndex);
         bool needADL;
         if (preNetExposureAmountChecker >= 0) {
             if (!order.isLong) {
