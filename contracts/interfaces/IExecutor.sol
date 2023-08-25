@@ -107,5 +107,5 @@ interface IExecutor {
         TradingTypes.TradeType tradeType
     ) external;
 
-    function claimTradingFee(address claimToken) external returns (uint256);
+    // function claimTradingFee(address claimToken) external returns (uint256);
 }

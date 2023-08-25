@@ -2,15 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import '@openzeppelin/contracts/security/Pausable.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
 
-import "../token/interfaces/IBaseToken.sol";
-import "./interfaces/IRewardDistributor.sol";
-import "../interfaces/IPositionManager.sol";
+import '../token/interfaces/IBaseToken.sol';
+import './interfaces/IRewardDistributor.sol';
+import '../interfaces/IPositionManager.sol';
+import '../interfaces/IFeeManager.sol';
 
 // distribute reward myx for staking
 contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownable {
@@ -35,9 +36,10 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
 
     uint256 public totalClaimed;
 
-    mapping (address => bool) public isHandler;
+    mapping(address => bool) public isHandler;
 
     IPositionManager public positionManager;
+    IFeeManager public feeManager;
 
     event Claim(address indexed account, uint256 indexed round, uint256 amount);
     event Compound(address indexed account, uint256 indexed round, uint256 amount);
@@ -59,17 +61,24 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
         positionManager = _positionManager;
     }
 
+    function setFeeManager(IFeeManager _feeManager) external onlyOwner {
+        feeManager = _feeManager;
+    }
+
     // update root by handler
     // amount: total reward
     function updateRoot(bytes32 _merkleRoot, uint256 _amount) external override onlyHandler {
-        require(!merkleRootUsed[_merkleRoot], "RewardDistributor: root already used");
-        require(totalReward + positionManager.distributorTradingFee(rewardToken) >= _amount, "RewardDistributor: reward not enough");
+        require(!merkleRootUsed[_merkleRoot], 'RewardDistributor: root already used');
+        require(
+            totalReward + feeManager.distributorTradingFee(rewardToken) >= _amount,
+            'RewardDistributor: reward not enough'
+        );
 
         round++;
         merkleRoots[round] = _merkleRoot;
         merkleRootUsed[_merkleRoot] = true;
 
-        uint256 claimAmount = positionManager.claimDistributorTradingFee(rewardToken);
+        uint256 claimAmount = feeManager.claimDistributorTradingFee(rewardToken);
         totalReward += claimAmount;
     }
 
@@ -79,16 +88,26 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
     }
 
     // claim reward by handler
-    function claimForAccount(address account, address receiver, uint256 _amount, bytes32[] calldata _merkleProof) external override onlyHandler whenNotPaused nonReentrant {
+    function claimForAccount(
+        address account,
+        address receiver,
+        uint256 _amount,
+        bytes32[] calldata _merkleProof
+    ) external override onlyHandler whenNotPaused nonReentrant {
         _claim(account, receiver, _amount, _merkleProof);
     }
 
-    function _claim(address account, address receiver, uint256 _amount, bytes32[] calldata _merkleProof) private returns(uint256) {
-        require(!userClaimed[round][account], "RewardDistributor: already claimed");
+    function _claim(
+        address account,
+        address receiver,
+        uint256 _amount,
+        bytes32[] calldata _merkleProof
+    ) private returns (uint256) {
+        require(!userClaimed[round][account], 'RewardDistributor: already claimed');
 
         (bool canClaim, uint256 adjustedAmount) = _canClaim(account, _amount, _merkleProof);
 
-        require(canClaim, "RewardDistributor: cannot claim");
+        require(canClaim, 'RewardDistributor: cannot claim');
 
         userClaimed[round][account] = true;
 
@@ -101,10 +120,7 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
         return adjustedAmount;
     }
 
-    function canClaim(
-        uint256 _amount,
-        bytes32[] calldata _merkleProof
-    ) external view returns (bool, uint256) {
+    function canClaim(uint256 _amount, bytes32[] calldata _merkleProof) external view returns (bool, uint256) {
         return _canClaim(msg.sender, _amount, _merkleProof);
     }
 
