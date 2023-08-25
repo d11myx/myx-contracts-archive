@@ -43,8 +43,8 @@ async function main() {
     //
     // console.log(await executor.connect(keeper).executeDecreaseOrder(9, TradeType.MARKET));
 
-    console.log(await orderManager.decreaseMarketOrdersIndex());
-    console.log(await executor.decreaseMarketOrderStartIndex());
+    // console.log(await orderManager.decreaseMarketOrdersIndex());
+    // console.log(await executor.decreaseMarketOrderStartIndex());
 
     // console.log(await oraclePriceFeed.getPrice('0xB010E4aC01bD4410eA04bdD12d1CB39EA0857950'));
     // console.log(await oraclePriceFeed.getPrice('0x16C72f9b628Df203370b9e504a6815191a22F252'));
