@@ -7,12 +7,14 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IRoleManager.sol';
 
 contract RoleManager is AccessControl, IRoleManager {
+    using Address for address;
+
     bytes32 public constant POOL_ADMIN_ROLE = keccak256('POOL_ADMIN');
     bytes32 public constant OPERATOR_ROLE = keccak256('OPERATOR_ROLE');
     bytes32 public constant TREASURER_ROLE = keccak256('TREASURER_ROLE');
     bytes32 public constant KEEPER_ROLE = keccak256('KEEPER_ROLE');
 
-    using Address for address;
+    mapping(address => bool) public accountBlackList;
 
     constructor(Ownable provider) {
         require(provider.owner() != address(0), 'is 0');
@@ -81,5 +83,17 @@ contract RoleManager is AccessControl, IRoleManager {
 
     function isKeeper(address keeper) external view override returns (bool) {
         return hasRole(KEEPER_ROLE, keeper);
+    }
+
+    function addAccountBlackList(address account) public onlyRole(OPERATOR_ROLE) {
+        accountBlackList[account] = true;
+    }
+
+    function removeAccountBlackList(address account) public onlyRole(OPERATOR_ROLE) {
+        delete accountBlackList[account];
+    }
+
+    function isBlackList(address account) external view override returns (bool) {
+        return accountBlackList[account];
     }
 }

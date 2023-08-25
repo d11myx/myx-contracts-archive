@@ -13,8 +13,8 @@ import 'hardhat-abi-exporter';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
 import 'hardhat-log-remover';
-import "keccak256";
-import "merkletreejs";
+import 'keccak256';
+import 'merkletreejs';
 import { getCurrentTimestamp } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
 import { DEFAULT_NAMED_ACCOUNTS, loadTasks } from './helpers';
 
@@ -238,6 +238,32 @@ const config: HardhatUserConfig = {
         remote_test: {
             url: 'https://myx-test-rpc.myx.cash',
             chainId: 31338,
+            accounts: [
+                REMOTE_PRIVATE_KEY0,
+                REMOTE_PRIVATE_KEY1,
+                REMOTE_PRIVATE_KEY2,
+                REMOTE_PRIVATE_KEY3,
+                REMOTE_PRIVATE_KEY4,
+                REMOTE_PRIVATE_KEY5,
+                REMOTE_PRIVATE_KEY6,
+                REMOTE_PRIVATE_KEY7,
+                REMOTE_PRIVATE_KEY8,
+                REMOTE_PRIVATE_KEY9,
+                REMOTE_PRIVATE_KEY10,
+                REMOTE_PRIVATE_KEY11,
+                REMOTE_PRIVATE_KEY12,
+                REMOTE_PRIVATE_KEY13,
+                REMOTE_PRIVATE_KEY14,
+                REMOTE_PRIVATE_KEY15,
+                REMOTE_PRIVATE_KEY16,
+                REMOTE_PRIVATE_KEY17,
+                REMOTE_PRIVATE_KEY18,
+                REMOTE_PRIVATE_KEY19,
+            ],
+        },
+        remote_pre: {
+            url: 'https://pre-rpc.myx.cash',
+            chainId: 131338,
             accounts: [
                 REMOTE_PRIVATE_KEY0,
                 REMOTE_PRIVATE_KEY1,

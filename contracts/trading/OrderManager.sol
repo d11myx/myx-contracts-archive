@@ -6,22 +6,21 @@ import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
-
-import '../interfaces/IOraclePriceFeed.sol';
-import '../interfaces/IPool.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/PositionKey.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/TradingTypes.sol';
-
-import 'hardhat/console.sol';
+import '../interfaces/IOraclePriceFeed.sol';
+import '../interfaces/IPool.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOrderCallback.sol';
-import "./helpers/ValidationHelper.sol";
+import "../helpers/ValidationHelper.sol";
+
+import 'hardhat/console.sol';
 
 contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     using SafeERC20 for IERC20;
@@ -110,7 +109,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         address account = request.account;
 
         // account is frozen
-        ValidationHelper.validateAccountFrozen(positionManager, account);
+        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, account);
 
         // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
@@ -241,6 +240,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         uint256 pairIndex,
         bool isLong
     ) external onlyExecutorOrAccount(account) whenNotPaused {
+        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, account);
+
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
 
         while (positionOrders[key].length > 0) {
@@ -386,6 +387,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _cancelIncreaseOrder(TradingTypes.IncreasePositionOrder memory order) internal {
+        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, order.account);
+
         _removeOrderAndRefundCollateral(
             order.account,
             order.pairIndex,
@@ -411,6 +414,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _cancelDecreaseOrder(TradingTypes.DecreasePositionOrder memory order) internal {
+        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, order.account);
+
         _removeOrderAndRefundCollateral(
             order.account,
             order.pairIndex,
