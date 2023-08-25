@@ -2,11 +2,11 @@
 pragma solidity 0.8.17;
 
 import '../libraries/PrecisionUtils.sol';
-import '../interfaces/IFeeDistributor.sol';
+import '../interfaces/IFeeCollector.sol';
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
-contract FeeDistributor is IFeeDistributor {
+contract FeeCollector is IFeeCollector {
 
     // Discount ratio of every level (level => discountRatio)
     mapping(uint256 => uint256) public override levelDiscountRatios;
