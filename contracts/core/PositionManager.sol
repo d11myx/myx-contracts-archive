@@ -42,10 +42,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     uint256 public fundingInterval;
 
-    mapping(address => uint256) public override stakingTradingFee;
-    mapping(address => uint256) public override distributorTradingFee;
-    mapping(address => mapping(address => uint256)) public override keeperTradingFee;
-
     IPool public pool;
     address public addressExecutor;
     address public addressOrderManager;
@@ -92,7 +88,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
         afterCollateral -= int256(tradingFee);
-        _distributeTradingFee(_account, pair, tradingFee, _keeper);
+        //todo tranfer to feemanager
+        //_distributeTradingFee(_account, pair, tradingFee, _keeper);
 
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         if (fundingFee >= 0) {
@@ -523,73 +520,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         return tradingFee;
     }
 
-    function _distributeTradingFee(
-        address account,
-        IPool.Pair memory pair,
-        uint256 tradingFee,
-        address keeper
-    ) internal {
-        console.log('distributeTradingFee tradingFee', tradingFee, 'keeper', keeper);
-        IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
-
-        uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
-        //        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
-        pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
-
-        uint256 keeperAmount = tradingFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
-        uint256 stakingAmount = tradingFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
-        uint256 distributorAmount = tradingFee - keeperAmount - stakingAmount;
-
-        keeperTradingFee[pair.stableToken][keeper] += keeperAmount;
-        stakingTradingFee[pair.stableToken] += stakingAmount;
-        distributorTradingFee[pair.stableToken] += distributorAmount;
-        console.log(
-            'distributeTradingFee lpAmount %s keeperAmount %s stakingAmount %s',
-            lpAmount,
-            keeperAmount,
-            stakingAmount
-        );
-
-        emit DistributeTradingFee(account, pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
-    }
-
     // TODO receiver? ?onlyPoolAdmin
-    function claimStakingTradingFee(
-        address claimToken
-    ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
-        uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
-        if (claimableStakingTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableStakingTradingFee);
-            //            IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
-            delete stakingTradingFee[claimToken];
-        }
-        return claimableStakingTradingFee;
-    }
-
-    function claimDistributorTradingFee(
-        address claimToken
-    ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
-        uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
-        if (claimableDistributorTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
-            //            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
-            delete distributorTradingFee[claimToken];
-        }
-        return claimableDistributorTradingFee;
-    }
-
-    function claimKeeperTradingFee(
-        address claimToken,
-        address keeper
-    ) external nonReentrant onlyExecutor whenNotPaused returns (uint256) {
-        uint256 claimableKeeperTradingFee = keeperTradingFee[claimToken][keeper];
-        if (claimableKeeperTradingFee > 0) {
-            pool.transferTokenTo(claimToken, keeper, claimableKeeperTradingFee);
-            //            IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
-            delete keeperTradingFee[claimToken][keeper];
-        }
-        return claimableKeeperTradingFee;
-    }
 
     function getFundingFee(
         bool _increase,
