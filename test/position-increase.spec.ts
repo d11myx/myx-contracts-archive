@@ -18,10 +18,12 @@ describe('Router: increase position ar', () => {
 
     before(async () => {
         const {
-            users: [depositor],
+            deployer,
+            users: [depositor, poolAdmin, operator],
             btc,
             usdt,
             pool,
+            roleManager,
         } = testEnv;
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('10000', 18);
@@ -30,6 +32,8 @@ describe('Router: increase position ar', () => {
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await roleManager.connect(deployer.signer).addOperator(operator.address);
+        await roleManager.connect(operator.signer).removeAccountBlackList(depositor.address);
         await testCallBack
             .connect(depositor.signer)
             .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
@@ -102,7 +106,7 @@ describe('Router: increase position ar', () => {
                 collateral: collateral,
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -141,7 +145,7 @@ describe('Router: increase position ar', () => {
                 collateral: amount,
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -182,7 +186,7 @@ describe('Router: increase position ar', () => {
                 collateral: 0,
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -224,7 +228,7 @@ describe('Router: increase position ar', () => {
                 collateral: ethers.utils.parseUnits('-50', 18),
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -271,10 +275,11 @@ describe('Router: increase position ar', () => {
                 collateral: ethers.utils.parseUnits('-9300', 18),
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
-            await expect(router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest)).to.be.reverted;
+            await expect(router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest)).to.be
+                .reverted;
         });
     });
 
@@ -378,7 +383,7 @@ describe('Router: increase position ar', () => {
                 collateral: ethers.utils.parseUnits('20000', 18),
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
@@ -441,7 +446,7 @@ describe('Router: increase position ar', () => {
                 collateral: 0,
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('10', 18)
+                sizeAmount: ethers.utils.parseUnits('10', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -524,7 +529,7 @@ describe('Router: increase position ar', () => {
                 collateral: collateral,
                 openPrice: ethers.utils.parseUnits('29600', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -555,7 +560,7 @@ describe('Router: increase position ar', () => {
                 collateral: collateral,
                 openPrice: ethers.utils.parseUnits('31000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -629,7 +634,7 @@ describe('Router: increase position ar', () => {
                 collateral: collateral,
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('10', 18)
+                sizeAmount: ethers.utils.parseUnits('10', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -664,7 +669,7 @@ describe('Router: increase position ar', () => {
                 collateral: 0,
                 openPrice: ethers.utils.parseUnits('50000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18)
+                sizeAmount: ethers.utils.parseUnits('5', 18),
             };
 
             const orderId = await orderManager.ordersIndex();
