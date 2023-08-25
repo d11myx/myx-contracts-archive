@@ -22,7 +22,7 @@ import '../libraries/PrecisionUtils.sol';
 
 import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
-
+import '../helpers/ValidationHelper.sol';
 import "hardhat/console.sol";
 
 contract Pool is IPool, Roleable {
@@ -283,6 +283,8 @@ contract Pool is IPool, Roleable {
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256) {
+        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
+
         return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
@@ -294,6 +296,8 @@ contract Pool is IPool, Roleable {
         uint256 _stableAmount,
         bytes calldata data
     ) external returns (uint256) {
+        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
+
         return _addLiquidity(_funder, recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
@@ -303,6 +307,8 @@ contract Pool is IPool, Roleable {
         uint256 _amount,
         bytes calldata data
     ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
+        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, _receiver);
+
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(_receiver, _pairIndex, _amount, data);
 
         IPool.Pair memory pair = getPair(_pairIndex);

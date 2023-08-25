@@ -68,8 +68,6 @@ interface IPositionManager {
         uint256 distributorAmount
     );
 
-    function isFrozen(address account) external view returns (bool);
-
     function netExposureAmountChecker(uint256 pairIndex) external view returns (int256);
 
     function longTracker(uint256 pairIndex) external view returns (uint256);
