@@ -5,22 +5,25 @@ import snapshotGasCost from './shared/snapshotGasCost';
 import { TestGas, TestMulticall } from '../types';
 
 describe('TestGas', async () => {
-    // const wallets = waffle.provider.getWallets();
+    const wallets = waffle.provider.getWallets();
 
-    // let testGas: TestGas ;
+    let testGas: TestGas;
 
-    // beforeEach('create multicall', async () => {
-    //     const testGasFacory = await ethers.getContractFactory('TestGas');
-    //     testGas = (await testGasFacory.deploy()) as TestGas;
-    // });
+    beforeEach('create multicall', async () => {
+        const testGasFacory = await ethers.getContractFactory('TestGas');
+        testGas = (await testGasFacory.deploy()) as TestGas;
+    });
 
+    it('gas cost test maping(address=>struct)', async () => {
+        await snapshotGasCost(testGas.saveStruct());
+    });
 
+    it('gas cost of uint256', async () => {
+        await snapshotGasCost(testGas.testKey('1'));
+    });
 
-    // it('gas cost of uint256', async () => {
-    //     await snapshotGasCost(testGas.testKey("1"));
-    // });
+    it('gas cost of maping(address=>uint256)', async () => {
+        await snapshotGasCost(testGas.testKeys('1'));
+    });
 
-    // it('gas cost of maping(address=>uint256)', async () => {
-    //     await snapshotGasCost(testGas.testKeys("1"));
-    // });
 });

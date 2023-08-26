@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TestGas gas cost of maping(address=>uint256) 1`] = `45728`;
+
+exports[`TestGas gas cost of maping(address=>uint256) 2`] = `314348`;
+
+exports[`TestGas gas cost of uint256 1`] = `43506`;
+
+exports[`TestGas gas cost test maping(address=>struct) 1`] = `178515`;
