@@ -60,7 +60,7 @@ export async function increasePosition(
         const orderId = await orderManager.ordersIndex();
         await router.connect(user.signer).createIncreaseOrderWithoutTpSl(request);
         // execute order
-        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType);
+        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType, 0, 0);
 
         return orderId;
     } else {
@@ -68,7 +68,9 @@ export async function increasePosition(
         const orderId = await orderManager.ordersIndex();
         await router.connect(user.signer).createIncreaseOrderWithoutTpSl(request);
         // execute order
-        await executor.connect(keeper.signer).executeIncreaseLimitOrders([orderId.toNumber()]);
+        await executor
+            .connect(keeper.signer)
+            .executeIncreaseLimitOrders([{ orderId: orderId.toNumber(), level: 0, commissionRatio: 0 }]);
 
         return orderId;
     }
@@ -103,5 +105,5 @@ export async function decreasePosition(
     const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
     // execute order
-    await executor.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType);
+    await executor.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType, 0, 0);
 }
