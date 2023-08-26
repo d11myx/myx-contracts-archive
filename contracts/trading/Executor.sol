@@ -73,9 +73,9 @@ contract Executor is IExecutor, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        uint256[] memory increaseOrders,
-        uint256[] memory decreaseOrders
-    ) external onlyPositionKeeper whenNotPaused {
+        ExecuteOrder[] memory increaseOrders,
+        ExecuteOrder[] memory decreaseOrders
+    ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
@@ -88,42 +88,59 @@ contract Executor is IExecutor, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        uint256[] memory increaseOrderIds,
-        uint256[] memory decreaseOrderIds
-    ) external onlyPositionKeeper whenNotPaused {
+        ExecuteOrder[] memory increaseOrders,
+        ExecuteOrder[] memory decreaseOrders
+    ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
-        this.executeIncreaseLimitOrders(increaseOrderIds);
-        this.executeDecreaseLimitOrders(decreaseOrderIds);
+        this.executeIncreaseLimitOrders(increaseOrders);
+        this.executeDecreaseLimitOrders(decreaseOrders);
     }
 
-    function executeIncreaseMarketOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
-        for (uint256 index = 0; index < orderIds.length; index++) {
-            try this.executeIncreaseOrder(orderIds[index], TradingTypes.TradeType.MARKET) {
-                console.log('executeIncreaseMarketOrders completed. orderIds:', orderIds[index]);
+    function executeIncreaseMarketOrders(
+        ExecuteOrder[] memory orders
+    ) external override onlyPositionKeeper whenNotPaused {
+        for (uint256 i = 0; i < orders.length; i++) {
+            ExecuteOrder memory order = orders[i];
+            console.log('==> executeIncreaseMarketOrders orderId:', order.orderId);
+
+            try this.executeIncreaseOrder(order.orderId, TradingTypes.TradeType.MARKET, order.level, order.commissionRatio) {
+                console.log('== completed. orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('executeIncreaseMarketOrders error:', reason);
-                orderManager.cancelOrder(orderIds[index], TradingTypes.TradeType.MARKET, true);
+                console.log('== error:', reason);
+                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
+                console.log('== canceled:', order.orderId);
             }
+            console.log('<== executeIncreaseMarketOrders orderId:', order.orderId);
         }
     }
 
-    function executeIncreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
-        for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeIncreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-                console.log('executeIncreaseLimitOrders completed. index:', orderIds[i]);
+    function executeIncreaseLimitOrders(
+        ExecuteOrder[] memory orders
+    ) external override onlyPositionKeeper whenNotPaused {
+        for (uint256 i = 0; i < orders.length; i++) {
+            ExecuteOrder memory order = orders[i];
+            console.log('==> executeIncreaseLimitOrders orderId:', order.orderId);
+
+            try this.executeIncreaseOrder(order.orderId, TradingTypes.TradeType.LIMIT, order.level, order.commissionRatio) {
+                console.log('== completed. orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('executeIncreaseLimitOrders error:', reason);
+                console.log('== error:', reason);
             }
+            console.log('<== executeIncreaseLimitOrders orderId:', order.orderId);
         }
     }
 
     function executeIncreaseOrder(
         uint256 _orderId,
-        TradingTypes.TradeType _tradeType
-    ) external onlyPositionKeeper whenNotPaused {
+        TradingTypes.TradeType _tradeType,
+        uint8 level,
+        uint256 commissionRatio
+    ) external override onlyPositionKeeper whenNotPaused {
+        console.log('==> executeIncreaseOrder orderId:', _orderId);
+
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
             return;
@@ -274,37 +291,58 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
+        console.log('<== executeIncreaseOrder orderId:', _orderId);
     }
 
-    function executeDecreaseMarketOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
-        for (uint256 index = 0; index < orderIds.length; index++) {
-            try this.executeDecreaseOrder(orderIds[index], TradingTypes.TradeType.MARKET) {
-                console.log('executeDecreaseMarketOrders completed. index:', orderIds[index]);
+    function executeDecreaseMarketOrders(
+        ExecuteOrder[] memory orders
+    ) external override onlyPositionKeeper whenNotPaused {
+        for (uint256 i = 0; i < orders.length; i++) {
+            ExecuteOrder memory order = orders[i];
+            console.log('==> executeDecreaseMarketOrders orderId:', order.orderId);
+
+            try this.executeDecreaseOrder(order.orderId, TradingTypes.TradeType.MARKET, order.level, order.commissionRatio) {
+                console.log('== completed. orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('executeDecreaseMarketOrders error:', reason);
-                orderManager.cancelOrder(orderIds[index], TradingTypes.TradeType.MARKET, false);
+                console.log('== error:', reason);
+                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
+                console.log('== canceled:', order.orderId);
             }
+            console.log('<== executeDecreaseMarketOrders orderId:', order.orderId);
         }
     }
 
-    function executeDecreaseLimitOrders(uint256[] memory orderIds) external onlyPositionKeeper whenNotPaused {
-        for (uint256 i = 0; i < orderIds.length; i++) {
-            try this.executeDecreaseOrder(orderIds[i], TradingTypes.TradeType.LIMIT) {
-                console.log('executeDecreaseLimitOrders completed. index:', orderIds[i]);
+    function executeDecreaseLimitOrders(ExecuteOrder[] memory orders) external override onlyPositionKeeper whenNotPaused {
+        for (uint256 i = 0; i < orders.length; i++) {
+            ExecuteOrder memory order = orders[i];
+            console.log('==> executeDecreaseLimitOrders orderId:', order.orderId);
+
+            try this.executeDecreaseOrder(order.orderId, TradingTypes.TradeType.LIMIT, order.level, order.commissionRatio) {
+                console.log('== completed. index:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('executeDecreaseLimitOrders error:', reason);
+                console.log('== error:', reason);
             }
+            console.log('<== executeDecreaseLimitOrders orderId:', order.orderId);
         }
     }
 
     function executeDecreaseOrder(
         uint256 _orderId,
-        TradingTypes.TradeType _tradeType
-    ) external onlyPositionKeeper whenNotPaused {
-        _executeDecreaseOrder(_orderId, _tradeType);
+        TradingTypes.TradeType _tradeType,
+        uint8 level,
+        uint256 commissionRatio
+    ) external override onlyPositionKeeper whenNotPaused {
+        _executeDecreaseOrder(_orderId, _tradeType, level, commissionRatio);
     }
 
-    function _executeDecreaseOrder(uint256 _orderId, TradingTypes.TradeType _tradeType) internal {
+    function _executeDecreaseOrder(
+        uint256 _orderId,
+        TradingTypes.TradeType _tradeType,
+        uint8 level,
+        uint256 commissionRatio
+    ) internal {
+        console.log('==> executeDecreaseOrder orderId:', _orderId);
+
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
             return;
@@ -462,91 +500,101 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
-    }
-
-    function setPricesAndLiquidatePositions(
-        address[] memory tokens,
-        uint256[] memory prices,
-        uint256 timestamp,
-        bytes32[] memory positionKeys
-    ) external onlyPositionKeeper whenNotPaused {
-        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
-
-        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
-
-        this.liquidatePositions(positionKeys);
-    }
-
-    function liquidatePositions(bytes32[] memory positionKeys) external onlyPositionKeeper whenNotPaused {
-        for (uint256 i = 0; i < positionKeys.length; i++) {
-            Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
-            _liquidatePosition(position, positionKeys[i]);
-        }
+        console.log('<== executeDecreaseOrder orderId:', _orderId);
     }
 
     function setPricesAndExecuteADL(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        bytes32[] memory positionKeys,
-        uint256[] memory sizeAmounts,
+        ExecutePosition[] memory executePositions,
         uint256 orderId,
-        TradingTypes.TradeType tradeType
-    ) external onlyPositionKeeper whenNotPaused {
+        TradingTypes.TradeType tradeType,
+        uint8 level,
+        uint256 commissionRatio
+    ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
-        this.executeADLAndDecreaseOrder(positionKeys, sizeAmounts, orderId, tradeType);
+        this.executeADLAndDecreaseOrder(executePositions, orderId, tradeType, level, commissionRatio);
     }
 
     function executeADLAndDecreaseOrder(
-        bytes32[] memory _positionKeys,
-        uint256[] memory _sizeAmounts,
+        ExecutePosition[] memory executePositions,
         uint256 _orderId,
-        TradingTypes.TradeType _tradeType
-    ) public onlyPositionKeeper whenNotPaused {
-        require(_positionKeys.length == _sizeAmounts.length, 'length not match');
-
+        TradingTypes.TradeType _tradeType,
+        uint8 _level,
+        uint256 _commissionRatio
+    ) external override onlyPositionKeeper whenNotPaused {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
         require(order.needADL, 'no need ADL');
 
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(order.pairIndex);
 
-        Position.Info[] memory adlPositions = new Position.Info[](_positionKeys.length);
-        uint256 sumAmount;
-        for (uint256 i = 0; i < _positionKeys.length; i++) {
-            Position.Info memory position = positionManager.getPositionByKey(_positionKeys[i]);
-            require(_sizeAmounts[i] <= position.positionAmount, 'ADL size exceeds position');
-            require(_sizeAmounts[i] <= tradingConfig.maxTradeAmount, 'exceeds max trade amount');
-            sumAmount += _sizeAmounts[i];
-            adlPositions[i] = position;
-        }
+        ExecutePositionInfo[] memory adlPositions = new ExecutePositionInfo[](executePositions.length);
+        uint256 executeTotalAmount;
+        for (uint256 i = 0; i < adlPositions.length; i++) {
+            ExecutePosition memory executePosition = executePositions[i];
 
-        require(sumAmount == order.sizeAmount, 'ADL position amount not match decrease order');
+            Position.Info memory position = positionManager.getPositionByKey(executePosition.positionKey);
+            require(executePosition.sizeAmount <= position.positionAmount, 'ADL size exceeds position');
+            require(executePosition.sizeAmount <= tradingConfig.maxTradeAmount, 'exceeds max trade amount');
+            executeTotalAmount += executePosition.sizeAmount;
+
+            ExecutePositionInfo memory adlPosition = adlPositions[i];
+            adlPosition.position = position;
+            adlPosition.level = executePosition.level;
+            adlPosition.commissionRatio = executePosition.commissionRatio;
+        }
+        require(executeTotalAmount == order.sizeAmount, 'ADL position amount not match decrease order');
+
         IPool.Pair memory pair = pool.getPair(order.pairIndex);
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
-            Position.Info memory adlPosition = adlPositions[i];
+            ExecutePositionInfo memory adlPosition = adlPositions[i];
             uint256 orderId = orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
-                    account: adlPosition.account,
-                    pairIndex: adlPosition.pairIndex,
+                    account: adlPosition.position.account,
+                    pairIndex: adlPosition.position.pairIndex,
                     tradeType: TradingTypes.TradeType.MARKET,
                     collateral: 0,
                     openPrice: price,
-                    isLong: adlPosition.isLong,
-                    sizeAmount: -int256(adlPosition.positionAmount),
-                    data: abi.encode(adlPosition.account)
+                    isLong: adlPosition.position.isLong,
+                    sizeAmount: -int256(adlPosition.position.positionAmount),
+                    data: abi.encode(adlPosition.position.account)
                 })
             );
-            this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+            this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, adlPosition.level, adlPosition.commissionRatio);
         }
-        this.executeDecreaseOrder(_orderId, order.tradeType);
+        this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio);
     }
 
-    function _liquidatePosition(Position.Info memory position, bytes32 _positionKey) internal {
+    function setPricesAndLiquidatePositions(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
+        ExecutePosition[] memory executePositions
+    ) external override onlyPositionKeeper whenNotPaused {
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+
+        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+
+        this.liquidatePositions(executePositions);
+    }
+
+    function liquidatePositions(
+        ExecutePosition[] memory executePositions
+    ) external override onlyPositionKeeper whenNotPaused {
+        for (uint256 i = 0; i < executePositions.length; i++) {
+            ExecutePosition memory executePosition = executePositions[i];
+            _liquidatePosition(executePosition.positionKey, executePosition.level, executePosition.commissionRatio);
+        }
+    }
+
+    function _liquidatePosition(bytes32 positionKey, uint8 level, uint256 commissionRatio) internal {
+        Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
             return;
         }
@@ -602,10 +650,10 @@ contract Executor is IExecutor, Pausable {
             })
         );
 
-        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio);
 
         emit LiquidatePosition(
-            _positionKey,
+            positionKey,
             position.account,
             position.pairIndex,
             position.isLong,

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import '../libraries/TradingTypes.sol';
+import '../libraries/Position.sol';
 
 interface IExecutor {
     event UpdateMaxTimeDelay(uint256 oldDelay, uint256 newDelay);
@@ -33,7 +34,7 @@ interface IExecutor {
         int256 fundingFee
     );
 
-     event LiquidatePosition(
+    event LiquidatePosition(
         bytes32 positionKey,
         address account,
         uint256 pairIndex,
@@ -44,6 +45,24 @@ interface IExecutor {
         uint256 orderId
     );
 
+    struct ExecuteOrder {
+        uint256 orderId;
+        uint8 level;
+        uint256 commissionRatio;
+    }
+
+    struct ExecutePosition {
+        bytes32 positionKey;
+        uint256 sizeAmount;
+        uint8 level;
+        uint256 commissionRatio;
+    }
+
+    struct ExecutePositionInfo {
+        Position.Info position;
+        uint8 level;
+        uint256 commissionRatio;
+    }
 
     function increaseMarketOrderStartIndex() external view returns (uint256);
 
@@ -53,59 +72,71 @@ interface IExecutor {
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
-    // function setPricesAndExecuteMarketOrders(
-    //     address[] memory tokens,
-    //     uint256[] memory prices,
-    //     uint256 timestamp,
-    //     uint256 increaseEndIndex,
-    //     uint256 decreaseEndIndex
-    // ) external;
+    function setPricesAndExecuteMarketOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
+        ExecuteOrder[] memory increaseOrders,
+        ExecuteOrder[] memory decreaseOrders
+    ) external;
 
     function setPricesAndExecuteLimitOrders(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        uint256[] memory increaseOrderIds,
-        uint256[] memory decreaseOrderIds
+        ExecuteOrder[] memory increaseOrders,
+        ExecuteOrder[] memory decreaseOrders
     ) external;
 
-    // function executeIncreaseMarketOrders(uint256 endIndex) external;
+    function executeIncreaseMarketOrders(ExecuteOrder[] memory orders) external;
 
-    function executeIncreaseLimitOrders(uint256[] memory orderIds) external;
+    function executeIncreaseLimitOrders(ExecuteOrder[] memory orders) external;
 
-    function executeIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
-
-    // function executeDecreaseMarketOrders(uint256 endIndex) external;
-
-    function executeDecreaseLimitOrders(uint256[] memory orderIds) external;
-
-    function executeDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
-
-    function setPricesAndLiquidatePositions(
-        address[] memory tokens,
-        uint256[] memory prices,
-        uint256 timestamp,
-        bytes32[] memory positionKeys
+    function executeIncreaseOrder(
+        uint256 _orderId,
+        TradingTypes.TradeType _tradeType,
+        uint8 level,
+        uint256 commissionRatio
     ) external;
 
-    function liquidatePositions(bytes32[] memory positionKeys) external;
+    function executeDecreaseMarketOrders(ExecuteOrder[] memory orders) external;
+
+    function executeDecreaseLimitOrders(ExecuteOrder[] memory orders) external;
+
+    function executeDecreaseOrder(
+        uint256 _orderId,
+        TradingTypes.TradeType _tradeType,
+        uint8 level,
+        uint256 commissionRatio
+    ) external;
 
     function setPricesAndExecuteADL(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        bytes32[] memory positionKeys,
-        uint256[] memory sizeAmounts,
+        ExecutePosition[] memory executePositions,
         uint256 orderId,
-        TradingTypes.TradeType tradeType
+        TradingTypes.TradeType tradeType,
+        uint8 level,
+        uint256 commissionRatio
     ) external;
 
     function executeADLAndDecreaseOrder(
-        bytes32[] memory positionKeys,
-        uint256[] memory sizeAmounts,
-        uint256 orderId,
-        TradingTypes.TradeType tradeType
+        ExecutePosition[] memory executePositions,
+        uint256 _orderId,
+        TradingTypes.TradeType _tradeType,
+        uint8 _level,
+        uint256 _commissionRatio
     ) external;
+
+    function setPricesAndLiquidatePositions(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
+        ExecutePosition[] memory executePositions
+    ) external;
+
+    function liquidatePositions(ExecutePosition[] memory executePositions) external;
 
     function claimTradingFee(address claimToken) external returns (uint256);
 }
