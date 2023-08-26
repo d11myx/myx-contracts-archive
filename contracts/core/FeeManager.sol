@@ -10,13 +10,14 @@ import '../libraries/Roleable.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 
-
 contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
+    using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
+
     mapping(address => uint256) public override stakingTradingFee;
     mapping(address => uint256) public override distributorTradingFee;
-    mapping(address => mapping(address => uint256)) public override keeperTradingFee;
-
+    mapping(address => mapping(address => uint256)) public override userTradingFee;
+    mapping(address => uint256) public referenceTradingFee;
     IPool public pool;
 
     constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
@@ -24,8 +25,7 @@ contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     function claimStakingTradingFee(address claimToken) external nonReentrant onlyPoolAdmin returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
         if (claimableStakingTradingFee > 0) {
-            // pool.transferTokenTo(claimToken, msg.sender, claimableStakingTradingFee);
-            //            IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
+            // IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
             delete stakingTradingFee[claimToken];
         }
         return claimableStakingTradingFee;
@@ -35,48 +35,44 @@ contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
         if (claimableDistributorTradingFee > 0) {
             // pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
-            //            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
+            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
             delete distributorTradingFee[claimToken];
         }
         return claimableDistributorTradingFee;
     }
 
-    function claimKeeperTradingFee(address claimToken, address keeper) external nonReentrant returns (uint256) {
-        uint256 claimableKeeperTradingFee = keeperTradingFee[claimToken][keeper];
+    function claimKeeperTradingFee(address claimToken) external nonReentrant returns (uint256) {
+        uint256 claimableKeeperTradingFee = userTradingFee[claimToken][msg.sender];
         if (claimableKeeperTradingFee > 0) {
             // pool.transferTokenTo(claimToken, keeper, claimableKeeperTradingFee);
             //            IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
-            delete keeperTradingFee[claimToken][keeper];
+            delete userTradingFee[claimToken][msg.sender];
         }
         return claimableKeeperTradingFee;
     }
 
     function _distributeTradingFee(
+        uint256 pairIndex,
         address account,
-        IPool.Pair memory pair,
         uint256 tradingFee,
-        address keeper
+        address keeper,
+        uint256 vipRate,
+        uint256 referenceRate
     ) internal {
-        // console.log('distributeTradingFee tradingFee', tradingFee, 'keeper', keeper);
+        IPool.Pair memory pair = pool.getPair(pairIndex);
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
-
         uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
-        //        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
         pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
-
         uint256 keeperAmount = tradingFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
+        uint256 vipAmount = tradingFee.mulPercentage(vipRate);
+        uint256 refenceAmount = tradingFee.mulPercentage(referenceRate);
         uint256 stakingAmount = tradingFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
         uint256 distributorAmount = tradingFee - keeperAmount - stakingAmount;
-
-        keeperTradingFee[pair.stableToken][keeper] += keeperAmount;
+        userTradingFee[pair.stableToken][keeper] += keeperAmount;
         stakingTradingFee[pair.stableToken] += stakingAmount;
         distributorTradingFee[pair.stableToken] += distributorAmount;
-        // console.log(
-        //     'distributeTradingFee lpAmount %s keeperAmount %s stakingAmount %s',
-        //     lpAmount,
-        //     keeperAmount,
-        //     stakingAmount
-        // );
+        userTradingFee[pair.stableToken][account] += vipAmount;
+        referenceTradingFee[pair.stableToken] += refenceAmount;
 
         emit DistributeTradingFee(account, pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
     }

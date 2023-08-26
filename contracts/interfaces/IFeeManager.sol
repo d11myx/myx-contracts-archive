@@ -14,13 +14,11 @@ interface IFeeManager {
 
     function distributorTradingFee(address _token) external view returns (uint256);
 
-    function keeperTradingFee(address _token, address _account) external view returns (uint256);
-
+    function userTradingFee(address _token, address _account) external view returns (uint256);
 
     function claimStakingTradingFee(address claimToken) external returns (uint256);
 
     function claimDistributorTradingFee(address claimToken) external returns (uint256);
 
-    function claimKeeperTradingFee(address claimToken, address keeper) external returns (uint256);
-
+    function claimKeeperTradingFee(address claimToken) external returns (uint256);
 }

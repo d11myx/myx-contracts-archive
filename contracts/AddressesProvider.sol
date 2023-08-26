@@ -10,6 +10,8 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
     bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
 
+    bytes32 private constant FEE_MANAGER = 'FEE_MANAGER';
+
     mapping(bytes32 => address) private _addresses;
 
     function getAddress(bytes32 id) public view override returns (address) {
@@ -51,5 +53,16 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         address oldAclManager = _addresses[ROLE_MANAGER];
         setAddress(ROLE_MANAGER, newAddress);
         emit AddressSet(ROLE_MANAGER, oldAclManager, newAddress);
+    }
+
+    function getFeeManger() external view returns (address) {
+        return getAddress(FEE_MANAGER);
+    }
+
+    function setFeeManger(address newAddress) external {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAclManager = _addresses[FEE_MANAGER];
+        setAddress(FEE_MANAGER, newAddress);
+        emit AddressSet(FEE_MANAGER, oldAclManager, newAddress);
     }
 }
