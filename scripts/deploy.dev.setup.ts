@@ -78,7 +78,7 @@ async function main() {
                 await pool.getPair(0)
             ).stableToken,
             ethers.utils.parseEther('1000'),
-            ethers.utils.parseEther('30000000'),
+            ethers.utils.parseEther('26000000'),
         ),
     );
     await waitForTx(
@@ -91,7 +91,7 @@ async function main() {
                 await pool.getPair(1)
             ).stableToken,
             ethers.utils.parseEther('1000'),
-            ethers.utils.parseEther('2000000'),
+            ethers.utils.parseEther('1650000'),
         ),
     );
 
