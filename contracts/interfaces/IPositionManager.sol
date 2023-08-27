@@ -68,7 +68,7 @@ interface IPositionManager {
         uint256 distributorAmount
     );
 
-    function netExposureAmountChecker(uint256 pairIndex) external view returns (int256);
+    function getExposedPositions(uint256 pairIndex) external view returns (int256);
 
     function longTracker(uint256 pairIndex) external view returns (uint256);
 
