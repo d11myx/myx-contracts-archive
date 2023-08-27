@@ -39,7 +39,6 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
     mapping(address => bool) public isHandler;
 
     IPositionManager public positionManager;
-    IFeeManager public feeManager;
 
     event Claim(address indexed account, uint256 indexed round, uint256 amount);
     event Compound(address indexed account, uint256 indexed round, uint256 amount);
@@ -61,16 +60,12 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
         positionManager = _positionManager;
     }
 
-    function setFeeManager(IFeeManager _feeManager) external onlyOwner {
-        feeManager = _feeManager;
-    }
-
     // update root by handler
     // amount: total reward
     function updateRoot(bytes32 _merkleRoot, uint256 _amount) external override onlyHandler {
         require(!merkleRootUsed[_merkleRoot], 'RewardDistributor: root already used');
         require(
-            totalReward + feeManager.distributorTradingFee(rewardToken) >= _amount,
+            totalReward + IFeeManager(address(positionManager)).distributorTradingFee(rewardToken) >= _amount,
             'RewardDistributor: reward not enough'
         );
 
@@ -78,7 +73,7 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
         merkleRoots[round] = _merkleRoot;
         merkleRootUsed[_merkleRoot] = true;
 
-        uint256 claimAmount = feeManager.claimDistributorTradingFee(rewardToken);
+        uint256 claimAmount = IFeeManager(address(positionManager)).claimDistributorTradingFee(rewardToken);
         totalReward += claimAmount;
     }
 
