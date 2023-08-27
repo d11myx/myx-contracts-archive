@@ -59,38 +59,17 @@ interface IPositionManager {
 
     event NeedBuyIndexToken(uint256 pairIndex, uint256 profit, uint256 lastFundingTime);
 
-    event DistributeTradingFee(
-        address account,
-        uint256 pairIndex,
-        uint256 lpAmount,
-        uint256 keeperAmount,
-        uint256 stakingAmount,
-        uint256 distributorAmount
-    );
-
     function getExposedPositions(uint256 pairIndex) external view returns (int256);
 
     function longTracker(uint256 pairIndex) external view returns (uint256);
 
     function shortTracker(uint256 pairIndex) external view returns (uint256);
 
-    function stakingTradingFee(address _token) external view returns (uint256);
-
-    function distributorTradingFee(address _token) external view returns (uint256);
-
-    function keeperTradingFee(address _token, address _account) external view returns (uint256);
-
     function getTradingFee(
         uint256 _pairIndex,
         bool _isLong,
         uint256 _sizeAmount
     ) external view returns (uint256 tradingFee);
-
-    function claimStakingTradingFee(address claimToken) external returns (uint256);
-
-    function claimDistributorTradingFee(address claimToken) external returns (uint256);
-
-    function claimKeeperTradingFee(address claimToken, address keeper) external returns (uint256);
 
     function getFundingFee(
         bool _increase,
@@ -115,22 +94,26 @@ interface IPositionManager {
     function updateFundingInterval(uint256 newInterval) external;
 
     function increasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
 
     function decreasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 

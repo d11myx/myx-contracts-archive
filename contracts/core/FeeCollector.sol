@@ -3,11 +3,10 @@ pragma solidity 0.8.17;
 
 import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IFeeCollector.sol';
-import "../interfaces/IAddressesProvider.sol";
-import "../interfaces/IRoleManager.sol";
+import '../interfaces/IAddressesProvider.sol';
+import '../interfaces/IRoleManager.sol';
 
 contract FeeCollector is IFeeCollector {
-
     // Discount ratio of every level (level => discountRatio)
     mapping(uint8 => uint256) public override levelDiscountRatios;
 
@@ -16,9 +15,14 @@ contract FeeCollector is IFeeCollector {
 
     IAddressesProvider public immutable ADDRESSES_PROVIDER;
 
-    constructor(IAddressesProvider addressesProvider, uint256 _maxCommissionRatio) {
+    constructor(IAddressesProvider addressesProvider) {
         ADDRESSES_PROVIDER = addressesProvider;
-        maxCommissionRatio = _maxCommissionRatio;
+        maxCommissionRatio = 10000;
+        levelDiscountRatios[1] = 1000;
+        levelDiscountRatios[2] = 2000;
+        levelDiscountRatios[3] = 3000;
+        levelDiscountRatios[4] = 4000;
+        levelDiscountRatios[5] = 5000;
     }
 
     modifier onlyPoolAdmin() {
@@ -43,5 +47,4 @@ contract FeeCollector is IFeeCollector {
 
         emit UpdateMaxCommissionRatio(oldRatio, newRatio);
     }
-
 }

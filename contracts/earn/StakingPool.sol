@@ -7,6 +7,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 
+import '../interfaces/IFeeManager.sol';
 import '../token/interfaces/IBaseToken.sol';
 import './interfaces/IStakingPool.sol';
 import './interfaces/IRewardDistributor.sol';
@@ -144,7 +145,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
             return 0;
         }
 
-        uint256 pendingReward = positionManager.claimStakingTradingFee(rewardToken);
+        uint256 pendingReward = IFeeManager(address(positionManager)).claimStakingTradingFee(rewardToken);
         if (pendingReward > 0) {
             cumulativeRewardPerToken += pendingReward.mulDiv(PRECISION, totalSupply);
         }
@@ -170,7 +171,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         if (totalSupply == 0 || balance == 0) {
             return 0;
         }
-        uint256 pendingReward = positionManager.stakingTradingFee(rewardToken);
+        uint256 pendingReward = IFeeManager(address(positionManager)).stakingTradingFee(rewardToken);
         uint256 nextCumulativeFeePerToken = cumulativeRewardPerToken + pendingReward.mulDiv(PRECISION, totalSupply);
         claimableReward = balance.mulDiv(nextCumulativeFeePerToken - userCumulativeRewardPerTokens[account], PRECISION);
         console.log(
