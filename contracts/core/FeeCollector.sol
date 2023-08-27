@@ -9,7 +9,7 @@ import "../interfaces/IRoleManager.sol";
 contract FeeCollector is IFeeCollector {
 
     // Discount ratio of every level (level => discountRatio)
-    mapping(uint256 => uint256) public override levelDiscountRatios;
+    mapping(uint8 => uint256) public override levelDiscountRatios;
 
     // Maximum of commission ratio
     uint256 public override maxCommissionRatio;
@@ -26,7 +26,7 @@ contract FeeCollector is IFeeCollector {
         _;
     }
 
-    function updateLevelDiscountRatio(uint256 level, uint256 newRatio) external override {
+    function updateLevelDiscountRatio(uint8 level, uint256 newRatio) external override {
         require(newRatio <= PrecisionUtils.percentage(), 'exceeds max ratio');
 
         uint256 oldRatio = levelDiscountRatios[level];

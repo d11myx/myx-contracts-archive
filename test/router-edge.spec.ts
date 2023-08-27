@@ -91,7 +91,7 @@ describe('Router: Edge cases', () => {
         const orderId = 0;
         console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
         console.log(`position:`, position);
@@ -124,7 +124,7 @@ describe('Router: Edge cases', () => {
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
 
-        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionAmountAfter = positionAfter.positionAmount;
@@ -157,7 +157,7 @@ describe('Router: Edge cases', () => {
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createDecreaseOrder(increasePositionRequest);
 
-        await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
+        await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionAmountAfter = positionAfter.positionAmount;
@@ -264,7 +264,7 @@ describe('Router: Edge cases', () => {
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(shorter.signer).createDecreaseOrder(decreasePositionRequest);
 
-            await executor.connect(keeper.signer).executeDecreaseOrder(decreaseOrderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0);
 
             const decreaseOrderInfo = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
             expect(decreaseOrderInfo.needADL).to.be.eq(true);
@@ -273,14 +273,20 @@ describe('Router: Edge cases', () => {
             let traderPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
             let traderCurPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(traderCurPosition);
-            await executor
-                .connect(keeper.signer)
-                .executeADLAndDecreaseOrder(
-                    [traderPositionKey],
-                    [ethers.utils.parseUnits('5', 18)],
-                    decreaseOrderId,
-                    TradeType.MARKET,
-                );
+            await executor.connect(keeper.signer).executeADLAndDecreaseOrder(
+                [
+                    {
+                        positionKey: traderPositionKey,
+                        sizeAmount: ethers.utils.parseUnits('5', 18),
+                        level: 0,
+                        commissionRatio: 0,
+                    },
+                ],
+                decreaseOrderId,
+                TradeType.MARKET,
+                0,
+                0,
+            );
         });
     });
 
@@ -319,7 +325,7 @@ describe('Router: Edge cases', () => {
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequestStruct);
 
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
             const positionAmountAfter = positionAfter.positionAmount;
@@ -389,7 +395,7 @@ describe('Router: Edge cases', () => {
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
 
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -413,7 +419,9 @@ describe('Router: Edge cases', () => {
             expect(leverageAft).to.be.eq(61);
             // liquidation
             const traderPositionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
-            await executor.connect(keeper.signer).liquidatePositions([traderPositionKey]);
+            await executor
+                .connect(keeper.signer)
+                .liquidatePositions([{ positionKey: traderPositionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
 
             //todo
             // const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
@@ -446,5 +454,5 @@ export async function increaseUserPosition(
     // await router.setHandler(user.address, true);
     const increaseOrderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-    await executor.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET);
+    await executor.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
 }
