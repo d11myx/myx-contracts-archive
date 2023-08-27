@@ -113,7 +113,7 @@ describe('Router: increase position ar', () => {
             console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`position:`, position);
@@ -152,7 +152,7 @@ describe('Router: increase position ar', () => {
             console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`update position:`, position);
@@ -193,7 +193,7 @@ describe('Router: increase position ar', () => {
             console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`after position :`, positionAfter);
@@ -236,7 +236,7 @@ describe('Router: increase position ar', () => {
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const collateralAfter = position.collateral;
@@ -317,7 +317,7 @@ describe('Router: increase position ar', () => {
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const balance = await usdt.balanceOf(trader.address);
             console.log(`User balance: `, balance);
@@ -387,7 +387,7 @@ describe('Router: increase position ar', () => {
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`new open position: `, position);
@@ -451,7 +451,7 @@ describe('Router: increase position ar', () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`position: `, position);
@@ -492,7 +492,7 @@ describe('Router: increase position ar', () => {
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const balance = await usdt.balanceOf(trader.address);
             console.log(`User balance: `, balance);
@@ -535,7 +535,7 @@ describe('Router: increase position ar', () => {
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await expect(
-                executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET),
+                executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
             ).to.be.revertedWith('not reach trigger price');
         });
 
@@ -565,7 +565,7 @@ describe('Router: increase position ar', () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`position: `, position);
@@ -611,7 +611,7 @@ describe('Router: increase position ar', () => {
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
         });
         after(async () => {});
 
@@ -639,7 +639,7 @@ describe('Router: increase position ar', () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const firstPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const firstOpenPrice = firstPosition.averagePrice;
@@ -674,7 +674,7 @@ describe('Router: increase position ar', () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const uncompletedPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const uncompletedPositionPrice = uncompletedPosition.averagePrice;
@@ -703,7 +703,7 @@ describe('Router: increase position ar', () => {
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const lastTimePrice = traderPosition.averagePrice;
@@ -759,7 +759,7 @@ describe('Router: increase position ar', () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const secondPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`secondPosition: `, secondPosition);
