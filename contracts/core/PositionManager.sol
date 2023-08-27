@@ -74,12 +74,14 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
     }
 
     function _takeFundingFeeAddTraderFee(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) internal returns (int256 afterCollateral, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -88,7 +90,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
         afterCollateral -= int256(tradingFee);
 
-        //_distributeTradingFee(_account, pair, tradingFee, _keeper);
+        _updateFee(pair, _account, _keeper, tradingFee, vipRate, referenceRate);
 
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         if (fundingFee >= 0) {
@@ -259,12 +261,14 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
 
     //todo why not oracle price
     function increasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -299,12 +303,14 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
-            _keeper,
-            _account,
             _pairIndex,
-            int256(position.collateral),
+            _account,
+            _keeper,
             _sizeAmount,
             _isLong,
+            int256(position.collateral),
+            vipRate,
+            referenceRate,
             _price
         );
 
@@ -354,12 +360,14 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
     }
 
     function decreasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external onlyExecutor nonReentrant whenNotPaused returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -387,12 +395,14 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         updateFundingRate(_pairIndex, _price);
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
-            _keeper,
-            _account,
             _pairIndex,
-            int256(position.collateral),
+            _account,
+            _keeper,
             _sizeAmount,
             _isLong,
+            int256(position.collateral),
+            vipRate,
+            referenceRate,
             _price
         );
 
