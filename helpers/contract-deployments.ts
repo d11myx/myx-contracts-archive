@@ -23,6 +23,7 @@ import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
+import { FeeCollector } from '../types/contracts/trading';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -170,11 +171,13 @@ export async function deployTrading(
     console.log(`deployed Router at ${router.address}`);
     await orderManager.setRouter(router.address);
 
+    let feeCollector = (await deployContract('FeeCollector', [addressProvider.address])) as any as FeeCollector;
     let executor = (await deployContract('Executor', [
         addressProvider.address,
         pool.address,
         orderManager.address,
         positionManager.address,
+        feeCollector.address,
         60 * 10, //todo testing time
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);

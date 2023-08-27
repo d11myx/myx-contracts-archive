@@ -16,6 +16,7 @@ import {
     waitForTx,
 } from '../../helpers';
 import { Router, Executor, PositionManager, OrderManager } from '../../types';
+import { FeeCollector } from '../../types/contracts/trading';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy, get } = deployments;
@@ -67,11 +68,30 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
     await waitForTx(await orderManager.setRouter(router.address));
 
+    // FeeCollector
+    const feeCollectorArtifact = await deploy(`${TRADING_VAULT_ID}`, {
+        from: deployer,
+        contract: 'FeeCollector',
+        args: [addressProvider.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const feeCollector = (await hre.ethers.getContractAt(
+        feeCollectorArtifact.abi,
+        feeCollectorArtifact.address,
+    )) as FeeCollector;
+
     // Executor
     const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
-        args: [addressProvider.address, pool.address, orderManager.address, positionManager.address, 60],
+        args: [
+            addressProvider.address,
+            pool.address,
+            orderManager.address,
+            positionManager.address,
+            feeCollector.address,
+            60,
+        ],
         // libraries: {
         //     ValidationHelper: validationHelperArtifact.address,
         // },
