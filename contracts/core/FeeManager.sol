@@ -52,15 +52,14 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         return claimableKeeperTradingFee;
     }
 
-    function updateFee(
-        uint256 pairIndex,
+    function _updateFee(
+        IPool.Pair memory pair,
         address account,
         address keeper,
         uint256 tradingFee,
         uint256 vipRate,
         uint256 referenceRate
     ) internal {
-        IPool.Pair memory pair = pool.getPair(pairIndex);
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
         uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
         pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
