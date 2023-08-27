@@ -59,14 +59,11 @@ interface IPositionManager {
 
     event NeedBuyIndexToken(uint256 pairIndex, uint256 profit, uint256 lastFundingTime);
 
-
-
     function getExposedPositions(uint256 pairIndex) external view returns (int256);
 
     function longTracker(uint256 pairIndex) external view returns (uint256);
 
     function shortTracker(uint256 pairIndex) external view returns (uint256);
-
 
     function getTradingFee(
         uint256 _pairIndex,
@@ -97,22 +94,26 @@ interface IPositionManager {
     function updateFundingInterval(uint256 newInterval) external;
 
     function increasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
 
     function decreasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
