@@ -19,8 +19,4 @@ interface IAddressesProvider {
     function getRoleManager() external view returns (address);
 
     function setRolManager(address) external;
-
-    function getFeeManger() external view returns (address);
-
-    function setFeeManger(address) external;
 }

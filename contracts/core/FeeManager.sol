@@ -10,7 +10,7 @@ import '../libraries/Roleable.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 
-contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
+abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
 
@@ -18,9 +18,11 @@ contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     mapping(address => uint256) public override distributorTradingFee;
     mapping(address => mapping(address => uint256)) public override userTradingFee;
     mapping(address => uint256) public referenceTradingFee;
-    IPool public pool;
+    IPool public immutable pool;
 
-    constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
+    constructor(IAddressesProvider addressProvider, IPool _pool) Roleable(addressProvider) {
+        pool = IPool(_pool);
+    }
 
     function claimStakingTradingFee(address claimToken) external nonReentrant onlyPoolAdmin returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
@@ -51,14 +53,14 @@ contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         return claimableKeeperTradingFee;
     }
 
-    function _distributeTradingFee(
+    function updateFee(
         uint256 pairIndex,
         address account,
-        uint256 tradingFee,
         address keeper,
+        uint256 tradingFee,
         uint256 vipRate,
         uint256 referenceRate
-    ) internal {
+    ) external {
         IPool.Pair memory pair = pool.getPair(pairIndex);
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
         uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
@@ -73,7 +75,6 @@ contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         distributorTradingFee[pair.stableToken] += distributorAmount;
         userTradingFee[pair.stableToken][account] += vipAmount;
         referenceTradingFee[pair.stableToken] += refenceAmount;
-
         emit DistributeTradingFee(account, pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
     }
 }
