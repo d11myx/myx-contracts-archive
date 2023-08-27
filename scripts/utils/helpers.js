@@ -334,7 +334,7 @@ async function queryPosition(user, pairIndex, isLong) {
     console.log(`average price of user: ${reduceDecimals(position.averagePrice, 30)}`);
 
     console.log(`usdt balance of trading vault: ${formatBalance(await usdt.balanceOf(tradingVault.address))}`);
-    console.log(`exposure of trading vault: ${formatBalance(await tradingVault.netExposureAmountChecker(pairIndex))}`);
+    console.log(`exposure of trading vault: ${formatBalance(await tradingVault.getExposedPositions(pairIndex))}`);
 
     let vault = await pairVault.getVault(pairIndex);
 
