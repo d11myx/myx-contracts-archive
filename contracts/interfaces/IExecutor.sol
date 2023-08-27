@@ -138,5 +138,5 @@ interface IExecutor {
 
     function liquidatePositions(ExecutePosition[] memory executePositions) external;
 
-    function claimTradingFee(address claimToken) external returns (uint256);
+    // function claimTradingFee(address claimToken) external returns (uint256);
 }

@@ -18,8 +18,9 @@ import '../interfaces/IPool.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
+import './FeeManager.sol';
 
-contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausable {
+contract PositionManager is FeeManager, IPositionManager, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -42,11 +43,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     uint256 public fundingInterval;
 
-    mapping(address => uint256) public override stakingTradingFee;
-    mapping(address => uint256) public override distributorTradingFee;
-    mapping(address => mapping(address => uint256)) public override keeperTradingFee;
-
-    IPool public pool;
     address public addressExecutor;
     address public addressOrderManager;
 
@@ -54,8 +50,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         IAddressesProvider addressProvider,
         IPool _pairInfo,
         uint256 _fundingInterval
-    ) Roleable(addressProvider) {
-        pool = _pairInfo;
+    ) FeeManager(addressProvider, _pairInfo) {
         fundingInterval = _fundingInterval;
     }
 
@@ -79,12 +74,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function _takeFundingFeeAddTraderFee(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) internal returns (int256 afterCollateral, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -92,7 +89,8 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
         afterCollateral -= int256(tradingFee);
-        _distributeTradingFee(_account, pair, tradingFee, _keeper);
+
+        _updateFee(pair, _account, _keeper, tradingFee, vipRate, referenceRate);
 
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         if (fundingFee >= 0) {
@@ -263,12 +261,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     //todo why not oracle price
     function increasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -303,12 +303,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
-            _keeper,
-            _account,
             _pairIndex,
-            int256(position.collateral),
+            _account,
+            _keeper,
             _sizeAmount,
             _isLong,
+            int256(position.collateral),
+            vipRate,
+            referenceRate,
             _price
         );
 
@@ -358,12 +360,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
     }
 
     function decreasePosition(
-        address _keeper,
-        address _account,
         uint256 _pairIndex,
-        int256 _collateral,
+        address _account,
+        address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
+        int256 _collateral,
+        uint256 vipRate,
+        uint256 referenceRate,
         uint256 _price
     ) external onlyExecutor nonReentrant whenNotPaused returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -391,12 +395,14 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         updateFundingRate(_pairIndex, _price);
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
-            _keeper,
-            _account,
             _pairIndex,
-            int256(position.collateral),
+            _account,
+            _keeper,
             _sizeAmount,
             _isLong,
+            int256(position.collateral),
+            vipRate,
+            referenceRate,
             _price
         );
 
@@ -503,7 +509,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 _price
     ) internal view returns (uint256 tradingFee) {
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
-
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
@@ -520,76 +525,11 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
                 tradingFee = sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP);
             }
         }
+
         return tradingFee;
     }
 
-    function _distributeTradingFee(
-        address account,
-        IPool.Pair memory pair,
-        uint256 tradingFee,
-        address keeper
-    ) internal {
-        console.log('distributeTradingFee tradingFee', tradingFee, 'keeper', keeper);
-        IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
-
-        uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
-        //        IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
-        pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
-
-        uint256 keeperAmount = tradingFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
-        uint256 stakingAmount = tradingFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
-        uint256 distributorAmount = tradingFee - keeperAmount - stakingAmount;
-
-        keeperTradingFee[pair.stableToken][keeper] += keeperAmount;
-        stakingTradingFee[pair.stableToken] += stakingAmount;
-        distributorTradingFee[pair.stableToken] += distributorAmount;
-        console.log(
-            'distributeTradingFee lpAmount %s keeperAmount %s stakingAmount %s',
-            lpAmount,
-            keeperAmount,
-            stakingAmount
-        );
-
-        emit DistributeTradingFee(account, pair.pairIndex, lpAmount, keeperAmount, stakingAmount, distributorAmount);
-    }
-
     // TODO receiver? ?onlyPoolAdmin
-    function claimStakingTradingFee(
-        address claimToken
-    ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
-        uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
-        if (claimableStakingTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableStakingTradingFee);
-            //            IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
-            delete stakingTradingFee[claimToken];
-        }
-        return claimableStakingTradingFee;
-    }
-
-    function claimDistributorTradingFee(
-        address claimToken
-    ) external nonReentrant onlyPoolAdmin whenNotPaused returns (uint256) {
-        uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
-        if (claimableDistributorTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
-            //            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
-            delete distributorTradingFee[claimToken];
-        }
-        return claimableDistributorTradingFee;
-    }
-
-    function claimKeeperTradingFee(
-        address claimToken,
-        address keeper
-    ) external nonReentrant onlyExecutor whenNotPaused returns (uint256) {
-        uint256 claimableKeeperTradingFee = keeperTradingFee[claimToken][keeper];
-        if (claimableKeeperTradingFee > 0) {
-            pool.transferTokenTo(claimToken, keeper, claimableKeeperTradingFee);
-            //            IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
-            delete keeperTradingFee[claimToken][keeper];
-        }
-        return claimableKeeperTradingFee;
-    }
 
     function getFundingFee(
         bool _increase,
@@ -599,16 +539,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         uint256 _sizeAmount
     ) public view override returns (int256) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
-        //todo  if the selettlement time is not reached , the fund rate fo the rate of the user shall be settled according to the time
-        // uint256 interval = block.timestamp - position.entryFundingTime;
-        // if (interval < fundingInterval) {
-        //            if (!_increase) {
-        //                int256 fundingRate = (lastFundingRates[_pairIndex] * int256(interval)) / int256(fundingInterval);
-        //                return (int256(_sizeAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
-        //            }
-        // return 0;
-        // }
-
         //todo  Position is converted to margin currency
         int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.fundRateIndex;
         return (int256(position.positionAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
@@ -690,21 +620,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
             fundingFeeConfig.maxFundingRate
         );
     }
-
-    // function _distributeFundingFee(
-    //     IPool.Pair memory pair,
-    //     uint256 _fundingFee
-    // ) internal returns (uint256 userAmount, uint256 lpAmount) {
-    //     IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(pair.pairIndex);
-
-    //     lpAmount = _fundingFee.mulPercentage(fundingFeeConfig.lpDistributeP);
-    //     userAmount = _fundingFee - lpAmount;
-
-    //     IERC20(pair.stableToken).safeTransfer(address(pool), lpAmount);
-    //     pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
-
-    //     return (userAmount, lpAmount);
-    // }
 
     function getPosition(
         address _account,
