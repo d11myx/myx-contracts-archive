@@ -27,8 +27,8 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     function claimStakingTradingFee(address claimToken) external nonReentrant onlyPoolAdmin returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
         if (claimableStakingTradingFee > 0) {
-            // IERC20(claimToken).safeTransfer(msg.sender, claimableStakingTradingFee);
-            delete stakingTradingFee[claimToken];
+            pool.transferTokenTo(claimToken, msg.sender, claimableStakingTradingFee);
+            stakingTradingFee[claimToken] = 0;
         }
         return claimableStakingTradingFee;
     }
@@ -36,9 +36,8 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     function claimDistributorTradingFee(address claimToken) external nonReentrant onlyPoolAdmin returns (uint256) {
         uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
         if (claimableDistributorTradingFee > 0) {
-            // pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
-            IERC20(claimToken).safeTransfer(msg.sender, claimableDistributorTradingFee);
-            delete distributorTradingFee[claimToken];
+            pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
+            distributorTradingFee[claimToken] = 0;
         }
         return claimableDistributorTradingFee;
     }
@@ -46,9 +45,9 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     function claimKeeperTradingFee(address claimToken) external nonReentrant returns (uint256) {
         uint256 claimableKeeperTradingFee = userTradingFee[claimToken][msg.sender];
         if (claimableKeeperTradingFee > 0) {
-            // pool.transferTokenTo(claimToken, keeper, claimableKeeperTradingFee);
-            //            IERC20(claimToken).safeTransfer(keeper, claimableKeeperTradingFee);
-            delete userTradingFee[claimToken][msg.sender];
+            pool.transferTokenTo(claimToken, msg.sender, claimableKeeperTradingFee);
+            IERC20(claimToken).safeTransfer(msg.sender, claimableKeeperTradingFee);
+            userTradingFee[claimToken][msg.sender] = 0;
         }
         return claimableKeeperTradingFee;
     }
@@ -60,7 +59,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         uint256 tradingFee,
         uint256 vipRate,
         uint256 referenceRate
-    ) external {
+    ) internal {
         IPool.Pair memory pair = pool.getPair(pairIndex);
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
         uint256 lpAmount = tradingFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
