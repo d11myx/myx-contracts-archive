@@ -715,10 +715,6 @@ contract Executor is IExecutor, Pausable {
         );
     }
 
-    // function claimTradingFee(address claimToken) external override onlyPositionKeeper whenNotPaused returns (uint256) {
-    //     return positionManager.claimKeeperTradingFee(claimToken, msg.sender);
-    // }
-
     function setPaused() external onlyAdmin {
         _pause();
     }
