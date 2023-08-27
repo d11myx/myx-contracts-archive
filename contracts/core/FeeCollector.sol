@@ -10,19 +10,19 @@ contract FeeCollector is IFeeCollector {
     // Discount ratio of every level (level => discountRatio)
     mapping(uint8 => uint256) public override levelDiscountRatios;
 
-    // Maximum of commission ratio
-    uint256 public override maxCommissionRatio;
+    // Maximum of reference ratio
+    uint256 public override maxReferenceRatio;
 
     IAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     constructor(IAddressesProvider addressesProvider) {
         ADDRESSES_PROVIDER = addressesProvider;
-        maxCommissionRatio = 10000;
-        levelDiscountRatios[1] = 1000;
-        levelDiscountRatios[2] = 2000;
-        levelDiscountRatios[3] = 3000;
-        levelDiscountRatios[4] = 4000;
-        levelDiscountRatios[5] = 5000;
+        maxReferenceRatio = 1e8;
+        levelDiscountRatios[1] = 1000000;
+        levelDiscountRatios[2] = 2000000;
+        levelDiscountRatios[3] = 3000000;
+        levelDiscountRatios[4] = 4000000;
+        levelDiscountRatios[5] = 5000000;
     }
 
     modifier onlyPoolAdmin() {
@@ -39,12 +39,12 @@ contract FeeCollector is IFeeCollector {
         emit UpdateLevelDiscountRatio(level, oldRatio, newRatio);
     }
 
-    function updateMaxCommissionRatio(uint256 newRatio) external override {
+    function updateMaxReferenceRatio(uint256 newRatio) external override {
         require(newRatio <= PrecisionUtils.percentage(), 'exceeds max ratio');
 
-        uint256 oldRatio = maxCommissionRatio;
-        maxCommissionRatio = newRatio;
+        uint256 oldRatio = maxReferenceRatio;
+        maxReferenceRatio = newRatio;
 
-        emit UpdateMaxCommissionRatio(oldRatio, newRatio);
+        emit UpdateMaxReferenceRatio(oldRatio, newRatio);
     }
 }

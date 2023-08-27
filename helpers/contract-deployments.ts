@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     AddressesProvider,
     Executor,
+    FeeCollector,
     IndexPriceFeed,
     MockPriceFeed,
     OraclePriceFeed,
@@ -23,7 +24,6 @@ import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
-import { FeeCollector } from '../types/contracts/trading';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -147,9 +147,14 @@ export async function deployTrading(
 ) {
     console.log(` - setup trading`);
 
+    const weth = await getWETH();
+
+    let feeCollector = (await deployContract('FeeCollector', [addressProvider.address])) as any as FeeCollector;
+
     let positionManager = (await deployContract('PositionManager', [
         addressProvider.address,
         pool.address,
+        feeCollector.address,
         8 * 60 * 60,
     ])) as any as PositionManager;
     console.log(`deployed PositionManager at ${positionManager.address}`);
@@ -161,7 +166,6 @@ export async function deployTrading(
     ])) as any as OrderManager;
     console.log(`deployed OrderManager at ${orderManager.address}`);
 
-    const weth = await getWETH();
     let router = (await deployContract('Router', [
         weth.address,
         addressProvider.address,
@@ -169,9 +173,8 @@ export async function deployTrading(
         pool.address,
     ])) as Router;
     console.log(`deployed Router at ${router.address}`);
-    await orderManager.setRouter(router.address);
+    await waitForTx(await orderManager.setRouter(router.address));
 
-    let feeCollector = (await deployContract('FeeCollector', [addressProvider.address])) as any as FeeCollector;
     let executor = (await deployContract('Executor', [
         addressProvider.address,
         pool.address,
