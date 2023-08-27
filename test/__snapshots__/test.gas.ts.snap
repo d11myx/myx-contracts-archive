@@ -6,6 +6,6 @@ exports[`TestGas gas cost of testKey 1`] = `43506`;
 
 exports[`TestGas gas cost of testKeys 1`] = `45750`;
 
-exports[`TestGas gas cost of testKeys 2`] = `314348`;
+exports[`TestGas gas cost of testKeys 2`] = `314456`;
 
 exports[`TestGas gas cost test maping(address=>struct) 1`] = `178589`;
