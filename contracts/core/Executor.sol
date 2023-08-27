@@ -13,8 +13,9 @@ import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
-import "../helpers/ValidationHelper.sol";
-import "../helpers/TradingHelper.sol";
+import '../helpers/ValidationHelper.sol';
+import '../helpers/TradingHelper.sol';
+import '../interfaces/IFeeCollector.sol';
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
@@ -33,18 +34,21 @@ contract Executor is IExecutor, Pausable {
     IOrderManager public orderManager;
     IPool public pool;
     IPositionManager public positionManager;
+    IFeeCollector public feeCollector;
 
     constructor(
         IAddressesProvider addressProvider,
         IPool _pool,
         IOrderManager _orderManager,
         IPositionManager _positionManager,
+        IFeeCollector _feeCollector,
         uint256 _maxTimeDelay
     ) {
         ADDRESS_PROVIDER = addressProvider;
         pool = _pool;
         orderManager = _orderManager;
         positionManager = _positionManager;
+        feeCollector = _feeCollector;
         maxTimeDelay = _maxTimeDelay;
     }
 
@@ -106,7 +110,14 @@ contract Executor is IExecutor, Pausable {
             ExecuteOrder memory order = orders[i];
             console.log('==> executeIncreaseMarketOrders orderId:', order.orderId);
 
-            try this.executeIncreaseOrder(order.orderId, TradingTypes.TradeType.MARKET, order.level, order.commissionRatio) {
+            try
+                this.executeIncreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.MARKET,
+                    order.level,
+                    order.commissionRatio
+                )
+            {
                 console.log('== completed. orderId:', order.orderId);
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
@@ -124,7 +135,14 @@ contract Executor is IExecutor, Pausable {
             ExecuteOrder memory order = orders[i];
             console.log('==> executeIncreaseLimitOrders orderId:', order.orderId);
 
-            try this.executeIncreaseOrder(order.orderId, TradingTypes.TradeType.LIMIT, order.level, order.commissionRatio) {
+            try
+                this.executeIncreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.LIMIT,
+                    order.level,
+                    order.commissionRatio
+                )
+            {
                 console.log('== completed. orderId:', order.orderId);
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
@@ -163,7 +181,8 @@ contract Executor is IExecutor, Pausable {
 
         // validate can be triggered
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
-        bool isAbove = order.isLong && (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
+        bool isAbove = order.isLong &&
+            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
         ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, isAbove, price, order.openPrice);
 
         // compare openPrice and oraclePrice
@@ -218,12 +237,14 @@ contract Executor is IExecutor, Pausable {
         }
 
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
-            tx.origin,
-            order.account,
             pairIndex,
-            order.collateral,
+            order.account,
+            tx.origin,
             order.sizeAmount,
             order.isLong,
+            order.collateral,
+            level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
+            commissionRatio,
             price
         );
 
@@ -301,7 +322,14 @@ contract Executor is IExecutor, Pausable {
             ExecuteOrder memory order = orders[i];
             console.log('==> executeDecreaseMarketOrders orderId:', order.orderId);
 
-            try this.executeDecreaseOrder(order.orderId, TradingTypes.TradeType.MARKET, order.level, order.commissionRatio) {
+            try
+                this.executeDecreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.MARKET,
+                    order.level,
+                    order.commissionRatio
+                )
+            {
                 console.log('== completed. orderId:', order.orderId);
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
@@ -312,12 +340,21 @@ contract Executor is IExecutor, Pausable {
         }
     }
 
-    function executeDecreaseLimitOrders(ExecuteOrder[] memory orders) external override onlyPositionKeeper whenNotPaused {
+    function executeDecreaseLimitOrders(
+        ExecuteOrder[] memory orders
+    ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             console.log('==> executeDecreaseLimitOrders orderId:', order.orderId);
 
-            try this.executeDecreaseOrder(order.orderId, TradingTypes.TradeType.LIMIT, order.level, order.commissionRatio) {
+            try
+                this.executeDecreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.LIMIT,
+                    order.level,
+                    order.commissionRatio
+                )
+            {
                 console.log('== completed. index:', order.orderId);
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
@@ -375,7 +412,13 @@ contract Executor is IExecutor, Pausable {
 
         // validate can be triggered
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
-        ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, order.abovePrice, price, order.triggerPrice);
+        ValidationHelper.validatePriceTriggered(
+            tradingConfig,
+            order.tradeType,
+            order.abovePrice,
+            price,
+            order.triggerPrice
+        );
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -439,12 +482,14 @@ contract Executor is IExecutor, Pausable {
         }
 
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
-            tx.origin,
-            order.account,
             pairIndex,
-            order.collateral,
+            order.account,
+            msg.sender,
             order.sizeAmount,
             order.isLong,
+            order.collateral,
+            level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
+            commissionRatio,
             price
         );
 
@@ -566,7 +611,12 @@ contract Executor is IExecutor, Pausable {
                     data: abi.encode(adlPosition.position.account)
                 })
             );
-            this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, adlPosition.level, adlPosition.commissionRatio);
+            this.executeDecreaseOrder(
+                orderId,
+                TradingTypes.TradeType.MARKET,
+                adlPosition.level,
+                adlPosition.commissionRatio
+            );
         }
         this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio);
     }
@@ -624,7 +674,8 @@ contract Executor is IExecutor, Pausable {
         if (exposureAsset <= 0) {
             needLiquidate = true;
         } else {
-            uint256 riskRate = position.positionAmount
+            uint256 riskRate = position
+                .positionAmount
                 .mulPrice(position.averagePrice)
                 .mulPercentage(tradingConfig.maintainMarginRate)
                 .calculatePercentage(uint256(exposureAsset));
