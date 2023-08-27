@@ -3,20 +3,17 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
     EXECUTOR_ID,
+    FEE_COLLECTOR_ID,
     getAddressesProvider,
-    getIndexPriceFeed,
-    getOraclePriceFeed,
     getPool,
     getRoleManager,
     getWETH,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
     ROUTER_ID,
-    TRADING_VAULT_ID,
     waitForTx,
 } from '../../helpers';
-import { Router, Executor, PositionManager, OrderManager } from '../../types';
-import { FeeCollector } from '../../types/contracts/trading';
+import { Router, Executor, PositionManager, OrderManager, FeeCollector } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy, get } = deployments;
@@ -29,11 +26,23 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     // const validationHelperArtifact = await get('ValidationHelper');
 
+    // FeeCollector
+    const feeCollectorArtifact = await deploy(`${FEE_COLLECTOR_ID}`, {
+        from: deployer,
+        contract: 'FeeCollector',
+        args: [addressProvider.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const feeCollector = (await hre.ethers.getContractAt(
+        feeCollectorArtifact.abi,
+        feeCollectorArtifact.address,
+    )) as FeeCollector;
+
     // PositionManager
-    const positionManagerArtifact = await deploy(`${TRADING_VAULT_ID}`, {
+    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
         from: deployer,
         contract: 'PositionManager',
-        args: [addressProvider.address, pool.address, 8 * 60 * 60],
+        args: [addressProvider.address, pool.address, feeCollector.address, 8 * 60 * 60],
         ...COMMON_DEPLOY_PARAMS,
     });
     const positionManager = (await hre.ethers.getContractAt(
@@ -67,18 +76,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
     await waitForTx(await orderManager.setRouter(router.address));
-
-    // FeeCollector
-    const feeCollectorArtifact = await deploy(`${TRADING_VAULT_ID}`, {
-        from: deployer,
-        contract: 'FeeCollector',
-        args: [addressProvider.address],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const feeCollector = (await hre.ethers.getContractAt(
-        feeCollectorArtifact.abi,
-        feeCollectorArtifact.address,
-    )) as FeeCollector;
 
     // Executor
     const executorArtifact = await deploy(`${EXECUTOR_ID}`, {

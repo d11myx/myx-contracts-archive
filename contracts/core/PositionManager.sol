@@ -48,9 +48,10 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
 
     constructor(
         IAddressesProvider addressProvider,
-        IPool _pairInfo,
+        IPool pool,
+        IFeeCollector feeCollector,
         uint256 _fundingInterval
-    ) FeeManager(addressProvider, _pairInfo) {
+    ) FeeManager(addressProvider, pool, feeCollector) {
         fundingInterval = _fundingInterval;
     }
 
