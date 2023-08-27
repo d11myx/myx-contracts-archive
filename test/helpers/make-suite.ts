@@ -13,6 +13,7 @@ import {
     Router,
     Executor,
     OrderManager,
+    FeeManager,
 } from '../../types';
 import {
     SymbolMap,
@@ -165,7 +166,9 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
     const roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
+    const feeManager = (await deployContract('FeeManager', [addressesProvider.address])) as FeeManager;
     await addressesProvider.setRolManager(roleManager.address);
+    await addressesProvider.setFeeManger(feeManager.address);
     await roleManager.addPoolAdmin(deployer.address);
     await roleManager.addKeeper(keeper.address);
 
