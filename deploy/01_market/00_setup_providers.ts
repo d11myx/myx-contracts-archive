@@ -34,20 +34,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         roleManagerArtifact.address,
     )) as RoleManager;
 
-    // FeeManager
-    const feeManagerArtifact = await deploy(ROLE_MANAGER_ID, {
-        from: deployer,
-        contract: 'FeeManager',
-        args: [addressesProvider.address],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-
-    const feeManager = (await hre.ethers.getContractAt(
-        feeManagerArtifact.abi,
-        feeManagerArtifact.address,
-    )) as RoleManager;
-    await addressesProvider.setFeeManger(feeManager.address);
-
     // Setup RoleManager at AddressesProvider
     await waitForTx(await addressesProvider.setRolManager(roleManager.address));
 

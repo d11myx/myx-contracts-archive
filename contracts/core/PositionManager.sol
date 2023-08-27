@@ -18,8 +18,9 @@ import '../interfaces/IPool.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
+import './FeeManager.sol';
 
-contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausable {
+contract PositionManager is FeeManager, IPositionManager, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -42,7 +43,6 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
 
     uint256 public fundingInterval;
 
-    IPool public pool;
     address public addressExecutor;
     address public addressOrderManager;
 
@@ -50,8 +50,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         IAddressesProvider addressProvider,
         IPool _pairInfo,
         uint256 _fundingInterval
-    ) Roleable(addressProvider) {
-        pool = _pairInfo;
+    ) FeeManager(addressProvider, _pairInfo) {
         fundingInterval = _fundingInterval;
     }
 
@@ -87,7 +86,7 @@ contract PositionManager is IPositionManager, ReentrancyGuard, Roleable, Pausabl
         afterCollateral = _collateral;
 
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
-        pool.transferTokenTo(pair.stableToken, ADDRESS_PROVIDER.getFeeManger(), tradingFee);
+        // pool.transferTokenTo(pair.stableToken, ADDRESS_PROVIDER.getFeeManger(), tradingFee);
         afterCollateral -= int256(tradingFee);
         //todo tranfer to feemanager
         //_distributeTradingFee(_account, pair, tradingFee, _keeper);
