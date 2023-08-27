@@ -9,16 +9,16 @@ interface IFeeCollector {
         uint256 newRatio
     );
 
-    event UpdateMaxCommissionRatio(
+    event UpdateMaxReferenceRatio(
         uint256 oldRatio,
         uint256 newRatio
     );
 
     function levelDiscountRatios(uint8 level) external view returns (uint256 discountRatio);
 
-    function maxCommissionRatio() external view returns (uint256 maxCommissionRatio);
+    function maxReferenceRatio() external view returns (uint256 maxReferenceRatio);
 
     function updateLevelDiscountRatio(uint8 level, uint256 newRatio) external;
 
-    function updateMaxCommissionRatio(uint256 newRatio) external;
+    function updateMaxReferenceRatio(uint256 newRatio) external;
 }
