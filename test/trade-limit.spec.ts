@@ -91,7 +91,7 @@ describe('Trade: Limit order cases', () => {
         //             orderManager,
         //         } = testEnv;
         //
-        //         const netExposureAmountBefore = await positionManager.netExposureAmountChecker(pairIndex);
+        //         const netExposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
         //         expect(netExposureAmountBefore).to.be.eq(ethers.utils.parseUnits('1000', 18));
         //
         //         const collateral = ethers.utils.parseUnits('3000000', 18);
@@ -100,7 +100,7 @@ describe('Trade: Limit order cases', () => {
         //         await mintAndApprove(testEnv, usdt, collateral, trader, orderManager.address);
         //         await increasePosition(testEnv, trader, pairIndex, collateral, size, TradeType.MARKET, false);
         //
-        //         const netExposureAmountAfter = await positionManager.netExposureAmountChecker(pairIndex);
+        //         const netExposureAmountAfter = await positionManager.getExposedPositions(pairIndex);
         //         expect(netExposureAmountAfter).to.be.eq(netExposureAmountBefore.sub(size));
         //         expect(netExposureAmountAfter).to.be.lt(0);
         //     });
@@ -122,11 +122,11 @@ describe('Trade: Limit order cases', () => {
         //     } = testEnv;
         //     const size = ethers.utils.parseUnits('1000', 18);
         //
-        //     const netExposureAmountBefore = await positionManager.netExposureAmountChecker(pairIndex);
+        //     const netExposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
         //     expect(netExposureAmountBefore).to.be.eq(BigNumber.from('-1000000000000000000000'));
         //
         //     await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, false);
-        //     const netExposureAmountAfter = await positionManager.netExposureAmountChecker(pairIndex);
+        //     const netExposureAmountAfter = await positionManager.getExposedPositions(pairIndex);
         //     expect(netExposureAmountAfter).to.be.eq(netExposureAmountBefore.add(size));
         //     expect(netExposureAmountAfter).to.be.eq(0);
         // });
