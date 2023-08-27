@@ -86,9 +86,8 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         afterCollateral = _collateral;
 
         tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
-        // pool.transferTokenTo(pair.stableToken, ADDRESS_PROVIDER.getFeeManger(), tradingFee);
         afterCollateral -= int256(tradingFee);
-        //todo tranfer to feemanager
+
         //_distributeTradingFee(_account, pair, tradingFee, _keeper);
 
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
