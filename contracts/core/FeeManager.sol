@@ -81,6 +81,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         IPool.Pair memory pair,
         address account,
         address keeper,
+        uint256 sizeDelta,
         uint256 tradingFee,
         uint256 vipRate,
         uint256 referenceRate
@@ -110,6 +111,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         emit DistributeTradingFee(
             account,
             pair.pairIndex,
+            sizeDelta,
             tradingFee,
             referralsAmount,
             lpAmount,

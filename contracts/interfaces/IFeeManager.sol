@@ -4,6 +4,7 @@ interface IFeeManager {
     event DistributeTradingFee(
         address account,
         uint256 pairIndex,
+        uint256 sizeDelta,
         uint256 tradingFee,
         uint256 referenceAmount,
         uint256 lpAmount,
