@@ -185,8 +185,8 @@ export async function newTestEnv(): Promise<TestEnv> {
         validationHelper,
     );
 
-    await pool.setPositionManager(positionManager.address);
-    await pool.setOrderManager(orderManager.address);
+    await pool.addPositionManager(positionManager.address);
+    await pool.addOrderManager(orderManager.address);
     await initPairs(deployer, tokens, usdt, pool);
 
     await roleManager.addKeeper(executor.address);
