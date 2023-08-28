@@ -38,7 +38,6 @@ export const btcPairInfo: PairInfoConfig = {
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
         interest: 0,
-        lpDistributeP: 50000000, //50%
     },
 };
 

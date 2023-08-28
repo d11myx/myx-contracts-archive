@@ -140,8 +140,7 @@ contract Pool is IPool, Roleable {
     ) external onlyPoolAdmin {
         require(
             _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.lpDistributeP <= PrecisionUtils.percentage(),
+                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage(),
             'exceed 100%'
         );
 
