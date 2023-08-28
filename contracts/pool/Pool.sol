@@ -23,7 +23,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../helpers/ValidationHelper.sol';
-import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
@@ -94,7 +94,10 @@ contract Pool is IPool, Roleable {
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
-        require(_pair.expectIndexTokenP <= PrecisionUtils.percentage() && _pair.addLpFeeP <= PrecisionUtils.percentage(), 'exceed 100%');
+        require(
+            _pair.expectIndexTokenP <= PrecisionUtils.percentage() && _pair.addLpFeeP <= PrecisionUtils.percentage(),
+            'exceed 100%'
+        );
 
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
@@ -117,7 +120,8 @@ contract Pool is IPool, Roleable {
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _tradingFeeConfig.takerFeeP <= PrecisionUtils.percentage() && _tradingFeeConfig.makerFeeP <= PrecisionUtils.percentage(),
+            _tradingFeeConfig.takerFeeP <= PrecisionUtils.percentage() &&
+                _tradingFeeConfig.makerFeeP <= PrecisionUtils.percentage(),
             'trading fee exceed 100%'
         );
         require(
@@ -244,7 +248,6 @@ contract Pool is IPool, Roleable {
         uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
         require(_profit <= availableStable, 'stable token not enough');
         vault.stableTotalAmount -= _profit;
-        // vault.realisedPnl -= int256(_profit);
         emit UpdateLPProfit(_pairIndex, -int256(_profit), vault.stableTotalAmount);
     }
 
