@@ -306,8 +306,8 @@ contract Executor is IExecutor, Pausable {
             _orderId,
             pairIndex,
             _tradeType,
-            order.collateral,
             order.isLong,
+            order.collateral,
             order.sizeAmount,
             price,
             tradingFee,
@@ -472,10 +472,11 @@ contract Executor is IExecutor, Pausable {
                 pairIndex,
                 order.tradeType,
                 order.isLong,
+                order.collateral,
                 order.sizeAmount,
                 price,
-                0,
                 needADL,
+                0,
                 0,
                 0
             );
@@ -539,10 +540,11 @@ contract Executor is IExecutor, Pausable {
             pairIndex,
             order.tradeType,
             order.isLong,
+            order.collateral,
             order.sizeAmount,
             price,
-            pnl,
             needADL,
+            pnl,
             tradingFee,
             fundingFee
         );
@@ -704,15 +706,14 @@ contract Executor is IExecutor, Pausable {
 
         this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio);
 
-        emit LiquidatePosition(
+        emit ExecuteLiquidation(
             positionKey,
             position.account,
             position.pairIndex,
             position.isLong,
-            position.positionAmount,
             position.collateral,
-            price,
-            orderId
+            position.positionAmount,
+            price
         );
     }
 
