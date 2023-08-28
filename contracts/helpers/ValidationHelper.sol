@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IPool.sol';
-import "../interfaces/IAddressesProvider.sol";
-import "../interfaces/IRoleManager.sol";
+import '../interfaces/IAddressesProvider.sol';
+import '../interfaces/IRoleManager.sol';
 import 'hardhat/console.sol';
 
 library ValidationHelper {
@@ -37,10 +37,7 @@ library ValidationHelper {
                 'not reach trigger price'
             );
         } else {
-            require(
-                isAbove ? currentPrice <= orderPrice : currentPrice >= orderPrice,
-                'not reach trigger price'
-            );
+            require(isAbove ? currentPrice <= orderPrice : currentPrice >= orderPrice, 'not reach trigger price');
         }
     }
 

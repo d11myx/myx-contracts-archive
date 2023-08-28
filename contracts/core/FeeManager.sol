@@ -9,7 +9,7 @@ import '../interfaces/IFeeManager.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
-import "./FeeCollector.sol";
+import './FeeCollector.sol';
 
 abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     using SafeERC20 for IERC20;
@@ -41,7 +41,9 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         return claimableStakingTradingFee;
     }
 
-    function claimDistributorTradingFee(address claimToken) external override nonReentrant onlyPoolAdmin returns (uint256) {
+    function claimDistributorTradingFee(
+        address claimToken
+    ) external override nonReentrant onlyPoolAdmin returns (uint256) {
         uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
         if (claimableDistributorTradingFee > 0) {
             pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
