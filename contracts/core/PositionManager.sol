@@ -329,7 +329,6 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         _settleLPPosition(_pairIndex, _sizeAmount, _isLong, true, _price);
         if (transferOut > 0) {
             pool.transferTokenTo(pair.stableToken, _account, transferOut);
-            //            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
 
         emit IncreasePosition(
@@ -468,13 +467,6 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         }
 
         if (transferOut > 0) {
-            //            //TODO fix: Insufficient vault balance
-            //            require(
-            //                IERC20(pair.stableToken).balanceOf(address(this)) > transferOut,
-            //                'todo: to be fixed, Insufficient vault balance'
-            //            );
-            //            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
-            //
             pool.transferTokenTo(pair.stableToken, _account, transferOut);
         }
 
