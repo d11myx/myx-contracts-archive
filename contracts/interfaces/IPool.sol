@@ -62,7 +62,6 @@ interface IPool {
         uint256 stableTotalAmount;
         uint256 stableReservedAmount;
         uint256 averagePrice;
-
     }
 
     struct Pair {
@@ -99,14 +98,12 @@ interface IPool {
     }
 
     struct FundingFeeConfig {
-        // factor
-        int256 minFundingRate; // Minimum capital rate 1,000,000 for 100%
-        int256 maxFundingRate; // The maximum capital rate is 1,000,000 for 100%
-        int256 defaultFundingRate; // default capital rate  1,000,000 for 100%
-        uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is 10000 for 100%
-        uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 10,000 for 100%
+        int256 minFundingRate; // Minimum capital rate 1e8 for 100%
+        int256 maxFundingRate; // The maximum capital rate is 1e8 for 100%
+        int256 defaultFundingRate; // default capital rate  1e8 for 100%
+        uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is  for 100%
+        uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 1e8 for 100%
         int256 interest;
-        uint256 lpDistributeP;
     }
 
     function getPairIndex(address indexToken, address stableToken) external view returns (uint256);
