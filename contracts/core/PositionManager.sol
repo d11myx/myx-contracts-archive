@@ -331,6 +331,8 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             pool.transferTokenTo(pair.stableToken, _account, transferOut);
             //            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
         }
+        //todo emit pnl
+        int256 pnl;
 
         emit IncreasePosition(
             positionKey,
@@ -354,8 +356,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             position.positionAmount,
             position.averagePrice,
             position.fundRateIndex,
-            // position.entryFundingTime,
-            position.realisedPnl,
+            pnl,
             _price
         );
     }
@@ -422,7 +423,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         } else {
             afterCollateral += pnl;
         }
-        position.realisedPnl += pnl;
+        // position.realisedPnl += pnl;
 
         // final collateral & out
         if (position.positionAmount == 0) {
@@ -442,7 +443,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
                 _price,
                 tradingFee,
                 fundingFee,
-                pnl,
+                // pnl,
                 transferOut
             );
             delete positions[positionKey];
@@ -462,7 +463,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
                 _price,
                 tradingFee,
                 fundingFee,
-                pnl,
+                // pnl,
                 transferOut
             );
         }
@@ -488,7 +489,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             position.averagePrice,
             position.fundRateIndex,
             // position.entryFundingTime,
-            position.realisedPnl,
+            pnl,
             _price
         );
     }
