@@ -100,7 +100,6 @@ interface IPool {
     struct FundingFeeConfig {
         int256 minFundingRate; // Minimum capital rate 1e8 for 100%
         int256 maxFundingRate; // The maximum capital rate is 1e8 for 100%
-        int256 defaultFundingRate; // default capital rate  1e8 for 100%
         uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is  for 100%
         uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 1e8 for 100%
         int256 interest;
