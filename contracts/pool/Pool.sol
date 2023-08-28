@@ -23,7 +23,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../helpers/ValidationHelper.sol';
-import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
@@ -44,8 +44,8 @@ contract Pool is IPool, Roleable {
     uint256 public pairsCount;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
-    address public positionManager;
-    address public orderManager;
+    mapping(address => bool) public positionManagers;
+    mapping(address => bool) public orderManagers;
 
     mapping(address => uint256) public feeTokenAmounts;
 
@@ -54,21 +54,29 @@ contract Pool is IPool, Roleable {
     }
 
     modifier onlyPositionManagerOrOrderManager() {
-        require(msg.sender == positionManager || msg.sender == orderManager, 'onlyPositionManagerOrOrderManager');
+        require(positionManagers[msg.sender] || orderManagers[msg.sender], 'onlyPositionManagerOrOrderManager');
         _;
     }
 
     modifier onlyPositionManager() {
-        require(msg.sender == positionManager, 'forbidden');
+        require(positionManagers[msg.sender], 'forbidden');
         _;
     }
 
-    function setPositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManager = _positionManager;
+    function addPositionManager(address _positionManager) external onlyPoolAdmin {
+        positionManagers[_positionManager] = true;
     }
 
-    function setOrderManager(address _orderManager) external onlyPoolAdmin {
-        orderManager = _orderManager;
+    function removePositionManager(address _positionManager) external onlyPoolAdmin {
+        delete positionManagers[_positionManager];
+    }
+
+    function addOrderManager(address _positionManager) external onlyPoolAdmin {
+        orderManagers[_positionManager] = true;
+    }
+
+    function removeOrderManager(address _orderManager) external onlyPoolAdmin {
+        delete orderManagers[_orderManager];
     }
 
     // Manage pairs
@@ -94,7 +102,10 @@ contract Pool is IPool, Roleable {
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
         Pair storage pair = pairs[_pairIndex];
         require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
-        require(_pair.expectIndexTokenP <= PrecisionUtils.percentage() && _pair.addLpFeeP <= PrecisionUtils.percentage(), 'exceed 100%');
+        require(
+            _pair.expectIndexTokenP <= PrecisionUtils.percentage() && _pair.addLpFeeP <= PrecisionUtils.percentage(),
+            'exceed 100%'
+        );
 
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
@@ -117,7 +128,8 @@ contract Pool is IPool, Roleable {
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _tradingFeeConfig.takerFeeP <= PrecisionUtils.percentage() && _tradingFeeConfig.makerFeeP <= PrecisionUtils.percentage(),
+            _tradingFeeConfig.takerFeeP <= PrecisionUtils.percentage() &&
+                _tradingFeeConfig.makerFeeP <= PrecisionUtils.percentage(),
             'trading fee exceed 100%'
         );
         require(
@@ -136,8 +148,7 @@ contract Pool is IPool, Roleable {
     ) external onlyPoolAdmin {
         require(
             _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.lpDistributeP <= PrecisionUtils.percentage(),
+                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage(),
             'exceed 100%'
         );
 
@@ -244,7 +255,6 @@ contract Pool is IPool, Roleable {
         uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
         require(_profit <= availableStable, 'stable token not enough');
         vault.stableTotalAmount -= _profit;
-        // vault.realisedPnl -= int256(_profit);
         emit UpdateLPProfit(_pairIndex, -int256(_profit), vault.stableTotalAmount);
     }
 

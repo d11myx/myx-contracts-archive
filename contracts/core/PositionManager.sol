@@ -423,7 +423,6 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         } else {
             afterCollateral += pnl;
         }
-        // position.realisedPnl += pnl;
 
         // final collateral & out
         if (position.positionAmount == 0) {
@@ -607,14 +606,16 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
 
         uint256 absFundingRate;
-        if (q == 0 || l == 0) {
-            fundingRate = fundingFeeConfig.defaultFundingRate;
+        if (q == 0) {
+            fundingRate = 0;
         } else {
-            absFundingRate =
-                (w * absNetExposure * PrecisionUtils.fundingRatePrecision()) /
-                (k * q) +
-                ((PrecisionUtils.fundingRatePrecision() - w) * absNetExposure) /
-                (k * l);
+            absFundingRate = (w * absNetExposure * PrecisionUtils.fundingRatePrecision()) / (k * q);
+            if (l != 0) {
+                absFundingRate =
+                    absFundingRate +
+                    ((PrecisionUtils.fundingRatePrecision() - w) * absNetExposure) /
+                    (k * l);
+            }
             fundingRate = currentExposureAmountChecker >= 0 ? int256(absFundingRate) : -int256(absFundingRate);
         }
 

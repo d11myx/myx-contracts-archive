@@ -34,11 +34,9 @@ export const btcPairInfo: PairInfoConfig = {
     fundingFeeConfig: {
         minFundingRate: 0,
         maxFundingRate: 0,
-        defaultFundingRate: 1000000, //1%
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
         interest: 0,
-        lpDistributeP: 50000000, //50%
     },
 };
 
