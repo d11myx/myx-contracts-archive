@@ -95,6 +95,14 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         emit UpdatePositionManager(oldAddress, newAddress);
     }
 
+    function getOrderKey(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease
+    ) public pure override returns (bytes32) {
+        return PositionKey.getOrderKey(isIncrease, tradeType, orderId);
+    }
+
     function getOrderTpSl(bytes32 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
         return orderWithTpSl[orderKey];
     }

@@ -50,6 +50,12 @@ interface IOrderManager {
 
     function positionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType) external view returns (bool);
 
+    function getOrderKey(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease
+    ) external pure returns (bytes32);
+
     function getOrderTpSl(bytes32 orderKey) external view returns (TradingTypes.OrderWithTpSl memory);
 
     function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory);
