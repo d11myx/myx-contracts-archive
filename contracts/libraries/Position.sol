@@ -23,7 +23,7 @@ library Position {
         uint256 averagePrice;
         int256 fundRateIndex;
         // uint256 entryFundingTime;
-        int256 realisedPnl;
+        // int256 realisedPnl;
     }
 
     function get(
