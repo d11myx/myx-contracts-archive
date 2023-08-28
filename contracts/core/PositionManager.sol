@@ -260,236 +260,172 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         }
     }
 
-    //todo why not oracle price
     function increasePosition(
-        uint256 _pairIndex,
-        address _account,
-        address _keeper,
-        uint256 _sizeAmount,
-        bool _isLong,
-        int256 _collateral,
+        uint256 pairIndex,
+        address account,
+        address keeper,
+        uint256 sizeAmount,
+        bool isLong,
+        int256 collateral,
         uint256 vipRate,
         uint256 referenceRate,
-        uint256 _price
+        uint256 oraclePrice
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
-        require(pair.enable, 'trade pair not supported');
-
-        // get position
-        bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
+        bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
-        // position.key = positionKey;
 
-        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+        uint256 beforeCollateral = position.collateral;
+        uint256 beforePositionAmount = position.positionAmount;
+        uint256 sizeDelta = sizeAmount.mulPrice(oraclePrice);
 
         if (position.positionAmount == 0) {
-            position.account = _account;
-            position.pairIndex = _pairIndex;
-            position.isLong = _isLong;
-            position.averagePrice = _price;
+            position.account = account;
+            position.pairIndex = pairIndex;
+            position.isLong = isLong;
+            position.averagePrice = oraclePrice;
         }
 
         if (position.positionAmount > 0 && sizeDelta > 0) {
             position.averagePrice = (position.positionAmount.mulPrice(position.averagePrice) + sizeDelta).mulDiv(
                 PrecisionUtils.pricePrecision(),
-                (position.positionAmount + _sizeAmount)
+                (position.positionAmount + sizeAmount)
             );
         }
 
-        position.positionAmount = position.positionAmount + _sizeAmount;
+        // update funding fee
+        updateFundingRate(pairIndex, oraclePrice);
 
-        // funding fee
-        updateFundingRate(_pairIndex, _price);
+        position.fundRateIndex = gobleFundingRateIndex[pairIndex];
+        position.positionAmount += sizeAmount;
 
-        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
+        // settlement trading fee and funding fee
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
-            _pairIndex,
-            _account,
-            _keeper,
-            _sizeAmount,
-            _isLong,
+            pairIndex,
+            account,
+            keeper,
+            sizeAmount,
+            isLong,
             int256(position.collateral),
             vipRate,
             referenceRate,
-            _price
+            oraclePrice
         );
 
-        // trading fee
-
-        uint256 transferOut;
-        // final collateral & out
-        afterCollateral += _collateral;
-        transferOut += _collateral < 0 ? _collateral.abs() : 0;
+        // final collateral & transfer out
+        afterCollateral += collateral;
         require(afterCollateral > 0, 'collateral not enough');
 
-        position.collateral = afterCollateral.abs();
+        position.collateral = uint256(afterCollateral);
 
-        // update lp vault
-        _settleLPPosition(_pairIndex, _sizeAmount, _isLong, true, _price);
+        // settlement lp position
+        _settleLPPosition(pairIndex, sizeAmount, isLong, true, oraclePrice);
+
+        // transfer collateral
+        uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
         if (transferOut > 0) {
-            pool.transferTokenTo(pair.stableToken, _account, transferOut);
-            //            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
+            IPool.Pair memory pair = pool.getPair(pairIndex);
+            pool.transferTokenTo(pair.stableToken, account, transferOut);
         }
-        //todo emit pnl
-        int256 pnl;
-
-        emit IncreasePosition(
-            positionKey,
-            _account,
-            _pairIndex,
-            _collateral,
-            _isLong,
-            _sizeAmount,
-            _price,
-            tradingFee,
-            fundingFee,
-            transferOut
-        );
 
         emit UpdatePosition(
+            account,
             positionKey,
-            _account,
-            _pairIndex,
-            _isLong,
+            pairIndex,
+            isLong,
+            beforeCollateral,
             position.collateral,
+            oraclePrice,
+            beforePositionAmount,
             position.positionAmount,
             position.averagePrice,
             position.fundRateIndex,
-            pnl,
-            _price
+            0
         );
     }
 
     function decreasePosition(
-        uint256 _pairIndex,
-        address _account,
-        address _keeper,
-        uint256 _sizeAmount,
-        bool _isLong,
-        int256 _collateral,
+        uint256 pairIndex,
+        address account,
+        address keeper,
+        uint256 sizeAmount,
+        bool isLong,
+        int256 collateral,
         uint256 vipRate,
         uint256 referenceRate,
-        uint256 _price
+        uint256 oraclePrice
     ) external onlyExecutor nonReentrant whenNotPaused returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
-
-        // check trading amount
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(_pairIndex);
-        require(
-            _sizeAmount >= tradingConfig.minTradeAmount && _sizeAmount <= tradingConfig.maxTradeAmount,
-            'invalid size'
-        );
-
-        // get position
-        bytes32 positionKey = PositionKey.getPositionKey(_account, _pairIndex, _isLong);
+        bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
-        require(position.account != address(0), 'position already closed');
+        require(position.account != address(0), 'position not found');
 
-        // update position size
-        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+        uint256 beforeCollateral = position.collateral;
+        uint256 beforePositionAmount = position.positionAmount;
 
-        position.positionAmount -= _sizeAmount;
+        // update funding fee
+        updateFundingRate(pairIndex, oraclePrice);
 
-        uint256 transferOut;
+        position.fundRateIndex = gobleFundingRateIndex[pairIndex];
+        position.positionAmount -= sizeAmount;
 
-        // funding fee
-        updateFundingRate(_pairIndex, _price);
+        // settlement trading fee and funding fee
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
-            _pairIndex,
-            _account,
-            _keeper,
-            _sizeAmount,
-            _isLong,
+            pairIndex,
+            account,
+            keeper,
+            sizeAmount,
+            isLong,
             int256(position.collateral),
             vipRate,
             referenceRate,
-            _price
+            oraclePrice
         );
-
-        position.fundRateIndex = gobleFundingRateIndex[_pairIndex];
-        // position.entryFundingTime = lastFundingRateUpdateTimes[_pairIndex];
-
-        // update lp vault
-        _settleLPPosition(_pairIndex, _sizeAmount, _isLong, false, _price);
+        // settlement lp position
+        _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
         // pnl
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
-        pnl = position.getUnrealizedPnl(_sizeAmount, price);
+        pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
 
+        // final collateral & transfer out
+        uint256 transferOut;
         if (pnl > 0) {
-            transferOut += pnl.abs();
+            transferOut += uint256(pnl);
         } else {
-            afterCollateral += pnl;
+            afterCollateral -= int256(pnl.abs());
         }
-
-        // final collateral & out
         if (position.positionAmount == 0) {
-            // transfer out all collateral and _collateral
-            int256 allTransferOut = int256(transferOut) + afterCollateral + (_collateral > 0 ? _collateral : int256(0));
-            transferOut = allTransferOut > 0 ? allTransferOut.abs() : 0;
+            // transfer out all collateral and order collateral
+            int256 allTransferOut = int256(transferOut) + afterCollateral + (collateral > 0 ? collateral : int256(0));
+            transferOut = allTransferOut > 0 ? uint256(allTransferOut) : 0;
 
-            emit ClosePosition(positionKey, _account, _pairIndex, _isLong);
-
-            emit DecreasePosition(
-                positionKey,
-                _account,
-                _pairIndex,
-                _isLong,
-                -int256(position.collateral),
-                _sizeAmount,
-                _price,
-                tradingFee,
-                fundingFee,
-                // pnl,
-                transferOut
-            );
             delete positions[positionKey];
         } else {
-            afterCollateral += _collateral;
-            transferOut += (_collateral < 0 ? uint256(-_collateral) : 0);
-            require(afterCollateral > 0, 'collateral not enough');
-            position.collateral = afterCollateral.abs();
+            transferOut += (collateral < 0 ? collateral.abs() : 0);
 
-            emit DecreasePosition(
-                positionKey,
-                _account,
-                _pairIndex,
-                _isLong,
-                _collateral,
-                _sizeAmount,
-                _price,
-                tradingFee,
-                fundingFee,
-                // pnl,
-                transferOut
-            );
+            afterCollateral += collateral;
+            require(afterCollateral > 0, 'collateral not enough');
+            position.collateral = uint256(afterCollateral);
         }
 
         if (transferOut > 0) {
-            //            //TODO fix: Insufficient vault balance
-            //            require(
-            //                IERC20(pair.stableToken).balanceOf(address(this)) > transferOut,
-            //                'todo: to be fixed, Insufficient vault balance'
-            //            );
-            //            IERC20(pair.stableToken).safeTransfer(_account, transferOut);
-            //
-            pool.transferTokenTo(pair.stableToken, _account, transferOut);
+            IPool.Pair memory pair = pool.getPair(pairIndex);
+            pool.transferTokenTo(pair.stableToken, account, transferOut);
         }
 
         emit UpdatePosition(
+            account,
             positionKey,
-            _account,
-            _pairIndex,
-            _isLong,
+            pairIndex,
+            isLong,
+            beforeCollateral,
             position.collateral,
+            oraclePrice,
+            beforePositionAmount,
             position.positionAmount,
             position.averagePrice,
             position.fundRateIndex,
-            // position.entryFundingTime,
-            pnl,
-            _price
+            pnl
         );
     }
 
@@ -529,8 +465,6 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
 
         return tradingFee;
     }
-
-    // TODO receiver? ?onlyPoolAdmin
 
     function getFundingFee(
         bool _increase,
