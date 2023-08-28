@@ -236,6 +236,7 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
+        // increase position
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
             pairIndex,
             order.account,
