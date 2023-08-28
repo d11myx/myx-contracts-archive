@@ -43,7 +43,7 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
     event Claim(address indexed account, uint256 indexed round, uint256 amount);
     event Compound(address indexed account, uint256 indexed round, uint256 amount);
 
-    constructor(address _rewardToken) public {
+    constructor(address _rewardToken) {
         rewardToken = _rewardToken;
     }
 
