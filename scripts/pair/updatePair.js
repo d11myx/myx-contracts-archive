@@ -47,11 +47,9 @@ async function main() {
     let fundingFeeConfig = {
         minFundingRate: -3000000,
         maxFundingRate: 3000000,
-        defaultFundingRate: 0,
         fundingWeightFactor: 5000,
         liquidityPremiumFactor: 10000,
         interest: 0,
-        lpDistributeP: 5000,
     }
 
     // btc - usdt

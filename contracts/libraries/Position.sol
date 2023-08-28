@@ -14,7 +14,6 @@ library Position {
     using PrecisionUtils for uint256;
 
     struct Info {
-        // bytes32 key;
         address account;
         uint256 pairIndex;
         bool isLong;
@@ -22,8 +21,6 @@ library Position {
         uint256 positionAmount;
         uint256 averagePrice;
         int256 fundRateIndex;
-        // uint256 entryFundingTime;
-        int256 realisedPnl;
     }
 
     function get(
