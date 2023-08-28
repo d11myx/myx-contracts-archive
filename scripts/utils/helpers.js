@@ -339,7 +339,7 @@ async function queryPosition(user, pairIndex, isLong) {
     let vault = await pairVault.getVault(pairIndex);
 
     console.log(`average price of lpVault: ${reduceDecimals(vault.averagePrice, 30)}`);
-    console.log(`pnl of lpVault: ${formatBalance(vault.realisedPnl)}`);
+    // console.log(`pnl of lpVault: ${formatBalance(vault.realisedPnl)}`);
     console.log(`total btc: ${formatBalance(vault.indexTotalAmount)} reserve of btc: ${formatBalance(vault.indexReservedAmount)}`);
     console.log(`total usdt: ${formatBalance(vault.stableTotalAmount)}  reserve of usdt: ${formatBalance(vault.stableReservedAmount)}`);
 
