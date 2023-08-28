@@ -210,9 +210,6 @@ describe('Modify LP Average Price', async () => {
                 .mul(positionBef.averagePrice.sub(openPrice))
                 .div(ethers.utils.parseUnits('1', 30))
                 .abs();
-            const userProfit = positionAft.realisedPnl;
-
-            expect(poolLosses).to.be.eq(userProfit);
             expect(positionBef.averagePrice).to.be.lt(
                 positionBefAvgPrice
                     .mul(positionBefAmount)
@@ -267,9 +264,6 @@ describe('Modify LP Average Price', async () => {
             const poolProfit = descreaseAmount
                 .mul(positionBef.averagePrice.sub(openPrice))
                 .div(ethers.utils.parseUnits('1', 30));
-            const userLosses = positionAft.realisedPnl.sub(positionBef.realisedPnl).abs();
-
-            expect(poolProfit).to.be.eq(userLosses);
             expect(positionBef.averagePrice).to.be.gt(
                 positionBefAvgPrice
                     .mul(positionBefAmount)
@@ -445,7 +439,6 @@ describe('Modify LP Average Price', async () => {
             const poolProfit = decreaseAmount
                 .mul(openPrice.sub(position.averagePrice))
                 .div(ethers.utils.parseUnits('1', 30));
-            const userLosses = positionAft.realisedPnl.abs();
 
             expect(positionAft.averagePrice).to.be.lt(
                 position.averagePrice
@@ -453,7 +446,6 @@ describe('Modify LP Average Price', async () => {
                     .add(openPrice.mul(decreaseAmount))
                     .div(position.positionAmount.add(decreaseAmount)),
             );
-            expect(poolProfit).to.be.eq(userLosses);
         });
 
         it('BTC: decrease short position: -5  BTC, openPrice: 10000, newAveragePrice < openPositionAveragePrice, lpBalance -> userBalance', async () => {
@@ -498,9 +490,7 @@ describe('Modify LP Average Price', async () => {
                 .mul(openPrice.sub(position.averagePrice))
                 .div(ethers.utils.parseUnits('1', 30))
                 .abs();
-            const userPnl = positionAft.realisedPnl.sub(position.realisedPnl);
 
-            expect(poolLosses).to.be.eq(userPnl);
             expect(positionAft.averagePrice).to.be.gt(
                 position.averagePrice
                     .mul(position.positionAmount)
