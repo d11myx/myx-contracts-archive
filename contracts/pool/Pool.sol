@@ -44,8 +44,8 @@ contract Pool is IPool, Roleable {
     uint256 public pairsCount;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
-    address public positionManager;
-    address public orderManager;
+    mapping(address => bool) public positionManagers;
+    mapping(address => bool) public orderManagers;
 
     mapping(address => uint256) public feeTokenAmounts;
 
@@ -54,21 +54,29 @@ contract Pool is IPool, Roleable {
     }
 
     modifier onlyPositionManagerOrOrderManager() {
-        require(msg.sender == positionManager || msg.sender == orderManager, 'onlyPositionManagerOrOrderManager');
+        require(positionManagers[msg.sender] || orderManagers[msg.sender], 'onlyPositionManagerOrOrderManager');
         _;
     }
 
     modifier onlyPositionManager() {
-        require(msg.sender == positionManager, 'forbidden');
+        require(positionManagers[msg.sender], 'forbidden');
         _;
     }
 
-    function setPositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManager = _positionManager;
+    function addPositionManager(address _positionManager) external onlyPoolAdmin {
+        positionManagers[_positionManager] = true;
     }
 
-    function setOrderManager(address _orderManager) external onlyPoolAdmin {
-        orderManager = _orderManager;
+    function removePositionManager(address _positionManager) external onlyPoolAdmin {
+        delete positionManagers[_positionManager];
+    }
+
+    function addOrderManager(address _positionManager) external onlyPoolAdmin {
+        orderManagers[_positionManager] = true;
+    }
+
+    function removeOrderManager(address _orderManager) external onlyPoolAdmin {
+        delete orderManagers[_orderManager];
     }
 
     // Manage pairs
