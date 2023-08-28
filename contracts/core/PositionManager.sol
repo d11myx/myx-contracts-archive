@@ -423,7 +423,6 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         } else {
             afterCollateral += pnl;
         }
-        // position.realisedPnl += pnl;
 
         // final collateral & out
         if (position.positionAmount == 0) {

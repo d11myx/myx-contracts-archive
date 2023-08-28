@@ -35,7 +35,6 @@ interface IPositionManager {
         uint256 price,
         uint256 tradingFee,
         int256 fundingFee,
-        // int256 realisedPnl,
         uint256 transferOut
     );
 
