@@ -307,7 +307,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             )
         );
 
-        //TODO remove tp sl from event
         emit CreateIncreaseOrder(
             order.account,
             order.orderId,
@@ -316,11 +315,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             _request.collateral,
             _request.openPrice,
             _request.isLong,
-            _request.sizeAmount,
-            0,
-            0,
-            0,
-            0
+            _request.sizeAmount
         );
         return order.orderId;
     }
