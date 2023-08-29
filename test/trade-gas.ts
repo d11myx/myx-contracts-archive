@@ -1,4 +1,4 @@
-import { testEnv } from './helpers/make-suite';
+import { TestEnv, newTestEnv, localTestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
@@ -15,8 +15,10 @@ import { TradingTypes } from '../types/contracts/trading/Router';
 
 describe('Router: increase position ar', () => {
     const pairIndex = 0;
+    let localTestEnv: TestEnv;
 
     before(async () => {
+        localTestEnv = (await newTestEnv()) as TestEnv;
         const {
             deployer,
             users: [depositor, poolAdmin, operator],
@@ -24,14 +26,14 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             roleManager,
-        } = testEnv;
+        } = localTestEnv;
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('10000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
         let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await mintAndApprove(localTestEnv, btc, indexAmount, depositor, testCallBack.address);
+        await mintAndApprove(localTestEnv, usdt, stableAmount, depositor, testCallBack.address);
         await roleManager.connect(deployer.signer).addOperator(operator.address);
         await roleManager.connect(operator.signer).removeAccountBlackList(depositor.address);
         await testCallBack
@@ -41,7 +43,7 @@ describe('Router: increase position ar', () => {
 
     describe('Router: collateral test cases', () => {
         before(async () => {
-            const { btc, oraclePriceFeed } = testEnv;
+            const { btc, oraclePriceFeed } = localTestEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
             const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
@@ -57,7 +59,7 @@ describe('Router: increase position ar', () => {
                 usdt,
                 router,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const amount = ethers.utils.parseUnits('30000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
@@ -93,7 +95,7 @@ describe('Router: increase position ar', () => {
                 executor,
                 positionManager,
                 orderManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const collateral = ethers.utils.parseUnits('10000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
@@ -131,7 +133,7 @@ describe('Router: increase position ar', () => {
                 executor,
                 orderManager,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`user's current postion: `, traderPosition);
@@ -171,7 +173,7 @@ describe('Router: increase position ar', () => {
                 executor,
                 orderManager,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`before position: `, traderPosition);
@@ -212,7 +214,7 @@ describe('Router: increase position ar', () => {
                 executor,
                 orderManager,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const balanceBefore = await usdt.balanceOf(trader.address);
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -259,7 +261,7 @@ describe('Router: increase position ar', () => {
                 router,
                 orderManager,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const balance = await usdt.balanceOf(trader.address);
             const traderPosition = positionManager.getPosition(trader.address, pairIndex, true);
@@ -295,7 +297,7 @@ describe('Router: increase position ar', () => {
                 oraclePriceFeed,
                 orderManager,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
             const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
@@ -338,7 +340,7 @@ describe('Router: increase position ar', () => {
         //         tradingRouter,
         //         executeRouter,
         //         tradingVault,
-        //     } = testEnv;
+        //     } = localTestEnv;
         //
         //     const collateral = ethers.utils.parseUnits('1000', 18);
         //     await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
@@ -374,7 +376,7 @@ describe('Router: increase position ar', () => {
                 executor,
                 orderManager,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
             // open position
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -402,7 +404,7 @@ describe('Router: increase position ar', () => {
         // 		tradingRouter,
         // 		executeRouter,
         // 		tradingVault,
-        // 	} = testEnv;
+        // 	} = localTestEnv;
 
         // 	// hava a position, input sizeAmount = 0, withdraw collateral
         // 	const traderCollateral = await tradingVault.getPosition(trader.address, pairIndex, true)
@@ -437,7 +439,7 @@ describe('Router: increase position ar', () => {
                 executor,
                 orderManager,
                 positionManager,
-            } = testEnv;
+            } = localTestEnv;
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -470,7 +472,7 @@ describe('Router: increase position ar', () => {
                 positionManager,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
             const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
@@ -517,7 +519,7 @@ describe('Router: increase position ar', () => {
                 orderManager,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             const collateral = ethers.utils.parseUnits('10000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
@@ -549,7 +551,7 @@ describe('Router: increase position ar', () => {
                 positionManager,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             const collateral = ethers.utils.parseUnits('10000', 18);
 
@@ -589,7 +591,7 @@ describe('Router: increase position ar', () => {
                 positionManager,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
             const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
@@ -623,7 +625,7 @@ describe('Router: increase position ar', () => {
                 positionManager,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             const collateral = ethers.utils.parseUnits('10000', 18);
 
@@ -655,7 +657,7 @@ describe('Router: increase position ar', () => {
                 positionManager,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const traderOpenAverage = traderPosition.averagePrice;
@@ -690,7 +692,7 @@ describe('Router: increase position ar', () => {
                 positionManager,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
@@ -727,7 +729,7 @@ describe('Router: increase position ar', () => {
                 oraclePriceFeed,
                 router,
                 executor,
-            } = testEnv;
+            } = localTestEnv;
 
             // modify btc price
             const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
