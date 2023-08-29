@@ -68,6 +68,12 @@ const GOERLI_PRIVATE_KEY2 = '0xe9733eeed09ad95c2ef876eb7c9073a68a49651101f93dfdc
 const GOERLI_PRIVATE_KEY3 = '0x2f218d6f236015060f30827825d5d24711d01d502d0a5bd3ec85043ff45c2ae2';
 const GOERLI_PRIVATE_KEY4 = '0xa661ddc2b2524edf18074ac62ed919c8af1fedcd658d5361e0ed7eee249ff168';
 
+const BSC_TEST_PRIVATE_KEY0 = '0x65091b97411c66d154fdcd0df561c8922776ea41189472ace89695413426b57a';
+const BSC_TEST_PRIVATE_KEY1 = '0x99c0023272b43b36f19de100d21ec249a16779f197227e7d660f7c45d07e6c2c';
+const BSC_TEST_PRIVATE_KEY2 = '0xe5bdef804789f48de7b49a845f1cf03646d865ba11c77f77a226ddbaa8548bb5';
+const BSC_TEST_PRIVATE_KEY3 = '0x3679e8f54128f28c216d666d70e58a1afb42dea9161250b6706ab596b363b839';
+const BSC_TEST_PRIVATE_KEY4 = '0x3ea5ea3aaf39b07dfd9f7507ebf89e52b901342a7a20f6aa812d9c9e622d6966';
+
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const TASK_FOLDERS = ['./misc'];
 
@@ -285,6 +291,16 @@ const config: HardhatUserConfig = {
                 REMOTE_PRIVATE_KEY17,
                 REMOTE_PRIVATE_KEY18,
                 REMOTE_PRIVATE_KEY19,
+            ],
+        },
+        bsc_test: {
+            url: 'https://bsc-testnet.publicnode.com',
+            accounts: [
+                BSC_TEST_PRIVATE_KEY0,
+                BSC_TEST_PRIVATE_KEY1,
+                BSC_TEST_PRIVATE_KEY2,
+                BSC_TEST_PRIVATE_KEY3,
+                BSC_TEST_PRIVATE_KEY4,
             ],
         },
         goerli: {
