@@ -93,6 +93,7 @@ library Position {
         require(totalCollateral >= 0, 'collateral not enough for pnl');
 
         require(afterPosition <= totalCollateral.abs().divPrice(price) * maxLeverage, 'exceed max leverage');
+        require(afterPosition > totalCollateral.abs().divPrice(price) * minLeverage, 'exceed min leverage');
         require(afterPosition <= maxPositionAmount, 'exceed max position');
 
         return (afterPosition, totalCollateral.abs());
