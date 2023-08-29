@@ -88,10 +88,12 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         afterCollateral = _collateral;
 
-        tradingFee = _tradingFee(_pairIndex, _isLong, _sizeAmount, _price);
+        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+
+        tradingFee = _tradingFee(_pairIndex, _isLong, sizeDelta);
         afterCollateral -= int256(tradingFee);
 
-        _updateFee(pair, _account, _keeper, tradingFee, vipRate, referenceRate);
+        _updateFee(pair, _account, _keeper, sizeDelta, tradingFee, vipRate, referenceRate);
 
         fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
         if (fundingFee >= 0) {
@@ -436,16 +438,15 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
-        return _tradingFee(_pairIndex, _isLong, _sizeAmount, price);
+        uint256 sizeDelta = _sizeAmount.mulPrice(price);
+        return _tradingFee(_pairIndex, _isLong, sizeDelta);
     }
 
     function _tradingFee(
         uint256 _pairIndex,
         bool _isLong,
-        uint256 _sizeAmount,
-        uint256 _price
+        uint256 sizeDelta
     ) internal view returns (uint256 tradingFee) {
-        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
@@ -471,7 +472,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         address _account,
         uint256 _pairIndex,
         bool _isLong,
-        uint256 _sizeAmount
+        uint256 _sizeAmount //TODO _sizeAmount or sizeDelta ?
     ) public view override returns (int256) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
         //todo  Position is converted to margin currency
