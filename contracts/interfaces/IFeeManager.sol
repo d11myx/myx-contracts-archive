@@ -13,6 +13,11 @@ interface IFeeManager {
         uint256 distributorAmount
     );
 
+    event ClaimedStakingTradingFee(address account, address claimToken, uint256 amount);
+    event ClaimedDistributorTradingFee(address account, address claimToken, uint256 amount);
+    event ClaimedReferralsTradingFee(address account, address claimToken, uint256 amount);
+    event ClaimedUserTradingFee(address account, address claimToken, uint256 amount);
+
     function stakingTradingFee(address _token) external view returns (uint256);
 
     function distributorTradingFee(address _token) external view returns (uint256);
