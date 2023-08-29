@@ -14,7 +14,7 @@ describe('TestGas', async () => {
         testGas = (await testGasFacory.deploy()) as TestGas;
     });
     it('', async () => {
-         expect(await testGas.owner()).to.be.eq(wallets[0].address);
+        expect(await testGas.owner()).to.be.eq(wallets[0].address);
     });
 
     it('gas cost test maping(address=>struct)', async () => {
@@ -31,5 +31,8 @@ describe('TestGas', async () => {
 
     it('gas cost of testKeys', async () => {
         await snapshotGasCost(testGas.testKeys('1'));
+    });
+    it('gas cost of infos', async () => {
+        await snapshotGasCost(testGas.saveInfos());
     });
 });

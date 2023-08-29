@@ -18,7 +18,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOrderCallback.sol';
-import "../helpers/ValidationHelper.sol";
+import '../helpers/ValidationHelper.sol';
 
 import 'hardhat/console.sol';
 
@@ -135,16 +135,15 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 // check leverage
-                (uint256 afterPosition,) = position.validLeverage(
+                (uint256 afterPosition, ) = position.validLeverage(
                     price,
                     request.collateral,
                     uint256(request.sizeAmount),
                     true,
-                    tradingConfig.minLeverage,
+                    // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount
                 );
-                // (uint256 afterPosition,) = tradingUtils.validLeverage(account, request.pairIndex, request.isLong, request.collateral, uint256(request.sizeAmount), true);
                 require(afterPosition > 0, 'zero position amount');
             }
             if (request.sizeAmount < 0) {
@@ -154,15 +153,15 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                     request.collateral,
                     uint256(request.sizeAmount.abs()),
                     false,
-                    tradingConfig.minLeverage,
+                    // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount
                 );
 
                 require(
                     uint256(request.sizeAmount.abs()) == position.positionAmount ||
-                    uint256(request.sizeAmount.abs()) <=
-                    position.positionAmount - positionDecreaseTotalAmount[positionKey],
+                        uint256(request.sizeAmount.abs()) <=
+                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
                     'decrease amount exceed position'
                 );
             }
@@ -182,43 +181,43 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         if (request.sizeAmount > 0) {
             return
                 _saveIncreaseOrder(
-                TradingTypes.IncreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: uint256(request.sizeAmount)
-                })
-            );
+                    TradingTypes.IncreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        openPrice: request.openPrice,
+                        isLong: request.isLong,
+                        sizeAmount: uint256(request.sizeAmount)
+                    })
+                );
         } else if (request.sizeAmount < 0) {
             return
                 _saveDecreaseOrder(
-                TradingTypes.DecreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    triggerPrice: request.openPrice,
-                    sizeAmount: uint256(request.sizeAmount.abs()),
-                    isLong: request.isLong
-                })
-            );
+                    TradingTypes.DecreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        triggerPrice: request.openPrice,
+                        sizeAmount: uint256(request.sizeAmount.abs()),
+                        isLong: request.isLong
+                    })
+                );
         } else {
             require(request.collateral != 0, 'not support');
             return
                 _saveIncreaseOrder(
-                TradingTypes.IncreasePositionRequest({
-                    account: account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: 0
-                })
-            );
+                    TradingTypes.IncreasePositionRequest({
+                        account: account,
+                        pairIndex: request.pairIndex,
+                        tradeType: request.tradeType,
+                        collateral: request.collateral,
+                        openPrice: request.openPrice,
+                        isLong: request.isLong,
+                        sizeAmount: 0
+                    })
+                );
         }
     }
 
@@ -260,7 +259,12 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         }
     }
 
-    function _transferOrderCollateral(address collateral, uint256 collateralAmount, address to, bytes calldata data) internal {
+    function _transferOrderCollateral(
+        address collateral,
+        uint256 collateralAmount,
+        address to,
+        bytes calldata data
+    ) internal {
         uint256 balanceBefore = IERC20(collateral).balanceOf(to);
 
         if (collateralAmount > 0) {
@@ -501,7 +505,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (
             !order.isIncrease &&
-        (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
         ) {
             positionDecreaseTotalAmount[positionKey] += order.sizeAmount;
         }
@@ -533,7 +537,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         if (
             !order.isIncrease &&
-        (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
+            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
         ) {
             positionDecreaseTotalAmount[positionKey] -= order.sizeAmount;
         }
