@@ -12,51 +12,22 @@ enum PositionStatus {
 interface IPositionManager {
     event UpdateFundingInterval(uint256 oldInterval, uint256 newInterval);
 
-    event IncreasePosition(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        int256 collateral,
-        bool isLong,
-        uint256 sizeAmount,
-        uint256 price,
-        uint256 tradingFee,
-        int256 fundingFee,
-        uint256 transferOut
-    );
-
-    event DecreasePosition(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        int256 collateral,
-        uint256 sizeAmount,
-        uint256 price,
-        uint256 tradingFee,
-        int256 fundingFee,
-        uint256 transferOut
-    );
-
     event UpdatePosition(
-        bytes32 positionKey,
         address account,
+        bytes32 positionKey,
         uint256 pairIndex,
         bool isLong,
-        uint256 collateral,
-        uint256 positionAmount,
+        uint256 beforCollateral,
+        uint256 afterCollateral,
+        uint256 price,
+        uint256 beforPositionAmount,
+        uint256 afterPositionAmount,
         uint256 averagePrice,
         int256 fundRateIndex,
-        // uint256 entryFundingTime,
-        int256 pnl,
-        uint256 price
+        int256 pnl
     );
 
-    event ClosePosition(bytes32 positionKey, address account, uint256 pairIndex, bool isLong);
-
     event UpdateFundingRate(uint256 pairIndex, int256 fundingRate, uint256 lastFundingTime);
-
-    event NeedBuyIndexToken(uint256 pairIndex, uint256 profit, uint256 lastFundingTime);
 
     function getExposedPositions(uint256 pairIndex) external view returns (int256);
 

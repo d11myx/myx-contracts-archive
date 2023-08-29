@@ -18,7 +18,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     mapping(address => uint256) public override stakingTradingFee;
     mapping(address => uint256) public override distributorTradingFee;
     mapping(address => mapping(address => uint256)) public override userTradingFee;
-    mapping(address => uint256) public override referenceTradingFee;
+    mapping(address => uint256) public override referralsTradingFee;
 
     IPool public immutable pool;
     IFeeCollector public immutable feeCollector;
@@ -52,6 +52,15 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         return claimableDistributorTradingFee;
     }
 
+    function claimReferralsTradingFee(address claimToken) external override nonReentrant onlyPoolAdmin returns (uint256) {
+        uint256 claimableReferralsTradingFee = referralsTradingFee[claimToken];
+        if (claimableReferralsTradingFee > 0) {
+            pool.transferTokenTo(claimToken, msg.sender, claimableReferralsTradingFee);
+            referralsTradingFee[claimToken] = 0;
+        }
+        return claimableReferralsTradingFee;
+    }
+
     function claimKeeperTradingFee(address claimToken) external override nonReentrant returns (uint256) {
         return _claimUserTradingFee(claimToken);
     }
@@ -74,6 +83,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         IPool.Pair memory pair,
         address account,
         address keeper,
+        uint256 sizeDelta,
         uint256 tradingFee,
         uint256 vipRate,
         uint256 referenceRate
@@ -85,8 +95,8 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
 
         uint256 surplusFee = tradingFee - vipAmount;
 
-        uint256 referenceAmount = surplusFee.mulPercentage(Math.min(referenceRate, feeCollector.maxReferenceRatio()));
-        referenceTradingFee[pair.stableToken] += referenceAmount;
+        uint256 referralsAmount = surplusFee.mulPercentage(Math.min(referenceRate, feeCollector.maxReferralsRatio()));
+        referralsTradingFee[pair.stableToken] += referralsAmount;
 
         uint256 lpAmount = surplusFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
         pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
@@ -97,14 +107,15 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         uint256 stakingAmount = surplusFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
         stakingTradingFee[pair.stableToken] += stakingAmount;
 
-        uint256 distributorAmount = surplusFee - lpAmount - keeperAmount - stakingAmount;
+        uint256 distributorAmount = surplusFee - referralsAmount - lpAmount - keeperAmount - stakingAmount;
         distributorTradingFee[pair.stableToken] += distributorAmount;
 
         emit DistributeTradingFee(
             account,
             pair.pairIndex,
+            sizeDelta,
             tradingFee,
-            referenceAmount,
+            referralsAmount,
             lpAmount,
             keeperAmount,
             stakingAmount,

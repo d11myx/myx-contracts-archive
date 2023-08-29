@@ -10,14 +10,14 @@ contract FeeCollector is IFeeCollector {
     // Discount ratio of every level (level => discountRatio)
     mapping(uint8 => uint256) public override levelDiscountRatios;
 
-    // Maximum of reference ratio
-    uint256 public override maxReferenceRatio;
+    // Maximum of referrals ratio
+    uint256 public override maxReferralsRatio;
 
     IAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     constructor(IAddressesProvider addressesProvider) {
         ADDRESSES_PROVIDER = addressesProvider;
-        maxReferenceRatio = 1e8;
+        maxReferralsRatio = 1e8;
         levelDiscountRatios[1] = 1000000;
         levelDiscountRatios[2] = 2000000;
         levelDiscountRatios[3] = 3000000;
@@ -39,12 +39,12 @@ contract FeeCollector is IFeeCollector {
         emit UpdateLevelDiscountRatio(level, oldRatio, newRatio);
     }
 
-    function updateMaxReferenceRatio(uint256 newRatio) external override {
+    function updateMaxReferralsRatio(uint256 newRatio) external override {
         require(newRatio <= PrecisionUtils.percentage(), 'exceeds max ratio');
 
-        uint256 oldRatio = maxReferenceRatio;
-        maxReferenceRatio = newRatio;
+        uint256 oldRatio = maxReferralsRatio;
+        maxReferralsRatio = newRatio;
 
-        emit UpdateMaxReferenceRatio(oldRatio, newRatio);
+        emit UpdateMaxReferralsRatio(oldRatio, newRatio);
     }
 }

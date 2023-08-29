@@ -12,8 +12,8 @@ interface IExecutor {
         uint256 orderId,
         uint256 pairIndex,
         TradingTypes.TradeType tradeType,
-        int256 collateral,
         bool isLong,
+        int256 collateral,
         uint256 sizeAmount,
         uint256 price,
         uint256 tradingFee,
@@ -26,23 +26,23 @@ interface IExecutor {
         uint256 pairIndex,
         TradingTypes.TradeType tradeType,
         bool isLong,
+        int256 collateral,
         uint256 sizeAmount,
         uint256 price,
-        int256 pnl,
         bool needADL,
+        int256 pnl,
         uint256 tradingFee,
         int256 fundingFee
     );
 
-    event LiquidatePosition(
+    event ExecuteLiquidation(
         bytes32 positionKey,
         address account,
         uint256 pairIndex,
         bool isLong,
-        uint256 sizeAmount,
         uint256 collateral,
-        uint256 price,
-        uint256 orderId
+        uint256 sizeAmount,
+        uint256 price
     );
 
     struct ExecuteOrder {
