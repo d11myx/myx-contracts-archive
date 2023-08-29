@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Trade: FeeCal calculate trading fee 1`] = `314170`;
