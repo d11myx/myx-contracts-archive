@@ -71,7 +71,7 @@ interface IPool {
         address pairToken;
         bool enable;
         uint256 kOfSwap; //Initial k value of liquidity
-        uint256 expectIndexTokenP; //  10000 for 100%
+        uint256 expectIndexTokenP; //   for 100%
         uint256 addLpFeeP; // Add liquidity fee
         uint256 lpFeeDistributeP;
     }
@@ -82,7 +82,7 @@ interface IPool {
         uint256 minTradeAmount;
         uint256 maxTradeAmount;
         uint256 maxPositionAmount;
-        uint256 maintainMarginRate; // Maintain the margin rate of 10000 for 100%
+        uint256 maintainMarginRate; // Maintain the margin rate of  for 100%
         uint256 priceSlipP; // Price slip point
         uint256 maxPriceDeviationP; // Maximum offset of index price
     }
