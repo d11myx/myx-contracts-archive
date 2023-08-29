@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Router: increase position ar Router: collateral test cases position cast 1`] = `314170`;
+exports[`Router: increase position ar addLiquidity cast 1`] = `314170`;
 
-exports[`Router: increase position ar Router: collateral test cases position cast 2`] = `433126`;
+exports[`Router: increase position ar addLiquidity cast 2`] = `433126`;
 
-exports[`Router: increase position ar Router: collateral test cases position cast 3`] = `540838`;
+exports[`Router: increase position ar addLiquidity cast 3`] = `540838`;
 
-exports[`Router: increase position ar Router: collateral test cases position cast 4`] = `427818`;
+exports[`Router: increase position ar addLiquidity cast 4`] = `427818`;
 
-exports[`Router: increase position ar Router: collateral test cases position cast 5`] = `323056`;
+exports[`Router: increase position ar addLiquidity cast 5`] = `323056`;
 
-exports[`Router: increase position ar Router: collateral test cases position cast 6`] = `314182`;
+exports[`Router: increase position ar addLiquidity cast 6`] = `314182`;
