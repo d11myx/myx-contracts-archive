@@ -14,11 +14,7 @@ interface IOrderManager {
         int256 collateral,
         uint256 openPrice,
         bool isLong,
-        uint256 sizeAmount,
-        uint256 tpPrice,
-        uint256 tpAmount,
-        uint256 slPrice,
-        uint256 slAmount
+        uint256 sizeAmount
     );
 
     event CreateDecreaseOrder(

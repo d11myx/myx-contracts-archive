@@ -64,6 +64,8 @@ contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Own
         round++;
         merkleRoots[round] = _merkleRoot;
         merkleRootUsed[_merkleRoot] = true;
+
+        emit UpdateRoot(round);
     }
 
     // claim reward by user
