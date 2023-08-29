@@ -140,7 +140,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                     request.collateral,
                     uint256(request.sizeAmount),
                     true,
-                    tradingConfig.minLeverage,
+                    // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount
                 );
@@ -153,7 +153,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                     request.collateral,
                     uint256(request.sizeAmount.abs()),
                     false,
-                    tradingConfig.minLeverage,
+                    // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount
                 );

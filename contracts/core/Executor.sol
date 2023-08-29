@@ -203,7 +203,7 @@ contract Executor is IExecutor, Pausable {
             order.collateral,
             order.sizeAmount,
             true,
-            tradingConfig.minLeverage,
+            // tradingConfig.minLeverage,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
@@ -436,7 +436,7 @@ contract Executor is IExecutor, Pausable {
             order.collateral,
             order.sizeAmount,
             false,
-            tradingConfig.minLeverage,
+            // tradingConfig.minLeverage,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
