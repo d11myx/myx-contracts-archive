@@ -2,12 +2,12 @@
 
 exports[`Router: increase position ar addLiquidity cast 1`] = `314170`;
 
-exports[`Router: increase position ar addLiquidity cast 2`] = `433126`;
+exports[`Router: increase position ar createDecreaseOrder cast 1`] = `427818`;
 
-exports[`Router: increase position ar addLiquidity cast 3`] = `540838`;
+exports[`Router: increase position ar createIncreaseOrderWithoutTpSl cast 1`] = `433126`;
 
-exports[`Router: increase position ar addLiquidity cast 4`] = `427818`;
+exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `323056`;
 
-exports[`Router: increase position ar addLiquidity cast 5`] = `323056`;
+exports[`Router: increase position ar executeDecreaseOrder cast 2`] = `314182`;
 
-exports[`Router: increase position ar addLiquidity cast 6`] = `314182`;
+exports[`Router: increase position ar executeIncreaseOrder cast 1`] = `540838`;
