@@ -178,6 +178,33 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         }
     }
 
+    function createOrderTpSl(
+        CreateOrderTpSlRequest memory request
+    ) external returns (uint256 tpOrderId, uint256 slOrderId) {
+        if (request.isIncrease) {
+            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(request.orderId, request.tradeType);
+            require(order.account == msg.sender, 'no access');
+        } else {
+            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(request.orderId, request.tradeType);
+            require(order.account == msg.sender, 'no access');
+        }
+
+        if (request.tp > 0 || request.sl > 0) {
+            bytes32 orderKey = PositionKey.getOrderKey(request.isIncrease, request.tradeType, request.orderId);
+
+            orderManager.saveOrderTpSl(
+                orderKey,
+                TradingTypes.OrderWithTpSl({
+                    tpPrice: request.tpPrice,
+                    tp: request.tp,
+                    slPrice: request.slPrice,
+                    sl: request.sl
+                })
+            );
+        }
+        return (tpOrderId, slOrderId);
+    }
+
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId) {

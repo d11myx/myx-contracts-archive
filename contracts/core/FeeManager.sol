@@ -38,6 +38,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
             pool.transferTokenTo(claimToken, msg.sender, claimableStakingTradingFee);
             stakingTradingFee[claimToken] = 0;
         }
+        emit ClaimedStakingTradingFee(msg.sender, claimToken, claimableStakingTradingFee);
         return claimableStakingTradingFee;
     }
 
@@ -49,6 +50,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
             pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
             distributorTradingFee[claimToken] = 0;
         }
+        emit ClaimedDistributorTradingFee(msg.sender, claimToken, claimableDistributorTradingFee);
         return claimableDistributorTradingFee;
     }
 
@@ -58,6 +60,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
             pool.transferTokenTo(claimToken, msg.sender, claimableReferralsTradingFee);
             referralsTradingFee[claimToken] = 0;
         }
+        emit ClaimedReferralsTradingFee(msg.sender, claimToken, claimableReferralsTradingFee);
         return claimableReferralsTradingFee;
     }
 
@@ -70,13 +73,14 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
     }
 
     function _claimUserTradingFee(address claimToken) internal returns (uint256) {
-        uint256 claimableKeeperTradingFee = userTradingFee[claimToken][msg.sender];
-        if (claimableKeeperTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableKeeperTradingFee);
-            IERC20(claimToken).safeTransfer(msg.sender, claimableKeeperTradingFee);
+        uint256 claimableUserTradingFee = userTradingFee[claimToken][msg.sender];
+        if (claimableUserTradingFee > 0) {
+            pool.transferTokenTo(claimToken, msg.sender, claimableUserTradingFee);
+            IERC20(claimToken).safeTransfer(msg.sender, claimableUserTradingFee);
             userTradingFee[claimToken][msg.sender] = 0;
         }
-        return claimableKeeperTradingFee;
+        emit ClaimedUserTradingFee(msg.sender, claimToken, claimableUserTradingFee);
+        return claimableUserTradingFee;
     }
 
     function _updateFee(
