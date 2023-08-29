@@ -165,7 +165,6 @@ struct TradingFeeConfig {
 uint256 takerFeeP;           // taker Process rate
 uint256 makerFeeP;           // maker procedure rate
 // Distribute
-uint256 lpDistributeP;       // lp Allocation ratio
 uint256 keeperDistributeP;   // keeper Allocation ratio
 uint256 treasuryDistributeP; // Treasury allocation ratio
 uint256 refererDistributeP;  // Allocation ratio of invitees
@@ -183,7 +182,6 @@ uint256 fundingWeightFactor;         // The weight coefficient of the fund rate 
 uint256 liquidityPremiumFactor;      // The coefficient of liquidity to premium is 10,000 for 100%
 uint256 interest;
 // Distribute
-uint256 lpDistributeP;               // lp Allocation ratio
 uint256 userDistributeP;             // User allocation ratio
 uint256 treasuryDistributeP;         // Treasury allocation ratio
 }
