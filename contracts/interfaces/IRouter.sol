@@ -4,6 +4,16 @@ pragma solidity ^0.8.0;
 import '../libraries/TradingTypes.sol';
 
 interface IRouter {
+    struct CreateOrderTpSlRequest {
+        uint256 orderId;
+        TradingTypes.TradeType tradeType;
+        bool isIncrease;
+        uint256 tpPrice; // Stop profit price 1e30
+        uint256 tp; // The number of profit stops
+        uint256 slPrice; // Stop price 1e30
+        uint256 sl; // Stop loss quantity
+    }
+
     event UpdateTradingRouter(address oldAddress, address newAddress);
 
     function createIncreaseOrder(TradingTypes.IncreasePositionWithTpSlRequest memory request) external returns (uint256 orderId);
