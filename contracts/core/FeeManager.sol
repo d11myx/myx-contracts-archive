@@ -4,6 +4,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 
+import {PositionStatus, IPositionManager} from '../interfaces/IPositionManager.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/IFeeManager.sol';
 import '../libraries/Roleable.sol';
@@ -11,7 +12,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import './FeeCollector.sol';
 
-abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
+abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, Roleable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
 
@@ -54,7 +55,9 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         return claimableDistributorTradingFee;
     }
 
-    function claimReferralsTradingFee(address claimToken) external override nonReentrant onlyPoolAdmin returns (uint256) {
+    function claimReferralsTradingFee(
+        address claimToken
+    ) external override nonReentrant onlyPoolAdmin returns (uint256) {
         uint256 claimableReferralsTradingFee = referralsTradingFee[claimToken];
         if (claimableReferralsTradingFee > 0) {
             pool.transferTokenTo(claimToken, msg.sender, claimableReferralsTradingFee);
