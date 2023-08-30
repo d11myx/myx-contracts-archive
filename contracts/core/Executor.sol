@@ -146,7 +146,6 @@ contract Executor is IExecutor, Pausable {
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
                 console.log('== canceled:', order.orderId);
             }
-            console.log('<== executeIncreaseMarketOrders orderId:', order.orderId);
         }
     }
 
@@ -169,7 +168,6 @@ contract Executor is IExecutor, Pausable {
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
             }
-            console.log('<== executeIncreaseLimitOrders orderId:', order.orderId);
         }
     }
 
@@ -359,7 +357,6 @@ contract Executor is IExecutor, Pausable {
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
                 console.log('== canceled:', order.orderId);
             }
-            console.log('<== executeDecreaseMarketOrders orderId:', order.orderId);
         }
     }
 
@@ -382,7 +379,6 @@ contract Executor is IExecutor, Pausable {
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
             }
-            console.log('<== executeDecreaseLimitOrders orderId:', order.orderId);
         }
     }
 
