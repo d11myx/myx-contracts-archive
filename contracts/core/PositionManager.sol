@@ -56,7 +56,7 @@ contract PositionManager is FeeManager, Pausable {
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutor, 'Position Manager: forbidden');
+        require(msg.sender == addressExecutor, 'forbidden');
         _;
     }
 
