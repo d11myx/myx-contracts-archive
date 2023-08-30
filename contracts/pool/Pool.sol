@@ -81,22 +81,22 @@ contract Pool is IPool, Roleable {
     }
 
     // Manage pairs
-    function addPair(address _indexToken, address _positionToken) external onlyPoolAdmin {
-        require(_indexToken != address(0) && _positionToken != address(0), 'zero address');
-        require(!isPairListed[_indexToken][_positionToken], 'pair already listed');
+    function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
+        require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
+        require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
 
-        address pairToken = poolTokenFactory.createPoolToken(_indexToken, _positionToken);
+        address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
-        isPairListed[_indexToken][_positionToken] = true;
-        getPairIndex[_indexToken][_positionToken] = pairsCount;
+        isPairListed[_indexToken][_stableToken] = true;
+        getPairIndex[_indexToken][_stableToken] = pairsCount;
 
         Pair storage pair = pairs[pairsCount];
         pair.pairIndex = pairsCount;
         pair.indexToken = _indexToken;
-        pair.stableToken = _positionToken;
+        pair.stableToken = _stableToken;
         pair.pairToken = pairToken;
 
-        emit PairAdded(_indexToken, _positionToken, pairToken, pairsCount++);
+        emit PairAdded(_indexToken, _stableToken, pairToken, pairsCount++);
     }
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
@@ -135,7 +135,7 @@ contract Pool is IPool, Roleable {
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
                 _tradingFeeConfig.stakingFeeDistributeP <=
-                MAX_FEE,
+                PrecisionUtils.percentage(),
             'distribute exceed 1%'
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
