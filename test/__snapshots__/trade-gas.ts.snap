@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Router: increase position ar addLiquidity cast 1`] = `314182`;
+exports[`Router: increase position ar addLiquidity cast 1`] = `314194`;
 
 exports[`Router: increase position ar createDecreaseOrder cast 1`] = `427818`;
 
