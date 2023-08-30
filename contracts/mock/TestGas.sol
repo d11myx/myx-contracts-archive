@@ -16,8 +16,10 @@ contract TestGas {
 
     address public owner;
 
-    constructor() {
+    mapping(uint256 => int256) public uint256Tests;
+    mapping(uint32 => int256) public uint32Tests;
 
+    constructor() {
         owner = msg.sender;
     }
 
@@ -47,5 +49,13 @@ contract TestGas {
 
     function saveInfos() external {
         infos = [Info({collateral: 0, positionAmount: 0, averagePrice: 0})];
+    }
+
+    function saveUint256Tests() external {
+        uint256Tests[1] = 1;
+    }
+
+    function saveUint32Tests() external {
+        uint32Tests[1] = 1;
     }
 }
