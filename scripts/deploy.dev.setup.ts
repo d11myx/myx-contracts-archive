@@ -61,63 +61,63 @@ async function main() {
 
     console.log(`testCallBack:`, testCallBack.address);
 
-    await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
-    await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    // await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    // await waitForTx(await eth.approve(testCallBack.address, MAX_UINT_AMOUNT));
+    //
+    // await waitForTx(
+    //     await testCallBack.addLiquidity(
+    //         pool.address,
+    //         (
+    //             await pool.getPair(0)
+    //         ).indexToken,
+    //         (
+    //             await pool.getPair(0)
+    //         ).stableToken,
+    //         ethers.utils.parseEther('1000'),
+    //         ethers.utils.parseEther('26000000'),
+    //     ),
+    // );
+    // await waitForTx(
+    //     await testCallBack.addLiquidity(
+    //         pool.address,
+    //         (
+    //             await pool.getPair(1)
+    //         ).indexToken,
+    //         (
+    //             await pool.getPair(1)
+    //         ).stableToken,
+    //         ethers.utils.parseEther('1000'),
+    //         ethers.utils.parseEther('1650000'),
+    //     ),
+    // );
 
-    await waitForTx(
-        await testCallBack.addLiquidity(
-            pool.address,
-            (
-                await pool.getPair(0)
-            ).indexToken,
-            (
-                await pool.getPair(0)
-            ).stableToken,
-            ethers.utils.parseEther('1000'),
-            ethers.utils.parseEther('26000000'),
-        ),
-    );
-    await waitForTx(
-        await testCallBack.addLiquidity(
-            pool.address,
-            (
-                await pool.getPair(1)
-            ).indexToken,
-            (
-                await pool.getPair(1)
-            ).stableToken,
-            ethers.utils.parseEther('1000'),
-            ethers.utils.parseEther('1650000'),
-        ),
-    );
-
-    const btcTradingConfig: IPool.TradingConfigStruct = {
-        minLeverage: 3,
-        maxLeverage: 50,
-        minTradeAmount: '100000000000000000',
-        maxTradeAmount: '100000000000000000000000',
-        maxPositionAmount: '100000000000000000000000000',
-        maintainMarginRate: 100,
-        priceSlipP: 10,
-        maxPriceDeviationP: 50,
-    };
-    await pool.updateTradingConfig(0, btcTradingConfig);
-
-    const ethTradingConfig: IPool.TradingConfigStruct = {
-        minLeverage: 3,
-        maxLeverage: 50,
-        minTradeAmount: '100000000000000000',
-        maxTradeAmount: '100000000000000000000000',
-        maxPositionAmount: '100000000000000000000000000',
-        maintainMarginRate: 100,
-        priceSlipP: 10,
-        maxPriceDeviationP: 50,
-    };
-    await pool.updateTradingConfig(1, ethTradingConfig);
+    // const btcTradingConfig: IPool.TradingConfigStruct = {
+    //     minLeverage: 3,
+    //     maxLeverage: 50,
+    //     minTradeAmount: '100000000000000000',
+    //     maxTradeAmount: '100000000000000000000000',
+    //     maxPositionAmount: '100000000000000000000000000',
+    //     maintainMarginRate: 100,
+    //     priceSlipP: 10,
+    //     maxPriceDeviationP: 50,
+    // };
+    // await pool.updateTradingConfig(0, btcTradingConfig);
+    //
+    // const ethTradingConfig: IPool.TradingConfigStruct = {
+    //     minLeverage: 3,
+    //     maxLeverage: 50,
+    //     minTradeAmount: '100000000000000000',
+    //     maxTradeAmount: '100000000000000000000000',
+    //     maxPositionAmount: '100000000000000000000000000',
+    //     maintainMarginRate: 100,
+    //     priceSlipP: 10,
+    //     maxPriceDeviationP: 50,
+    // };
+    // await pool.updateTradingConfig(1, ethTradingConfig);
 }
 
 async function getTokens() {

@@ -4,7 +4,7 @@ exports[`Router: increase position ar addLiquidity cast 1`] = `314182`;
 
 exports[`Router: increase position ar createDecreaseOrder cast 1`] = `427818`;
 
-exports[`Router: increase position ar createIncreaseOrderWithoutTpSl cast 1`] = `433126`;
+exports[`Router: increase position ar createIncreaseOrderWithoutTpSl cast 1`] = `432036`;
 
 exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `323056`;
 
