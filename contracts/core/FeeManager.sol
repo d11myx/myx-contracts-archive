@@ -17,9 +17,11 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
     using PrecisionUtils for uint256;
 
     mapping(address => uint256) public override stakingTradingFee;
-    mapping(address => uint256) public override distributorTradingFee;
+
     mapping(address => mapping(address => uint256)) public override userTradingFee;
+    //user +keeper
     mapping(address => uint256) public override referralsTradingFee;
+    mapping(address => uint256) public override distributorTradingFee;
 
     IPool public immutable pool;
     IFeeCollector public immutable feeCollector;
