@@ -31,6 +31,7 @@ contract Pool is IPool, Roleable {
     using Int256Utils for int256;
     using Math for uint256;
     using SafeMath for uint256;
+    uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public immutable poolTokenFactory;
 
@@ -80,23 +81,22 @@ contract Pool is IPool, Roleable {
     }
 
     // Manage pairs
-    function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
-        require(_indexToken != _stableToken, 'identical address');
-        require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
-        require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
+    function addPair(address _indexToken, address _positionToken) external onlyPoolAdmin {
+        require(_indexToken != address(0) && _positionToken != address(0), 'zero address');
+        require(!isPairListed[_indexToken][_positionToken], 'pair already listed');
 
-        address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
+        address pairToken = poolTokenFactory.createPoolToken(_indexToken, _positionToken);
 
-        isPairListed[_indexToken][_stableToken] = true;
-        getPairIndex[_indexToken][_stableToken] = pairsCount;
+        isPairListed[_indexToken][_positionToken] = true;
+        getPairIndex[_indexToken][_positionToken] = pairsCount;
 
         Pair storage pair = pairs[pairsCount];
         pair.pairIndex = pairsCount;
         pair.indexToken = _indexToken;
-        pair.stableToken = _stableToken;
+        pair.stableToken = _positionToken;
         pair.pairToken = pairToken;
 
-        emit PairAdded(_indexToken, _stableToken, pairToken, pairsCount++);
+        emit PairAdded(_indexToken, _positionToken, pairToken, pairsCount++);
     }
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
@@ -128,16 +128,15 @@ contract Pool is IPool, Roleable {
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _tradingFeeConfig.takerFeeP <= PrecisionUtils.percentage() &&
-                _tradingFeeConfig.makerFeeP <= PrecisionUtils.percentage(),
-            'trading fee exceed 100%'
+            _tradingFeeConfig.takerFeeP <= MAX_FEE && _tradingFeeConfig.makerFeeP <= MAX_FEE,
+            'trading fee exceed 1%'
         );
         require(
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
                 _tradingFeeConfig.stakingFeeDistributeP <=
-                PrecisionUtils.percentage(),
-            'distribute exceed 100%'
+                MAX_FEE,
+            'distribute exceed 1%'
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
