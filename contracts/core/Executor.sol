@@ -73,33 +73,55 @@ contract Executor is IExecutor, Pausable {
         emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
     }
 
-    function setPricesAndExecuteMarketOrders(
+    function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        ExecuteOrder[] memory increaseOrders,
-        ExecuteOrder[] memory decreaseOrders
+        ExecuteOrder[] memory increaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseMarketOrders(increaseOrders);
-        this.executeDecreaseMarketOrders(decreaseOrders);
     }
 
-    function setPricesAndExecuteLimitOrders(
+    function setPricesAndExecuteDecreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        ExecuteOrder[] memory increaseOrders,
         ExecuteOrder[] memory decreaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
+        this.executeDecreaseMarketOrders(decreaseOrders);
+    }
+
+    function setPricesAndExecuteIncreaseLimitOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
+        ExecuteOrder[] memory increaseOrders
+    ) external override onlyPositionKeeper whenNotPaused {
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+
+        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+
         this.executeIncreaseLimitOrders(increaseOrders);
+    }
+
+    function setPricesAndExecuteDecreaseLimitOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
+        ExecuteOrder[] memory decreaseOrders
+    ) external override onlyPositionKeeper whenNotPaused {
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+
+        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+
         this.executeDecreaseLimitOrders(decreaseOrders);
     }
 
