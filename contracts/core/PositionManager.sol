@@ -20,7 +20,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import './FeeManager.sol';
 
-contract PositionManager is FeeManager, IPositionManager, Pausable {
+contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
