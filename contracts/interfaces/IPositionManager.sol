@@ -23,7 +23,7 @@ interface IPositionManager {
         uint256 beforPositionAmount,
         uint256 afterPositionAmount,
         uint256 averagePrice,
-        int256 fundRateIndex,
+        int256 fundFeeTracker,
         int256 pnl
     );
 
@@ -42,11 +42,9 @@ interface IPositionManager {
     ) external view returns (uint256 tradingFee);
 
     function getFundingFee(
-        bool _increase,
         address _account,
         uint256 _pairIndex,
-        bool _isLong,
-        uint256 _sizeAmount
+        bool _isLong
     ) external view returns (int256);
 
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);

@@ -73,33 +73,55 @@ contract Executor is IExecutor, Pausable {
         emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
     }
 
-    function setPricesAndExecuteMarketOrders(
+    function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        ExecuteOrder[] memory increaseOrders,
-        ExecuteOrder[] memory decreaseOrders
+        ExecuteOrder[] memory increaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseMarketOrders(increaseOrders);
-        this.executeDecreaseMarketOrders(decreaseOrders);
     }
 
-    function setPricesAndExecuteLimitOrders(
+    function setPricesAndExecuteDecreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        ExecuteOrder[] memory increaseOrders,
         ExecuteOrder[] memory decreaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
+        this.executeDecreaseMarketOrders(decreaseOrders);
+    }
+
+    function setPricesAndExecuteIncreaseLimitOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
+        ExecuteOrder[] memory increaseOrders
+    ) external override onlyPositionKeeper whenNotPaused {
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+
+        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+
         this.executeIncreaseLimitOrders(increaseOrders);
+    }
+
+    function setPricesAndExecuteDecreaseLimitOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
+        ExecuteOrder[] memory decreaseOrders
+    ) external override onlyPositionKeeper whenNotPaused {
+        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+
+        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+
         this.executeDecreaseLimitOrders(decreaseOrders);
     }
 
@@ -124,7 +146,6 @@ contract Executor is IExecutor, Pausable {
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
                 console.log('== canceled:', order.orderId);
             }
-            console.log('<== executeIncreaseMarketOrders orderId:', order.orderId);
         }
     }
 
@@ -147,7 +168,6 @@ contract Executor is IExecutor, Pausable {
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
             }
-            console.log('<== executeIncreaseLimitOrders orderId:', order.orderId);
         }
     }
 
@@ -337,7 +357,6 @@ contract Executor is IExecutor, Pausable {
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
                 console.log('== canceled:', order.orderId);
             }
-            console.log('<== executeDecreaseMarketOrders orderId:', order.orderId);
         }
     }
 
@@ -360,7 +379,6 @@ contract Executor is IExecutor, Pausable {
             } catch Error(string memory reason) {
                 console.log('== error:', reason);
             }
-            console.log('<== executeDecreaseLimitOrders orderId:', order.orderId);
         }
     }
 
@@ -661,13 +679,7 @@ contract Executor is IExecutor, Pausable {
             position.isLong,
             position.positionAmount
         );
-        int256 fundingFee = positionManager.getFundingFee(
-            false,
-            position.account,
-            position.pairIndex,
-            position.isLong,
-            position.positionAmount
-        );
+        int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
         int256 exposureAsset = int256(position.collateral) +
             unrealizedPnl -
             int256(tradingFee) +
