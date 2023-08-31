@@ -24,9 +24,6 @@ contract Executor is IExecutor, Pausable {
     using Int256Utils for int256;
     using Position for Position.Info;
 
-    uint256 public override increaseMarketOrderStartIndex;
-    uint256 public override decreaseMarketOrderStartIndex;
-
     uint256 public override maxTimeDelay;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
