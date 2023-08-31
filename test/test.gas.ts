@@ -35,4 +35,10 @@ describe('TestGas', async () => {
     it('gas cost of infos', async () => {
         await snapshotGasCost(testGas.saveInfos());
     });
+    it('gas cost of saveUint256Tests', async () => {
+        await snapshotGasCost(testGas.saveUint256Tests());
+    });
+    it('gas cost of saveUint32Tests', async () => {
+        await snapshotGasCost(testGas.saveUint32Tests());
+    });
 });

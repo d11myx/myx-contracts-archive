@@ -65,7 +65,7 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
     function updateRoot(bytes32 _merkleRoot, uint256 _amount) external override onlyHandler {
         require(!merkleRootUsed[_merkleRoot], 'RewardDistributor: root already used');
         require(
-            totalReward + IFeeManager(address(positionManager)).distributorTradingFee(rewardToken) >= _amount,
+            totalReward + IFeeManager(address(positionManager)).distributorTradingFee() >= _amount,
             'RewardDistributor: reward not enough'
         );
 

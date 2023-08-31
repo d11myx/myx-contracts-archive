@@ -31,6 +31,7 @@ contract Pool is IPool, Roleable {
     using Int256Utils for int256;
     using Math for uint256;
     using SafeMath for uint256;
+    uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public immutable poolTokenFactory;
 
@@ -79,9 +80,9 @@ contract Pool is IPool, Roleable {
         delete orderManagers[_orderManager];
     }
 
+
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
-        require(_indexToken != _stableToken, 'identical address');
         require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
         require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
 
@@ -93,6 +94,7 @@ contract Pool is IPool, Roleable {
         Pair storage pair = pairs[pairsCount];
         pair.pairIndex = pairsCount;
         pair.indexToken = _indexToken;
+
         pair.stableToken = _stableToken;
         pair.pairToken = pairToken;
 
@@ -128,16 +130,15 @@ contract Pool is IPool, Roleable {
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _tradingFeeConfig.takerFeeP <= PrecisionUtils.percentage() &&
-                _tradingFeeConfig.makerFeeP <= PrecisionUtils.percentage(),
-            'trading fee exceed 100%'
+            _tradingFeeConfig.takerFeeP <= MAX_FEE && _tradingFeeConfig.makerFeeP <= MAX_FEE,
+            'trading fee exceed 1%'
         );
         require(
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
                 _tradingFeeConfig.stakingFeeDistributeP <=
                 PrecisionUtils.percentage(),
-            'distribute exceed 100%'
+            'distribute exceed 1%'
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
