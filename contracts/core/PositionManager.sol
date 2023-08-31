@@ -45,7 +45,6 @@ contract PositionManager is FeeManager, Pausable {
 
     address public addressExecutor;
     address public addressOrderManager;
-    address public immutable pledgeAddress;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -53,8 +52,7 @@ contract PositionManager is FeeManager, Pausable {
         address _pledgeAddress,
         IFeeCollector feeCollector,
         uint256 _fundingInterval
-    ) FeeManager(addressProvider, pool, feeCollector) {
-        pledgeAddress = _pledgeAddress;
+    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {
         fundingInterval = _fundingInterval;
     }
 
