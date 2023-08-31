@@ -34,8 +34,11 @@ async function main() {
     console.log(`router:`, router.address);
     console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
-    console.log(await pool.getPair(0));
-    console.log(await pool.getPair(1));
+    // console.log(await pool.getPair(0));
+    // console.log(await pool.getPair(1));
+
+    console.log(await orderManager.increaseMarketOrders(25));
+    // console.log(await executor.executeIncreaseMarketOrders([{ orderId: 7, level: 0, commissionRatio: 0 }]));
 
     // console.log(await positionManager.getPosition('0x2068f8e9C9e61A330F2F713C998D372C04e3C9Cc', 0, true));
 
