@@ -3,7 +3,9 @@ pragma solidity 0.8.17;
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
+import {PositionStatus, IPositionManager} from '../interfaces/IPositionManager.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/IFeeManager.sol';
 import '../libraries/Roleable.sol';
@@ -11,79 +13,78 @@ import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import './FeeCollector.sol';
 
-abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
+abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, Roleable {
     using SafeERC20 for IERC20;
+    using SafeMath for uint256;
     using PrecisionUtils for uint256;
 
-    mapping(address => uint256) public override stakingTradingFee;
-    mapping(address => uint256) public override distributorTradingFee;
-    mapping(address => mapping(address => uint256)) public override userTradingFee;
-    mapping(address => uint256) public override referralsTradingFee;
+    uint256 public override stakingTradingFee;
+    //user +keeper
+    mapping(address => uint256) public override userTradingFee;
+
+    uint256 public override treasuryFee;
 
     IPool public immutable pool;
     IFeeCollector public immutable feeCollector;
+    address public immutable pledgeAddress;
+    address public stakingPool;
 
     constructor(
         IAddressesProvider addressProvider,
         IPool _pool,
+        address _pledgeAddress,
         IFeeCollector _feeCollector
     ) Roleable(addressProvider) {
+        pledgeAddress = _pledgeAddress;
         pool = _pool;
         feeCollector = _feeCollector;
     }
 
-    function claimStakingTradingFee(address claimToken) external override nonReentrant onlyPoolAdmin returns (uint256) {
-        uint256 claimableStakingTradingFee = stakingTradingFee[claimToken];
+    function setStakingPool(address newAddress) external onlyPoolAdmin {
+        stakingPool = newAddress;
+    }
+
+    function claimStakingTradingFee() external override nonReentrant returns (uint256) {
+        require(msg.sender == stakingPool, '!=staking');
+        uint256 claimableStakingTradingFee = stakingTradingFee;
         if (claimableStakingTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableStakingTradingFee);
-            stakingTradingFee[claimToken] = 0;
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableStakingTradingFee);
+            stakingTradingFee = 0;
         }
-        emit ClaimedStakingTradingFee(msg.sender, claimToken, claimableStakingTradingFee);
+        emit ClaimedStakingTradingFee(msg.sender, pledgeAddress, claimableStakingTradingFee);
         return claimableStakingTradingFee;
     }
 
-    function claimDistributorTradingFee(
-        address claimToken
-    ) external override nonReentrant onlyPoolAdmin returns (uint256) {
-        uint256 claimableDistributorTradingFee = distributorTradingFee[claimToken];
-        if (claimableDistributorTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableDistributorTradingFee);
-            distributorTradingFee[claimToken] = 0;
+    function claimTreauryFee() external override nonReentrant onlyPoolAdmin returns (uint256) {
+        uint256 claimableTreasuryFee = treasuryFee;
+        if (claimableTreasuryFee > 0) {
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableTreasuryFee);
+            treasuryFee = 0;
         }
-        emit ClaimedDistributorTradingFee(msg.sender, claimToken, claimableDistributorTradingFee);
-        return claimableDistributorTradingFee;
+        emit ClaimedDistributorTradingFee(msg.sender, pledgeAddress, claimableTreasuryFee);
+        return claimableTreasuryFee;
     }
 
-    function claimReferralsTradingFee(address claimToken) external override nonReentrant onlyPoolAdmin returns (uint256) {
-        uint256 claimableReferralsTradingFee = referralsTradingFee[claimToken];
-        if (claimableReferralsTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableReferralsTradingFee);
-            referralsTradingFee[claimToken] = 0;
-        }
-        emit ClaimedReferralsTradingFee(msg.sender, claimToken, claimableReferralsTradingFee);
-        return claimableReferralsTradingFee;
+    function claimKeeperTradingFee() external override nonReentrant returns (uint256) {
+        return _claimUserTradingFee();
     }
 
-    function claimKeeperTradingFee(address claimToken) external override nonReentrant returns (uint256) {
-        return _claimUserTradingFee(claimToken);
+    function claimUserTradingFee() external override nonReentrant returns (uint256) {
+        return _claimUserTradingFee();
     }
 
-    function claimUserTradingFee(address claimToken) external override nonReentrant returns (uint256) {
-        return _claimUserTradingFee(claimToken);
-    }
-
-    function _claimUserTradingFee(address claimToken) internal returns (uint256) {
-        uint256 claimableUserTradingFee = userTradingFee[claimToken][msg.sender];
+    function _claimUserTradingFee() internal returns (uint256) {
+        uint256 claimableUserTradingFee = userTradingFee[msg.sender];
         if (claimableUserTradingFee > 0) {
-            pool.transferTokenTo(claimToken, msg.sender, claimableUserTradingFee);
-            IERC20(claimToken).safeTransfer(msg.sender, claimableUserTradingFee);
-            userTradingFee[claimToken][msg.sender] = 0;
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
+            IERC20(pledgeAddress).safeTransfer(msg.sender, claimableUserTradingFee);
+            userTradingFee[msg.sender] = 0;
         }
-        emit ClaimedUserTradingFee(msg.sender, claimToken, claimableUserTradingFee);
+        emit ClaimedUserTradingFee(msg.sender, pledgeAddress, claimableUserTradingFee);
         return claimableUserTradingFee;
     }
 
-    function _updateFee(
+    function _distributeTradingFee(
         IPool.Pair memory pair,
         address account,
         address keeper,
@@ -95,24 +96,23 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, Roleable {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
         uint256 vipAmount = tradingFee.mulPercentage(vipRate);
-        userTradingFee[pair.stableToken][account] += vipAmount;
+        userTradingFee[account] += vipAmount;
 
         uint256 surplusFee = tradingFee - vipAmount;
 
         uint256 referralsAmount = surplusFee.mulPercentage(Math.min(referenceRate, feeCollector.maxReferralsRatio()));
-        referralsTradingFee[pair.stableToken] += referralsAmount;
 
         uint256 lpAmount = surplusFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
-        pool.increaseTotalAmount(pair.pairIndex, 0, lpAmount);
+        pool.increaseLPProfit(pair.pairIndex, lpAmount);
 
         uint256 keeperAmount = surplusFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
-        userTradingFee[pair.stableToken][keeper] += keeperAmount;
+        userTradingFee[keeper] += keeperAmount;
 
         uint256 stakingAmount = surplusFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
-        stakingTradingFee[pair.stableToken] += stakingAmount;
+        stakingTradingFee += stakingAmount;
 
         uint256 distributorAmount = surplusFee - referralsAmount - lpAmount - keeperAmount - stakingAmount;
-        distributorTradingFee[pair.stableToken] += distributorAmount;
+        treasuryFee += distributorAmount.add(referralsAmount);
 
         emit DistributeTradingFee(
             account,

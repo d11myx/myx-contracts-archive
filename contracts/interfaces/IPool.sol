@@ -93,8 +93,9 @@ interface IPool {
         uint256 makerFeeP;
         // distribute
         uint256 lpFeeDistributeP;
-        uint256 keeperFeeDistributeP;
         uint256 stakingFeeDistributeP;
+        uint256 keeperFeeDistributeP;
+
     }
 
     struct FundingFeeConfig {
