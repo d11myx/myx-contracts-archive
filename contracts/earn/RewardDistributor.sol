@@ -58,7 +58,7 @@ contract RewardDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Own
     }
 
     // update root by handler
-    function updateRoot(bytes32 _merkleRoot, uint256 amount) external override onlyHandler {
+    function updateRoot(bytes32 _merkleRoot, uint256 transferInAmount, uint256 amount) external override onlyHandler {
         require(!merkleRootUsed[_merkleRoot], 'RewardDistributor: root already used');
 
         round++;
