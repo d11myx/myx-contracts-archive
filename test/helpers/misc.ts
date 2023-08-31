@@ -37,7 +37,7 @@ export async function increasePosition(
     testEnv: TestEnv,
     user: SignerWithAddress,
     pairIndex: number,
-    collateral: BigNumber,
+    collateral: BigNumber | string,
     openPrice: BigNumber,
     size: BigNumber,
     tradeType: TradeType,
