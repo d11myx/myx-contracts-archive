@@ -85,5 +85,5 @@ interface IPositionManager {
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
-    function updateFundingRate(uint256 _pairIndex, uint256 _price) external;
+    function updateFundingRate(uint256 _pairIndex) external;
 }
