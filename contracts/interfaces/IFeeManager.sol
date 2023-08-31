@@ -20,7 +20,7 @@ interface IFeeManager {
 
     function stakingTradingFee() external view returns (uint256);
 
-    function distributorTradingFee() external view returns (uint256);
+    function treasuryFee() external view returns (uint256);
 
     function userTradingFee(address _account) external view returns (uint256);
 
@@ -28,11 +28,11 @@ interface IFeeManager {
 
     // function claimReferralsTradingFee(address claimToken) external returns (uint256);
 
-    function claimStakingTradingFee(address claimToken) external returns (uint256);
+    function claimStakingTradingFee() external returns (uint256);
 
-    function claimDistributorTradingFee(address claimToken) external returns (uint256);
+    function claimTreauryFee() external returns (uint256);
 
-    function claimKeeperTradingFee(address claimToken) external returns (uint256);
+    function claimKeeperTradingFee() external returns (uint256);
 
-    function claimUserTradingFee(address claimToken) external returns (uint256);
+    function claimUserTradingFee() external returns (uint256);
 }
