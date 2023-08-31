@@ -80,6 +80,7 @@ contract Pool is IPool, Roleable {
         delete orderManagers[_orderManager];
     }
 
+
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
@@ -93,6 +94,7 @@ contract Pool is IPool, Roleable {
         Pair storage pair = pairs[pairsCount];
         pair.pairIndex = pairsCount;
         pair.indexToken = _indexToken;
+
         pair.stableToken = _stableToken;
         pair.pairToken = pairToken;
 

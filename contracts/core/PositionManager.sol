@@ -35,6 +35,8 @@ contract PositionManager is FeeManager, Pausable {
     mapping(uint256 => uint256) public override longTracker;
     mapping(uint256 => uint256) public override shortTracker;
 
+
+
     // gobleFundingRateIndex tracks the funding rates based on utilization
     mapping(uint256 => int256) public gobleFundingRateIndex;
 
