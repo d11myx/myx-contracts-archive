@@ -50,17 +50,17 @@ contract Executor is IExecutor, Pausable {
     }
 
     modifier onlyAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isAdmin(msg.sender), 'onlyAdmin');
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isAdmin(msg.sender), 'oa');
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'opa');
         _;
     }
 
     modifier onlyPositionKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'onlyPositionKeeper');
+        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'opk');
         _;
     }
 
@@ -76,7 +76,7 @@ contract Executor is IExecutor, Pausable {
         uint256 timestamp,
         ExecuteOrder[] memory increaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
-        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -89,7 +89,7 @@ contract Executor is IExecutor, Pausable {
         uint256 timestamp,
         ExecuteOrder[] memory decreaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
-        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -102,7 +102,7 @@ contract Executor is IExecutor, Pausable {
         uint256 timestamp,
         ExecuteOrder[] memory increaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
-        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -115,7 +115,7 @@ contract Executor is IExecutor, Pausable {
         uint256 timestamp,
         ExecuteOrder[] memory decreaseOrders
     ) external override onlyPositionKeeper whenNotPaused {
-        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -127,7 +127,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('==> executeIncreaseMarketOrders orderId:', order.orderId);
+            console.log('eim Id:', order.orderId);
 
             try
                 this.executeIncreaseOrder(
@@ -137,11 +137,11 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('== completed. orderId:', order.orderId);
+                console.log('c orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('== error:', reason);
+                console.log('error:', reason);
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
-                console.log('== canceled:', order.orderId);
+                console.log('canceled:', order.orderId);
             }
         }
     }
@@ -151,7 +151,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('==> executeIncreaseLimitOrders orderId:', order.orderId);
+            console.log('elo orderId:', order.orderId);
 
             try
                 this.executeIncreaseOrder(
@@ -161,9 +161,9 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('== completed. orderId:', order.orderId);
+                console.log('c orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('== error:', reason);
+                console.log('error:', reason);
             }
         }
     }
@@ -174,7 +174,7 @@ contract Executor is IExecutor, Pausable {
         uint8 level,
         uint256 commissionRatio
     ) external override onlyPositionKeeper whenNotPaused {
-        console.log('==> executeIncreaseOrder orderId:', _orderId);
+        console.log('eio orderId:', _orderId);
 
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
@@ -224,7 +224,7 @@ contract Executor is IExecutor, Pausable {
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
-        require(afterPosition > 0, 'zero position amount');
+        require(afterPosition > 0, 'zpa');
 
         IPool.Vault memory lpVault = pool.getVault(pairIndex);
 
@@ -232,24 +232,21 @@ contract Executor is IExecutor, Pausable {
         if (preNetExposureAmountChecker >= 0) {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                require(order.sizeAmount <= availableIndex, 'lp index token not enough');
+                require(order.sizeAmount <= availableIndex, 'iit');
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
                 require(
                     order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.divPrice(price),
-                    'lp stable token not enough'
+                    'ist'
                 );
             }
         } else {
             if (order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                require(
-                    order.sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex,
-                    'lp index token not enough'
-                );
+                require(order.sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex, 'iit');
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                require(order.sizeAmount <= availableStable.divPrice(price), 'lp stable token not enough');
+                require(order.sizeAmount <= availableStable.divPrice(price), 'ist');
             }
         }
 
@@ -330,7 +327,7 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
-        console.log('<== executeIncreaseOrder orderId:', _orderId);
+        console.log('eio orderId:', _orderId);
     }
 
     function executeDecreaseMarketOrders(
@@ -338,7 +335,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('==> executeDecreaseMarketOrders orderId:', order.orderId);
+            console.log('edmo orderId:', order.orderId);
 
             try
                 this.executeDecreaseOrder(
@@ -348,11 +345,11 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('== completed. orderId:', order.orderId);
+                console.log('completed orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('== error:', reason);
+                console.log('error:', reason);
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
-                console.log('== canceled:', order.orderId);
+                console.log('canceled:', order.orderId);
             }
         }
     }
@@ -362,7 +359,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('==> executeDecreaseLimitOrders orderId:', order.orderId);
+            console.log('edlo orderId:', order.orderId);
 
             try
                 this.executeDecreaseOrder(
@@ -372,9 +369,9 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('== completed. index:', order.orderId);
+                console.log('completed. index:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('== error:', reason);
+                console.log('error:', reason);
             }
         }
     }
@@ -394,7 +391,7 @@ contract Executor is IExecutor, Pausable {
         uint8 level,
         uint256 commissionRatio
     ) internal {
-        console.log('==> executeDecreaseOrder orderId:', _orderId);
+        console.log('edo orderId:', _orderId);
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
@@ -563,7 +560,7 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
-        console.log('<== executeDecreaseOrder orderId:', _orderId);
+        console.log('edo orderId:', _orderId);
     }
 
     function setPricesAndExecuteADL(
@@ -576,7 +573,7 @@ contract Executor is IExecutor, Pausable {
         uint8 level,
         uint256 commissionRatio
     ) external override onlyPositionKeeper whenNotPaused {
-        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
@@ -591,7 +588,7 @@ contract Executor is IExecutor, Pausable {
         uint256 _commissionRatio
     ) external override onlyPositionKeeper whenNotPaused {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
-        require(order.needADL, 'no need ADL');
+        require(order.needADL, 'noADL');
 
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(order.pairIndex);
 
@@ -601,8 +598,8 @@ contract Executor is IExecutor, Pausable {
             ExecutePosition memory executePosition = executePositions[i];
 
             Position.Info memory position = positionManager.getPositionByKey(executePosition.positionKey);
-            require(executePosition.sizeAmount <= position.positionAmount, 'ADL size exceeds position');
-            require(executePosition.sizeAmount <= tradingConfig.maxTradeAmount, 'exceeds max trade amount');
+            require(executePosition.sizeAmount <= position.positionAmount, 'ADL sep');
+            require(executePosition.sizeAmount <= tradingConfig.maxTradeAmount, 'emta');
             executeTotalAmount += executePosition.sizeAmount;
 
             ExecutePositionInfo memory adlPosition = adlPositions[i];
@@ -610,7 +607,7 @@ contract Executor is IExecutor, Pausable {
             adlPosition.level = executePosition.level;
             adlPosition.commissionRatio = executePosition.commissionRatio;
         }
-        require(executeTotalAmount == order.sizeAmount, 'ADL position amount not match decrease order');
+        require(executeTotalAmount == order.sizeAmount, 'ADL pa');
 
         IPool.Pair memory pair = pool.getPair(order.pairIndex);
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
@@ -645,7 +642,7 @@ contract Executor is IExecutor, Pausable {
         uint256 timestamp,
         ExecutePosition[] memory executePositions
     ) external override onlyPositionKeeper whenNotPaused {
-        require(tokens.length == prices.length && tokens.length >= 0, 'invalid params');
+        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
 
