@@ -234,8 +234,8 @@ contract Token is IERC20 {
      * - `sender` must have a balance of at least `amount`.
      */
     function _transfer(address sender, address recipient, uint256 amount) internal virtual {
-        // console.log('transfer, sender: %s, recipient: %s, this: %s', sender, recipient, amount);
-        // console.log('transfer, token: %s, _msgSender: %s, balance: %s', address(this), _msgSender(), balanceOf(sender));
+        console.log('transfer, sender: %s, recipient: %s, this: %s', sender, recipient, amount);
+        console.log('transfer, token: %s, _msgSender: %s, balance: %s', address(this), _msgSender(), balanceOf(sender));
 
         require(sender != address(0), 'ERC20: transfer from the zero address');
         require(recipient != address(0), 'ERC20: transfer to the zero address');

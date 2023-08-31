@@ -155,12 +155,12 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
             PRECISION
         );
         IERC20(rewardToken).safeTransfer(account, claimableReward);
-        // console.log(
+        console.log(
             'claimReward cumulativeRewardPerToken %s userCumulativeRewardPerTokens %s',
             cumulativeRewardPerToken,
             userCumulativeRewardPerTokens[account]
         );
-        // console.log('claimReward balance %s claimableReward %s', balance, claimableReward);
+        console.log('claimReward balance %s claimableReward %s', balance, claimableReward);
 
         userCumulativeRewardPerTokens[account] = cumulativeRewardPerToken;
     }
@@ -174,7 +174,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         uint256 pendingReward = IFeeManager(address(positionManager)).stakingTradingFee();
         uint256 nextCumulativeFeePerToken = cumulativeRewardPerToken + pendingReward.mulDiv(PRECISION, totalSupply);
         claimableReward = balance.mulDiv(nextCumulativeFeePerToken - userCumulativeRewardPerTokens[account], PRECISION);
-        // console.log(
+        console.log(
             'claimableReward claimableReward %s pendingReward %s nextCumulativeFeePerToken %s',
             claimableReward,
             pendingReward,
