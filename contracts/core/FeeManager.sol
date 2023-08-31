@@ -91,7 +91,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
         return claimableUserTradingFee;
     }
 
-    function _updateFee(
+    function _distributeTradingFee(
         IPool.Pair memory pair,
         address account,
         address keeper,
