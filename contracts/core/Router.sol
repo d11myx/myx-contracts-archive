@@ -17,7 +17,6 @@ import '../interfaces/IOrderCallback.sol';
 
 contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrderCallback, ETHGateway {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
-
     IOrderManager public immutable orderManager;
     IPool public immutable pool;
 
