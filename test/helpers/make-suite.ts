@@ -182,6 +182,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         addressesProvider,
         roleManager,
         pool,
+        usdt,
         validationHelper,
     );
 
