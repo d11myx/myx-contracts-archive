@@ -31,10 +31,10 @@ contract Executor is IExecutor, Pausable {
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
 
-    IOrderManager public orderManager;
-    IPool public pool;
-    IPositionManager public positionManager;
-    IFeeCollector public feeCollector;
+    IOrderManager public immutable orderManager;
+    IPool public immutable pool;
+    IPositionManager public immutable positionManager;
+    IFeeCollector public immutable feeCollector;
 
     constructor(
         IAddressesProvider addressProvider,
