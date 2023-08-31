@@ -23,6 +23,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../helpers/ValidationHelper.sol';
+
 // import 'hardhat/console.sol';
 
 contract Pool is IPool, Roleable {
@@ -79,7 +80,6 @@ contract Pool is IPool, Roleable {
     function removeOrderManager(address _orderManager) external onlyPoolAdmin {
         delete orderManagers[_orderManager];
     }
-
 
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
