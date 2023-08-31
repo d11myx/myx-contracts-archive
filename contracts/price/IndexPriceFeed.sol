@@ -8,7 +8,7 @@ import '../interfaces/IIndexPriceFeed.sol';
 
 // import 'hardhat/console.sol';
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 contract IndexPriceFeed is IIndexPriceFeed {
     using SafeMath for uint256;
