@@ -47,17 +47,17 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
 
-    IPool public pool;
-    IPositionManager public positionManager;
+    IPool public immutable pool;
+    IPositionManager public immutable positionManager;
     address public addressExecutor;
     address public router;
 
     constructor(
         IAddressesProvider addressProvider,
-        IPool _pairInfo,
+        IPool _pool,
         IPositionManager _positionManager
     ) Roleable(addressProvider) {
-        pool = _pairInfo;
+        pool = _pool;
         positionManager = _positionManager;
     }
 
@@ -89,11 +89,11 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         router = _router;
     }
 
-    function updatePositionManager(address newAddress) external onlyPoolAdmin {
-        address oldAddress = address(positionManager);
-        positionManager = IPositionManager(newAddress);
-        emit UpdatePositionManager(oldAddress, newAddress);
-    }
+    // function updatePositionManager(address newAddress) external onlyPoolAdmin {
+    //     address oldAddress = address(positionManager);
+    //     positionManager = IPositionManager(newAddress);
+    //     emit UpdatePositionManager(oldAddress, newAddress);
+    // }
 
     function getOrderKey(
         uint256 orderId,

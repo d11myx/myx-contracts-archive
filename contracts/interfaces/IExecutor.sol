@@ -64,9 +64,6 @@ interface IExecutor {
         uint256 commissionRatio;
     }
 
-    function increaseMarketOrderStartIndex() external view returns (uint256);
-
-    function decreaseMarketOrderStartIndex() external view returns (uint256);
 
     function maxTimeDelay() external view returns (uint256);
 
