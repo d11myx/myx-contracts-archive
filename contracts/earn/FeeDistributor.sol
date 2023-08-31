@@ -62,19 +62,15 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
 
     // update root by handler
     // amount: total reward
-    function updateRoot(bytes32 _merkleRoot, uint256 _amount) external override onlyHandler {
+    function updateRoot(bytes32 _merkleRoot, uint256 transferInAmount, uint256 _amount) external override onlyHandler {
         require(!merkleRootUsed[_merkleRoot], 'RewardDistributor: root already used');
-        require(
-            totalReward + IFeeManager(address(positionManager)).distributorTradingFee(rewardToken) >= _amount,
-            'RewardDistributor: reward not enough'
-        );
+        require(totalReward + transferInAmount >= _amount, 'RewardDistributor: reward not enough');
+        IERC20(rewardToken).transferFrom(msg.sender, address(this), transferInAmount);
 
         round++;
         merkleRoots[round] = _merkleRoot;
         merkleRootUsed[_merkleRoot] = true;
-
-        uint256 claimAmount = IFeeManager(address(positionManager)).claimDistributorTradingFee(rewardToken);
-        totalReward += claimAmount;
+        totalReward += transferInAmount;
     }
 
     // claim reward by user
