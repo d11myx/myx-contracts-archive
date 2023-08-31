@@ -100,7 +100,7 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
     }
 
     function releaseToken(DistributeType distributeType) external nonReentrant returns (uint256 releaseAmount) {
-        console.log(
+        // console.log(
             'releaseToken releasedAmount %s totalRelease %s distributeType %s',
             releasedAmount[distributeType],
             totalRelease[distributeType],
@@ -116,17 +116,17 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
             distributeType == DistributeType.INITIAL_LIQUIDITY ||
             distributeType == DistributeType.DEVELOPMENT_RESERVE
         ) {
-            console.log('releaseToken timestamp', block.timestamp, 'nextReleaseTime', nextReleaseTime[distributeType]);
+            // console.log('releaseToken timestamp', block.timestamp, 'nextReleaseTime', nextReleaseTime[distributeType]);
 
             require(block.timestamp >= nextReleaseTime[distributeType], 'Vester: locking time');
 
             releaseAmount = getReleaseAmount(distributeType);
             require(releaseAmount > 0, 'Vester: none release');
-            console.log('releaseToken releaseAmount', releaseAmount);
+            // console.log('releaseToken releaseAmount', releaseAmount);
 
             releasedAmount[distributeType] += releaseAmount;
             nextReleaseTime[distributeType] += releaseInterval[distributeType];
-            console.log(
+            // console.log(
                 'releaseToken releasedAmount',
                 releasedAmount[distributeType],
                 'nextReleaseTime',
@@ -141,7 +141,7 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
             releaseAmount = getReleaseAmount(distributeType);
             require(releaseAmount > 0, 'Vester: none release');
             releasedAmount[distributeType] += releaseAmount;
-            console.log(
+            // console.log(
                 'releaseToken releasedAmount',
                 releasedAmount[distributeType],
                 'nextReleaseTime',
@@ -159,7 +159,7 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
     }
 
     function getReleaseAmount(DistributeType distributeType) public view returns (uint256 releaseAmount) {
-        console.log(
+        // console.log(
             'getReleaseAmount releasedAmount',
             releasedAmount[distributeType],
             'totalRelease',
@@ -170,7 +170,7 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
         }
 
         if (distributeType == DistributeType.TEAM_ADVISOR || distributeType == DistributeType.PRIVATE_PLACEMENT) {
-            console.log(
+            // console.log(
                 'getReleaseAmount timestamp',
                 block.timestamp,
                 'nextReleaseTime',
@@ -186,14 +186,14 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
             }
 
             uint256 interval = block.timestamp - nextReleaseTime[distributeType];
-            console.log('getReleaseAmount releaseInterval', releaseInterval[distributeType], 'interval', interval);
+            // console.log('getReleaseAmount releaseInterval', releaseInterval[distributeType], 'interval', interval);
             if (interval < releaseInterval[distributeType]) {
                 return 0;
             }
             // todo releaseAmount.min(total - released)
             releaseAmount = totalRelease[distributeType] / releaseRounds[distributeType];
         } else if (distributeType == DistributeType.MARKET_OPERATION || distributeType == DistributeType.ECO_KEEPER) {
-            console.log(
+            // console.log(
                 'getReleaseAmount timestamp',
                 block.timestamp,
                 'nextReleaseTime',
@@ -209,7 +209,7 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
             }
 
             uint256 interval = block.timestamp - nextReleaseTime[distributeType];
-            console.log('getReleaseAmount releaseInterval', releaseInterval[distributeType], 'interval', interval);
+            // console.log('getReleaseAmount releaseInterval', releaseInterval[distributeType], 'interval', interval);
             if (interval < releaseInterval[distributeType]) {
                 return 0;
             }
