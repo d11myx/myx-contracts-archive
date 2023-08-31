@@ -7,6 +7,7 @@ import {
     getAddressesProvider,
     getPool,
     getRoleManager,
+    getToken,
     getWETH,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
@@ -23,6 +24,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const addressProvider = await getAddressesProvider();
     const pool = await getPool();
+    let usdt = await getToken();
 
     // const validationHelperArtifact = await get('ValidationHelper');
 
@@ -42,7 +44,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
         from: deployer,
         contract: 'PositionManager',
-        args: [addressProvider.address, pool.address, feeCollector.address, 8 * 60 * 60],
+        args: [addressProvider.address, pool.address, usdt.address, feeCollector.address, 8 * 60 * 60],
         ...COMMON_DEPLOY_PARAMS,
     });
     const positionManager = (await hre.ethers.getContractAt(
@@ -87,7 +89,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             orderManager.address,
             positionManager.address,
             feeCollector.address,
-            60,
+            60 * 5, // todo testing
         ],
         // libraries: {
         //     ValidationHelper: validationHelperArtifact.address,
@@ -96,7 +98,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
 
-    await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(positionManager.address));
+    // await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(positionManager.address));
 
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
