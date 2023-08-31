@@ -127,7 +127,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('eim Id:', order.orderId);
+//             console.log('eim Id:', order.orderId);
 
             try
                 this.executeIncreaseOrder(
@@ -137,11 +137,11 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('c orderId:', order.orderId);
+//                 console.log('c orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('error:', reason);
+//                 console.log('error:', reason);
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
-                console.log('canceled:', order.orderId);
+//                 console.log('canceled:', order.orderId);
             }
         }
     }
@@ -151,7 +151,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('elo orderId:', order.orderId);
+//             console.log('elo orderId:', order.orderId);
 
             try
                 this.executeIncreaseOrder(
@@ -161,9 +161,9 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('c orderId:', order.orderId);
+//                 console.log('c orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('error:', reason);
+//                 console.log('error:', reason);
             }
         }
     }
@@ -174,7 +174,7 @@ contract Executor is IExecutor, Pausable {
         uint8 level,
         uint256 commissionRatio
     ) external override onlyPositionKeeper whenNotPaused {
-        console.log('eio orderId:', _orderId);
+//         console.log('eio orderId:', _orderId);
 
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
@@ -327,7 +327,7 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
-        console.log('eio orderId:', _orderId);
+//         console.log('eio orderId:', _orderId);
     }
 
     function executeDecreaseMarketOrders(
@@ -335,7 +335,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('edmo orderId:', order.orderId);
+//             console.log('edmo orderId:', order.orderId);
 
             try
                 this.executeDecreaseOrder(
@@ -345,11 +345,11 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('completed orderId:', order.orderId);
+//                 console.log('completed orderId:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('error:', reason);
+//                 console.log('error:', reason);
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
-                console.log('canceled:', order.orderId);
+//                 console.log('canceled:', order.orderId);
             }
         }
     }
@@ -359,7 +359,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('edlo orderId:', order.orderId);
+//             console.log('edlo orderId:', order.orderId);
 
             try
                 this.executeDecreaseOrder(
@@ -369,9 +369,9 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                console.log('completed. index:', order.orderId);
+//                 console.log('completed. index:', order.orderId);
             } catch Error(string memory reason) {
-                console.log('error:', reason);
+//                 console.log('error:', reason);
             }
         }
     }
@@ -391,7 +391,7 @@ contract Executor is IExecutor, Pausable {
         uint8 level,
         uint256 commissionRatio
     ) internal {
-        console.log('edo orderId:', _orderId);
+//         console.log('edo orderId:', _orderId);
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
@@ -560,7 +560,7 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
-        console.log('edo orderId:', _orderId);
+//         console.log('edo orderId:', _orderId);
     }
 
     function setPricesAndExecuteADL(
