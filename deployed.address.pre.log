@@ -1,24 +1,24 @@
 Accounts after deployment
-┌─────────┬──────────────────────┬──────────────────────────────────────────────┬────────────────────────────┐
-│ (index) │         name         │                   account                    │          balance           │
-├─────────┼──────────────────────┼──────────────────────────────────────────────┼────────────────────────────┤
-│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99749662716503915' │
-│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99749662716503915' │
-│    2    │      'operator'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │        '1000000.0'         │
-│    3    │     'treasurer'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │        '1000000.0'         │
-│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99749662716503915' │
-│    5    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99749662716503915' │
-│    6    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99749662716503915' │
-│    7    │   'teamAndAdvisor'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
-│    8    │  'privatePlacement'  │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
-│    9    │     'community'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
-│   10    │   'initLiquidity'    │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
-│   11    │  'marketOperation'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
-│   12    │     'ecoKeeper'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
-│   13    │ 'developmentReserve' │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
-│   14    │       'trader'       │ '0xe52317Dbf949073Cbd94864f7A740f97627acc89' │        '1000000.0'         │
-│   15    │       'lpUser'       │ '0xe52317Dbf949073Cbd94864f7A740f97627acc89' │        '1000000.0'         │
-└─────────┴──────────────────────┴──────────────────────────────────────────────┴────────────────────────────┘
+┌─────────┬──────────────────────┬──────────────────────────────────────────────┬─────────────────────────────┐
+│ (index) │         name         │                   account                    │           balance           │
+├─────────┼──────────────────────┼──────────────────────────────────────────────┼─────────────────────────────┤
+│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997556188481736265' │
+│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997556188481736265' │
+│    2    │      'operator'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
+│    3    │     'treasurer'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
+│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997556188481736265' │
+│    5    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997556188481736265' │
+│    6    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997556188481736265' │
+│    7    │   'teamAndAdvisor'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
+│    8    │  'privatePlacement'  │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
+│    9    │     'community'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
+│   10    │   'initLiquidity'    │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
+│   11    │  'marketOperation'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
+│   12    │     'ecoKeeper'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
+│   13    │ 'developmentReserve' │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
+│   14    │       'trader'       │ '0xe52317Dbf949073Cbd94864f7A740f97627acc89' │         '1000000.0'         │
+│   15    │       'lpUser'       │ '0xe52317Dbf949073Cbd94864f7A740f97627acc89' │         '1000000.0'         │
+└─────────┴──────────────────────┴──────────────────────────────────────────────┴─────────────────────────────┘
 
 Deployments
 ┌────────────────────┬──────────────────────────────────────────────┐
@@ -40,16 +40,16 @@ Deployments
 │    OrderManager    │ '0xb07fB1a2F76574FD5243C1aA25Bb992cE9490B9C' │
 │       Router       │ '0x72336C1702f9725e65D6aDecE2b30Ca714903BfF' │
 │      Executor      │ '0xD2351c3f1D876274162aae2127B00829cae069Da' │
-│    TestCallBack    │ '0xf4011F3Cb6e77a14C5943192Ac7197fEfE887b63' │
-│        MYX         │ '0x9470Ca8ad8FC4474B09c58B9C445bc1cA8866804' │
-│       RaMYX        │ '0x509f6c6C41C671d7F4aa223a6219bD9C889f23c0' │
-│       StMYX        │ '0xcf0220a29D13d47b3d4f2DC59E7468F9e606B097' │
-│       Vester       │ '0x48ABD3Ca302d693Ce71417516E7e6d3f83974Ff4' │
-│    StakingPool     │ '0xb679e480650730032D9a6f762eaAf2EC79d08149' │
-│   LPStakingPool    │ '0x2fa8e11dF61515913EFf40C95bf25C00dc72CDb8' │
-│     Convertor      │ '0x75608fD59edb71152C7360F789B3245Cd1CB4Afc' │
-│ RewardDistributor  │ '0xabDE58dBa1E456BE2BaC701CE40aCF4A3BFfA1dB' │
-│   FeeDistributor   │ '0xbe33f8b86faE5cB59579AFbCAC0F29ABFAd78E85' │
+│    TestCallBack    │ '0x295528430103cEBC738CbF3cca765ee9d2b11011' │
+│        MYX         │ '0xf4011F3Cb6e77a14C5943192Ac7197fEfE887b63' │
+│       RaMYX        │ '0x9470Ca8ad8FC4474B09c58B9C445bc1cA8866804' │
+│       StMYX        │ '0x509f6c6C41C671d7F4aa223a6219bD9C889f23c0' │
+│       Vester       │ '0xcf0220a29D13d47b3d4f2DC59E7468F9e606B097' │
+│    StakingPool     │ '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583' │
+│   LPStakingPool    │ '0xb679e480650730032D9a6f762eaAf2EC79d08149' │
+│     Convertor      │ '0x2fa8e11dF61515913EFf40C95bf25C00dc72CDb8' │
+│ RewardDistributor  │ '0x75608fD59edb71152C7360F789B3245Cd1CB4Afc' │
+│   FeeDistributor   │ '0xabDE58dBa1E456BE2BaC701CE40aCF4A3BFfA1dB' │
 └────────────────────┴──────────────────────────────────────────────┘
 
 MockedTokens
