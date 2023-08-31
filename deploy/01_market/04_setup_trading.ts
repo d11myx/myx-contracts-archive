@@ -89,7 +89,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             orderManager.address,
             positionManager.address,
             feeCollector.address,
-            60,
+            60 * 5, // todo testing
         ],
         // libraries: {
         //     ValidationHelper: validationHelperArtifact.address,

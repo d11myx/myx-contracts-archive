@@ -4,6 +4,7 @@ import {
     getOraclePriceFeed,
     getOrderManager,
     getPool,
+    getPositionManager,
     getRoleManager,
     getRouter,
     getTestCallBack,
@@ -26,6 +27,7 @@ async function main() {
 
     const router = await getRouter();
     const orderManager = await getOrderManager();
+    const positionManager = await getPositionManager();
     const executor = await getExecutor();
     const oraclePriceFeed = await getOraclePriceFeed();
     const roleManager = await getRoleManager();
@@ -58,6 +60,8 @@ async function main() {
 
     console.log(await btcFeed.isAdmin(keeper));
     console.log(await ethFeed.isAdmin(keeper));
+
+    await positionManager.updateFundingInterval(10 * 60);
 
     console.log(`testCallBack:`, testCallBack.address);
 
