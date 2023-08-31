@@ -20,7 +20,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import './FeeManager.sol';
 
-contract PositionManager is FeeManager, IPositionManager, Pausable {
+contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -49,14 +49,15 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
     constructor(
         IAddressesProvider addressProvider,
         IPool pool,
+        address _pledgeAddress,
         IFeeCollector feeCollector,
         uint256 _fundingInterval
-    ) FeeManager(addressProvider, pool, feeCollector) {
+    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {
         fundingInterval = _fundingInterval;
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutor, 'Position Manager: forbidden');
+        require(msg.sender == addressExecutor, 'forbidden');
         _;
     }
 
@@ -273,6 +274,8 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         uint256 referenceRate,
         uint256 oraclePrice
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        require(pair.stableToken == pledgeAddress, '!=plege');
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
 
@@ -326,7 +329,6 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         // transfer collateral
         uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
         if (transferOut > 0) {
-            IPool.Pair memory pair = pool.getPair(pairIndex);
             pool.transferTokenTo(pair.stableToken, account, transferOut);
         }
 
