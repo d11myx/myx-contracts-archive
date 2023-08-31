@@ -98,7 +98,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
 
-    await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(positionManager.address));
+    // await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(positionManager.address));
 
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
