@@ -679,13 +679,7 @@ contract Executor is IExecutor, Pausable {
             position.isLong,
             position.positionAmount
         );
-        int256 fundingFee = positionManager.getFundingFee(
-            false,
-            position.account,
-            position.pairIndex,
-            position.isLong,
-            position.positionAmount
-        );
+        int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
         int256 exposureAsset = int256(position.collateral) +
             unrealizedPnl -
             int256(tradingFee) +
