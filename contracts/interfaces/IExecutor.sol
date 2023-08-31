@@ -72,19 +72,31 @@ interface IExecutor {
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
-    function setPricesAndExecuteMarketOrders(
+    function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        ExecuteOrder[] memory increaseOrders,
+        ExecuteOrder[] memory increaseOrders
+    ) external;
+
+    function setPricesAndExecuteDecreaseMarketOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
         ExecuteOrder[] memory decreaseOrders
     ) external;
 
-    function setPricesAndExecuteLimitOrders(
+    function setPricesAndExecuteIncreaseLimitOrders(
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        ExecuteOrder[] memory increaseOrders,
+        ExecuteOrder[] memory increaseOrders
+    ) external;
+
+    function setPricesAndExecuteDecreaseLimitOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        uint256 timestamp,
         ExecuteOrder[] memory decreaseOrders
     ) external;
 
