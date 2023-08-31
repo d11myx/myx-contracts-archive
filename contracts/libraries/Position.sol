@@ -20,7 +20,7 @@ library Position {
         uint256 collateral;
         uint256 positionAmount;
         uint256 averagePrice;
-        int256 fundRateIndex;
+        int256 fundingFeeTracker;
     }
 
     function get(
