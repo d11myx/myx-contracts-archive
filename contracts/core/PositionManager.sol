@@ -297,7 +297,7 @@ contract PositionManager is FeeManager, Pausable {
         }
 
         // update funding fee
-        updateFundingRate(pairIndex, oraclePrice);
+        _updateFundingRate(pairIndex, oraclePrice);
 
         // settlement trading fee and funding fee
         int256 afterCollateral;
@@ -365,7 +365,7 @@ contract PositionManager is FeeManager, Pausable {
         uint256 beforePositionAmount = position.positionAmount;
 
         // update funding fee
-        updateFundingRate(pairIndex, oraclePrice);
+        _updateFundingRate(pairIndex, oraclePrice);
 
         // settlement trading fee and funding fee
         int256 afterCollateral;
@@ -477,7 +477,13 @@ contract PositionManager is FeeManager, Pausable {
         return (int256(position.positionAmount) * fundingFeeTracker) / int256(PrecisionUtils.fundingRatePrecision());
     }
 
-    function updateFundingRate(uint256 _pairIndex, uint256 _price) public whenNotPaused {
+    function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        _updateFundingRate(_pairIndex, price);
+    }
+
+    function _updateFundingRate(uint256 _pairIndex, uint256 _price) internal {
         if (lastFundingRateUpdateTimes[_pairIndex] == 0) {
             lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
             return;
@@ -487,7 +493,7 @@ contract PositionManager is FeeManager, Pausable {
         }
         int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
 
-        globalFundingFeeTracker[_pairIndex] = globalFundingFeeTracker[_pairIndex] + nextFundingRate * int256(_price);
+        globalFundingFeeTracker[_pairIndex] = globalFundingFeeTracker[_pairIndex] + nextFundingRate * int256(_price) / int256(PrecisionUtils.pricePrecision());
         lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
 
         // fund rate for settlement lp

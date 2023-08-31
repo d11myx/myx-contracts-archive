@@ -90,33 +90,33 @@ export const getBlockTimestamp = async (blockNumber?: number): Promise<number> =
     return block.timestamp;
 };
 
-async function latest() {
+export async function latest() {
     const block = await hre.ethers.provider.getBlock('latest');
     return BigNumber.from(block.timestamp);
 }
 
-async function latestBlock() {
+export async function latestBlock() {
     const block = await hre.ethers.provider.getBlock('latest');
     return BigNumber.from(block.number);
 }
 
-async function advanceBlock() {
+export async function advanceBlock() {
     await hre.ethers.provider.send('evm_mine', []);
 }
 
-async function increase(duration: any) {
+export async function increase(duration: any) {
     if (!BigNumber.isBigNumber(duration)) {
         duration = BigNumber.from(duration);
     }
 
-    if (duration.isNeg()) throw Error(`Cannot increase time by a negative amount (${duration})`);
+    if (duration.isNegative()) throw Error(`Cannot increase time by a negative amount (${duration})`);
 
     await hre.ethers.provider.send('evm_increaseTime', [duration.toNumber()]);
 
     await advanceBlock();
 }
 
-async function increaseTo(target: any) {
+export async function increaseTo(target: any) {
     if (!BigNumber.isBigNumber(target)) {
         target = BigNumber.from(target);
     }
@@ -128,7 +128,7 @@ async function increaseTo(target: any) {
     return increase(diff);
 }
 
-const Duration = {
+export const Duration = {
     seconds: function (val: any) {
         return BigNumber.from(val);
     },
