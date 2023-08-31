@@ -56,7 +56,7 @@ interface IOrderManager {
 
     function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory);
 
-    function updatePositionManager(address newAddress) external;
+    // function updatePositionManager(address newAddress) external;
 
     function createOrder(TradingTypes.CreateOrderRequest memory request) external returns (uint256 orderId);
 

@@ -188,7 +188,7 @@ export async function deployTrading(
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
-    await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
+    // await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
 
     await positionManager.setExecutor(executor.address);
     await positionManager.setOrderManager(orderManager.address);
