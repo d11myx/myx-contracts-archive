@@ -18,15 +18,15 @@ interface IFeeManager {
     event ClaimedReferralsTradingFee(address account, address claimToken, uint256 amount);
     event ClaimedUserTradingFee(address account, address claimToken, uint256 amount);
 
-    function stakingTradingFee(address _token) external view returns (uint256);
+    function stakingTradingFee() external view returns (uint256);
 
-    function distributorTradingFee(address _token) external view returns (uint256);
+    function distributorTradingFee() external view returns (uint256);
 
-    function userTradingFee(address _token, address _account) external view returns (uint256);
+    function userTradingFee(address _account) external view returns (uint256);
 
-    function referralsTradingFee(address _token) external view returns (uint256);
+    // function referralsTradingFee() external view returns (uint256);
 
-    function claimReferralsTradingFee(address claimToken) external returns (uint256);
+    // function claimReferralsTradingFee(address claimToken) external returns (uint256);
 
     function claimStakingTradingFee(address claimToken) external returns (uint256);
 
