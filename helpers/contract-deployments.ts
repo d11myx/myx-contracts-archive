@@ -23,7 +23,7 @@ import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
-import { getWETH } from './contract-getters';
+import { getToken, getWETH } from './contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -143,17 +143,20 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
+    pledge:Token,
     validationHelper: Contract,
 ) {
     console.log(` - setup trading`);
 
     const weth = await getWETH();
+    // const usdt = await getToken();
 
     let feeCollector = (await deployContract('FeeCollector', [addressProvider.address])) as any as FeeCollector;
 
     let positionManager = (await deployContract('PositionManager', [
         addressProvider.address,
         pool.address,
+        pledge.address,
         feeCollector.address,
         8 * 60 * 60,
     ])) as any as PositionManager;
@@ -185,7 +188,7 @@ export async function deployTrading(
     ])) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
-    await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
+    // await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
 
     await positionManager.setExecutor(executor.address);
     await positionManager.setOrderManager(orderManager.address);
