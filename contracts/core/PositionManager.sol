@@ -20,7 +20,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import './FeeManager.sol';
 
-contract PositionManager is FeeManager, IPositionManager, Pausable {
+contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -31,12 +31,11 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
 
     mapping(bytes32 => Position.Info) public positions;
 
-    // mapping(uint256 => int256) public override getExposedPositions;
     mapping(uint256 => uint256) public override longTracker;
     mapping(uint256 => uint256) public override shortTracker;
 
     // gobleFundingRateIndex tracks the funding rates based on utilization
-    mapping(uint256 => int256) public gobleFundingRateIndex;
+    mapping(uint256 => int256) public globalFundingFeeTracker;
 
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
@@ -49,14 +48,15 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
     constructor(
         IAddressesProvider addressProvider,
         IPool pool,
+        address _pledgeAddress,
         IFeeCollector feeCollector,
         uint256 _fundingInterval
-    ) FeeManager(addressProvider, pool, feeCollector) {
+    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {
         fundingInterval = _fundingInterval;
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutor, 'Position Manager: forbidden');
+        require(msg.sender == addressExecutor, 'forbidden');
         _;
     }
 
@@ -93,9 +93,9 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         tradingFee = _tradingFee(_pairIndex, _isLong, sizeDelta);
         afterCollateral -= int256(tradingFee);
 
-        _updateFee(pair, _account, _keeper, sizeDelta, tradingFee, vipRate, referenceRate);
+        _distributeTradingFee(pair, _account, _keeper, sizeDelta, tradingFee, vipRate, referenceRate);
 
-        fundingFee = getFundingFee(true, _account, _pairIndex, _isLong, _sizeAmount);
+        fundingFee = getFundingFee(_account, _pairIndex, _isLong);
         if (fundingFee >= 0) {
             if (_isLong) {
                 afterCollateral -= fundingFee;
@@ -273,6 +273,8 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         uint256 referenceRate,
         uint256 oraclePrice
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        require(pair.stableToken == pledgeAddress, '!=plege');
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
 
@@ -295,10 +297,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         }
 
         // update funding fee
-        updateFundingRate(pairIndex, oraclePrice);
-
-        position.fundRateIndex = gobleFundingRateIndex[pairIndex];
-        position.positionAmount += sizeAmount;
+        _updateFundingRate(pairIndex, oraclePrice);
 
         // settlement trading fee and funding fee
         int256 afterCollateral;
@@ -319,6 +318,8 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         require(afterCollateral > 0, 'collateral not enough');
 
         position.collateral = uint256(afterCollateral);
+        position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
+        position.positionAmount += sizeAmount;
 
         // settlement lp position
         _settleLPPosition(pairIndex, sizeAmount, isLong, true, oraclePrice);
@@ -326,7 +327,6 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         // transfer collateral
         uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
         if (transferOut > 0) {
-            IPool.Pair memory pair = pool.getPair(pairIndex);
             pool.transferTokenTo(pair.stableToken, account, transferOut);
         }
 
@@ -341,7 +341,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             beforePositionAmount,
             position.positionAmount,
             position.averagePrice,
-            position.fundRateIndex,
+            position.fundingFeeTracker,
             0
         );
     }
@@ -365,10 +365,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
         uint256 beforePositionAmount = position.positionAmount;
 
         // update funding fee
-        updateFundingRate(pairIndex, oraclePrice);
-
-        position.fundRateIndex = gobleFundingRateIndex[pairIndex];
-        position.positionAmount -= sizeAmount;
+        _updateFundingRate(pairIndex, oraclePrice);
 
         // settlement trading fee and funding fee
         int256 afterCollateral;
@@ -383,10 +380,13 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             referenceRate,
             oraclePrice
         );
+
+        position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
+        position.positionAmount -= sizeAmount;
+
         // settlement lp position
         _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
-        // pnl
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
 
         // final collateral & transfer out
@@ -426,7 +426,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             beforePositionAmount,
             position.positionAmount,
             position.averagePrice,
-            position.fundRateIndex,
+            position.fundingFeeTracker,
             pnl
         );
     }
@@ -468,19 +468,22 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
     }
 
     function getFundingFee(
-        bool _increase,
         address _account,
         uint256 _pairIndex,
-        bool _isLong,
-        uint256 _sizeAmount //TODO _sizeAmount or sizeDelta ?
+        bool _isLong
     ) public view override returns (int256) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
-        //todo  Position is converted to margin currency
-        int256 fundingRate = gobleFundingRateIndex[_pairIndex] - position.fundRateIndex;
-        return (int256(position.positionAmount) * fundingRate) / int256(PrecisionUtils.fundingRatePrecision());
+        int256 fundingFeeTracker = globalFundingFeeTracker[_pairIndex] - position.fundingFeeTracker;
+        return (int256(position.positionAmount) * fundingFeeTracker) / int256(PrecisionUtils.fundingRatePrecision());
     }
 
-    function updateFundingRate(uint256 _pairIndex, uint256 _price) public whenNotPaused {
+    function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        _updateFundingRate(_pairIndex, price);
+    }
+
+    function _updateFundingRate(uint256 _pairIndex, uint256 _price) internal {
         if (lastFundingRateUpdateTimes[_pairIndex] == 0) {
             lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
             return;
@@ -489,12 +492,12 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
             return;
         }
         int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
-        gobleFundingRateIndex[_pairIndex] = gobleFundingRateIndex[_pairIndex] + nextFundingRate;
+
+        globalFundingFeeTracker[_pairIndex] = globalFundingFeeTracker[_pairIndex] + nextFundingRate * int256(_price) / int256(PrecisionUtils.pricePrecision());
         lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
-        //todo  fund rate for settlement lp
 
+        // fund rate for settlement lp
         uint256 lpPosition;
-
         if (longTracker[_pairIndex] > shortTracker[_pairIndex]) {
             lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
             nextFundingRate > 0
@@ -519,7 +522,7 @@ contract PositionManager is FeeManager, IPositionManager, Pausable {
                 );
         }
 
-        emit UpdateFundingRate(_pairIndex, gobleFundingRateIndex[_pairIndex], lastFundingRateUpdateTimes[_pairIndex]);
+        emit UpdateFundingRate(_pairIndex, nextFundingRate, lastFundingRateUpdateTimes[_pairIndex]);
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
