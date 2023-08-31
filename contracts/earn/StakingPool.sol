@@ -145,7 +145,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
             return 0;
         }
 
-        uint256 pendingReward = IFeeManager(address(positionManager)).claimStakingTradingFee(rewardToken);
+        uint256 pendingReward = IFeeManager(address(positionManager)).claimStakingTradingFee();
         if (pendingReward > 0) {
             cumulativeRewardPerToken += pendingReward.mulDiv(PRECISION, totalSupply);
         }
