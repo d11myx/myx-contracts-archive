@@ -35,8 +35,6 @@ contract PositionManager is FeeManager, Pausable {
     mapping(uint256 => uint256) public override longTracker;
     mapping(uint256 => uint256) public override shortTracker;
 
-
-
     // gobleFundingRateIndex tracks the funding rates based on utilization
     mapping(uint256 => int256) public gobleFundingRateIndex;
 
@@ -47,13 +45,16 @@ contract PositionManager is FeeManager, Pausable {
 
     address public addressExecutor;
     address public addressOrderManager;
+    address public immutable pledgeAddress;
 
     constructor(
         IAddressesProvider addressProvider,
         IPool pool,
+        address _pledgeAddress,
         IFeeCollector feeCollector,
         uint256 _fundingInterval
     ) FeeManager(addressProvider, pool, feeCollector) {
+        pledgeAddress = _pledgeAddress;
         fundingInterval = _fundingInterval;
     }
 
@@ -275,6 +276,8 @@ contract PositionManager is FeeManager, Pausable {
         uint256 referenceRate,
         uint256 oraclePrice
     ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        require(pair.stableToken == pledgeAddress, '!=plege');
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
 
@@ -328,7 +331,6 @@ contract PositionManager is FeeManager, Pausable {
         // transfer collateral
         uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
         if (transferOut > 0) {
-            IPool.Pair memory pair = pool.getPair(pairIndex);
             pool.transferTokenTo(pair.stableToken, account, transferOut);
         }
 
