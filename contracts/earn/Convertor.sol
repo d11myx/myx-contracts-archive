@@ -47,7 +47,7 @@ contract Convertor is ReentrancyGuard, Ownable {
     }
 
     function convert(uint256 amount, uint256 lockDays) external {
-        console.log('convert amount %s lockDays %s', amount, lockDays);
+        // console.log('convert amount %s lockDays %s', amount, lockDays);
         require(
             lockDays == 0 || lockDays == 14 || lockDays == 30 || lockDays == 90 || lockDays == 180,
             'Convertor: invalid unlock period'
@@ -73,7 +73,7 @@ contract Convertor is ReentrancyGuard, Ownable {
 
         // burn remaining raMYX and transfer myx
         uint256 remainingAmount = amount - convertAmount;
-        console.log('convert convertAmount %s remaining %s', convertAmount, remainingAmount);
+        // console.log('convert convertAmount %s remaining %s', convertAmount, remainingAmount);
         IBaseToken(convertToken).burn(address(this), remainingAmount);
         IERC20(claimToken).safeTransfer(communityPool, remainingAmount);
 
@@ -93,7 +93,7 @@ contract Convertor is ReentrancyGuard, Ownable {
     }
 
     function _claim(address account) internal {
-        console.log('claim account %s timestamp %s', account, block.timestamp);
+        // console.log('claim account %s timestamp %s', account, block.timestamp);
 
         address account = msg.sender;
 
@@ -114,13 +114,13 @@ contract Convertor is ReentrancyGuard, Ownable {
                 Conversion storage lastConversion = conversions[conversions.length - 1];
                 conversions[i] = lastConversion;
                 conversions.pop();
-                console.log('convert pop i %s', i);
+                // console.log('convert pop i %s', i);
             } else {
                 conversion.claimedAmount += nextVestedAmount;
                 conversion.lastVestingTimes = block.timestamp;
             }
             claimableAmount += nextVestedAmount;
-            console.log('convert nextVestedAmount %s claimableAmount %s', nextVestedAmount, claimableAmount);
+            // console.log('convert nextVestedAmount %s claimableAmount %s', nextVestedAmount, claimableAmount);
             if (conversions.length == 0 || i == 0) {
                 break;
             }
@@ -135,7 +135,7 @@ contract Convertor is ReentrancyGuard, Ownable {
     function claimableAmount(address _account) public view returns (uint256 claimableAmount) {
         Conversion[] memory conversions = userConversions[_account];
         for (uint256 i = 0; i < conversions.length; i++) {
-            console.log('claimableAmount i %s', i);
+            // console.log('claimableAmount i %s', i);
             Conversion memory conversion = conversions[i];
             uint256 timeDiff = block.timestamp - conversion.lastVestingTimes;
             uint256 nextVestedAmount = (conversion.convertAmount * timeDiff) / conversion.lockPeriod;
@@ -144,7 +144,7 @@ contract Convertor is ReentrancyGuard, Ownable {
                 nextVestedAmount = conversion.convertAmount - conversion.claimedAmount;
             }
             claimableAmount += nextVestedAmount;
-            console.log('nextVestedAmount %s claimableAmount %s', nextVestedAmount, claimableAmount);
+            // console.log('nextVestedAmount %s claimableAmount %s', nextVestedAmount, claimableAmount);
         }
     }
 
