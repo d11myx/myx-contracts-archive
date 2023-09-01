@@ -14,16 +14,16 @@ function commentOutConsoleLogs(filePath: string): void {
     if (comment) {
         for (const line of lines) {
             if (line.trim() == "// import 'hardhat/console.sol';") {
-                modifiedLines.push(`// ${line}`);
+                modifiedLines.push(line.replace('// ', ''));
             } else {
                 if (line.trim().startsWith('console.log(')) {
                     inConsoleLog = !line.trim().endsWith(');');
-                    modifiedLines.push(line.replace('// ', ''));
+                    modifiedLines.push(line.replace('//             ', ''));
                 } else if (inConsoleLog && line.endsWith(');')) {
                     inConsoleLog = false;
-                    modifiedLines.push(line.replace('//                 ', ''));
+                    modifiedLines.push(line.replace('//             ', ''));
                 } else if (inConsoleLog) {
-                    modifiedLines.push(line.replace('//                 ', ''));
+                    modifiedLines.push(line.replace('//             ', ''));
                 } else {
                     modifiedLines.push(line);
                 }
