@@ -446,32 +446,23 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function _addLiquidity(
-        address _account,
-        address recipient,
+    // calculate lp amount for add liquidity
+    function getMintLpAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
-        uint256 _stableAmount,
-        bytes calldata data
-    ) private returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
-        require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
+        uint256 _stableAmount
+    ) external override view returns (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount,
+            uint256 stableFeeAmount, uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount) {
+        if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
         IPool.Vault memory vault = getVault(_pairIndex);
-        _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
-
-        uint256 afterFeeIndexAmount;
-        uint256 afterFeeStableAmount;
 
         // transfer fee
         uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
         uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
-
-        feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(indexFeeAmount);
-
-        feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(stableFeeAmount);
 
         afterFeeIndexAmount = _indexAmount - indexFeeAmount;
         afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -513,7 +504,6 @@ contract Pool is IPool, Roleable {
                 slipAmount = AmountMath.getIndexAmount(slipDelta, price);
 
                 afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(slipAmount);
             } else if (stableTotalDelta > expectStableDelta) {
                 uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
                 uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
@@ -527,7 +517,6 @@ contract Pool is IPool, Roleable {
                 slipAmount = slipDelta;
 
                 afterFeeStableAmount = afterFeeStableAmount - slipDelta;
-                feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(slipDelta);
             }
         }
         // mint lp
@@ -535,6 +524,28 @@ contract Pool is IPool, Roleable {
             indexDepositDelta + afterFeeStableAmount - slipDelta,
             lpFairPrice(_pairIndex)
         );
+
+        return (mintAmount, slipToken, slipAmount, indexFeeAmount, stableFeeAmount, afterFeeIndexAmount, afterFeeStableAmount);
+    }
+
+    function _addLiquidity(
+        address _account,
+        address recipient,
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount,
+        bytes calldata data
+    ) private returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
+        require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
+
+        IPool.Pair memory pair = getPair(_pairIndex);
+        require(pair.pairToken != address(0), 'invalid pair');
+
+        _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
+
+        (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount, uint256 stableFeeAmount,
+            uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount);
+
         IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
