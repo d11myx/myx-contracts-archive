@@ -169,17 +169,21 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     function createOrderTpSl(
         CreateOrderTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId) {
+        uint256 orderAmount;
         if (request.isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(request.orderId, request.tradeType);
             require(order.account == msg.sender, 'no access');
+            orderAmount = order.sizeAmount;
         } else {
             TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(request.orderId, request.tradeType);
             require(order.account == msg.sender, 'no access');
+            orderAmount = order.sizeAmount;
         }
 
         if (request.tp > 0 || request.sl > 0) {
-            bytes32 orderKey = PositionKey.getOrderKey(request.isIncrease, request.tradeType, request.orderId);
+            require(request.tp <= orderAmount && request.sl <= orderAmount, 'exceeds order size');
 
+            bytes32 orderKey = PositionKey.getOrderKey(request.isIncrease, request.tradeType, request.orderId);
             orderManager.saveOrderTpSl(
                 orderKey,
                 TradingTypes.OrderWithTpSl({
