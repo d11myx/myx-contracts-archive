@@ -20,7 +20,7 @@
         "deploy": "npx hardhat deploy",
         "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'",
         "sizer": "hardhat size-contracts",
-        "comment-out":"ts-node scripts/commentOutConsoleLogs.ts"
+        "comment-out":"ts-node scripts/commentOutConsole.ts"
     },
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.2.3",
