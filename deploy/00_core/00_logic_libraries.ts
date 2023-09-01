@@ -6,11 +6,11 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    // await deploy('ValidationHelper', {
-    //     from: deployer,
-    //     args: [],
-    //     ...COMMON_DEPLOY_PARAMS,
-    // });
+    await deploy('LiquidationLogic', {
+        from: deployer,
+        args: [],
+        ...COMMON_DEPLOY_PARAMS,
+    });
 
     return true;
 };

@@ -32,7 +32,7 @@ async function main() {
     const pool = await getPool();
 
     console.log(`router:`, router.address);
-    console.log(`index:`, await executor.increaseMarketOrderStartIndex());
+    // console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
     // console.log(await pool.getPair(0));
     // console.log(await pool.getPair(1));
