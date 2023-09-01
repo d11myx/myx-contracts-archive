@@ -93,7 +93,7 @@ contract PositionManager is FeeManager, Pausable {
         tradingFee = _tradingFee(_pairIndex, _isLong, sizeDelta);
         afterCollateral -= int256(tradingFee);
 
-        _distributeTradingFee(pair, _account, _keeper, sizeDelta, tradingFee, vipRate, referenceRate);
+        (uint256 lpAmount) = _distributeTradingFee(pair, _account, _keeper, sizeDelta, tradingFee, vipRate, referenceRate);
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
         if (fundingFee >= 0) {
@@ -109,6 +109,8 @@ contract PositionManager is FeeManager, Pausable {
                 afterCollateral -= fundingFee;
             }
         }
+
+        emit TakeFundingFeeAddTraderFee(_account, _pairIndex, sizeDelta, tradingFee, fundingFee, lpAmount);
     }
 
     function getExposedPositions(uint256 _pairIndex) public view override returns (int256) {
