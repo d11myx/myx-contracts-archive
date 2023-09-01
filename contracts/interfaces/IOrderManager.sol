@@ -5,6 +5,7 @@ import '../libraries/TradingTypes.sol';
 
 interface IOrderManager {
     event UpdatePositionManager(address oldAddress, address newAddress);
+    event CancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, string reason);
 
     event CreateIncreaseOrder(
         address account,
@@ -58,7 +59,7 @@ interface IOrderManager {
 
     function createOrder(TradingTypes.CreateOrderRequest memory request) external returns (uint256 orderId);
 
-    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease) external;
+    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease, string memory reason) external;
 
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
 
