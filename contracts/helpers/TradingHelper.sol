@@ -5,7 +5,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IOraclePriceFeed.sol';
 import '../interfaces/IPool.sol';
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library TradingHelper {
     using PrecisionUtils for uint256;
