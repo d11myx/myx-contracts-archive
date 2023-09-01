@@ -18,11 +18,11 @@
 
 //     before(async () => {
 //         const {
-//             users: [depositor],
-//             btc,
-//             usdt,
-//             pool,
-//             oraclePriceFeed,
+//         users: [depositor],
+//         btc,
+//         usdt,
+//         pool,
+//         oraclePriceFeed,
 //         } = testEnv;
 //         // add liquidity
 //         const indexAmount = ethers.utils.parseUnits('10000', 18);
@@ -32,8 +32,8 @@
 //         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
 //         await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
 //         await testCallBack
-//             .connect(depositor.signer)
-//             .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+//         .connect(depositor.signer)
+//         .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 //         const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
 //         const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
 //         const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
@@ -42,41 +42,41 @@
 
 //     describe('Router: collateral test cases', () => {
 //         it('hava a postion and collateral, input collateral = 0', async () => {
-//             const {
-//                 keeper,
-//                 users: [trader],
-//                 usdt,
-//                 router,
-//                 executor,
-//                 orderManager,
-//                 positionManager,
-//             } = testEnv;
+//         const {
+//         keeper,
+//         users: [trader],
+//         usdt,
+//         router,
+//         executor,
+//         orderManager,
+//         positionManager,
+//         } = testEnv;
 
-//             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-//             console.log(`before position: `, traderPosition);
+//         const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
+//         console.log(`before position: `, traderPosition);
 
-//             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
-//                 account: trader.address,
-//                 pairIndex: pairIndex,
-//                 tradeType: TradeType.MARKET,
-//                 collateral: 0,
-//                 openPrice: ethers.utils.parseUnits('30000', 30),
-//                 isLong: true,
-//                 sizeAmount: ethers.utils.parseUnits('5', 18),
-//             };
+//         const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
+//         account: trader.address,
+//         pairIndex: pairIndex,
+//         tradeType: TradeType.MARKET,
+//         collateral: 0,
+//         openPrice: ethers.utils.parseUnits('30000', 30),
+//         isLong: true,
+//         sizeAmount: ethers.utils.parseUnits('5', 18),
+//         };
 
-//             const orderId = await orderManager.ordersIndex();
-//             console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+//         const orderId = await orderManager.ordersIndex();
+//         console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-//             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-//             await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
+//         await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+//         await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
-//             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-//             console.log(`after position :`, positionAfter);
+//         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
+//         console.log(`after position :`, positionAfter);
 
-//             expect(positionAfter.positionAmount).to.be.eq(
-//                 traderPosition.positionAmount.add(ethers.utils.parseUnits('5', 18)),
-//             );
+//         expect(positionAfter.positionAmount).to.be.eq(
+//         traderPosition.positionAmount.add(ethers.utils.parseUnits('5', 18)),
+//         );
 //         });
 //     });
 // });

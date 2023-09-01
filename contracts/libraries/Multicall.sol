@@ -1,4 +1,4 @@
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 pragma abicoder v2;
 
 import '../interfaces/IMulticall.sol';

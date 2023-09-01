@@ -6,7 +6,7 @@ import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/TradingTypes.sol';
 import '../libraries/PositionKey.sol';
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library Position {
     using Int256Utils for int256;
