@@ -45,8 +45,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     mapping(bytes32 => uint256) public positionDecreaseTotalAmount;
 
-    mapping(bytes32 => mapping(TradingTypes.TradeType => bool)) public positionHasTpSl; // PositionKey -> TradeType -> bool
-
     IPool public immutable pool;
     IPositionManager public immutable positionManager;
     address public addressExecutor;
@@ -352,15 +350,10 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             order.abovePrice = !_request.isLong;
 
             decreaseLimitOrders[ordersIndex] = order;
-            bytes32 positionKey = PositionKey.getPositionKey(_request.account, _request.pairIndex, _request.isLong);
-            positionHasTpSl[positionKey][TradingTypes.TradeType.TP] = true;
         } else if (_request.tradeType == TradingTypes.TradeType.SL) {
             order.abovePrice = _request.isLong;
 
             decreaseLimitOrders[ordersIndex] = order;
-
-            bytes32 positionKey = PositionKey.getPositionKey(_request.account, _request.pairIndex, _request.isLong);
-            positionHasTpSl[positionKey][TradingTypes.TradeType.SL] = true;
         } else {
             revert('invalid trade type');
         }
@@ -438,14 +431,11 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             })
         );
 
-        bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
-
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
             delete decreaseMarketOrders[order.orderId];
         } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             delete decreaseLimitOrders[order.orderId];
         } else {
-            positionHasTpSl[key][order.tradeType] = false;
             delete decreaseLimitOrders[order.orderId];
         }
 
@@ -536,14 +526,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         ) {
             positionDecreaseTotalAmount[positionKey] -= order.sizeAmount;
         }
-    }
-
-    function setPositionHasTpSl(
-        bytes32 key,
-        TradingTypes.TradeType tradeType,
-        bool has
-    ) external onlyExecutor whenNotPaused {
-        positionHasTpSl[key][tradeType] = has;
     }
 
     function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
