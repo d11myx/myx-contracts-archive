@@ -6,7 +6,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 pragma solidity 0.8.20;
 
@@ -135,7 +135,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
     }
 
     function _setPrice(address _token, uint256 _price) private {
-console.log('setPrice token %s price %s ', _token, _price);
+// console.log('setPrice token %s price %s ', _token, _price);
 
         prices[_token] = _price;
         emit PriceUpdate(_token, _price, msg.sender);
