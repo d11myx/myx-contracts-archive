@@ -25,7 +25,7 @@ library LiquidationLogic {
         uint256 price
     );
 
-    function LiquidationPosition(
+    function liquidationPosition(
         IPool pool,
         IOrderManager orderManager,
         IPositionManager positionManager,
