@@ -26,7 +26,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const pool = await getPool();
     let usdt = await getToken();
 
-    // const validationHelperArtifact = await get('ValidationHelper');
+    const liquidationLogicArtifact = await get('LiquidationLogic');
 
     // FeeCollector
     const feeCollectorArtifact = await deploy(`${FEE_COLLECTOR_ID}`, {
@@ -91,9 +91,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             feeCollector.address,
             60 * 5, // todo testing
         ],
-        // libraries: {
-        //     ValidationHelper: validationHelperArtifact.address,
-        // },
+        libraries: {
+            LiquidationLogic: liquidationLogicArtifact.address,
+        },
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;

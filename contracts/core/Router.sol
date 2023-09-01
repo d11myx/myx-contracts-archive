@@ -71,17 +71,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
 
         // order with tp sl
         if (request.tp > 0 || request.sl > 0) {
-            bytes32 positionKey = PositionKey.getPositionKey(request.account, request.pairIndex, request.isLong);
-
-            require(
-                request.tp == 0 || !orderManager.positionHasTpSl(positionKey, TradingTypes.TradeType.TP),
-                'tp already exists'
-            );
-            require(
-                request.sl == 0 || !orderManager.positionHasTpSl(positionKey, TradingTypes.TradeType.SL),
-                'sl already exists'
-            );
-
             bytes32 orderKey = PositionKey.getOrderKey(true, request.tradeType, orderId);
 
             orderManager.saveOrderTpSl(
@@ -207,10 +196,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId) {
-        bytes32 key = PositionKey.getPositionKey(msg.sender, request.pairIndex, request.isLong);
-        require(request.tp == 0 || !orderManager.positionHasTpSl(key, TradingTypes.TradeType.TP), 'tp already exists');
-        require(request.sl == 0 || !orderManager.positionHasTpSl(key, TradingTypes.TradeType.SL), 'sl already exists');
-
         if (request.tp > 0) {
             tpOrderId = orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -247,9 +232,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         address stableToken,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override {
+    ) external override returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).addLiquidity(msg.sender, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
+        return IPool(pool).addLiquidity(msg.sender, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
     }
 
     function addLiquidityForAccount(
