@@ -137,11 +137,11 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                //                 console.log('c orderId:', order.orderId);
+                //         console.log('c orderId:', order.orderId);
             } catch Error(string memory reason) {
-                //                 console.log('error:', reason);
+                //         console.log('error:', reason);
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
-                //                 console.log('canceled:', order.orderId);
+                //         console.log('canceled:', order.orderId);
             }
         }
     }
@@ -161,9 +161,9 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                //                 console.log('c orderId:', order.orderId);
+                //         console.log('c orderId:', order.orderId);
             } catch Error(string memory reason) {
-                //                 console.log('error:', reason);
+                //         console.log('error:', reason);
             }
         }
     }
@@ -345,11 +345,11 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                //                 console.log('completed orderId:', order.orderId);
+                //         console.log('completed orderId:', order.orderId);
             } catch Error(string memory reason) {
-                //                 console.log('error:', reason);
+                //         console.log('error:', reason);
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
-                //                 console.log('canceled:', order.orderId);
+                //         console.log('canceled:', order.orderId);
             }
         }
     }
@@ -359,7 +359,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            //             console.log('edlo orderId:', order.orderId);
+            //         console.log('edlo orderId:', order.orderId);
 
             try
                 this.executeDecreaseOrder(
@@ -369,9 +369,9 @@ contract Executor is IExecutor, Pausable {
                     order.commissionRatio
                 )
             {
-                //                 console.log('completed. index:', order.orderId);
+                //         console.log('completed. index:', order.orderId);
             } catch Error(string memory reason) {
-                //                 console.log('error:', reason);
+                //         console.log('error:', reason);
             }
         }
     }

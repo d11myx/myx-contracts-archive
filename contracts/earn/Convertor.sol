@@ -115,7 +115,7 @@ contract Convertor is ReentrancyGuard, Ownable {
                 Conversion storage lastConversion = conversions[conversions.length - 1];
                 conversions[i] = lastConversion;
                 conversions.pop();
-                //                 console.log('convert pop i %s', i);
+                //         console.log('convert pop i %s', i);
             } else {
                 conversion.claimedAmount += nextVestedAmount;
                 conversion.lastVestingTimes = block.timestamp;
