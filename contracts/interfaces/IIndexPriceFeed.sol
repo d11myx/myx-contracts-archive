@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 interface IIndexPriceFeed {
     event PriceUpdate(address token, uint256 price, address priceFeed);
