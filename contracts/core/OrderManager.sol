@@ -222,14 +222,15 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     function cancelOrder(
         uint256 orderId,
         TradingTypes.TradeType tradeType,
-        bool isIncrease
+        bool isIncrease,
+        string memory reason
     ) public nonReentrant onlyCreateOrderAddress(msg.sender) whenNotPaused {
+        emit CancelOrder(orderId, tradeType, reason);
         if (isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = getIncreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
                 return;
             }
-
             _cancelIncreaseOrder(order);
         } else {
             TradingTypes.DecreasePositionOrder memory order = getDecreaseOrder(orderId, tradeType);
@@ -253,7 +254,12 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             uint256 lastIndex = positionOrders[key].length - 1;
             PositionOrder memory positionOrder = positionOrders[key][lastIndex];
 
-            this.cancelOrder(positionOrder.orderId, positionOrder.tradeType, positionOrder.isIncrease);
+            this.cancelOrder(
+                positionOrder.orderId,
+                positionOrder.tradeType,
+                positionOrder.isIncrease,
+                'cancelAllPositionOrders'
+            );
         }
     }
 
