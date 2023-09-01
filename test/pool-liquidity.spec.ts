@@ -30,6 +30,12 @@ describe('Pool: Liquidity cases', () => {
         const depositorLpBef = await pairToken.balanceOf(depositor.address);
         const callbackLpBef = await pairToken.balanceOf(testCallBack.address);
 
+        const receivedLP = await pool.getMintLpAmount(
+            pairIndex,
+            ethers.utils.parseEther('1000'),
+            ethers.utils.parseEther('30000000'),
+        );
+
         await waitForTx(
             await testCallBack
                 .connect(depositor.signer)
@@ -49,7 +55,7 @@ describe('Pool: Liquidity cases', () => {
 
         expect(usdtBalanceAft).to.be.eq(usdtBalanceBef.sub(ethers.utils.parseEther('30000000')));
         expect(btcBalanceAft).to.be.eq(btcBalanceBef.sub(ethers.utils.parseEther('1000')));
-        expect(depositorLpAft).to.be.eq(depositorLpBef.add(ethers.utils.parseEther('59400000')));
+        expect(depositorLpAft).to.be.eq(depositorLpBef.add(receivedLP.mintAmount));
         expect(callbackLpAft).to.be.eq(callbackLpBef);
     });
 
