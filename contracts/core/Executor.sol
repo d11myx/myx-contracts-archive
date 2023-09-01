@@ -141,7 +141,7 @@ contract Executor is IExecutor, Pausable {
                 //                 console.log('c orderId:', order.orderId);
             } catch Error(string memory reason) {
                 //                 console.log('error:', reason);
-                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
+                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true, reason);
                 //                 console.log('canceled:', order.orderId);
             }
         }
@@ -191,7 +191,7 @@ contract Executor is IExecutor, Pausable {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, true);
+            orderManager.cancelOrder(order.orderId, order.tradeType, true, 'pair enable');
             return;
         }
 
@@ -349,7 +349,7 @@ contract Executor is IExecutor, Pausable {
                 //                 console.log('completed orderId:', order.orderId);
             } catch Error(string memory reason) {
                 //                 console.log('error:', reason);
-                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
+                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false, reason);
                 //                 console.log('canceled:', order.orderId);
             }
         }
@@ -408,7 +408,7 @@ contract Executor is IExecutor, Pausable {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, false);
+            orderManager.cancelOrder(order.orderId, order.tradeType, false, 'pair enable');
             return;
         }
 
@@ -541,7 +541,7 @@ contract Executor is IExecutor, Pausable {
             for (uint256 i = 0; i < orders.length; i++) {
                 IOrderManager.PositionOrder memory positionOrder = orders[i];
                 if (!positionOrder.isIncrease) {
-                    orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                    orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false, '! increase');
                 }
             }
         }
