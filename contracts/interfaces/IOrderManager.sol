@@ -44,8 +44,6 @@ interface IOrderManager {
 
     function ordersIndex() external view returns (uint256);
 
-    function positionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType) external view returns (bool);
-
     function getOrderKey(
         uint256 orderId,
         TradingTypes.TradeType tradeType,
@@ -77,8 +75,6 @@ interface IOrderManager {
     function addOrderToPosition(PositionOrder memory order) external;
 
     function removeOrderFromPosition(PositionOrder memory order) external;
-
-    function setPositionHasTpSl(bytes32 key, TradingTypes.TradeType tradeType, bool has) external;
 
     function removeIncreaseMarketOrders(uint256 orderId) external;
 
