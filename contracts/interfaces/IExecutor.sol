@@ -35,16 +35,6 @@ interface IExecutor {
         int256 fundingFee
     );
 
-    event ExecuteLiquidation(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        uint256 collateral,
-        uint256 sizeAmount,
-        uint256 price
-    );
-
     struct ExecuteOrder {
         uint256 orderId;
         uint8 level;

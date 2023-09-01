@@ -290,7 +290,7 @@ contract Pool is IPool, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) external returns (uint256) {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
         return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
@@ -303,7 +303,7 @@ contract Pool is IPool, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) external returns (uint256) {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
         return _addLiquidity(_funder, recipient, _pairIndex, _indexAmount, _stableAmount, data);
@@ -453,7 +453,7 @@ contract Pool is IPool, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) private returns (uint256 mintAmount) {
+    ) private returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
 
         IPool.Pair memory pair = getPair(_pairIndex);
@@ -487,8 +487,8 @@ contract Pool is IPool, Roleable {
 
         // calculate deposit usdt value without slippage
         uint256 slipDelta;
-        address slipToken;
-        uint256 slipAmount;
+        slipToken;
+        slipAmount;
         if (indexReserveDelta + vault.stableTotalAmount > 0) {
             // after deposit
             uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
@@ -552,7 +552,7 @@ contract Pool is IPool, Roleable {
             slipAmount
         );
 
-        return mintAmount;
+        return (mintAmount, slipToken, slipAmount);
     }
 
     function _removeLiquidity(

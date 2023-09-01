@@ -142,7 +142,7 @@ interface IPool {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) external returns (uint256);
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
     function addLiquidityForAccount(
         address _funder,
@@ -151,7 +151,7 @@ interface IPool {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) external returns (uint256);
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
     function removeLiquidity(
         address _receiver,

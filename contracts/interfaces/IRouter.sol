@@ -39,7 +39,7 @@ interface IRouter {
         address stableToken,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external;
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
     function addLiquidityForAccount(
         address indexToken,
