@@ -109,7 +109,7 @@ export async function increase(duration: any) {
         duration = BigNumber.from(duration);
     }
 
-    if (duration.isNegative()) throw Error(`Cannot increase time by a negative amount (${duration})`);
+    // if (duration.isNeg()) throw Error(`Cannot increase time by a negative amount (${duration})`);
 
     await hre.ethers.provider.send('evm_increaseTime', [duration.toNumber()]);
 
