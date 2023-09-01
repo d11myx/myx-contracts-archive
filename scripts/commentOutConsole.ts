@@ -16,7 +16,7 @@ function commentOutConsoleLogs(filePath: string): void {
             if (line.trim() == "// import 'hardhat/console.sol';") {
                 modifiedLines.push(line.replace('// ', ''));
             } else {
-                if (line.trim().startsWith('console.log(')) {
+                if (line.trim().startsWith('//             console.log(')) {
                     inConsoleLog = !line.trim().endsWith(');');
                     modifiedLines.push(line.replace('//             ', ''));
                 } else if (inConsoleLog && line.endsWith(');')) {
