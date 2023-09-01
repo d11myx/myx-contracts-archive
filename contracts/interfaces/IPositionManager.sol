@@ -29,6 +29,15 @@ interface IPositionManager {
 
     event UpdateFundingRate(uint256 pairIndex, int256 fundingRate, uint256 lastFundingTime);
 
+    event TakeFundingFeeAddTraderFee(
+        address account,
+        uint256 pairIndex,
+        uint256 sizeDelta,
+        uint256 tradingFee,
+        int256 fundingFee,
+        uint256 lpTradingFee
+    );
+
     function getExposedPositions(uint256 pairIndex) external view returns (int256);
 
     function longTracker(uint256 pairIndex) external view returns (uint256);
