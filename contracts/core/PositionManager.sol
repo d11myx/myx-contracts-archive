@@ -283,10 +283,7 @@ contract PositionManager is FeeManager, Pausable {
         uint256 sizeDelta = sizeAmount.mulPrice(oraclePrice);
 
         if (position.positionAmount == 0) {
-            position.account = account;
-            position.pairIndex = pairIndex;
-            position.isLong = isLong;
-            position.averagePrice = oraclePrice;
+            position.init(pairIndex, account, isLong, oraclePrice);
         }
 
         if (position.positionAmount > 0 && sizeDelta > 0) {
@@ -467,11 +464,7 @@ contract PositionManager is FeeManager, Pausable {
         return tradingFee;
     }
 
-    function getFundingFee(
-        address _account,
-        uint256 _pairIndex,
-        bool _isLong
-    ) public view override returns (int256) {
+    function getFundingFee(address _account, uint256 _pairIndex, bool _isLong) public view override returns (int256) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
         int256 fundingFeeTracker = globalFundingFeeTracker[_pairIndex] - position.fundingFeeTracker;
         return (int256(position.positionAmount) * fundingFeeTracker) / int256(PrecisionUtils.fundingRatePrecision());
@@ -493,7 +486,10 @@ contract PositionManager is FeeManager, Pausable {
         }
         int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
 
-        globalFundingFeeTracker[_pairIndex] = globalFundingFeeTracker[_pairIndex] + nextFundingRate * int256(_price) / int256(PrecisionUtils.pricePrecision());
+        globalFundingFeeTracker[_pairIndex] =
+            globalFundingFeeTracker[_pairIndex] +
+            (nextFundingRate * int256(_price)) /
+            int256(PrecisionUtils.pricePrecision());
         lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
 
         // fund rate for settlement lp
