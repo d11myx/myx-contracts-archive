@@ -143,7 +143,7 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
-    pledge:Token,
+    pledge: Token,
     validationHelper: Contract,
 ) {
     console.log(` - setup trading`);
@@ -178,14 +178,22 @@ export async function deployTrading(
     console.log(`deployed Router at ${router.address}`);
     await waitForTx(await orderManager.setRouter(router.address));
 
-    let executor = (await deployContract('Executor', [
-        addressProvider.address,
-        pool.address,
-        orderManager.address,
-        positionManager.address,
-        feeCollector.address,
-        60 * 10, //todo testing time
-    ])) as any as Executor;
+    const liquidationLogic = await deployContract('LiquidationLogic', []);
+
+    let executor = (await deployContract(
+        'Executor',
+        [
+            addressProvider.address,
+            pool.address,
+            orderManager.address,
+            positionManager.address,
+            feeCollector.address,
+            60 * 10, //todo testing time
+        ],
+        {
+            LiquidationLogic: liquidationLogic.address,
+        },
+    )) as any as Executor;
     console.log(`deployed Executor at ${executor.address}`);
 
     // await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));

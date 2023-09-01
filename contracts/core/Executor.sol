@@ -16,6 +16,7 @@ import '../interfaces/IPool.sol';
 import '../helpers/ValidationHelper.sol';
 import '../helpers/TradingHelper.sol';
 import '../interfaces/IFeeCollector.sol';
+import './logic/LiquidationLogic.sol';
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
@@ -515,7 +516,6 @@ contract Executor is IExecutor, Pausable {
         } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             orderManager.removeDecreaseLimitOrders(_orderId);
         } else {
-            orderManager.setPositionHasTpSl(key, order.tradeType, false);
             orderManager.removeDecreaseLimitOrders(_orderId);
         }
 
@@ -654,73 +654,17 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < executePositions.length; i++) {
             ExecutePosition memory executePosition = executePositions[i];
-            _liquidatePosition(executePosition.positionKey, executePosition.level, executePosition.commissionRatio);
+            LiquidationLogic.liquidationPosition(
+                pool,
+                orderManager,
+                positionManager,
+                this,
+                ADDRESS_PROVIDER,
+                executePosition.positionKey,
+                executePosition.level,
+                executePosition.commissionRatio
+            );
         }
-    }
-
-    function _liquidatePosition(bytes32 positionKey, uint8 level, uint256 commissionRatio) internal {
-        Position.Info memory position = positionManager.getPositionByKey(positionKey);
-        if (position.positionAmount == 0) {
-            return;
-        }
-        IPool.Pair memory pair = pool.getPair(position.pairIndex);
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
-        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
-
-        int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
-        uint256 tradingFee = positionManager.getTradingFee(
-            position.pairIndex,
-            position.isLong,
-            position.positionAmount
-        );
-        int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
-        int256 exposureAsset = int256(position.collateral) +
-            unrealizedPnl -
-            int256(tradingFee) +
-            (position.isLong ? -fundingFee : fundingFee);
-
-        bool needLiquidate;
-        if (exposureAsset <= 0) {
-            needLiquidate = true;
-        } else {
-            uint256 riskRate = position
-                .positionAmount
-                .mulPrice(position.averagePrice)
-                .mulPercentage(tradingConfig.maintainMarginRate)
-                .calculatePercentage(uint256(exposureAsset));
-            needLiquidate = riskRate >= PrecisionUtils.percentage();
-        }
-        if (!needLiquidate) {
-            return;
-        }
-
-        // cancel all positionOrders
-        orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
-
-        uint256 orderId = orderManager.createOrder(
-            TradingTypes.CreateOrderRequest({
-                account: position.account,
-                pairIndex: position.pairIndex,
-                tradeType: TradingTypes.TradeType.MARKET,
-                collateral: 0,
-                openPrice: price,
-                isLong: position.isLong,
-                sizeAmount: -int256(position.positionAmount),
-                data: abi.encode(position.account)
-            })
-        );
-
-        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio);
-
-        emit ExecuteLiquidation(
-            positionKey,
-            position.account,
-            position.pairIndex,
-            position.isLong,
-            position.collateral,
-            position.positionAmount,
-            price
-        );
     }
 
     function setPaused() external onlyAdmin {
