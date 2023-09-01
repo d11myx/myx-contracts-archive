@@ -127,7 +127,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            //             console.log('eim Id:', order.orderId);
+            //         console.log('eim Id:', order.orderId);
 
             try
                 this.executeIncreaseOrder(
@@ -151,7 +151,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            //             console.log('elo orderId:', order.orderId);
+            //         console.log('elo orderId:', order.orderId);
 
             try
                 this.executeIncreaseOrder(
@@ -335,7 +335,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            //             console.log('edmo orderId:', order.orderId);
+            //         console.log('edmo orderId:', order.orderId);
 
             try
                 this.executeDecreaseOrder(
