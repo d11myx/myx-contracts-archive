@@ -654,7 +654,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < executePositions.length; i++) {
             ExecutePosition memory executePosition = executePositions[i];
-            LiquidationLogic.LiquidationPosition(
+            LiquidationLogic.liquidationPosition(
                 pool,
                 orderManager,
                 positionManager,
