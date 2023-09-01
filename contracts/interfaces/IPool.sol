@@ -177,4 +177,11 @@ interface IPool {
         uint256 _minOut,
         bytes calldata data
     ) external returns (uint256 amountIn, uint256 amountOut);
+
+    function getMintLpAmount(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external view returns (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount,
+        uint256 stableFeeAmount, uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount);
 }
