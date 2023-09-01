@@ -76,10 +76,10 @@ async function main() {
     //     await testCallBack.addLiquidity(
     //         pool.address,
     //         (
-    //             await pool.getPair(0)
+    //         await pool.getPair(0)
     //         ).indexToken,
     //         (
-    //             await pool.getPair(0)
+    //         await pool.getPair(0)
     //         ).stableToken,
     //         ethers.utils.parseEther('1000'),
     //         ethers.utils.parseEther('26000000'),
@@ -89,10 +89,10 @@ async function main() {
     //     await testCallBack.addLiquidity(
     //         pool.address,
     //         (
-    //             await pool.getPair(1)
+    //         await pool.getPair(1)
     //         ).indexToken,
     //         (
-    //             await pool.getPair(1)
+    //         await pool.getPair(1)
     //         ).stableToken,
     //         ethers.utils.parseEther('1000'),
     //         ethers.utils.parseEther('1650000'),
