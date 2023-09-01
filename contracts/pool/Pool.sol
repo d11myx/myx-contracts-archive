@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -23,7 +23,8 @@ import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../helpers/ValidationHelper.sol';
-import 'hardhat/console.sol';
+
+// import 'hardhat/console.sol';
 
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
@@ -79,7 +80,6 @@ contract Pool is IPool, Roleable {
     function removeOrderManager(address _orderManager) external onlyPoolAdmin {
         delete orderManagers[_orderManager];
     }
-
 
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
