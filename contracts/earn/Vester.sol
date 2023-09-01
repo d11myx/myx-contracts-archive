@@ -127,10 +127,10 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
             releasedAmount[distributeType] += releaseAmount;
             nextReleaseTime[distributeType] += releaseInterval[distributeType];
             //             console.log(
-            //                 'releaseToken releasedAmount',
-            //                 releasedAmount[distributeType],
-            //                 'nextReleaseTime',
-            //                 nextReleaseTime[distributeType]
+            //         'releaseToken releasedAmount',
+            //         releasedAmount[distributeType],
+            //         'nextReleaseTime',
+            //         nextReleaseTime[distributeType]
             //             );
             IERC20(token).safeTransfer(receiver[distributeType], releaseAmount);
         } else if (
@@ -142,10 +142,10 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
             require(releaseAmount > 0, 'Vester: none release');
             releasedAmount[distributeType] += releaseAmount;
             //             console.log(
-            //                 'releaseToken releasedAmount',
-            //                 releasedAmount[distributeType],
-            //                 'nextReleaseTime',
-            //                 nextReleaseTime[distributeType]
+            //         'releaseToken releasedAmount',
+            //         releasedAmount[distributeType],
+            //         'nextReleaseTime',
+            //         nextReleaseTime[distributeType]
             //             );
             IERC20(token).safeTransfer(receiver[distributeType], releaseAmount);
         }
@@ -171,10 +171,10 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
 
         if (distributeType == DistributeType.TEAM_ADVISOR || distributeType == DistributeType.PRIVATE_PLACEMENT) {
             //             console.log(
-            //                 'getReleaseAmount timestamp',
-            //                 block.timestamp,
-            //                 'nextReleaseTime',
-            //                 nextReleaseTime[distributeType]
+            //         'getReleaseAmount timestamp',
+            //         block.timestamp,
+            //         'nextReleaseTime',
+            //         nextReleaseTime[distributeType]
             //             );
             if (block.timestamp < nextReleaseTime[distributeType]) {
                 return 0;
@@ -194,10 +194,10 @@ contract Vester is ReentrancyGuard, Ownable, Initializable {
             releaseAmount = totalRelease[distributeType] / releaseRounds[distributeType];
         } else if (distributeType == DistributeType.MARKET_OPERATION || distributeType == DistributeType.ECO_KEEPER) {
             //             console.log(
-            //                 'getReleaseAmount timestamp',
-            //                 block.timestamp,
-            //                 'nextReleaseTime',
-            //                 nextReleaseTime[distributeType]
+            //         'getReleaseAmount timestamp',
+            //         block.timestamp,
+            //         'nextReleaseTime',
+            //         nextReleaseTime[distributeType]
             //             );
 
             if (block.timestamp < nextReleaseTime[distributeType]) {

@@ -43,26 +43,26 @@
 //     describe('Router: collateral test cases', () => {
 //         it('hava a postion and collateral, input collateral = 0', async () => {
 //             const {
-//                 keeper,
-//                 users: [trader],
-//                 usdt,
-//                 router,
-//                 executor,
-//                 orderManager,
-//                 positionManager,
+//         keeper,
+//         users: [trader],
+//         usdt,
+//         router,
+//         executor,
+//         orderManager,
+//         positionManager,
 //             } = testEnv;
 
 //             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 //             console.log(`before position: `, traderPosition);
 
 //             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
-//                 account: trader.address,
-//                 pairIndex: pairIndex,
-//                 tradeType: TradeType.MARKET,
-//                 collateral: 0,
-//                 openPrice: ethers.utils.parseUnits('30000', 30),
-//                 isLong: true,
-//                 sizeAmount: ethers.utils.parseUnits('5', 18),
+//         account: trader.address,
+//         pairIndex: pairIndex,
+//         tradeType: TradeType.MARKET,
+//         collateral: 0,
+//         openPrice: ethers.utils.parseUnits('30000', 30),
+//         isLong: true,
+//         sizeAmount: ethers.utils.parseUnits('5', 18),
 //             };
 
 //             const orderId = await orderManager.ordersIndex();
@@ -75,7 +75,7 @@
 //             console.log(`after position :`, positionAfter);
 
 //             expect(positionAfter.positionAmount).to.be.eq(
-//                 traderPosition.positionAmount.add(ethers.utils.parseUnits('5', 18)),
+//         traderPosition.positionAmount.add(ethers.utils.parseUnits('5', 18)),
 //             );
 //         });
 //     });
