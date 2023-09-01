@@ -324,7 +324,7 @@ contract PositionManager is FeeManager, Pausable {
         // transfer collateral
         uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
         if (transferOut > 0) {
-            pool.transferTokenTo(pair.stableToken, account, transferOut);
+            pool.transferTokenTo(pledgeAddress, account, transferOut);
         }
 
         emit UpdatePosition(
@@ -401,15 +401,13 @@ contract PositionManager is FeeManager, Pausable {
             delete positions[positionKey];
         } else {
             transferOut += (collateral < 0 ? collateral.abs() : 0);
-
             afterCollateral += collateral;
             require(afterCollateral > 0, 'collateral not enough');
             position.collateral = uint256(afterCollateral);
         }
 
         if (transferOut > 0) {
-            IPool.Pair memory pair = pool.getPair(pairIndex);
-            pool.transferTokenTo(pair.stableToken, account, transferOut);
+            pool.transferTokenTo(pledgeAddress, account, transferOut);
         }
 
         emit UpdatePosition(
