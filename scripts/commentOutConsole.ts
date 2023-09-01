@@ -36,12 +36,12 @@ function commentOutConsoleLogs(filePath: string): void {
             } else {
                 if (line.trim().startsWith('console.log(')) {
                     inConsoleLog = !line.trim().endsWith(');');
-                    modifiedLines.push(`//         ${line}`);
+                    modifiedLines.push(`// ${line}`);
                 } else if (inConsoleLog && line.endsWith(');')) {
                     inConsoleLog = false;
-                    modifiedLines.push(`//         ${line}`);
+                    modifiedLines.push(`// ${line}`);
                 } else if (inConsoleLog) {
-                    modifiedLines.push(`//         ${line}`);
+                    modifiedLines.push(`// ${line}`);
                 } else {
                     modifiedLines.push(line);
                 }
