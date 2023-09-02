@@ -305,7 +305,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-
+        _handleColleral(position, collateral);
         // settlement trading fee and funding fee
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -321,8 +321,7 @@ contract PositionManager is FeeManager, Pausable {
         );
 
         // final collateral & transfer out
-        afterCollateral += collateral;
-        require(afterCollateral > 0, 'collateral not enough');
+        // afterCollateral += collateral;
 
         position.collateral = uint256(afterCollateral);
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
@@ -332,10 +331,10 @@ contract PositionManager is FeeManager, Pausable {
         _settleLPPosition(pairIndex, sizeAmount, isLong, true, oraclePrice);
 
         // transfer collateral
-        uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
-        if (transferOut > 0) {
-            pool.transferTokenTo(pledgeAddress, account, transferOut);
-        }
+        // uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
+        // if (transferOut > 0) {
+        //     pool.transferTokenTo(pledgeAddress, account, transferOut);
+        // }
 
         emit UpdatePosition(
             account,
@@ -351,6 +350,16 @@ contract PositionManager is FeeManager, Pausable {
             position.fundingFeeTracker,
             0
         );
+    }
+
+    function _handleColleral(Position.Info storage position, int256 collateral) internal {
+        if (collateral < 0) {
+            position.collateral = position.collateral.sub(collateral.abs());
+            pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
+        } else {
+            position.collateral = position.collateral.add(collateral.abs());
+        }
+        require(position.collateral > 0, 'collateral not enough');
     }
 
     function decreasePosition(
@@ -403,7 +412,7 @@ contract PositionManager is FeeManager, Pausable {
             afterCollateral -= int256(pnl.abs());
         }
         position.collateral = uint256(afterCollateral);
-        _adjustCollateral(position, collateral);
+        _adjustCollateral(positionKey, collateral);
 
         emit UpdatePosition(
             account,
@@ -421,16 +430,16 @@ contract PositionManager is FeeManager, Pausable {
         );
     }
 
-    function _adjustCollateral(Position.Info storage position, int256 _amount) internal {
-        // Position.Info storage position = positions[positionKey];
-        if (_amount < 0) {
-            position.collateral = position.collateral.sub(_amount.abs());
-            pool.transferTokenTo(pledgeAddress, position.account, _amount.abs());
-            if (position.collateral == 0 && position.positionAmount == 0) {
-                // delete positions[positionKey];
-            }
+    function _adjustCollateral(bytes32 positionKey, int256 collateral) internal {
+        Position.Info storage position = positions[positionKey];
+        if (collateral < 0) {
+            position.collateral = position.collateral.sub(collateral.abs());
+            pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
+            // if (position.collateral == 0 && position.positionAmount == 0) {
+            //     delete positions[positionKey];
+            // }
         } else {
-            position.collateral = position.collateral.add(_amount.abs());
+            position.collateral = position.collateral.add(collateral.abs());
         }
         require(position.collateral > 0, 'collateral not enough');
         // todo validLeverage
