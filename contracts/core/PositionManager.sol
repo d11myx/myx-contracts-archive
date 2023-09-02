@@ -403,7 +403,7 @@ contract PositionManager is FeeManager, Pausable {
             afterCollateral -= int256(pnl.abs());
         }
         position.collateral = uint256(afterCollateral);
-        _adjustCollateral(positionKey, collateral);
+        _adjustCollateral(position, collateral);
 
         emit UpdatePosition(
             account,
@@ -421,13 +421,13 @@ contract PositionManager is FeeManager, Pausable {
         );
     }
 
-    function _adjustCollateral(bytes32 positionKey, int256 _amount) internal {
-        Position.Info storage position = positions[positionKey];
+    function _adjustCollateral(Position.Info storage position, int256 _amount) internal {
+        // Position.Info storage position = positions[positionKey];
         if (_amount < 0) {
             position.collateral = position.collateral.sub(_amount.abs());
             pool.transferTokenTo(pledgeAddress, position.account, _amount.abs());
             if (position.collateral == 0 && position.positionAmount == 0) {
-                delete positions[positionKey];
+                // delete positions[positionKey];
             }
         } else {
             position.collateral = position.collateral.add(_amount.abs());
