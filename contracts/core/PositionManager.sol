@@ -382,7 +382,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-
+        _handleColleral(position, collateral);
         // settlement trading fee and funding fee
         int256 afterCollateral;
         (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -412,8 +412,9 @@ contract PositionManager is FeeManager, Pausable {
             afterCollateral -= int256(pnl.abs());
         }
         position.collateral = uint256(afterCollateral);
-        _adjustCollateral(positionKey, collateral);
-
+        if (position.positionAmount == 0) {
+            pool.transferTokenTo(pledgeAddress, position.account, position.collateral);
+        }
         emit UpdatePosition(
             account,
             positionKey,
@@ -428,23 +429,6 @@ contract PositionManager is FeeManager, Pausable {
             position.fundingFeeTracker,
             pnl
         );
-    }
-
-    function _adjustCollateral(bytes32 positionKey, int256 collateral) internal {
-        Position.Info storage position = positions[positionKey];
-        if (collateral < 0) {
-            position.collateral = position.collateral.sub(collateral.abs());
-            pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
-            // if (position.collateral == 0 && position.positionAmount == 0) {
-            //     delete positions[positionKey];
-            // }
-        } else {
-            position.collateral = position.collateral.add(collateral.abs());
-        }
-        require(position.collateral > 0, 'collateral not enough');
-        // todo validLeverage
-        // todo get all collateral
-        // require(position.validLeverage(self, price, _collateral, _sizeAmount, _increase, maxLeverage, maxPositionAmount););
     }
 
     function getTradingFee(
