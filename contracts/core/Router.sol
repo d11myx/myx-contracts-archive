@@ -130,11 +130,11 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
-        orderManager.cancelOrder(orderId, tradeType, true);
+        orderManager.cancelOrder(orderId, tradeType, true, 'cancelIncreaseOrder');
     }
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
-        orderManager.cancelOrder(orderId, tradeType, false);
+        orderManager.cancelOrder(orderId, tradeType, false, 'cancelDecreaseOrder');
     }
 
     function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external {
@@ -145,9 +145,19 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
             uint256 lastIndex = orders.length - 1;
             IOrderManager.PositionOrder memory positionOrder = orders[lastIndex];
             if (positionOrder.isIncrease) {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+                orderManager.cancelOrder(
+                    positionOrder.orderId,
+                    positionOrder.tradeType,
+                    true,
+                    'cancelAllPositionOrders'
+                );
             } else {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                orderManager.cancelOrder(
+                    positionOrder.orderId,
+                    positionOrder.tradeType,
+                    false,
+                    'cancelAllPositionOrders'
+                );
             }
         }
     }
@@ -159,9 +169,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         for (uint256 i = 0; i < orders.length; i++) {
             IOrderManager.PositionOrder memory positionOrder = orders[i];
             if (isIncrease && positionOrder.isIncrease) {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true, 'cancelOrders');
             } else if (!isIncrease && !positionOrder.isIncrease) {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false, 'cancelOrders');
             }
         }
     }
@@ -171,11 +181,17 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     ) external returns (uint256 tpOrderId, uint256 slOrderId) {
         uint256 orderAmount;
         if (request.isIncrease) {
-            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(request.orderId, request.tradeType);
+            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+                request.orderId,
+                request.tradeType
+            );
             require(order.account == msg.sender, 'no access');
             orderAmount = order.sizeAmount;
         } else {
-            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(request.orderId, request.tradeType);
+            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+                request.orderId,
+                request.tradeType
+            );
             require(order.account == msg.sender, 'no access');
             orderAmount = order.sizeAmount;
         }
