@@ -6,8 +6,8 @@ exports[`Router: increase position ar createDecreaseOrder cast 1`] = `423462`;
 
 exports[`Router: increase position ar createIncreaseOrderWithoutTpSl cast 1`] = `423319`;
 
-exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `300966`;
+exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `301023`;
 
 exports[`Router: increase position ar executeDecreaseOrder cast 2`] = `266296`;
 
-exports[`Router: increase position ar executeIncreaseOrder cast 1`] = `531337`;
+exports[`Router: increase position ar executeIncreaseOrder cast 1`] = `531394`;
