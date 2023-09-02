@@ -60,6 +60,14 @@ contract PositionManager is FeeManager, Pausable {
         _;
     }
 
+    function setPaused() external onlyAdmin {
+        _pause();
+    }
+
+    function setUnPaused() external onlyAdmin {
+        _unpause();
+    }
+
     function setExecutor(address _addressExecutor) external onlyPoolAdmin {
         addressExecutor = _addressExecutor;
     }
@@ -132,17 +140,9 @@ contract PositionManager is FeeManager, Pausable {
         }
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (isIncrease) {
-            if (_isLong) {
-                longTracker[_pairIndex] += _sizeAmount;
-            } else {
-                shortTracker[_pairIndex] += _sizeAmount;
-            }
+            _isLong ? longTracker[_pairIndex] += _sizeAmount : shortTracker[_pairIndex] += _sizeAmount;
         } else {
-            if (_isLong) {
-                longTracker[_pairIndex] -= _sizeAmount;
-            } else {
-                shortTracker[_pairIndex] -= _sizeAmount;
-            }
+            _isLong ? longTracker[_pairIndex] -= _sizeAmount : shortTracker[_pairIndex] -= _sizeAmount;
         }
         int256 nextExposureAmountChecker = getExposedPositions(_pairIndex);
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
@@ -555,13 +555,5 @@ contract PositionManager is FeeManager, Pausable {
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
         return PositionKey.getPositionKey(_account, _pairIndex, _isLong);
-    }
-
-    function setPaused() external onlyAdmin {
-        _pause();
-    }
-
-    function setUnPaused() external onlyAdmin {
-        _unpause();
     }
 }
