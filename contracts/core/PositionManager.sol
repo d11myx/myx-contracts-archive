@@ -80,18 +80,16 @@ contract PositionManager is FeeManager, Pausable {
         address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
-        int256 _collateral,
         uint256 vipRate,
         uint256 referenceRate,
         uint256 _price
-    ) internal returns (int256 afterCollateral, uint256 tradingFee, int256 fundingFee) {
+    ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        afterCollateral = _collateral;
 
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
         tradingFee = _tradingFee(_pairIndex, _isLong, sizeDelta);
-        afterCollateral -= int256(tradingFee);
+        charge -= int256(tradingFee);
 
         uint256 lpAmount = _distributeTradingFee(
             pair,
@@ -106,18 +104,17 @@ contract PositionManager is FeeManager, Pausable {
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
         if (fundingFee >= 0) {
             if (_isLong) {
-                afterCollateral -= fundingFee;
+                charge -= fundingFee;
             } else {
-                afterCollateral += fundingFee;
+                charge += fundingFee;
             }
         } else {
             if (!_isLong) {
-                afterCollateral += fundingFee;
+                charge += fundingFee;
             } else {
-                afterCollateral -= fundingFee;
+                charge -= fundingFee;
             }
         }
-
         emit TakeFundingFeeAddTraderFee(_account, _pairIndex, sizeDelta, tradingFee, fundingFee, lpAmount);
     }
 
@@ -307,14 +304,14 @@ contract PositionManager is FeeManager, Pausable {
         _updateFundingRate(pairIndex, oraclePrice);
         _handleColleral(position, collateral);
         // settlement trading fee and funding fee
-        int256 afterCollateral;
-        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
+        int256 charge;
+        (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
             pairIndex,
             account,
             keeper,
             sizeAmount,
             isLong,
-            int256(position.collateral),
+            // int256(position.collateral),
             vipRate,
             referenceRate,
             oraclePrice
@@ -323,7 +320,9 @@ contract PositionManager is FeeManager, Pausable {
         // final collateral & transfer out
         // afterCollateral += collateral;
 
-        position.collateral = uint256(afterCollateral);
+        charge < 0 ? position.collateral = position.collateral.sub(charge.abs()) : position.collateral = position
+            .collateral
+            .add(charge.abs());
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount += sizeAmount;
 
@@ -384,14 +383,14 @@ contract PositionManager is FeeManager, Pausable {
         _updateFundingRate(pairIndex, oraclePrice);
         _handleColleral(position, collateral);
         // settlement trading fee and funding fee
-        int256 afterCollateral;
-        (afterCollateral, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
+        int256 charge;
+        (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
             pairIndex,
             account,
             keeper,
             sizeAmount,
             isLong,
-            int256(position.collateral),
+            // int256(position.collateral),
             vipRate,
             referenceRate,
             oraclePrice
@@ -404,14 +403,10 @@ contract PositionManager is FeeManager, Pausable {
         _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
-
-        // final collateral & transfer out
-        if (pnl > 0) {
-            afterCollateral += pnl;
-        } else {
-            afterCollateral -= int256(pnl.abs());
-        }
-        position.collateral = uint256(afterCollateral);
+        pnl += charge;
+        pnl < 0 ? position.collateral = position.collateral.sub(pnl.abs()) : position.collateral = position
+            .collateral
+            .add(pnl.abs());
         if (position.positionAmount == 0) {
             pool.transferTokenTo(pledgeAddress, position.account, position.collateral);
         }
