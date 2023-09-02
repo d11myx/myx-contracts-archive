@@ -305,14 +305,10 @@ contract PositionManager is FeeManager, Pausable {
             keeper,
             sizeAmount,
             isLong,
-            // int256(position.collateral),
             vipRate,
             referenceRate,
             oraclePrice
         );
-
-        // final collateral & transfer out
-        // afterCollateral += collateral;
 
         charge < 0 ? position.collateral = position.collateral.sub(charge.abs()) : position.collateral = position
             .collateral
@@ -322,13 +318,6 @@ contract PositionManager is FeeManager, Pausable {
 
         // settlement lp position
         _settleLPPosition(pairIndex, sizeAmount, isLong, true, oraclePrice);
-
-        // transfer collateral
-        // uint256 transferOut = collateral < 0 ? collateral.abs() : 0;
-        // if (transferOut > 0) {
-        //     pool.transferTokenTo(pledgeAddress, account, transferOut);
-        // }
-
         emit UpdatePosition(
             account,
             positionKey,
@@ -384,7 +373,6 @@ contract PositionManager is FeeManager, Pausable {
             keeper,
             sizeAmount,
             isLong,
-            // int256(position.collateral),
             vipRate,
             referenceRate,
             oraclePrice
@@ -403,6 +391,7 @@ contract PositionManager is FeeManager, Pausable {
             .add(pnl.abs());
         if (position.positionAmount == 0) {
             pool.transferTokenTo(pledgeAddress, position.account, position.collateral);
+            position.collateral = 0;
         }
         emit UpdatePosition(
             account,
