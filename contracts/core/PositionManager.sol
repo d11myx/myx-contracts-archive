@@ -510,7 +510,7 @@ contract PositionManager is FeeManager, Pausable {
                 );
         }
 
-        emit UpdateFundingRate(_pairIndex, nextFundingRate, lastFundingRateUpdateTimes[_pairIndex]);
+        emit UpdateFundingRate(_pairIndex, _price, nextFundingRate, lastFundingRateUpdateTimes[_pairIndex]);
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
