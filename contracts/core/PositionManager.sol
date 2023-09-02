@@ -102,18 +102,12 @@ contract PositionManager is FeeManager, Pausable {
         );
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
-        if (fundingFee >= 0) {
-            if (_isLong) {
-                charge -= fundingFee;
-            } else {
-                charge += fundingFee;
-            }
+        if ((fundingFee >= 0 && _isLong) || (fundingFee < 0 && !_isLong)) {
+            //pay funding fee
+            charge -= fundingFee;
         } else {
-            if (!_isLong) {
-                charge += fundingFee;
-            } else {
-                charge -= fundingFee;
-            }
+            //take funding fee
+            charge += fundingFee;
         }
         emit TakeFundingFeeAddTraderFee(_account, _pairIndex, sizeDelta, tradingFee, fundingFee, lpAmount);
     }
