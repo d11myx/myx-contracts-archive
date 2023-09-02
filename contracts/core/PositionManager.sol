@@ -93,7 +93,15 @@ contract PositionManager is FeeManager, Pausable {
         tradingFee = _tradingFee(_pairIndex, _isLong, sizeDelta);
         afterCollateral -= int256(tradingFee);
 
-        (uint256 lpAmount) = _distributeTradingFee(pair, _account, _keeper, sizeDelta, tradingFee, vipRate, referenceRate);
+        uint256 lpAmount = _distributeTradingFee(
+            pair,
+            _account,
+            _keeper,
+            sizeDelta,
+            tradingFee,
+            vipRate,
+            referenceRate
+        );
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
         if (fundingFee >= 0) {
@@ -389,28 +397,13 @@ contract PositionManager is FeeManager, Pausable {
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
 
         // final collateral & transfer out
-        uint256 transferOut;
         if (pnl > 0) {
-            transferOut += uint256(pnl);
+            afterCollateral += pnl;
         } else {
             afterCollateral -= int256(pnl.abs());
         }
-        if (position.positionAmount == 0) {
-            // transfer out all collateral and order collateral
-            int256 allTransferOut = int256(transferOut) + afterCollateral + (collateral > 0 ? collateral : int256(0));
-            transferOut = allTransferOut > 0 ? uint256(allTransferOut) : 0;
-
-            delete positions[positionKey];
-        } else {
-            transferOut += (collateral < 0 ? collateral.abs() : 0);
-            afterCollateral += collateral;
-            require(afterCollateral > 0, 'collateral not enough');
-            position.collateral = uint256(afterCollateral);
-        }
-
-        if (transferOut > 0) {
-            pool.transferTokenTo(pledgeAddress, account, transferOut);
-        }
+        position.collateral = uint256(afterCollateral);
+        _adjustCollateral(positionKey, collateral);
 
         emit UpdatePosition(
             account,
@@ -426,6 +419,23 @@ contract PositionManager is FeeManager, Pausable {
             position.fundingFeeTracker,
             pnl
         );
+    }
+
+    function _adjustCollateral(bytes32 positionKey, int256 _amount) internal {
+        Position.Info storage position = positions[positionKey];
+        if (_amount < 0) {
+            position.collateral = position.collateral.sub(_amount.abs());
+            pool.transferTokenTo(pledgeAddress, position.account, _amount.abs());
+            if (position.collateral == 0 && position.positionAmount == 0) {
+                delete positions[positionKey];
+            }
+        } else {
+            position.collateral = position.collateral.add(_amount.abs());
+        }
+        require(position.collateral > 0, 'collateral not enough');
+        // todo validLeverage
+        // todo get all collateral
+        // require(position.validLeverage(self, price, _collateral, _sizeAmount, _increase, maxLeverage, maxPositionAmount););
     }
 
     function getTradingFee(
