@@ -36,7 +36,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseLimitOrders;
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
 
-    mapping(bytes32 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderKey -> TpSl
+    mapping(uint256 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderKey -> TpSl
 
     // positionKey
     mapping(bytes32 => PositionOrder[]) public positionOrders;
@@ -94,7 +94,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         return PositionKey.getOrderKey(isIncrease, tradeType, orderId);
     }
 
-    function getOrderTpSl(bytes32 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
+    function getOrderTpSl(uint256 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
         return orderWithTpSl[orderKey];
     }
 
@@ -558,11 +558,11 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         order.needADL = needADL;
     }
 
-    function saveOrderTpSl(bytes32 orderKey, TradingTypes.OrderWithTpSl memory tpSl) external onlyRouter whenNotPaused {
+    function saveOrderTpSl(uint256 orderKey, TradingTypes.OrderWithTpSl memory tpSl) external onlyRouter whenNotPaused {
         orderWithTpSl[orderKey] = tpSl;
     }
 
-    function removeOrderTpSl(bytes32 orderKey) external onlyExecutor whenNotPaused {
+    function removeOrderTpSl(uint256 orderKey) external onlyExecutor whenNotPaused {
         delete orderWithTpSl[orderKey];
     }
 
