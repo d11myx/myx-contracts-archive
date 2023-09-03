@@ -34,6 +34,7 @@ interface IExecutor {
         uint256 tradingFee,
         int256 fundingFee
     );
+    event ExecuteOrderError(uint256 orderId, string errorMessage);
 
     struct ExecuteOrder {
         uint256 orderId;
@@ -53,7 +54,6 @@ interface IExecutor {
         uint8 level;
         uint256 commissionRatio;
     }
-
 
     function maxTimeDelay() external view returns (uint256);
 
