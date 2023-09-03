@@ -71,7 +71,7 @@ describe('Trade: TP & SL', () => {
             };
             await router.connect(trader.signer).createOrderTpSl(orderTpSlRequest);
 
-            const orderKey = await orderManager.getOrderKey(orderId, TradeType.LIMIT, true);
+            // const orderKey = await orderManager.getOrderKey(orderId, TradeType.LIMIT, true);
             let orderTpSl = await orderManager.orderWithTpSl(orderId);
             console.log(`orderTpSl:`, orderTpSl);
 
