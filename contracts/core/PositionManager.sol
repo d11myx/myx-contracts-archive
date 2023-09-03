@@ -344,6 +344,24 @@ contract PositionManager is FeeManager, Pausable {
         require(position.collateral > 0, 'collateral not enough');
     }
 
+    function adjustColleral(uint256 pairIndex, address account, bool isLong, int256 collateral) external {
+        require(account == msg.sender || addressExecutor == msg.sender, 'forbidden');
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        Position.Info storage position = positions[PositionKey.getPositionKey(account, pairIndex, isLong)];
+        _handleColleral(position, collateral);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+        (uint256 afterPosition, ) = position.validLeverage(
+            price,
+            0,
+            0,
+            false,
+            tradingConfig.maxLeverage,
+            tradingConfig.maxPositionAmount
+        );
+        require(afterPosition > 0, 'zero position amount');
+    }
+
     function decreasePosition(
         uint256 pairIndex,
         address account,
