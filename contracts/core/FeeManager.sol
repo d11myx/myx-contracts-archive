@@ -92,7 +92,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
         uint256 tradingFee,
         uint256 vipRate,
         uint256 referenceRate
-    ) internal returns(uint256 lpAmount) {
+    ) internal returns (uint256 lpAmount) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
         uint256 vipAmount = tradingFee.mulPercentage(vipRate);

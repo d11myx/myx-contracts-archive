@@ -71,8 +71,8 @@ describe('Trade: TP & SL', () => {
             };
             await router.connect(trader.signer).createOrderTpSl(orderTpSlRequest);
 
-            const orderKey = await orderManager.getOrderKey(orderId, TradeType.LIMIT, true);
-            let orderTpSl = await orderManager.orderWithTpSl(orderKey);
+            // const orderKey = await orderManager.getOrderKey(orderId, TradeType.LIMIT, true);
+            let orderTpSl = await orderManager.orderWithTpSl(orderId);
             console.log(`orderTpSl:`, orderTpSl);
 
             expect(orderTpSl.tp).to.be.eq(ethers.utils.parseEther('1'));
@@ -82,7 +82,7 @@ describe('Trade: TP & SL', () => {
 
             orderTpSlRequest.slPrice = 333;
             await router.connect(trader.signer).createOrderTpSl(orderTpSlRequest);
-            orderTpSl = await orderManager.orderWithTpSl(orderKey);
+            orderTpSl = await orderManager.orderWithTpSl(orderId);
 
             expect(orderTpSl.tp).to.be.eq(ethers.utils.parseEther('1'));
             expect(orderTpSl.sl).to.be.eq(ethers.utils.parseEther('2'));
