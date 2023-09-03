@@ -20,8 +20,6 @@ import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOrderCallback.sol';
 import '../helpers/ValidationHelper.sol';
 
-// import 'hardhat/console.sol';
-
 contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -40,6 +38,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     mapping(bytes32 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderKey -> TpSl
 
+    // positionKey
     mapping(bytes32 => PositionOrder[]) public positionOrders;
     mapping(bytes32 => mapping(bytes32 => uint256)) public positionOrderIndex;
 
@@ -86,12 +85,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     function setRouter(address _router) external onlyPoolAdmin {
         router = _router;
     }
-
-    // function updatePositionManager(address newAddress) external onlyPoolAdmin {
-    //     address oldAddress = address(positionManager);
-    //     positionManager = IPositionManager(newAddress);
-    //     emit UpdatePositionManager(oldAddress, newAddress);
-    // }
 
     function getOrderKey(
         uint256 orderId,
