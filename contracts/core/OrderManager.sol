@@ -20,8 +20,6 @@ import '../interfaces/IPositionManager.sol';
 import '../interfaces/IOrderCallback.sol';
 import '../helpers/ValidationHelper.sol';
 
-// import 'hardhat/console.sol';
-
 contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -38,10 +36,11 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseLimitOrders;
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
 
-    mapping(bytes32 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderKey -> TpSl
+    mapping(uint256 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderKey -> TpSl
 
+    // positionKey
     mapping(bytes32 => PositionOrder[]) public positionOrders;
-    mapping(bytes32 => mapping(bytes32 => uint256)) public positionOrderIndex;
+    mapping(bytes32 => mapping(uint256 => uint256)) public positionOrderIndex;
 
     mapping(bytes32 => uint256) public positionDecreaseTotalAmount;
 
@@ -87,21 +86,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         router = _router;
     }
 
-    // function updatePositionManager(address newAddress) external onlyPoolAdmin {
-    //     address oldAddress = address(positionManager);
-    //     positionManager = IPositionManager(newAddress);
-    //     emit UpdatePositionManager(oldAddress, newAddress);
-    // }
 
-    function getOrderKey(
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        bool isIncrease
-    ) public pure override returns (bytes32) {
-        return PositionKey.getOrderKey(isIncrease, tradeType, orderId);
-    }
-
-    function getOrderTpSl(bytes32 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
+    function getOrderTpSl(uint256 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
         return orderWithTpSl[orderKey];
     }
 
@@ -490,8 +476,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     function addOrderToPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
-        bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
-        positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
+        // bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
+        positionOrderIndex[positionKey][order.orderId] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(order);
 
         if (
@@ -506,24 +492,24 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         PositionOrder memory order
     ) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
-        bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
+        // bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
 
-        uint256 index = positionOrderIndex[positionKey][orderKey];
+        uint256 index = positionOrderIndex[positionKey][order.orderId];
         uint256 lastIndex = positionOrders[positionKey].length - 1;
 
         if (index < lastIndex) {
             // swap last order
             PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-            bytes32 lastOrderKey = PositionKey.getOrderKey(
-                lastOrder.isIncrease,
-                lastOrder.tradeType,
-                lastOrder.orderId
-            );
+            // bytes32 lastOrderKey = PositionKey.getOrderKey(
+            //     lastOrder.isIncrease,
+            //     lastOrder.tradeType,
+            //     lastOrder.orderId
+            // );
 
             positionOrders[positionKey][index] = lastOrder;
-            positionOrderIndex[positionKey][lastOrderKey] = index;
+            positionOrderIndex[positionKey][lastOrder.orderId] = index;
         }
-        delete positionOrderIndex[positionKey][orderKey];
+        delete positionOrderIndex[positionKey][order.orderId];
         positionOrders[positionKey].pop();
 
         if (
@@ -565,11 +551,11 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         order.needADL = needADL;
     }
 
-    function saveOrderTpSl(bytes32 orderKey, TradingTypes.OrderWithTpSl memory tpSl) external onlyRouter whenNotPaused {
+    function saveOrderTpSl(uint256 orderKey, TradingTypes.OrderWithTpSl memory tpSl) external onlyRouter whenNotPaused {
         orderWithTpSl[orderKey] = tpSl;
     }
 
-    function removeOrderTpSl(bytes32 orderKey) external onlyExecutor whenNotPaused {
+    function removeOrderTpSl(uint256 orderKey) external onlyExecutor whenNotPaused {
         delete orderWithTpSl[orderKey];
     }
 
