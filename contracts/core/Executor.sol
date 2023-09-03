@@ -276,8 +276,8 @@ contract Executor is IExecutor, Pausable {
             )
         );
 
-        bytes32 orderKey = PositionKey.getOrderKey(true, order.tradeType, _orderId);
-        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(orderKey);
+        // bytes32 orderKey = PositionKey.getOrderKey(true, order.tradeType, _orderId);
+        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(_orderId);
         if (orderTpSl.tp > 0) {
             orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -307,7 +307,7 @@ contract Executor is IExecutor, Pausable {
             );
         }
 
-        orderManager.removeOrderTpSl(orderKey);
+        orderManager.removeOrderTpSl(_orderId);
 
         // delete order
         if (_tradeType == TradingTypes.TradeType.MARKET) {
