@@ -2,17 +2,15 @@
 pragma solidity 0.8.20;
 
 import '../../libraries/Position.sol';
-import "../../interfaces/IPool.sol";
-import "../../interfaces/IOrderManager.sol";
-import "../../interfaces/IPositionManager.sol";
-import "../../interfaces/IAddressesProvider.sol";
+import '../../interfaces/IPool.sol';
+import '../../interfaces/IOrderManager.sol';
+import '../../interfaces/IPositionManager.sol';
+import '../../interfaces/IAddressesProvider.sol';
 import '../../helpers/TradingHelper.sol';
-import "../../interfaces/IExecutor.sol";
+import '../../interfaces/IExecutor.sol';
 
 library LiquidationLogic {
     using PrecisionUtils for uint256;
-//    using Math for uint256;
-//    using Int256Utils for int256;
     using Position for Position.Info;
 
     event ExecuteLiquidation(
@@ -52,8 +50,8 @@ library LiquidationLogic {
         );
         int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
         int256 exposureAsset = int256(position.collateral) +
-                    unrealizedPnl -
-                            int256(tradingFee) +
+            unrealizedPnl -
+            int256(tradingFee) +
             (position.isLong ? -fundingFee : fundingFee);
 
         bool needLiquidate;
