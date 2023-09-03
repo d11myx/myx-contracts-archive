@@ -40,7 +40,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     // positionKey
     mapping(bytes32 => PositionOrder[]) public positionOrders;
-    mapping(bytes32 => mapping(bytes32 => uint256)) public positionOrderIndex;
+    mapping(bytes32 => mapping(uint256 => uint256)) public positionOrderIndex;
 
     mapping(bytes32 => uint256) public positionDecreaseTotalAmount;
 
@@ -86,13 +86,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         router = _router;
     }
 
-    function getOrderKey(
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        bool isIncrease
-    ) public pure override returns (bytes32) {
-        return PositionKey.getOrderKey(isIncrease, tradeType, orderId);
-    }
 
     function getOrderTpSl(uint256 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
         return orderWithTpSl[orderKey];
@@ -483,8 +476,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     function addOrderToPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
-        bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
-        positionOrderIndex[positionKey][orderKey] = positionOrders[positionKey].length;
+        // bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
+        positionOrderIndex[positionKey][order.orderId] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(order);
 
         if (
@@ -499,24 +492,24 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         PositionOrder memory order
     ) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
-        bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
+        // bytes32 orderKey = PositionKey.getOrderKey(order.isIncrease, order.tradeType, order.orderId);
 
-        uint256 index = positionOrderIndex[positionKey][orderKey];
+        uint256 index = positionOrderIndex[positionKey][order.orderId];
         uint256 lastIndex = positionOrders[positionKey].length - 1;
 
         if (index < lastIndex) {
             // swap last order
             PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-            bytes32 lastOrderKey = PositionKey.getOrderKey(
-                lastOrder.isIncrease,
-                lastOrder.tradeType,
-                lastOrder.orderId
-            );
+            // bytes32 lastOrderKey = PositionKey.getOrderKey(
+            //     lastOrder.isIncrease,
+            //     lastOrder.tradeType,
+            //     lastOrder.orderId
+            // );
 
             positionOrders[positionKey][index] = lastOrder;
-            positionOrderIndex[positionKey][lastOrderKey] = index;
+            positionOrderIndex[positionKey][lastOrder.orderId] = index;
         }
-        delete positionOrderIndex[positionKey][orderKey];
+        delete positionOrderIndex[positionKey][order.orderId];
         positionOrders[positionKey].pop();
 
         if (

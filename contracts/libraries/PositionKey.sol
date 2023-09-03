@@ -9,11 +9,11 @@ library PositionKey {
         return keccak256(abi.encodePacked(_account, _pairIndex, _isLong));
     }
 
-    function getOrderKey(
-        bool _isIncrease,
-        TradingTypes.TradeType _tradeType,
-        uint256 _orderId
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_isIncrease, _tradeType, _orderId));
-    }
+    // function getOrderKey(
+    //     bool _isIncrease,
+    //     TradingTypes.TradeType _tradeType,
+    //     uint256 _orderId
+    // ) internal pure returns (bytes32) {
+    //     return keccak256(abi.encodePacked(_isIncrease, _tradeType, _orderId));
+    // }
 }
