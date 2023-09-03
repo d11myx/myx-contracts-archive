@@ -254,7 +254,6 @@ contract PositionManager is FeeManager, Pausable {
         } else {
             if (_price < lpVault.averagePrice) {
                 uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
-
                 pool.decreaseLPProfit(_pairIndex, profit);
             } else {
                 uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
@@ -446,20 +445,15 @@ contract PositionManager is FeeManager, Pausable {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
-            if (_isLong) {
-                // fee
-                tradingFee = sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP);
-            } else {
-                tradingFee = sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP);
-            }
+            // fee
+            tradingFee = _isLong
+                ? sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP)
+                : sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP);
         } else {
-            if (_isLong) {
-                tradingFee = sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP);
-            } else {
-                tradingFee = sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP);
-            }
+            tradingFee = _isLong
+                ? sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP)
+                : sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP);
         }
-
         return tradingFee;
     }
 
