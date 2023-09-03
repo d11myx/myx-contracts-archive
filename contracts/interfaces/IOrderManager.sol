@@ -45,17 +45,9 @@ interface IOrderManager {
 
     function ordersIndex() external view returns (uint256);
 
-    function getOrderKey(
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        bool isIncrease
-    ) external pure returns (bytes32);
-
     function getOrderTpSl(uint256 orderKey) external view returns (TradingTypes.OrderWithTpSl memory);
 
     function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory);
-
-    // function updatePositionManager(address newAddress) external;
 
     function createOrder(TradingTypes.CreateOrderRequest memory request) external returns (uint256 orderId);
 
