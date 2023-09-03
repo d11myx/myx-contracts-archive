@@ -27,7 +27,7 @@ interface IPositionManager {
         int256 pnl
     );
 
-    event UpdateFundingRate(uint256 pairIndex, int256 fundingRate, uint256 lastFundingTime);
+    event UpdateFundingRate(uint256 pairIndex, uint price, int256 fundingRate, uint256 lastFundingTime);
 
     event TakeFundingFeeAddTraderFee(
         address account,
@@ -50,11 +50,7 @@ interface IPositionManager {
         uint256 _sizeAmount
     ) external view returns (uint256 tradingFee);
 
-    function getFundingFee(
-        address _account,
-        uint256 _pairIndex,
-        bool _isLong
-    ) external view returns (int256);
+    function getFundingFee(address _account, uint256 _pairIndex, bool _isLong) external view returns (int256);
 
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
 
