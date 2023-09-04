@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 import '../libraries/Position.sol';
 
@@ -27,7 +27,16 @@ interface IPositionManager {
         int256 pnl
     );
 
-    event UpdateFundingRate(uint256 pairIndex, int256 fundingRate, uint256 lastFundingTime);
+    event UpdateFundingRate(uint256 pairIndex, uint price, int256 fundingRate, uint256 lastFundingTime);
+
+    event TakeFundingFeeAddTraderFee(
+        address account,
+        uint256 pairIndex,
+        uint256 sizeDelta,
+        uint256 tradingFee,
+        int256 fundingFee,
+        uint256 lpTradingFee
+    );
 
     function getExposedPositions(uint256 pairIndex) external view returns (int256);
 
@@ -41,11 +50,7 @@ interface IPositionManager {
         uint256 _sizeAmount
     ) external view returns (uint256 tradingFee);
 
-    function getFundingFee(
-        address _account,
-        uint256 _pairIndex,
-        bool _isLong
-    ) external view returns (int256);
+    function getFundingFee(address _account, uint256 _pairIndex, bool _isLong) external view returns (int256);
 
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
 
@@ -86,4 +91,5 @@ interface IPositionManager {
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
     function updateFundingRate(uint256 _pairIndex) external;
+    function adjustColleral(uint256 pairIndex, address account, bool isLong, int256 collateral) external;
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -23,7 +23,8 @@ import '../libraries/PrecisionUtils.sol';
 import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../helpers/ValidationHelper.sol';
-import 'hardhat/console.sol';
+
+// import 'hardhat/console.sol';
 
 contract Pool is IPool, Roleable {
     using PrecisionUtils for uint256;
@@ -79,7 +80,6 @@ contract Pool is IPool, Roleable {
     function removeOrderManager(address _orderManager) external onlyPoolAdmin {
         delete orderManagers[_orderManager];
     }
-
 
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
@@ -290,7 +290,7 @@ contract Pool is IPool, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) external returns (uint256) {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
         return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
@@ -303,7 +303,7 @@ contract Pool is IPool, Roleable {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) external returns (uint256) {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
         return _addLiquidity(_funder, recipient, _pairIndex, _indexAmount, _stableAmount, data);
@@ -446,32 +446,23 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function _addLiquidity(
-        address _account,
-        address recipient,
+    // calculate lp amount for add liquidity
+    function getMintLpAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
-        uint256 _stableAmount,
-        bytes calldata data
-    ) private returns (uint256 mintAmount) {
-        require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
+        uint256 _stableAmount
+    ) external override view returns (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount,
+            uint256 stableFeeAmount, uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount) {
+        if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
         IPool.Vault memory vault = getVault(_pairIndex);
-        _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
-
-        uint256 afterFeeIndexAmount;
-        uint256 afterFeeStableAmount;
 
         // transfer fee
         uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
         uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
-
-        feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(indexFeeAmount);
-
-        feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(stableFeeAmount);
 
         afterFeeIndexAmount = _indexAmount - indexFeeAmount;
         afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -487,8 +478,8 @@ contract Pool is IPool, Roleable {
 
         // calculate deposit usdt value without slippage
         uint256 slipDelta;
-        address slipToken;
-        uint256 slipAmount;
+        slipToken;
+        slipAmount;
         if (indexReserveDelta + vault.stableTotalAmount > 0) {
             // after deposit
             uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
@@ -513,7 +504,6 @@ contract Pool is IPool, Roleable {
                 slipAmount = AmountMath.getIndexAmount(slipDelta, price);
 
                 afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-                feeTokenAmounts[pair.indexToken] = feeTokenAmounts[pair.indexToken].add(slipAmount);
             } else if (stableTotalDelta > expectStableDelta) {
                 uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
                 uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
@@ -527,7 +517,6 @@ contract Pool is IPool, Roleable {
                 slipAmount = slipDelta;
 
                 afterFeeStableAmount = afterFeeStableAmount - slipDelta;
-                feeTokenAmounts[pair.stableToken] = feeTokenAmounts[pair.stableToken].add(slipDelta);
             }
         }
         // mint lp
@@ -535,6 +524,28 @@ contract Pool is IPool, Roleable {
             indexDepositDelta + afterFeeStableAmount - slipDelta,
             lpFairPrice(_pairIndex)
         );
+
+        return (mintAmount, slipToken, slipAmount, indexFeeAmount, stableFeeAmount, afterFeeIndexAmount, afterFeeStableAmount);
+    }
+
+    function _addLiquidity(
+        address _account,
+        address recipient,
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount,
+        bytes calldata data
+    ) private returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
+        require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
+
+        IPool.Pair memory pair = getPair(_pairIndex);
+        require(pair.pairToken != address(0), 'invalid pair');
+
+        _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
+
+        (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount, uint256 stableFeeAmount,
+            uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount);
+
         IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
@@ -552,7 +563,7 @@ contract Pool is IPool, Roleable {
             slipAmount
         );
 
-        return mintAmount;
+        return (mintAmount, slipToken, slipAmount);
     }
 
     function _removeLiquidity(

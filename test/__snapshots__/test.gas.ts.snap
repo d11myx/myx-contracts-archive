@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TestGas gas cost of infos 1`] = `50286`;
+exports[`TestGas gas cost of infos 1`] = `50285`;
 
-exports[`TestGas gas cost of saveOrderWithTpSl 1`] = `112015`;
+exports[`TestGas gas cost of saveOrderWithTpSl 1`] = `112014`;
 
-exports[`TestGas gas cost of saveUint32Tests 1`] = `43601`;
+exports[`TestGas gas cost of saveUint32Tests 1`] = `43600`;
 
-exports[`TestGas gas cost of saveUint256Tests 1`] = `43584`;
+exports[`TestGas gas cost of saveUint256Tests 1`] = `43583`;
 
-exports[`TestGas gas cost of testKey 1`] = `43553`;
+exports[`TestGas gas cost of testKey 1`] = `43552`;
 
-exports[`TestGas gas cost of testKeys 1`] = `45827`;
+exports[`TestGas gas cost of testKeys 1`] = `45826`;
 
-exports[`TestGas gas cost test maping(address=>struct) 1`] = `178634`;
+exports[`TestGas gas cost test maping(address=>struct) 1`] = `178633`;
