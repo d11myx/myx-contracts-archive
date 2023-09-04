@@ -85,10 +85,10 @@ describe('Trade: Limit order cases', () => {
     describe('long < short', () => {
         //     before(async () => {
         //         const {
-        //             users: [trader],
-        //             usdt,
-        //             positionManager,
-        //             orderManager,
+        //         users: [trader],
+        //         usdt,
+        //         positionManager,
+        //         orderManager,
         //         } = testEnv;
         //
         //         const netExposureAmountBefore = await positionManager.getExposedPositions(pairIndex);

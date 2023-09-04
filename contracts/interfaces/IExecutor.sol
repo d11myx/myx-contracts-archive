@@ -34,16 +34,7 @@ interface IExecutor {
         uint256 tradingFee,
         int256 fundingFee
     );
-
-    event ExecuteLiquidation(
-        bytes32 positionKey,
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        uint256 collateral,
-        uint256 sizeAmount,
-        uint256 price
-    );
+    event ExecuteOrderError(uint256 orderId, string errorMessage);
 
     struct ExecuteOrder {
         uint256 orderId;
@@ -63,7 +54,6 @@ interface IExecutor {
         uint8 level;
         uint256 commissionRatio;
     }
-
 
     function maxTimeDelay() external view returns (uint256);
 

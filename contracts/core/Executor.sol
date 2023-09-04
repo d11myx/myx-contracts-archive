@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
@@ -16,6 +16,7 @@ import '../interfaces/IPool.sol';
 import '../helpers/ValidationHelper.sol';
 import '../helpers/TradingHelper.sol';
 import '../interfaces/IFeeCollector.sol';
+import './logic/LiquidationLogic.sol';
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
@@ -62,6 +63,14 @@ contract Executor is IExecutor, Pausable {
     modifier onlyPositionKeeper() {
         require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'opk');
         _;
+    }
+
+    function setPaused() external onlyAdmin {
+        _pause();
+    }
+
+    function setUnPaused() external onlyAdmin {
+        _unpause();
     }
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external override whenNotPaused onlyPoolAdmin {
@@ -127,7 +136,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('eim Id:', order.orderId);
 
             try
                 this.executeIncreaseOrder(
@@ -136,12 +144,8 @@ contract Executor is IExecutor, Pausable {
                     order.level,
                     order.commissionRatio
                 )
-            {
-                console.log('c orderId:', order.orderId);
-            } catch Error(string memory reason) {
-                console.log('error:', reason);
-                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true);
-                console.log('canceled:', order.orderId);
+            {} catch Error(string memory reason) {
+                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true, reason);
             }
         }
     }
@@ -151,8 +155,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('elo orderId:', order.orderId);
-
             try
                 this.executeIncreaseOrder(
                     order.orderId,
@@ -160,10 +162,8 @@ contract Executor is IExecutor, Pausable {
                     order.level,
                     order.commissionRatio
                 )
-            {
-                console.log('c orderId:', order.orderId);
-            } catch Error(string memory reason) {
-                console.log('error:', reason);
+            {} catch Error(string memory reason) {
+                emit ExecuteOrderError(order.orderId, reason);
             }
         }
     }
@@ -174,8 +174,6 @@ contract Executor is IExecutor, Pausable {
         uint8 level,
         uint256 commissionRatio
     ) external override onlyPositionKeeper whenNotPaused {
-        console.log('eio orderId:', _orderId);
-
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
             return;
@@ -190,7 +188,7 @@ contract Executor is IExecutor, Pausable {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, true);
+            orderManager.cancelOrder(order.orderId, order.tradeType, true, 'pair enable');
             return;
         }
 
@@ -220,7 +218,6 @@ contract Executor is IExecutor, Pausable {
             order.collateral,
             order.sizeAmount,
             true,
-            // tradingConfig.minLeverage,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
@@ -275,8 +272,7 @@ contract Executor is IExecutor, Pausable {
             )
         );
 
-        bytes32 orderKey = PositionKey.getOrderKey(true, order.tradeType, _orderId);
-        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(orderKey);
+        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(_orderId);
         if (orderTpSl.tp > 0) {
             orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -306,7 +302,7 @@ contract Executor is IExecutor, Pausable {
             );
         }
 
-        orderManager.removeOrderTpSl(orderKey);
+        orderManager.removeOrderTpSl(_orderId);
 
         // delete order
         if (_tradeType == TradingTypes.TradeType.MARKET) {
@@ -327,7 +323,6 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
-        console.log('eio orderId:', _orderId);
     }
 
     function executeDecreaseMarketOrders(
@@ -335,8 +330,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('edmo orderId:', order.orderId);
-
             try
                 this.executeDecreaseOrder(
                     order.orderId,
@@ -344,12 +337,8 @@ contract Executor is IExecutor, Pausable {
                     order.level,
                     order.commissionRatio
                 )
-            {
-                console.log('completed orderId:', order.orderId);
-            } catch Error(string memory reason) {
-                console.log('error:', reason);
-                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false);
-                console.log('canceled:', order.orderId);
+            {} catch Error(string memory reason) {
+                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false, reason);
             }
         }
     }
@@ -359,8 +348,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
-            console.log('edlo orderId:', order.orderId);
-
             try
                 this.executeDecreaseOrder(
                     order.orderId,
@@ -368,10 +355,8 @@ contract Executor is IExecutor, Pausable {
                     order.level,
                     order.commissionRatio
                 )
-            {
-                console.log('completed. index:', order.orderId);
-            } catch Error(string memory reason) {
-                console.log('error:', reason);
+            {} catch Error(string memory reason) {
+                emit ExecuteOrderError(order.orderId, reason);
             }
         }
     }
@@ -391,7 +376,7 @@ contract Executor is IExecutor, Pausable {
         uint8 level,
         uint256 commissionRatio
     ) internal {
-        console.log('edo orderId:', _orderId);
+        //         console.log('edo orderId:', _orderId);
 
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
@@ -407,7 +392,7 @@ contract Executor is IExecutor, Pausable {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, false);
+            orderManager.cancelOrder(order.orderId, order.tradeType, false, 'pair enable');
             return;
         }
 
@@ -515,7 +500,6 @@ contract Executor is IExecutor, Pausable {
         } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             orderManager.removeDecreaseLimitOrders(_orderId);
         } else {
-            orderManager.setPositionHasTpSl(key, order.tradeType, false);
             orderManager.removeDecreaseLimitOrders(_orderId);
         }
 
@@ -541,7 +525,7 @@ contract Executor is IExecutor, Pausable {
             for (uint256 i = 0; i < orders.length; i++) {
                 IOrderManager.PositionOrder memory positionOrder = orders[i];
                 if (!positionOrder.isIncrease) {
-                    orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                    orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false, '! increase');
                 }
             }
         }
@@ -560,7 +544,6 @@ contract Executor is IExecutor, Pausable {
             tradingFee,
             fundingFee
         );
-        console.log('edo orderId:', _orderId);
     }
 
     function setPricesAndExecuteADL(
@@ -654,80 +637,16 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         for (uint256 i = 0; i < executePositions.length; i++) {
             ExecutePosition memory executePosition = executePositions[i];
-            _liquidatePosition(executePosition.positionKey, executePosition.level, executePosition.commissionRatio);
+            LiquidationLogic.liquidationPosition(
+                pool,
+                orderManager,
+                positionManager,
+                this,
+                ADDRESS_PROVIDER,
+                executePosition.positionKey,
+                executePosition.level,
+                executePosition.commissionRatio
+            );
         }
-    }
-
-    function _liquidatePosition(bytes32 positionKey, uint8 level, uint256 commissionRatio) internal {
-        Position.Info memory position = positionManager.getPositionByKey(positionKey);
-        if (position.positionAmount == 0) {
-            return;
-        }
-        IPool.Pair memory pair = pool.getPair(position.pairIndex);
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
-        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
-
-        int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
-        uint256 tradingFee = positionManager.getTradingFee(
-            position.pairIndex,
-            position.isLong,
-            position.positionAmount
-        );
-        int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
-        int256 exposureAsset = int256(position.collateral) +
-            unrealizedPnl -
-            int256(tradingFee) +
-            (position.isLong ? -fundingFee : fundingFee);
-
-        bool needLiquidate;
-        if (exposureAsset <= 0) {
-            needLiquidate = true;
-        } else {
-            uint256 riskRate = position
-                .positionAmount
-                .mulPrice(position.averagePrice)
-                .mulPercentage(tradingConfig.maintainMarginRate)
-                .calculatePercentage(uint256(exposureAsset));
-            needLiquidate = riskRate >= PrecisionUtils.percentage();
-        }
-        if (!needLiquidate) {
-            return;
-        }
-
-        // cancel all positionOrders
-        orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
-
-        uint256 orderId = orderManager.createOrder(
-            TradingTypes.CreateOrderRequest({
-                account: position.account,
-                pairIndex: position.pairIndex,
-                tradeType: TradingTypes.TradeType.MARKET,
-                collateral: 0,
-                openPrice: price,
-                isLong: position.isLong,
-                sizeAmount: -int256(position.positionAmount),
-                data: abi.encode(position.account)
-            })
-        );
-
-        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio);
-
-        emit ExecuteLiquidation(
-            positionKey,
-            position.account,
-            position.pairIndex,
-            position.isLong,
-            position.collateral,
-            position.positionAmount,
-            price
-        );
-    }
-
-    function setPaused() external onlyAdmin {
-        _pause();
-    }
-
-    function setUnPaused() external onlyAdmin {
-        _unpause();
     }
 }
