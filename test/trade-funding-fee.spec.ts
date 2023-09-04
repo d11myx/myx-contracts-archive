@@ -197,6 +197,9 @@ describe('Trade: funding fee', () => {
             const size = ethers.utils.parseUnits('9', 18);
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
+            const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
+            expect(fundingFeeTrackerBefore).to.be.eq('27906930000');
+
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
 
@@ -207,13 +210,11 @@ describe('Trade: funding fee', () => {
             // update funding fee
             await increase(Duration.hours(10));
             await positionManager.updateFundingRate(pairIndex);
-
             const fundingFeeTrackerAfter = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerAfter).to.be.eq('27906930000');
+            expect(fundingFeeTrackerAfter).to.be.eq('25030230000');
 
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
-
             await decreasePosition(
                 testEnv,
                 trader,
@@ -225,7 +226,6 @@ describe('Trade: funding fee', () => {
             );
 
             const userUsdtAfter = await usdt.balanceOf(trader.address);
-
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPositionBefore.collateral;
             const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPositionBefore.positionAmount);
@@ -246,6 +246,9 @@ describe('Trade: funding fee', () => {
             const size = ethers.utils.parseUnits('1', 18);
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
+            const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
+            expect(fundingFeeTrackerBefore).to.be.eq('25030230000');
+
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
 
@@ -258,7 +261,7 @@ describe('Trade: funding fee', () => {
             await positionManager.updateFundingRate(pairIndex);
 
             const fundingFeeTrackerAfter = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerAfter).to.be.eq('27906930000');
+            expect(fundingFeeTrackerAfter).to.be.eq('20622660000');
 
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
@@ -274,7 +277,6 @@ describe('Trade: funding fee', () => {
             );
 
             const userUsdtAfter = await usdt.balanceOf(trader.address);
-
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPositionBefore.collateral;
             const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPositionBefore.positionAmount);
