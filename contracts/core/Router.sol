@@ -10,6 +10,7 @@ import '../interfaces/IRouter.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IOrderManager.sol';
+import '../interfaces/IPositionManager.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../interfaces/ISwapCallback.sol';
 import '../interfaces/IPool.sol';
@@ -19,15 +20,18 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
     IPool public immutable pool;
+    IPositionManager public immutable positionManager;
 
     constructor(
         address _weth,
         IAddressesProvider addressProvider,
         IOrderManager _orderManager,
+        IPositionManager _positionManager,
         IPool _pool
     ) ETHGateway(_weth) {
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
+        positionManager = _positionManager;
         pool = _pool;
     }
 
@@ -372,5 +376,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         } else if (stableAmount > 0) {
             IERC20(stableToken).transferFrom(sender, msg.sender, stableAmount);
         }
+    }
+
+    function adjustColleral(uint256 pairIndex, bool isLong, int256 collateral) external {
+        positionManager.adjustColleral(pairIndex, msg.sender, isLong, collateral);
     }
 }
