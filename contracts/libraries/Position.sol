@@ -6,7 +6,8 @@ import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/TradingTypes.sol';
 import '../libraries/PositionKey.sol';
-import 'hardhat/console.sol';
+
+// import 'hardhat/console.sol';
 
 library Position {
     using Int256Utils for int256;
@@ -37,6 +38,13 @@ library Position {
         bytes32 key
     ) internal view returns (Position.Info storage position) {
         position = self[key];
+    }
+
+    function init(Info storage self, uint256 pairIndex, address account, bool isLong, uint256 oraclePrice) internal {
+        self.pairIndex = pairIndex;
+        self.account = account;
+        self.isLong = isLong;
+        self.averagePrice = oraclePrice;
     }
 
     function getUnrealizedPnl(Info memory self, uint256 _sizeAmount, uint256 price) internal pure returns (int256 pnl) {

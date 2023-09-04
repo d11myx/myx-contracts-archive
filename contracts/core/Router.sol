@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 import '@openzeppelin/contracts/utils/Address.sol';
 
@@ -10,6 +10,7 @@ import '../interfaces/IRouter.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IOrderManager.sol';
+import '../interfaces/IPositionManager.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../interfaces/ISwapCallback.sol';
 import '../interfaces/IPool.sol';
@@ -19,15 +20,18 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
     IPool public immutable pool;
+    IPositionManager public immutable positionManager;
 
     constructor(
         address _weth,
         IAddressesProvider addressProvider,
         IOrderManager _orderManager,
+        IPositionManager _positionManager,
         IPool _pool
     ) ETHGateway(_weth) {
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
+        positionManager = _positionManager;
         pool = _pool;
     }
 
@@ -71,21 +75,10 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
 
         // order with tp sl
         if (request.tp > 0 || request.sl > 0) {
-            bytes32 positionKey = PositionKey.getPositionKey(request.account, request.pairIndex, request.isLong);
-
-            require(
-                request.tp == 0 || !orderManager.positionHasTpSl(positionKey, TradingTypes.TradeType.TP),
-                'tp already exists'
-            );
-            require(
-                request.sl == 0 || !orderManager.positionHasTpSl(positionKey, TradingTypes.TradeType.SL),
-                'sl already exists'
-            );
-
-            bytes32 orderKey = PositionKey.getOrderKey(true, request.tradeType, orderId);
+            // bytes32 orderKey = PositionKey.getOrderKey(true, request.tradeType, orderId);
 
             orderManager.saveOrderTpSl(
-                orderKey,
+                orderId,
                 TradingTypes.OrderWithTpSl({
                     tpPrice: request.tpPrice,
                     tp: request.tp,
@@ -141,11 +134,11 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
-        orderManager.cancelOrder(orderId, tradeType, true);
+        orderManager.cancelOrder(orderId, tradeType, true, 'cancelIncreaseOrder');
     }
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
-        orderManager.cancelOrder(orderId, tradeType, false);
+        orderManager.cancelOrder(orderId, tradeType, false, 'cancelDecreaseOrder');
     }
 
     function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external {
@@ -156,9 +149,19 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
             uint256 lastIndex = orders.length - 1;
             IOrderManager.PositionOrder memory positionOrder = orders[lastIndex];
             if (positionOrder.isIncrease) {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+                orderManager.cancelOrder(
+                    positionOrder.orderId,
+                    positionOrder.tradeType,
+                    true,
+                    'cancelAllPositionOrders'
+                );
             } else {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                orderManager.cancelOrder(
+                    positionOrder.orderId,
+                    positionOrder.tradeType,
+                    false,
+                    'cancelAllPositionOrders'
+                );
             }
         }
     }
@@ -170,9 +173,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         for (uint256 i = 0; i < orders.length; i++) {
             IOrderManager.PositionOrder memory positionOrder = orders[i];
             if (isIncrease && positionOrder.isIncrease) {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, true, 'cancelOrders');
             } else if (!isIncrease && !positionOrder.isIncrease) {
-                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false);
+                orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false, 'cancelOrders');
             }
         }
     }
@@ -180,19 +183,29 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     function createOrderTpSl(
         CreateOrderTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId) {
+        uint256 orderAmount;
         if (request.isIncrease) {
-            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(request.orderId, request.tradeType);
+            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+                request.orderId,
+                request.tradeType
+            );
             require(order.account == msg.sender, 'no access');
+            orderAmount = order.sizeAmount;
         } else {
-            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(request.orderId, request.tradeType);
+            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+                request.orderId,
+                request.tradeType
+            );
             require(order.account == msg.sender, 'no access');
+            orderAmount = order.sizeAmount;
         }
 
         if (request.tp > 0 || request.sl > 0) {
-            bytes32 orderKey = PositionKey.getOrderKey(request.isIncrease, request.tradeType, request.orderId);
+            require(request.tp <= orderAmount && request.sl <= orderAmount, 'exceeds order size');
 
+            // bytes32 orderKey = PositionKey.getOrderKey(request.isIncrease, request.tradeType, request.orderId);
             orderManager.saveOrderTpSl(
-                orderKey,
+                request.orderId,
                 TradingTypes.OrderWithTpSl({
                     tpPrice: request.tpPrice,
                     tp: request.tp,
@@ -207,10 +220,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId) {
-        bytes32 key = PositionKey.getPositionKey(msg.sender, request.pairIndex, request.isLong);
-        require(request.tp == 0 || !orderManager.positionHasTpSl(key, TradingTypes.TradeType.TP), 'tp already exists');
-        require(request.sl == 0 || !orderManager.positionHasTpSl(key, TradingTypes.TradeType.SL), 'sl already exists');
-
         if (request.tp > 0) {
             tpOrderId = orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -247,9 +256,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         address stableToken,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override {
+    ) external override returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).addLiquidity(msg.sender, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
+        return IPool(pool).addLiquidity(msg.sender, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
     }
 
     function addLiquidityForAccount(
@@ -367,5 +376,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         } else if (stableAmount > 0) {
             IERC20(stableToken).transferFrom(sender, msg.sender, stableAmount);
         }
+    }
+
+    function adjustColleral(uint256 pairIndex, bool isLong, int256 collateral) external {
+        positionManager.adjustColleral(pairIndex, msg.sender, isLong, collateral);
     }
 }
