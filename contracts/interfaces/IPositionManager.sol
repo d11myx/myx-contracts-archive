@@ -54,6 +54,8 @@ interface IPositionManager {
 
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
 
+    function getNextFundingRateUpdateTime(uint256 _pairIndex) external view returns (uint256);
+
     function getPosition(
         address _account,
         uint256 _pairIndex,
