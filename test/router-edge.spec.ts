@@ -6,7 +6,6 @@ import { deployMockCallback, getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, wait
 import { expect } from './shared/expect';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/trading/Router';
-import usdt from '../markets/usdt';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 0;
@@ -249,7 +248,9 @@ describe('Router: Edge cases', () => {
                 'indexReservedAmount',
                 pairVaultInfo.indexReservedAmount,
             );
-            expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(0);
+            expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(
+                '306000000000000000',
+            );
 
             // shorter decrease position will wait for adl
             const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {

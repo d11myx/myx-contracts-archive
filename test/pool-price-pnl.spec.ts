@@ -19,25 +19,25 @@ describe('Modify LP Average Price', async () => {
             btc,
             usdt,
             pool,
+            router,
         } = testEnv;
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('20000', 18);
         const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
-        let testCallBack = await deployMockCallback();
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
         let pair = await pool.getPair(pairIndex);
 
         let lpToken = (await getContract<PoolToken>('Token', pair[3])) as PoolToken;
         let bal = await lpToken.balanceOf(depositor.address);
         expect(bal).to.be.eq('0');
-        await testCallBack
+        await router
             .connect(depositor.signer)
-            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
         bal = await lpToken.balanceOf(depositor.address);
-        expect(bal).to.be.eq('891000000000000000000000000');
+        expect(bal).to.be.eq('899100000000000000000000000');
         let blaPool = await lpToken.balanceOf(pool.address);
         // expect(blaPool).to.be.eq('1');
     });
