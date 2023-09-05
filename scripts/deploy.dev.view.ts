@@ -29,8 +29,24 @@ async function main() {
     // console.log(await pool.getPair(0));
     // console.log(await pool.getPair(1));
 
-    console.log(await orderManager.increaseMarketOrders(7));
-    console.log(await executor.executeIncreaseMarketOrders([{ orderId: 7, level: 0, commissionRatio: 0 }]));
+    console.log(
+        `btc price:`,
+        ethers.utils.formatUnits(await oraclePriceFeed.getPrice('0x2572481e069456b87350976b304521D818fd4d45'), 30),
+    );
+    console.log(
+        `eth price:`,
+        ethers.utils.formatUnits(await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'), 30),
+    );
+
+    // console.log(await orderManager.increaseMarketOrders(4));
+    // console.log(await executor.executeIncreaseMarketOrders([{ orderId: 4, level: 0, commissionRatio: 0 }]));
+    // console.log(
+    //     ethers.utils.toUtf8String(
+    //         '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000d6f72646572206578706972656400000000000000000000000000000000000000',
+    //     ),
+    // );
+
+    console.log(await positionManager.getNextFundingRateUpdateTime(1));
 
     // console.log(
     //     `btc price:`,

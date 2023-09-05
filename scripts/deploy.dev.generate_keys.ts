@@ -23,7 +23,7 @@ async function main() {
     // // privateKeysAsHex.for
     // // console.log(privateKeysAsHex);
 
-    for (let i = 0; i < 11; i++) {
+    for (let i = 0; i < 5; i++) {
         const wallet = ethers.Wallet.createRandom();
         console.log(wallet.privateKey + '----' + wallet.address);
     }
