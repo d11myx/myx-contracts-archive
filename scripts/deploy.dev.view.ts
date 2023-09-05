@@ -1,13 +1,5 @@
 import { ethers } from 'hardhat';
-import {
-    getExecutor,
-    getOraclePriceFeed,
-    getOrderManager,
-    getPool,
-    getPositionManager,
-    getRouter,
-    TradeType,
-} from '../helpers';
+import { getExecutor, getOraclePriceFeed, getOrderManager, getPool, getPositionManager, getRouter } from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -34,11 +26,28 @@ async function main() {
     console.log(`router:`, router.address);
     // console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
-    console.log(await pool.getPair(0));
-    console.log(await pool.getPair(1));
+    // console.log(await pool.getPair(0));
+    // console.log(await pool.getPair(1));
+
+    console.log(await orderManager.increaseMarketOrders(7));
+    console.log(await executor.executeIncreaseMarketOrders([{ orderId: 7, level: 0, commissionRatio: 0 }]));
+
+    // console.log(
+    //     `btc price:`,
+    //     ethers.utils.formatUnits(await oraclePriceFeed.getPrice('0x2572481e069456b87350976b304521D818fd4d45'), 30),
+    // );
+    // console.log(
+    //     `eth price:`,
+    //     ethers.utils.formatUnits(await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'), 30),
+    // );
+    //
+    // console.log(
+    //     ethers.utils.toUtf8String(
+    //         '0x00000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000176e6f742072656163682074726967676572207072696365000000000000000000',
+    //     ),
+    // );
 
     // console.log(await orderManager.increaseMarketOrders(25));
-    // console.log(await executor.executeIncreaseMarketOrders([{ orderId: 7, level: 0, commissionRatio: 0 }]));
 
     // console.log(await positionManager.getPosition('0x2068f8e9C9e61A330F2F713C998D372C04e3C9Cc', 0, true));
 

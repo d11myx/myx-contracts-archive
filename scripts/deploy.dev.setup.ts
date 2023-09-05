@@ -44,8 +44,8 @@ async function main() {
     console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
     console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
 
-    await waitForTx(await roleManager.addKeeper(keeper));
-    await waitForTx(await roleManager.addPoolAdmin(keeper));
+    await waitForTx(await roleManager.connect(deployer).addKeeper(keeper));
+    await waitForTx(await roleManager.connect(deployer).addPoolAdmin(keeper));
 
     const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
     const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);

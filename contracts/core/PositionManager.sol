@@ -520,6 +520,10 @@ contract PositionManager is FeeManager, Pausable {
         return _currentFundingRate(_pairIndex, price);
     }
 
+    function getNextFundingRateUpdateTime(uint256 _pairIndex) external view override returns (uint256) {
+        return lastFundingRateUpdateTimes[_pairIndex] + fundingInterval;
+    }
+
     function _currentFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
         IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
