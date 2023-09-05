@@ -107,7 +107,7 @@ describe('Trade: funding fee', () => {
             const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPositionBefore.positionAmount);
 
             // longer user will be paid fundingFee
-            // expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee);
+            expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee);
         });
 
         it('shorter user closed position, should be received fundingFee', async () => {
@@ -158,7 +158,7 @@ describe('Trade: funding fee', () => {
             const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPositionBefore.positionAmount);
 
             // shorter user will be received fundingFee
-            // expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
+            expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
         });
     });
 
@@ -231,7 +231,6 @@ describe('Trade: funding fee', () => {
             const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPositionBefore.positionAmount);
 
             // longer user will be received fundingFee
-            //todo 需要待修复getFundingFee中position.fundingFeeTracker=0的问题后验证
             expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
         });
 
@@ -283,7 +282,6 @@ describe('Trade: funding fee', () => {
             const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPositionBefore.positionAmount);
 
             // shorter user will be paid fundingFee
-            //todo 需要待修复getFundingFee中position.fundingFeeTracker=0的问题后验证
             expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee);
         });
     });
