@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import { ethers } from 'hardhat';
-import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';
+import hre, { ethers } from 'hardhat';
+import { decreasePosition, extraHash, increasePosition, mintAndApprove } from './helpers/misc';
 import { BigNumber, constants } from 'ethers';
 import { getMockToken, TradeType } from '../helpers';
 
@@ -160,20 +160,33 @@ describe('LP: Pool cases', () => {
             const availableLongBefore = vaultBefore.indexTotalAmount
                 .sub(vaultBefore.indexReservedAmount)
                 .mul(pairPrice);
-            // const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
+            const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
             // open position
             const collateral = ethers.utils.parseUnits('30000', 18);
             const size = ethers.utils.parseUnits('10', 18);
             const openPrice = ethers.utils.parseUnits('30000', 30);
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
+            const { executeReceipt } = await increasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                collateral,
+                openPrice,
+                size,
+                TradeType.MARKET,
+                true,
+            );
+            const lpFeeAmount = await extraHash(executeReceipt?.transactionHash, 'DistributeTradingFee', 'lpAmount');
 
             const vaultAfter = await pool.getVault(pairIndex);
             const availableLongAfter = vaultAfter.indexTotalAmount.sub(vaultAfter.indexReservedAmount).mul(pairPrice);
-            // const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
+            const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
             expect(availableLongAfter).to.be.eq(availableLongBefore.sub(size.mul(pairPrice)));
+            expect(availableShortAfter).to.be.eq(availableShortBefore.add(lpFeeAmount));
+
+            expect(vaultAfter.indexReservedAmount).to.be.eq(vaultBefore.indexReservedAmount.add(size));
         });
 
         it('long tracker decreased, unlock available long liquidity', async () => {
@@ -194,27 +207,194 @@ describe('LP: Pool cases', () => {
             const availableLongBefore = vaultBefore.indexTotalAmount
                 .sub(vaultBefore.indexReservedAmount)
                 .mul(pairPrice);
-            // const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
+            const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
             // open position
             const collateral = ethers.utils.parseUnits('30000', 18);
             const size = ethers.utils.parseUnits('10', 18);
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-            await decreasePosition(testEnv, trader, pairIndex, collateral, size, TradeType.MARKET, true);
+            const { executeReceipt } = await decreasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                collateral,
+                size,
+                TradeType.MARKET,
+                true,
+            );
+            const lpFeeAmount = await extraHash(executeReceipt?.transactionHash, 'DistributeTradingFee', 'lpAmount');
 
             const vaultAfter = await pool.getVault(pairIndex);
             const availableLongAfter = vaultAfter.indexTotalAmount.sub(vaultAfter.indexReservedAmount).mul(pairPrice);
-            // const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
+            const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
             expect(availableLongAfter).to.be.eq(availableLongBefore.add(size.mul(pairPrice)));
+            expect(availableShortAfter).to.be.eq(availableShortBefore.add(lpFeeAmount));
+
+            expect(vaultAfter.indexReservedAmount).to.be.eq(vaultBefore.indexReservedAmount.sub(size));
         });
 
-        it('long tracker -> short tracker, unlock all long liquidity, lock short liquidity', async () => {});
+        it('long tracker -> short tracker, unlock all long liquidity, lock short liquidity', async () => {
+            // const {
+            //     users: [depositor, trader],
+            //     btc,
+            //     usdt,
+            //     router,
+            //     pool,
+            //     oraclePriceFeed,
+            //     positionManager,
+            // } = testEnv;
+            // await mintAndApprove(testEnv, usdt, ethers.utils.parseUnits('30000', 18), depositor, router.address);
+            // await increasePosition(
+            //     testEnv,
+            //     depositor,
+            //     pairIndex,
+            //     ethers.utils.parseUnits('30000', 18),
+            //     ethers.utils.parseUnits('30000', 30),
+            //     ethers.utils.parseUnits('10', 18),
+            //     TradeType.MARKET,
+            //     true,
+            // );
+            //
+            // expect(await positionManager.getExposedPositions(pairIndex)).to.be.gt(0);
+            //
+            // const pairPrice = BigNumber.from(
+            //     ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
+            // );
+            //
+            // const vaultBefore = await pool.getVault(pairIndex);
+            // const availableLongBefore = vaultBefore.indexTotalAmount
+            //     .sub(vaultBefore.indexReservedAmount)
+            //     .mul(pairPrice);
+            // const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
+            //
+            // // open position
+            // const collateral = ethers.utils.parseUnits('30000', 18);
+            // const size = ethers.utils.parseUnits('20', 18);
+            // const openPrice = ethers.utils.parseUnits('30000', 30);
+            // await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            // const { executeReceipt } = await increasePosition(
+            //     testEnv,
+            //     trader,
+            //     pairIndex,
+            //     collateral,
+            //     openPrice,
+            //     size,
+            //     TradeType.MARKET,
+            //     false,
+            // );
+            // const lpFeeAmount = await extraHash(executeReceipt?.transactionHash, 'DistributeTradingFee', 'lpAmount');
+            //
+            // expect(await positionManager.getExposedPositions(pairIndex)).to.be.gt(0);
+            //
+            // const vaultAfter = await pool.getVault(pairIndex);
+            // const availableLongAfter = vaultAfter.indexTotalAmount.sub(vaultAfter.indexReservedAmount).mul(pairPrice);
+            // const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
+            //
+            // console.log(availableLongBefore);
+            // console.log(availableLongAfter);
+            // console.log(vaultBefore.indexTotalAmount);
+            // console.log(vaultAfter.indexReservedAmount);
+            // console.log(vaultBefore.indexTotalAmount);
+            // console.log(vaultAfter.indexReservedAmount);
+            // expect(availableLongAfter).to.be.eq(availableLongBefore);
+            // expect(availableShortAfter).to.be.eq(availableShortBefore.sub(size.mul(pairPrice)).add(lpFeeAmount));
+            //
+            // expect(vaultAfter.stableReservedAmount).to.be.eq(vaultBefore.stableReservedAmount.add(size.mul(pairPrice)));
+        });
+        //
+        // it('short tracker -> long tracker, unlock all short liquidity, lock long liquidity', async () => {});
 
-        it('short tracker -> long tracker, unlock all short liquidity, lock long liquidity', async () => {});
+        it('short tracker increased, lock available short liquidity', async () => {
+            const {
+                users: [, trader],
+                btc,
+                usdt,
+                router,
+                pool,
+                oraclePriceFeed,
+            } = testEnv;
 
-        it('short tracker increased, lock available short liquidity', async () => {});
+            const pairPrice = BigNumber.from(
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
+            );
 
-        it('short tracker decreased, unlock available short liquidity', async () => {});
+            const vaultBefore = await pool.getVault(pairIndex);
+            const availableLongBefore = vaultBefore.indexTotalAmount
+                .sub(vaultBefore.indexReservedAmount)
+                .mul(pairPrice);
+            const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
+
+            // open position
+            const collateral = ethers.utils.parseUnits('30000', 18);
+            const size = ethers.utils.parseUnits('10', 18);
+            const openPrice = ethers.utils.parseUnits('30000', 30);
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const { executeReceipt } = await increasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                collateral,
+                openPrice,
+                size,
+                TradeType.MARKET,
+                false,
+            );
+            const lpFeeAmount = await extraHash(executeReceipt?.transactionHash, 'DistributeTradingFee', 'lpAmount');
+
+            const vaultAfter = await pool.getVault(pairIndex);
+            const availableLongAfter = vaultAfter.indexTotalAmount.sub(vaultAfter.indexReservedAmount).mul(pairPrice);
+            const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
+
+            expect(availableLongAfter).to.be.eq(availableLongBefore);
+            expect(availableShortAfter).to.be.eq(availableShortBefore.sub(size.mul(pairPrice)).add(lpFeeAmount));
+
+            expect(vaultAfter.stableReservedAmount).to.be.eq(vaultBefore.stableReservedAmount.add(size.mul(pairPrice)));
+        });
+
+        it('short tracker decreased, unlock available short liquidity', async () => {
+            const {
+                users: [, trader],
+                btc,
+                usdt,
+                router,
+                pool,
+                oraclePriceFeed,
+            } = testEnv;
+
+            const pairPrice = BigNumber.from(
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
+            );
+
+            const vaultBefore = await pool.getVault(pairIndex);
+            const availableLongBefore = vaultBefore.indexTotalAmount
+                .sub(vaultBefore.indexReservedAmount)
+                .mul(pairPrice);
+            const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
+
+            // open position
+            const collateral = ethers.utils.parseUnits('30000', 18);
+            const size = ethers.utils.parseUnits('10', 18);
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const { executeReceipt } = await decreasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                collateral,
+                size,
+                TradeType.MARKET,
+                false,
+            );
+            const lpFeeAmount = await extraHash(executeReceipt?.transactionHash, 'DistributeTradingFee', 'lpAmount');
+
+            const vaultAfter = await pool.getVault(pairIndex);
+            const availableLongAfter = vaultAfter.indexTotalAmount.sub(vaultAfter.indexReservedAmount).mul(pairPrice);
+            const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
+
+            expect(availableLongAfter).to.be.eq(availableLongBefore);
+            expect(availableShortAfter).to.be.eq(availableShortBefore.add(size.mul(pairPrice)).add(lpFeeAmount));
+
+            expect(vaultAfter.stableReservedAmount).to.be.eq(vaultBefore.stableReservedAmount.sub(size.mul(pairPrice)));
+        });
     });
 });
