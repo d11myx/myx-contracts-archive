@@ -538,30 +538,29 @@ contract PositionManager is FeeManager, Pausable {
 
     function _nextFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
         IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
-        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
-        uint256 absNetExposure = currentExposureAmountChecker.abs();
-        uint256 w = fundingFeeConfig.fundingWeightFactor;
-        uint256 q = longTracker[_pairIndex] + shortTracker[_pairIndex];
-        uint256 k = fundingFeeConfig.liquidityPremiumFactor;
+        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex) * int256(_price);
+
+        int256 w = int256(fundingFeeConfig.fundingWeightFactor);
+        int256 q = int256(longTracker[_pairIndex] + shortTracker[_pairIndex]) * int256(_price);
+        int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        uint256 l = (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
-            (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
+        int256 l = int256(
+            (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
+                (lpVault.stableTotalAmount - lpVault.stableReservedAmount)
+        );
 
-        uint256 absFundingRate;
         if (q == 0) {
             fundingRate = 0;
         } else {
-            absFundingRate = (w * absNetExposure * PrecisionUtils.fundingRatePrecision()) / (k * q);
+            fundingRate = (w * currentExposureAmountChecker * int256(PrecisionUtils.fundingRatePrecision())) / (k * q);
             if (l != 0) {
-                absFundingRate =
-                    absFundingRate +
-                    ((PrecisionUtils.fundingRatePrecision() - w) * absNetExposure) /
+                fundingRate =
+                    fundingRate +
+                    ((int256(PrecisionUtils.fundingRatePrecision()) - w) * currentExposureAmountChecker) /
                     (k * l);
             }
-            fundingRate = currentExposureAmountChecker >= 0 ? int256(absFundingRate) : -int256(absFundingRate);
         }
-
         fundingRate = (fundingRate - fundingFeeConfig.interest).max(fundingFeeConfig.minFundingRate).min(
             fundingFeeConfig.maxFundingRate
         );
