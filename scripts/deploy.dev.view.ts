@@ -46,7 +46,8 @@ async function main() {
     //     ),
     // );
 
-    console.log(await positionManager.getNextFundingRateUpdateTime(1));
+    console.log(await positionManager.getNextFundingRateUpdateTime(0));
+    console.log(await positionManager.lastFundingRateUpdateTimes(0));
 
     // console.log(
     //     `btc price:`,
