@@ -94,58 +94,6 @@ if (!SKIP_LOAD) {
 }
 
 // const GOERLI_DEPLOY_KEY = "";
-const abiDecoder = require('abi-decoder');
-
-task('decode-event', 'decode trx event logs')
-    .addParam('hash', 'trx hash')
-    .setAction(async (param, hre) => {
-        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
-        for (let fullName of fullNames) {
-            let contract = await hre.artifacts.readArtifact(fullName);
-            abiDecoder.addABI(contract.abi);
-        }
-        let receipt = await hre.ethers.provider.getTransactionReceipt(param.hash);
-        const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
-        for (let event of decodedLogs) {
-            console.log(event);
-        }
-    });
-
-task('encode-event', 'get method artifact detail by method name')
-    .addOptionalParam('contract', 'contract name')
-    .setAction(async (param, hre) => {
-        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
-        for (let fullName of fullNames) {
-            let contract = await hre.artifacts.readArtifact(fullName);
-            if (contract.contractName == param.contract) {
-                console.log(`contract:`, contract.contractName);
-                abiDecoder.addABI(contract.abi);
-            }
-        }
-        let methodObject = abiDecoder.getMethodIDs();
-        Object.keys(methodObject).forEach(function (methodId: string, index: number, arr: any) {
-            let method = methodObject[methodId];
-            if (method.type == 'event') {
-                console.log(`event: ${method.name} id: ${methodId}`);
-            }
-        });
-    });
-
-task('update-evm-time', 'update evm time')
-    .addParam('increase', 'increase or decrease minutes')
-    .setAction(async (param, hre) => {
-        let blockNumber = await hre.ethers.provider.getBlockNumber();
-        let block = await hre.ethers.provider.getBlock(blockNumber);
-        console.log(`block time ${block.timestamp} diff ${block.timestamp - getCurrentTimestamp()}`);
-
-        await hre.network.provider.send('evm_increaseTime', [parseInt(param.increase)]);
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        blockNumber = await hre.ethers.provider.getBlockNumber();
-        block = await hre.ethers.provider.getBlock(blockNumber);
-        console.log(`block time ${block.timestamp} diff ${block.timestamp - getCurrentTimestamp()}`);
-    });
 
 const gas = 'auto';
 const gasPrice = 'auto';
