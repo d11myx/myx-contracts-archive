@@ -164,8 +164,6 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
 
     const PRICE_PRECISION = '1000000000000000000000000000000';
     const PERCENTAGE = '100000000';
-    // const userLongPosition = await positionManager.getPosition(user.address, pairIndex, true);
-    // const userShortPosition = await positionManager.getPosition(user.address, pairIndex, false);
     const fundingFeeConfig = await pool.getFundingFeeConfig(pairIndex);
     const pair = await pool.getPair(pairIndex);
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
@@ -173,24 +171,26 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const longTracker = await positionManager.longTracker(pairIndex);
     const shortTracker = await positionManager.shortTracker(pairIndex);
 
-    const absNetExposure = currentExposureAmountChecker.abs().mul(price);
+    const absNetExposure = currentExposureAmountChecker.abs().mul(price); // eq u and v
     const q = longTracker.add(shortTracker);
+    const u = longTracker.mul(price);
+    const v = shortTracker.mul(price);
     const w = fundingFeeConfig.fundingWeightFactor;
     const k = fundingFeeConfig.liquidityPremiumFactor;
     const interest = fundingFeeConfig.interest;
     const diffBTCAmount = BigNumber.from(indexTotalAmount).sub(BigNumber.from(indexReservedAmount));
     const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
-    const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount.mul(price).div(PRICE_PRECISION));
+    const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount);
 
     let fundingRate, absFundingRate;
     if (q.eq(0)) {
         fundingRate = 0;
     } else {
-        absFundingRate = BigNumber.from(w).mul(absNetExposure).mul(PERCENTAGE).div(k.mul(q));
-        // absFundingRate = BigNumber.from(w).mul(u.sub(v)).mul(PERCENTAGE).div(k.mul(q));
+        // absFundingRate = BigNumber.from(w).mul(absNetExposure).mul(PERCENTAGE).div(k.mul(q));
+        absFundingRate = BigNumber.from(w).mul(u.sub(v)).mul(PERCENTAGE).div(k.mul(q));
         if (!l.eq(0)) {
-            absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(absNetExposure).div(k.mul(l)));
-            // absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(u.sub(v)).div(k.mul(l)));
+            // absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(absNetExposure).div(k.mul(l)));
+            absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(u.sub(v)).div(k.mul(l)));
         }
         fundingRate = currentExposureAmountChecker.gte(0) ? absFundingRate : -absFundingRate;
     }
@@ -198,6 +198,10 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     console.log('------test start--------');
     console.log('currentExposureAmountChecker: ', currentExposureAmountChecker);
     console.log('price: ', price);
+    // console.log('diffBTCAmount: ', diffBTCAmount);
+    // console.log('diffUSDTAmount: ', diffUSDTAmount);
+    // console.log('diffBTCAmount.mul(price): ', diffBTCAmount.mul(price));
+    // console.log('diffUSDTAmount.mul(price).div(PRICE_PRECISION): ', diffBTCAmount.mul(price));
     console.log('absNetExposure: ', absNetExposure);
     console.log('w: ', w);
     console.log('q: ', q);
