@@ -33,37 +33,44 @@ async function main() {
     const roleManager = await getRoleManager();
     const pool = await getPool();
     const testCallBack = await getTestCallBack();
-
-    console.log(`router:`, router.address);
+    // console.log(`router:`, router.address);
     // console.log(`index:`, await orderManager.ordersIndex());
+    console.log(`executor:`, executor.address);
 
     const { usdt, btc, eth } = await getTokens();
-    const keeper = '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63';
-
-    console.log(`executor:`, executor.address);
     console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
     console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
 
-    await waitForTx(await roleManager.connect(deployer).addKeeper(keeper));
-    await waitForTx(await roleManager.connect(deployer).addPoolAdmin(keeper));
-
     const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
     const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);
-
     const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
 
-    const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
-    const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
+    const keepers: string[] = [
+        '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',
+        '0x8C2B496E5BC13b4170dC818132bEE5413A39834C',
+        '0x9a5c3C2843eB3d9b764A2F00236D8519989BbDa1',
+        '0x299227e2bD681A510b00dFfaC9f4FD0Da0715B94',
+        '0xF1BAB1E9ad036B53Ad653Af455C21796f15EE3bD',
+        '0x8bc45c15C993A982AFc053ce0fF7B59b40eE0D7B',
+    ];
 
-    await waitForTx(await btcFeed.setAdmin(keeper, true));
-    await waitForTx(await ethFeed.setAdmin(keeper, true));
+    for (let keeper of keepers) {
+        await deployer.sendTransaction({ to: keeper, value: ethers.utils.parseEther('100') });
 
-    console.log(await btcFeed.isAdmin(keeper));
-    console.log(await ethFeed.isAdmin(keeper));
+        await waitForTx(await roleManager.addKeeper(keeper));
+        await waitForTx(await roleManager.addPoolAdmin(keeper));
 
-    await positionManager.updateFundingInterval(10 * 60);
+        const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
+        const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
 
-    console.log(`testCallBack:`, testCallBack.address);
+        await waitForTx(await btcFeed.setAdmin(keeper, true));
+        await waitForTx(await ethFeed.setAdmin(keeper, true));
+
+        console.log(await btcFeed.isAdmin(keeper));
+        console.log(await ethFeed.isAdmin(keeper));
+    }
+
+    await positionManager.updateFundingInterval(60 * 60);
 
     // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
     // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
