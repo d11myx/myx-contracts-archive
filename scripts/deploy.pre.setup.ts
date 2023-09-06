@@ -70,7 +70,7 @@ async function main() {
         console.log(await ethFeed.isAdmin(keeper));
     }
 
-    await positionManager.updateFundingInterval(10 * 60);
+    await positionManager.updateFundingInterval(60 * 60);
 
     // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
     // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
