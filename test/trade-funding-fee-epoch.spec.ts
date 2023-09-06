@@ -116,33 +116,14 @@ describe('Trade: funding fee epoch', () => {
             expect(shortTracker).to.be.eq('6000000000000000000');
 
             let beforeGlobalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
-            console.log('beforeGlobalFundingFeeTracker:' + beforeGlobalFundingFeeTracker);
-            longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
-            longSecondPosition = await positionManager.getPosition(longSecond.address, pairIndex, true);
-            shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
-            // let  shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
-            // shortSecondFundingFee = await positionManager.getPosition(shortSecond.address, pairIndex, false);
+            expect(beforeGlobalFundingFeeTracker).to.be.eq(0);
 
-            console.log('longFirstPosition: fundingFeeTracker' + longFirstPosition.fundingFeeTracker);
-
-            console.log('longSecondPosition: fundingFeeTracker' + longSecondPosition.fundingFeeTracker);
-            console.log('shortSecondPosition: fundingFeeTracker' + shortSecondPosition.fundingFeeTracker);
             // update funding fee
             await increase(Duration.hours(8));
             await positionManager.updateFundingRate(pairIndex);
 
             let afterGlobalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
-
-            console.log('afterGlobalFundingFeeTracker:' + afterGlobalFundingFeeTracker);
-            longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
-            longSecondPosition = await positionManager.getPosition(longSecond.address, pairIndex, true);
-            // let  shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
-             shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
-
-            console.log('longFirstPosition: fundingFeeTracker' + longFirstPosition.fundingFeeTracker);
-
-            console.log('longSecondPosition: fundingFeeTracker' + longSecondPosition.fundingFeeTracker);
-            console.log('shortSecondPosition: fundingFeeTracker' + shortSecondPosition.fundingFeeTracker);
+            expect(afterGlobalFundingFeeTracker).to.be.gt(0);
 
             // user position funding fee
             let longFirstFundingFee = await positionManager.getFundingFee(longFirst.address, pairIndex, true);
@@ -150,16 +131,10 @@ describe('Trade: funding fee epoch', () => {
             let shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             let shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
 
-            console.log('longFirstFundingFee:' + longFirstFundingFee);
-            console.log('longSecondFundingFee:' + longSecondFundingFee);
-            console.log('shortFirstFundingFee:' + shortFirstFundingFee);
-            console.log('shortFirstFundingFee:' + shortSecondFundingFee);
-
-            //TODO: short position funding fee needs to be less than 0
-            expect(longFirstFundingFee).to.be.gt(0);
-            expect(longSecondFundingFee).to.be.gt(0);
-            expect(shortFirstFundingFee).to.be.lt(0);
-            expect(shortSecondFundingFee).to.be.lt(0);
+            expect(longFirstFundingFee).to.be.lt(0);
+            expect(longSecondFundingFee).to.be.lt(0);
+            expect(shortFirstFundingFee).to.be.gt(0);
+            expect(shortSecondFundingFee).to.be.gt(0);
         });
 
         it('epoch 2, 35000 price unchanged position', async () => {
@@ -207,11 +182,10 @@ describe('Trade: funding fee epoch', () => {
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
 
-            //TODO: short position funding fee needs to be less than 0
-            expect(longFirstFundingFee).to.be.gt(0);
-            expect(longSecondFundingFee).to.be.gt(0);
-            expect(shortFirstFundingFee).to.be.lt(0);
-            expect(shortSecondFundingFee).to.be.lt(0);
+            expect(longFirstFundingFee).to.be.lt(0);
+            expect(longSecondFundingFee).to.be.lt(0);
+            expect(shortFirstFundingFee).to.be.gt(0);
+            expect(shortSecondFundingFee).to.be.gt(0);
         });
 
         it('epoch 3, 25000 price unchanged position', async () => {
@@ -259,11 +233,10 @@ describe('Trade: funding fee epoch', () => {
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
 
-            //TODO: short position funding fee needs to be less than 0
-            expect(longFirstFundingFee).to.be.gt(0);
-            expect(longSecondFundingFee).to.be.gt(0);
-            expect(shortFirstFundingFee).to.be.lt(0);
-            expect(shortSecondFundingFee).to.be.lt(0);
+            expect(longFirstFundingFee).to.be.lt(0);
+            expect(longSecondFundingFee).to.be.lt(0);
+            expect(shortFirstFundingFee).to.be.gt(0);
+            expect(shortSecondFundingFee).to.be.gt(0);
         });
 
         it('epoch 4, 22000 price increase position', async () => {
@@ -364,11 +337,10 @@ describe('Trade: funding fee epoch', () => {
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
 
-            //TODO: short position funding fee needs to be less than 0
-            expect(longFirstFundingFee).to.be.gt(0);
-            expect(longSecondFundingFee).to.be.gt(0);
-            expect(shortFirstFundingFee).to.be.lt(0);
-            expect(shortSecondFundingFee).to.be.lt(0);
+            expect(longFirstFundingFee).to.be.lt(0);
+            expect(longSecondFundingFee).to.be.lt(0);
+            expect(shortFirstFundingFee).to.be.gt(0);
+            expect(shortSecondFundingFee).to.be.gt(0);
         });
 
         it('epoch 5, 30000 price increase position', async () => {
@@ -446,7 +418,6 @@ describe('Trade: funding fee epoch', () => {
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
 
-            //TODO: short position funding fee needs to be greater than 0
             expect(longFirstFundingFee).to.be.lt(0);
             expect(longSecondFundingFee).to.be.lt(0);
             expect(shortFirstFundingFee).to.be.gt(0);
