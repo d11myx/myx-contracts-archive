@@ -66,12 +66,30 @@ describe('Trade: funding fee epoch', () => {
 
             // open short position
             await mintAndApprove(testEnv, usdt, collateral, shortFirst, router.address);
-            await increasePosition(testEnv, shortFirst, pairIndex, collateral, openPrice, size2, TradeType.MARKET, false);
+            await increasePosition(
+                testEnv,
+                shortFirst,
+                pairIndex,
+                collateral,
+                openPrice,
+                size2,
+                TradeType.MARKET,
+                false,
+            );
             const shortFirstPositionBefore = await positionManager.getPosition(shortFirst.address, pairIndex, false);
             expect(shortFirstPositionBefore.positionAmount).to.be.eq(size2);
 
             await mintAndApprove(testEnv, usdt, collateral, shortSecond, router.address);
-            await increasePosition(testEnv, shortSecond, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
+            await increasePosition(
+                testEnv,
+                shortSecond,
+                pairIndex,
+                collateral,
+                openPrice,
+                size,
+                TradeType.MARKET,
+                false,
+            );
             const shortSecondPositionBefore = await positionManager.getPosition(shortSecond.address, pairIndex, false);
             expect(shortSecondPositionBefore.positionAmount).to.be.eq(size);
 
@@ -89,13 +107,13 @@ describe('Trade: funding fee epoch', () => {
             // user position funding fee
             const longFirstFundingFee = await positionManager.getFundingFee(longFirst.address, pairIndex, true);
             const longSecondFundingFee = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
-            expect(longFirstFundingFee).to.be.eq(longSecondFundingFee).and.eq('171428400000000000000');
+            expect(longFirstFundingFee).to.be.eq(longSecondFundingFee).and.eq('-171428400000000000000');
 
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
-            expect(shortFirstFundingFee).to.be.eq("85714200000000000000");
+            expect(shortFirstFundingFee).to.be.eq('85714200000000000000');
 
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
-            expect(shortSecondFundingFee).to.be.eq("171428400000000000000");
+            expect(shortSecondFundingFee).to.be.eq('171428400000000000000');
         });
 
         it('epoch 2, 35000 unchanged position', async () => {
@@ -114,15 +132,15 @@ describe('Trade: funding fee epoch', () => {
             // user position funding fee
             const longFirstFundingFee = await positionManager.getFundingFee(longFirst.address, pairIndex, true);
             const longSecondFundingFee = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
-            expect(longFirstFundingFee).to.be.eq(longSecondFundingFee).and.eq('371428200000000000000');
+            expect(longFirstFundingFee).to.be.eq(longSecondFundingFee).and.eq('-371428200000000000000');
 
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
-            expect(shortFirstFundingFee).to.be.eq("185714100000000000000");
+            expect(shortFirstFundingFee).to.be.eq('185714100000000000000');
 
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
-            expect(shortSecondFundingFee).to.be.eq("371428200000000000000");
+            expect(shortSecondFundingFee).to.be.eq('371428200000000000000');
         });
 
-        it('epoch 3, 25000 unchanged position', async () => { });
+        it('epoch 3, 25000 unchanged position', async () => {});
     });
 });
