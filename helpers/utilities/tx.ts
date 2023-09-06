@@ -1,5 +1,6 @@
 import { BigNumber, Contract, ContractTransaction, ethers } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { TestEnv } from '../../test/helpers/make-suite';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -148,3 +149,72 @@ export const Duration = {
         return BigNumber.from(val).mul(this.days('365'));
     },
 };
+
+/**
+ * calculation fundingRate
+ * Clamp([w * (U - V) / K * Q + (1 - w) * (U - V) / K * L ] - Interest, min, max)
+ * @param testEnv {TestEnv} current test env
+ * @param pairIndex {Number} currency pair index
+ */
+export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
+    const { positionManager, pool, oraclePriceFeed } = testEnv;
+    const { indexTotalAmount, indexReservedAmount, stableTotalAmount, stableReservedAmount } = await pool.getVault(
+        pairIndex,
+    );
+
+    const PRICE_PRECISION = '1000000000000000000000000000000';
+    const PERCENTAGE = '100000000';
+    // const userLongPosition = await positionManager.getPosition(user.address, pairIndex, true);
+    // const userShortPosition = await positionManager.getPosition(user.address, pairIndex, false);
+    const fundingFeeConfig = await pool.getFundingFeeConfig(pairIndex);
+    const pair = await pool.getPair(pairIndex);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
+    const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
+    const longTracker = await positionManager.longTracker(pairIndex);
+    const shortTracker = await positionManager.shortTracker(pairIndex);
+
+    const absNetExposure = currentExposureAmountChecker.abs().mul(price);
+    const q = longTracker.add(shortTracker);
+    const w = fundingFeeConfig.fundingWeightFactor;
+    const k = fundingFeeConfig.liquidityPremiumFactor;
+    const interest = fundingFeeConfig.interest;
+    const diffBTCAmount = BigNumber.from(indexTotalAmount).sub(BigNumber.from(indexReservedAmount));
+    const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
+    const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount.mul(price).div(PRICE_PRECISION));
+
+    let fundingRate, absFundingRate;
+    if (q.eq(0)) {
+        fundingRate = 0;
+    } else {
+        absFundingRate = BigNumber.from(w).mul(absNetExposure).mul(PERCENTAGE).div(k.mul(q));
+        // absFundingRate = BigNumber.from(w).mul(u.sub(v)).mul(PERCENTAGE).div(k.mul(q));
+        if (!l.eq(0)) {
+            absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(absNetExposure).div(k.mul(l)));
+            // absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(u.sub(v)).div(k.mul(l)));
+        }
+        fundingRate = currentExposureAmountChecker.gte(0) ? absFundingRate : -absFundingRate;
+    }
+
+    console.log('------test start--------');
+    console.log('currentExposureAmountChecker: ', currentExposureAmountChecker);
+    console.log('price: ', price);
+    console.log('absNetExposure: ', absNetExposure);
+    console.log('w: ', w);
+    console.log('q: ', q);
+    console.log('k: ', k);
+    console.log('l: ', l);
+    console.log('absFundingRate: ', absFundingRate);
+    console.log('fundingRate: ', fundingRate);
+
+    fundingRate = BigNumber.from(fundingRate).sub(interest);
+    // fundingRate = BigNumber.from(fundingRate).sub(interest).lt(fundingFeeConfig.minFundingRate)? fundingFeeConfig.minFundingRate: ;
+    if (fundingRate.lt(fundingFeeConfig.minFundingRate)) {
+        fundingRate = fundingFeeConfig.minFundingRate;
+    } else if (fundingRate.gt(fundingFeeConfig.maxFundingRate)) {
+        fundingRate = fundingFeeConfig.maxFundingRate;
+    }
+
+    console.log('fundingRate: ', fundingRate);
+    console.log('------test end--------');
+    return fundingRate;
+}
