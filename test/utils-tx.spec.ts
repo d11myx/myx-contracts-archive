@@ -79,6 +79,8 @@ describe('Utils: tx', () => {
             const nextFundingRate = await positionManager.getNextFundingRate(pairIndex);
             const fundingRate = await getFundingRate(testEnv, pairIndex);
             console.log(`nextFundingRate: ${nextFundingRate}, fundingRate: ${fundingRate}`);
+
+            expect(nextFundingRate).to.be.eq(fundingRate);
         });
     });
 });
