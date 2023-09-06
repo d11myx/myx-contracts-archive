@@ -110,13 +110,7 @@ contract PositionManager is FeeManager, Pausable {
         );
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
-        if ((fundingFee >= 0 && _isLong) || (fundingFee < 0 && !_isLong)) {
-            //pay funding fee
-            charge -= fundingFee;
-        } else {
-            //take funding fee
-            charge += fundingFee;
-        }
+        charge += fundingFee;
         emit TakeFundingFeeAddTraderFee(_account, _pairIndex, sizeDelta, tradingFee, fundingFee, lpAmount);
     }
 
@@ -457,10 +451,21 @@ contract PositionManager is FeeManager, Pausable {
         return tradingFee;
     }
 
-    function getFundingFee(address _account, uint256 _pairIndex, bool _isLong) public view override returns (int256) {
+    function getFundingFee(
+        address _account,
+        uint256 _pairIndex,
+        bool _isLong
+    ) public view override returns (int256 fundingFee) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
         int256 fundingFeeTracker = globalFundingFeeTracker[_pairIndex] - position.fundingFeeTracker;
-        return (int256(position.positionAmount) * fundingFeeTracker) / int256(PrecisionUtils.fundingRatePrecision());
+        if ((_isLong && fundingFeeTracker > 0) || (!_isLong && fundingFeeTracker < 0)) {
+            fundingFee = -1;
+        } else {
+            fundingFee = 1;
+        }
+        fundingFee *=
+            (int256(position.positionAmount) * fundingFeeTracker) /
+            int256(PrecisionUtils.fundingRatePrecision());
     }
 
     function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
