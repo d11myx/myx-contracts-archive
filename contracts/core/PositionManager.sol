@@ -37,6 +37,8 @@ contract PositionManager is FeeManager, Pausable {
     // gobleFundingRateIndex tracks the funding rates based on utilization
     mapping(uint256 => int256) public globalFundingFeeTracker;
 
+    mapping(uint256 => int256) public currentFundingRate;
+
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
@@ -110,13 +112,7 @@ contract PositionManager is FeeManager, Pausable {
         );
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
-        if ((fundingFee >= 0 && _isLong) || (fundingFee < 0 && !_isLong)) {
-            //pay funding fee
-            charge -= fundingFee;
-        } else {
-            //take funding fee
-            charge += fundingFee;
-        }
+        charge += fundingFee;
         emit TakeFundingFeeAddTraderFee(_account, _pairIndex, sizeDelta, tradingFee, fundingFee, lpAmount);
     }
 
@@ -457,10 +453,21 @@ contract PositionManager is FeeManager, Pausable {
         return tradingFee;
     }
 
-    function getFundingFee(address _account, uint256 _pairIndex, bool _isLong) public view override returns (int256) {
+    function getFundingFee(
+        address _account,
+        uint256 _pairIndex,
+        bool _isLong
+    ) public view override returns (int256 fundingFee) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
         int256 fundingFeeTracker = globalFundingFeeTracker[_pairIndex] - position.fundingFeeTracker;
-        return (int256(position.positionAmount) * fundingFeeTracker) / int256(PrecisionUtils.fundingRatePrecision());
+        if ((_isLong && fundingFeeTracker > 0) || (!_isLong && fundingFeeTracker < 0)) {
+            fundingFee = -1;
+        } else {
+            fundingFee = 1;
+        }
+        fundingFee *=
+            (int256(position.positionAmount) * fundingFeeTracker) /
+            int256(PrecisionUtils.fundingRatePrecision());
     }
 
     function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
@@ -477,13 +484,14 @@ contract PositionManager is FeeManager, Pausable {
         if (block.timestamp - lastFundingRateUpdateTimes[_pairIndex] < fundingInterval) {
             return;
         }
-        int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
+        int256 nextFundingRate = _nextFundingRate(_pairIndex, _price);
 
         globalFundingFeeTracker[_pairIndex] =
             globalFundingFeeTracker[_pairIndex] +
             (nextFundingRate * int256(_price)) /
             int256(PrecisionUtils.pricePrecision());
         lastFundingRateUpdateTimes[_pairIndex] = block.timestamp;
+        currentFundingRate[_pairIndex] = nextFundingRate;
 
         // fund rate for settlement lp
         uint256 lpPosition;
@@ -515,16 +523,20 @@ contract PositionManager is FeeManager, Pausable {
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
+        return currentFundingRate[_pairIndex];
+    }
+
+    function getNextFundingRate(uint256 _pairIndex) external view override returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
-        return _currentFundingRate(_pairIndex, price);
+        return _nextFundingRate(_pairIndex, price);
     }
 
     function getNextFundingRateUpdateTime(uint256 _pairIndex) external view override returns (uint256) {
         return lastFundingRateUpdateTimes[_pairIndex] + fundingInterval;
     }
 
-    function _currentFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
+    function _nextFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
         IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         uint256 absNetExposure = currentExposureAmountChecker.abs();
