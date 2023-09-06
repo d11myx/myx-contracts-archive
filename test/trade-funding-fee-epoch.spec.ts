@@ -5,7 +5,6 @@ import { Duration, increase, TradeType } from '../helpers';
 import { expect } from './shared/expect';
 
 describe('Trade: funding fee epoch', () => {
-
     describe('rate simulation (can only add position)', async () => {
         const pairIndex = 0;
         let testEnv: TestEnv;
@@ -64,29 +63,47 @@ describe('Trade: funding fee epoch', () => {
             // open long position
             await mintAndApprove(testEnv, usdt, collateral, longFirst, router.address);
             await increasePosition(testEnv, longFirst, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
-            const longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
+            let longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
 
             expect(longFirstPosition.positionAmount).to.be.eq(size);
             expect(longFirstPosition.averagePrice).to.be.eq(openPrice);
 
             await mintAndApprove(testEnv, usdt, collateral, longSecond, router.address);
             await increasePosition(testEnv, longSecond, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
-            const longSecondPosition = await positionManager.getPosition(longSecond.address, pairIndex, true);
+            let longSecondPosition = await positionManager.getPosition(longSecond.address, pairIndex, true);
 
             expect(longSecondPosition.positionAmount).to.be.eq(size);
             expect(longSecondPosition.averagePrice).to.be.eq(openPrice);
 
             // open short position
             await mintAndApprove(testEnv, usdt, collateral, shortFirst, router.address);
-            await increasePosition(testEnv, shortFirst, pairIndex, collateral, openPrice, size2, TradeType.MARKET, false);
-            const shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
+            await increasePosition(
+                testEnv,
+                shortFirst,
+                pairIndex,
+                collateral,
+                openPrice,
+                size2,
+                TradeType.MARKET,
+                false,
+            );
+            let shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
 
             expect(shortFirstPosition.positionAmount).to.be.eq(size2);
             expect(shortFirstPosition.averagePrice).to.be.eq(openPrice);
 
             await mintAndApprove(testEnv, usdt, collateral, shortSecond, router.address);
-            await increasePosition(testEnv, shortSecond, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
-            const shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
+            await increasePosition(
+                testEnv,
+                shortSecond,
+                pairIndex,
+                collateral,
+                openPrice,
+                size,
+                TradeType.MARKET,
+                false,
+            );
+            let shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
 
             expect(shortSecondPosition.positionAmount).to.be.eq(size);
             expect(shortSecondPosition.averagePrice).to.be.eq(openPrice);
@@ -98,15 +115,45 @@ describe('Trade: funding fee epoch', () => {
             expect(longTracker).to.be.eq('8000000000000000000');
             expect(shortTracker).to.be.eq('6000000000000000000');
 
+            let beforeGlobalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
+            console.log('beforeGlobalFundingFeeTracker:' + beforeGlobalFundingFeeTracker);
+            longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
+            longSecondPosition = await positionManager.getPosition(longSecond.address, pairIndex, true);
+            shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
+            // let  shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
+            // shortSecondFundingFee = await positionManager.getPosition(shortSecond.address, pairIndex, false);
+
+            console.log('longFirstPosition: fundingFeeTracker' + longFirstPosition.fundingFeeTracker);
+
+            console.log('longSecondPosition: fundingFeeTracker' + longSecondPosition.fundingFeeTracker);
+            console.log('shortSecondPosition: fundingFeeTracker' + shortSecondPosition.fundingFeeTracker);
             // update funding fee
             await increase(Duration.hours(8));
             await positionManager.updateFundingRate(pairIndex);
 
+            let afterGlobalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
+
+            console.log('afterGlobalFundingFeeTracker:' + afterGlobalFundingFeeTracker);
+            longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
+            longSecondPosition = await positionManager.getPosition(longSecond.address, pairIndex, true);
+            // let  shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
+             shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
+
+            console.log('longFirstPosition: fundingFeeTracker' + longFirstPosition.fundingFeeTracker);
+
+            console.log('longSecondPosition: fundingFeeTracker' + longSecondPosition.fundingFeeTracker);
+            console.log('shortSecondPosition: fundingFeeTracker' + shortSecondPosition.fundingFeeTracker);
+
             // user position funding fee
-            const longFirstFundingFee = await positionManager.getFundingFee(longFirst.address, pairIndex, true);
-            const longSecondFundingFee = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
-            const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
-            const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
+            let longFirstFundingFee = await positionManager.getFundingFee(longFirst.address, pairIndex, true);
+            let longSecondFundingFee = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
+            let shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
+            let shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
+
+            console.log('longFirstFundingFee:' + longFirstFundingFee);
+            console.log('longSecondFundingFee:' + longSecondFundingFee);
+            console.log('shortFirstFundingFee:' + shortFirstFundingFee);
+            console.log('shortFirstFundingFee:' + shortSecondFundingFee);
 
             //TODO: short position funding fee needs to be less than 0
             expect(longFirstFundingFee).to.be.gt(0);
@@ -239,15 +286,51 @@ describe('Trade: funding fee epoch', () => {
 
             // open long position
             await mintAndApprove(testEnv, usdt, collateral, longFirst, router.address);
-            await increasePosition(testEnv, longFirst, pairIndex, collateral, openPrice, longFirstSize, TradeType.MARKET, true);
+            await increasePosition(
+                testEnv,
+                longFirst,
+                pairIndex,
+                collateral,
+                openPrice,
+                longFirstSize,
+                TradeType.MARKET,
+                true,
+            );
             await mintAndApprove(testEnv, usdt, collateral, longSecond, router.address);
-            await increasePosition(testEnv, longSecond, pairIndex, collateral, openPrice, longSecondSize, TradeType.MARKET, true);
+            await increasePosition(
+                testEnv,
+                longSecond,
+                pairIndex,
+                collateral,
+                openPrice,
+                longSecondSize,
+                TradeType.MARKET,
+                true,
+            );
 
             // open short position
             await mintAndApprove(testEnv, usdt, collateral, shortFirst, router.address);
-            await increasePosition(testEnv, shortFirst, pairIndex, collateral, openPrice, shortFirstSize, TradeType.MARKET, false);
+            await increasePosition(
+                testEnv,
+                shortFirst,
+                pairIndex,
+                collateral,
+                openPrice,
+                shortFirstSize,
+                TradeType.MARKET,
+                false,
+            );
             await mintAndApprove(testEnv, usdt, collateral, shortSecond, router.address);
-            await increasePosition(testEnv, shortSecond, pairIndex, collateral, openPrice, shortSecondSize, TradeType.MARKET, false);
+            await increasePosition(
+                testEnv,
+                shortSecond,
+                pairIndex,
+                collateral,
+                openPrice,
+                shortSecondSize,
+                TradeType.MARKET,
+                false,
+            );
 
             // user position size and price
             const longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
@@ -255,13 +338,13 @@ describe('Trade: funding fee epoch', () => {
             const shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
             const shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
 
-            expect(longFirstPosition.positionAmount).to.be.eq("25000000000000000000");
+            expect(longFirstPosition.positionAmount).to.be.eq('25000000000000000000');
             expect(longFirstPosition.averagePrice).to.be.eq('23280000000000000000000000000000000');
-            expect(longSecondPosition.positionAmount).to.be.eq("24000000000000000000");
+            expect(longSecondPosition.positionAmount).to.be.eq('24000000000000000000');
             expect(longSecondPosition.averagePrice).to.be.eq('23333333333333333333333333333333333');
-            expect(shortFirstPosition.positionAmount).to.be.eq("24000000000000000000");
+            expect(shortFirstPosition.positionAmount).to.be.eq('24000000000000000000');
             expect(shortFirstPosition.averagePrice).to.be.eq('22666666666666666666666666666666666');
-            expect(shortSecondPosition.positionAmount).to.be.eq("24000000000000000000");
+            expect(shortSecondPosition.positionAmount).to.be.eq('24000000000000000000');
             expect(shortSecondPosition.averagePrice).to.be.eq('23333333333333333333333333333333333');
 
             // user total position
@@ -305,13 +388,31 @@ describe('Trade: funding fee epoch', () => {
 
             // open short position
             await mintAndApprove(testEnv, usdt, collateral, shortFirst, router.address);
-            await increasePosition(testEnv, shortFirst, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
+            await increasePosition(
+                testEnv,
+                shortFirst,
+                pairIndex,
+                collateral,
+                openPrice,
+                size,
+                TradeType.MARKET,
+                false,
+            );
             await mintAndApprove(testEnv, usdt, collateral, shortSecond, router.address);
-            await increasePosition(testEnv, shortSecond, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
+            await increasePosition(
+                testEnv,
+                shortSecond,
+                pairIndex,
+                collateral,
+                openPrice,
+                size,
+                TradeType.MARKET,
+                false,
+            );
 
             // lp long position
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            expect(exposedPosition.abs()).to.be.eq("3000000000000000000");
+            expect(exposedPosition.abs()).to.be.eq('3000000000000000000');
 
             // user position size and price
             const longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
@@ -319,13 +420,13 @@ describe('Trade: funding fee epoch', () => {
             const shortFirstPosition = await positionManager.getPosition(shortFirst.address, pairIndex, false);
             const shortSecondPosition = await positionManager.getPosition(shortSecond.address, pairIndex, false);
 
-            expect(longFirstPosition.positionAmount).to.be.eq("25000000000000000000");
+            expect(longFirstPosition.positionAmount).to.be.eq('25000000000000000000');
             expect(longFirstPosition.averagePrice).to.be.eq('23280000000000000000000000000000000');
-            expect(longSecondPosition.positionAmount).to.be.eq("24000000000000000000");
+            expect(longSecondPosition.positionAmount).to.be.eq('24000000000000000000');
             expect(longSecondPosition.averagePrice).to.be.eq('23333333333333333333333333333333333');
-            expect(shortFirstPosition.positionAmount).to.be.eq("26000000000000000000");
+            expect(shortFirstPosition.positionAmount).to.be.eq('26000000000000000000');
             expect(shortFirstPosition.averagePrice).to.be.eq('23230769230769230769230730769230769');
-            expect(shortSecondPosition.positionAmount).to.be.eq("26000000000000000000");
+            expect(shortSecondPosition.positionAmount).to.be.eq('26000000000000000000');
             expect(shortSecondPosition.averagePrice).to.be.eq('23846153846153846153846115384615384');
 
             // user total position
@@ -435,12 +536,30 @@ describe('Trade: funding fee epoch', () => {
 
             // open long position
             await mintAndApprove(testEnv, usdt, collateral, longFirst, router.address);
-            await increasePosition(testEnv, longFirst, pairIndex, collateral, openPrice, longFirstSize, TradeType.MARKET, true);
+            await increasePosition(
+                testEnv,
+                longFirst,
+                pairIndex,
+                collateral,
+                openPrice,
+                longFirstSize,
+                TradeType.MARKET,
+                true,
+            );
             const longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
             // console.log("longFirstPosition: ", longFirstPosition);
 
             await mintAndApprove(testEnv, usdt, collateral, longSecond, router.address);
-            await increasePosition(testEnv, longSecond, pairIndex, collateral, openPrice, longSecondSize, TradeType.MARKET, true);
+            await increasePosition(
+                testEnv,
+                longSecond,
+                pairIndex,
+                collateral,
+                openPrice,
+                longSecondSize,
+                TradeType.MARKET,
+                true,
+            );
             const longSecondPosition = await positionManager.getPosition(longSecond.address, pairIndex, true);
             // console.log("longSecondPosition: ", longSecondPosition);
 
