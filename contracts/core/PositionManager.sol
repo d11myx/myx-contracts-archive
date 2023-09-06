@@ -471,7 +471,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function _updateFundingRate(uint256 _pairIndex, uint256 _price) internal {
         if (lastFundingRateUpdateTimes[_pairIndex] == 0) {
-            lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
+            lastFundingRateUpdateTimes[_pairIndex] = block.timestamp;
             return;
         }
         if (block.timestamp - lastFundingRateUpdateTimes[_pairIndex] < fundingInterval) {
@@ -483,7 +483,7 @@ contract PositionManager is FeeManager, Pausable {
             globalFundingFeeTracker[_pairIndex] +
             (nextFundingRate * int256(_price)) /
             int256(PrecisionUtils.pricePrecision());
-        lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
+        lastFundingRateUpdateTimes[_pairIndex] = block.timestamp;
 
         // fund rate for settlement lp
         uint256 lpPosition;
