@@ -37,6 +37,8 @@ contract PositionManager is FeeManager, Pausable {
     // gobleFundingRateIndex tracks the funding rates based on utilization
     mapping(uint256 => int256) public globalFundingFeeTracker;
 
+    mapping(uint256 => int256) public currentFundingRate;
+
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
@@ -476,19 +478,20 @@ contract PositionManager is FeeManager, Pausable {
 
     function _updateFundingRate(uint256 _pairIndex, uint256 _price) internal {
         if (lastFundingRateUpdateTimes[_pairIndex] == 0) {
-            lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
+            lastFundingRateUpdateTimes[_pairIndex] = block.timestamp;
             return;
         }
         if (block.timestamp - lastFundingRateUpdateTimes[_pairIndex] < fundingInterval) {
             return;
         }
-        int256 nextFundingRate = _currentFundingRate(_pairIndex, _price);
+        int256 nextFundingRate = _nextFundingRate(_pairIndex, _price);
 
         globalFundingFeeTracker[_pairIndex] =
             globalFundingFeeTracker[_pairIndex] +
             (nextFundingRate * int256(_price)) /
             int256(PrecisionUtils.pricePrecision());
-        lastFundingRateUpdateTimes[_pairIndex] = (block.timestamp / fundingInterval) * fundingInterval;
+        lastFundingRateUpdateTimes[_pairIndex] = block.timestamp;
+        currentFundingRate[_pairIndex] = nextFundingRate;
 
         // fund rate for settlement lp
         uint256 lpPosition;
@@ -520,12 +523,20 @@ contract PositionManager is FeeManager, Pausable {
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
-        return _currentFundingRate(_pairIndex, price);
+        return currentFundingRate[_pairIndex];
     }
 
-    function _currentFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
+    function getNextFundingRate(uint256 _pairIndex) external view override returns (int256) {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        return _nextFundingRate(_pairIndex, price);
+    }
+
+    function getNextFundingRateUpdateTime(uint256 _pairIndex) external view override returns (uint256) {
+        return lastFundingRateUpdateTimes[_pairIndex] + fundingInterval;
+    }
+
+    function _nextFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
         IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         uint256 absNetExposure = currentExposureAmountChecker.abs();
