@@ -107,7 +107,7 @@ describe('Trade: funding fee', () => {
             const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPositionBefore.positionAmount);
 
             // longer user will be paid fundingFee
-            expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee);
+            expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
         });
 
         it('shorter user closed position, should be received fundingFee', async () => {
@@ -168,7 +168,7 @@ describe('Trade: funding fee', () => {
                 users: [, maker],
                 usdt,
                 router,
-                positionManager
+                positionManager,
             } = testEnv;
 
             // make positions
@@ -282,9 +282,9 @@ describe('Trade: funding fee', () => {
             const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPositionBefore.positionAmount);
 
             // shorter user will be paid fundingFee
-            expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee);
+            expect(positionCollateral.sub(balanceDiff).sub(tradingFee).abs()).to.be.eq(userFundingFee);
         });
     });
 
-    describe('longTracker = shortTracker', async () => { });
+    describe('longTracker = shortTracker', async () => {});
 });
