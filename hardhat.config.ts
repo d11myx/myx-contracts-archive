@@ -74,6 +74,17 @@ const BSC_TEST_PRIVATE_KEY2 = '0xe5bdef804789f48de7b49a845f1cf03646d865ba11c77f7
 const BSC_TEST_PRIVATE_KEY3 = '0x3679e8f54128f28c216d666d70e58a1afb42dea9161250b6706ab596b363b839';
 const BSC_TEST_PRIVATE_KEY4 = '0x3ea5ea3aaf39b07dfd9f7507ebf89e52b901342a7a20f6aa812d9c9e622d6966';
 
+const LINEA_GOERLI_PRIVATE_KEY0 = '0x3d90b31068e578f185d21fd5a19076dcb0f7128c9d35e09062cfe4a5a0246501'; //
+const LINEA_GOERLI_PRIVATE_KEY1 = '0x23c5d708d53b253c024c7b2a3188734aed34deb1093481d2ea8cd9c2df712571'; //
+const LINEA_GOERLI_PRIVATE_KEY2 = '0xa862301ec5d6f19bdbc2def46d3e7a8f858ca1eb1ddc6a0e933a499017c26d8c'; //
+const LINEA_GOERLI_PRIVATE_KEY3 = '0x14a12b2fb3f78830eabfce512873eb53fbce24772360e4a90cb71bbe25bfbb2e';
+const LINEA_GOERLI_PRIVATE_KEY4 = '0x690f55fb3db14f11e9578167e907a33a588dcc877b8991a675c222cffc8c5a77';
+const LINEA_GOERLI_PRIVATE_KEY5 = '0x2f95b1979a3e5a9a4184842e848e663d3959c7fd77deb4d7c3d5f98aed0ba2b2';
+const LINEA_GOERLI_PRIVATE_KEY6 = '0x1726c48cb90c07d91723175aae1b894ada3b5dfc8dfdf0e6dfecb04c0418770a';
+const LINEA_GOERLI_PRIVATE_KEY7 = '0x86c5dbbff3912151b7b7c8d5411cbe88740084a3509c9309a1868d26b62b1da9';
+const LINEA_GOERLI_PRIVATE_KEY8 = '0x8bc175705f87bdce6a819abe782fb9e5702b862ac4231dcbfd7fc84d242bae31';
+const LINEA_GOERLI_PRIVATE_KEY9 = '0x172a20c3bfb16ea00f0353cd5a07339dc464d8f095f247ed03b1a4d0a97a8ccd'; //
+
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const TASK_FOLDERS = ['./misc'];
 
@@ -83,58 +94,6 @@ if (!SKIP_LOAD) {
 }
 
 // const GOERLI_DEPLOY_KEY = "";
-const abiDecoder = require('abi-decoder');
-
-task('decode-event', 'decode trx event logs')
-    .addParam('hash', 'trx hash')
-    .setAction(async (param, hre) => {
-        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
-        for (let fullName of fullNames) {
-            let contract = await hre.artifacts.readArtifact(fullName);
-            abiDecoder.addABI(contract.abi);
-        }
-        let receipt = await hre.ethers.provider.getTransactionReceipt(param.hash);
-        const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
-        for (let event of decodedLogs) {
-            console.log(event);
-        }
-    });
-
-task('encode-event', 'get method artifact detail by method name')
-    .addOptionalParam('contract', 'contract name')
-    .setAction(async (param, hre) => {
-        const fullNames = await hre.artifacts.getAllFullyQualifiedNames();
-        for (let fullName of fullNames) {
-            let contract = await hre.artifacts.readArtifact(fullName);
-            if (contract.contractName == param.contract) {
-                console.log(`contract:`, contract.contractName);
-                abiDecoder.addABI(contract.abi);
-            }
-        }
-        let methodObject = abiDecoder.getMethodIDs();
-        Object.keys(methodObject).forEach(function (methodId: string, index: number, arr: any) {
-            let method = methodObject[methodId];
-            if (method.type == 'event') {
-                console.log(`event: ${method.name} id: ${methodId}`);
-            }
-        });
-    });
-
-task('update-evm-time', 'update evm time')
-    .addParam('increase', 'increase or decrease minutes')
-    .setAction(async (param, hre) => {
-        let blockNumber = await hre.ethers.provider.getBlockNumber();
-        let block = await hre.ethers.provider.getBlock(blockNumber);
-        console.log(`block time ${block.timestamp} diff ${block.timestamp - getCurrentTimestamp()}`);
-
-        await hre.network.provider.send('evm_increaseTime', [parseInt(param.increase)]);
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        blockNumber = await hre.ethers.provider.getBlockNumber();
-        block = await hre.ethers.provider.getBlock(blockNumber);
-        console.log(`block time ${block.timestamp} diff ${block.timestamp - getCurrentTimestamp()}`);
-    });
 
 const gas = 'auto';
 const gasPrice = 'auto';
@@ -312,6 +271,25 @@ const config: HardhatUserConfig = {
                 GOERLI_PRIVATE_KEY2,
                 GOERLI_PRIVATE_KEY3,
                 GOERLI_PRIVATE_KEY4,
+            ],
+        },
+        linea_goerli: {
+            //1438000
+            url: 'https://rpc.goerli.linea.build',
+            chainId: 59140,
+            gasPrice: 19343240,
+            blockGasLimit: 10000000,
+            accounts: [
+                LINEA_GOERLI_PRIVATE_KEY0,
+                LINEA_GOERLI_PRIVATE_KEY1,
+                LINEA_GOERLI_PRIVATE_KEY2,
+                LINEA_GOERLI_PRIVATE_KEY3,
+                LINEA_GOERLI_PRIVATE_KEY4,
+                LINEA_GOERLI_PRIVATE_KEY5,
+                LINEA_GOERLI_PRIVATE_KEY6,
+                LINEA_GOERLI_PRIVATE_KEY7,
+                LINEA_GOERLI_PRIVATE_KEY8,
+                LINEA_GOERLI_PRIVATE_KEY9,
             ],
         },
     },

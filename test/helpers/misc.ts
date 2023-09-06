@@ -1,10 +1,10 @@
 import { MockPriceFeed, Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { getBlockTimestamp, TradeType, waitForTx } from '../../helpers';
-import { TradingTypes } from '../../types/contracts/trading/Router';
-import snapshotGasCost from '../shared/snapshotGasCost';
+import { ContractReceipt } from '@ethersproject/contracts/src.ts';
+import { TradingTypes } from '../../types/contracts/core/Router';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
@@ -55,25 +55,26 @@ export async function increasePosition(
         sizeAmount: size,
     };
 
+    let orderId;
+    let receipt: ContractReceipt;
     if (tradeType == TradeType.MARKET) {
         // create increase order
-        const orderId = await orderManager.ordersIndex();
+        orderId = await orderManager.ordersIndex();
         await router.connect(user.signer).createIncreaseOrderWithoutTpSl(request);
         // execute order
-        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType, 0, 0);
-
-        return orderId;
+        const tx = await executor.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType, 0, 0);
+        receipt = await tx.wait();
     } else {
         // create increase order
-        const orderId = await orderManager.ordersIndex();
+        orderId = await orderManager.ordersIndex();
         await router.connect(user.signer).createIncreaseOrderWithoutTpSl(request);
         // execute order
-        await executor
+        const tx = await executor
             .connect(keeper.signer)
             .executeIncreaseLimitOrders([{ orderId: orderId.toNumber(), level: 0, commissionRatio: 0 }]);
-
-        return orderId;
+        receipt = await tx.wait();
     }
+    return { orderId: orderId, executeReceipt: receipt };
 }
 
 export async function decreasePosition(
@@ -105,5 +106,15 @@ export async function decreasePosition(
     const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
     // execute order
-    await executor.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType, 0, 0);
+    const tx = await executor.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType, 0, 0);
+    const receipt = await tx.wait();
+
+    return { orderId: orderId, executeReceipt: receipt };
+}
+
+export async function extraHash(hash: string, eventName: string, key: string): Promise<any> {
+    const events = (await hre.run('decode-event', { hash: hash })) as any;
+
+    const DistributeTradingFeeEvent = events.find((val: any) => val.name === eventName);
+    return DistributeTradingFeeEvent?.events.find((val: any) => val.name === key)?.value as any;
 }

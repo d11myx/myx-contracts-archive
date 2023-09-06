@@ -10,6 +10,9 @@ export * from './types';
 export * from './utilities/signer';
 export * from './utilities/tx';
 export * from '../tasks/misc/print-deployments';
+export * from '../tasks/misc/encode-event';
+export * from '../tasks/misc/decode-event';
+export * from '../tasks/misc/update-evm-time';
 
 import { loadTasks } from './hardhat-config-helpers';
 

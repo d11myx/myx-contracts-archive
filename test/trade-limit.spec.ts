@@ -55,7 +55,7 @@ describe('Trade: Limit order cases', () => {
             const triggerPrice = ethers.utils.parseUnits('32000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-            const orderId = await increasePosition(
+            const { orderId } = await increasePosition(
                 testEnv,
                 trader,
                 pairIndex,

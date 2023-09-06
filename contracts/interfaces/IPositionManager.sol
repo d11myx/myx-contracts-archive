@@ -50,9 +50,13 @@ interface IPositionManager {
         uint256 _sizeAmount
     ) external view returns (uint256 tradingFee);
 
-    function getFundingFee(address _account, uint256 _pairIndex, bool _isLong) external view returns (int256);
+    function getFundingFee(address _account, uint256 _pairIndex, bool _isLong) external view returns (int256 fundingFee);
 
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
+
+    function getNextFundingRate(uint256 _pairIndex) external view returns (int256);
+
+    function getNextFundingRateUpdateTime(uint256 _pairIndex) external view returns (uint256);
 
     function getPosition(
         address _account,
