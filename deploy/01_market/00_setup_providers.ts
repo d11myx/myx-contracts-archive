@@ -12,7 +12,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const timelockArtifact = await deploy(TIMELOCK_ID, {
         from: deployer,
         contract: 'Timelock',
-        args: [deployerSigner.address, '10', '100'],
+        args: ['43200'],
         ...COMMON_DEPLOY_PARAMS,
     });
 
@@ -38,7 +38,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const roleManagerArtifact = await deploy(ROLE_MANAGER_ID, {
         from: deployer,
         contract: 'RoleManager',
-        args: [deployerSigner.address],
+        args: [],
         ...COMMON_DEPLOY_PARAMS,
     });
 
