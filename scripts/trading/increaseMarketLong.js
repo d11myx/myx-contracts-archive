@@ -16,7 +16,7 @@ async function main() {
   const positionManager = await getPositionManager();
   const indexPriceFeed = await getIndexPriceFeed();
   const btcPriceFeed = await getMockPriceFeed("BTC");
-  const roleManager = await roleManager();
+  const roleManager = await getRoleManager();
   const pool = await getPool();
 
   const btc = await getMockToken("BTC")
