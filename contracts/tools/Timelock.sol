@@ -124,12 +124,12 @@ contract Timelock {
         bytes memory data,
         uint256 eta
     ) public returns (bytes memory) {
-        require(msg.sender == admin, 'executeTransaction: Call must come from admin.');
+        require(msg.sender == admin, 'Call must come from admin.');
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
-        require(queuedTransactions[txHash], "executeTransaction: Transaction hasn't been queued.");
-        require(block.timestamp >= eta, "executeTransaction: Transaction hasn't surpassed time lock.");
-        require(block.timestamp <= eta.add(GRACE_PERIOD), 'executeTransaction: Transaction is stale.');
+        require(queuedTransactions[txHash], "Transaction hasn't been queued.");
+        require(block.timestamp >= eta, "Transaction hasn't surpassed time lock.");
+        require(block.timestamp <= eta.add(GRACE_PERIOD), 'Transaction is stale.');
 
         queuedTransactions[txHash] = false;
 
@@ -143,7 +143,7 @@ contract Timelock {
 
         // solium-disable-next-line security/no-call-value
         (bool success, bytes memory returnData) = target.call{value: value}(callData);
-        require(success, 'executeTransaction: Transaction execution reverted.');
+        require(success, 'Transaction execution reverted.');
 
         emit ExecuteTransaction(txHash, target, value, signature, data, eta);
 
