@@ -26,11 +26,9 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         _;
     }
 
-    function getAddress(bytes32 id) public view override returns (address) {
+    function getAddress(bytes32 id) public view returns (address) {
         return _addresses[id];
     }
-
-
 
     function roleManager() external view override returns (address) {
         return getAddress(ROLE_MANAGER);
