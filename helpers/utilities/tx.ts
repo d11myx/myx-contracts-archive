@@ -167,14 +167,13 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const fundingFeeConfig = await pool.getFundingFeeConfig(pairIndex);
     const pair = await pool.getPair(pairIndex);
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
-    const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
+    const exposedPosition = await positionManager.getExposedPositions(pairIndex);
     const longTracker = await positionManager.longTracker(pairIndex);
     const shortTracker = await positionManager.shortTracker(pairIndex);
 
-    const absNetExposure = currentExposureAmountChecker.abs().mul(price); // eq u and v
-    const q = longTracker.add(shortTracker);
-    const u = longTracker.mul(price);
-    const v = shortTracker.mul(price);
+    const uv = exposedPosition.abs().mul(price);
+    //TODO: Q = (LongOI + ShortOI) * price or Q = LongOI + ShortOI, to be confirmed
+    const q = longTracker.add(shortTracker).mul(price);
     const w = fundingFeeConfig.fundingWeightFactor;
     const k = fundingFeeConfig.liquidityPremiumFactor;
     const interest = fundingFeeConfig.interest;
@@ -186,39 +185,19 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     if (q.eq(0)) {
         fundingRate = 0;
     } else {
-        // absFundingRate = BigNumber.from(w).mul(absNetExposure).mul(PERCENTAGE).div(k.mul(q));
-        absFundingRate = BigNumber.from(w).mul(u.sub(v)).mul(PERCENTAGE).div(k.mul(q));
+        absFundingRate = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
         if (!l.eq(0)) {
-            // absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(absNetExposure).div(k.mul(l)));
-            absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(u.sub(v)).div(k.mul(l)));
+            absFundingRate = absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
         }
-        fundingRate = currentExposureAmountChecker.gte(0) ? absFundingRate : -absFundingRate;
+        fundingRate = exposedPosition.gte(0) ? absFundingRate : -absFundingRate;
     }
-
-    console.log('------test start--------');
-    console.log('currentExposureAmountChecker: ', currentExposureAmountChecker);
-    console.log('price: ', price);
-    // console.log('diffBTCAmount: ', diffBTCAmount);
-    // console.log('diffUSDTAmount: ', diffUSDTAmount);
-    // console.log('diffBTCAmount.mul(price): ', diffBTCAmount.mul(price));
-    // console.log('diffUSDTAmount.mul(price).div(PRICE_PRECISION): ', diffBTCAmount.mul(price));
-    console.log('absNetExposure: ', absNetExposure);
-    console.log('w: ', w);
-    console.log('q: ', q);
-    console.log('k: ', k);
-    console.log('l: ', l);
-    console.log('absFundingRate: ', absFundingRate);
-    console.log('fundingRate: ', fundingRate);
 
     fundingRate = BigNumber.from(fundingRate).sub(interest);
-    // fundingRate = BigNumber.from(fundingRate).sub(interest).lt(fundingFeeConfig.minFundingRate)? fundingFeeConfig.minFundingRate: ;
-    if (fundingRate.lt(fundingFeeConfig.minFundingRate)) {
-        fundingRate = fundingFeeConfig.minFundingRate;
-    } else if (fundingRate.gt(fundingFeeConfig.maxFundingRate)) {
-        fundingRate = fundingFeeConfig.maxFundingRate;
-    }
+    fundingRate = fundingRate.lt(fundingFeeConfig.minFundingRate)
+        ? fundingFeeConfig.minFundingRate
+        : fundingRate.gt(fundingFeeConfig.maxFundingRate)
+        ? fundingFeeConfig.maxFundingRate
+        : fundingRate;
 
-    console.log('fundingRate: ', fundingRate);
-    console.log('------test end--------');
     return fundingRate;
 }
