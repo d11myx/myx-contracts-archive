@@ -1,7 +1,7 @@
-import { newTestEnv, TestEnv } from './helpers/make-suite';
+import {newTestEnv, testEnv, TestEnv} from './helpers/make-suite';
 import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
-import { increasePosition, mintAndApprove } from './helpers/misc';
+import {decreasePosition, increasePosition, mintAndApprove} from './helpers/misc';
 import { TradeType } from '../helpers';
 import { IRouter, TradingTypes } from '../types/contracts/core/Router';
 
@@ -29,6 +29,17 @@ describe('Trade: TP & SL', () => {
         await router
             .connect(depositor.signer)
             .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+    });
+    after(async ()=>{
+        const {
+            users: [trader],
+            positionManager
+        } = testEnv;
+
+        const decreaseCollateral = ethers.utils.parseUnits('0', 18);
+        const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
+        const decreaseAmount = positionBefore.positionAmount;
+        await decreasePosition(testEnv, trader, pairIndex, decreaseCollateral, decreaseAmount, TradeType.MARKET, true);
     });
 
     describe('order tp sl', () => {
