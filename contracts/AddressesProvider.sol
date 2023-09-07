@@ -48,7 +48,7 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         emit AddressSet(TIMELOCK, oldAddress, newAddress);
     }
 
-    function setAddress(bytes32 id, address newAddress) public override onlyOwner {
+    function setAddress(bytes32 id, address newAddress) public onlyOwner {
         address oldAddress = _addresses[id];
         _addresses[id] = newAddress;
         emit AddressSet(id, oldAddress, newAddress);
@@ -63,19 +63,19 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
     }
 
-    function setPriceOracle(address newPriceOracle) external override onlyTimelock {
+    function setPriceOracle(address newPriceOracle) external onlyTimelock {
         address oldPriceOracle = _addresses[PRICE_ORACLE];
         priceOracle = newPriceOracle;
         emit AddressSet(PRICE_ORACLE, oldPriceOracle, newPriceOracle);
     }
 
-    function setIndexPriceOracle(address newIndexPriceOracle) external override onlyTimelock {
+    function setIndexPriceOracle(address newIndexPriceOracle) external onlyTimelock {
         address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
         indexPriceOracle = newIndexPriceOracle;
         emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
     }
 
-    function setRolManager(address newAddress) external override onlyOwner {
+    function setRolManager(address newAddress) external onlyOwner {
         require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
         address oldAclManager = _addresses[ROLE_MANAGER];
         setAddress(ROLE_MANAGER, newAddress);
