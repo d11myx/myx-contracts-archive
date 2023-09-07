@@ -15,12 +15,12 @@ abstract contract Roleable {
     }
 
     modifier onlyAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isAdmin(msg.sender), 'onlyAdmin');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isAdmin(msg.sender), 'onlyAdmin');
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 }

@@ -36,7 +36,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 

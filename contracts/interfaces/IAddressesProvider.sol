@@ -6,9 +6,11 @@ interface IAddressesProvider {
 
     function getAddress(bytes32 id) external view returns (address);
 
-    function getPriceOracle() external view returns (address);
+    function timelock() external view returns (address);
 
-    function getIndexPriceOracle() external view returns (address);
+    function priceOracle() external view returns (address);
 
-    function getRoleManager() external view returns (address);
+    function indexPriceOracle() external view returns (address);
+
+    function roleManager() external view returns (address);
 }

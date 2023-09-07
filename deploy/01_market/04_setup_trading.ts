@@ -6,7 +6,7 @@ import {
     FEE_COLLECTOR_ID,
     getAddressesProvider,
     getPool,
-    getRoleManager,
+    roleManager,
     getToken,
     getWETH,
     ORDER_MANAGER_ID,
@@ -100,7 +100,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     // await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(positionManager.address));
 
-    const roleManager = await getRoleManager();
+    const roleManager = await roleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
     await waitForTx(await positionManager.setExecutor(executor.address));
