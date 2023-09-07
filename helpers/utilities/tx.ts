@@ -151,10 +151,11 @@ export const Duration = {
 };
 
 /**
- * calculation fundingRate
+ * calculation funding rate
  * Clamp([w * (U - V) / K * Q + (1 - w) * (U - V) / K * L ] - Interest, min, max)
  * @param testEnv {TestEnv} current test env
  * @param pairIndex {Number} currency pair index
+ * @returns fundingRate
  */
 export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const { positionManager, pool, oraclePriceFeed } = testEnv;
@@ -200,4 +201,25 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
         : fundingRate;
 
     return fundingRate;
+}
+
+/**
+ * calculation position average price
+ * averagePrice = (oldPositionAveragePrice * OldPositionSize) + (openPrice * latestPositionSize) / (oldPositionAveragePrice + latestPositionSize)
+ * @param oldAveragePrice {BigNumber} old position average price
+ * @param OldSize {BigNumber} old position size
+ * @param openPrice {BigNumber} current position open price
+ * @param size {BigNumber} current position size
+ * @returns averagePrice
+ */
+export function getAveragePrice(
+    oldAveragePrice: BigNumber,
+    OldSize: BigNumber,
+    openPrice: BigNumber,
+    size: BigNumber,
+) {
+    return oldAveragePrice
+        .mul(OldSize)
+        .add(openPrice.mul(size))
+        .div(OldSize.add(size));
 }
