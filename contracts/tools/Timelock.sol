@@ -35,8 +35,8 @@ contract Timelock {
     );
 
     uint256 public constant GRACE_PERIOD = 14 days;
-    uint256 public constant MINIMUM_DELAY = 0;
-    // uint256 public constant MINIMUM_DELAY = 12 hours;
+    // uint256 public constant MINIMUM_DELAY = 0;
+    uint256 public immutable MINIMUM_DELAY;
     uint256 public constant MAXIMUM_DELAY = 30 days;
 
     address public admin;
@@ -46,7 +46,8 @@ contract Timelock {
 
     mapping(bytes32 => bool) public queuedTransactions;
 
-    constructor(address admin_, uint256 delay_) {
+    constructor(address admin_, uint256 _minDelay, uint256 delay_) {
+        MINIMUM_DELAY = _minDelay;
         require(delay_ >= MINIMUM_DELAY, ' Delay must exceed minimum delay.');
         require(delay_ <= MAXIMUM_DELAY, ' Delay must not exceed maximum delay.');
 

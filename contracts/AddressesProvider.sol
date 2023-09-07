@@ -6,6 +6,7 @@ import './interfaces/IAddressesProvider.sol';
 import './libraries/Errors.sol';
 
 contract AddressesProvider is Ownable, IAddressesProvider {
+    bytes32 private constant TIMELOCK = 'TIMELOCK';
     bytes32 private constant ROLE_MANAGER = 'ROLE_MANAGER';
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
     bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
@@ -14,8 +15,31 @@ contract AddressesProvider is Ownable, IAddressesProvider {
 
     mapping(bytes32 => address) private _addresses;
 
+    constructor(address _timelock) {
+        timelock = _timelock;
+    }
+
     function getAddress(bytes32 id) public view override returns (address) {
         return _addresses[id];
+    }
+
+    function getPriceOracle() external view override returns (address) {
+        return getAddress(PRICE_ORACLE);
+    }
+
+    function getIndexPriceOracle() external view override returns (address) {
+        return getAddress(INDEX_PRICE_ORACLE);
+    }
+
+    function getRoleManager() external view override returns (address) {
+        return getAddress(ROLE_MANAGER);
+    }
+
+    function setTimelock(address newAddress) public {
+        require(msg.sender == timelock, 'only timelock');
+        address oldAddress = newAddress;
+        timelock = newAddress;
+        emit AddressSet(TIMELOCK, oldAddress, newAddress);
     }
 
     function setAddress(bytes32 id, address newAddress) public override onlyOwner {
@@ -24,28 +48,16 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         emit AddressSet(id, oldAddress, newAddress);
     }
 
-    function getPriceOracle() external view override returns (address) {
-        return getAddress(PRICE_ORACLE);
-    }
-
     function setPriceOracle(address newPriceOracle) external override onlyOwner {
         address oldPriceOracle = _addresses[PRICE_ORACLE];
         _addresses[PRICE_ORACLE] = newPriceOracle;
         emit AddressSet(PRICE_ORACLE, oldPriceOracle, newPriceOracle);
     }
 
-    function getIndexPriceOracle() external view override returns (address) {
-        return getAddress(INDEX_PRICE_ORACLE);
-    }
-
     function setIndexPriceOracle(address newIndexPriceOracle) external override onlyOwner {
         address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
         _addresses[INDEX_PRICE_ORACLE] = newIndexPriceOracle;
         emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
-    }
-
-    function getRoleManager() external view override returns (address) {
-        return getAddress(ROLE_MANAGER);
     }
 
     function setRolManager(address newAddress) external override onlyOwner {
