@@ -58,22 +58,18 @@ contract OraclePriceFeed is IOraclePriceFeed {
         indexPriceFeed = _secondaryPriceFeed;
     }
 
-    function setTokenConfig(
-        address _token,
-        address _priceFeed,
-        uint256 _priceDecimals
-    ) external override onlyPoolAdmin {
+    function setTokenConfig(address _token, address _priceFeed, uint256 _priceDecimals) external onlyPoolAdmin {
         priceFeeds[_token] = _priceFeed;
         priceDecimals[_token] = _priceDecimals;
     }
 
     function getPrice(address _token) public view override returns (uint256) {
         uint256 price = getPrimaryPrice(_token);
-        require(price > 0, "invalid price");
+        require(price > 0, 'invalid price');
         return price;
     }
 
-    function getPrimaryPrice(address _token) public view override returns (uint256) {
+    function getPrimaryPrice(address _token) public view returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
         require(priceFeedAddress != address(0), 'invalid price feed');
 
@@ -98,10 +94,10 @@ contract OraclePriceFeed is IOraclePriceFeed {
         return price.mul(PRICE_PRECISION).div(10 ** _priceDecimals);
     }
 
-    function getIndexPrice(address _token, uint256 _referencePrice) public view returns (uint256) {
-        if (indexPriceFeed == address(0)) {
-            return _referencePrice;
-        }
-        return IOraclePrice(indexPriceFeed).getPrice(_token);
-    }
+    //     function getIndexPrice(address _token, uint256 _referencePrice) public view returns (uint256) {
+    //         if (indexPriceFeed == address(0)) {
+    //             return _referencePrice;
+    //         }
+    //         return IOraclePrice(indexPriceFeed).getPrice(_token);
+    //     }
 }

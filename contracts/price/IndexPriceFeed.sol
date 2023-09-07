@@ -25,7 +25,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
 
     uint256 public constant MAX_PRICE_DURATION = 30 minutes;
 
-    uint256 public override lastUpdatedAt;
+    uint256 public lastUpdatedAt;
 
     uint256 public maxTimeDeviation;
 
@@ -67,7 +67,11 @@ contract IndexPriceFeed is IIndexPriceFeed {
         tokenPrecisions = _tokenPrecisions;
     }
 
-    function setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) external onlyKeeper {
+    function setPrices(
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        uint256 _timestamp
+    ) external override onlyKeeper {
         bool shouldUpdate = _setLastUpdatedValues(_timestamp);
 
         if (shouldUpdate) {
@@ -108,7 +112,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
         _setPricesWithBits(_priceBits, _timestamp);
     }
 
-    function getPrice(address _token) external view returns (uint256) {
+    function getPrice(address _token) public view override returns (uint256) {
         return prices[_token];
     }
 
@@ -135,7 +139,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
     }
 
     function _setPrice(address _token, uint256 _price) private {
-// console.log('setPrice token %s price %s ', _token, _price);
+        // console.log('setPrice token %s price %s ', _token, _price);
 
         prices[_token] = _price;
         emit PriceUpdate(_token, _price, msg.sender);
