@@ -7,7 +7,7 @@ const {deployMockCallback, MAX_UINT_AMOUNT,
     getOrderManager,
     getExecutor,
     getOraclePriceFeed,
-    getRoleManager,
+    roleManager,
     getPool, getToken, getMockToken
 } = require("../../helpers");
 const {ethers} = require("hardhat");

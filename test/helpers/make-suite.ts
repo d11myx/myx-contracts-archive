@@ -21,7 +21,7 @@ import {
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPool,
-    getRoleManager,
+    roleManager,
     getToken,
     getWETH,
     MOCK_TOKEN_PREFIX,
@@ -36,6 +36,7 @@ import {
     getOrderManager,
     getPositionManager,
     deployLibraries,
+    getRoleManager,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -164,8 +165,9 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { weth, usdt, tokens } = await deployToken();
 
-    const addressesProvider = (await deployContract('AddressesProvider', [])) as AddressesProvider;
-    const roleManager = (await deployContract('RoleManager', [addressesProvider.address])) as RoleManager;
+    const timelock = (await deployContract('Timelock', ['43200'])) as AddressesProvider;
+    const addressesProvider = (await deployContract('AddressesProvider', [timelock.address])) as AddressesProvider;
+    const roleManager = (await deployContract('RoleManager', [])) as RoleManager;
 
     await addressesProvider.setRolManager(roleManager.address);
 
