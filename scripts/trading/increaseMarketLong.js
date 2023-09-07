@@ -2,7 +2,7 @@ const { toChainLinkPrice} = require("../utils/helpers");
 const { expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const hre = require("hardhat");
 const {ethers} = require("hardhat");
-const {getRouter, getOrderManager, getExecutor, getOraclePriceFeed, getRoleManager, getPool, getIndexPriceFeed,
+const {getRouter, getOrderManager, getExecutor, getOraclePriceFeed, roleManager, getPool, getIndexPriceFeed,
   getMockPriceFeed, getToken, getMockToken, getPositionManager
 } = require("../../helpers");
 

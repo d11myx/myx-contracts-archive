@@ -10,7 +10,7 @@ const {
   getPositionManager,
   getIndexPriceFeed,
   getMockPriceFeed,
-  getRoleManager,
+  roleManager,
   getPool,
   getMockToken,
   getToken

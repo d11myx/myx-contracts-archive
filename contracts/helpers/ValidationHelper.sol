@@ -11,7 +11,7 @@ library ValidationHelper {
     using PrecisionUtils for uint256;
 
     function validateAccountBlacklist(IAddressesProvider addressesProvider, address account) internal view {
-        require(!IRoleManager(addressesProvider.getRoleManager()).isBlackList(account), 'blacklist account');
+        require(!IRoleManager(addressesProvider.roleManager()).isBlackList(account), 'blacklist account');
     }
 
     function validatePairEnabled(IPool.Pair memory pair) internal view {

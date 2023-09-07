@@ -5,7 +5,7 @@ import {
     getOrderManager,
     getPool,
     getPositionManager,
-    getRoleManager,
+    roleManager,
     getRouter,
     getTestCallBack,
     getToken,
