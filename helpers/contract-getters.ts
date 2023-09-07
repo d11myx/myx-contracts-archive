@@ -79,7 +79,7 @@ export const getAddressesProvider = async (address?: string): Promise<AddressesP
     );
 };
 
-export const roleManager = async (address?: string): Promise<RoleManager> => {
+export const getRoleManager = async (address?: string): Promise<RoleManager> => {
     return getContract<RoleManager>('RoleManager', address || (await hre.deployments.get(ROLE_MANAGER_ID)).address);
 };
 

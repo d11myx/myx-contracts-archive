@@ -36,6 +36,7 @@ import {
     getOrderManager,
     getPositionManager,
     deployLibraries,
+    getRoleManager,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -125,7 +126,7 @@ export async function setupTestEnv() {
 
     // provider
     testEnv.addressesProvider = await getAddressesProvider();
-    testEnv.roleManager = await roleManager();
+    testEnv.roleManager = await getRoleManager();
 
     // oracle
     testEnv.oraclePriceFeed = await getOraclePriceFeed();
