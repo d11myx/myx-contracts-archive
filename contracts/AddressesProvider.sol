@@ -10,6 +10,8 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
     bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
 
+    address public timelock;
+
     mapping(bytes32 => address) private _addresses;
 
     function getAddress(bytes32 id) public view override returns (address) {
