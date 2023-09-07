@@ -9,10 +9,23 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const deployerSigner = await hre.ethers.getSigner(deployer);
 
     // AddressesProvider
+    const timelockArtifact = await deploy(ADDRESSES_PROVIDER_ID, {
+        from: deployer,
+        contract: 'Timelock',
+        args: [deployerSigner.address, '10', '100'],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+
+    const timelock = (await hre.ethers.getContractAt(
+        timelockArtifact.abi,
+        timelockArtifact.address,
+    )) as AddressesProvider;
+
+    // AddressesProvider
     const addressesProviderArtifact = await deploy(ADDRESSES_PROVIDER_ID, {
         from: deployer,
         contract: 'AddressesProvider',
-        args: [],
+        args: [timelock.address],
         ...COMMON_DEPLOY_PARAMS,
     });
 
