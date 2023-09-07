@@ -15,7 +15,7 @@ library TradingHelper {
         address token,
         IPool.TradingConfig memory tradingConfig
     ) internal view returns (uint256) {
-        IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(addressesProvider.getPriceOracle());
+        IOraclePriceFeed oraclePriceFeed = IOraclePriceFeed(addressesProvider.priceOracle());
 
         uint256 oraclePrice = oraclePriceFeed.getPrice(token);
 

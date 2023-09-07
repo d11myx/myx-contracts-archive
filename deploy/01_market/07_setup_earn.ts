@@ -7,7 +7,7 @@ import {
   getIndexPriceFeed,
   getOraclePriceFeed,
   getPool, getPositionManager,
-  getRoleManager, getToken,
+  roleManager, getToken,
   getWETH, LP_STAKING_POOL_ID, MYX_ID,
   ORDER_MANAGER_ID,
   POSITION_MANAGER_ID, RAMYX_ID, REWARD_DISTRIBUTOR_ID,
@@ -195,7 +195,7 @@ const func: DeployFunction = async function ({getNamedAccounts, deployments, ...
   await waitForTx(await stMYX.setMiner(stakingPool.address, true));
   await waitForTx(await stMYX.setHandler(stakingPool.address, true));
 
-  const roleManager = await getRoleManager();
+  const roleManager = await roleManager();
   await waitForTx(await roleManager.connect(deployerSigner).addPoolAdmin(stakingPool.address));
   await waitForTx(await roleManager.connect(deployerSigner).addPoolAdmin(feeDistributor.address));
 

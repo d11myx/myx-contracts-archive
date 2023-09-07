@@ -10,7 +10,7 @@ const {
   getPositionManager,
   getIndexPriceFeed,
   getMockPriceFeed,
-  getRoleManager,
+  roleManager,
   getPool,
   getMockToken,
   getToken
@@ -28,7 +28,7 @@ async function main() {
   const positionManager = await getPositionManager();
   const indexPriceFeed = await getIndexPriceFeed();
   const btcPriceFeed = await getMockPriceFeed("BTC");
-  const roleManager = await getRoleManager();
+  const roleManager = await roleManager();
   const pool = await getPool();
 
   const btc = await getMockToken("BTC")

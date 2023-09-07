@@ -44,12 +44,12 @@ contract IndexPriceFeed is IIndexPriceFeed {
     }
 
     modifier onlyKeeper() {
-        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), 'onlyKeeper');
+        require(IRoleManager(addressProvider.roleManager()).isKeeper(msg.sender), 'onlyKeeper');
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(IRoleManager(addressProvider.roleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 
