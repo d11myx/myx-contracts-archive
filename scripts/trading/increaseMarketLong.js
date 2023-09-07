@@ -2,7 +2,7 @@ const { toChainLinkPrice} = require("../utils/helpers");
 const { expandDecimals, formatBalance, getBlockTime} = require("../utils/utilities");
 const hre = require("hardhat");
 const {ethers} = require("hardhat");
-const {getRouter, getOrderManager, getExecutor, getOraclePriceFeed, getRoleManager, getPool, getIndexPriceFeed,
+const {getRouter, getOrderManager, getExecutor, getOraclePriceFeed, roleManager, getPool, getIndexPriceFeed,
   getMockPriceFeed, getToken, getMockToken, getPositionManager
 } = require("../../helpers");
 
@@ -16,7 +16,7 @@ async function main() {
   const positionManager = await getPositionManager();
   const indexPriceFeed = await getIndexPriceFeed();
   const btcPriceFeed = await getMockPriceFeed("BTC");
-  const roleManager = await getRoleManager();
+  const roleManager = await roleManager();
   const pool = await getPool();
 
   const btc = await getMockToken("BTC")

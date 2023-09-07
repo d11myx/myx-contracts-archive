@@ -21,7 +21,7 @@ import {
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPool,
-    getRoleManager,
+    roleManager,
     getToken,
     getWETH,
     MOCK_TOKEN_PREFIX,
@@ -125,7 +125,7 @@ export async function setupTestEnv() {
 
     // provider
     testEnv.addressesProvider = await getAddressesProvider();
-    testEnv.roleManager = await getRoleManager();
+    testEnv.roleManager = await roleManager();
 
     // oracle
     testEnv.oraclePriceFeed = await getOraclePriceFeed();

@@ -5,7 +5,7 @@ import {
     getOrderManager,
     getPool,
     getPositionManager,
-    getRoleManager,
+    roleManager,
     getRouter,
     getTestCallBack,
     getToken,
@@ -30,7 +30,7 @@ async function main() {
     const positionManager = await getPositionManager();
     const executor = await getExecutor();
     const oraclePriceFeed = await getOraclePriceFeed();
-    const roleManager = await getRoleManager();
+    const roleManager = await roleManager();
     const pool = await getPool();
     const testCallBack = await getTestCallBack();
 

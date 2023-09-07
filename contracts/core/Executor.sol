@@ -51,17 +51,17 @@ contract Executor is IExecutor, Pausable {
     }
 
     modifier onlyAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isAdmin(msg.sender), 'oa');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isAdmin(msg.sender), 'oa');
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'opa');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'opa');
         _;
     }
 
     modifier onlyPositionKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isKeeper(msg.sender), 'opk');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), 'opk');
         _;
     }
 
@@ -87,7 +87,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseMarketOrders(increaseOrders);
     }
@@ -100,7 +100,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseMarketOrders(decreaseOrders);
     }
@@ -113,7 +113,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseLimitOrders(increaseOrders);
     }
@@ -126,7 +126,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseLimitOrders(decreaseOrders);
     }
@@ -558,7 +558,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.executeADLAndDecreaseOrder(executePositions, orderId, tradeType, level, commissionRatio);
     }
@@ -627,7 +627,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.getIndexPriceOracle()).setPrices(tokens, prices, timestamp);
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
 
         this.liquidatePositions(executePositions);
     }

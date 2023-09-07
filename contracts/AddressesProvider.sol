@@ -11,9 +11,9 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
     bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
 
-    address public timelock;
-    address public priceOracle;
-    address public indexPriceOracle;
+    address public override timelock;
+    address public override priceOracle;
+    address public override indexPriceOracle;
 
     mapping(bytes32 => address) private _addresses;
 
@@ -30,15 +30,9 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         return _addresses[id];
     }
 
-    function getPriceOracle() external view override returns (address) {
-        return priceOracle;
-    }
 
-    function getIndexPriceOracle() external view override returns (address) {
-        return indexPriceOracle;
-    }
 
-    function getRoleManager() external view override returns (address) {
+    function roleManager() external view override returns (address) {
         return getAddress(ROLE_MANAGER);
     }
 
