@@ -30,7 +30,7 @@ async function main() {
     const positionManager = await getPositionManager();
     const executor = await getExecutor();
     const oraclePriceFeed = await getOraclePriceFeed();
-    const roleManager = await roleManager();
+    const roleManager = await getRoleManager();
     const pool = await getPool();
     const testCallBack = await getTestCallBack();
     // console.log(`router:`, router.address);
