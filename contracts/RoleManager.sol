@@ -15,9 +15,8 @@ contract RoleManager is AccessControl, IRoleManager {
 
     mapping(address => bool) public accountBlackList;
 
-    constructor(address owner) {
-        require(owner != address(0), 'is 0');
-        _setupRole(DEFAULT_ADMIN_ROLE, owner);
+    constructor() {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function setRoleAdmin(bytes32 role, bytes32 adminRole) external override onlyRole(DEFAULT_ADMIN_ROLE) {
