@@ -39,9 +39,9 @@ async function main() {
     await roleManager.addKeeper(user0.address);
     await roleManager.addKeeper(user1.address);
 
-    await oraclePriceFeed.setTokenConfig(eth.address, ethPriceFeed.address, 8);
-    await oraclePriceFeed.setTokenConfig(btc.address, btcPriceFeed.address, 8);
-    await oraclePriceFeed.setTokenConfig(usdt.address, usdtPriceFeed.address, 8);
+    await oraclePriceFeed.initTokenConfig(eth.address, ethPriceFeed.address, 8);
+    await oraclePriceFeed.initTokenConfig(btc.address, btcPriceFeed.address, 8);
+    await oraclePriceFeed.initTokenConfig(usdt.address, usdtPriceFeed.address, 8);
 
     await fastPriceFeed.connect(user0).setTokens([btc.address, eth.address], [10, 10]);
 

@@ -34,7 +34,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         const mockPriceFeed = await getMockPriceFeed(pair);
 
         await mockPriceFeed.connect(keeperSigner).setLatestAnswer(MOCK_PRICES[pair]);
-        await oraclePriceFeed.connect(poolAdminSigner).setTokenConfig(pairToken.address, mockPriceFeed.address, 8);
+        await oraclePriceFeed.connect(poolAdminSigner).initTokenConfig(pairToken.address, mockPriceFeed.address, 8);
 
         pairTokenAddresses.push(pairToken.address);
         pairTokenPrices.push(

@@ -95,7 +95,7 @@ export async function deployPrice(
         if (!pairTokenAddress) {
             throw `wait for deployed before using`;
         }
-        await oraclePriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8);
+        await oraclePriceFeed.initTokenConfig(pairTokenAddress, priceFeed.address, 8);
 
         pairTokenAddresses.push(pairTokenAddress);
         pairTokenPrices.push(
