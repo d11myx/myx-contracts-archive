@@ -40,13 +40,18 @@ contract OraclePriceFeed is IOraclePriceFeed {
         addressProvider = _addressProvider;
     }
 
+    modifier onlyTimelock() {
+        require(addressProvider.timelock() == msg.sender, 'onlyTimelock');
+        _;
+    }
+
     modifier onlyKeeper() {
-        require(IRoleManager(addressProvider.getRoleManager()).isKeeper(msg.sender), 'onlyKeeper');
+        require(IRoleManager(addressProvider.roleManager()).isKeeper(msg.sender), 'onlyKeeper');
         _;
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(addressProvider.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(IRoleManager(addressProvider.roleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 
@@ -58,22 +63,28 @@ contract OraclePriceFeed is IOraclePriceFeed {
         indexPriceFeed = _secondaryPriceFeed;
     }
 
-    function setTokenConfig(
-        address _token,
-        address _priceFeed,
-        uint256 _priceDecimals
-    ) external override onlyPoolAdmin {
+    function setTokenConfig(address _token, address _priceFeed, uint256 _priceDecimals) external onlyTimelock {
+        require(priceFeeds[_token] == address(0), 'first init');
+        require(_token != address(0) && _priceFeed != address(0) && _priceDecimals != 0, '!=0');
         priceFeeds[_token] = _priceFeed;
         priceDecimals[_token] = _priceDecimals;
+        emit SetToken(_token, _priceFeed, _priceDecimals);
+    }
+
+    function initTokenConfig(address _token, address _priceFeed, uint256 _priceDecimals) external onlyPoolAdmin {
+        require(_token != address(0) && _priceFeed != address(0) && _priceDecimals != 0, '!=0');
+        priceFeeds[_token] = _priceFeed;
+        priceDecimals[_token] = _priceDecimals;
+        emit SetToken(_token, _priceFeed, _priceDecimals);
     }
 
     function getPrice(address _token) public view override returns (uint256) {
         uint256 price = getPrimaryPrice(_token);
-        require(price > 0, "invalid price");
+        require(price > 0, 'invalid price');
         return price;
     }
 
-    function getPrimaryPrice(address _token) public view override returns (uint256) {
+    function getPrimaryPrice(address _token) public view returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
         require(priceFeedAddress != address(0), 'invalid price feed');
 
@@ -96,12 +107,5 @@ contract OraclePriceFeed is IOraclePriceFeed {
 
         uint256 _priceDecimals = priceDecimals[_token];
         return price.mul(PRICE_PRECISION).div(10 ** _priceDecimals);
-    }
-
-    function getIndexPrice(address _token, uint256 _referencePrice) public view returns (uint256) {
-        if (indexPriceFeed == address(0)) {
-            return _referencePrice;
-        }
-        return IOraclePrice(indexPriceFeed).getPrice(_token);
     }
 }
