@@ -33,7 +33,7 @@ describe('Utils: tx', () => {
 
         it('getFundingRate', async () => {
             const {
-                users: [longFirst, longSecond, shortFirst, shortSecond],
+                users: [longFirst, shortFirst],
                 usdt,
                 router,
                 positionManager,
@@ -78,7 +78,6 @@ describe('Utils: tx', () => {
 
             const nextFundingRate = await positionManager.getNextFundingRate(pairIndex);
             const fundingRate = await getFundingRate(testEnv, pairIndex);
-            console.log(`nextFundingRate: ${nextFundingRate}, fundingRate: ${fundingRate}`);
 
             expect(nextFundingRate).to.be.eq(fundingRate);
         });
