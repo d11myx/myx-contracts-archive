@@ -118,8 +118,8 @@ export async function deployPrice(
 
     await oraclePriceFeed.setIndexPriceFeed(indexPriceFeed.address);
 
-    await addressesProvider.connect(deployer.signer).setPriceOracle(oraclePriceFeed.address);
-    await addressesProvider.connect(deployer.signer).setIndexPriceOracle(indexPriceFeed.address);
+    await addressesProvider.connect(deployer.signer).initOracle(oraclePriceFeed.address, indexPriceFeed.address);
+    // await addressesProvider.connect(deployer.signer).setIndexPriceOracle();
     return { oraclePriceFeed, indexPriceFeed };
 }
 

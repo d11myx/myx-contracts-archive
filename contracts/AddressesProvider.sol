@@ -12,6 +12,8 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
 
     address public timelock;
+    address public priceOracle;
+    address public indexPriceOracle;
 
     mapping(bytes32 => address) private _addresses;
 
@@ -19,24 +21,28 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         timelock = _timelock;
     }
 
+    modifier onlyTimelock() {
+        require(msg.sender == timelock, 'only timelock');
+        _;
+    }
+
     function getAddress(bytes32 id) public view override returns (address) {
         return _addresses[id];
     }
 
     function getPriceOracle() external view override returns (address) {
-        return getAddress(PRICE_ORACLE);
+        return priceOracle;
     }
 
     function getIndexPriceOracle() external view override returns (address) {
-        return getAddress(INDEX_PRICE_ORACLE);
+        return indexPriceOracle;
     }
 
     function getRoleManager() external view override returns (address) {
         return getAddress(ROLE_MANAGER);
     }
 
-    function setTimelock(address newAddress) public {
-        require(msg.sender == timelock, 'only timelock');
+    function setTimelock(address newAddress) public onlyTimelock {
         address oldAddress = newAddress;
         timelock = newAddress;
         emit AddressSet(TIMELOCK, oldAddress, newAddress);
@@ -48,15 +54,24 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         emit AddressSet(id, oldAddress, newAddress);
     }
 
-    function setPriceOracle(address newPriceOracle) external override onlyOwner {
+    function initOracle(address newPriceOracle, address newIndexPriceOracle) external onlyOwner {
+        require(priceOracle == address(0) && indexPriceOracle == address(0), 'first init');
+        require(newPriceOracle != address(0) && newIndexPriceOracle != address(0), '!0');
+        priceOracle = newPriceOracle;
+        indexPriceOracle = newIndexPriceOracle;
+        emit AddressSet(PRICE_ORACLE, address(0), newPriceOracle);
+        emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
+    }
+
+    function setPriceOracle(address newPriceOracle) external override onlyTimelock {
         address oldPriceOracle = _addresses[PRICE_ORACLE];
-        _addresses[PRICE_ORACLE] = newPriceOracle;
+        priceOracle = newPriceOracle;
         emit AddressSet(PRICE_ORACLE, oldPriceOracle, newPriceOracle);
     }
 
-    function setIndexPriceOracle(address newIndexPriceOracle) external override onlyOwner {
+    function setIndexPriceOracle(address newIndexPriceOracle) external override onlyTimelock {
         address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
-        _addresses[INDEX_PRICE_ORACLE] = newIndexPriceOracle;
+        indexPriceOracle = newIndexPriceOracle;
         emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
     }
 
