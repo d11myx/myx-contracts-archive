@@ -5,6 +5,7 @@ import '../interfaces/IPositionManager.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
+
 // import 'hardhat/console.sol';
 
 library ValidationHelper {
@@ -12,10 +13,6 @@ library ValidationHelper {
 
     function validateAccountBlacklist(IAddressesProvider addressesProvider, address account) internal view {
         require(!IRoleManager(addressesProvider.roleManager()).isBlackList(account), 'blacklist account');
-    }
-
-    function validatePairEnabled(IPool.Pair memory pair) internal view {
-        require(pair.enable, 'trade pair not supported');
     }
 
     function validateOrderExpired(uint256 orderTime, uint256 maxTimeDelay) internal view {

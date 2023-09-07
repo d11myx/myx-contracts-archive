@@ -51,7 +51,12 @@ interface IOrderManager {
 
     function createOrder(TradingTypes.CreateOrderRequest memory request) external returns (uint256 orderId);
 
-    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease, string memory reason) external;
+    function cancelOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        string memory reason
+    ) external;
 
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
 
