@@ -95,7 +95,7 @@ export async function deployPrice(
         if (!pairTokenAddress) {
             throw `wait for deployed before using`;
         }
-        await oraclePriceFeed.setTokenConfig(pairTokenAddress, priceFeed.address, 8);
+        await oraclePriceFeed.initTokenConfig(pairTokenAddress, priceFeed.address, 8);
 
         pairTokenAddresses.push(pairTokenAddress);
         pairTokenPrices.push(
@@ -118,8 +118,8 @@ export async function deployPrice(
 
     await oraclePriceFeed.setIndexPriceFeed(indexPriceFeed.address);
 
-    await addressesProvider.connect(deployer.signer).setPriceOracle(oraclePriceFeed.address);
-    await addressesProvider.connect(deployer.signer).setIndexPriceOracle(indexPriceFeed.address);
+    await addressesProvider.connect(deployer.signer).initOracle(oraclePriceFeed.address, indexPriceFeed.address);
+    // await addressesProvider.connect(deployer.signer).setIndexPriceOracle();
     return { oraclePriceFeed, indexPriceFeed };
 }
 

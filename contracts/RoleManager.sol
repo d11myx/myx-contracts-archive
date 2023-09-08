@@ -3,7 +3,6 @@ pragma solidity =0.8.20;
 
 import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/access/AccessControl.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IRoleManager.sol';
 
 contract RoleManager is AccessControl, IRoleManager {
@@ -16,9 +15,8 @@ contract RoleManager is AccessControl, IRoleManager {
 
     mapping(address => bool) public accountBlackList;
 
-    constructor(Ownable provider) {
-        require(provider.owner() != address(0), 'is 0');
-        _setupRole(DEFAULT_ADMIN_ROLE, provider.owner());
+    constructor() {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function setRoleAdmin(bytes32 role, bytes32 adminRole) external override onlyRole(DEFAULT_ADMIN_ROLE) {

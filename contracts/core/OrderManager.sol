@@ -116,7 +116,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
             Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
-            uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+            uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 // check leverage
                 (uint256 afterPosition, ) = position.validLeverage(

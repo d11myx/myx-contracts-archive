@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { ADDRESSES_PROVIDER_ID, COMMON_DEPLOY_PARAMS, ROLE_MANAGER_ID, waitForTx } from '../../helpers';
+import { ADDRESSES_PROVIDER_ID, COMMON_DEPLOY_PARAMS, ROLE_MANAGER_ID, TIMELOCK_ID, waitForTx } from '../../helpers';
 import { AddressesProvider, RoleManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
@@ -9,10 +9,23 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const deployerSigner = await hre.ethers.getSigner(deployer);
 
     // AddressesProvider
+    const timelockArtifact = await deploy(TIMELOCK_ID, {
+        from: deployer,
+        contract: 'Timelock',
+        args: ['43200'],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+
+    const timelock = (await hre.ethers.getContractAt(
+        timelockArtifact.abi,
+        timelockArtifact.address,
+    )) as AddressesProvider;
+
+    // AddressesProvider
     const addressesProviderArtifact = await deploy(ADDRESSES_PROVIDER_ID, {
         from: deployer,
         contract: 'AddressesProvider',
-        args: [],
+        args: [timelock.address],
         ...COMMON_DEPLOY_PARAMS,
     });
 
@@ -25,7 +38,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const roleManagerArtifact = await deploy(ROLE_MANAGER_ID, {
         from: deployer,
         contract: 'RoleManager',
-        args: [addressesProvider.address],
+        args: [],
         ...COMMON_DEPLOY_PARAMS,
     });
 
