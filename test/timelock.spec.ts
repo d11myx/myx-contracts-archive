@@ -115,33 +115,46 @@ describe('Timelock', () => {
         );
         expect(await testToken.owner()).to.be.eq(carol.address);
     });
-    // it('test cancelTransaction', async () => {
-    //     assert.equal(await testToken.owner().valueOf(), alice);
-    //     await testToken.transferOwnership(timelock.address, {from: alice});
-    //     assert.equal(await testToken.owner().valueOf(), timelock.address);
+    it('test cancelTransaction', async () => {
+        const {
+            deployer,
+            pool,
+            usdt,
+            users: [depositor, carol, alice],
+        } = testEnv;
+        await testToken.transferOwnership(timelock.address);
 
-    //     let eta = (await time.latest()).add(time.duration.days(4));
-    //     await timelock.queueTransaction(
-    //         testToken.address, '0', 'transferOwnership(address)',
-    //         encodeParameters(['address'], [carol]), eta, {from: bob},
-    //     );
-    //     await time.increase(time.duration.days(4));
+        let eta = (await latest()).add(Duration.days(4));
+        await timelock.queueTransaction(
+            testToken.address,
+            '0',
+            'transferOwnership(address)',
+            encodeParameters(['address'], [carol.address]),
+            eta,
+        );
+        await increase(Duration.days(4));
 
-    //     eta = (await time.latest()).add(time.duration.days(4));
-
-    //     await timelock.cancelTransaction(
-    //         testToken.address, '0', 'transferOwnership(address)',
-    //         encodeParameters(['address'], [carol]), eta, {from: bob},
-    //     );
-    //     assert.equal(await testToken.owner().valueOf(), timelock.address);
-
-    // });
-    // it("test acceptAdmin", async () => {
-    //     assert.equal(await timelock.pendingAdmin(), alice);
-    //     await timelock.acceptAdmin();
-    //     assert.equal(await timelock.pendingAdmin(), zeroAddress);
-
-    // });
+        await timelock.cancelTransaction(
+            testToken.address,
+            '0',
+            'transferOwnership(address)',
+            encodeParameters(['address'], [carol.address]),
+            eta,
+        );
+        expect(await testToken.owner().valueOf()).to.be.eq(timelock.address);
+    });
+    it('test acceptAdmin', async () => {
+        const {
+            deployer,
+            pool,
+            usdt,
+            users: [depositor, carol, alice],
+        } = testEnv;
+        await timelock.setPendingAdmin(alice.address);
+        expect(await timelock.pendingAdmin()).to.be.eq(alice.address);
+        await timelock.acceptAdmin();
+        expect(await timelock.pendingAdmin()).to.be.eq(ZERO_ADDRESS);
+    });
     // it("test setPendingAdmin", async () => {
     //     assert.equal(await timelock.pendingAdmin(), alice);
 
