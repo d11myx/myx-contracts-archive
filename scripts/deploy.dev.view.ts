@@ -23,25 +23,25 @@ async function main() {
     console.log(await deployer.getBalance());
 
     // const router = await getRouter();
-    const orderManager = await getOrderManager('0x72336C1702f9725e65D6aDecE2b30Ca714903BfF');
-    const positionManager = await getPositionManager('0xb07fB1a2F76574FD5243C1aA25Bb992cE9490B9C');
+    const orderManager = await getOrderManager();
+    const positionManager = await getPositionManager();
     // const executor = await getExecutor();
-    const oraclePriceFeed = await getOraclePriceFeed('0xDfeAA34359305f9189ACD2Fb3681B1C94835c1E0');
-    const pool = await getPool('0x9F183F317A723830C486c28765dFc9686945b6c1');
-    const rewardDistributor = await getRewardDistributor('0x525C7063E7C20997BaaE9bDa922159152D0e8417');
+    const oraclePriceFeed = await getOraclePriceFeed();
+    const pool = await getPool();
+    const rewardDistributor = await getRewardDistributor();
 
     // console.log(`router:`, router.address);
     // console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
-    // console.log(await pool.getPair(0));
-    // console.log(await pool.getPair(1));
+    console.log(await pool.getPair(0));
+    console.log(await pool.getPair(1));
 
     const btcPrice = ethers.utils.formatUnits(
-        await oraclePriceFeed.getPrice('0x2572481e069456b87350976b304521D818fd4d45'),
+        await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'),
         30,
     );
     const ethPrice = ethers.utils.formatUnits(
-        await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'),
+        await oraclePriceFeed.getPrice('0x437afc3306b2911B39024cafF860A07b43427d83'),
         30,
     );
     console.log(`btc price:`, btcPrice);
@@ -67,15 +67,15 @@ async function main() {
     // //     '0x7b0f9ac2cf09c8c622b25929c45aabda97b29b7d624d2958cce653f5a30e0884',
     // // ]);
 
-    const vault = await pool.getVault(0);
-    // console.log(vault);
-    console.log(
-        `long:`,
-        ethers.utils.formatUnits(
-            vault.indexTotalAmount.sub(vault.indexReservedAmount).mul(btcPrice.split('.')[0]).toString(),
-        ),
-    );
-    console.log(`short:`, ethers.utils.formatUnits(vault.stableTotalAmount.sub(vault.stableReservedAmount).toString()));
+    // const vault = await pool.getVault(0);
+    // // console.log(vault);
+    // console.log(
+    //     `long:`,
+    //     ethers.utils.formatUnits(
+    //         vault.indexTotalAmount.sub(vault.indexReservedAmount).mul(btcPrice.split('.')[0]).toString(),
+    //     ),
+    // );
+    // console.log(`short:`, ethers.utils.formatUnits(vault.stableTotalAmount.sub(vault.stableReservedAmount).toString()));
 
     // long: 499341.159
     // short: 500282.636963365265499999
