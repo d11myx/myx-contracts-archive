@@ -734,7 +734,7 @@ contract Pool is IPool, Roleable {
     }
 
     function _getPrice(address _token) internal view returns (uint256) {
-        return IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(_token);
+        return IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
