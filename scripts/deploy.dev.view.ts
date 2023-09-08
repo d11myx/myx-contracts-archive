@@ -1,44 +1,94 @@
 import { ethers } from 'hardhat';
-import { getExecutor, getOraclePriceFeed, getOrderManager, getPool, getPositionManager, getRouter } from '../helpers';
+import {
+    getExecutor,
+    getOraclePriceFeed,
+    getOrderManager,
+    getPool,
+    getPositionManager,
+    getRewardDistributor,
+    getRouter,
+    ZERO_ADDRESS,
+} from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { pool } from '../types/contracts';
+import { MerkleTree } from 'merkletreejs';
+import { AbiHelpers } from 'hardhat/internal/util/abi-helpers';
+import keccak256 = require('keccak256');
 
 declare var hre: HardhatRuntimeEnvironment;
 
 async function main() {
     const [deployer, keeper] = await ethers.getSigners();
-
-    // const addresses = await ethers.getSigners();
-    // for (let address of addresses) {
-    //     console.log(address.address);
-    //     // console.log(await address.getBalance());
-    // }
-
     console.log(deployer.address);
     console.log(await deployer.getBalance());
 
-    const router = await getRouter();
-    const orderManager = await getOrderManager();
-    const positionManager = await getPositionManager();
-    const executor = await getExecutor();
-    const oraclePriceFeed = await getOraclePriceFeed();
-    const pool = await getPool();
+    // const router = await getRouter();
+    const orderManager = await getOrderManager('0x72336C1702f9725e65D6aDecE2b30Ca714903BfF');
+    const positionManager = await getPositionManager('0xb07fB1a2F76574FD5243C1aA25Bb992cE9490B9C');
+    // const executor = await getExecutor();
+    const oraclePriceFeed = await getOraclePriceFeed('0xDfeAA34359305f9189ACD2Fb3681B1C94835c1E0');
+    const pool = await getPool('0x9F183F317A723830C486c28765dFc9686945b6c1');
+    const rewardDistributor = await getRewardDistributor('0x525C7063E7C20997BaaE9bDa922159152D0e8417');
 
-    console.log(`router:`, router.address);
+    // console.log(`router:`, router.address);
     // console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
     // console.log(await pool.getPair(0));
     // console.log(await pool.getPair(1));
 
-    console.log(
-        `btc price:`,
-        ethers.utils.formatUnits(await oraclePriceFeed.getPrice('0x2572481e069456b87350976b304521D818fd4d45'), 30),
+    const btcPrice = ethers.utils.formatUnits(
+        await oraclePriceFeed.getPrice('0x2572481e069456b87350976b304521D818fd4d45'),
+        30,
     );
-    console.log(
-        `eth price:`,
-        ethers.utils.formatUnits(await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'), 30),
+    const ethPrice = ethers.utils.formatUnits(
+        await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'),
+        30,
     );
+    console.log(`btc price:`, btcPrice);
+    console.log(`eth price:`, ethPrice);
 
-    // console.log(await orderManager.increaseMarketOrders(4));
+    // console.log(await orderManager.increaseLimitOrders(53));
+    //
+    // const factory = await ethers.getContractFactory('RewardDistributor');
+    // const re = await factory.deploy(ZERO_ADDRESS);
+    // console.log(
+    //     await re.a('0x70997970c51812dc3a010c7d01b50e0d17dc79c8', [
+    //         '0x7b0f9ac2cf09c8c622b25929c45aabda97b29b7d624d2958cce653f5a30e0884',
+    //     ]),
+    // );
+    // const map = { address: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8', amount: '1678179842040000000' };
+    // const leaves = [map].map((va) => keccak256(va));
+    // new MerkleTree();
+    // console.log(await rewardDistributor.round());
+    // console.log(await rewardDistributor.merkleRoots(1));
+    // keccak256().MerkleTree.verify();
+    // ('0xdb65c68c8c1ef0f048eaf4fdd535738b54fd71c3e33cd649db304d1199019bfd');
+    // // await rewardDistributor.claim('1678179842040000000', [
+    // //     '0x7b0f9ac2cf09c8c622b25929c45aabda97b29b7d624d2958cce653f5a30e0884',
+    // // ]);
+
+    const vault = await pool.getVault(0);
+    // console.log(vault);
+    console.log(
+        `long:`,
+        ethers.utils.formatUnits(
+            vault.indexTotalAmount.sub(vault.indexReservedAmount).mul(btcPrice.split('.')[0]).toString(),
+        ),
+    );
+    console.log(`short:`, ethers.utils.formatUnits(vault.stableTotalAmount.sub(vault.stableReservedAmount).toString()));
+
+    // long: 499341.159
+    // short: 500282.636963365265499999
+    // long: 387343.2805
+    // short: 500309.516555922725499999
+
+    // long: 387223.0109
+    // short: 500309.516555922725499999
+    // long: 497240.1594
+    // short: 500356.563073816175499999
+    //
+
+    // console.log(await orderManager.orderWithTpSl(0));
     // console.log(await executor.executeIncreaseMarketOrders([{ orderId: 4, level: 0, commissionRatio: 0 }]));
     // console.log(
     //     ethers.utils.toUtf8String(
@@ -46,8 +96,8 @@ async function main() {
     //     ),
     // );
 
-    console.log(await positionManager.getNextFundingRateUpdateTime(0));
-    console.log(await positionManager.lastFundingRateUpdateTimes(0));
+    // console.log(await positionManager.getNextFundingRateUpdateTime(0));
+    // console.log(await positionManager.lastFundingRateUpdateTimes(0));
 
     // console.log(
     //     `btc price:`,

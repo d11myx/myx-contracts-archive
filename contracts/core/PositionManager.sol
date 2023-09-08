@@ -19,6 +19,7 @@ import '../interfaces/IPool.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import './FeeManager.sol';
+//import 'hardhat/console.sol';
 
 contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
@@ -146,16 +147,19 @@ contract PositionManager is FeeManager, Pausable {
         PositionStatus currentPositionStatus = PositionStatus.Balance;
         if (currentExposureAmountChecker > 0) {
             currentPositionStatus = PositionStatus.NetLong;
-        } else {
+        } else if (currentExposureAmountChecker < 0) {
             currentPositionStatus = PositionStatus.NetShort;
         }
+
         PositionStatus nextPositionStatus = PositionStatus.Balance;
         if (nextExposureAmountChecker > 0) {
             nextPositionStatus = PositionStatus.NetLong;
-        } else {
+        } else if (nextExposureAmountChecker < 0) {
             nextPositionStatus = PositionStatus.NetShort;
         }
-        bool isAddPosition = nextExposureAmountChecker > currentExposureAmountChecker;
+
+        bool isAddPosition = (currentPositionStatus == PositionStatus.NetLong && nextExposureAmountChecker > currentExposureAmountChecker)
+            || (currentPositionStatus == PositionStatus.NetShort && nextExposureAmountChecker < currentExposureAmountChecker);
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
 
@@ -197,8 +201,14 @@ contract PositionManager is FeeManager, Pausable {
                     pool.updateAveragePrice(_pairIndex, _price);
                 }
             }
-        } else {
+        } else if (currentPositionStatus == PositionStatus.NetShort) {
             if (isAddPosition) {
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+
+                uint256 averagePrice = (uint256(-currentExposureAmountChecker).mulPrice(lpVault.averagePrice) +
+                    sizeDelta).calculatePrice(uint256(-currentExposureAmountChecker) + _sizeAmount);
+                pool.updateAveragePrice(_pairIndex, averagePrice);
+            } else {
                 uint256 decreaseShort;
                 uint256 increaseLong;
 
@@ -208,7 +218,6 @@ contract PositionManager is FeeManager, Pausable {
                     decreaseShort = uint256(-currentExposureAmountChecker);
                     increaseLong = _sizeAmount - decreaseShort;
                 }
-
                 // decrease reserve & pnl
                 pool.decreaseReserveAmount(
                     _pairIndex,
@@ -223,12 +232,6 @@ contract PositionManager is FeeManager, Pausable {
                     pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
                     pool.updateAveragePrice(_pairIndex, _price);
                 }
-            } else {
-                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
-
-                uint256 averagePrice = (uint256(-currentExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(-currentExposureAmountChecker) + _sizeAmount);
-                pool.updateAveragePrice(_pairIndex, averagePrice);
             }
         }
         // zero exposure

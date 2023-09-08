@@ -319,10 +319,6 @@ contract Pool is IPool, Roleable {
 
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(_receiver, _pairIndex, _amount, data);
 
-        IPool.Pair memory pair = getPair(_pairIndex);
-        if (receivedStableAmount > 0) {
-            IERC20(pair.stableToken).transfer(msg.sender, receivedStableAmount);
-        }
         return (receivedIndexAmount, receivedStableAmount);
     }
 
