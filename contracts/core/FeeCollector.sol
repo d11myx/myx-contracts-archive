@@ -26,7 +26,7 @@ contract FeeCollector is IFeeCollector {
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESSES_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(IRoleManager(ADDRESSES_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 

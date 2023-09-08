@@ -36,7 +36,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.getRoleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
         _;
     }
 
@@ -75,8 +75,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
 
         // order with tp sl
         if (request.tp > 0 || request.sl > 0) {
-            // bytes32 orderKey = PositionKey.getOrderKey(true, request.tradeType, orderId);
-
             orderManager.saveOrderTpSl(
                 orderId,
                 TradingTypes.OrderWithTpSl({
@@ -202,8 +200,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
 
         if (request.tp > 0 || request.sl > 0) {
             require(request.tp <= orderAmount && request.sl <= orderAmount, 'exceeds order size');
-
-            // bytes32 orderKey = PositionKey.getOrderKey(request.isIncrease, request.tradeType, request.orderId);
             orderManager.saveOrderTpSl(
                 request.orderId,
                 TradingTypes.OrderWithTpSl({
@@ -378,7 +374,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         }
     }
 
-    function adjustColleral(uint256 pairIndex, bool isLong, int256 collateral) external {
-        positionManager.adjustColleral(pairIndex, msg.sender, isLong, collateral);
+    function adjustCollateral(uint256 pairIndex, bool isLong, int256 collateral) external {
+        positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
     }
 }
