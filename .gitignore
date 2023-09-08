@@ -36,3 +36,5 @@ deployments/
 deployments/local
 deployments/localhost
 deployments/**/*
+
+.history
