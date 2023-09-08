@@ -38,6 +38,14 @@ interface IPositionManager {
         uint256 lpTradingFee
     );
 
+    event AdjustCollateral(
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        uint256 collateralBefore,
+        uint256 collateralAfter
+    );
+
     function getExposedPositions(uint256 pairIndex) external view returns (int256);
 
     function longTracker(uint256 pairIndex) external view returns (uint256);
@@ -98,7 +106,7 @@ interface IPositionManager {
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
-    function updateFundingRate(uint256 _pairIndex) external;
+    function adjustCollateral(uint256 pairIndex, address account, bool isLong, int256 collateral) external;
 
-    function adjustColleral(uint256 pairIndex, address account, bool isLong, int256 collateral) external;
+    function updateFundingRate(uint256 _pairIndex) external;
 }

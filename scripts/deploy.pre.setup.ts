@@ -5,14 +5,13 @@ import {
     getOrderManager,
     getPool,
     getPositionManager,
-    roleManager,
     getRouter,
     getTestCallBack,
     getToken,
-    MAX_UINT_AMOUNT,
     MOCK_TOKEN_PREFIX,
     SymbolMap,
     waitForTx,
+    getRoleManager,
 } from '../helpers';
 import { IPool, MockPriceFeed, Token } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';

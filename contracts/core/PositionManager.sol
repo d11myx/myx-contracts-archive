@@ -294,7 +294,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-        _handleColleral(position, collateral);
+        _handleCollateral(position, collateral);
         // settlement trading fee and funding fee
         int256 charge;
         (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -332,34 +332,6 @@ contract PositionManager is FeeManager, Pausable {
         );
     }
 
-    function _handleColleral(Position.Info storage position, int256 collateral) internal {
-        if (collateral < 0) {
-            position.collateral = position.collateral.sub(collateral.abs());
-            pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
-        } else {
-            position.collateral = position.collateral.add(collateral.abs());
-        }
-        require(position.collateral > 0, 'collateral not enough');
-    }
-
-    function adjustColleral(uint256 pairIndex, address account, bool isLong, int256 collateral) external {
-        require(account == msg.sender || addressExecutor == msg.sender, 'forbidden');
-        IPool.Pair memory pair = pool.getPair(pairIndex);
-        Position.Info storage position = positions[PositionKey.getPositionKey(account, pairIndex, isLong)];
-        _handleColleral(position, collateral);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
-        (uint256 afterPosition, ) = position.validLeverage(
-            price,
-            0,
-            0,
-            false,
-            tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
-        );
-        require(afterPosition > 0, 'zero position amount');
-    }
-
     function decreasePosition(
         uint256 pairIndex,
         address account,
@@ -380,7 +352,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-        _handleColleral(position, collateral);
+        _handleCollateral(position, collateral);
         // settlement trading fee and funding fee
         int256 charge;
         (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -423,6 +395,36 @@ contract PositionManager is FeeManager, Pausable {
             position.fundingFeeTracker,
             pnl
         );
+    }
+
+    function adjustCollateral(uint256 pairIndex, address account, bool isLong, int256 collateral) external override {
+        require(account == msg.sender || addressExecutor == msg.sender, 'forbidden');
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        Position.Info storage position = positions[PositionKey.getPositionKey(account, pairIndex, isLong)];
+        _handleCollateral(position, collateral);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+        (uint256 afterPosition, ) = position.validLeverage(
+            price,
+            0,
+            0,
+            false,
+            tradingConfig.maxLeverage,
+            tradingConfig.maxPositionAmount
+        );
+        require(afterPosition > 0, 'zero position amount');
+    }
+
+    function _handleCollateral(Position.Info storage position, int256 collateral) internal {
+        uint256 collateralBefore = position.collateral;
+        if (collateral < 0) {
+            position.collateral = position.collateral.sub(collateral.abs());
+            pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
+        } else {
+            position.collateral = position.collateral.add(collateral.abs());
+        }
+        require(position.collateral >= 0, 'collateral not enough');
+        emit AdjustCollateral(position.account, position.pairIndex, position.isLong, collateralBefore, position.collateral);
     }
 
     function getTradingFee(
@@ -541,33 +543,34 @@ contract PositionManager is FeeManager, Pausable {
 
     function _nextFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
         IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
-        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
-        uint256 absNetExposure = currentExposureAmountChecker.abs();
-        uint256 w = fundingFeeConfig.fundingWeightFactor;
-        uint256 q = longTracker[_pairIndex] + shortTracker[_pairIndex];
-        uint256 k = fundingFeeConfig.liquidityPremiumFactor;
+        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex) * int256(_price);
+
+        int256 w = int256(fundingFeeConfig.fundingWeightFactor);
+//        int256 q = int256(longTracker[_pairIndex] + shortTracker[_pairIndex]) * int256(_price);
+        int256 q = int256(longTracker[_pairIndex] + shortTracker[_pairIndex]);
+        int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        uint256 l = (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
-            (lpVault.stableTotalAmount - lpVault.stableReservedAmount);
+        int256 l = int256(
+            (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
+                (lpVault.stableTotalAmount - lpVault.stableReservedAmount)
+        );
 
-        uint256 absFundingRate;
         if (q == 0) {
             fundingRate = 0;
         } else {
-            absFundingRate = (w * absNetExposure * PrecisionUtils.fundingRatePrecision()) / (k * q);
+            fundingRate = (w * currentExposureAmountChecker * int256(PrecisionUtils.fundingRatePrecision())) / (k * q);
             if (l != 0) {
-                absFundingRate =
-                    absFundingRate +
-                    ((PrecisionUtils.fundingRatePrecision() - w) * absNetExposure) /
+                fundingRate =
+                    fundingRate +
+                    ((int256(PrecisionUtils.fundingRatePrecision()) - w) * currentExposureAmountChecker) /
                     (k * l);
             }
-            fundingRate = currentExposureAmountChecker >= 0 ? int256(absFundingRate) : -int256(absFundingRate);
         }
-
         fundingRate = (fundingRate - fundingFeeConfig.interest).max(fundingFeeConfig.minFundingRate).min(
             fundingFeeConfig.maxFundingRate
         );
+        fundingRate = fundingRate / int256(365) / int256(86400 / fundingInterval);
     }
 
     function getPosition(
