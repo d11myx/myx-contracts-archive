@@ -65,7 +65,7 @@ contract Timelock {
     }
 
     function acceptAdmin() public {
-        require(msg.sender == pendingAdmin, 'acceptAdmin: Call must come from pendingAdmin.');
+        require(msg.sender == pendingAdmin, 'Call must come from pendingAdmin.');
         admin = msg.sender;
         pendingAdmin = address(0);
 
@@ -75,9 +75,9 @@ contract Timelock {
     function setPendingAdmin(address pendingAdmin_) public {
         // allows one time setting of admin for deployment purposes
         if (adminInitialized) {
-            require(msg.sender == address(this), 'setPendingAdmin: Call must come from Timelock.');
+            require(msg.sender == address(this), 'Call must come from Timelock.');
         } else {
-            require(msg.sender == admin, 'setPendingAdmin: First call must come from admin.');
+            require(msg.sender == admin, 'First call must come from admin.');
             adminInitialized = true;
         }
         pendingAdmin = pendingAdmin_;

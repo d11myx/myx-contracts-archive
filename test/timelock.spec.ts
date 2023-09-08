@@ -141,7 +141,7 @@ describe('Timelock', () => {
             encodeParameters(['address'], [carol.address]),
             eta,
         );
-        expect(await testToken.owner().valueOf()).to.be.eq(timelock.address);
+        expect(await testToken.owner()).to.be.eq(timelock.address);
     });
     it('test acceptAdmin', async () => {
         const {
@@ -152,8 +152,11 @@ describe('Timelock', () => {
         } = testEnv;
         await timelock.setPendingAdmin(alice.address);
         expect(await timelock.pendingAdmin()).to.be.eq(alice.address);
-        await timelock.acceptAdmin();
-        expect(await timelock.pendingAdmin()).to.be.eq(ZERO_ADDRESS);
+        console.log(await timelock.pendingAdmin());
+        await timelock.connect(alice.signer).acceptAdmin();
+        let pendingAdmin = await timelock.pendingAdmin();
+        expect(pendingAdmin).to.be.eq(ZERO_ADDRESS);
+        expect(await timelock.admin()).to.be.eq(alice.address);
     });
     // it("test setPendingAdmin", async () => {
     //     assert.equal(await timelock.pendingAdmin(), alice);
