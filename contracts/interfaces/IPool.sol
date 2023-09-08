@@ -95,7 +95,6 @@ interface IPool {
         uint256 lpFeeDistributeP;
         uint256 stakingFeeDistributeP;
         uint256 keeperFeeDistributeP;
-
     }
 
     struct FundingFeeConfig {
@@ -182,6 +181,16 @@ interface IPool {
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) external view returns (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount,
-        uint256 stableFeeAmount, uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount);
+    )
+        external
+        view
+        returns (
+            uint256 mintAmount,
+            address slipToken,
+            uint256 slipAmount,
+            uint256 indexFeeAmount,
+            uint256 stableFeeAmount,
+            uint256 afterFeeIndexAmount,
+            uint256 afterFeeStableAmount
+        );
 }
