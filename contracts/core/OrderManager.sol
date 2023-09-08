@@ -86,7 +86,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         router = _router;
     }
 
-
     function getOrderTpSl(uint256 orderKey) public view override returns (TradingTypes.OrderWithTpSl memory) {
         return orderWithTpSl[orderKey];
     }
@@ -105,7 +104,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
         // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
-        ValidationHelper.validatePairEnabled(pair);
+        require(pair.enable, 'trade pair not supported');
 
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);

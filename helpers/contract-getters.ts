@@ -144,20 +144,28 @@ export const getVester = async (address?: string): Promise<Vester> => {
 };
 
 export const getRewardDistributor = async (address?: string): Promise<RewardDistributor> => {
-    return getContract<RewardDistributor>('RewardDistributor', address || (await hre.deployments.get(REWARD_DISTRIBUTOR_ID)).address);
+    return getContract<RewardDistributor>(
+        'RewardDistributor',
+        address || (await hre.deployments.get(REWARD_DISTRIBUTOR_ID)).address,
+    );
 };
 
 export const getFeeDistributor = async (address?: string): Promise<FeeDistributor> => {
-    return getContract<FeeDistributor>('FeeDistributor', address || (await hre.deployments.get(FEE_DISTRIBUTOR_ID)).address);
+    return getContract<FeeDistributor>(
+        'FeeDistributor',
+        address || (await hre.deployments.get(FEE_DISTRIBUTOR_ID)).address,
+    );
 };
 
 export const getStakingPool = async (address?: string): Promise<StakingPool> => {
     return getContract<StakingPool>('StakingPool', address || (await hre.deployments.get(STAKING_POOL_ID)).address);
 };
 
-
 export const getLPStakingPool = async (address?: string): Promise<LPStakingPool> => {
-    return getContract<LPStakingPool>('LPStakingPool', address || (await hre.deployments.get(LP_STAKING_POOL_ID)).address);
+    return getContract<LPStakingPool>(
+        'LPStakingPool',
+        address || (await hre.deployments.get(LP_STAKING_POOL_ID)).address,
+    );
 };
 
 export const getConvertor = async (address?: string): Promise<Convertor> => {
