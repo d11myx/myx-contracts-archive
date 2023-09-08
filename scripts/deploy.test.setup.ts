@@ -5,13 +5,14 @@ import {
     getOrderManager,
     getPool,
     getPositionManager,
+    getRoleManager,
     getRouter,
     getTestCallBack,
     getToken,
+    MAX_UINT_AMOUNT,
     MOCK_TOKEN_PREFIX,
     SymbolMap,
     waitForTx,
-    getRoleManager,
 } from '../helpers';
 import { IPool, MockPriceFeed, Token } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -31,7 +32,6 @@ async function main() {
     const oraclePriceFeed = await getOraclePriceFeed();
     const roleManager = await getRoleManager();
     const pool = await getPool();
-    const testCallBack = await getTestCallBack();
     // console.log(`router:`, router.address);
     // console.log(`index:`, await orderManager.ordersIndex());
     console.log(`executor:`, executor.address);
@@ -45,16 +45,23 @@ async function main() {
     const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
 
     const keepers: string[] = [
-        '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',
-        '0x8C2B496E5BC13b4170dC818132bEE5413A39834C',
-        '0x9a5c3C2843eB3d9b764A2F00236D8519989BbDa1',
-        '0x299227e2bD681A510b00dFfaC9f4FD0Da0715B94',
-        '0xF1BAB1E9ad036B53Ad653Af455C21796f15EE3bD',
-        '0x8bc45c15C993A982AFc053ce0fF7B59b40eE0D7B',
+        // '0xA85583325A974bE1B47a492589Ce4370a6C20628',
+        // '0x90A6E957421e4da018d4d42358777282d5B58f0D',
+        // '0xf3ca5d7ffe335d97323A6579D9a82f94134b9d4b',
+        // '0xCB46beC2C4B768299F5eB2d03042AeF70095f83e',
+        // '0xc13403910d21901661C200eafa7076de0711d3Fb',
+        // '0x715f29B6b150Db476cf5a8b5667C1bc2f6025fA4',
+        // '0xBA0886b286374BCC8754699775c05fe86b165705',
+        // '0x1C7780946c47cCEd4AC394f59b984E983b3576a3',
+        // '0x9F02805250713C534EA2B76B537c714B6959b8CB',
+        // '0xd4c55C8625c1D0AC0f69A790C15ad2c01dC7a50f',
+        // '0xED8697599638fF3192492AAc02f8CCCd7E5F1834',
+        '0xB7ba707A62D73C5823879FdC2B1D1CDfb484B48A',
+        '0x97f00086093674dde1B4e6B1c1866aE6fDEeF19E',
     ];
 
     for (let keeper of keepers) {
-        await deployer.sendTransaction({ to: keeper, value: ethers.utils.parseEther('100') });
+        // await deployer.sendTransaction({ to: keeper, value: ethers.utils.parseEther('100') });
 
         await waitForTx(await roleManager.addKeeper(keeper));
         await waitForTx(await roleManager.addPoolAdmin(keeper));
@@ -69,7 +76,7 @@ async function main() {
         console.log(await ethFeed.isAdmin(keeper));
     }
 
-    await positionManager.updateFundingInterval(60 * 60);
+    // await positionManager.updateFundingInterval(60 * 60);
 
     // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
     // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));

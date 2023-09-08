@@ -319,10 +319,6 @@ contract Pool is IPool, Roleable {
 
         (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(_receiver, _pairIndex, _amount, data);
 
-        IPool.Pair memory pair = getPair(_pairIndex);
-        if (receivedStableAmount > 0) {
-            IERC20(pair.stableToken).transfer(msg.sender, receivedStableAmount);
-        }
         return (receivedIndexAmount, receivedStableAmount);
     }
 
@@ -451,8 +447,20 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount
-    ) external override view returns (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount,
-            uint256 stableFeeAmount, uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount) {
+    )
+        external
+        view
+        override
+        returns (
+            uint256 mintAmount,
+            address slipToken,
+            uint256 slipAmount,
+            uint256 indexFeeAmount,
+            uint256 stableFeeAmount,
+            uint256 afterFeeIndexAmount,
+            uint256 afterFeeStableAmount
+        )
+    {
         if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
@@ -525,7 +533,15 @@ contract Pool is IPool, Roleable {
             lpFairPrice(_pairIndex)
         );
 
-        return (mintAmount, slipToken, slipAmount, indexFeeAmount, stableFeeAmount, afterFeeIndexAmount, afterFeeStableAmount);
+        return (
+            mintAmount,
+            slipToken,
+            slipAmount,
+            indexFeeAmount,
+            stableFeeAmount,
+            afterFeeIndexAmount,
+            afterFeeStableAmount
+        );
     }
 
     function _addLiquidity(
@@ -543,8 +559,15 @@ contract Pool is IPool, Roleable {
 
         _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
 
-        (uint256 mintAmount, address slipToken, uint256 slipAmount, uint256 indexFeeAmount, uint256 stableFeeAmount,
-            uint256 afterFeeIndexAmount, uint256 afterFeeStableAmount) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount);
+        (
+            uint256 mintAmount,
+            address slipToken,
+            uint256 slipAmount,
+            uint256 indexFeeAmount,
+            uint256 stableFeeAmount,
+            uint256 afterFeeIndexAmount,
+            uint256 afterFeeStableAmount
+        ) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount);
 
         IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
@@ -734,7 +757,7 @@ contract Pool is IPool, Roleable {
     }
 
     function _getPrice(address _token) internal view returns (uint256) {
-        return IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(_token);
+        return IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {

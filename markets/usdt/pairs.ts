@@ -32,8 +32,8 @@ export const btcPairInfo: PairInfoConfig = {
         stakingFeeDistributeP: 10000000, //10%
     },
     fundingFeeConfig: {
-        minFundingRate: -1000000,
-        maxFundingRate: 1000000,
+        minFundingRate: -36500000, //=-0.1% * 365
+        maxFundingRate: 36500000, //=0.1% * 365
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
         interest: 0,
@@ -70,8 +70,8 @@ export const ethPairInfo: PairInfoConfig = {
         stakingFeeDistributeP: 10000000, //10%
     },
     fundingFeeConfig: {
-        minFundingRate: -1000000,
-        maxFundingRate: 1000000,
+        minFundingRate: -36500000, //=-0.1% * 365
+        maxFundingRate: 36500000, //=0.1% * 365
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
         interest: 0,
