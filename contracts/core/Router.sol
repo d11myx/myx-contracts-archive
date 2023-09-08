@@ -374,7 +374,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         }
     }
 
-    function adjustColleral(uint256 pairIndex, bool isLong, int256 collateral) external {
-        positionManager.adjustColleral(pairIndex, msg.sender, isLong, collateral);
+    function adjustCollateral(uint256 pairIndex, bool isLong, int256 collateral) external {
+        positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
     }
 }
