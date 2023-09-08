@@ -2,12 +2,14 @@ import { testEnv } from './helpers/make-suite';
 import { waitForTx } from '../helpers/utilities/tx';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 import { expect } from './shared/expect';
-import { IPool } from '../types';
+import { IPool, Timelock } from '../types';
 import { BigNumber } from 'ethers';
 import { deployMockToken } from '../helpers/contract-deployments';
 import { MARKET_NAME } from '../helpers/env';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { ethers } from 'hardhat';
+import { deployContract } from '../helpers/utilities/tx';
+import { ZERO_ADDRESS } from '../helpers';
 
 // function encodeParameters(types, values) {
 //     const abi = new ethers.utils.AbiCoder();
@@ -15,10 +17,12 @@ import { ethers } from 'hardhat';
 // }
 
 describe('Timelock', () => {
+    let timelock: Timelock;
     beforeEach(async () => {
         const { poolAdmin, pool, usdt } = testEnv;
         let testToken = await deployMockToken('TestOwnableToken');
-        // let  timelock = await Timelock.new(bob, '259200', {from: alice});
+
+        timelock = (await deployContract('Timelock', ['43200'])) as Timelock;
         // zeroAddress = "0x0000000000000000000000000000000000000000";
 
         // let eta = (await time.latest()).add(time.duration.days(4));
@@ -37,30 +41,31 @@ describe('Timelock', () => {
 
         // assert.equal(await this.timelock.pendingAdmin(), zeroAddress);
         // await this.timelock.setPendingAdmin(alice, {from: bob});
-        // assert.equal(await this.timelock.pendingAdmin(), alice)
     });
 
-    // it('should not allow non-owner to do operation', async () => {
-
-    //     await this.testToken.transferOwnership(this.timelock.address, {from: alice});
-    //     await expectRevert(
-    //         this.testToken.transferOwnership(carol, {from: alice}),
-    //         'Ownable: caller is not the owner',
-    //     );
-    //     await expectRevert(
-    //         this.testToken.transferOwnership(carol, {from: bob}),
-    //         'Ownable: caller is not the owner',
-    //     );
-    //     await expectRevert(
-    //         this.timelock.queueTransaction(
-    //             this.testToken.address, '0', 'transferOwnership(address)',
-    //             encodeParameters(['address'], [carol]),
-    //             (await time.latest()).add(time.duration.days(4)),
-    //             {from: alice},
-    //         ),
-    //         'Timelock::queueTransaction: Call must come from admin.',
-    //     );
-    // });
+    it('should not allow non-owner to do operation', async () => {
+        const { deployer, pool, usdt } = testEnv;
+        expect(await timelock.pendingAdmin()).to.be.eq(ZERO_ADDRESS);
+        expect(await timelock.admin()).to.be.eq(deployer.address);
+        //     await this.testToken.transferOwnership(this.timelock.address, {from: alice});
+        //     await expectRevert(
+        //         this.testToken.transferOwnership(carol, {from: alice}),
+        //         'Ownable: caller is not the owner',
+        //     );
+        //     await expectRevert(
+        //         this.testToken.transferOwnership(carol, {from: bob}),
+        //         'Ownable: caller is not the owner',
+        //     );
+        //     await expectRevert(
+        //         this.timelock.queueTransaction(
+        //             this.testToken.address, '0', 'transferOwnership(address)',
+        //             encodeParameters(['address'], [carol]),
+        //             (await time.latest()).add(time.duration.days(4)),
+        //             {from: alice},
+        //         ),
+        //         'Timelock::queueTransaction: Call must come from admin.',
+        //     );
+    });
 
     // it('should do the timelock thing', async () => {
     //     await this.testToken.transferOwnership(this.timelock.address, {from: alice});
