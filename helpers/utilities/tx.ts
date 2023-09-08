@@ -2,6 +2,9 @@ import { BigNumber, Contract, ContractTransaction, ethers } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TestEnv } from '../../test/helpers/make-suite';
 
+const PRICE_PRECISION = '1000000000000000000000000000000';
+const PERCENTAGE = '100000000';
+
 declare var hre: HardhatRuntimeEnvironment;
 
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
@@ -151,11 +154,12 @@ export const Duration = {
 };
 
 /**
- * calculation funding rate
- * Clamp([w * (U - V) / K * Q + (1 - w) * (U - V) / K * L ] - Interest, min, max)
+ * calculation epoch funding rate
+ *
+ * @description (Clamp([w * (U - V) / K * Q + (1 - w) * (U - V) / K * L ] - Interest, min, max)/) / 365 / (24/4)
  * @param testEnv {TestEnv} current test env
  * @param pairIndex {Number} currency pair index
- * @returns fundingRate
+ * @returns funding rate
  */
 export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const { positionManager, pool, oraclePriceFeed } = testEnv;
@@ -163,8 +167,7 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
         pairIndex,
     );
 
-    const PRICE_PRECISION = '1000000000000000000000000000000';
-    const PERCENTAGE = '100000000';
+    const fundingInterval = 28800;
     const fundingFeeConfig = await pool.getFundingFeeConfig(pairIndex);
     const pair = await pool.getPair(pairIndex);
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
@@ -173,8 +176,7 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const shortTracker = await positionManager.shortTracker(pairIndex);
 
     const uv = exposedPosition.abs().mul(price);
-    //TODO: Q = (LongOI + ShortOI) * price or Q = LongOI + ShortOI, to be confirmed
-    const q = longTracker.add(shortTracker).mul(price);
+    const q = longTracker.add(shortTracker);
     const w = fundingFeeConfig.fundingWeightFactor;
     const k = fundingFeeConfig.liquidityPremiumFactor;
     const interest = fundingFeeConfig.interest;
@@ -200,26 +202,67 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
         ? fundingFeeConfig.maxFundingRate
         : fundingRate;
 
-    return fundingRate;
+    return fundingRate.div(365).div(86400 / fundingInterval);
 }
 
 /**
  * calculation position average price
- * averagePrice = (oldPositionAveragePrice * OldPositionSize) + (openPrice * latestPositionSize) / (oldPositionAveragePrice + latestPositionSize)
- * @param oldAveragePrice {BigNumber} old position average price
- * @param OldSize {BigNumber} old position size
- * @param openPrice {BigNumber} current position open price
- * @param size {BigNumber} current position size
- * @returns averagePrice
+ *
+ * @description averagePrice = (previousPositionAveragePrice * previousPositionAmount) + (openPrice * positionAmount) / (previousPositionAmount + positionAmount)
+ * @param previousPositionAveragePrice {BigNumber} previous position average price
+ * @param previousPositionAmount{BigNumber} previous position size
+ * @param openPrice {BigNumber} current open position price
+ * @param positionAmount {BigNumber} current position size
+ * @returns position average price
  */
 export function getAveragePrice(
-    oldAveragePrice: BigNumber,
-    OldSize: BigNumber,
+    previousPositionAveragePrice: BigNumber,
+    previousPositionAmount: BigNumber,
     openPrice: BigNumber,
-    size: BigNumber,
+    positionAmount: BigNumber,
 ) {
-    return oldAveragePrice
-        .mul(OldSize)
-        .add(openPrice.mul(size))
-        .div(OldSize.add(size));
+    return previousPositionAveragePrice
+        .mul(previousPositionAmount)
+        .add(openPrice.mul(positionAmount))
+        .div(previousPositionAmount.add(positionAmount));
+}
+
+/**
+ * calculation epoch funding fee tracker
+ *
+ * @description fundingFeeTracker = previousFundingFeeTracker * currentEpochFundingFee
+ * @param previousFundingFeeTracker {BigNumber} previous epoch funding fee tracker
+ * @param fundingRate {BigNumber} current epoch funding rate
+ * @param openPrice {BigNumber} current epoch open price
+ * @returns epoch funding fee tracker
+ */
+export function getFundingFeeTracker(
+    previousFundingFeeTracker: BigNumber,
+    fundingRate: BigNumber,
+    openPrice: BigNumber,
+) {
+    return previousFundingFeeTracker.add(getEpochFundingFee(fundingRate, openPrice));
+}
+
+/**
+ * calculation epoch currency standard funding fee
+ *
+ * @description currentEpochFundingFee = currentEpochRate * currentOpenPrice
+ * @param fundingRate {BigNumber} current epoch funding rate
+ * @param openPrice {BigNumber} current opsition open price
+ * @returns each position holding one currency that passes the checkpoint requires a corresponding USDT fee to be paid
+ */
+export function getEpochFundingFee(fundingRate: BigNumber, openPrice: BigNumber) {
+    return fundingRate.mul(openPrice).div(PRICE_PRECISION);
+}
+
+/**
+ * calculation current position amount
+ *
+ * @param epochFundindFee {BigNumber} epoch currency standard funding fee
+ * @param positionAmount {BigNumber} current position size
+ * @returns current position amount
+ */
+export function getPositionFundFee(epochFundindFee: BigNumber, positionAmount: BigNumber) {
+    return positionAmount.mul(epochFundindFee).div(PERCENTAGE);
 }
