@@ -13,6 +13,8 @@ library LiquidationLogic {
     using PrecisionUtils for uint256;
     using Position for Position.Info;
 
+    uint256 public constant MAX_RATIO = 3e6;
+
     event ExecuteLiquidation(
         bytes32 positionKey,
         address account,
@@ -33,6 +35,7 @@ library LiquidationLogic {
         uint8 level,
         uint256 commissionRatio
     ) external {
+        require(commissionRatio < MAX_RATIO, 'max ratio');
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
             return;
