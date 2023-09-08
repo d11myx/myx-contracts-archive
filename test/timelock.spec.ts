@@ -158,23 +158,31 @@ describe('Timelock', () => {
         expect(pendingAdmin).to.be.eq(ZERO_ADDRESS);
         expect(await timelock.admin()).to.be.eq(alice.address);
     });
-    // it("test setPendingAdmin", async () => {
-    //     assert.equal(await timelock.pendingAdmin(), alice);
+    it('test setPendingAdmin', async () => {
+        const {
+            deployer,
+            pool,
+            usdt,
+            users: [depositor, carol, alice],
+        } = testEnv;
 
-    //     let eta = (await time.latest()).add(time.duration.days(4));
-    //     await timelock.queueTransaction(
-    //         timelock.address, '0', 'setPendingAdmin(address)',
-    //         encodeParameters(['address'],
-    //             [carol]), eta, {from: bob}
-    //     );
-    //     await time.increase(time.duration.days(4));
-    //     await timelock.executeTransaction(
-    //         timelock.address, '0', 'setPendingAdmin(address)',
-    //         encodeParameters(['uint256'],
-    //             [carol]), eta, {from: bob}
-    //     );
-    //     // await timelock.setPendingAdmin(carol, {from: bob});
-    //     assert.equal(await timelock.pendingAdmin(), carol);
-
-    // });
+        let eta = (await latest()).add(Duration.days(4));
+        await timelock.queueTransaction(
+            timelock.address,
+            '0',
+            'setPendingAdmin(address)',
+            encodeParameters(['address'], [carol.address]),
+            eta,
+        );
+        await increase(Duration.days(4));
+        await timelock.executeTransaction(
+            timelock.address,
+            '0',
+            'setPendingAdmin(address)',
+            encodeParameters(['uint256'], [carol.address]),
+            eta,
+        );
+        // await timelock.setPendingAdmin(carol, {from: bob});
+        expect(await timelock.pendingAdmin()).to.be.eq(carol.address);
+    });
 });
