@@ -3,7 +3,6 @@ pragma solidity =0.8.20;
 
 import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/access/AccessControl.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IRoleManager.sol';
 
 contract RoleManager is AccessControl, IRoleManager {
@@ -16,20 +15,19 @@ contract RoleManager is AccessControl, IRoleManager {
 
     mapping(address => bool) public accountBlackList;
 
-    constructor(Ownable provider) {
-        require(provider.owner() != address(0), 'is 0');
-        _setupRole(DEFAULT_ADMIN_ROLE, provider.owner());
+    constructor() {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function setRoleAdmin(bytes32 role, bytes32 adminRole) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         _setRoleAdmin(role, adminRole);
     }
 
-    function addAdmin(address admin) external override {
+    function addAdmin(address admin) external {
         grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
-    function removeAdmin(address admin) external override {
+    function removeAdmin(address admin) external {
         revokeRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
@@ -37,11 +35,11 @@ contract RoleManager is AccessControl, IRoleManager {
         return hasRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
-    function addPoolAdmin(address poolAdmin) external override {
+    function addPoolAdmin(address poolAdmin) external {
         grantRole(POOL_ADMIN_ROLE, poolAdmin);
     }
 
-    function removePoolAdmin(address poolAdmin) external override {
+    function removePoolAdmin(address poolAdmin) external {
         revokeRole(POOL_ADMIN_ROLE, poolAdmin);
     }
 
@@ -49,11 +47,11 @@ contract RoleManager is AccessControl, IRoleManager {
         return hasRole(POOL_ADMIN_ROLE, poolAdmin);
     }
 
-    function addOperator(address operator) external override {
+    function addOperator(address operator) external {
         grantRole(OPERATOR_ROLE, operator);
     }
 
-    function removeOperator(address operator) external override {
+    function removeOperator(address operator) external {
         revokeRole(OPERATOR_ROLE, operator);
     }
 
@@ -61,11 +59,11 @@ contract RoleManager is AccessControl, IRoleManager {
         return hasRole(OPERATOR_ROLE, operator);
     }
 
-    function addTreasurer(address treasurer) external override {
+    function addTreasurer(address treasurer) external {
         grantRole(TREASURER_ROLE, treasurer);
     }
 
-    function removeTreasurer(address treasurer) external override {
+    function removeTreasurer(address treasurer) external {
         revokeRole(TREASURER_ROLE, treasurer);
     }
 
@@ -73,11 +71,11 @@ contract RoleManager is AccessControl, IRoleManager {
         return hasRole(TREASURER_ROLE, treasurer);
     }
 
-    function addKeeper(address keeper) external override {
+    function addKeeper(address keeper) external {
         grantRole(KEEPER_ROLE, keeper);
     }
 
-    function removeKeeper(address keeper) external override {
+    function removeKeeper(address keeper) external {
         revokeRole(KEEPER_ROLE, keeper);
     }
 

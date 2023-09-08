@@ -45,13 +45,18 @@ interface IOrderManager {
 
     function ordersIndex() external view returns (uint256);
 
-    function getOrderTpSl(uint256 orderKey) external view returns (TradingTypes.OrderWithTpSl memory);
+    function getOrderTpSl(uint256 orderId) external view returns (TradingTypes.OrderWithTpSl memory);
 
     function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory);
 
     function createOrder(TradingTypes.CreateOrderRequest memory request) external returns (uint256 orderId);
 
-    function cancelOrder(uint256 orderId, TradingTypes.TradeType tradeType, bool isIncrease, string memory reason) external;
+    function cancelOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        string memory reason
+    ) external;
 
     function cancelAllPositionOrders(address account, uint256 pairIndex, bool isLong) external;
 
@@ -79,7 +84,7 @@ interface IOrderManager {
 
     function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) external;
 
-    function saveOrderTpSl(uint256 orderKey, TradingTypes.OrderWithTpSl memory tpSl) external;
+    function saveOrderTpSl(uint256 orderId, TradingTypes.OrderWithTpSl memory tpSl) external;
 
-    function removeOrderTpSl(uint256 orderKey) external;
+    function removeOrderTpSl(uint256 orderId) external;
 }

@@ -61,8 +61,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         indexPriceFeedArtifact.address,
     )) as IndexPriceFeed;
 
-    await waitForTx(await addressesProvider.connect(deployerSigner).setPriceOracle(oraclePriceFeed.address));
-    await waitForTx(await addressesProvider.connect(deployerSigner).setIndexPriceOracle(indexPriceFeed.address));
+    await waitForTx(
+        await addressesProvider.connect(deployerSigner).initOracle(oraclePriceFeed.address, indexPriceFeed.address),
+    );
+    // await waitForTx(await addressesProvider.connect(deployerSigner).setIndexPriceOracle());
 };
 
 func.id = `Oracles`;
