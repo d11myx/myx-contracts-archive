@@ -344,7 +344,7 @@ contract PositionManager is FeeManager, Pausable {
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[PositionKey.getPositionKey(account, pairIndex, isLong)];
         _handleColleral(position, collateral);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         (uint256 afterPosition, ) = position.validLeverage(
             price,
@@ -428,7 +428,7 @@ contract PositionManager is FeeManager, Pausable {
         uint256 _sizeAmount
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
         return _tradingFee(_pairIndex, _isLong, sizeDelta);
     }
@@ -472,7 +472,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         _updateFundingRate(_pairIndex, price);
     }
 
@@ -528,7 +528,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function getNextFundingRate(uint256 _pairIndex) external view override returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.getPriceOracle()).getPrice(pair.indexToken);
+        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         return _nextFundingRate(_pairIndex, price);
     }
 
