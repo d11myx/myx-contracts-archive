@@ -157,6 +157,9 @@ describe('Timelock', () => {
         let pendingAdmin = await timelock.pendingAdmin();
         expect(pendingAdmin).to.be.eq(ZERO_ADDRESS);
         expect(await timelock.admin()).to.be.eq(alice.address);
+        await expect(timelock.connect(alice.signer).setPendingAdmin(alice.address)).to.be.revertedWith(
+            'Call must come from Timelock.',
+        );
     });
     it('test setPendingAdmin', async () => {
         const {
@@ -166,23 +169,31 @@ describe('Timelock', () => {
             users: [depositor, carol, alice],
         } = testEnv;
 
+        await timelock.setPendingAdmin(alice.address);
+        await timelock.connect(alice.signer).acceptAdmin();
         let eta = (await latest()).add(Duration.days(4));
-        await timelock.queueTransaction(
-            timelock.address,
-            '0',
-            'setPendingAdmin(address)',
-            encodeParameters(['address'], [carol.address]),
-            eta,
-        );
-        await increase(Duration.days(4));
-        await timelock.executeTransaction(
-            timelock.address,
-            '0',
-            'setPendingAdmin(address)',
-            encodeParameters(['uint256'], [carol.address]),
-            eta,
-        );
-        // await timelock.setPendingAdmin(carol, {from: bob});
+        await timelock
+            .connect(alice.signer)
+            .queueTransaction(
+                timelock.address,
+                '0',
+                'setPendingAdmin(address)',
+                encodeParameters(['address'], [carol.address]),
+                eta,
+            );
+        await increase(Duration.days(5));
+        await timelock
+            .connect(alice.signer)
+            .executeTransaction(
+                timelock.address,
+                '0',
+                'setPendingAdmin(address)',
+                encodeParameters(['address'], [carol.address]),
+                eta,
+            );
         expect(await timelock.pendingAdmin()).to.be.eq(carol.address);
+        await timelock.connect(carol.signer).acceptAdmin();
+        expect(await timelock.pendingAdmin()).to.be.eq(ZERO_ADDRESS);
+        expect(await timelock.admin()).to.be.eq(carol.address);
     });
 });
