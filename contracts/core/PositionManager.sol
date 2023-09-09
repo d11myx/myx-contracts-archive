@@ -248,14 +248,17 @@ contract PositionManager is FeeManager, Pausable {
         pool.setLPProfit(_pairIndex, profit);
     }
 
-    function lpProfit(uint pairIndex) external view returns (address, int256) {
+    function lpProfit(uint pairIndex, address token) external view override returns (int256) {
+        if (token != pledgeAddress) {
+            return 0;
+        }
         int256 currentExposureAmountChecker = getExposedPositions(pairIndex);
         int256 profit = _currentLpProfit(
             pairIndex,
             currentExposureAmountChecker > 0,
             currentExposureAmountChecker.abs()
         );
-        return (pledgeAddress, profit);
+        return profit;
     }
 
     function _currentLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal view returns (int256) {
