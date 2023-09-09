@@ -243,9 +243,19 @@ contract PositionManager is FeeManager, Pausable {
         }
     }
 
-    function _calLpProfit(uint256 _pairIndex, bool positive, uint amount) internal {
-        int256 profit = _currentLpProfit(_pairIndex, positive, amount);
+    function _calLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal {
+        int256 profit = _currentLpProfit(_pairIndex, lpIsLong, amount);
         pool.setLPProfit(_pairIndex, profit);
+    }
+
+    function lpProfit(uint pairIndex) external view returns (address, int256) {
+        int256 currentExposureAmountChecker = getExposedPositions(pairIndex);
+        int256 profit = _currentLpProfit(
+            pairIndex,
+            currentExposureAmountChecker > 0,
+            currentExposureAmountChecker.abs()
+        );
+        return (pledgeAddress, profit);
     }
 
     function _currentLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal view returns (int256) {
