@@ -19,6 +19,7 @@ import '../interfaces/IPool.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import './FeeManager.sol';
+
 //import 'hardhat/console.sol';
 
 contract PositionManager is FeeManager, Pausable {
@@ -158,8 +159,10 @@ contract PositionManager is FeeManager, Pausable {
             nextPositionStatus = PositionStatus.NetShort;
         }
 
-        bool isAddPosition = (currentPositionStatus == PositionStatus.NetLong && nextExposureAmountChecker > currentExposureAmountChecker)
-            || (currentPositionStatus == PositionStatus.NetShort && nextExposureAmountChecker < currentExposureAmountChecker);
+        bool isAddPosition = (currentPositionStatus == PositionStatus.NetLong &&
+            nextExposureAmountChecker > currentExposureAmountChecker) ||
+            (currentPositionStatus == PositionStatus.NetShort &&
+                nextExposureAmountChecker < currentExposureAmountChecker);
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
 
@@ -257,6 +260,30 @@ contract PositionManager is FeeManager, Pausable {
             } else {
                 uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
                 pool.increaseLPProfit(_pairIndex, profit);
+            }
+        }
+    }
+
+    function _currentLpProfit(uint256 _pairIndex, bool positive, uint amount) internal view returns (int256) {
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
+        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
+        uint256 _price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        if (positive) {
+            if (_price > lpVault.averagePrice) {
+                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
+                return int256(profit);
+                // pool.decreaseLPProfit(_pairIndex, profit);
+            } else {
+                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
+                //pool.increaseLPProfit(_pairIndex, profit);
+            }
+        } else {
+            if (_price < lpVault.averagePrice) {
+                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
+                //pool.decreaseLPProfit(_pairIndex, profit);
+            } else {
+                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
+                //pool.increaseLPProfit(_pairIndex, profit);
             }
         }
     }
@@ -424,7 +451,13 @@ contract PositionManager is FeeManager, Pausable {
             position.collateral = position.collateral.add(collateral.abs());
         }
         require(position.collateral >= 0, 'collateral not enough');
-        emit AdjustCollateral(position.account, position.pairIndex, position.isLong, collateralBefore, position.collateral);
+        emit AdjustCollateral(
+            position.account,
+            position.pairIndex,
+            position.isLong,
+            collateralBefore,
+            position.collateral
+        );
     }
 
     function getTradingFee(
@@ -546,7 +579,6 @@ contract PositionManager is FeeManager, Pausable {
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex) * int256(_price);
 
         int256 w = int256(fundingFeeConfig.fundingWeightFactor);
-//        int256 q = int256(longTracker[_pairIndex] + shortTracker[_pairIndex]) * int256(_price);
         int256 q = int256(longTracker[_pairIndex] + shortTracker[_pairIndex]);
         int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
 

@@ -244,19 +244,17 @@ contract Pool is IPool, Roleable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function increaseLPProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
+    function setLPProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
-        vault.stableTotalAmount += _profit;
+        if (_profit > 0) {
+            vault.stableTotalAmount += _profit.abs();
+        } else {
+            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
+            require(_profit <= int256(availableStable), 'stable token not enough');
+            vault.stableTotalAmount -= _profit.abs();
+        }
 
         emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
-    }
-
-    function decreaseLPProfit(uint256 _pairIndex, uint256 _profit) external onlyPositionManager {
-        Vault storage vault = vaults[_pairIndex];
-        uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-        require(_profit <= availableStable, 'stable token not enough');
-        vault.stableTotalAmount -= _profit;
-        emit UpdateLPProfit(_pairIndex, -int256(_profit), vault.stableTotalAmount);
     }
 
     function liqiitySwap(
@@ -322,6 +320,7 @@ contract Pool is IPool, Roleable {
         return (receivedIndexAmount, receivedStableAmount);
     }
 
+    //  cal lp pnl
     function swap(
         uint256 _pairIndex,
         bool _isBuy,
