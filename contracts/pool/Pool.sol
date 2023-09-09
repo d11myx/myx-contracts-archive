@@ -6,7 +6,9 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
+import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 
+import '../interfaces/IPositionManager.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/ISwapCallback.sol';
 import '../interfaces/IPoolToken.sol';
@@ -27,6 +29,7 @@ import '../helpers/ValidationHelper.sol';
 // import 'hardhat/console.sol';
 
 contract Pool is IPool, Roleable {
+    using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
@@ -46,8 +49,8 @@ contract Pool is IPool, Roleable {
     uint256 public pairsCount;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
-    mapping(address => bool) public positionManagers;
-    mapping(address => bool) public orderManagers;
+    EnumerableSet.AddressSet private positionManagers;
+    EnumerableSet.AddressSet private orderManagers;
 
     mapping(address => uint256) public feeTokenAmounts;
 
@@ -56,29 +59,32 @@ contract Pool is IPool, Roleable {
     }
 
     modifier onlyPositionManagerOrOrderManager() {
-        require(positionManagers[msg.sender] || orderManagers[msg.sender], 'onlyPositionManagerOrOrderManager');
+        require(
+            positionManagers.contains(msg.sender) || orderManagers.contains(msg.sender),
+            'onlyPositionManagerOrOrderManager'
+        );
         _;
     }
 
     modifier onlyPositionManager() {
-        require(positionManagers[msg.sender], 'forbidden');
+        require(positionManagers.contains(msg.sender), 'forbidden');
         _;
     }
 
     function addPositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManagers[_positionManager] = true;
+        positionManagers.add(_positionManager);
     }
 
     function removePositionManager(address _positionManager) external onlyPoolAdmin {
-        delete positionManagers[_positionManager];
+        positionManagers.remove(_positionManager);
     }
 
-    function addOrderManager(address _positionManager) external onlyPoolAdmin {
-        orderManagers[_positionManager] = true;
+    function addOrderManager(address _orderManager) external onlyPoolAdmin {
+        orderManagers.add(_orderManager);
     }
 
     function removeOrderManager(address _orderManager) external onlyPoolAdmin {
-        delete orderManagers[_orderManager];
+        orderManagers.remove(_orderManager);
     }
 
     // Manage pairs
@@ -257,12 +263,12 @@ contract Pool is IPool, Roleable {
         emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
     }
 
-    function liqiitySwap(
+    function liquitySwap(
         uint256 _pairIndex,
         bool _isBuy,
         uint256 _amountIn,
         uint256 _amountOut
-    ) public onlyPositionManager {
+    ) private onlyPositionManager {
         Vault memory vault = vaults[_pairIndex];
 
         if (_isBuy) {
@@ -389,7 +395,7 @@ contract Pool is IPool, Roleable {
 
             require(amountOut >= _minOut, 'insufficient minOut');
 
-            liqiitySwap(_pairIndex, _isBuy, amountIn, amountOut);
+            liquitySwap(_pairIndex, _isBuy, amountIn, amountOut);
             if (amountIn > 0) balanceBefore = IERC20(pair.stableToken).balanceOf(address(this));
             ISwapCallback(msg.sender).swapCallback(pair.stableToken, pair.stableToken, 0, amountIn, data);
             if (amountIn > 0) {
@@ -751,6 +757,13 @@ contract Pool is IPool, Roleable {
         IERC20(token).safeTransfer(to, amount);
     }
 
+    function getProfit(uint pairIndex, address token) external view returns (int256 profit) {
+        for (uint256 i = 0; i < positionManagersLength(); i++) {
+            profit = profit + IPositionManager(positionManagers.at(i)).lpProfit(pairIndex, token);
+        }
+        return profit;
+    }
+
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
         return vaults[_pairIndex];
     }
@@ -773,5 +786,17 @@ contract Pool is IPool, Roleable {
 
     function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
         return fundingFeeConfigs[_pairIndex];
+    }
+
+    function positionManagersAt(uint256 index) external view returns (address) {
+        return positionManagers.at(index);
+    }
+
+    function positionManagersLength() public view returns (uint256) {
+        return positionManagers.length();
+    }
+
+    function orderManagersLength() public view returns (uint256) {
+        return orderManagers.length();
     }
 }
