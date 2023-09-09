@@ -263,12 +263,7 @@ contract Pool is IPool, Roleable {
         emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
     }
 
-    function liquitySwap(
-        uint256 _pairIndex,
-        bool _isBuy,
-        uint256 _amountIn,
-        uint256 _amountOut
-    ) private onlyPositionManager {
+    function _liquitySwap(uint256 _pairIndex, bool _isBuy, uint256 _amountIn, uint256 _amountOut) private {
         Vault memory vault = vaults[_pairIndex];
 
         if (_isBuy) {
@@ -368,9 +363,11 @@ contract Pool is IPool, Roleable {
 
         uint256 price = _getPrice(pair.indexToken);
 
+        uint256 indexTotalAmount = _getIndexTotalAmount(pair, vault);
+        uint256 stableTotaAmount = _getStableTotalAmount(pair, vault);
         // total delta
-        uint256 indexTotalDelta = vault.indexTotalAmount.mulPrice(price);
-        uint256 stableTotalDelta = vault.stableTotalAmount;
+        uint256 indexTotalDelta = indexTotalAmount.mulPrice(price);
+        uint256 stableTotalDelta = stableTotaAmount;
 
         uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
@@ -386,7 +383,7 @@ contract Pool is IPool, Roleable {
             stableInDelta = stableInDelta.min(expectStableDelta - stableTotalDelta);
 
             amountOut = stableInDelta.divPrice(price);
-            uint256 availableIndex = vault.indexTotalAmount - vault.indexReservedAmount;
+            uint256 availableIndex = indexTotalAmount - vault.indexReservedAmount;
 
             require(availableIndex > 0, 'no available index token');
 
@@ -395,7 +392,7 @@ contract Pool is IPool, Roleable {
 
             require(amountOut >= _minOut, 'insufficient minOut');
 
-            liquitySwap(_pairIndex, _isBuy, amountIn, amountOut);
+            _liquitySwap(_pairIndex, _isBuy, amountIn, amountOut);
             if (amountIn > 0) balanceBefore = IERC20(pair.stableToken).balanceOf(address(this));
             ISwapCallback(msg.sender).swapCallback(pair.stableToken, pair.stableToken, 0, amountIn, data);
             if (amountIn > 0) {
@@ -410,7 +407,7 @@ contract Pool is IPool, Roleable {
             indexInDelta = indexInDelta.min(expectIndexDelta - indexTotalDelta);
 
             amountOut = indexInDelta;
-            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
+            uint256 availableStable = stableTotaAmount - vault.stableReservedAmount;
 
             require(availableStable > 0, 'no stable token');
 
@@ -474,8 +471,8 @@ contract Pool is IPool, Roleable {
         IPool.Vault memory vault = getVault(_pairIndex);
 
         // transfer fee
-        uint256 indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
-        uint256 stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
+        indexFeeAmount = _indexAmount.mulPercentage(pair.addLpFeeP);
+        stableFeeAmount = _stableAmount.mulPercentage(pair.addLpFeeP);
 
         afterFeeIndexAmount = _indexAmount - indexFeeAmount;
         afterFeeStableAmount = _stableAmount - stableFeeAmount;
@@ -484,7 +481,7 @@ contract Pool is IPool, Roleable {
         uint256 price = _getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
+        uint256 indexReserveDelta = AmountMath.getStableDelta(_getIndexTotalAmount(pair, vault), price);
 
         // usdt value of deposit
         uint256 indexDepositDelta = AmountMath.getStableDelta(afterFeeIndexAmount, price);
@@ -493,10 +490,11 @@ contract Pool is IPool, Roleable {
         uint256 slipDelta;
         slipToken;
         slipAmount;
-        if (indexReserveDelta + vault.stableTotalAmount > 0) {
+        uint256 stableTotalAmount = _getStableTotalAmount(pair, vault);
+        if (indexReserveDelta + stableTotalAmount > 0) {
             // after deposit
             uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
-            uint256 stableTotalDelta = vault.stableTotalAmount + afterFeeStableAmount;
+            uint256 stableTotalDelta = stableTotalAmount + afterFeeStableAmount;
 
             // expect delta
             uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
@@ -549,6 +547,24 @@ contract Pool is IPool, Roleable {
         );
     }
 
+    function _getStableTotalAmount(IPool.Pair memory pair, IPool.Vault memory vault) internal view returns (uint256) {
+        int256 profit = getProfit(pair.pairIndex, pair.stableToken);
+        if (profit < 0) {
+            return vault.stableTotalAmount.sub(profit.abs());
+        } else {
+            return vault.stableTotalAmount.add(profit.abs());
+        }
+    }
+
+    function _getIndexTotalAmount(IPool.Pair memory pair, IPool.Vault memory vault) internal view returns (uint256) {
+        int256 profit = getProfit(pair.pairIndex, pair.indexToken);
+        if (profit < 0) {
+            return vault.indexTotalAmount.sub(profit.abs());
+        } else {
+            return vault.indexTotalAmount.add(profit.abs());
+        }
+    }
+
     function _addLiquidity(
         address _account,
         address recipient,
@@ -565,9 +581,9 @@ contract Pool is IPool, Roleable {
         _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
 
         (
-            uint256 mintAmount,
-            address slipToken,
-            uint256 slipAmount,
+            ,
+            ,
+            ,
             uint256 indexFeeAmount,
             uint256 stableFeeAmount,
             uint256 afterFeeIndexAmount,
@@ -757,7 +773,7 @@ contract Pool is IPool, Roleable {
         IERC20(token).safeTransfer(to, amount);
     }
 
-    function getProfit(uint pairIndex, address token) external view returns (int256 profit) {
+    function getProfit(uint pairIndex, address token) public view returns (int256 profit) {
         for (uint256 i = 0; i < positionManagersLength(); i++) {
             profit = profit + IPositionManager(positionManagers.at(i)).lpProfit(pairIndex, token);
         }
