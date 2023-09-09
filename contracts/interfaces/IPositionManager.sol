@@ -109,4 +109,5 @@ interface IPositionManager {
     function adjustCollateral(uint256 pairIndex, address account, bool isLong, int256 collateral) external;
 
     function updateFundingRate(uint256 _pairIndex) external;
+    function lpProfit(uint pairIndex) external view returns(address pledgeAddress,int256 profit);
 }
