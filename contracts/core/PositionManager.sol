@@ -196,7 +196,7 @@ contract PositionManager is FeeManager, Pausable {
                 }
 
                 pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
-                _calLpProfit(_pairIndex, _price, true, decreaseLong);
+                _calLpProfit(_pairIndex, true, decreaseLong);
 
                 // increase reserve
                 if (increaseShort > 0) {
@@ -229,7 +229,7 @@ contract PositionManager is FeeManager, Pausable {
                         ? lpVault.stableReservedAmount
                         : decreaseShort.mulPrice(lpVault.averagePrice)
                 );
-                _calLpProfit(_pairIndex, _price, false, decreaseShort);
+                _calLpProfit(_pairIndex, false, decreaseShort);
                 // increase reserve
                 if (increaseLong > 0) {
                     pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
@@ -243,47 +243,26 @@ contract PositionManager is FeeManager, Pausable {
         }
     }
 
-    function _calLpProfit(uint256 _pairIndex, uint256 _price, bool positive, uint amount) internal {
-        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        if (positive) {
-            if (_price > lpVault.averagePrice) {
-                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
-                pool.decreaseLPProfit(_pairIndex, profit);
-            } else {
-                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
-                pool.increaseLPProfit(_pairIndex, profit);
-            }
-        } else {
-            if (_price < lpVault.averagePrice) {
-                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
-                pool.decreaseLPProfit(_pairIndex, profit);
-            } else {
-                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
-                pool.increaseLPProfit(_pairIndex, profit);
-            }
-        }
+    function _calLpProfit(uint256 _pairIndex, bool positive, uint amount) internal {
+        int256 profit = _currentLpProfit(_pairIndex, positive, amount);
+        pool.setLPProfit(_pairIndex, profit);
     }
 
-    function _currentLpProfit(uint256 _pairIndex, bool positive, uint amount) internal view returns (int256) {
+    function _currentLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal view returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
         uint256 _price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
-        if (positive) {
+        if (lpIsLong) {
             if (_price > lpVault.averagePrice) {
-                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
-                return int256(profit);
-                // pool.decreaseLPProfit(_pairIndex, profit);
+                return int256(amount.mulPrice(_price - lpVault.averagePrice));
             } else {
-                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
-                //pool.increaseLPProfit(_pairIndex, profit);
+                return -int256(amount.mulPrice(lpVault.averagePrice - _price));
             }
         } else {
             if (_price < lpVault.averagePrice) {
-                uint256 profit = amount.mulPrice(lpVault.averagePrice - _price);
-                //pool.decreaseLPProfit(_pairIndex, profit);
+                return int256(amount.mulPrice(lpVault.averagePrice - _price));
             } else {
-                uint256 profit = amount.mulPrice(_price - lpVault.averagePrice);
-                //pool.increaseLPProfit(_pairIndex, profit);
+                return -int256(amount.mulPrice(_price - lpVault.averagePrice));
             }
         }
     }
@@ -535,26 +514,16 @@ contract PositionManager is FeeManager, Pausable {
         uint256 lpPosition;
         if (longTracker[_pairIndex] > shortTracker[_pairIndex]) {
             lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
-            nextFundingRate > 0
-                ? pool.increaseLPProfit(
-                    _pairIndex,
-                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
-                )
-                : pool.decreaseLPProfit(
-                    _pairIndex,
-                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
-                );
+            pool.setLPProfit(
+                _pairIndex,
+                (nextFundingRate * int256(lpPosition)) / int256(PrecisionUtils.fundingRatePrecision())
+            );
         } else {
             lpPosition = shortTracker[_pairIndex] - longTracker[_pairIndex];
-            nextFundingRate > 0
-                ? pool.decreaseLPProfit(
-                    _pairIndex,
-                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
-                )
-                : pool.increaseLPProfit(
-                    _pairIndex,
-                    lpPosition.mul(nextFundingRate.abs()).div(PrecisionUtils.fundingRatePrecision())
-                );
+            pool.setLPProfit(
+                _pairIndex,
+                (-nextFundingRate * int256(lpPosition)) / int256(PrecisionUtils.fundingRatePrecision())
+            );
         }
 
         emit UpdateFundingRate(_pairIndex, _price, nextFundingRate, lastFundingRateUpdateTimes[_pairIndex]);
