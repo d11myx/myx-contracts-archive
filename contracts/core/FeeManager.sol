@@ -103,7 +103,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
         uint256 referralsAmount = surplusFee.mulPercentage(Math.min(referenceRate, feeCollector.maxReferralsRatio()));
 
         lpAmount = surplusFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
-        pool.increaseLPProfit(pair.pairIndex, lpAmount);
+        pool.setLPProfit(pair.pairIndex, int256(lpAmount));
 
         uint256 keeperAmount = surplusFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
         userTradingFee[keeper] += keeperAmount;
