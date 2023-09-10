@@ -361,7 +361,7 @@ contract Pool is IPool, Roleable {
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
-        uint256 price = _getPrice(pair.indexToken);
+        uint256 price = getPrice(pair.indexToken);
 
         uint256 indexTotalAmount = _getIndexTotalAmount(pair, vault);
         uint256 stableTotaAmount = _getStableTotalAmount(pair, vault);
@@ -478,7 +478,7 @@ contract Pool is IPool, Roleable {
         afterFeeStableAmount = _stableAmount - stableFeeAmount;
 
         // usdt value of reserve
-        uint256 price = _getPrice(pair.indexToken);
+        uint256 price = getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(_getIndexTotalAmount(pair, vault), price);
@@ -654,8 +654,10 @@ contract Pool is IPool, Roleable {
     function lpFairPrice(uint256 _pairIndex) public view returns (uint256) {
         IPool.Pair memory pair = getPair(_pairIndex);
         IPool.Vault memory vault = getVault(_pairIndex);
-        uint256 price = _getPrice(pair.indexToken);
+        uint256 price = getPrice(pair.indexToken);
+
         uint256 lpFairDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
+        // return lpFairDelta;
         return
             lpFairDelta > 0
                 ? Math.mulDiv(lpFairDelta, AmountMath.PRICE_PRECISION, IERC20(pair.pairToken).totalSupply())
@@ -674,7 +676,7 @@ contract Pool is IPool, Roleable {
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
-        uint256 price = _getPrice(pair.indexToken);
+        uint256 price = getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
@@ -729,7 +731,7 @@ contract Pool is IPool, Roleable {
         IPool.Vault memory vault = getVault(_pairIndex);
 
         // usdt value of reserve
-        uint256 price = _getPrice(pair.indexToken);
+        uint256 price = getPrice(pair.indexToken);
         require(price > 0, 'invalid price');
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
@@ -784,7 +786,7 @@ contract Pool is IPool, Roleable {
         return vaults[_pairIndex];
     }
 
-    function _getPrice(address _token) internal view returns (uint256) {
+    function getPrice(address _token) public view returns (uint256) {
         return IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
     }
 
