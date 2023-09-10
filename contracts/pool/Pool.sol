@@ -659,7 +659,7 @@ contract Pool is IPool, Roleable {
         uint256 lpFairDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
         // return lpFairDelta;
         return
-            lpFairDelta > 0
+            lpFairDelta > 0 && IERC20(pair.pairToken).totalSupply() > 0
                 ? Math.mulDiv(lpFairDelta, AmountMath.PRICE_PRECISION, IERC20(pair.pairToken).totalSupply())
                 : 1 * AmountMath.PRICE_PRECISION;
     }
