@@ -34,7 +34,7 @@ describe('LP: Pool cases', () => {
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-
+            expect(await pool.lpFairPrice(pairIndex)).to.be.eq(ethers.utils.parseUnits('1000000000000'));
             const vaultBefore = await pool.getVault(pairIndex);
             const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
             const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
@@ -42,10 +42,16 @@ describe('LP: Pool cases', () => {
             expect(vaultBefore.stableTotalAmount).to.be.eq(0);
 
             const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
 
+            const lpToken = await getMockToken('', pair.pairToken);
+            const totoalApply = await lpToken.totalSupply();
+            expect(totoalApply).to.be.eq(ethers.utils.parseUnits('599400000'));
+            const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
+            expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
             const vaultAfter = await pool.getVault(pairIndex);
             const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
             const userUsdtBalanceAfter = await usdt.balanceOf(depositor.address);
@@ -77,7 +83,8 @@ describe('LP: Pool cases', () => {
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
-
+            console.log('price:' + (await pool.getPrice(pair.indexToken)));
+            console.log('lpFairPrice:' + (await pool.lpFairPrice(pairIndex)));
             const lpPrice = BigNumber.from(
                 ethers.utils.formatUnits(await pool.lpFairPrice(pairIndex), 30).replace('.0', ''),
             );
@@ -88,6 +95,8 @@ describe('LP: Pool cases', () => {
             const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
             const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
             const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
+
+            console.log('lp:' + userLpBalanceBefore);
 
             const lpAmount = ethers.utils.parseEther('30000');
             const expectRemoveLiquidity = await pool.getReceivedAmount(pairIndex, lpAmount);
