@@ -578,16 +578,20 @@ contract Pool is IPool, Roleable {
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), 'invalid pair');
 
+        uint256 indexFeeAmount;
+        uint256 stableFeeAmount;
+        uint256 afterFeeIndexAmount;
+        uint256 afterFeeStableAmount;
         _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
 
         (
-            ,
-            ,
-            ,
-            uint256 indexFeeAmount,
-            uint256 stableFeeAmount,
-            uint256 afterFeeIndexAmount,
-            uint256 afterFeeStableAmount
+            mintAmount,
+            slipToken,
+            slipAmount,
+            indexFeeAmount,
+            stableFeeAmount,
+            afterFeeIndexAmount,
+            afterFeeStableAmount
         ) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount);
 
         IBaseToken(pair.pairToken).mint(recipient, mintAmount);
