@@ -18,11 +18,11 @@ contract FeeCollector is IFeeCollector {
     constructor(IAddressesProvider addressesProvider) {
         ADDRESSES_PROVIDER = addressesProvider;
         maxReferralsRatio = 1e8;
-        levelDiscountRatios[1] = 1000000;
-        levelDiscountRatios[2] = 2000000;
-        levelDiscountRatios[3] = 3000000;
-        levelDiscountRatios[4] = 4000000;
-        levelDiscountRatios[5] = 5000000;
+        levelDiscountRatios[1] = 1e6;
+        levelDiscountRatios[2] = 2e6;
+        levelDiscountRatios[3] = 3e6;
+        levelDiscountRatios[4] = 4e6;
+        levelDiscountRatios[5] = 5e6;
     }
 
     modifier onlyPoolAdmin() {

@@ -16,7 +16,7 @@ import '../interfaces/IPool.sol';
 import '../helpers/ValidationHelper.sol';
 import '../helpers/TradingHelper.sol';
 import '../interfaces/IFeeCollector.sol';
-import './logic/LiquidationLogic.sol';
+import '../helpers/LiquidationLogic.sol';
 
 contract Executor is IExecutor, Pausable {
     using SafeERC20 for IERC20;
