@@ -660,7 +660,8 @@ contract Pool is IPool, Roleable {
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
 
-        uint256 lpFairDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price) + vault.stableTotalAmount;
+        uint256 lpFairDelta = AmountMath.getStableDelta(_getIndexTotalAmount(pair, vault), price) +
+            _getStableTotalAmount(pair, vault);
         // return lpFairDelta;
         return
             lpFairDelta > 0 && IERC20(pair.pairToken).totalSupply() > 0
