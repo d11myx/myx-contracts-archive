@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-// import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 
 import '../libraries/Position.sol';
@@ -19,7 +18,6 @@ import '../interfaces/IFeeCollector.sol';
 import '../helpers/LiquidationLogic.sol';
 
 contract Executor is IExecutor, Pausable {
-    // using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
