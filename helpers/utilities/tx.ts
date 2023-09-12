@@ -257,12 +257,38 @@ export function getEpochFundingFee(fundingRate: BigNumber, openPrice: BigNumber)
 }
 
 /**
- * calculation current position amount
+ * calculation current position funding fee
+ *
+ * @param globalFundingFeeTracker {BigNumber} global funding fee tracker
+ * @param positionFundingFeeTracker {BigNumber} position funding fee tracker
+ * @param positionAmount {BigNumber} current position size
+ * @param isLong {Boolean} long or short
+ * @returns current position funding fee
+ */
+export function getPositionFundingFee(
+    globalFundingFeeTracker: BigNumber,
+    positionFundingFeeTracker: BigNumber,
+    positionAmount: BigNumber,
+    isLong: boolean,
+) {
+    let fundingFee;
+    const diffFundingFeeTracker = globalFundingFeeTracker.sub(positionFundingFeeTracker);
+    if ((isLong && diffFundingFeeTracker.gt(0)) || (!isLong && diffFundingFeeTracker.lt(0))) {
+        fundingFee = -1;
+    } else {
+        fundingFee = 1;
+    }
+
+    return positionAmount.mul(diffFundingFeeTracker).div(PERCENTAGE).mul(fundingFee);
+}
+
+/**
+ * calculation lp funding fee
  *
  * @param epochFundindFee {BigNumber} epoch currency standard funding fee
- * @param positionAmount {BigNumber} current position size
- * @returns current position amount
+ * @param lpPosition {BigNumber} current position size
+ * @returns current lp funding fee
  */
-export function getPositionFundFee(epochFundindFee: BigNumber, positionAmount: BigNumber) {
-    return positionAmount.mul(epochFundindFee).div(PERCENTAGE);
+export function getLpFundingFee(epochFundindFee: BigNumber, lpPosition: BigNumber) {
+    return lpPosition.mul(epochFundindFee).div(PERCENTAGE).abs();
 }
