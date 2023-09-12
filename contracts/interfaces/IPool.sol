@@ -129,11 +129,11 @@ interface IPool {
 
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external;
 
-    function increaseLPProfit(uint256 _pairIndex, uint256 _profit) external;
+    function setLPProfit(uint256 _pairIndex, int256 _profit) external;
 
-    function decreaseLPProfit(uint256 _pairIndex, uint256 _profit) external;
+    // function decreaseLPProfit(uint256 _pairIndex, int256 _profit) external;
 
-    function liqiitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
+    // function liquitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
 
     function addLiquidity(
         address recipient,
