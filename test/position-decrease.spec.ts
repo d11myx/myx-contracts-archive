@@ -125,6 +125,7 @@ describe('PositionManager: decrease position', () => {
                 triggerPrice: openPrice,
                 isLong: true,
                 sizeAmount: positionBefore.positionAmount,
+                maxSlippage: 0,
             };
 
             // update BTC price
@@ -136,7 +137,7 @@ describe('PositionManager: decrease position', () => {
             // await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
             await expect(
                 executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
-            ).to.be.revertedWith('ERC20: transfer amount exceeds balance');
+            ).to.be.revertedWith('stable token not enough');
         });
     });
 });

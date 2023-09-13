@@ -20,8 +20,6 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import './FeeManager.sol';
 
-//import 'hardhat/console.sol';
-
 contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -196,7 +194,7 @@ contract PositionManager is FeeManager, Pausable {
                 }
 
                 pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
-                _calLpProfit(_pairIndex, true, decreaseLong);
+                _calLpProfit(_pairIndex, false, decreaseLong);
 
                 // increase reserve
                 if (increaseShort > 0) {
@@ -229,7 +227,7 @@ contract PositionManager is FeeManager, Pausable {
                         ? lpVault.stableReservedAmount
                         : decreaseShort.mulPrice(lpVault.averagePrice)
                 );
-                _calLpProfit(_pairIndex, false, decreaseShort);
+                _calLpProfit(_pairIndex, true, decreaseShort);
                 // increase reserve
                 if (increaseLong > 0) {
                     pool.increaseReserveAmount(_pairIndex, increaseLong, 0);

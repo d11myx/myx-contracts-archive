@@ -50,6 +50,7 @@ export async function increasePosition(
         openPrice: openPrice,
         isLong: isLong,
         sizeAmount: size,
+        maxSlippage: 0,
     };
 
     let orderId;
@@ -97,6 +98,7 @@ export async function decreasePosition(
         triggerPrice: openPrice,
         isLong: isLong,
         sizeAmount: size,
+        maxSlippage: 0,
     };
 
     // create increase order

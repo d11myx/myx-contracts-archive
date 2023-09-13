@@ -39,7 +39,8 @@ contract TestGas {
             collateral: 1,
             openPrice: 3000,
             isLong: true,
-            sizeAmount: 1000
+            sizeAmount: 1000,
+            maxSlippage: 1000000
         });
     }
 
