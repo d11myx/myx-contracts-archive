@@ -12,5 +12,9 @@ task('decode-event', 'decode trx event logs')
             abiDecoder.addABI(contract.abi);
         }
         let receipt = await hre.ethers.provider.getTransactionReceipt(param.hash);
-        return abiDecoder.decodeLogs(receipt.logs);
+        const decodeLogs = abiDecoder.decodeLogs(receipt.logs);
+        // for (let decodeLog of decodeLogs) {
+        //     console.log(decodeLog);
+        // }
+        return decodeLogs;
     });
