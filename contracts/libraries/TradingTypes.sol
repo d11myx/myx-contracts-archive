@@ -17,6 +17,7 @@ library TradingTypes {
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
         int256 sizeAmount; // size
+        uint256 maxSlippage;
         bytes data;
     }
 
@@ -35,6 +36,7 @@ library TradingTypes {
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
         uint256 sizeAmount; // size
+        uint256 maxSlippage;
     }
 
     struct IncreasePositionWithTpSlRequest {
@@ -49,6 +51,7 @@ library TradingTypes {
         uint256 tp; // tp size
         uint256 slPrice; // 1e30, sl price
         uint256 sl; // sl size
+        uint256 maxSlippage;
     }
 
     struct DecreasePositionRequest {
@@ -59,6 +62,7 @@ library TradingTypes {
         uint256 triggerPrice; // 1e30, price
         uint256 sizeAmount; // size
         bool isLong;
+        uint256 maxSlippage;
     }
 
     struct CreateTpSlRequest {
@@ -80,6 +84,7 @@ library TradingTypes {
         uint256 openPrice; // 1e30 Market acceptable price/Limit opening price
         bool isLong; // Long/short
         uint256 sizeAmount; // Number of positions
+        uint256 maxSlippage;
         uint256 blockTime;
     }
 
@@ -91,6 +96,7 @@ library TradingTypes {
         int256 collateral; // 1e18 Margin amount
         uint256 triggerPrice; // Limit trigger price
         uint256 sizeAmount; // Number of customs documents
+        uint256 maxSlippage;
         bool isLong;
         bool abovePrice; // Above or below the trigger price
         // market：long: true,  short: false

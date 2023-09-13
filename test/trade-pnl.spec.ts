@@ -21,8 +21,8 @@ describe('Trade: profit & Loss', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10', 18);
-        const stableAmount = ethers.utils.parseUnits('300000', 18);
+        const indexAmount = ethers.utils.parseUnits('1000', 18);
+        const stableAmount = ethers.utils.parseUnits('30000000', 18);
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -122,7 +122,9 @@ describe('Trade: profit & Loss', () => {
                 userPositionBefore.collateral.add(pnl).sub(decreasingCollateral.abs()),
             );
         });
+    });
 
+    describe('user profit < 0', () => {
         it('user has loss, decrease position', async () => {
             const {
                 users: [, , trader],
