@@ -25,7 +25,7 @@ library ValidationHelper {
         bool isAbove,
         uint256 currentPrice,
         uint256 orderPrice
-    ) internal view {
+    ) internal pure {
         if (tradeType == TradingTypes.TradeType.MARKET || tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 isAbove
@@ -38,7 +38,7 @@ library ValidationHelper {
         }
     }
 
-    function validTradeSize(IPool.TradingConfig memory tradingConfig, uint256 size) internal view returns (bool) {
+    function validTradeSize(IPool.TradingConfig memory tradingConfig, uint256 size) internal pure returns (bool) {
         return size >= tradingConfig.minTradeAmount && size <= tradingConfig.maxTradeAmount;
     }
 }
