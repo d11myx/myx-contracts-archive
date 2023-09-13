@@ -277,7 +277,7 @@ const config: HardhatUserConfig = {
             //1438000
             url: 'https://rpc.goerli.linea.build',
             chainId: 59140,
-            gasPrice: 19343240,
+            gasPrice: 193432400,
             blockGasLimit: 10000000,
             accounts: [
                 LINEA_GOERLI_PRIVATE_KEY0,
