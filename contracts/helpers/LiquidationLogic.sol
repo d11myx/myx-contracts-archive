@@ -81,6 +81,7 @@ library LiquidationLogic {
                 openPrice: price,
                 isLong: position.isLong,
                 sizeAmount: -int256(position.positionAmount),
+                maxSlippage: 0,
                 data: abi.encode(position.account)
             })
         );

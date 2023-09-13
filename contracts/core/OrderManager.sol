@@ -171,7 +171,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                         collateral: request.collateral,
                         openPrice: request.openPrice,
                         isLong: request.isLong,
-                        sizeAmount: uint256(request.sizeAmount)
+                        sizeAmount: uint256(request.sizeAmount),
+                        maxSlippage: request.maxSlippage
                     })
                 );
         } else if (request.sizeAmount < 0) {
@@ -184,7 +185,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                         collateral: request.collateral,
                         triggerPrice: request.openPrice,
                         sizeAmount: uint256(request.sizeAmount.abs()),
-                        isLong: request.isLong
+                        isLong: request.isLong,
+                        maxSlippage: request.maxSlippage
                     })
                 );
         } else {
@@ -198,7 +200,8 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                         collateral: request.collateral,
                         openPrice: request.openPrice,
                         isLong: request.isLong,
-                        sizeAmount: 0
+                        sizeAmount: 0,
+                        maxSlippage: request.maxSlippage
                     })
                 );
         }
@@ -272,6 +275,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             _request.openPrice,
             _request.isLong,
             _request.sizeAmount,
+            _request.maxSlippage,
             block.timestamp
         );
 
@@ -318,6 +322,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             _request.collateral,
             _request.triggerPrice,
             _request.sizeAmount,
+            _request.maxSlippage,
             _request.isLong,
             false, // abovePrice
             block.timestamp,

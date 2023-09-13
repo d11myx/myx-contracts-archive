@@ -21,7 +21,7 @@ export const btcPairInfo: PairInfoConfig = {
         maxTradeAmount: '100000000000000000000000', //100000
         maxPositionAmount: '100000000000000000000000000', //100000000
         maintainMarginRate: 1000000, //1%
-        priceSlipP: 500000, //0.5%
+        priceSlipP: 100000, //0.1%
         maxPriceDeviationP: 500000, //0.5%
     },
     tradingFeeConfig: {
@@ -59,7 +59,7 @@ export const ethPairInfo: PairInfoConfig = {
         maxTradeAmount: '100000000000000000000000', //100000
         maxPositionAmount: '100000000000000000000000000', //100000000
         maintainMarginRate: 1000000, //1%
-        priceSlipP: 500000, //0.5%
+        priceSlipP: 100000, //0.1%
         maxPriceDeviationP: 500000, //0.5%
     },
     tradingFeeConfig: {

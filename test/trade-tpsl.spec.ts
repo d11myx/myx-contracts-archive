@@ -1,7 +1,7 @@
-import {newTestEnv, testEnv, TestEnv} from './helpers/make-suite';
+import { newTestEnv, testEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
-import {decreasePosition, increasePosition, mintAndApprove} from './helpers/misc';
+import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';
 import { TradeType } from '../helpers';
 import { IRouter, TradingTypes } from '../types/contracts/core/Router';
 
@@ -30,10 +30,10 @@ describe('Trade: TP & SL', () => {
             .connect(depositor.signer)
             .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
-    after(async ()=>{
+    after(async () => {
         const {
             users: [trader],
-            positionManager
+            positionManager,
         } = testEnv;
 
         const decreaseCollateral = ethers.utils.parseUnits('0', 18);
@@ -66,6 +66,7 @@ describe('Trade: TP & SL', () => {
                 openPrice: openPrice,
                 isLong: true,
                 sizeAmount: size,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
