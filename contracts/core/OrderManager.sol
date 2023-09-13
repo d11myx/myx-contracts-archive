@@ -105,7 +105,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
         require(pair.enable, 'trade pair not supported');
-
+        Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
             require(
@@ -114,7 +114,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             );
 
             bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
-            Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
+
             uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 // check leverage
@@ -151,7 +151,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         }
 
         if (request.tradeType == TradingTypes.TradeType.TP || request.tradeType == TradingTypes.TradeType.SL) {
-            Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
+            // Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
             require(uint256(request.sizeAmount.abs()) <= position.positionAmount, 'tp/sl exceeds max size');
             require(request.collateral == 0, 'no collateral required');
         }
