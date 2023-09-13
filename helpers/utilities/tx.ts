@@ -184,15 +184,14 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
     const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount);
 
-    let fundingRate, absFundingRate;
+    let fundingRate;
     if (q.eq(0)) {
         fundingRate = 0;
     } else {
-        absFundingRate = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
+        fundingRate = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
         if (!l.eq(0)) {
-            absFundingRate = absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
+            fundingRate = fundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
         }
-        fundingRate = exposedPosition.gte(0) ? absFundingRate : -absFundingRate;
     }
 
     fundingRate = BigNumber.from(fundingRate).sub(interest);
@@ -202,7 +201,9 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
         ? fundingFeeConfig.maxFundingRate
         : fundingRate;
 
-    return fundingRate.div(365).div(86400 / fundingInterval);
+    fundingRate = fundingRate.div(365).div(86400 / fundingInterval);
+    fundingRate = exposedPosition.gte(0) ? fundingRate : -fundingRate;
+    return fundingRate;
 }
 
 /**
@@ -223,7 +224,9 @@ export function getAveragePrice(
 ) {
     return previousPositionAveragePrice
         .mul(previousPositionAmount)
-        .add(openPrice.mul(positionAmount))
+        .div(PRICE_PRECISION)
+        .add(openPrice.mul(positionAmount).div(PRICE_PRECISION))
+        .mul(PRICE_PRECISION)
         .div(previousPositionAmount.add(positionAmount));
 }
 
