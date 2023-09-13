@@ -498,7 +498,7 @@ contract Executor is IExecutor, Pausable {
             price
         );
 
-        bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
+        // bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
 
         // delete order
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
@@ -522,11 +522,13 @@ contract Executor is IExecutor, Pausable {
             )
         );
 
-        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+        // position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         if (position.positionAmount == 0) {
             // cancel all decrease order
-            IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
+            IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(
+                PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong)
+            );
 
             for (uint256 i = 0; i < orders.length; i++) {
                 IOrderManager.PositionOrder memory positionOrder = orders[i];
