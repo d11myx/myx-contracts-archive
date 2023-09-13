@@ -1,9 +1,10 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
-import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import { TradeType } from '../helpers';
+import Decimal from 'decimal.js';
 
 describe('Trade: profit & Loss', () => {
     const pairIndex = 0;
@@ -36,7 +37,6 @@ describe('Trade: profit & Loss', () => {
             const {
                 users: [trader],
                 usdt,
-                btc,
                 pool,
                 router,
                 positionManager,
@@ -54,14 +54,10 @@ describe('Trade: profit & Loss', () => {
             const poolBalance = await usdt.balanceOf(pool.address);
             const positionBalance = await usdt.balanceOf(positionManager.address);
 
-            console.log(`poolBalance:`, ethers.utils.formatEther(poolBalance));
-            console.log(`positionBalance:`, ethers.utils.formatEther(positionBalance));
-
             const btcPrice = '50000';
             await updateBTCPrice(testEnv, btcPrice);
 
             const userPnl = BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount);
-            console.log(`userPnl:`, userPnl);
 
             // positionBalance < userPnl < poolBalance
             expect(userPnl).to.be.gt(positionBalance);
@@ -77,6 +73,141 @@ describe('Trade: profit & Loss', () => {
                 true,
                 ethers.utils.parseUnits(btcPrice, 30),
             );
+        });
+
+        it('user has profit, decrease position', async () => {
+            const {
+                users: [, trader],
+                usdt,
+                router,
+                positionManager,
+            } = testEnv;
+
+            let btcPrice = '30000';
+            await updateBTCPrice(testEnv, btcPrice);
+
+            const collateral = ethers.utils.parseUnits('30000', 18);
+            const size = ethers.utils.parseUnits('9', 18);
+            let openPrice = ethers.utils.parseUnits('30000', 30);
+
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
+
+            const userPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
+
+            btcPrice = '50000';
+            await updateBTCPrice(testEnv, btcPrice);
+
+            const userPnl = BigNumber.from(btcPrice).sub('30000').mul(userPositionBefore.positionAmount);
+            expect(userPnl).to.be.gt(0);
+
+            const decreasingCollateral = BigNumber.from(0).sub(userPositionBefore.collateral.mul(99).div(100));
+            const decreasingSize = userPositionBefore.positionAmount.mul(99).div(100);
+            const { executeReceipt } = await decreasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                decreasingCollateral,
+                decreasingSize, // decrease 99%
+                TradeType.MARKET,
+                true,
+                ethers.utils.parseUnits(btcPrice, 30),
+            );
+            const pnl = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'pnl');
+
+            const userPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
+
+            expect(userPositionAfter.positionAmount).to.be.eq(userPositionBefore.positionAmount.sub(decreasingSize));
+            expect(userPositionAfter.collateral).to.be.eq(
+                userPositionBefore.collateral.add(pnl).sub(decreasingCollateral.abs()),
+            );
+        });
+
+        it('user has loss, decrease position', async () => {
+            const {
+                users: [, , trader],
+                usdt,
+                router,
+                positionManager,
+            } = testEnv;
+
+            let btcPrice = '30000';
+            await updateBTCPrice(testEnv, btcPrice);
+
+            const collateral = ethers.utils.parseUnits('30000', 18);
+            const size = ethers.utils.parseUnits('9', 18);
+            let openPrice = ethers.utils.parseUnits('30000', 30);
+
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
+
+            const userPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
+
+            btcPrice = '28000';
+            await updateBTCPrice(testEnv, btcPrice);
+
+            const userPnlBef = BigNumber.from(btcPrice).sub('30000').mul(userPositionBefore.positionAmount);
+            expect(userPnlBef).to.be.lt(0);
+
+            const riskBefore = new Decimal(9)
+                .mul(new Decimal(30000))
+                .mul(1)
+                .div(100)
+                .div(new Decimal(30000).add(new Decimal(userPnlBef.toString()).div(1e18)));
+            expect(riskBefore.toString()).to.be.eq('0.225');
+
+            let decreasingCollateral = BigNumber.from(0).sub(userPositionBefore.collateral.mul(99).div(100));
+            let decreasingSize = userPositionBefore.positionAmount.mul(99).div(100);
+            await expect(
+                decreasePosition(
+                    testEnv,
+                    trader,
+                    pairIndex,
+                    decreasingCollateral,
+                    decreasingSize, // decrease 99%
+                    TradeType.MARKET,
+                    true,
+                    ethers.utils.parseUnits(btcPrice, 30),
+                ),
+            ).to.be.revertedWith('collateral not enough for pnl');
+
+            decreasingSize = userPositionBefore.positionAmount.mul(99).div(100);
+            const availableCollateral = userPositionBefore.collateral
+                .add(userPnlBef)
+                .sub(await positionManager.getTradingFee(pairIndex, true, decreasingSize.abs()));
+            decreasingCollateral = BigNumber.from(0).sub(availableCollateral.mul(99).div(100));
+            const { executeReceipt } = await decreasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                decreasingCollateral,
+                decreasingSize, // decrease 99%
+                TradeType.MARKET,
+                true,
+                ethers.utils.parseUnits(btcPrice, 30),
+            );
+            const pnl = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'pnl');
+
+            const userPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
+
+            expect(userPositionAfter.positionAmount).to.be.eq(userPositionBefore.positionAmount.sub(decreasingSize));
+            expect(userPositionAfter.collateral).to.be.eq(
+                userPositionBefore.collateral.add(pnl).sub(decreasingCollateral.abs()),
+            );
+
+            const sizeAfter = new Decimal(userPositionAfter.positionAmount.toString()).div(1e18);
+            const avgPriceAfter = new Decimal(userPositionAfter.averagePrice.toString()).div(1e30);
+            const collateralAfter = new Decimal(userPositionAfter.collateral.toString()).div(1e18);
+            const userPnlAft = BigNumber.from(btcPrice)
+                .sub(avgPriceAfter.toString())
+                .mul(userPositionAfter.positionAmount);
+
+            const riskAfter = new Decimal(sizeAfter)
+                .mul(new Decimal(avgPriceAfter))
+                .mul(1)
+                .div(100)
+                .div(new Decimal(collateralAfter).add(new Decimal(userPnlAft.toString()).div(1e18)));
+            expect(riskAfter.toFixed(2)).to.be.eq('0.23');
         });
     });
 });
