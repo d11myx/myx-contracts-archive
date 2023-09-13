@@ -10,8 +10,6 @@ import '../interfaces/IChainlinkFlags.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
-// import 'hardhat/console.sol';
-
 pragma solidity 0.8.20;
 
 contract OraclePriceFeed is IOraclePriceFeed {

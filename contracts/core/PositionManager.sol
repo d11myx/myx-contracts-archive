@@ -20,8 +20,6 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import './FeeManager.sol';
 
-//import 'hardhat/console.sol';
-
 contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
