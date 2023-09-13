@@ -6,8 +6,6 @@ import '../interfaces/IPool.sol';
 import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 
-// import 'hardhat/console.sol';
-
 library ValidationHelper {
     using PrecisionUtils for uint256;
 

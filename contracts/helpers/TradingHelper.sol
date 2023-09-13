@@ -7,8 +7,6 @@ import '../interfaces/IOraclePriceFeed.sol';
 import '../interfaces/IIndexPriceFeed.sol';
 import '../interfaces/IPool.sol';
 
-// import 'hardhat/console.sol';
-
 library TradingHelper {
     using PrecisionUtils for uint256;
 

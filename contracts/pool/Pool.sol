@@ -26,8 +26,6 @@ import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../helpers/ValidationHelper.sol';
 
-// import 'hardhat/console.sol';
-
 contract Pool is IPool, Roleable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
