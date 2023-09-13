@@ -2,16 +2,9 @@ import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
-import {
-    deployMockCallback,
-    getBlockTimestamp,
-    MAX_UINT_AMOUNT,
-    ORDER_MANAGER_ID,
-    TradeType,
-    waitForTx,
-} from '../helpers';
+import { deployMockCallback, getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { mintAndApprove } from './helpers/misc';
-import { TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: increase position ar', () => {
     const pairIndex = 0;
@@ -78,6 +71,7 @@ describe('Router: increase position ar', () => {
                 tp: ethers.utils.parseUnits('1', 18),
                 slPrice: ethers.utils.parseUnits('29000', 30),
                 sl: ethers.utils.parseUnits('1', 18),
+                maxSlippage: 0,
             };
 
             await expect(router.connect(trader.signer).createTpSl(increasePositionRequest)).to.be.reverted;
@@ -107,6 +101,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -146,6 +141,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -187,6 +183,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -229,6 +226,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -276,6 +274,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             await expect(router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest)).to.be
@@ -314,6 +313,7 @@ describe('Router: increase position ar', () => {
                 triggerPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: traderPosition.positionAmount,
+                maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -384,6 +384,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
@@ -447,6 +448,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('10', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -489,6 +491,7 @@ describe('Router: increase position ar', () => {
                 triggerPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: traderPosition.positionAmount,
+                maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -530,13 +533,14 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('29600', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 500000,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await expect(
                 executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
-            ).to.be.revertedWith('not reach trigger price');
+            ).to.be.revertedWith('exceeds max slippage');
         });
 
         it('open position, where openPrice >= marketPrice, normal open positon', async () => {
@@ -561,6 +565,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('31000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -608,6 +613,7 @@ describe('Router: increase position ar', () => {
                 triggerPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: traderPosition.positionAmount,
+                maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -635,6 +641,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('10', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -670,6 +677,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('50000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -700,6 +708,7 @@ describe('Router: increase position ar', () => {
                 triggerPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -755,6 +764,7 @@ describe('Router: increase position ar', () => {
                 openPrice: ethers.utils.parseUnits('40000', 30),
                 isLong: true,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();

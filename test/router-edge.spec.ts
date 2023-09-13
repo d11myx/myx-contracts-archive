@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 import { deployMockCallback, getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { expect } from './shared/expect';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 0;
@@ -84,6 +84,7 @@ describe('Router: Edge cases', () => {
             tp: ethers.utils.parseUnits('1', 18),
             slPrice: ethers.utils.parseUnits('29000', 30),
             sl: ethers.utils.parseUnits('1', 18),
+            maxSlippage: 0,
         };
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
@@ -119,6 +120,7 @@ describe('Router: Edge cases', () => {
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('8', 18),
+            maxSlippage: 0,
         };
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
@@ -152,6 +154,7 @@ describe('Router: Edge cases', () => {
             triggerPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('3', 18),
+            maxSlippage: 0,
         };
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createDecreaseOrder(increasePositionRequest);
@@ -261,6 +264,7 @@ describe('Router: Edge cases', () => {
                 triggerPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: false,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
+                maxSlippage: 0,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(shorter.signer).createDecreaseOrder(decreasePositionRequest);
@@ -322,6 +326,7 @@ describe('Router: Edge cases', () => {
                 triggerPrice: openPrice,
                 isLong: true,
                 sizeAmount: position.positionAmount,
+                maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequestStruct);
@@ -390,6 +395,7 @@ describe('Router: Edge cases', () => {
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
                 sizeAmount: size,
+                maxSlippage: 0,
             };
 
             // await tradingRouter.setHandler(trader.address, true);
@@ -450,6 +456,7 @@ export async function increaseUserPosition(
         openPrice: price,
         isLong: isLong,
         sizeAmount: size,
+        maxSlippage: 0,
     };
 
     // await router.setHandler(user.address, true);
