@@ -295,3 +295,40 @@ export function getPositionFundingFee(
 export function getLpFundingFee(epochFundindFee: BigNumber, lpPosition: BigNumber) {
     return lpPosition.mul(epochFundindFee).div(PERCENTAGE).abs();
 }
+
+/**
+ * calculation position trading fee
+ *
+ * @param testEnv {TestEnv} current test env
+ * @param pairIndex {Number} currency pair index
+ * @param positionAmount {BigNumber} current position size
+ * @param isLong {Boolean} long or short
+ * @returns current position trading fee
+ */
+export async function getPositionTradingFee(
+    testEnv: TestEnv,
+    pairIndex: number,
+    positionAmount: BigNumber,
+    isLong: boolean,
+) {
+    const { positionManager, pool, oraclePriceFeed } = testEnv;
+
+    const pair = await pool.getPair(pairIndex);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
+    const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
+    const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+    const positionPrice = positionAmount.mul(price).div(PRICE_PRECISION);
+    let tradingFee;
+
+    if (currentExposureAmountChecker.gte(0)) {
+        tradingFee = isLong
+            ? positionPrice.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE)
+            : positionPrice.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+    } else {
+        tradingFee = isLong
+            ? positionPrice.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE)
+            : positionPrice.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+    }
+
+    return tradingFee;
+}
