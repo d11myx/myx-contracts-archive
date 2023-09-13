@@ -85,7 +85,8 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseMarketOrders(increaseOrders);
     }
@@ -98,7 +99,8 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseMarketOrders(decreaseOrders);
     }
@@ -111,7 +113,8 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseLimitOrders(increaseOrders);
     }
@@ -124,7 +127,8 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseLimitOrders(decreaseOrders);
     }
@@ -196,7 +200,14 @@ contract Executor is IExecutor, Pausable {
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
         bool isAbove = order.isLong &&
             (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
-        ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, isAbove, price, order.openPrice, order.maxSlippage);
+        ValidationHelper.validatePriceTriggered(
+            tradingConfig,
+            order.tradeType,
+            isAbove,
+            price,
+            order.openPrice,
+            order.maxSlippage
+        );
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -557,9 +568,14 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeADLAndDecreaseOrder(executePositions, orderId, tradeType, level, commissionRatio);
+    }
+
+    function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) internal {
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(_tokens, _prices, _timestamp);
     }
 
     function executeADLAndDecreaseOrder(
@@ -627,7 +643,8 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.liquidatePositions(executePositions);
     }
