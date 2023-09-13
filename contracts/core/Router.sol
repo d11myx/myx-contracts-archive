@@ -16,7 +16,7 @@ import '../interfaces/ISwapCallback.sol';
 import '../interfaces/IPool.sol';
 import '../interfaces/IOrderCallback.sol';
 
-contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrderCallback, ETHGateway {
+contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGateway {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
     IPool public immutable pool;
@@ -69,6 +69,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
                 openPrice: request.openPrice,
                 isLong: request.isLong,
                 sizeAmount: int256(request.sizeAmount),
+                maxSlippage: request.maxSlippage,
                 data: abi.encode(request.account)
             })
         );
@@ -108,6 +109,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
                     openPrice: request.openPrice,
                     isLong: request.isLong,
                     sizeAmount: int256(request.sizeAmount),
+                    maxSlippage: request.maxSlippage,
                     data: abi.encode(request.account)
                 })
             );
@@ -126,6 +128,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
                     openPrice: request.triggerPrice,
                     isLong: request.isLong,
                     sizeAmount: -int256(request.sizeAmount),
+                    maxSlippage: request.maxSlippage,
                     data: abi.encode(request.account)
                 })
             );
@@ -139,30 +142,30 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         orderManager.cancelOrder(orderId, tradeType, false, 'cancelDecreaseOrder');
     }
 
-    function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external {
-        bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
-        IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
-
-        while (orders.length > 0) {
-            uint256 lastIndex = orders.length - 1;
-            IOrderManager.PositionOrder memory positionOrder = orders[lastIndex];
-            if (positionOrder.isIncrease) {
-                orderManager.cancelOrder(
-                    positionOrder.orderId,
-                    positionOrder.tradeType,
-                    true,
-                    'cancelAllPositionOrders'
-                );
-            } else {
-                orderManager.cancelOrder(
-                    positionOrder.orderId,
-                    positionOrder.tradeType,
-                    false,
-                    'cancelAllPositionOrders'
-                );
-            }
-        }
-    }
+//    function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external {
+//        bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
+//        IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
+//
+//        while (orders.length > 0) {
+//            uint256 lastIndex = orders.length - 1;
+//            IOrderManager.PositionOrder memory positionOrder = orders[lastIndex];
+//            if (positionOrder.isIncrease) {
+//                orderManager.cancelOrder(
+//                    positionOrder.orderId,
+//                    positionOrder.tradeType,
+//                    true,
+//                    'cancelAllPositionOrders'
+//                );
+//            } else {
+//                orderManager.cancelOrder(
+//                    positionOrder.orderId,
+//                    positionOrder.tradeType,
+//                    false,
+//                    'cancelAllPositionOrders'
+//                );
+//            }
+//        }
+//    }
 
     function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external {
         bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
@@ -226,6 +229,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
                     openPrice: request.tpPrice,
                     isLong: request.isLong,
                     sizeAmount: -int256(request.tp),
+                    maxSlippage: 0,
                     data: abi.encode(msg.sender)
                 })
             );
@@ -240,6 +244,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
                     openPrice: request.slPrice,
                     isLong: request.isLong,
                     sizeAmount: -int256(request.sl),
+                    maxSlippage: 0,
                     data: abi.encode(msg.sender)
                 })
             );
@@ -287,37 +292,37 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         return IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
     }
 
-    function swap(
-        address indexToken,
-        address stableToken,
-        bool isBuy,
-        uint256 amountIn,
-        uint256 minOut
-    ) external override returns (uint256, uint256) {
-        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).swap(pairIndex, isBuy, amountIn, minOut, abi.encode(msg.sender));
-    }
-
-    function swapForAccount(
-        address indexToken,
-        address stableToken,
-        address receiver,
-        bool isBuy,
-        uint256 amountIn,
-        uint256 minOut
-    ) external override returns (uint256, uint256) {
-        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return
-            IPool(pool).swapForAccount(
-                msg.sender,
-                receiver,
-                pairIndex,
-                isBuy,
-                amountIn,
-                minOut,
-                abi.encode(msg.sender)
-            );
-    }
+//    function swap(
+//        address indexToken,
+//        address stableToken,
+//        bool isBuy,
+//        uint256 amountIn,
+//        uint256 minOut
+//    ) external override returns (uint256, uint256) {
+//        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+//        return IPool(pool).swap(pairIndex, isBuy, amountIn, minOut, abi.encode(msg.sender));
+//    }
+//
+//    function swapForAccount(
+//        address indexToken,
+//        address stableToken,
+//        address receiver,
+//        bool isBuy,
+//        uint256 amountIn,
+//        uint256 minOut
+//    ) external override returns (uint256, uint256) {
+//        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+//        return
+//            IPool(pool).swapForAccount(
+//                msg.sender,
+//                receiver,
+//                pairIndex,
+//                isBuy,
+//                amountIn,
+//                minOut,
+//                abi.encode(msg.sender)
+//            );
+//    }
 
     function createOrderCallback(
         address collateral,
@@ -358,21 +363,21 @@ contract Router is Multicall, IRouter, ILiquidityCallback, ISwapCallback, IOrder
         IERC20(pairToken).transferFrom(sender, msg.sender, amount);
     }
 
-    function swapCallback(
-        address indexToken,
-        address stableToken,
-        uint256 indexAmount,
-        uint256 stableAmount,
-        bytes calldata data
-    ) external override onlyPool {
-        address sender = abi.decode(data, (address));
-
-        if (indexAmount > 0) {
-            IERC20(indexToken).transferFrom(sender, msg.sender, indexAmount);
-        } else if (stableAmount > 0) {
-            IERC20(stableToken).transferFrom(sender, msg.sender, stableAmount);
-        }
-    }
+//    function swapCallback(
+//        address indexToken,
+//        address stableToken,
+//        uint256 indexAmount,
+//        uint256 stableAmount,
+//        bytes calldata data
+//    ) external override onlyPool {
+//        address sender = abi.decode(data, (address));
+//
+//        if (indexAmount > 0) {
+//            IERC20(indexToken).transferFrom(sender, msg.sender, indexAmount);
+//        } else if (stableAmount > 0) {
+//            IERC20(stableToken).transferFrom(sender, msg.sender, stableAmount);
+//        }
+//    }
 
     function adjustCollateral(uint256 pairIndex, bool isLong, int256 collateral) external {
         positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
