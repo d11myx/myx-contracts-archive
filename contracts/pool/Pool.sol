@@ -256,7 +256,7 @@ contract Pool is IPool, Roleable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-            require(_profit <= int256(availableStable), 'stable token not enough');
+            require(_profit.abs() <= availableStable, 'stable token not enough');
             vault.stableTotalAmount -= _profit.abs();
         }
 
