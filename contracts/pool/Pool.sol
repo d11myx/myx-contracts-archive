@@ -53,6 +53,7 @@ contract Pool is IPool, Roleable {
     EnumerableSet.AddressSet private orderManagers;
 
     mapping(address => uint256) public feeTokenAmounts;
+    mapping(address => bool) public isStableToken;
 
     constructor(IAddressesProvider addressProvider, IPoolTokenFactory _poolTokenFactory) Roleable(addressProvider) {
         poolTokenFactory = _poolTokenFactory;
@@ -87,9 +88,18 @@ contract Pool is IPool, Roleable {
         orderManagers.remove(_orderManager);
     }
 
+    function addStableToken(address _token) external onlyPoolAdmin {
+        isStableToken[_token] = true;
+    }
+
+    function removeStableToken(address _token) external onlyPoolAdmin {
+        delete isStableToken[_token];
+    }
+
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
+        require(!isStableToken[_indexToken], '!stable token');
         require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
