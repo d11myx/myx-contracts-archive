@@ -332,3 +332,39 @@ export async function getPositionTradingFee(
 
     return tradingFee;
 }
+
+/**
+ * calculation distribute trading fee
+ *
+ * @param testEnv {TestEnv} current test env
+ * @param pairIndex {Number} currency pair index
+ * @param tradingFee {BigNumber} current position trading fee
+ * @param vipRate {number} vip rate, the default value is 0
+ * @param referenceRate {number} reference rate, the default value is 0
+ * @returns distribute trading fee
+ */
+export async function getDistributeTradingFee(
+    testEnv: TestEnv,
+    pairIndex: number,
+    tradingFee: BigNumber,
+    vipRate = 0,
+    referenceRate = 0,
+) {
+    const { pool } = testEnv;
+
+    const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+    const vipAmount = tradingFee.mul(vipRate).div(PERCENTAGE);
+    const userTradingFee = vipAmount;
+    const surplusFee = tradingFee.sub(vipAmount);
+    if (referenceRate > Number(PERCENTAGE)) {
+        referenceRate = Number(PERCENTAGE);
+    }
+    const referralsAmount = surplusFee.mul(referenceRate).div(PERCENTAGE);
+    const lpAmount = surplusFee.mul(tradingFeeConfig.lpFeeDistributeP).div(PERCENTAGE);
+    const keeperAmount = surplusFee.mul(tradingFeeConfig.keeperFeeDistributeP).div(PERCENTAGE);
+    const stakingAmount = surplusFee.mul(tradingFeeConfig.stakingFeeDistributeP).div(PERCENTAGE);
+    const distributorAmount = surplusFee.sub(referralsAmount).sub(lpAmount).sub(keeperAmount).sub(stakingAmount);
+    const treasuryFee = distributorAmount.add(referralsAmount);
+
+    return { userTradingFee, treasuryFee, stakingAmount };
+}
