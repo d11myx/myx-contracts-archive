@@ -196,7 +196,7 @@ contract Executor is IExecutor, Pausable {
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
         bool isAbove = order.isLong &&
             (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
-        ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, isAbove, price, order.openPrice);
+        ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, isAbove, price, order.openPrice, order.maxSlippage);
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -281,6 +281,7 @@ contract Executor is IExecutor, Pausable {
                     openPrice: orderTpSl.tpPrice,
                     isLong: order.isLong,
                     sizeAmount: -int256(orderTpSl.tp),
+                    maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
             );
@@ -295,6 +296,7 @@ contract Executor is IExecutor, Pausable {
                     openPrice: orderTpSl.slPrice,
                     isLong: order.isLong,
                     sizeAmount: -int256(orderTpSl.sl),
+                    maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
             );
@@ -411,7 +413,8 @@ contract Executor is IExecutor, Pausable {
             order.tradeType,
             order.abovePrice,
             price,
-            order.triggerPrice
+            order.triggerPrice,
+            order.maxSlippage
         );
 
         // compare openPrice and oraclePrice
@@ -602,6 +605,7 @@ contract Executor is IExecutor, Pausable {
                     openPrice: price,
                     isLong: adlPosition.position.isLong,
                     sizeAmount: -int256(adlPosition.position.positionAmount),
+                    maxSlippage: 0,
                     data: abi.encode(adlPosition.position.account)
                 })
             );

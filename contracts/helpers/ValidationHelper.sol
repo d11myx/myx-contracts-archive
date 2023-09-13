@@ -22,9 +22,14 @@ library ValidationHelper {
         TradingTypes.TradeType tradeType,
         bool isAbove,
         uint256 currentPrice,
-        uint256 orderPrice
+        uint256 orderPrice,
+        uint256 maxSlippage
     ) internal pure {
-        if (tradeType == TradingTypes.TradeType.MARKET || tradeType == TradingTypes.TradeType.LIMIT) {
+        if (tradeType == TradingTypes.TradeType.MARKET) {
+            bool valid = currentPrice >= orderPrice.mulPercentage(PrecisionUtils.percentage() - maxSlippage)
+                && currentPrice <= orderPrice.mulPercentage(PrecisionUtils.percentage() + maxSlippage);
+            require(maxSlippage == 0 || valid, 'exceeds max slippage');
+        } else if (tradeType == TradingTypes.TradeType.LIMIT) {
             require(
                 isAbove
                     ? currentPrice.mulPercentage(PrecisionUtils.percentage() - tradingConfig.priceSlipP) <= orderPrice

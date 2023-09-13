@@ -125,6 +125,7 @@ describe('PositionManager: decrease position', () => {
                 triggerPrice: openPrice,
                 isLong: true,
                 sizeAmount: positionBefore.positionAmount,
+                maxSlippage: 0,
             };
 
             // update BTC price
