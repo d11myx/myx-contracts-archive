@@ -33,6 +33,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         const tradingFeeConfig = pairConfig.tradingFeeConfig;
         const fundingFeeConfig = pairConfig.fundingFeeConfig;
 
+        await pool.connect(poolAdminSigner).addStableToken(pair.stableToken);
         await waitForTx(await pool.connect(poolAdminSigner).addPair(pair.indexToken, pair.stableToken));
 
         let pairIndex = await pool.connect(poolAdminSigner).getPairIndex(pair.indexToken, pair.stableToken);
@@ -42,7 +43,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         await waitForTx(await pool.connect(poolAdminSigner).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
         console.log(`added pair [${symbol}/${MARKET_NAME}] at index`, (await pool.pairsCount()).sub(1).toString());
-        console.log(`pairToken for [${symbol}/${MARKET_NAME}]: ${(await pool.pairs(pairIndex)).pairToken}`)
+        console.log(`pairToken for [${symbol}/${MARKET_NAME}]: ${(await pool.pairs(pairIndex)).pairToken}`);
     }
     console.log(`Configured all pairs [${Object.keys(pairConfigs)}]`);
 };
