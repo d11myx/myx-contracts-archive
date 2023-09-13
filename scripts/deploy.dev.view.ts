@@ -14,6 +14,7 @@ import { pool } from '../types/contracts';
 import { MerkleTree } from 'merkletreejs';
 import { AbiHelpers } from 'hardhat/internal/util/abi-helpers';
 import keccak256 = require('keccak256');
+import { TradingTypes } from '../types/contracts/core/Router';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -22,30 +23,50 @@ async function main() {
     console.log(deployer.address);
     console.log(await deployer.getBalance());
 
-    // const router = await getRouter();
-    const orderManager = await getOrderManager();
-    const positionManager = await getPositionManager();
+    const router = await getRouter('0x2aC6f70392622f060EEa03B6dd72FC0c16C17F27');
+    // const orderManager = await getOrderManager();
+    const positionManager = await getPositionManager('0xb07fB1a2F76574FD5243C1aA25Bb992cE9490B9C');
     // const executor = await getExecutor();
-    const oraclePriceFeed = await getOraclePriceFeed();
-    const pool = await getPool();
-    const rewardDistributor = await getRewardDistributor();
+    // const oraclePriceFeed = await getOraclePriceFeed();
+    // const pool = await getPool();
+    // const rewardDistributor = await getRewardDistributor();
 
     // console.log(`router:`, router.address);
     // console.log(`index:`, await executor.increaseMarketOrderStartIndex());
 
-    console.log(await pool.getPair(0));
-    console.log(await pool.getPair(1));
+    // console.log(await pool.getPair(0));
+    // console.log(await pool.getPair(1));
+    //
+    // const btcPrice = ethers.utils.formatUnits(
+    //     await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'),
+    //     30,
+    // );
+    // const ethPrice = ethers.utils.formatUnits(
+    //     await oraclePriceFeed.getPrice('0x437afc3306b2911B39024cafF860A07b43427d83'),
+    //     30,
+    // );
+    // console.log(`btc price:`, btcPrice);
+    // console.log(`eth price:`, ethPrice);
 
-    const btcPrice = ethers.utils.formatUnits(
-        await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'),
-        30,
+    3600;
+    0x733f604824feaf688bab4bd8d4571c3c2a0cae84615affb4f02a5c6aab28917e;
+    console.log(await positionManager.fundingInterval());
+    console.log(await positionManager.getPosition('0x0097e2a5dfD50155Bbf17cdDAe4E52B3B911dbA1', 0, true));
+
+    const order: TradingTypes.DecreasePositionRequestStruct = {
+        account: '0x0097e2a5dfd50155bbf17cddae4e52b3b911dba1',
+        pairIndex: 0,
+        tradeType: 0,
+        collateral: '0',
+        triggerPrice: '25807520000000000000000000000000000',
+        sizeAmount: '3307300000000000000',
+        isLong: true,
+    };
+    const wallet = new ethers.Wallet(
+        '8bc175705f87bdce6a819abe782fb9e5702b862ac4231dcbfd7fc84d242bae31',
+        deployer.provider,
     );
-    const ethPrice = ethers.utils.formatUnits(
-        await oraclePriceFeed.getPrice('0x437afc3306b2911B39024cafF860A07b43427d83'),
-        30,
-    );
-    console.log(`btc price:`, btcPrice);
-    console.log(`eth price:`, ethPrice);
+    await router.connect(wallet).createDecreaseOrder(order);
 
     // console.log(await orderManager.increaseLimitOrders(53));
     //

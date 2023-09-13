@@ -8,12 +8,9 @@ import { TradingTypes } from '../../types/contracts/core/Router';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
-    let btcPriceFeed: MockPriceFeed;
-    const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
     const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-    btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
+    const btcPriceFeed = (await ethers.getContractAt('MockPriceFeed', btcPriceFeedAddress)) as MockPriceFeed;
     await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits(btcPrice, 8)));
-    await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits(btcPrice, 8)));
     await waitForTx(
         await indexPriceFeed
             .connect(keeper.signer)
