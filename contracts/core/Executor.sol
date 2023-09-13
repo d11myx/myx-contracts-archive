@@ -85,7 +85,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
         _setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseMarketOrders(increaseOrders);
@@ -99,7 +98,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
         _setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseMarketOrders(decreaseOrders);
@@ -113,7 +111,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
         _setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseLimitOrders(increaseOrders);
@@ -127,7 +124,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
         _setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseLimitOrders(decreaseOrders);
@@ -568,7 +564,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
         _setPrices(tokens, prices, timestamp);
 
         this.executeADLAndDecreaseOrder(executePositions, orderId, tradeType, level, commissionRatio);
@@ -643,7 +638,6 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        // IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
         _setPrices(tokens, prices, timestamp);
 
         this.liquidatePositions(executePositions);
