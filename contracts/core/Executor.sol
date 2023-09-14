@@ -248,6 +248,7 @@ contract Executor is IExecutor, Pausable {
         // increase position
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
             pairIndex,
+            order.orderId,
             order.account,
             tx.origin,
             order.sizeAmount,
@@ -481,6 +482,7 @@ contract Executor is IExecutor, Pausable {
 
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
             pairIndex,
+            order.orderId,
             order.account,
             msg.sender,
             order.sizeAmount,
