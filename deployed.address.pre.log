@@ -2,13 +2,13 @@ Accounts after deployment
 ┌─────────┬──────────────────────┬──────────────────────────────────────────────┬─────────────────────────────┐
 │ (index) │         name         │                   account                    │           balance           │
 ├─────────┼──────────────────────┼──────────────────────────────────────────────┼─────────────────────────────┤
-│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996654205202000766' │
-│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996654205202000766' │
+│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996656345389044867' │
+│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996656345389044867' │
 │    2    │      'operator'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
 │    3    │     'treasurer'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
-│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996654205202000766' │
-│    5    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996654205202000766' │
-│    6    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996654205202000766' │
+│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996656345389044867' │
+│    5    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996656345389044867' │
+│    6    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.996656345389044867' │
 │    7    │   'teamAndAdvisor'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
 │    8    │  'privatePlacement'  │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
 │    9    │     'community'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
@@ -42,16 +42,16 @@ Deployments
 │    OrderManager    │ '0x72336C1702f9725e65D6aDecE2b30Ca714903BfF' │
 │       Router       │ '0x258B6859d949d733089712Eb70661AB6DE7381d3' │
 │      Executor      │ '0x06e9FE5668D3d762AdcD7654a0fd9FFef77F3D9E' │
-│    TestCallBack    │ '0xf4011F3Cb6e77a14C5943192Ac7197fEfE887b63' │
-│        MYX         │ '0x9470Ca8ad8FC4474B09c58B9C445bc1cA8866804' │
-│       RaMYX        │ '0x509f6c6C41C671d7F4aa223a6219bD9C889f23c0' │
-│       StMYX        │ '0xcf0220a29D13d47b3d4f2DC59E7468F9e606B097' │
-│       Vester       │ '0x48ABD3Ca302d693Ce71417516E7e6d3f83974Ff4' │
-│    StakingPool     │ '0xb679e480650730032D9a6f762eaAf2EC79d08149' │
-│   LPStakingPool    │ '0x2fa8e11dF61515913EFf40C95bf25C00dc72CDb8' │
-│     Convertor      │ '0x75608fD59edb71152C7360F789B3245Cd1CB4Afc' │
-│ RewardDistributor  │ '0xabDE58dBa1E456BE2BaC701CE40aCF4A3BFfA1dB' │
-│   FeeDistributor   │ '0xbe33f8b86faE5cB59579AFbCAC0F29ABFAd78E85' │
+│    TestCallBack    │ '0x509f6c6C41C671d7F4aa223a6219bD9C889f23c0' │
+│        MYX         │ '0xcf0220a29D13d47b3d4f2DC59E7468F9e606B097' │
+│       RaMYX        │ '0x48ABD3Ca302d693Ce71417516E7e6d3f83974Ff4' │
+│       StMYX        │ '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583' │
+│       Vester       │ '0xb679e480650730032D9a6f762eaAf2EC79d08149' │
+│    StakingPool     │ '0x75608fD59edb71152C7360F789B3245Cd1CB4Afc' │
+│   LPStakingPool    │ '0xabDE58dBa1E456BE2BaC701CE40aCF4A3BFfA1dB' │
+│     Convertor      │ '0xbe33f8b86faE5cB59579AFbCAC0F29ABFAd78E85' │
+│ RewardDistributor  │ '0xdeC8f0eb4A92f9f2481F292f9E5B4002a5D20bD8' │
+│   FeeDistributor   │ '0x12237d09f6E493138B3202a065688e5926e1c234' │
 └────────────────────┴──────────────────────────────────────────────┘
 
 MockedTokens
