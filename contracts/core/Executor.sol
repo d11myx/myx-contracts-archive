@@ -258,6 +258,9 @@ contract Executor is IExecutor, Pausable {
             price
         );
 
+        // create order tp sl
+        _createOrderTpSl(order);
+
         orderManager.removeOrderFromPosition(
             IOrderManager.PositionOrder(
                 order.account,
@@ -270,7 +273,29 @@ contract Executor is IExecutor, Pausable {
             )
         );
 
-        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(_orderId);
+        // delete order
+        if (_tradeType == TradingTypes.TradeType.MARKET) {
+            orderManager.removeIncreaseMarketOrders(_orderId);
+        } else if (_tradeType == TradingTypes.TradeType.LIMIT) {
+            orderManager.removeIncreaseLimitOrders(_orderId);
+        }
+
+        emit ExecuteIncreaseOrder(
+            order.account,
+            _orderId,
+            pairIndex,
+            _tradeType,
+            order.isLong,
+            order.collateral,
+            order.sizeAmount,
+            price,
+            tradingFee,
+            fundingFee
+        );
+    }
+
+    function _createOrderTpSl(TradingTypes.IncreasePositionOrder memory order) internal {
+        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(order.orderId);
         if (orderTpSl.tp > 0) {
             orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -302,27 +327,7 @@ contract Executor is IExecutor, Pausable {
             );
         }
 
-        orderManager.removeOrderTpSl(_orderId);
-
-        // delete order
-        if (_tradeType == TradingTypes.TradeType.MARKET) {
-            orderManager.removeIncreaseMarketOrders(_orderId);
-        } else if (_tradeType == TradingTypes.TradeType.LIMIT) {
-            orderManager.removeIncreaseLimitOrders(_orderId);
-        }
-
-        emit ExecuteIncreaseOrder(
-            order.account,
-            _orderId,
-            pairIndex,
-            _tradeType,
-            order.isLong,
-            order.collateral,
-            order.sizeAmount,
-            price,
-            tradingFee,
-            fundingFee
-        );
+        orderManager.removeOrderTpSl(order.orderId);
     }
 
     function executeDecreaseMarketOrders(
