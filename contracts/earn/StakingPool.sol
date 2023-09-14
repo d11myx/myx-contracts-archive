@@ -11,7 +11,6 @@ import '../interfaces/IFeeManager.sol';
 import '../token/interfaces/IBaseToken.sol';
 import './interfaces/IStakingPool.sol';
 import './interfaces/IRewardDistributor.sol';
-// import 'hardhat/console.sol';
 import '../interfaces/IPositionManager.sol';
 
 // staking pool for MYX / raMYX
@@ -155,13 +154,6 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
             PRECISION
         );
         IERC20(rewardToken).safeTransfer(account, claimableReward);
-//         console.log(
-//         'claimReward cumulativeRewardPerToken %s userCumulativeRewardPerTokens %s',
-//         cumulativeRewardPerToken,
-//         userCumulativeRewardPerTokens[account]
-//         );
-//         console.log('claimReward balance %s claimableReward %s', balance, claimableReward);
-
         userCumulativeRewardPerTokens[account] = cumulativeRewardPerToken;
     }
 
@@ -174,12 +166,6 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         uint256 pendingReward = IFeeManager(address(positionManager)).stakingTradingFee();
         uint256 nextCumulativeFeePerToken = cumulativeRewardPerToken + pendingReward.mulDiv(PRECISION, totalSupply);
         claimableReward = balance.mulDiv(nextCumulativeFeePerToken - userCumulativeRewardPerTokens[account], PRECISION);
-//         console.log(
-//         'claimableReward claimableReward %s pendingReward %s nextCumulativeFeePerToken %s',
-//         claimableReward,
-//         pendingReward,
-//         nextCumulativeFeePerToken
-//         );
     }
 
     function pause() external onlyOwner whenNotPaused {

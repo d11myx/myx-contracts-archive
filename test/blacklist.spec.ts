@@ -2,7 +2,7 @@ import { testEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
 import { ethers, getNamedAccounts } from 'hardhat';
 import { TradeType } from '../helpers';
-import { TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Blacklist cases', () => {
     after(async () => {
@@ -126,6 +126,7 @@ describe('Blacklist cases', () => {
             tpPrice: 0,
             sl: 0,
             slPrice: 0,
+            maxSlippage: 0,
         };
 
         await expect(router.connect(blackUser.signer).createIncreaseOrder(increase)).to.be.revertedWith(
@@ -144,6 +145,7 @@ describe('Blacklist cases', () => {
             triggerPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
             sizeAmount: 0,
+            maxSlippage: 0,
         };
         await expect(router.connect(blackUser.signer).createDecreaseOrder(decrease)).to.be.revertedWith(
             'blacklist account',

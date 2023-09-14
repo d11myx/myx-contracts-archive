@@ -19,7 +19,7 @@ async function main() {
     let usdt = await contractAt("Token", await getConfig("Token-USDT"))
 
     console.log(`pairInfo: ${pairInfo.address}, eth: ${eth.address}, btc: ${btc.address}, usdt: ${usdt.address}`);
-
+    await pool.addStableToken(usdt.address);
     // btc - usdt
     await pairInfo.addPair(btc.address, usdt.address, pairLiquidity.address);
     await sleep(3000);
