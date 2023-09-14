@@ -16,6 +16,7 @@ interface IPositionManager {
         address account,
         bytes32 positionKey,
         uint256 pairIndex,
+        uint256 orderId,
         bool isLong,
         uint256 beforCollateral,
         uint256 afterCollateral,
@@ -84,6 +85,7 @@ interface IPositionManager {
 
     function increasePosition(
         uint256 _pairIndex,
+        uint256 orderId,
         address _account,
         address _keeper,
         uint256 _sizeAmount,
@@ -96,6 +98,7 @@ interface IPositionManager {
 
     function decreasePosition(
         uint256 _pairIndex,
+        uint256 orderId,
         address _account,
         address _keeper,
         uint256 _sizeAmount,
