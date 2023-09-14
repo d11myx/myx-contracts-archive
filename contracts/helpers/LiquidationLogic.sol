@@ -52,10 +52,7 @@ library LiquidationLogic {
             position.positionAmount
         );
         int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
-        int256 exposureAsset = int256(position.collateral) +
-            unrealizedPnl -
-            int256(tradingFee) +
-            (position.isLong ? -fundingFee : fundingFee);
+        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + fundingFee;
 
         bool needLiquidate;
         if (exposureAsset <= 0) {
@@ -84,6 +81,7 @@ library LiquidationLogic {
                 openPrice: price,
                 isLong: position.isLong,
                 sizeAmount: -int256(position.positionAmount),
+                maxSlippage: 0,
                 data: abi.encode(position.account)
             })
         );

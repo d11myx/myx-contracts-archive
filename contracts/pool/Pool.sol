@@ -26,8 +26,6 @@ import '../interfaces/IPoolTokenFactory.sol';
 import '../interfaces/ILiquidityCallback.sol';
 import '../helpers/ValidationHelper.sol';
 
-// import 'hardhat/console.sol';
-
 contract Pool is IPool, Roleable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
@@ -53,6 +51,7 @@ contract Pool is IPool, Roleable {
     EnumerableSet.AddressSet private orderManagers;
 
     mapping(address => uint256) public feeTokenAmounts;
+    mapping(address => bool) public isStableToken;
 
     constructor(IAddressesProvider addressProvider, IPoolTokenFactory _poolTokenFactory) Roleable(addressProvider) {
         poolTokenFactory = _poolTokenFactory;
@@ -87,9 +86,18 @@ contract Pool is IPool, Roleable {
         orderManagers.remove(_orderManager);
     }
 
+    function addStableToken(address _token) external onlyPoolAdmin {
+        isStableToken[_token] = true;
+    }
+
+    function removeStableToken(address _token) external onlyPoolAdmin {
+        delete isStableToken[_token];
+    }
+
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
+        require(!isStableToken[_indexToken], '!stable token');
         require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
@@ -256,7 +264,7 @@ contract Pool is IPool, Roleable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-            require(_profit <= int256(availableStable), 'stable token not enough');
+            require(_profit.abs() <= availableStable, 'stable token not enough');
             vault.stableTotalAmount -= _profit.abs();
         }
 
@@ -321,108 +329,108 @@ contract Pool is IPool, Roleable {
         return (receivedIndexAmount, receivedStableAmount);
     }
 
-    //  cal lp pnl
-    function swap(
-        uint256 _pairIndex,
-        bool _isBuy,
-        uint256 _amountIn,
-        uint256 _minOut,
-        bytes calldata data
-    ) external returns (uint256 amountIn, uint256 amountOut) {
-        (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut, data);
-        return (amountIn, amountOut);
-    }
-
-    function swapForAccount(
-        address _funder,
-        address _receiver,
-        uint256 _pairIndex,
-        bool _isBuy,
-        uint256 _amountIn,
-        uint256 _minOut,
-        bytes calldata data
-    ) external returns (uint256 amountIn, uint256 amountOut) {
-        return _swap(_funder, _receiver, _pairIndex, _isBuy, _amountIn, _minOut, data);
-    }
-
-    function _swap(
-        address _funder,
-        address _receiver,
-        uint256 _pairIndex,
-        bool _isBuy,
-        uint256 _amountIn,
-        uint256 _minOut,
-        bytes calldata data
-    ) internal returns (uint256 amountIn, uint256 amountOut) {
-        require(_amountIn > 0, 'swap invalid amount in');
-
-        IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), 'swap invalid pair');
-
-        IPool.Vault memory vault = getVault(_pairIndex);
-
-        uint256 price = getPrice(pair.indexToken);
-
-        uint256 indexTotalAmount = _getIndexTotalAmount(pair, vault);
-        uint256 stableTotaAmount = _getStableTotalAmount(pair, vault);
-        // total delta
-        uint256 indexTotalDelta = indexTotalAmount.mulPrice(price);
-        uint256 stableTotalDelta = stableTotaAmount;
-
-        uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
-        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-        uint256 expectStableDelta = totalDelta - expectIndexDelta;
-
-        uint256 balanceBefore;
-
-        if (_isBuy) {
-            // index out stable in
-            require(expectStableDelta > stableTotalDelta, 'no need stable token');
-
-            uint256 stableInDelta = _amountIn;
-            stableInDelta = stableInDelta.min(expectStableDelta - stableTotalDelta);
-
-            amountOut = stableInDelta.divPrice(price);
-            uint256 availableIndex = indexTotalAmount - vault.indexReservedAmount;
-
-            require(availableIndex > 0, 'no available index token');
-
-            amountOut = amountOut.min(availableIndex);
-            amountIn = amountOut.divPrice(price);
-
-            require(amountOut >= _minOut, 'insufficient minOut');
-
-            _liquitySwap(_pairIndex, _isBuy, amountIn, amountOut);
-            if (amountIn > 0) balanceBefore = IERC20(pair.stableToken).balanceOf(address(this));
-            ISwapCallback(msg.sender).swapCallback(pair.stableToken, pair.stableToken, 0, amountIn, data);
-            if (amountIn > 0) {
-                require(balanceBefore.add(amountIn) <= IERC20(pair.stableToken).balanceOf(address(this)), 'ti');
-            }
-            IERC20(pair.indexToken).safeTransfer(_receiver, amountOut);
-        } else {
-            // index in stable out
-            require(expectIndexDelta > indexTotalDelta, 'no need index token');
-
-            uint256 indexInDelta = _amountIn.mulPrice(price);
-            indexInDelta = indexInDelta.min(expectIndexDelta - indexTotalDelta);
-
-            amountOut = indexInDelta;
-            uint256 availableStable = stableTotaAmount - vault.stableReservedAmount;
-
-            require(availableStable > 0, 'no stable token');
-
-            amountOut = amountOut.min(availableStable);
-            amountIn = amountOut.divPrice(price);
-            if (amountIn > 0) balanceBefore = IERC20(pair.indexToken).balanceOf(address(this));
-            ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, amountIn, 0, data);
-            if (amountIn > 0) {
-                require(balanceBefore.add(amountIn) <= IERC20(pair.indexToken).balanceOf(address(this)), 't');
-            }
-            IERC20(pair.stableToken).safeTransfer(_receiver, amountOut);
-        }
-
-        emit Swap(_funder, _receiver, _pairIndex, _isBuy, amountIn, amountOut);
-    }
+//    //  cal lp pnl
+//    function swap(
+//        uint256 _pairIndex,
+//        bool _isBuy,
+//        uint256 _amountIn,
+//        uint256 _minOut,
+//        bytes calldata data
+//    ) external returns (uint256 amountIn, uint256 amountOut) {
+//        (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut, data);
+//        return (amountIn, amountOut);
+//    }
+//
+//    function swapForAccount(
+//        address _funder,
+//        address _receiver,
+//        uint256 _pairIndex,
+//        bool _isBuy,
+//        uint256 _amountIn,
+//        uint256 _minOut,
+//        bytes calldata data
+//    ) external returns (uint256 amountIn, uint256 amountOut) {
+//        return _swap(_funder, _receiver, _pairIndex, _isBuy, _amountIn, _minOut, data);
+//    }
+//
+//    function _swap(
+//        address _funder,
+//        address _receiver,
+//        uint256 _pairIndex,
+//        bool _isBuy,
+//        uint256 _amountIn,
+//        uint256 _minOut,
+//        bytes calldata data
+//    ) internal returns (uint256 amountIn, uint256 amountOut) {
+//        require(_amountIn > 0, 'swap invalid amount in');
+//
+//        IPool.Pair memory pair = getPair(_pairIndex);
+//        require(pair.pairToken != address(0), 'swap invalid pair');
+//
+//        IPool.Vault memory vault = getVault(_pairIndex);
+//
+//        uint256 price = getPrice(pair.indexToken);
+//
+//        uint256 indexTotalAmount = _getIndexTotalAmount(pair, vault);
+//        uint256 stableTotaAmount = _getStableTotalAmount(pair, vault);
+//        // total delta
+//        uint256 indexTotalDelta = indexTotalAmount.mulPrice(price);
+//        uint256 stableTotalDelta = stableTotaAmount;
+//
+//        uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
+//        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
+//        uint256 expectStableDelta = totalDelta - expectIndexDelta;
+//
+//        uint256 balanceBefore;
+//
+//        if (_isBuy) {
+//            // index out stable in
+//            require(expectStableDelta > stableTotalDelta, 'no need stable token');
+//
+//            uint256 stableInDelta = _amountIn;
+//            stableInDelta = stableInDelta.min(expectStableDelta - stableTotalDelta);
+//
+//            amountOut = stableInDelta.divPrice(price);
+//            uint256 availableIndex = indexTotalAmount - vault.indexReservedAmount;
+//
+//            require(availableIndex > 0, 'no available index token');
+//
+//            amountOut = amountOut.min(availableIndex);
+//            amountIn = amountOut.divPrice(price);
+//
+//            require(amountOut >= _minOut, 'insufficient minOut');
+//
+//            _liquitySwap(_pairIndex, _isBuy, amountIn, amountOut);
+//            if (amountIn > 0) balanceBefore = IERC20(pair.stableToken).balanceOf(address(this));
+//            ISwapCallback(msg.sender).swapCallback(pair.stableToken, pair.stableToken, 0, amountIn, data);
+//            if (amountIn > 0) {
+//                require(balanceBefore.add(amountIn) <= IERC20(pair.stableToken).balanceOf(address(this)), 'ti');
+//            }
+//            IERC20(pair.indexToken).safeTransfer(_receiver, amountOut);
+//        } else {
+//            // index in stable out
+//            require(expectIndexDelta > indexTotalDelta, 'no need index token');
+//
+//            uint256 indexInDelta = _amountIn.mulPrice(price);
+//            indexInDelta = indexInDelta.min(expectIndexDelta - indexTotalDelta);
+//
+//            amountOut = indexInDelta;
+//            uint256 availableStable = stableTotaAmount - vault.stableReservedAmount;
+//
+//            require(availableStable > 0, 'no stable token');
+//
+//            amountOut = amountOut.min(availableStable);
+//            amountIn = amountOut.divPrice(price);
+//            if (amountIn > 0) balanceBefore = IERC20(pair.indexToken).balanceOf(address(this));
+//            ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, amountIn, 0, data);
+//            if (amountIn > 0) {
+//                require(balanceBefore.add(amountIn) <= IERC20(pair.indexToken).balanceOf(address(this)), 't');
+//            }
+//            IERC20(pair.stableToken).safeTransfer(_receiver, amountOut);
+//        }
+//
+//        emit Swap(_funder, _receiver, _pairIndex, _isBuy, amountIn, amountOut);
+//    }
 
     function _transferToken(
         address indexToken,

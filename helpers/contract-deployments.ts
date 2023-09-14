@@ -35,11 +35,19 @@ export const deployWETH = async (): Promise<WETH> => {
     return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
 };
 
+const logFlag = false;
+
+export function log(message?: any, ...optionalParams: any[]) {
+    if (logFlag) {
+        console.log(message, ...optionalParams);
+    }
+}
+
 export async function deployLibraries() {
-    console.log(` - setup libraries`);
+    log(` - setup libraries`);
 
     const validationHelper = await deployContract('ValidationHelper', []);
-    console.log(`deployed ValidationHelper at ${validationHelper.address}`);
+    log(`deployed ValidationHelper at ${validationHelper.address}`);
 
     return {
         validationHelper,
@@ -47,14 +55,14 @@ export async function deployLibraries() {
 }
 
 export async function deployToken() {
-    console.log(` - setup tokens`);
+    log(` - setup tokens`);
 
     // basic token
     const usdt = await deployMockToken(MARKET_NAME);
-    console.log(`deployed USDT at ${usdt.address}`);
+    log(`deployed USDT at ${usdt.address}`);
 
     const weth = await deployWETH();
-    console.log(`deployed WETH at ${weth.address}`);
+    log(`deployed WETH at ${weth.address}`);
 
     // pairs token
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
@@ -62,7 +70,7 @@ export async function deployToken() {
     const tokens: SymbolMap<Token> = {};
     for (let pair of Object.keys(pairConfigs)) {
         const token = await deployMockToken(pair);
-        console.log(`deployed ${pair} at ${token.address}`);
+        log(`deployed ${pair} at ${token.address}`);
 
         tokens[pair] = token;
     }
@@ -75,18 +83,18 @@ export async function deployPrice(
     addressesProvider: AddressesProvider,
     tokens: SymbolMap<Token>,
 ) {
-    console.log(` - setup price`);
+    log(` - setup price`);
 
     const oraclePriceFeed = (await deployContract('OraclePriceFeed', [
         addressesProvider.address,
     ])) as any as OraclePriceFeed;
-    console.log(`deployed OraclePriceFeed at ${oraclePriceFeed.address}`);
+    log(`deployed OraclePriceFeed at ${oraclePriceFeed.address}`);
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
     for (let [pair, token] of Object.entries(tokens)) {
         const priceFeed = (await deployContract('MockPriceFeed', [])) as any as MockPriceFeed;
-        console.log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
+        log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
 
         await priceFeed.connect(deployer.signer).setAdmin(keeper.address, true);
         await priceFeed.connect(keeper.signer).setLatestAnswer(MOCK_PRICES[pair]);
@@ -106,7 +114,7 @@ export async function deployPrice(
     const indexPriceFeed = (await deployContract('IndexPriceFeed', [
         addressesProvider.address,
     ])) as any as IndexPriceFeed;
-    console.log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
+    log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
     await indexPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
 
@@ -129,10 +137,10 @@ export async function deployPair(
     deployer: SignerWithAddress,
     weth: WETH,
 ) {
-    console.log(` - setup pairs`);
+    log(` - setup pairs`);
     const poolTokenFactory = (await deployContract('PoolTokenFactory', [addressProvider.address])) as PoolTokenFactory;
     const pool = (await deployContract('Pool', [addressProvider.address, poolTokenFactory.address])) as any as Pool;
-    console.log(`deployed Pool at ${pool.address}`);
+    log(`deployed Pool at ${pool.address}`);
 
     return { poolTokenFactory, pool };
 }
@@ -146,7 +154,7 @@ export async function deployTrading(
     pledge: Token,
     validationHelper: Contract,
 ) {
-    console.log(` - setup trading`);
+    log(` - setup trading`);
 
     const weth = await getWETH();
     // const usdt = await getToken();
@@ -160,14 +168,14 @@ export async function deployTrading(
         feeCollector.address,
         8 * 60 * 60,
     ])) as any as PositionManager;
-    console.log(`deployed PositionManager at ${positionManager.address}`);
+    log(`deployed PositionManager at ${positionManager.address}`);
 
     let orderManager = (await deployContract('OrderManager', [
         addressProvider.address,
         pool.address,
         positionManager.address,
     ])) as any as OrderManager;
-    console.log(`deployed OrderManager at ${orderManager.address}`);
+    log(`deployed OrderManager at ${orderManager.address}`);
 
     let router = (await deployContract('Router', [
         weth.address,
@@ -176,7 +184,7 @@ export async function deployTrading(
         positionManager.address,
         pool.address,
     ])) as Router;
-    console.log(`deployed Router at ${router.address}`);
+    log(`deployed Router at ${router.address}`);
     await waitForTx(await orderManager.setRouter(router.address));
 
     const liquidationLogic = await deployContract('LiquidationLogic', []);
@@ -195,7 +203,7 @@ export async function deployTrading(
             LiquidationLogic: liquidationLogic.address,
         },
     )) as any as Executor;
-    console.log(`deployed Executor at ${executor.address}`);
+    log(`deployed Executor at ${executor.address}`);
 
     // await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
 
