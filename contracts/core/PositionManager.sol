@@ -280,6 +280,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function increasePosition(
         uint256 pairIndex,
+        uint256 orderId,
         address account,
         address keeper,
         uint256 sizeAmount,
@@ -337,6 +338,7 @@ contract PositionManager is FeeManager, Pausable {
             account,
             positionKey,
             pairIndex,
+            orderId,
             isLong,
             beforeCollateral,
             position.collateral,
@@ -351,6 +353,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function decreasePosition(
         uint256 pairIndex,
+        uint256 orderId,
         address account,
         address keeper,
         uint256 sizeAmount,
@@ -402,6 +405,7 @@ contract PositionManager is FeeManager, Pausable {
             account,
             positionKey,
             pairIndex,
+            orderId,
             isLong,
             beforeCollateral,
             position.collateral,
@@ -418,6 +422,7 @@ contract PositionManager is FeeManager, Pausable {
         require(account == msg.sender || addressExecutor == msg.sender, 'forbidden');
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[PositionKey.getPositionKey(account, pairIndex, isLong)];
+        uint256 collateralBefore = position.collateral;
         _handleCollateral(position, collateral);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
@@ -430,6 +435,14 @@ contract PositionManager is FeeManager, Pausable {
             tradingConfig.maxPositionAmount
         );
         require(afterPosition > 0, 'zero position amount');
+
+        emit AdjustCollateral(
+            position.account,
+            position.pairIndex,
+            position.isLong,
+            collateralBefore,
+            position.collateral
+        );
     }
 
     function _handleCollateral(Position.Info storage position, int256 collateral) internal {
@@ -441,13 +454,6 @@ contract PositionManager is FeeManager, Pausable {
             position.collateral = position.collateral.add(collateral.abs());
         }
         require(position.collateral >= 0, 'collateral not enough');
-        emit AdjustCollateral(
-            position.account,
-            position.pairIndex,
-            position.isLong,
-            collateralBefore,
-            position.collateral
-        );
     }
 
     function getTradingFee(
