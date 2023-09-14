@@ -103,6 +103,7 @@ describe('Modify LP Average Price', async () => {
                 openPrice: openPrice,
                 isLong: true,
                 sizeAmount: sizeAmount,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -151,6 +152,7 @@ describe('Modify LP Average Price', async () => {
                 openPrice: openPrice,
                 isLong: true,
                 sizeAmount: sizeAmount,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -198,6 +200,7 @@ describe('Modify LP Average Price', async () => {
                 isLong: true,
                 triggerPrice: openPrice,
                 sizeAmount: sizeAmount,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -253,6 +256,7 @@ describe('Modify LP Average Price', async () => {
                 isLong: true,
                 triggerPrice: openPrice,
                 sizeAmount: descreaseAmount,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -338,6 +342,7 @@ describe('Modify LP Average Price', async () => {
                 openPrice: openPrice,
                 isLong: false,
                 sizeAmount: shortAmount,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -383,6 +388,7 @@ describe('Modify LP Average Price', async () => {
                 openPrice: openPrice,
                 isLong: false,
                 sizeAmount: shortAmount,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -428,6 +434,7 @@ describe('Modify LP Average Price', async () => {
                 triggerPrice: openPrice,
                 sizeAmount: decreaseAmount,
                 isLong: false,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -478,6 +485,7 @@ describe('Modify LP Average Price', async () => {
                 triggerPrice: openPrice,
                 sizeAmount: decreaseAmount,
                 isLong: false,
+                maxSlippage: 0,
             };
 
             const orderId = await orderManager.ordersIndex();

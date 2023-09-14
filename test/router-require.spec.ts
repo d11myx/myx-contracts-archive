@@ -4,8 +4,7 @@ import { mintAndApprove } from './helpers/misc';
 import { MAX_UINT_AMOUNT, TradeType, deployMockCallback, waitForTx } from '../helpers';
 import { IPool, IRouter, Router } from '../types';
 import { expect } from './shared/expect';
-import { TradingTypes as TradingTypes } from '../types/contracts/trading/Router';
-import { TradingTypes as TradingTypes_OrderManager } from '../types/contracts/trading/OrderManager';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: check require condition, trigger errors', async () => {
     const pairIndex = 0;
@@ -68,6 +67,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 tpPrice: 0,
                 sl: 0,
                 slPrice: 0,
+                maxSlippage: 0,
             };
 
             // setting createIncreateOrder: msg.sender = user
@@ -186,6 +186,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     tpPrice: 0,
                     sl: 0,
                     slPrice: 0,
+                    maxSlippage: 0,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -233,6 +234,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     tpPrice: 0,
                     sl: 0,
                     slPrice: 0,
+                    maxSlippage: 0,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -279,6 +281,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     tpPrice: 0,
                     sl: 0,
                     slPrice: 0,
+                    maxSlippage: 0,
                 };
 
                 const orderId = await orderManager.ordersIndex();

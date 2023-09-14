@@ -1,15 +1,15 @@
-import {newTestEnv, TestEnv} from './helpers/make-suite';
-import {ethers} from 'hardhat';
-import {TradeType,} from '../helpers';
-import {decreasePosition, increasePosition, mintAndApprove, updateBTCPrice} from './helpers/misc';
-import {expect} from "chai";
-import {TradingTypes} from "../types/contracts/core/Router";
+import { newTestEnv, TestEnv } from './helpers/make-suite';
+import { ethers } from 'hardhat';
+import { MAX_UINT_AMOUNT, TradeType } from '../helpers';
+import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { expect } from 'chai';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('PositionManager: decrease position', () => {
     const pairIndex = 0;
     let testEnv: TestEnv;
 
-    before('add liquidity',async () => {
+    before('add liquidity', async () => {
         testEnv = await newTestEnv();
         const {
             users: [depositor],
@@ -19,9 +19,12 @@ describe('PositionManager: decrease position', () => {
             router,
         } = testEnv;
 
+        // update BTC Price
+        await updateBTCPrice(testEnv, '30000');
+
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('50', 18);
-        const stableAmount = ethers.utils.parseUnits('300000', 18);
+        const indexAmount = ethers.utils.parseUnits('100', 18);
+        const stableAmount = ethers.utils.parseUnits('3000000', 18);
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -31,102 +34,110 @@ describe('PositionManager: decrease position', () => {
             .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
-    describe('Pre transaction check: Any check failure cancels the transaction', async () => {
+    after(async () => {
+        await updateBTCPrice(testEnv, '30000');
+    });
 
+    describe('Pre transaction check: Any check failure cancels the transaction', async () => {
         before('before increase position', async () => {
             const {
                 keeper,
-                users: [ trader],
+                users: [, trader],
                 usdt,
                 router,
-                positionManager
+                positionManager,
             } = testEnv;
-
-            await updateBTCPrice(testEnv,'30000');
 
             const stableAmount = ethers.utils.parseUnits('100000', 18);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
 
-            const collateral = ethers.utils.parseUnits('50000', 18);
-            const increaseSize = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('100000', 18);
+            const increaseSize = ethers.utils.parseUnits('90', 18);
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
-            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, increaseSize, TradeType.MARKET, true);
+            await increasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                collateral,
+                openPrice,
+                increaseSize,
+                TradeType.MARKET,
+                true,
+            );
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             expect(position.positionAmount).to.be.eq(increaseSize);
         });
 
-        it('check permissions, only keeper executor order', async () => {
+        it('decreaseAmount > positionAmount, trigger error: decrease amount exceed position', async () => {
             const {
-                keeper,
-                users: [trader, user1],
-                router,
-                executor,
-                orderManager,
+                users: [, trader],
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('0', 18);
-            const openPrice = ethers.utils.parseUnits('30000', 30);
-            const decreaseSize = ethers.utils.parseUnits('5', 18);
+            const decreaseSize = ethers.utils.parseUnits('91', 18);
 
-            // await decreasePosition(testEnv, trader, pairIndex, collateral, decreaseSize, TradeType.MARKET, true);
-            const request: TradingTypes.DecreasePositionRequestStruct = {
+            await expect(
+                decreasePosition(testEnv, trader, pairIndex, collateral, decreaseSize, TradeType.MARKET, true),
+            ).to.be.revertedWith('decrease amount exceed position');
+        });
+
+        it('Insufficient LP funds, trigger error: stable token not enough', async () => {
+            const {
+                keeper,
+                users: [depositor, trader],
+                usdt,
+                router,
+                executor,
+                positionManager,
+                orderManager,
+                pool,
+            } = testEnv;
+
+            const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
+
+            // const poolVaultBefore = await pool.getVault(pairIndex);
+            // console.log(`---poolVaultBefore: `, poolVaultBefore);
+
+            // remove Liquidity
+            const removeAmount = ethers.utils.parseUnits('300000', 18);
+            const pair = await pool.getPair(pairIndex);
+            const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
+
+            // const poolTokenBalance = await poolToken.balanceOf(depositor.address);
+            // console.log(`---poolTokenBalance: `, poolTokenBalance);
+
+            await poolToken.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT);
+            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount);
+
+            // const poolVaultAft = await pool.getVault(pairIndex);
+            // console.log(`---poolVaultAft: `, poolVaultAft);
+
+            // trader decrease position
+            const collateral = ethers.utils.parseUnits('0', 18);
+            const openPrice = ethers.utils.parseUnits('70000', 30);
+
+            const decreasePositionRequestStruct: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
-                collateral: collateral,
+                collateral: 0,
                 triggerPrice: openPrice,
                 isLong: true,
-                sizeAmount: decreaseSize,
+                sizeAmount: positionBefore.positionAmount,
+                maxSlippage: 0,
             };
 
+            // update BTC price
+            await updateBTCPrice(testEnv, '70000');
+
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createDecreaseOrder(request);
-            // await executor.connect(user1.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
-            await expect(executor.connect(user1.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0)).to.be.revertedWith('opk');
+            await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequestStruct);
+
+            // await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await expect(
+                executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
+            ).to.be.revertedWith('stable token not enough');
         });
-
-        it('decreaseAmount > positionAmount, trigger error: decrease amount exceed position', async ()=>{
-            const {
-                users: [trader],
-                positionManager
-            } = testEnv;
-
-            const position = await positionManager.getPosition(trader.address, pairIndex, true);
-
-            const collateral = ethers.utils.parseUnits('0', 18);
-            const decreaseSize = ethers.utils.parseUnits('11', 18);
-
-            await expect(decreasePosition(testEnv, trader, pairIndex, collateral, decreaseSize, TradeType.MARKET, true)).to.be.revertedWith('decrease amount exceed position');
-        });
-
-        it('Insufficient LP funds', async ()=>{
-            const {
-                users: [trader, trader2],
-                usdt,
-                router,
-                positionManager,
-                pool
-            } = testEnv;
-
-            const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            // console.log(`---traderPosition: `, traderPosition);
-
-            const valutPair = await pool.getVault(pairIndex)
-
-            // trader2
-            const stableAmount = ethers.utils.parseUnits('100000', 18);
-            await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
-
-            const collateral = ethers.utils.parseUnits('50000', 18);
-            const increaseSize = ethers.utils.parseUnits('40', 18);
-            const openPrice = ethers.utils.parseUnits('30000', 30);
-
-            // await increasePosition(testEnv, trader2, pairIndex, collateral, openPrice, increaseSize, TradeType.MARKET, true);
-        });
-
-        it('long > short', async () => {});
-        it('long < short', async () => {});
     });
-
 });

@@ -12,4 +12,4 @@ exports[`TestGas gas cost of testKey 1`] = `43552`;
 
 exports[`TestGas gas cost of testKeys 1`] = `45826`;
 
-exports[`TestGas gas cost test maping(address=>struct) 1`] = `178633`;
+exports[`TestGas gas cost test maping(address=>struct) 1`] = `200769`;

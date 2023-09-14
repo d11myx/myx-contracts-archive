@@ -11,9 +11,9 @@ import {
     waitForTx,
 } from '../helpers';
 import { mintAndApprove } from './helpers/misc';
-import { TradingTypes } from '../types/contracts/trading/Router';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { BigNumber } from 'ethers';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: increase position ar', () => {
     const pairIndex = 0;
@@ -102,6 +102,7 @@ describe('Router: increase position ar', () => {
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('5', 18),
+            maxSlippage: 0,
         };
 
         orderId = await orderManager.ordersIndex();
@@ -151,6 +152,7 @@ describe('Router: increase position ar', () => {
             triggerPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('5', 18),
+            maxSlippage: 0,
         };
         orderId = await orderManager.ordersIndex();
         await snapshotGasCost(router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest));
