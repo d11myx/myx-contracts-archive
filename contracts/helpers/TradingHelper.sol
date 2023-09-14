@@ -25,4 +25,8 @@ library TradingHelper {
         require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
         return oraclePrice;
     }
+
+    function getOrderTradePrice() internal view returns (uint256) {
+
+    }
 }
