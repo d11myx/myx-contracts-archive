@@ -34,6 +34,7 @@ interface IExecutor {
         uint256 orderPrice,
         uint256 executionSize,
         uint256 executionPrice,
+        uint256 executedSize,
         bool needADL,
         int256 pnl,
         uint256 tradingFee,

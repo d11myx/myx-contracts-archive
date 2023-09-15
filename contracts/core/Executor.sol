@@ -226,13 +226,15 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
+        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
+
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         // check position and leverage
         (uint256 afterPosition, ) = position.validLeverage(
             executionPrice,
-            order.collateral,
+            collateral,
             executionSize,
             true,
             tradingConfig.maxLeverage,
@@ -248,7 +250,7 @@ contract Executor is IExecutor, Pausable {
             tx.origin,
             executionSize,
             order.isLong,
-            order.collateral,
+            collateral,
             level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
             commissionRatio,
             executionPrice
@@ -260,6 +262,7 @@ contract Executor is IExecutor, Pausable {
         // create order tp sl
         _createOrderTpSl(order);
 
+        // remove order
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.executedSize >= order.sizeAmount) {
             orderManager.removeOrderFromPosition(
                 IOrderManager.PositionOrder(
@@ -287,7 +290,7 @@ contract Executor is IExecutor, Pausable {
             order.pairIndex,
             order.tradeType,
             order.isLong,
-            order.collateral,
+            collateral,
             order.sizeAmount,
             order.openPrice,
             executionSize,
@@ -374,10 +377,15 @@ contract Executor is IExecutor, Pausable {
             return;
         }
 
-        // calculate valid order size
+        // valid order size
         order.sizeAmount = Math.min(order.sizeAmount, position.positionAmount);
-        uint256 executionSize = order.sizeAmount;
+
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+
+        uint256 executionSize = order.sizeAmount - order.executedSize;
+        if (executionSize > tradingConfig.maxTradeAmount) {
+            executionSize = tradingConfig.maxTradeAmount;
+        }
 
         // validate can be triggered
         uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
@@ -399,10 +407,12 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
+        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
+
         // check position and leverage
         position.validLeverage(
             executionPrice,
-            order.collateral,
+            collateral,
             executionSize,
             false,
             // tradingConfig.minLeverage,
@@ -441,11 +451,12 @@ contract Executor is IExecutor, Pausable {
                 pairIndex,
                 order.tradeType,
                 order.isLong,
-                order.collateral,
+                collateral,
                 order.sizeAmount,
                 order.triggerPrice,
                 executionSize,
                 executionPrice,
+                order.executedSize,
                 needADL,
                 0,
                 0,
@@ -461,37 +472,39 @@ contract Executor is IExecutor, Pausable {
             msg.sender,
             executionSize,
             order.isLong,
-            order.collateral,
+            collateral,
             level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
             commissionRatio,
             executionPrice
         );
 
-        // bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
+        // add executed size
+        order.executedSize += executionSize;
 
-        // delete order
-        if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            orderManager.removeDecreaseMarketOrders(_orderId);
-        } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
-            orderManager.removeDecreaseLimitOrders(_orderId);
-        } else {
-            orderManager.removeDecreaseLimitOrders(_orderId);
+        // remove order
+        if (order.tradeType == TradingTypes.TradeType.MARKET || order.executedSize >= order.sizeAmount) {
+            // remove decrease order
+            orderManager.removeOrderFromPosition(
+                IOrderManager.PositionOrder(
+                    order.account,
+                    order.pairIndex,
+                    order.isLong,
+                    false,
+                    order.tradeType,
+                    order.orderId,
+                    executionSize
+                )
+            );
+
+            // delete order
+            if (order.tradeType == TradingTypes.TradeType.MARKET) {
+                orderManager.removeDecreaseMarketOrders(_orderId);
+            } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+                orderManager.removeDecreaseLimitOrders(_orderId);
+            } else {
+                orderManager.removeDecreaseLimitOrders(_orderId);
+            }
         }
-
-        // remove decrease order
-        orderManager.removeOrderFromPosition(
-            IOrderManager.PositionOrder(
-                order.account,
-                order.pairIndex,
-                order.isLong,
-                false,
-                order.tradeType,
-                order.orderId,
-                executionSize
-            )
-        );
-
-        // position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         if (position.positionAmount == 0) {
             // cancel all decrease order
@@ -513,11 +526,12 @@ contract Executor is IExecutor, Pausable {
             pairIndex,
             order.tradeType,
             order.isLong,
-            order.collateral,
+            collateral,
             order.sizeAmount,
             order.triggerPrice,
             executionSize,
             executionPrice,
+            order.executedSize,
             needADL,
             pnl,
             tradingFee,

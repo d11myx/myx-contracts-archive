@@ -103,18 +103,17 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
         require(pair.enable, 'trade pair not supported');
+
         Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-            require(
-                request.sizeAmount == 0 || ValidationHelper.validTradeSize(tradingConfig, request.sizeAmount.abs()),
-                'invalid trade size'
-            );
-
-            bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
-
             uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
+                require(
+                    request.sizeAmount == 0
+                        || (uint256(request.sizeAmount) >= tradingConfig.minTradeAmount && uint256(request.sizeAmount) <= tradingConfig.maxTradeAmount),
+                    'invalid trade size'
+                );
                 // check leverage
                 (uint256 afterPosition, ) = position.validLeverage(
                     price,
@@ -314,6 +313,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             collateral: _request.collateral,
             triggerPrice: _request.triggerPrice,
             sizeAmount: _request.sizeAmount,
+            executedSize: 0,
             maxSlippage: _request.maxSlippage,
             isLong: _request.isLong,
             abovePrice: false, // abovePrice
@@ -380,7 +380,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         _removeOrderAndRefundCollateral(
             order.account,
             order.pairIndex,
-            order.collateral,
+            order.executedSize == 0 ? order.collateral : int256(0),
             PositionOrder({
                 account: order.account,
                 pairIndex: order.pairIndex,
@@ -407,7 +407,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         _removeOrderAndRefundCollateral(
             order.account,
             order.pairIndex,
-            order.collateral,
+            order.executedSize == 0 ? order.collateral : int256(0),
             PositionOrder({
                 account: order.account,
                 pairIndex: order.pairIndex,
