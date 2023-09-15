@@ -40,8 +40,4 @@ library ValidationHelper {
             require(isAbove ? currentPrice <= orderPrice : currentPrice >= orderPrice, 'not reach trigger price');
         }
     }
-
-    function validTradeSize(IPool.TradingConfig memory tradingConfig, uint256 size) internal pure returns (bool) {
-        return size >= tradingConfig.minTradeAmount && size <= tradingConfig.maxTradeAmount;
-    }
 }

@@ -17,9 +17,9 @@ export const btcPairInfo: PairInfoConfig = {
     tradingConfig: {
         minLeverage: 3,
         maxLeverage: 50,
-        minTradeAmount: '100000000000000000', //0.1
-        maxTradeAmount: '100000000000000000000000', //100000
-        maxPositionAmount: '100000000000000000000000000', //100000000
+        minTradeAmount: '10000000000000000', //0.01
+        maxTradeAmount: '10000000000000000000000', //10000
+        maxPositionAmount: '1000000000000000000000000', //1000000
         maintainMarginRate: 1000000, //1%
         priceSlipP: 100000, //0.1%
         maxPriceDeviationP: 500000, //0.5%
@@ -56,8 +56,8 @@ export const ethPairInfo: PairInfoConfig = {
         minLeverage: 3,
         maxLeverage: 50,
         minTradeAmount: '100000000000000000', //0.1
-        maxTradeAmount: '100000000000000000000000', //100000
-        maxPositionAmount: '100000000000000000000000000', //100000000
+        maxTradeAmount: '10000000000000000000000', //10000
+        maxPositionAmount: '1000000000000000000000000', //1000000
         maintainMarginRate: 1000000, //1%
         priceSlipP: 100000, //0.1%
         maxPriceDeviationP: 500000, //0.5%
