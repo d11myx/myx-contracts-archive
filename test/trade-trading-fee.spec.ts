@@ -119,6 +119,7 @@ describe('Trade: trading fee', () => {
                 openPrice,
                 isLong: true,
                 sizeAmount,
+                maxSlippage: 0,
             };
 
             let orderId = await orderManager.ordersIndex();
@@ -136,6 +137,7 @@ describe('Trade: trading fee', () => {
                 openPrice,
                 isLong: true,
                 sizeAmount,
+                maxSlippage: 0,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -153,6 +155,7 @@ describe('Trade: trading fee', () => {
                 openPrice,
                 isLong: true,
                 sizeAmount,
+                maxSlippage: 0,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -170,6 +173,7 @@ describe('Trade: trading fee', () => {
                 openPrice,
                 isLong: true,
                 sizeAmount,
+                maxSlippage: 0,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -187,6 +191,7 @@ describe('Trade: trading fee', () => {
                 openPrice,
                 isLong: true,
                 sizeAmount,
+                maxSlippage: 0,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -204,6 +209,7 @@ describe('Trade: trading fee', () => {
                 openPrice,
                 isLong: true,
                 sizeAmount,
+                maxSlippage: 0,
             };
 
             orderId = await orderManager.ordersIndex();
