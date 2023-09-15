@@ -42,8 +42,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(bytes32 => PositionOrder[]) public positionOrders;
     mapping(bytes32 => mapping(uint256 => uint256)) public positionOrderIndex;
 
-    mapping(bytes32 => uint256) public positionDecreaseTotalAmount;
-
     IPool public immutable pool;
     IPositionManager public immutable positionManager;
     address public addressExecutor;
@@ -139,13 +137,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                     // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount
-                );
-
-                require(
-                    uint256(request.sizeAmount.abs()) == position.positionAmount ||
-                        uint256(request.sizeAmount.abs()) <=
-                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
-                    'decrease amount exceed position'
                 );
             }
         }
@@ -483,13 +474,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         positionOrderIndex[positionKey][order.orderId] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(order);
-
-        if (
-            !order.isIncrease &&
-            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
-        ) {
-            positionDecreaseTotalAmount[positionKey] += order.sizeAmount;
-        }
     }
 
     function removeOrderFromPosition(
@@ -503,24 +487,12 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         if (index < lastIndex) {
             // swap last order
             PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-            // bytes32 lastOrderKey = PositionKey.getOrderKey(
-            //     lastOrder.isIncrease,
-            //     lastOrder.tradeType,
-            //     lastOrder.orderId
-            // );
 
             positionOrders[positionKey][index] = lastOrder;
             positionOrderIndex[positionKey][lastOrder.orderId] = index;
         }
         delete positionOrderIndex[positionKey][order.orderId];
         positionOrders[positionKey].pop();
-
-        if (
-            !order.isIncrease &&
-            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
-        ) {
-            positionDecreaseTotalAmount[positionKey] -= order.sizeAmount;
-        }
     }
 
     function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
