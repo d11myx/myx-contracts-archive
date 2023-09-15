@@ -76,10 +76,12 @@ library Position {
         uint256 maxLeverage,
         uint256 maxPositionAmount
     ) internal pure returns (uint256, uint256) {
-        // position >= decrease size
-        require(_increase ? true : self.positionAmount >= _sizeAmount, 'decrease amount exceed position');
-
-        uint256 afterPosition = _increase ? self.positionAmount + _sizeAmount : self.positionAmount - _sizeAmount;
+        uint256 afterPosition;
+        if (_increase) {
+            afterPosition = self.positionAmount + _sizeAmount;
+        } else {
+            afterPosition = self.positionAmount >= _sizeAmount ? self.positionAmount - _sizeAmount : 0;
+        }
 
         // close position
         if (afterPosition == 0) {

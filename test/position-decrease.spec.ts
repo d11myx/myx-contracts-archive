@@ -69,18 +69,18 @@ describe('PositionManager: decrease position', () => {
             expect(position.positionAmount).to.be.eq(increaseSize);
         });
 
-        it('decreaseAmount > positionAmount, trigger error: decrease amount exceed position', async () => {
-            const {
-                users: [, trader],
-            } = testEnv;
-
-            const collateral = ethers.utils.parseUnits('0', 18);
-            const decreaseSize = ethers.utils.parseUnits('91', 18);
-
-            await expect(
-                decreasePosition(testEnv, trader, pairIndex, collateral, decreaseSize, TradeType.MARKET, true),
-            ).to.be.revertedWith('decrease amount exceed position');
-        });
+        // it('decreaseAmount > positionAmount, trigger error: decrease amount exceed position', async () => {
+        //     const {
+        //         users: [, trader],
+        //     } = testEnv;
+        //
+        //     const collateral = ethers.utils.parseUnits('0', 18);
+        //     const decreaseSize = ethers.utils.parseUnits('91', 18);
+        //
+        //     await expect(
+        //         decreasePosition(testEnv, trader, pairIndex, collateral, decreaseSize, TradeType.MARKET, true),
+        //     ).to.be.revertedWith('decrease amount exceed position');
+        // });
 
         it('Insufficient LP funds, trigger error: stable token not enough', async () => {
             const {

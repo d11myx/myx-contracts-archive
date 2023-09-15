@@ -193,14 +193,14 @@ contract Executor is IExecutor, Pausable {
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
         // validate can be triggered
-        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
         bool isAbove = order.isLong &&
             (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
         ValidationHelper.validatePriceTriggered(
             tradingConfig,
             order.tradeType,
             isAbove,
-            price,
+            executionPrice,
             order.openPrice,
             order.maxSlippage
         );
@@ -208,49 +208,39 @@ contract Executor is IExecutor, Pausable {
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             if (order.isLong) {
-                price = order.openPrice.min(price);
+                executionPrice = Math.min(order.openPrice, executionPrice);
             } else {
-                price = order.openPrice.max(price);
+                executionPrice = Math.max(order.openPrice, executionPrice);
             }
         }
+
+        IPool.Vault memory lpVault = pool.getVault(pairIndex);
+        int256 exposureAmount = positionManager.getExposedPositions(pairIndex);
+
+        uint256 orderSize = order.sizeAmount - order.executedSize;
+        uint256 executionSize;
+        if (orderSize > 0) {
+            (executionSize) = TradingHelper.exposureAmountChecker(lpVault, exposureAmount, order.isLong, orderSize, executionPrice);
+            if (executionSize == 0) {
+                return;
+            }
+        }
+
+        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
 
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         // check position and leverage
         (uint256 afterPosition, ) = position.validLeverage(
-            price,
-            order.collateral,
-            order.sizeAmount,
+            executionPrice,
+            collateral,
+            executionSize,
             true,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
         require(afterPosition > 0, 'zpa');
-
-        IPool.Vault memory lpVault = pool.getVault(pairIndex);
-
-        int256 preNetExposureAmountChecker = positionManager.getExposedPositions(order.pairIndex);
-        if (preNetExposureAmountChecker >= 0) {
-            if (order.isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                require(order.sizeAmount <= availableIndex, 'iit');
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                require(
-                    order.sizeAmount <= uint256(preNetExposureAmountChecker) + availableStable.divPrice(price),
-                    'ist'
-                );
-            }
-        } else {
-            if (order.isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                require(order.sizeAmount <= uint256(-preNetExposureAmountChecker) + availableIndex, 'iit');
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                require(order.sizeAmount <= availableStable.divPrice(price), 'ist');
-            }
-        }
 
         // increase position
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
@@ -258,76 +248,54 @@ contract Executor is IExecutor, Pausable {
             order.orderId,
             order.account,
             tx.origin,
-            order.sizeAmount,
+            executionSize,
             order.isLong,
-            order.collateral,
+            collateral,
             level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
             commissionRatio,
-            price
+            executionPrice
         );
 
-        orderManager.removeOrderFromPosition(
-            IOrderManager.PositionOrder(
-                order.account,
-                order.pairIndex,
-                order.isLong,
-                true,
-                order.tradeType,
-                _orderId,
-                order.sizeAmount
-            )
-        );
+        // add executed size
+        order.executedSize += executionSize;
 
-        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(_orderId);
-        if (orderTpSl.tp > 0) {
-            orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: order.account,
-                    pairIndex: order.pairIndex,
-                    tradeType: TradingTypes.TradeType.TP,
-                    collateral: 0,
-                    openPrice: orderTpSl.tpPrice,
-                    isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.tp),
-                    maxSlippage: 0,
-                    data: abi.encode(order.account)
-                })
+        // create order tp sl
+        _createOrderTpSl(order);
+
+        // remove order
+        if (order.tradeType == TradingTypes.TradeType.MARKET || order.executedSize >= order.sizeAmount) {
+            orderManager.removeOrderFromPosition(
+                IOrderManager.PositionOrder(
+                    order.account,
+                    order.pairIndex,
+                    order.isLong,
+                    true,
+                    order.tradeType,
+                    _orderId,
+                    order.sizeAmount
+                )
             );
-        }
-        if (orderTpSl.sl > 0) {
-            orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: order.account,
-                    pairIndex: order.pairIndex,
-                    tradeType: TradingTypes.TradeType.SL,
-                    collateral: 0,
-                    openPrice: orderTpSl.slPrice,
-                    isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.sl),
-                    maxSlippage: 0,
-                    data: abi.encode(order.account)
-                })
-            );
-        }
 
-        orderManager.removeOrderTpSl(_orderId);
-
-        // delete order
-        if (_tradeType == TradingTypes.TradeType.MARKET) {
-            orderManager.removeIncreaseMarketOrders(_orderId);
-        } else if (_tradeType == TradingTypes.TradeType.LIMIT) {
-            orderManager.removeIncreaseLimitOrders(_orderId);
+            // delete order
+            if (_tradeType == TradingTypes.TradeType.MARKET) {
+                orderManager.removeIncreaseMarketOrders(_orderId);
+            } else if (_tradeType == TradingTypes.TradeType.LIMIT) {
+                orderManager.removeIncreaseLimitOrders(_orderId);
+            }
         }
 
         emit ExecuteIncreaseOrder(
             order.account,
-            _orderId,
-            pairIndex,
-            _tradeType,
+            order.orderId,
+            order.pairIndex,
+            order.tradeType,
             order.isLong,
-            order.collateral,
+            collateral,
             order.sizeAmount,
-            price,
+            order.openPrice,
+            executionSize,
+            executionPrice,
+            order.executedSize,
             tradingFee,
             fundingFee
         );
@@ -409,18 +377,23 @@ contract Executor is IExecutor, Pausable {
             return;
         }
 
-        // calculate valid order size
+        // valid order size
         order.sizeAmount = Math.min(order.sizeAmount, position.positionAmount);
 
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
+        uint256 executionSize = order.sizeAmount - order.executedSize;
+        if (executionSize > tradingConfig.maxTradeAmount) {
+            executionSize = tradingConfig.maxTradeAmount;
+        }
+
         // validate can be triggered
-        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
         ValidationHelper.validatePriceTriggered(
             tradingConfig,
             order.tradeType,
             order.abovePrice,
-            price,
+            executionPrice,
             order.triggerPrice,
             order.maxSlippage
         );
@@ -428,17 +401,19 @@ contract Executor is IExecutor, Pausable {
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             if (!order.isLong) {
-                price = Math.min(order.triggerPrice, price);
+                executionPrice = Math.min(order.triggerPrice, executionPrice);
             } else {
-                price = Math.max(order.triggerPrice, price);
+                executionPrice = Math.max(order.triggerPrice, executionPrice);
             }
         }
 
+        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
+
         // check position and leverage
         position.validLeverage(
-            price,
-            order.collateral,
-            order.sizeAmount,
+            executionPrice,
+            collateral,
+            executionSize,
             false,
             // tradingConfig.minLeverage,
             tradingConfig.maxLeverage,
@@ -452,18 +427,18 @@ contract Executor is IExecutor, Pausable {
         if (preNetExposureAmountChecker >= 0) {
             if (!order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                needADL = order.sizeAmount > availableIndex;
+                needADL = executionSize > availableIndex;
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                needADL = order.sizeAmount > uint256(preNetExposureAmountChecker) + availableStable.divPrice(price);
+                needADL = executionSize > uint256(preNetExposureAmountChecker) + availableStable.divPrice(executionPrice);
             }
         } else {
             if (!order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                needADL = order.sizeAmount > uint256(-preNetExposureAmountChecker) + availableIndex;
+                needADL = executionSize > uint256(-preNetExposureAmountChecker) + availableIndex;
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                needADL = order.sizeAmount > availableStable.divPrice(price);
+                needADL = executionSize > availableStable.divPrice(executionPrice);
             }
         }
 
@@ -476,9 +451,12 @@ contract Executor is IExecutor, Pausable {
                 pairIndex,
                 order.tradeType,
                 order.isLong,
-                order.collateral,
+                collateral,
                 order.sizeAmount,
-                price,
+                order.triggerPrice,
+                executionSize,
+                executionPrice,
+                order.executedSize,
                 needADL,
                 0,
                 0,
@@ -492,39 +470,41 @@ contract Executor is IExecutor, Pausable {
             order.orderId,
             order.account,
             msg.sender,
-            order.sizeAmount,
+            executionSize,
             order.isLong,
-            order.collateral,
+            collateral,
             level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
             commissionRatio,
-            price
+            executionPrice
         );
 
-        // bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
+        // add executed size
+        order.executedSize += executionSize;
 
-        // delete order
-        if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            orderManager.removeDecreaseMarketOrders(_orderId);
-        } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
-            orderManager.removeDecreaseLimitOrders(_orderId);
-        } else {
-            orderManager.removeDecreaseLimitOrders(_orderId);
+        // remove order
+        if (order.tradeType == TradingTypes.TradeType.MARKET || order.executedSize >= order.sizeAmount) {
+            // remove decrease order
+            orderManager.removeOrderFromPosition(
+                IOrderManager.PositionOrder(
+                    order.account,
+                    order.pairIndex,
+                    order.isLong,
+                    false,
+                    order.tradeType,
+                    order.orderId,
+                    executionSize
+                )
+            );
+
+            // delete order
+            if (order.tradeType == TradingTypes.TradeType.MARKET) {
+                orderManager.removeDecreaseMarketOrders(_orderId);
+            } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+                orderManager.removeDecreaseLimitOrders(_orderId);
+            } else {
+                orderManager.removeDecreaseLimitOrders(_orderId);
+            }
         }
-
-        // remove decrease order
-        orderManager.removeOrderFromPosition(
-            IOrderManager.PositionOrder(
-                order.account,
-                order.pairIndex,
-                order.isLong,
-                false,
-                order.tradeType,
-                order.orderId,
-                order.sizeAmount
-            )
-        );
-
-        // position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         if (position.positionAmount == 0) {
             // cancel all decrease order
@@ -546,14 +526,53 @@ contract Executor is IExecutor, Pausable {
             pairIndex,
             order.tradeType,
             order.isLong,
-            order.collateral,
+            collateral,
             order.sizeAmount,
-            price,
+            order.triggerPrice,
+            executionSize,
+            executionPrice,
+            order.executedSize,
             needADL,
             pnl,
             tradingFee,
             fundingFee
         );
+    }
+
+    function _createOrderTpSl(TradingTypes.IncreasePositionOrder memory order) internal {
+        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(order.orderId);
+        if (orderTpSl.tp > 0) {
+            orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: order.account,
+                    pairIndex: order.pairIndex,
+                    tradeType: TradingTypes.TradeType.TP,
+                    collateral: 0,
+                    openPrice: orderTpSl.tpPrice,
+                    isLong: order.isLong,
+                    sizeAmount: -int256(orderTpSl.tp),
+                    maxSlippage: 0,
+                    data: abi.encode(order.account)
+                })
+            );
+        }
+        if (orderTpSl.sl > 0) {
+            orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: order.account,
+                    pairIndex: order.pairIndex,
+                    tradeType: TradingTypes.TradeType.SL,
+                    collateral: 0,
+                    openPrice: orderTpSl.slPrice,
+                    isLong: order.isLong,
+                    sizeAmount: -int256(orderTpSl.sl),
+                    maxSlippage: 0,
+                    data: abi.encode(order.account)
+                })
+            );
+        }
+
+        orderManager.removeOrderTpSl(order.orderId);
     }
 
     function setPricesAndExecuteADL(
