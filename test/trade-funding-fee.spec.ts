@@ -1,7 +1,15 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';
-import { Duration, increase, TradeType } from '../helpers';
+import {
+    Duration,
+    increase,
+    TradeType,
+    getFundingRate,
+    getFundingFeeTracker,
+    getPositionFundingFee,
+    getPositionTradingFee,
+} from '../helpers';
 import { expect } from './shared/expect';
 import { BigNumber } from 'ethers';
 
@@ -71,40 +79,71 @@ describe('Trade: funding fee', () => {
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
 
-            const userPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
+            const userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const userUsdtBefore = await usdt.balanceOf(trader.address);
-            expect(userPositionBefore.positionAmount).to.be.eq(size);
+
+            expect(userPosition.positionAmount).to.be.eq(size);
 
             await positionManager.updateFundingRate(pairIndex);
 
             const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
+
             expect(fundingFeeTrackerBefore).to.be.eq('0');
 
             // update funding fee
             await increase(Duration.hours(10));
             await positionManager.updateFundingRate(pairIndex);
 
+            // funding rate
+            const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
+            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+
+            expect(currentFundingRate).to.be.eq(targetFundingRate);
+
+            // funding fee tracker
+            const targetFundingFeeTracker = getFundingFeeTracker(
+                fundingFeeTrackerBefore,
+                currentFundingRate,
+                openPrice,
+            );
             const fundingFeeTrackerAfter = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerAfter).to.be.eq('999990000');
+
+            expect(fundingFeeTrackerAfter).to.be.eq(targetFundingFeeTracker);
 
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
+
+            expect(userFundingFee).to.be.eq(
+                getPositionFundingFee(
+                    fundingFeeTrackerAfter,
+                    userPosition.fundingFeeTracker,
+                    userPosition.positionAmount,
+                    true,
+                ),
+            );
 
             await decreasePosition(
                 testEnv,
                 trader,
                 pairIndex,
                 BigNumber.from(0),
-                userPositionBefore.positionAmount,
+                userPosition.positionAmount,
                 TradeType.MARKET,
                 true,
             );
 
             const userUsdtAfter = await usdt.balanceOf(trader.address);
-
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
-            const positionCollateral = userPositionBefore.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPositionBefore.positionAmount);
+            const positionCollateral = userPosition.collateral;
+            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
+            const currentPositionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                userPosition.positionAmount,
+                true,
+            );
+
+            expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // longer user will be paid fundingFee
             expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
@@ -125,28 +164,51 @@ describe('Trade: funding fee', () => {
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
 
-            const userPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
+            const userPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const userUsdtBefore = await usdt.balanceOf(trader.address);
-            expect(userPositionBefore.positionAmount).to.be.eq(size);
+
+            expect(userPosition.positionAmount).to.be.eq(size);
 
             const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerBefore).to.be.eq('999990000');
 
             // update funding fee
             await increase(Duration.hours(10));
             await positionManager.updateFundingRate(pairIndex);
 
+            // funding rate
+            const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
+            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+
+            expect(currentFundingRate).to.be.eq(targetFundingRate);
+
+            // funding fee tracker
+            const targetFundingFeeTracker = getFundingFeeTracker(
+                fundingFeeTrackerBefore,
+                currentFundingRate,
+                openPrice,
+            );
             const fundingFeeTrackerAfter = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerAfter).to.be.eq('1999980000');
+
+            expect(fundingFeeTrackerAfter).to.be.eq(targetFundingFeeTracker);
 
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
+
+            expect(userFundingFee).to.be.eq(
+                getPositionFundingFee(
+                    fundingFeeTrackerAfter,
+                    userPosition.fundingFeeTracker,
+                    userPosition.positionAmount,
+                    false,
+                ),
+            );
+
             await decreasePosition(
                 testEnv,
                 trader,
                 pairIndex,
                 BigNumber.from(0),
-                userPositionBefore.positionAmount,
+                userPosition.positionAmount,
                 TradeType.MARKET,
                 false,
             );
@@ -154,8 +216,16 @@ describe('Trade: funding fee', () => {
             const userUsdtAfter = await usdt.balanceOf(trader.address);
 
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
-            const positionCollateral = userPositionBefore.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPositionBefore.positionAmount);
+            const positionCollateral = userPosition.collateral;
+            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPosition.positionAmount);
+            const currentPositionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                userPosition.positionAmount,
+                false,
+            );
+
+            expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // shorter user will be received fundingFee
             expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
@@ -198,37 +268,68 @@ describe('Trade: funding fee', () => {
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerBefore).to.be.eq('1999980000');
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
 
-            const userPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
+            const userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const userUsdtBefore = await usdt.balanceOf(trader.address);
-            expect(userPositionBefore.positionAmount).to.be.eq(size);
+            expect(userPosition.positionAmount).to.be.eq(size);
 
             // update funding fee
             await increase(Duration.hours(10));
             await positionManager.updateFundingRate(pairIndex);
+
+            // funding rate
+            const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
+            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+
+            expect(currentFundingRate).to.be.eq(targetFundingRate);
+
+            // funding fee tracker
+            const targetFundingFeeTracker = getFundingFeeTracker(
+                fundingFeeTrackerBefore,
+                currentFundingRate,
+                openPrice,
+            );
             const fundingFeeTrackerAfter = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerAfter).to.be.eq('999990000');
+
+            expect(fundingFeeTrackerAfter).to.be.eq(targetFundingFeeTracker);
 
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
+
+            expect(userFundingFee).to.be.eq(
+                getPositionFundingFee(
+                    fundingFeeTrackerAfter,
+                    userPosition.fundingFeeTracker,
+                    userPosition.positionAmount,
+                    true,
+                ),
+            );
+
             await decreasePosition(
                 testEnv,
                 trader,
                 pairIndex,
                 BigNumber.from(0),
-                userPositionBefore.positionAmount,
+                userPosition.positionAmount,
                 TradeType.MARKET,
                 true,
             );
 
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
-            const positionCollateral = userPositionBefore.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPositionBefore.positionAmount);
+            const positionCollateral = userPosition.collateral;
+            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
+            const currentPositionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                userPosition.positionAmount,
+                true,
+            );
+
+            expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // longer user will be received fundingFee
             expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
@@ -247,21 +348,33 @@ describe('Trade: funding fee', () => {
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerBefore).to.be.eq('999990000');
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
 
-            const userPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
+            const userPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const userUsdtBefore = await usdt.balanceOf(trader.address);
-            expect(userPositionBefore.positionAmount).to.be.eq(size);
+            expect(userPosition.positionAmount).to.be.eq(size);
 
             // update funding fee
             await increase(Duration.hours(10));
             await positionManager.updateFundingRate(pairIndex);
 
+            // funding rate
+            const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
+            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+
+            expect(currentFundingRate).to.be.eq(targetFundingRate);
+
+            // funding fee tracker
+            const targetFundingFeeTracker = getFundingFeeTracker(
+                fundingFeeTrackerBefore,
+                currentFundingRate,
+                openPrice,
+            );
             const fundingFeeTrackerAfter = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(fundingFeeTrackerAfter).to.be.eq('0');
+
+            expect(fundingFeeTrackerAfter).to.be.eq(targetFundingFeeTracker);
 
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
@@ -271,15 +384,23 @@ describe('Trade: funding fee', () => {
                 trader,
                 pairIndex,
                 BigNumber.from(0),
-                userPositionBefore.positionAmount,
+                userPosition.positionAmount,
                 TradeType.MARKET,
                 false,
             );
 
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
-            const positionCollateral = userPositionBefore.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPositionBefore.positionAmount);
+            const positionCollateral = userPosition.collateral;
+            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPosition.positionAmount);
+            const currentPositionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                userPosition.positionAmount,
+                false,
+            );
+
+            expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // shorter user will be paid fundingFee
             expect(positionCollateral.sub(balanceDiff).sub(tradingFee).abs()).to.be.eq(userFundingFee);

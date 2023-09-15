@@ -78,7 +78,6 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
         uint256 claimableUserTradingFee = userTradingFee[msg.sender];
         if (claimableUserTradingFee > 0) {
             pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
-            IERC20(pledgeAddress).safeTransfer(msg.sender, claimableUserTradingFee);
             userTradingFee[msg.sender] = 0;
         }
         emit ClaimedUserTradingFee(msg.sender, pledgeAddress, claimableUserTradingFee);
