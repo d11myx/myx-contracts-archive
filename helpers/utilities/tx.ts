@@ -184,15 +184,14 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
     const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount);
 
-    let fundingRate, absFundingRate;
+    let fundingRate;
     if (q.eq(0)) {
         fundingRate = 0;
     } else {
-        absFundingRate = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
+        fundingRate = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
         if (!l.eq(0)) {
-            absFundingRate = absFundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
+            fundingRate = fundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
         }
-        fundingRate = exposedPosition.gte(0) ? absFundingRate : -absFundingRate;
     }
 
     fundingRate = BigNumber.from(fundingRate).sub(interest);
@@ -202,7 +201,9 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
         ? fundingFeeConfig.maxFundingRate
         : fundingRate;
 
-    return fundingRate.div(365).div(86400 / fundingInterval);
+    fundingRate = fundingRate.div(365).div(86400 / fundingInterval);
+    fundingRate = exposedPosition.gte(0) ? fundingRate : -fundingRate;
+    return fundingRate;
 }
 
 /**
@@ -223,7 +224,9 @@ export function getAveragePrice(
 ) {
     return previousPositionAveragePrice
         .mul(previousPositionAmount)
-        .add(openPrice.mul(positionAmount))
+        .div(PRICE_PRECISION)
+        .add(openPrice.mul(positionAmount).div(PRICE_PRECISION))
+        .mul(PRICE_PRECISION)
         .div(previousPositionAmount.add(positionAmount));
 }
 
@@ -291,4 +294,82 @@ export function getPositionFundingFee(
  */
 export function getLpFundingFee(epochFundindFee: BigNumber, lpPosition: BigNumber) {
     return lpPosition.mul(epochFundindFee).div(PERCENTAGE).abs();
+}
+
+/**
+ * calculation position trading fee
+ *
+ * @param testEnv {TestEnv} current test env
+ * @param pairIndex {Number} currency pair index
+ * @param positionAmount {BigNumber} current position size
+ * @param isLong {Boolean} long or short
+ * @returns current position trading fee
+ */
+export async function getPositionTradingFee(
+    testEnv: TestEnv,
+    pairIndex: number,
+    positionAmount: BigNumber,
+    isLong: boolean,
+) {
+    const { positionManager, pool, oraclePriceFeed } = testEnv;
+
+    const pair = await pool.getPair(pairIndex);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
+    const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
+    const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+    const positionPrice = positionAmount.mul(price).div(PRICE_PRECISION);
+    let tradingFee;
+
+    if (currentExposureAmountChecker.gte(0)) {
+        tradingFee = isLong
+            ? positionPrice.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE)
+            : positionPrice.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+    } else {
+        tradingFee = isLong
+            ? positionPrice.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE)
+            : positionPrice.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+    }
+
+    return tradingFee;
+}
+
+/**
+ * calculation distribute trading fee
+ *
+ * @param testEnv {TestEnv} current test env
+ * @param pairIndex {Number} currency pair index
+ * @param tradingFee {BigNumber} current position trading fee
+ * @param vipLevel {number} vip level, the default value is 0
+ * @param referenceRate {number} reference rate, the default value is 0
+ * @returns distribute trading fee
+ */
+export async function getDistributeTradingFee(
+    testEnv: TestEnv,
+    pairIndex: number,
+    tradingFee: BigNumber,
+    vipLevel = 0,
+    referenceRate = 0,
+) {
+    const { pool } = testEnv;
+    const levelDiscountRatios = [0, 1e6, 2e6, 3e6, 4e6, 5e6];
+
+    let vipRate = 0;
+    const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+    if (vipLevel > 0 && vipLevel <= levelDiscountRatios.length) {
+        vipRate = levelDiscountRatios[vipLevel];
+    }
+    const vipAmount = tradingFee.mul(vipRate).div(PERCENTAGE);
+    const userTradingFee = vipAmount;
+    const surplusFee = tradingFee.sub(vipAmount);
+    if (referenceRate > Number(PERCENTAGE)) {
+        referenceRate = Number(PERCENTAGE);
+    }
+    const referralsAmount = surplusFee.mul(referenceRate).div(PERCENTAGE);
+    const lpAmount = surplusFee.mul(tradingFeeConfig.lpFeeDistributeP).div(PERCENTAGE);
+    const keeperAmount = surplusFee.mul(tradingFeeConfig.keeperFeeDistributeP).div(PERCENTAGE);
+    const stakingAmount = surplusFee.mul(tradingFeeConfig.stakingFeeDistributeP).div(PERCENTAGE);
+    const distributorAmount = surplusFee.sub(referralsAmount).sub(lpAmount).sub(keeperAmount).sub(stakingAmount);
+    const treasuryFee = distributorAmount.add(referralsAmount);
+
+    return { userTradingFee, treasuryFee, stakingAmount, keeperAmount };
 }
