@@ -84,6 +84,7 @@ library TradingTypes {
         uint256 openPrice; // 1e30 Market acceptable price/Limit opening price
         bool isLong; // Long/short
         uint256 sizeAmount; // Number of positions
+        uint256 executedSize;
         uint256 maxSlippage;
         uint256 blockTime;
     }

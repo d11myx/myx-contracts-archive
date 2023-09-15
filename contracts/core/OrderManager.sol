@@ -266,18 +266,19 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _saveIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) internal returns (uint256) {
-        TradingTypes.IncreasePositionOrder memory order = TradingTypes.IncreasePositionOrder(
-            ordersIndex,
-            _request.account,
-            _request.pairIndex,
-            _request.tradeType,
-            _request.collateral,
-            _request.openPrice,
-            _request.isLong,
-            _request.sizeAmount,
-            _request.maxSlippage,
-            block.timestamp
-        );
+        TradingTypes.IncreasePositionOrder memory order = TradingTypes.IncreasePositionOrder({
+            orderId: ordersIndex,
+            account: _request.account,
+            pairIndex: _request.pairIndex,
+            tradeType: _request.tradeType,
+            collateral: _request.collateral,
+            openPrice: _request.openPrice,
+            isLong: _request.isLong,
+            sizeAmount: _request.sizeAmount,
+            executedSize: 0,
+            maxSlippage: _request.maxSlippage,
+            blockTime: block.timestamp
+        });
 
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
             increaseMarketOrders[ordersIndex] = order;
@@ -314,20 +315,20 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _saveDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) internal returns (uint256) {
-        TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder(
-            ordersIndex, // orderId
-            _request.account,
-            _request.pairIndex,
-            _request.tradeType,
-            _request.collateral,
-            _request.triggerPrice,
-            _request.sizeAmount,
-            _request.maxSlippage,
-            _request.isLong,
-            false, // abovePrice
-            block.timestamp,
-            false
-        );
+        TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder({
+            orderId: ordersIndex, // orderId
+            account: _request.account,
+            pairIndex: _request.pairIndex,
+            tradeType: _request.tradeType,
+            collateral: _request.collateral,
+            triggerPrice: _request.triggerPrice,
+            sizeAmount: _request.sizeAmount,
+            maxSlippage: _request.maxSlippage,
+            isLong: _request.isLong,
+            abovePrice: false, // abovePrice
+            blockTime: block.timestamp,
+            needADL: false
+        });
 
         // abovePrice
         // market：long: true,  short: false

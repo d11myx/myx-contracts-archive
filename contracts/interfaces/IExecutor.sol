@@ -14,8 +14,11 @@ interface IExecutor {
         TradingTypes.TradeType tradeType,
         bool isLong,
         int256 collateral,
-        uint256 sizeAmount,
-        uint256 price,
+        uint256 orderSize,
+        uint256 orderPrice,
+        uint256 executionSize,
+        uint256 executionPrice,
+        uint256 executedSize,
         uint256 tradingFee,
         int256 fundingFee
     );
@@ -27,13 +30,16 @@ interface IExecutor {
         TradingTypes.TradeType tradeType,
         bool isLong,
         int256 collateral,
-        uint256 sizeAmount,
-        uint256 price,
+        uint256 orderSize,
+        uint256 orderPrice,
+        uint256 executionSize,
+        uint256 executionPrice,
         bool needADL,
         int256 pnl,
         uint256 tradingFee,
         int256 fundingFee
     );
+
     event ExecuteOrderError(uint256 orderId, string errorMessage);
 
     struct ExecuteOrder {
