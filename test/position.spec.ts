@@ -38,12 +38,30 @@ describe('Position', () => {
                 let openPrice = ethers.utils.parseUnits('30000', 30);
 
                 await mintAndApprove(testEnv, usdt, collateral, long, router.address);
-                await increasePosition(testEnv, long, pairIndex, collateral, openPrice, longSize, TradeType.MARKET, true);
+                await increasePosition(
+                    testEnv,
+                    long,
+                    pairIndex,
+                    collateral,
+                    openPrice,
+                    longSize,
+                    TradeType.MARKET,
+                    true,
+                );
 
                 const shortSize = ethers.utils.parseUnits('30', 18);
 
                 await mintAndApprove(testEnv, usdt, collateral, short, router.address);
-                await increasePosition(testEnv, short, pairIndex, collateral, openPrice, shortSize, TradeType.MARKET, false);
+                await increasePosition(
+                    testEnv,
+                    short,
+                    pairIndex,
+                    collateral,
+                    openPrice,
+                    shortSize,
+                    TradeType.MARKET,
+                    false,
+                );
             });
 
             describe('user open long position', () => {
@@ -70,7 +88,7 @@ describe('Position', () => {
 
                     const position = await positionManager.getPosition(trader.address, pairIndex, true);
                     const tradingFee = await positionManager.getTradingFee(pairIndex, true, position.positionAmount);
-                    const takerTradingFee = position.positionAmount.mul("30000").mul(80000).div(1e8);
+                    const takerTradingFee = position.positionAmount.mul('30000').mul(80000).div(1e8);
 
                     expect(tradingFee).to.be.eq(takerTradingFee);
                 });
@@ -85,11 +103,20 @@ describe('Position', () => {
                     const size = ethers.utils.parseUnits('3', 18);
 
                     await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-                    await increasePosition(testEnv, trader, pairIndex, collateral, price, size, TradeType.MARKET, false);
+                    await increasePosition(
+                        testEnv,
+                        trader,
+                        pairIndex,
+                        collateral,
+                        price,
+                        size,
+                        TradeType.MARKET,
+                        false,
+                    );
 
                     const position = await positionManager.getPosition(trader.address, pairIndex, false);
                     const tradingFee = await positionManager.getTradingFee(pairIndex, false, position.positionAmount);
-                    const makerTradingFee = position.positionAmount.mul("30000").mul(50000).div(1e8);
+                    const makerTradingFee = position.positionAmount.mul('30000').mul(50000).div(1e8);
 
                     expect(tradingFee).to.be.eq(makerTradingFee);
                 });
@@ -123,12 +150,30 @@ describe('Position', () => {
                 let openPrice = ethers.utils.parseUnits('30000', 30);
 
                 await mintAndApprove(testEnv, usdt, collateral, long, router.address);
-                await increasePosition(testEnv, long, pairIndex, collateral, openPrice, longSize, TradeType.MARKET, true);
+                await increasePosition(
+                    testEnv,
+                    long,
+                    pairIndex,
+                    collateral,
+                    openPrice,
+                    longSize,
+                    TradeType.MARKET,
+                    true,
+                );
 
                 const shortSize = ethers.utils.parseUnits('90', 18);
 
                 await mintAndApprove(testEnv, usdt, collateral, short, router.address);
-                await increasePosition(testEnv, short, pairIndex, collateral, openPrice, shortSize, TradeType.MARKET, false);
+                await increasePosition(
+                    testEnv,
+                    short,
+                    pairIndex,
+                    collateral,
+                    openPrice,
+                    shortSize,
+                    TradeType.MARKET,
+                    false,
+                );
             });
 
             describe('user open long position', () => {
@@ -155,7 +200,7 @@ describe('Position', () => {
 
                     const position = await positionManager.getPosition(trader.address, pairIndex, true);
                     const tradingFee = await positionManager.getTradingFee(pairIndex, true, position.positionAmount);
-                    const makerTradingFee = position.positionAmount.mul("30000").mul(50000).div(1e8);
+                    const makerTradingFee = position.positionAmount.mul('30000').mul(50000).div(1e8);
 
                     expect(tradingFee).to.be.eq(makerTradingFee);
                 });
@@ -170,11 +215,20 @@ describe('Position', () => {
                     const size = ethers.utils.parseUnits('3', 18);
 
                     await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-                    await increasePosition(testEnv, trader, pairIndex, collateral, price, size, TradeType.MARKET, false);
+                    await increasePosition(
+                        testEnv,
+                        trader,
+                        pairIndex,
+                        collateral,
+                        price,
+                        size,
+                        TradeType.MARKET,
+                        false,
+                    );
 
                     const position = await positionManager.getPosition(trader.address, pairIndex, false);
                     const tradingFee = await positionManager.getTradingFee(pairIndex, false, position.positionAmount);
-                    const takerTradingFee = position.positionAmount.mul("30000").mul(80000).div(1e8);
+                    const takerTradingFee = position.positionAmount.mul('30000').mul(80000).div(1e8);
 
                     expect(tradingFee).to.be.eq(takerTradingFee);
                 });
@@ -221,13 +275,14 @@ describe('Position', () => {
             } = testEnv;
             const size = ethers.utils.parseUnits('0', 18);
 
+            console.log(collateral);
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const oldPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log("oldPosition", oldPosition);
+            console.log('oldPosition', oldPosition);
             await increasePosition(testEnv, trader, pairIndex, collateral, price, size, TradeType.MARKET, true);
 
             const latestPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log("latestPosition", latestPosition);
+            console.log('latestPosition', latestPosition);
 
             expect(latestPosition.positionAmount).to.be.eq(oldPosition.positionAmount);
             expect(latestPosition.collateral).to.be.gt(oldPosition.collateral);
@@ -244,11 +299,11 @@ describe('Position', () => {
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const oldPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log("oldPosition", oldPosition);
+            console.log('oldPosition', oldPosition);
             await increasePosition(testEnv, trader, pairIndex, collateral, price, size, TradeType.MARKET, true);
 
             const latestPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log("latestPosition", latestPosition);
+            console.log('latestPosition', latestPosition);
 
             expect(latestPosition.positionAmount).to.be.gt(oldPosition.positionAmount);
             expect(latestPosition.collateral).to.be.gt(oldPosition.collateral);
@@ -265,11 +320,20 @@ describe('Position', () => {
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const oldPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log("oldPosition", oldPosition);
-            await increasePosition(testEnv, trader, pairIndex, "-10000000000000000000000", price, size, TradeType.MARKET, true);
+            console.log('oldPosition', oldPosition);
+            await increasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                '-10000000000000000000000',
+                price,
+                size,
+                TradeType.MARKET,
+                true,
+            );
 
             const latestPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log("latestPosition", latestPosition);
+            console.log('latestPosition', latestPosition);
 
             expect(latestPosition.positionAmount).to.be.eq(oldPosition.positionAmount);
             expect(latestPosition.collateral).to.be.lt(oldPosition.collateral);

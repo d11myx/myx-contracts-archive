@@ -42,8 +42,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     mapping(bytes32 => PositionOrder[]) public positionOrders;
     mapping(bytes32 => mapping(uint256 => uint256)) public positionOrderIndex;
 
-    mapping(bytes32 => uint256) public positionDecreaseTotalAmount;
-
     IPool public immutable pool;
     IPositionManager public immutable positionManager;
     address public addressExecutor;
@@ -105,18 +103,17 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
         require(pair.enable, 'trade pair not supported');
+
         Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-            require(
-                request.sizeAmount == 0 || ValidationHelper.validTradeSize(tradingConfig, request.sizeAmount.abs()),
-                'invalid trade size'
-            );
-
-            bytes32 positionKey = PositionKey.getPositionKey(account, request.pairIndex, request.isLong);
-
             uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
+                require(
+                    request.sizeAmount == 0
+                        || (uint256(request.sizeAmount) >= tradingConfig.minTradeAmount && uint256(request.sizeAmount) <= tradingConfig.maxTradeAmount),
+                    'invalid trade size'
+                );
                 // check leverage
                 (uint256 afterPosition, ) = position.validLeverage(
                     price,
@@ -139,13 +136,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
                     // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount
-                );
-
-                require(
-                    uint256(request.sizeAmount.abs()) == position.positionAmount ||
-                        uint256(request.sizeAmount.abs()) <=
-                        position.positionAmount - positionDecreaseTotalAmount[positionKey],
-                    'decrease amount exceed position'
                 );
             }
         }
@@ -266,18 +256,19 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _saveIncreaseOrder(TradingTypes.IncreasePositionRequest memory _request) internal returns (uint256) {
-        TradingTypes.IncreasePositionOrder memory order = TradingTypes.IncreasePositionOrder(
-            ordersIndex,
-            _request.account,
-            _request.pairIndex,
-            _request.tradeType,
-            _request.collateral,
-            _request.openPrice,
-            _request.isLong,
-            _request.sizeAmount,
-            _request.maxSlippage,
-            block.timestamp
-        );
+        TradingTypes.IncreasePositionOrder memory order = TradingTypes.IncreasePositionOrder({
+            orderId: ordersIndex,
+            account: _request.account,
+            pairIndex: _request.pairIndex,
+            tradeType: _request.tradeType,
+            collateral: _request.collateral,
+            openPrice: _request.openPrice,
+            isLong: _request.isLong,
+            sizeAmount: _request.sizeAmount,
+            executedSize: 0,
+            maxSlippage: _request.maxSlippage,
+            blockTime: block.timestamp
+        });
 
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
             increaseMarketOrders[ordersIndex] = order;
@@ -314,20 +305,21 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     function _saveDecreaseOrder(TradingTypes.DecreasePositionRequest memory _request) internal returns (uint256) {
-        TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder(
-            ordersIndex, // orderId
-            _request.account,
-            _request.pairIndex,
-            _request.tradeType,
-            _request.collateral,
-            _request.triggerPrice,
-            _request.sizeAmount,
-            _request.maxSlippage,
-            _request.isLong,
-            false, // abovePrice
-            block.timestamp,
-            false
-        );
+        TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder({
+            orderId: ordersIndex, // orderId
+            account: _request.account,
+            pairIndex: _request.pairIndex,
+            tradeType: _request.tradeType,
+            collateral: _request.collateral,
+            triggerPrice: _request.triggerPrice,
+            sizeAmount: _request.sizeAmount,
+            executedSize: 0,
+            maxSlippage: _request.maxSlippage,
+            isLong: _request.isLong,
+            abovePrice: false, // abovePrice
+            blockTime: block.timestamp,
+            needADL: false
+        });
 
         // abovePrice
         // market：long: true,  short: false
@@ -388,7 +380,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         _removeOrderAndRefundCollateral(
             order.account,
             order.pairIndex,
-            order.collateral,
+            order.executedSize == 0 ? order.collateral : int256(0),
             PositionOrder({
                 account: order.account,
                 pairIndex: order.pairIndex,
@@ -415,7 +407,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         _removeOrderAndRefundCollateral(
             order.account,
             order.pairIndex,
-            order.collateral,
+            order.executedSize == 0 ? order.collateral : int256(0),
             PositionOrder({
                 account: order.account,
                 pairIndex: order.pairIndex,
@@ -482,13 +474,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         positionOrderIndex[positionKey][order.orderId] = positionOrders[positionKey].length;
         positionOrders[positionKey].push(order);
-
-        if (
-            !order.isIncrease &&
-            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
-        ) {
-            positionDecreaseTotalAmount[positionKey] += order.sizeAmount;
-        }
     }
 
     function removeOrderFromPosition(
@@ -502,24 +487,12 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         if (index < lastIndex) {
             // swap last order
             PositionOrder memory lastOrder = positionOrders[positionKey][positionOrders[positionKey].length - 1];
-            // bytes32 lastOrderKey = PositionKey.getOrderKey(
-            //     lastOrder.isIncrease,
-            //     lastOrder.tradeType,
-            //     lastOrder.orderId
-            // );
 
             positionOrders[positionKey][index] = lastOrder;
             positionOrderIndex[positionKey][lastOrder.orderId] = index;
         }
         delete positionOrderIndex[positionKey][order.orderId];
         positionOrders[positionKey].pop();
-
-        if (
-            !order.isIncrease &&
-            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT)
-        ) {
-            positionDecreaseTotalAmount[positionKey] -= order.sizeAmount;
-        }
     }
 
     function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {

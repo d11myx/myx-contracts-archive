@@ -25,4 +25,48 @@ library TradingHelper {
         require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
         return oraclePrice;
     }
+
+    function exposureAmountChecker(
+        IPool.Vault memory lpVault,
+        int256 exposureAmount,
+        bool isLong,
+        uint256 orderSize,
+        uint256 executionPrice
+    ) internal view returns (uint256 executionSize) {
+        executionSize = orderSize;
+
+        if (exposureAmount >= 0) {
+            if (isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+//                require(executionSize <= availableIndex, 'iit');
+                if (executionSize > availableIndex) {
+                    executionSize = availableIndex;
+                }
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+//                require(
+//                    executionSize <= uint256(exposureAmount) + availableStable.divPrice(executionPrice),
+//                    'ist'
+//                );
+                if (executionSize > uint256(exposureAmount) + availableStable.divPrice(executionPrice)) {
+                    executionSize = uint256(exposureAmount) + availableStable.divPrice(executionPrice);
+                }
+            }
+        } else {
+            if (isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+//                require(executionSize <= uint256(- exposureAmount) + availableIndex, 'iit');
+                if (executionSize > uint256(- exposureAmount) + availableIndex) {
+                    executionSize = uint256(- exposureAmount) + availableIndex;
+                }
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+//                require(executionSize <= availableStable.divPrice(executionPrice), 'ist');
+                if (executionSize > availableStable.divPrice(executionPrice)) {
+                    executionSize = availableStable.divPrice(executionPrice);
+                }
+            }
+        }
+        return executionSize;
+    }
 }
