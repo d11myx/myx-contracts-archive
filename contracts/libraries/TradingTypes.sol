@@ -97,6 +97,7 @@ library TradingTypes {
         int256 collateral; // 1e18 Margin amount
         uint256 triggerPrice; // Limit trigger price
         uint256 sizeAmount; // Number of customs documents
+        uint256 executedSize;
         uint256 maxSlippage;
         bool isLong;
         bool abovePrice; // Above or below the trigger price
