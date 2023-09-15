@@ -25,15 +25,6 @@ interface IPool {
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
-//    event Swap(
-//        address indexed funder,
-//        address indexed receiver,
-//        uint256 indexed pairIndex,
-//        bool isBuy, // buy indexToken with stableToken
-//        uint256 amountIn,
-//        uint256 amountOut
-//    );
-
     event AddLiquidity(
         address indexed funder,
         address indexed account,
@@ -131,10 +122,6 @@ interface IPool {
 
     function setLPProfit(uint256 _pairIndex, int256 _profit) external;
 
-    // function decreaseLPProfit(uint256 _pairIndex, int256 _profit) external;
-
-    // function liquitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
-
     function addLiquidity(
         address recipient,
         uint256 _pairIndex,
@@ -158,24 +145,6 @@ interface IPool {
         uint256 _amount,
         bytes calldata data
     ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
-
-//    function swap(
-//        uint256 _pairIndex,
-//        bool _isBuy,
-//        uint256 _amountIn,
-//        uint256 _minOut,
-//        bytes calldata data
-//    ) external returns (uint256 amountIn, uint256 amountOut);
-//
-//    function swapForAccount(
-//        address _funder,
-//        address _receiver,
-//        uint256 _pairIndex,
-//        bool _isBuy,
-//        uint256 _amountIn,
-//        uint256 _minOut,
-//        bytes calldata data
-//    ) external returns (uint256 amountIn, uint256 amountOut);
 
     function getMintLpAmount(
         uint256 _pairIndex,
