@@ -85,7 +85,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseMarketOrders(increaseOrders);
     }
@@ -98,7 +98,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseMarketOrders(decreaseOrders);
     }
@@ -111,7 +111,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeIncreaseLimitOrders(increaseOrders);
     }
@@ -124,7 +124,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeDecreaseLimitOrders(decreaseOrders);
     }
@@ -196,7 +196,14 @@ contract Executor is IExecutor, Pausable {
         uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
         bool isAbove = order.isLong &&
             (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
-        ValidationHelper.validatePriceTriggered(tradingConfig, order.tradeType, isAbove, executionPrice, order.openPrice, order.maxSlippage);
+        ValidationHelper.validatePriceTriggered(
+            tradingConfig,
+            order.tradeType,
+            isAbove,
+            executionPrice,
+            order.openPrice,
+            order.maxSlippage
+        );
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -460,7 +467,7 @@ contract Executor is IExecutor, Pausable {
             executionPrice
         );
 
-        bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
+        // bytes32 key = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
 
         // delete order
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
@@ -484,11 +491,13 @@ contract Executor is IExecutor, Pausable {
             )
         );
 
-        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+        // position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         if (position.positionAmount == 0) {
             // cancel all decrease order
-            IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
+            IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(
+                PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong)
+            );
 
             for (uint256 i = 0; i < orders.length; i++) {
                 IOrderManager.PositionOrder memory positionOrder = orders[i];
@@ -564,9 +573,13 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.executeADLAndDecreaseOrder(executePositions, orderId, tradeType, level, commissionRatio);
+    }
+
+    function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) internal {
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(_tokens, _prices, _timestamp);
     }
 
     function executeADLAndDecreaseOrder(
@@ -634,7 +647,7 @@ contract Executor is IExecutor, Pausable {
     ) external override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(tokens, prices, timestamp);
+        _setPrices(tokens, prices, timestamp);
 
         this.liquidatePositions(executePositions);
     }
