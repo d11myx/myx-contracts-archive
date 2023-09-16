@@ -136,12 +136,12 @@ contract Executor is IExecutor, Pausable {
             ExecuteOrder memory order = orders[i];
 
             try
-                this.executeIncreaseOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.MARKET,
-                    order.level,
-                    order.commissionRatio
-                )
+            this.executeIncreaseOrder(
+                order.orderId,
+                TradingTypes.TradeType.MARKET,
+                order.level,
+                order.commissionRatio
+            )
             {} catch Error(string memory reason) {
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true, reason);
             }
@@ -154,12 +154,12 @@ contract Executor is IExecutor, Pausable {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
-                this.executeIncreaseOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
-                    order.level,
-                    order.commissionRatio
-                )
+            this.executeIncreaseOrder(
+                order.orderId,
+                TradingTypes.TradeType.LIMIT,
+                order.level,
+                order.commissionRatio
+            )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
             }
@@ -232,7 +232,7 @@ contract Executor is IExecutor, Pausable {
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
 
         // check position and leverage
-        (uint256 afterPosition, ) = position.validLeverage(
+        (uint256 afterPosition,) = position.validLeverage(
             executionPrice,
             collateral,
             executionSize,
@@ -307,12 +307,12 @@ contract Executor is IExecutor, Pausable {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
-                this.executeDecreaseOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.MARKET,
-                    order.level,
-                    order.commissionRatio
-                )
+            this.executeDecreaseOrder(
+                order.orderId,
+                TradingTypes.TradeType.MARKET,
+                order.level,
+                order.commissionRatio
+            )
             {} catch Error(string memory reason) {
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false, reason);
             }
@@ -325,12 +325,12 @@ contract Executor is IExecutor, Pausable {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
-                this.executeDecreaseOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
-                    order.level,
-                    order.commissionRatio
-                )
+            this.executeDecreaseOrder(
+                order.orderId,
+                TradingTypes.TradeType.LIMIT,
+                order.level,
+                order.commissionRatio
+            )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
             }
@@ -435,7 +435,7 @@ contract Executor is IExecutor, Pausable {
         } else {
             if (!order.isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                needADL = executionSize > uint256(-preNetExposureAmountChecker) + availableIndex;
+                needADL = executionSize > uint256(- preNetExposureAmountChecker) + availableIndex;
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
                 needADL = executionSize > availableStable.divPrice(executionPrice);
@@ -550,7 +550,7 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: orderTpSl.tpPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.tp),
+                    sizeAmount: - int256(orderTpSl.tp),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -565,7 +565,7 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: orderTpSl.slPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.sl),
+                    sizeAmount: - int256(orderTpSl.sl),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -638,7 +638,7 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: price,
                     isLong: adlPosition.position.isLong,
-                    sizeAmount: -int256(adlPosition.position.positionAmount),
+                    sizeAmount: - int256(adlPosition.position.positionAmount),
                     maxSlippage: 0,
                     data: abi.encode(adlPosition.position.account)
                 })

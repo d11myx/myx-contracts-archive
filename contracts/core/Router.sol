@@ -101,18 +101,18 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
 
         return
             orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: request.account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.openPrice,
-                    isLong: request.isLong,
-                    sizeAmount: int256(request.sizeAmount),
-                    maxSlippage: request.maxSlippage,
-                    data: abi.encode(request.account)
-                })
-            );
+            TradingTypes.CreateOrderRequest({
+                account: request.account,
+                pairIndex: request.pairIndex,
+                tradeType: request.tradeType,
+                collateral: request.collateral,
+                openPrice: request.openPrice,
+                isLong: request.isLong,
+                sizeAmount: int256(request.sizeAmount),
+                maxSlippage: request.maxSlippage,
+                data: abi.encode(request.account)
+            })
+        );
     }
 
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256) {
@@ -120,18 +120,18 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
 
         return
             orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: request.account,
-                    pairIndex: request.pairIndex,
-                    tradeType: request.tradeType,
-                    collateral: request.collateral,
-                    openPrice: request.triggerPrice,
-                    isLong: request.isLong,
-                    sizeAmount: -int256(request.sizeAmount),
-                    maxSlippage: request.maxSlippage,
-                    data: abi.encode(request.account)
-                })
-            );
+            TradingTypes.CreateOrderRequest({
+                account: request.account,
+                pairIndex: request.pairIndex,
+                tradeType: request.tradeType,
+                collateral: request.collateral,
+                openPrice: request.triggerPrice,
+                isLong: request.isLong,
+                sizeAmount: - int256(request.sizeAmount),
+                maxSlippage: request.maxSlippage,
+                data: abi.encode(request.account)
+            })
+        );
     }
 
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
@@ -141,31 +141,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
         orderManager.cancelOrder(orderId, tradeType, false, 'cancelDecreaseOrder');
     }
-
-//    function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external {
-//        bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
-//        IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
-//
-//        while (orders.length > 0) {
-//            uint256 lastIndex = orders.length - 1;
-//            IOrderManager.PositionOrder memory positionOrder = orders[lastIndex];
-//            if (positionOrder.isIncrease) {
-//                orderManager.cancelOrder(
-//                    positionOrder.orderId,
-//                    positionOrder.tradeType,
-//                    true,
-//                    'cancelAllPositionOrders'
-//                );
-//            } else {
-//                orderManager.cancelOrder(
-//                    positionOrder.orderId,
-//                    positionOrder.tradeType,
-//                    false,
-//                    'cancelAllPositionOrders'
-//                );
-//            }
-//        }
-//    }
 
     function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external {
         bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
@@ -228,7 +203,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
                     collateral: 0,
                     openPrice: request.tpPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.tp),
+                    sizeAmount: - int256(request.tp),
                     maxSlippage: 0,
                     data: abi.encode(msg.sender)
                 })
@@ -243,7 +218,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
                     collateral: 0,
                     openPrice: request.slPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.sl),
+                    sizeAmount: - int256(request.sl),
                     maxSlippage: 0,
                     data: abi.encode(msg.sender)
                 })
@@ -277,7 +252,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address indexToken,
         address stableToken,
         uint256 amount
-    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
+    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return IPool(pool).removeLiquidity(msg.sender, pairIndex, amount, abi.encode(msg.sender));
     }
@@ -287,42 +262,10 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address stableToken,
         address receiver,
         uint256 amount
-    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
+    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
     }
-
-//    function swap(
-//        address indexToken,
-//        address stableToken,
-//        bool isBuy,
-//        uint256 amountIn,
-//        uint256 minOut
-//    ) external override returns (uint256, uint256) {
-//        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-//        return IPool(pool).swap(pairIndex, isBuy, amountIn, minOut, abi.encode(msg.sender));
-//    }
-//
-//    function swapForAccount(
-//        address indexToken,
-//        address stableToken,
-//        address receiver,
-//        bool isBuy,
-//        uint256 amountIn,
-//        uint256 minOut
-//    ) external override returns (uint256, uint256) {
-//        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-//        return
-//            IPool(pool).swapForAccount(
-//                msg.sender,
-//                receiver,
-//                pairIndex,
-//                isBuy,
-//                amountIn,
-//                minOut,
-//                abi.encode(msg.sender)
-//            );
-//    }
 
     function createOrderCallback(
         address collateral,
@@ -362,22 +305,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address sender = abi.decode(data, (address));
         IERC20(pairToken).transferFrom(sender, msg.sender, amount);
     }
-
-//    function swapCallback(
-//        address indexToken,
-//        address stableToken,
-//        uint256 indexAmount,
-//        uint256 stableAmount,
-//        bytes calldata data
-//    ) external override onlyPool {
-//        address sender = abi.decode(data, (address));
-//
-//        if (indexAmount > 0) {
-//            IERC20(indexToken).transferFrom(sender, msg.sender, indexAmount);
-//        } else if (stableAmount > 0) {
-//            IERC20(stableToken).transferFrom(sender, msg.sender, stableAmount);
-//        }
-//    }
 
     function adjustCollateral(uint256 pairIndex, bool isLong, int256 collateral) external {
         positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
