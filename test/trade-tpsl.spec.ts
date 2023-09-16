@@ -4,6 +4,7 @@ import { ethers } from 'hardhat';
 import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';
 import { TradeType } from '../helpers';
 import { IRouter, TradingTypes } from '../types/contracts/core/Router';
+import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 
 describe('Trade: TP & SL', () => {
     const pairIndex = 0;
@@ -40,6 +41,71 @@ describe('Trade: TP & SL', () => {
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const decreaseAmount = positionBefore.positionAmount;
         await decreasePosition(testEnv, trader, pairIndex, decreaseCollateral, decreaseAmount, TradeType.MARKET, true);
+    });
+
+    it('create order with tp sl', async () => {
+        const {
+            keeper,
+            users: [trader],
+            usdt,
+            router,
+            executor,
+            orderManager,
+            positionManager,
+        } = testEnv;
+
+        const collateral = ethers.utils.parseUnits('30000', 18);
+        const size = ethers.utils.parseUnits('9', 18);
+        let openPrice = ethers.utils.parseUnits('30000', 30);
+
+        await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+        const request: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
+            account: trader.address,
+            pairIndex: pairIndex,
+            tradeType: TradeType.MARKET,
+            collateral: collateral,
+            openPrice: openPrice,
+            isLong: true,
+            sizeAmount: size,
+            maxSlippage: 0,
+            tp: ethers.utils.parseUnits('5', 18),
+            tpPrice: ethers.utils.parseUnits('60000', 30),
+            sl: ethers.utils.parseUnits('5', 18),
+            slPrice: ethers.utils.parseUnits('10000', 30),
+        };
+
+        let orderId = await orderManager.ordersIndex();
+        await router.connect(trader.signer).createIncreaseOrder(request);
+        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+
+        const positionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
+        let positionOrders = await orderManager.getPositionOrders(positionKey);
+
+        expect(positionOrders.length).to.be.eq(2);
+
+        await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+        const request1: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
+            account: trader.address,
+            pairIndex: pairIndex,
+            tradeType: TradeType.MARKET,
+            collateral: 0,
+            openPrice: ethers.utils.parseUnits('30000', 30),
+            isLong: true,
+            sizeAmount: ethers.utils.parseUnits('10', 18),
+            maxSlippage: 0,
+            tp: ethers.utils.parseUnits('5', 18),
+            tpPrice: ethers.utils.parseUnits('60000', 30),
+            sl: ethers.utils.parseUnits('5', 18),
+            slPrice: ethers.utils.parseUnits('10000', 30),
+        };
+
+        orderId = await orderManager.ordersIndex();
+        await router.connect(trader.signer).createIncreaseOrder(request1);
+        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+
+        positionOrders = await orderManager.getPositionOrders(positionKey);
+
+        expect(positionOrders.length).to.be.eq(4);
     });
 
     describe('order tp sl', () => {
