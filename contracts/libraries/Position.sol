@@ -93,8 +93,8 @@ library Position {
         require(totalCollateral >= 0, 'collateral not enough for decrease');
 
         // pnl
-        if (_sizeAmount > 0) {
-            totalCollateral += getUnrealizedPnl(self, _sizeAmount, price);
+        if (self.positionAmount > 0) {
+            totalCollateral += getUnrealizedPnl(self, self.positionAmount, price);
         }
 
         require(totalCollateral >= 0, 'collateral not enough for pnl');
