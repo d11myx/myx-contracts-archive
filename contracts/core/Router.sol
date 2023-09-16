@@ -252,7 +252,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address indexToken,
         address stableToken,
         uint256 amount
-    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
+    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return IPool(pool).removeLiquidity(msg.sender, pairIndex, amount, abi.encode(msg.sender));
     }
@@ -262,7 +262,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address stableToken,
         address receiver,
         uint256 amount
-    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
+    ) external override returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
     }

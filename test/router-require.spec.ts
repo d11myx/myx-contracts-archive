@@ -133,6 +133,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     kOfSwap: pair.kOfSwap,
                     expectIndexTokenP: pair.expectIndexTokenP,
                     addLpFeeP: pair.addLpFeeP,
+                    removeLpFeeP: pair.addLpFeeP,
                     lpFeeDistributeP: pair.lpFeeDistributeP,
                 };
                 await pool.updatePair(pairIndex, newPair);
@@ -161,6 +162,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     kOfSwap: pairBef.kOfSwap,
                     expectIndexTokenP: pairBef.expectIndexTokenP,
                     addLpFeeP: pairBef.addLpFeeP,
+                    removeLpFeeP: pairBef.addLpFeeP,
                     lpFeeDistributeP: pairBef.lpFeeDistributeP,
                 };
                 await pool.updatePair(pairIndex, newPair);
