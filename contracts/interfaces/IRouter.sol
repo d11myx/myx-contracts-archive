@@ -30,8 +30,6 @@ interface IRouter {
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
 
-//    function cancelAllPositionOrders(uint256 pairIndex, bool isLong) external;
-
     function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
 
     function createTpSl(
@@ -57,29 +55,12 @@ interface IRouter {
         address indexToken,
         address stableToken,
         uint256 amount
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
     function removeLiquidityForAccount(
         address indexToken,
         address stableToken,
         address receiver,
         uint256 amount
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
-
-//    function swap(
-//        address indexToken,
-//        address stableToken,
-//        bool isBuy,
-//        uint256 amountIn,
-//        uint256 minOut
-//    ) external returns (uint256, uint256);
-//
-//    function swapForAccount(
-//        address indexToken,
-//        address stableToken,
-//        address receiver,
-//        bool isBuy,
-//        uint256 amountIn,
-//        uint256 minOut
-//    ) external returns (uint256, uint256);
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 }
