@@ -44,7 +44,8 @@ interface IPool {
         uint256 indexed pairIndex,
         uint256 indexAmount,
         uint256 stableAmount,
-        uint256 lpAmount
+        uint256 lpAmount,
+        uint256 feeAmount
     );
 
     struct Vault {
@@ -64,6 +65,7 @@ interface IPool {
         uint256 kOfSwap; //Initial k value of liquidity
         uint256 expectIndexTokenP; //   for 100%
         uint256 addLpFeeP; // Add liquidity fee
+        uint256 removeLpFeeP; // remove liquidity fee
         uint256 lpFeeDistributeP;
     }
 
@@ -144,7 +146,7 @@ interface IPool {
         uint256 _pairIndex,
         uint256 _amount,
         bytes calldata data
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
     function getMintLpAmount(
         uint256 _pairIndex,
