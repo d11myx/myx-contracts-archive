@@ -10,6 +10,8 @@ interface IFundingRate {
         uint256 fundingInterval;
     }
 
+    function getFundingInterval(uint256 _pairIndex) external view returns (uint256);
+
     function getFundingRate(
         uint256 _pairIndex,
         // uint256 fundingInterval,
