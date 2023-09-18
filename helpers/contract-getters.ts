@@ -23,6 +23,7 @@ import {
     LPStakingPool,
     FeeDistributor,
     TestCallBack,
+    FundingRate,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -48,6 +49,7 @@ import {
     LP_STAKING_POOL_ID,
     FEE_DISTRIBUTOR_ID,
     TEST_CALLBACK_ID,
+    FUNDING_RATE,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -106,6 +108,10 @@ export const getPoolTokenFactory = async (address?: string): Promise<PoolTokenFa
 
 export const getPool = async (address?: string): Promise<Pool> => {
     return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
+};
+
+export const getFundingRate = async (address?: string): Promise<FundingRate> => {
+    return getContract<FundingRate>('FundingRate', address || (await hre.deployments.get(FUNDING_RATE)).address);
 };
 
 export const getRouter = async (address?: string): Promise<Router> => {

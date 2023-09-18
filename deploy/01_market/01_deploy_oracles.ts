@@ -2,6 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
+    FUNDING_RATE,
     getAddressesProvider,
     INDEX_PRICE_FEED_ID,
     loadReserveConfig,
@@ -10,7 +11,7 @@ import {
     ORACLE_PRICE_FEED_ID,
     waitForTx,
 } from '../../helpers';
-import { IndexPriceFeed, MockPriceFeed, OraclePriceFeed } from '../../types';
+import { FundingRate, IndexPriceFeed, MockPriceFeed, OraclePriceFeed } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -61,8 +62,21 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         indexPriceFeedArtifact.address,
     )) as IndexPriceFeed;
 
+    const FundingRateArtifact = await deploy(`${FUNDING_RATE}`, {
+        from: deployer,
+        contract: 'FundingRate',
+        args: [addressesProvider.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const fundingRate = (await hre.ethers.getContractAt(
+        FundingRateArtifact.abi,
+        FundingRateArtifact.address,
+    )) as FundingRate;
+
     await waitForTx(
-        await addressesProvider.connect(deployerSigner).initOracle(oraclePriceFeed.address, indexPriceFeed.address),
+        await addressesProvider
+            .connect(deployerSigner)
+            .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address),
     );
     // await waitForTx(await addressesProvider.connect(deployerSigner).setIndexPriceOracle());
 };
