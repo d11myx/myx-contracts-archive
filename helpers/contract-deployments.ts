@@ -3,6 +3,7 @@ import {
     AddressesProvider,
     Executor,
     FeeCollector,
+    FundingRate,
     IndexPriceFeed,
     MockPriceFeed,
     OraclePriceFeed,
@@ -126,9 +127,14 @@ export async function deployPrice(
 
     await oraclePriceFeed.setIndexPriceFeed(indexPriceFeed.address);
 
-    await addressesProvider.connect(deployer.signer).initOracle(oraclePriceFeed.address, indexPriceFeed.address);
+    const fundingRate = (await deployContract('FundingRate', [addressesProvider.address])) as any as FundingRate;
+    log(`deployed FundingRate at ${fundingRate.address}`);
+
+    await addressesProvider
+        .connect(deployer.signer)
+        .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address);
     // await addressesProvider.connect(deployer.signer).setIndexPriceOracle();
-    return { oraclePriceFeed, indexPriceFeed };
+    return { oraclePriceFeed, indexPriceFeed, fundingRate };
 }
 
 export async function deployPair(
@@ -166,7 +172,7 @@ export async function deployTrading(
         pool.address,
         pledge.address,
         feeCollector.address,
-        8 * 60 * 60,
+
     ])) as any as PositionManager;
     log(`deployed PositionManager at ${positionManager.address}`);
 

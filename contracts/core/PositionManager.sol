@@ -1,24 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/security/Pausable.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@openzeppelin/contracts/utils/math/Math.sol';
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import '../libraries/Position.sol';
-import '../libraries/PositionKey.sol';
-import {PositionStatus, IPositionManager} from '../interfaces/IPositionManager.sol';
-import '../interfaces/IOraclePriceFeed.sol';
-import '../libraries/PrecisionUtils.sol';
-import '../libraries/Int256Utils.sol';
-import '../libraries/Roleable.sol';
-import '../interfaces/IPool.sol';
-import '../interfaces/IPool.sol';
-import '../interfaces/IAddressesProvider.sol';
-import '../interfaces/IRoleManager.sol';
-import './FeeManager.sol';
+import "./FeeManager.sol";
+import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
+import "../libraries/Position.sol";
+import "../libraries/PositionKey.sol";
+import "../libraries/PrecisionUtils.sol";
+import "../libraries/Int256Utils.sol";
+import "../libraries/Roleable.sol";
+
+import "../interfaces/IFundingRate.sol";
+import "../interfaces/IPool.sol";
+import "../interfaces/IOraclePriceFeed.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 
 contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
@@ -42,7 +43,7 @@ contract PositionManager is FeeManager, Pausable {
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
-    uint256 public fundingInterval;
+    // uint256 public fundingInterval = 28800;
 
     address public addressExecutor;
     address public addressOrderManager;
@@ -51,14 +52,11 @@ contract PositionManager is FeeManager, Pausable {
         IAddressesProvider addressProvider,
         IPool pool,
         address _pledgeAddress,
-        IFeeCollector feeCollector,
-        uint256 _fundingInterval
-    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {
-        fundingInterval = _fundingInterval;
-    }
+        IFeeCollector feeCollector
+    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {}
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutor, 'forbidden');
+        require(msg.sender == addressExecutor, "forbidden");
         _;
     }
 
@@ -78,11 +76,11 @@ contract PositionManager is FeeManager, Pausable {
         addressOrderManager = _addressOrderManager;
     }
 
-    function updateFundingInterval(uint256 newInterval) external onlyPoolAdmin {
-        uint256 oldInterval = fundingInterval;
-        fundingInterval = newInterval;
-        emit UpdateFundingInterval(oldInterval, newInterval);
-    }
+    // function updateFundingInterval(uint256 newInterval) external onlyPoolAdmin {
+    //     uint256 oldInterval = fundingInterval;
+    //     fundingInterval = newInterval;
+    //     emit UpdateFundingInterval(oldInterval, newInterval);
+    // }
 
     function _takeFundingFeeAddTraderFee(
         uint256 _pairIndex,
@@ -113,7 +111,14 @@ contract PositionManager is FeeManager, Pausable {
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
         charge += fundingFee;
-        emit TakeFundingFeeAddTraderFee(_account, _pairIndex, sizeDelta, tradingFee, fundingFee, lpAmount);
+        emit TakeFundingFeeAddTraderFee(
+            _account,
+            _pairIndex,
+            sizeDelta,
+            tradingFee,
+            fundingFee,
+            lpAmount
+        );
     }
 
     function getExposedPositions(uint256 _pairIndex) public view override returns (int256) {
@@ -136,9 +141,13 @@ contract PositionManager is FeeManager, Pausable {
         }
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (isIncrease) {
-            _isLong ? longTracker[_pairIndex] += _sizeAmount : shortTracker[_pairIndex] += _sizeAmount;
+            _isLong
+                ? longTracker[_pairIndex] += _sizeAmount
+                : shortTracker[_pairIndex] += _sizeAmount;
         } else {
-            _isLong ? longTracker[_pairIndex] -= _sizeAmount : shortTracker[_pairIndex] -= _sizeAmount;
+            _isLong
+                ? longTracker[_pairIndex] -= _sizeAmount
+                : shortTracker[_pairIndex] -= _sizeAmount;
         }
         int256 nextExposureAmountChecker = getExposedPositions(_pairIndex);
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
@@ -178,8 +187,9 @@ contract PositionManager is FeeManager, Pausable {
             if (isAddPosition) {
                 pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
 
-                uint256 averagePrice = (uint256(currentExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(currentExposureAmountChecker) + _sizeAmount);
+                uint256 averagePrice = (uint256(currentExposureAmountChecker).mulPrice(
+                    lpVault.averagePrice
+                ) + sizeDelta).calculatePrice(uint256(currentExposureAmountChecker) + _sizeAmount);
 
                 pool.updateAveragePrice(_pairIndex, averagePrice);
             } else {
@@ -206,8 +216,9 @@ contract PositionManager is FeeManager, Pausable {
             if (isAddPosition) {
                 pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
 
-                uint256 averagePrice = (uint256(-currentExposureAmountChecker).mulPrice(lpVault.averagePrice) +
-                    sizeDelta).calculatePrice(uint256(-currentExposureAmountChecker) + _sizeAmount);
+                uint256 averagePrice = (uint256(-currentExposureAmountChecker).mulPrice(
+                    lpVault.averagePrice
+                ) + sizeDelta).calculatePrice(uint256(-currentExposureAmountChecker) + _sizeAmount);
                 pool.updateAveragePrice(_pairIndex, averagePrice);
             } else {
                 uint256 decreaseShort;
@@ -259,7 +270,11 @@ contract PositionManager is FeeManager, Pausable {
         return profit;
     }
 
-    function _currentLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal view returns (int256) {
+    function _currentLpProfit(
+        uint256 _pairIndex,
+        bool lpIsLong,
+        uint amount
+    ) internal view returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
         uint256 _price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
@@ -289,9 +304,15 @@ contract PositionManager is FeeManager, Pausable {
         uint256 vipRate,
         uint256 referenceRate,
         uint256 oraclePrice
-    ) external nonReentrant onlyExecutor whenNotPaused returns (uint256 tradingFee, int256 fundingFee) {
+    )
+        external
+        nonReentrant
+        onlyExecutor
+        whenNotPaused
+        returns (uint256 tradingFee, int256 fundingFee)
+    {
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        require(pair.stableToken == pledgeAddress, '!=plege');
+        require(pair.stableToken == pledgeAddress, "!=plege");
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
 
@@ -304,10 +325,11 @@ contract PositionManager is FeeManager, Pausable {
         }
 
         if (position.positionAmount > 0 && sizeDelta > 0) {
-            position.averagePrice = (position.positionAmount.mulPrice(position.averagePrice) + sizeDelta).mulDiv(
-                PrecisionUtils.pricePrecision(),
-                (position.positionAmount + sizeAmount)
-            );
+            position.averagePrice = (position.positionAmount.mulPrice(position.averagePrice) +
+                sizeDelta).mulDiv(
+                    PrecisionUtils.pricePrecision(),
+                    (position.positionAmount + sizeAmount)
+                );
         }
 
         // update funding fee
@@ -326,9 +348,9 @@ contract PositionManager is FeeManager, Pausable {
             oraclePrice
         );
 
-        charge < 0 ? position.collateral = position.collateral.sub(charge.abs()) : position.collateral = position
-            .collateral
-            .add(charge.abs());
+        charge < 0
+            ? position.collateral = position.collateral.sub(charge.abs())
+            : position.collateral = position.collateral.add(charge.abs());
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount += sizeAmount;
 
@@ -362,10 +384,16 @@ contract PositionManager is FeeManager, Pausable {
         uint256 vipRate,
         uint256 referenceRate,
         uint256 oraclePrice
-    ) external onlyExecutor nonReentrant whenNotPaused returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
+    )
+        external
+        onlyExecutor
+        nonReentrant
+        whenNotPaused
+        returns (uint256 tradingFee, int256 fundingFee, int256 pnl)
+    {
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
-        require(position.account != address(0), 'position not found');
+        require(position.account != address(0), "position not found");
 
         uint256 beforeCollateral = position.collateral;
         uint256 beforePositionAmount = position.positionAmount;
@@ -394,9 +422,9 @@ contract PositionManager is FeeManager, Pausable {
 
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
         pnl += charge;
-        pnl < 0 ? position.collateral = position.collateral.sub(pnl.abs()) : position.collateral = position
-            .collateral
-            .add(pnl.abs());
+        pnl < 0
+            ? position.collateral = position.collateral.sub(pnl.abs())
+            : position.collateral = position.collateral.add(pnl.abs());
         if (position.positionAmount == 0) {
             pool.transferTokenTo(pledgeAddress, position.account, position.collateral);
             position.collateral = 0;
@@ -418,10 +446,17 @@ contract PositionManager is FeeManager, Pausable {
         );
     }
 
-    function adjustCollateral(uint256 pairIndex, address account, bool isLong, int256 collateral) external override {
-        require(account == msg.sender || addressExecutor == msg.sender, 'forbidden');
+    function adjustCollateral(
+        uint256 pairIndex,
+        address account,
+        bool isLong,
+        int256 collateral
+    ) external override {
+        require(account == msg.sender || addressExecutor == msg.sender, "forbidden");
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        Position.Info storage position = positions[PositionKey.getPositionKey(account, pairIndex, isLong)];
+        Position.Info storage position = positions[
+            PositionKey.getPositionKey(account, pairIndex, isLong)
+        ];
         uint256 collateralBefore = position.collateral;
         _handleCollateral(position, collateral);
         uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
@@ -434,7 +469,7 @@ contract PositionManager is FeeManager, Pausable {
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
-        require(afterPosition > 0, 'zero position amount');
+        require(afterPosition > 0, "zero position amount");
 
         emit AdjustCollateral(
             position.account,
@@ -446,14 +481,14 @@ contract PositionManager is FeeManager, Pausable {
     }
 
     function _handleCollateral(Position.Info storage position, int256 collateral) internal {
-        uint256 collateralBefore = position.collateral;
+        // uint256 collateralBefore = position.collateral;
         if (collateral < 0) {
             position.collateral = position.collateral.sub(collateral.abs());
             pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
         } else {
             position.collateral = position.collateral.add(collateral.abs());
         }
-        require(position.collateral >= 0, 'collateral not enough');
+        require(position.collateral >= 0, "collateral not enough");
     }
 
     function getTradingFee(
@@ -511,8 +546,13 @@ contract PositionManager is FeeManager, Pausable {
     }
 
     function _updateFundingRate(uint256 _pairIndex, uint256 _price) internal {
+        uint256 fundingInterval = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingInterval(
+            _pairIndex
+        );
         if (lastFundingRateUpdateTimes[_pairIndex] == 0) {
-            lastFundingRateUpdateTimes[_pairIndex] = block.timestamp;
+            lastFundingRateUpdateTimes[_pairIndex] =
+                (block.timestamp / fundingInterval) *
+                fundingInterval;
             return;
         }
         if (block.timestamp - lastFundingRateUpdateTimes[_pairIndex] < fundingInterval) {
@@ -524,7 +564,9 @@ contract PositionManager is FeeManager, Pausable {
             globalFundingFeeTracker[_pairIndex] +
             (nextFundingRate * int256(_price)) /
             int256(PrecisionUtils.pricePrecision());
-        lastFundingRateUpdateTimes[_pairIndex] = block.timestamp;
+        lastFundingRateUpdateTimes[_pairIndex] =
+            (block.timestamp / fundingInterval) *
+            fundingInterval;
         currentFundingRate[_pairIndex] = nextFundingRate;
 
         // fund rate for settlement lp
@@ -533,17 +575,24 @@ contract PositionManager is FeeManager, Pausable {
             lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
             pool.setLPProfit(
                 _pairIndex,
-                (nextFundingRate * int256(lpPosition)) / int256(PrecisionUtils.fundingRatePrecision())
+                (nextFundingRate * int256(lpPosition)) /
+                    int256(PrecisionUtils.fundingRatePrecision())
             );
         } else {
             lpPosition = shortTracker[_pairIndex] - longTracker[_pairIndex];
             pool.setLPProfit(
                 _pairIndex,
-                (-nextFundingRate * int256(lpPosition)) / int256(PrecisionUtils.fundingRatePrecision())
+                (-nextFundingRate * int256(lpPosition)) /
+                    int256(PrecisionUtils.fundingRatePrecision())
             );
         }
 
-        emit UpdateFundingRate(_pairIndex, _price, nextFundingRate, lastFundingRateUpdateTimes[_pairIndex]);
+        emit UpdateFundingRate(
+            _pairIndex,
+            _price,
+            nextFundingRate,
+            lastFundingRateUpdateTimes[_pairIndex]
+        );
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
@@ -556,17 +605,19 @@ contract PositionManager is FeeManager, Pausable {
         return _nextFundingRate(_pairIndex, price);
     }
 
-    function getNextFundingRateUpdateTime(uint256 _pairIndex) external view override returns (uint256) {
-        return lastFundingRateUpdateTimes[_pairIndex] + fundingInterval;
+    function getNextFundingRateUpdateTime(
+        uint256 _pairIndex
+    ) external view override returns (uint256) {
+        return
+            lastFundingRateUpdateTimes[_pairIndex] +
+            IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingInterval(_pairIndex);
     }
 
-    function _nextFundingRate(uint256 _pairIndex, uint256 _price) internal view returns (int256 fundingRate) {
-        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
+    function _nextFundingRate(
+        uint256 _pairIndex,
+        uint256 _price
+    ) internal view returns (int256 fundingRate) {
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex) * int256(_price);
-
-        int256 w = int256(fundingFeeConfig.fundingWeightFactor);
-        int256 q = int256(longTracker[_pairIndex] + shortTracker[_pairIndex]);
-        int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
         int256 l = int256(
@@ -574,21 +625,14 @@ contract PositionManager is FeeManager, Pausable {
                 (lpVault.stableTotalAmount - lpVault.stableReservedAmount)
         );
 
-        if (q == 0) {
-            fundingRate = 0;
-        } else {
-            fundingRate = (w * currentExposureAmountChecker * int256(PrecisionUtils.fundingRatePrecision())) / (k * q);
-            if (l != 0) {
-                fundingRate =
-                    fundingRate +
-                    ((int256(PrecisionUtils.fundingRatePrecision()) - w) * currentExposureAmountChecker) /
-                    (k * l);
-            }
-        }
-        fundingRate = (fundingRate - fundingFeeConfig.interest).max(fundingFeeConfig.minFundingRate).min(
-            fundingFeeConfig.maxFundingRate
+        fundingRate = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingRate(
+            _pairIndex,
+            // fundingInterval,
+            currentExposureAmountChecker,
+            l,
+            longTracker[_pairIndex],
+            shortTracker[_pairIndex]
         );
-        fundingRate = fundingRate / int256(365) / int256(86400 / fundingInterval);
     }
 
     function getPosition(
@@ -605,7 +649,11 @@ contract PositionManager is FeeManager, Pausable {
         return position;
     }
 
-    function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) public pure returns (bytes32) {
+    function getPositionKey(
+        address _account,
+        uint256 _pairIndex,
+        bool _isLong
+    ) public pure returns (bytes32) {
         return PositionKey.getPositionKey(_account, _pairIndex, _isLong);
     }
 }

@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/utils/math/Math.sol';
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import '@openzeppelin/contracts/utils/Address.sol';
-import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import '../interfaces/IPositionManager.sol';
-import '../interfaces/IPool.sol';
-import '../interfaces/ISwapCallback.sol';
-import '../interfaces/IPoolToken.sol';
-import '../interfaces/IOraclePriceFeed.sol';
-import '../token/interfaces/IBaseToken.sol';
+import "../interfaces/IPositionManager.sol";
+import "../interfaces/IPool.sol";
+import "../interfaces/ISwapCallback.sol";
+import "../interfaces/IPoolToken.sol";
+import "../interfaces/IOraclePriceFeed.sol";
+import "../token/interfaces/IBaseToken.sol";
 
-import '../libraries/AmountMath.sol';
-import '../libraries/PrecisionUtils.sol';
-import '../libraries/Roleable.sol';
-import '../libraries/Int256Utils.sol';
-import '../libraries/AMMUtils.sol';
-import '../libraries/PrecisionUtils.sol';
+import "../libraries/AmountMath.sol";
+import "../libraries/PrecisionUtils.sol";
+import "../libraries/Roleable.sol";
+import "../libraries/Int256Utils.sol";
+import "../libraries/AMMUtils.sol";
+import "../libraries/PrecisionUtils.sol";
 
-import '../interfaces/IPoolTokenFactory.sol';
-import '../interfaces/ILiquidityCallback.sol';
-import '../helpers/ValidationHelper.sol';
+import "../interfaces/IPoolTokenFactory.sol";
+import "../interfaces/ILiquidityCallback.sol";
+import "../helpers/ValidationHelper.sol";
 
 contract Pool is IPool, Roleable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -39,7 +39,6 @@ contract Pool is IPool, Roleable {
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
-    mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
     mapping(address => mapping(address => uint256)) public override getPairIndex;
     mapping(address => mapping(address => bool)) public isPairListed;
@@ -53,20 +52,23 @@ contract Pool is IPool, Roleable {
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
 
-    constructor(IAddressesProvider addressProvider, IPoolTokenFactory _poolTokenFactory) Roleable(addressProvider) {
+    constructor(
+        IAddressesProvider addressProvider,
+        IPoolTokenFactory _poolTokenFactory
+    ) Roleable(addressProvider) {
         poolTokenFactory = _poolTokenFactory;
     }
 
     modifier onlyPositionManagerOrOrderManager() {
         require(
             positionManagers.contains(msg.sender) || orderManagers.contains(msg.sender),
-            'onlyPositionManagerOrOrderManager'
+            "onlyPositionManagerOrOrderManager"
         );
         _;
     }
 
     modifier onlyPositionManager() {
-        require(positionManagers.contains(msg.sender), 'forbidden');
+        require(positionManagers.contains(msg.sender), "forbidden");
         _;
     }
 
@@ -96,9 +98,9 @@ contract Pool is IPool, Roleable {
 
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
-        require(_indexToken != address(0) && _stableToken != address(0), 'zero address');
-        require(!isStableToken[_indexToken], '!stable token');
-        require(!isPairListed[_indexToken][_stableToken], 'pair already listed');
+        require(_indexToken != address(0) && _stableToken != address(0), "zero address");
+        require(!isStableToken[_indexToken], "!stable token");
+        require(!isPairListed[_indexToken][_stableToken], "pair already listed");
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
@@ -117,24 +119,32 @@ contract Pool is IPool, Roleable {
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
         Pair storage pair = pairs[_pairIndex];
-        require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
         require(
-            _pair.expectIndexTokenP <= PrecisionUtils.percentage() && _pair.addLpFeeP <= PrecisionUtils.percentage(),
-            'exceed 100%'
+            pair.indexToken != address(0) && pair.stableToken != address(0),
+            "pair not existed"
+        );
+        require(
+            _pair.expectIndexTokenP <= PrecisionUtils.percentage() &&
+                _pair.addLpFeeP <= PrecisionUtils.percentage(),
+            "exceed 100%"
         );
 
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
         pair.expectIndexTokenP = _pair.expectIndexTokenP;
         pair.addLpFeeP = _pair.addLpFeeP;
+        pair.removeLpFeeP = _pair.removeLpFeeP;
     }
 
-    function updateTradingConfig(uint256 _pairIndex, TradingConfig calldata _tradingConfig) external onlyPoolAdmin {
+    function updateTradingConfig(
+        uint256 _pairIndex,
+        TradingConfig calldata _tradingConfig
+    ) external onlyPoolAdmin {
         require(
             _tradingConfig.maintainMarginRate <= PrecisionUtils.percentage() &&
                 _tradingConfig.priceSlipP <= PrecisionUtils.percentage() &&
                 _tradingConfig.maxPriceDeviationP <= PrecisionUtils.percentage(),
-            'exceed 100%'
+            "exceed 100%"
         );
         tradingConfigs[_pairIndex] = _tradingConfig;
     }
@@ -145,34 +155,28 @@ contract Pool is IPool, Roleable {
     ) external onlyPoolAdmin {
         require(
             _tradingFeeConfig.takerFeeP <= MAX_FEE && _tradingFeeConfig.makerFeeP <= MAX_FEE,
-            'trading fee exceed 1%'
+            "trading fee exceed 1%"
         );
         require(
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
                 _tradingFeeConfig.stakingFeeDistributeP <=
                 PrecisionUtils.percentage(),
-            'distribute exceed 1%'
+            "distribute exceed 1%"
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updateFundingFeeConfig(
+    function updatePairMiner(
         uint256 _pairIndex,
-        FundingFeeConfig calldata _fundingFeeConfig
+        address _account,
+        bool _enable
     ) external onlyPoolAdmin {
-        require(
-            _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage(),
-            'exceed 100%'
-        );
-
-        fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
-    }
-
-    function updatePairMiner(uint256 _pairIndex, address _account, bool _enable) external onlyPoolAdmin {
         Pair memory pair = pairs[_pairIndex];
-        require(pair.indexToken != address(0) && pair.stableToken != address(0), 'pair not existed');
+        require(
+            pair.indexToken != address(0) && pair.stableToken != address(0),
+            "pair not existed"
+        );
 
         IBaseToken(pair.pairToken).setMiner(_account, _enable);
     }
@@ -185,7 +189,11 @@ contract Pool is IPool, Roleable {
         _increaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
-    function _increaseTotalAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) internal {
+    function _increaseTotalAmount(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) internal {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount + _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount + _stableAmount;
@@ -206,7 +214,11 @@ contract Pool is IPool, Roleable {
         _decreaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
-    function _decreaseTotalAmount(uint256 _pairIndex, uint256 _indexAmount, uint256 _stableAmount) internal {
+    function _decreaseTotalAmount(
+        uint256 _pairIndex,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) internal {
         Vault storage vault = vaults[_pairIndex];
         vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
@@ -253,7 +265,10 @@ contract Pool is IPool, Roleable {
         );
     }
 
-    function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external onlyPositionManager {
+    function updateAveragePrice(
+        uint256 _pairIndex,
+        uint256 _averagePrice
+    ) external onlyPositionManager {
         vaults[_pairIndex].averagePrice = _averagePrice;
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
@@ -264,31 +279,11 @@ contract Pool is IPool, Roleable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-            require(_profit.abs() <= availableStable, 'stable token not enough');
+            require(_profit.abs() <= availableStable, "stable token not enough");
             vault.stableTotalAmount -= _profit.abs();
         }
 
         emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
-    }
-
-    function _liquitySwap(uint256 _pairIndex, bool _isBuy, uint256 _amountIn, uint256 _amountOut) private {
-        Vault memory vault = vaults[_pairIndex];
-
-        if (_isBuy) {
-            uint256 availableIndex = vault.indexTotalAmount - vault.indexReservedAmount;
-
-            require(_amountOut <= availableIndex, 'swap index token not enough');
-
-            _increaseTotalAmount(_pairIndex, 0, _amountIn);
-            _decreaseTotalAmount(_pairIndex, _amountOut, 0);
-        } else {
-            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-
-            require(_amountOut <= availableStable, 'swap stable token not enough');
-
-            _increaseTotalAmount(_pairIndex, _amountIn, 0);
-            _decreaseTotalAmount(_pairIndex, 0, _amountOut);
-        }
     }
 
     function addLiquidity(
@@ -321,116 +316,21 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _amount,
         bytes calldata data
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount) {
+    )
+        external
+        returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
+    {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, _receiver);
 
-        (receivedIndexAmount, receivedStableAmount) = _removeLiquidity(_receiver, _pairIndex, _amount, data);
+        (receivedIndexAmount, receivedStableAmount, feeAmount) = _removeLiquidity(
+            _receiver,
+            _pairIndex,
+            _amount,
+            data
+        );
 
-        return (receivedIndexAmount, receivedStableAmount);
+        return (receivedIndexAmount, receivedStableAmount, feeAmount);
     }
-
-//    //  cal lp pnl
-//    function swap(
-//        uint256 _pairIndex,
-//        bool _isBuy,
-//        uint256 _amountIn,
-//        uint256 _minOut,
-//        bytes calldata data
-//    ) external returns (uint256 amountIn, uint256 amountOut) {
-//        (amountIn, amountOut) = _swap(msg.sender, address(this), _pairIndex, _isBuy, _amountIn, _minOut, data);
-//        return (amountIn, amountOut);
-//    }
-//
-//    function swapForAccount(
-//        address _funder,
-//        address _receiver,
-//        uint256 _pairIndex,
-//        bool _isBuy,
-//        uint256 _amountIn,
-//        uint256 _minOut,
-//        bytes calldata data
-//    ) external returns (uint256 amountIn, uint256 amountOut) {
-//        return _swap(_funder, _receiver, _pairIndex, _isBuy, _amountIn, _minOut, data);
-//    }
-//
-//    function _swap(
-//        address _funder,
-//        address _receiver,
-//        uint256 _pairIndex,
-//        bool _isBuy,
-//        uint256 _amountIn,
-//        uint256 _minOut,
-//        bytes calldata data
-//    ) internal returns (uint256 amountIn, uint256 amountOut) {
-//        require(_amountIn > 0, 'swap invalid amount in');
-//
-//        IPool.Pair memory pair = getPair(_pairIndex);
-//        require(pair.pairToken != address(0), 'swap invalid pair');
-//
-//        IPool.Vault memory vault = getVault(_pairIndex);
-//
-//        uint256 price = getPrice(pair.indexToken);
-//
-//        uint256 indexTotalAmount = _getIndexTotalAmount(pair, vault);
-//        uint256 stableTotaAmount = _getStableTotalAmount(pair, vault);
-//        // total delta
-//        uint256 indexTotalDelta = indexTotalAmount.mulPrice(price);
-//        uint256 stableTotalDelta = stableTotaAmount;
-//
-//        uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
-//        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-//        uint256 expectStableDelta = totalDelta - expectIndexDelta;
-//
-//        uint256 balanceBefore;
-//
-//        if (_isBuy) {
-//            // index out stable in
-//            require(expectStableDelta > stableTotalDelta, 'no need stable token');
-//
-//            uint256 stableInDelta = _amountIn;
-//            stableInDelta = stableInDelta.min(expectStableDelta - stableTotalDelta);
-//
-//            amountOut = stableInDelta.divPrice(price);
-//            uint256 availableIndex = indexTotalAmount - vault.indexReservedAmount;
-//
-//            require(availableIndex > 0, 'no available index token');
-//
-//            amountOut = amountOut.min(availableIndex);
-//            amountIn = amountOut.divPrice(price);
-//
-//            require(amountOut >= _minOut, 'insufficient minOut');
-//
-//            _liquitySwap(_pairIndex, _isBuy, amountIn, amountOut);
-//            if (amountIn > 0) balanceBefore = IERC20(pair.stableToken).balanceOf(address(this));
-//            ISwapCallback(msg.sender).swapCallback(pair.stableToken, pair.stableToken, 0, amountIn, data);
-//            if (amountIn > 0) {
-//                require(balanceBefore.add(amountIn) <= IERC20(pair.stableToken).balanceOf(address(this)), 'ti');
-//            }
-//            IERC20(pair.indexToken).safeTransfer(_receiver, amountOut);
-//        } else {
-//            // index in stable out
-//            require(expectIndexDelta > indexTotalDelta, 'no need index token');
-//
-//            uint256 indexInDelta = _amountIn.mulPrice(price);
-//            indexInDelta = indexInDelta.min(expectIndexDelta - indexTotalDelta);
-//
-//            amountOut = indexInDelta;
-//            uint256 availableStable = stableTotaAmount - vault.stableReservedAmount;
-//
-//            require(availableStable > 0, 'no stable token');
-//
-//            amountOut = amountOut.min(availableStable);
-//            amountIn = amountOut.divPrice(price);
-//            if (amountIn > 0) balanceBefore = IERC20(pair.indexToken).balanceOf(address(this));
-//            ISwapCallback(msg.sender).swapCallback(pair.indexToken, pair.stableToken, amountIn, 0, data);
-//            if (amountIn > 0) {
-//                require(balanceBefore.add(amountIn) <= IERC20(pair.indexToken).balanceOf(address(this)), 't');
-//            }
-//            IERC20(pair.stableToken).safeTransfer(_receiver, amountOut);
-//        }
-//
-//        emit Swap(_funder, _receiver, _pairIndex, _isBuy, amountIn, amountOut);
-//    }
 
     function _transferToken(
         address indexToken,
@@ -443,12 +343,25 @@ contract Pool is IPool, Roleable {
         uint256 balanceStableBefore;
         if (indexAmount > 0) balanceIndexBefore = IERC20(indexToken).balanceOf(address(this));
         if (stableAmount > 0) balanceStableBefore = IERC20(stableToken).balanceOf(address(this));
-        ILiquidityCallback(msg.sender).addLiquidityCallback(indexToken, stableToken, indexAmount, stableAmount, data);
+        ILiquidityCallback(msg.sender).addLiquidityCallback(
+            indexToken,
+            stableToken,
+            indexAmount,
+            stableAmount,
+            data
+        );
 
         if (indexAmount > 0)
-            require(balanceIndexBefore.add(indexAmount) <= IERC20(indexToken).balanceOf(address(this)), 'ti');
+            require(
+                balanceIndexBefore.add(indexAmount) <= IERC20(indexToken).balanceOf(address(this)),
+                "ti"
+            );
         if (stableAmount > 0) {
-            require(balanceStableBefore.add(stableAmount) <= IERC20(stableToken).balanceOf(address(this)), 'ts');
+            require(
+                balanceStableBefore.add(stableAmount) <=
+                    IERC20(stableToken).balanceOf(address(this)),
+                "ts"
+            );
         }
     }
 
@@ -474,7 +387,7 @@ contract Pool is IPool, Roleable {
         if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), 'invalid pair');
+        require(pair.pairToken != address(0), "invalid pair");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
@@ -487,9 +400,12 @@ contract Pool is IPool, Roleable {
 
         // usdt value of reserve
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, 'invalid price');
+        require(price > 0, "invalid price");
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(_getIndexTotalAmount(pair, vault), price);
+        uint256 indexReserveDelta = AmountMath.getStableDelta(
+            _getIndexTotalAmount(pair, vault),
+            price
+        );
 
         // usdt value of deposit
         uint256 indexDepositDelta = AmountMath.getStableDelta(afterFeeIndexAmount, price);
@@ -509,7 +425,11 @@ contract Pool is IPool, Roleable {
             uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
             uint256 expectStableDelta = totalDelta - expectIndexDelta;
 
-            (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(pair.kOfSwap, price, AmountMath.PRICE_PRECISION);
+            (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(
+                pair.kOfSwap,
+                price,
+                AmountMath.PRICE_PRECISION
+            );
             if (indexTotalDelta > expectIndexDelta) {
                 uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
                 uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
@@ -518,7 +438,11 @@ contract Pool is IPool, Roleable {
 
                 slipDelta =
                     swapIndexDelta -
-                    AMMUtils.getAmountOut(AmountMath.getIndexAmount(swapIndexDelta, price), reserveA, reserveB);
+                    AMMUtils.getAmountOut(
+                        AmountMath.getIndexAmount(swapIndexDelta, price),
+                        reserveA,
+                        reserveB
+                    );
                 slipToken = pair.indexToken;
                 slipAmount = AmountMath.getIndexAmount(slipDelta, price);
 
@@ -531,7 +455,10 @@ contract Pool is IPool, Roleable {
 
                 slipDelta =
                     swapStableDelta -
-                    AmountMath.getStableDelta(AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA), price);
+                    AmountMath.getStableDelta(
+                        AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA),
+                        price
+                    );
                 slipToken = pair.stableToken;
                 slipAmount = slipDelta;
 
@@ -555,7 +482,10 @@ contract Pool is IPool, Roleable {
         );
     }
 
-    function _getStableTotalAmount(IPool.Pair memory pair, IPool.Vault memory vault) internal view returns (uint256) {
+    function _getStableTotalAmount(
+        IPool.Pair memory pair,
+        IPool.Vault memory vault
+    ) internal view returns (uint256) {
         int256 profit = getProfit(pair.pairIndex, pair.stableToken);
         if (profit < 0) {
             return vault.stableTotalAmount.sub(profit.abs());
@@ -564,7 +494,10 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function _getIndexTotalAmount(IPool.Pair memory pair, IPool.Vault memory vault) internal view returns (uint256) {
+    function _getIndexTotalAmount(
+        IPool.Pair memory pair,
+        IPool.Vault memory vault
+    ) internal view returns (uint256) {
         int256 profit = getProfit(pair.pairIndex, pair.indexToken);
         if (profit < 0) {
             return vault.indexTotalAmount.sub(profit.abs());
@@ -581,10 +514,10 @@ contract Pool is IPool, Roleable {
         uint256 _stableAmount,
         bytes calldata data
     ) private returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
-        require(_indexAmount > 0 || _stableAmount > 0, 'invalid amount');
+        require(_indexAmount > 0 || _stableAmount > 0, "invalid amount");
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), 'invalid pair');
+        require(pair.pairToken != address(0), "invalid pair");
 
         uint256 indexFeeAmount;
         uint256 stableFeeAmount;
@@ -627,22 +560,32 @@ contract Pool is IPool, Roleable {
         uint256 _pairIndex,
         uint256 _amount,
         bytes calldata data
-    ) private returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
-        require(_amount > 0, 'invalid amount');
+    )
+        private
+        returns (
+            uint256 receiveIndexTokenAmount,
+            uint256 receiveStableTokenAmount,
+            uint256 feeAmount
+        )
+    {
+        require(_amount > 0, "invalid amount");
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), 'invalid pair');
+        require(pair.pairToken != address(0), "invalid pair");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
-        (receiveIndexTokenAmount, receiveStableTokenAmount) = getReceivedAmount(_pairIndex, _amount);
+        (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount) = getReceivedAmount(
+            _pairIndex,
+            _amount
+        );
 
         require(
             receiveIndexTokenAmount <= vault.indexTotalAmount - vault.indexReservedAmount,
-            'insufficient indexToken amount'
+            "insufficient indexToken amount"
         );
         require(
             receiveStableTokenAmount <= vault.stableTotalAmount - vault.stableReservedAmount,
-            'insufficient stableToken amount'
+            "insufficient stableToken amount"
         );
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
@@ -657,10 +600,11 @@ contract Pool is IPool, Roleable {
             _pairIndex,
             receiveIndexTokenAmount,
             receiveStableTokenAmount,
-            _amount
+            _amount,
+            feeAmount
         );
 
-        return (receiveIndexTokenAmount, receiveStableTokenAmount);
+        return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount);
     }
 
     function lpFairPrice(uint256 _pairIndex) public view returns (uint256) {
@@ -673,7 +617,11 @@ contract Pool is IPool, Roleable {
         // return lpFairDelta;
         return
             lpFairDelta > 0 && IERC20(pair.pairToken).totalSupply() > 0
-                ? Math.mulDiv(lpFairDelta, AmountMath.PRICE_PRECISION, IERC20(pair.pairToken).totalSupply())
+                ? Math.mulDiv(
+                    lpFairDelta,
+                    AmountMath.PRICE_PRECISION,
+                    IERC20(pair.pairToken).totalSupply()
+                )
                 : 1 * AmountMath.PRICE_PRECISION;
     }
 
@@ -685,12 +633,12 @@ contract Pool is IPool, Roleable {
         if (_lpAmount == 0) return (0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), 'invalid pair');
+        require(pair.pairToken != address(0), "invalid pair");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, 'invalid price');
+        require(price > 0, "invalid price");
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
@@ -725,8 +673,12 @@ contract Pool is IPool, Roleable {
         depositStableAmount = depositStableTokenDelta;
 
         // add fee
-        depositIndexAmount = depositIndexAmount.divPercentage(PrecisionUtils.percentage() - pair.addLpFeeP);
-        depositStableAmount = depositStableAmount.divPercentage(PrecisionUtils.percentage() - pair.addLpFeeP);
+        depositIndexAmount = depositIndexAmount.divPercentage(
+            PrecisionUtils.percentage() - pair.addLpFeeP
+        );
+        depositStableAmount = depositStableAmount.divPercentage(
+            PrecisionUtils.percentage() - pair.addLpFeeP
+        );
 
         return (depositIndexAmount, depositStableAmount);
     }
@@ -735,23 +687,32 @@ contract Pool is IPool, Roleable {
     function getReceivedAmount(
         uint256 _pairIndex,
         uint256 _lpAmount
-    ) public view returns (uint256 receiveIndexTokenAmount, uint256 receiveStableTokenAmount) {
-        if (_lpAmount == 0) return (0, 0);
+    )
+        public
+        view
+        returns (
+            uint256 receiveIndexTokenAmount,
+            uint256 receiveStableTokenAmount,
+            uint256 feeAmount
+        )
+    {
+        if (_lpAmount == 0) return (0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), 'invalid pair');
+        require(pair.pairToken != address(0), "invalid pair");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
         // usdt value of reserve
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, 'invalid price');
+        require(price > 0, "invalid price");
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
 
         uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
-
+        feeAmount = receiveDelta.mulPercentage(pair.removeLpFeeP);
+        receiveDelta = receiveDelta - feeAmount;
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
@@ -781,10 +742,14 @@ contract Pool is IPool, Roleable {
         receiveIndexTokenAmount = AmountMath.getIndexAmount(receiveIndexTokenDelta, price);
         receiveStableTokenAmount = receiveStableTokenDelta;
 
-        return (receiveIndexTokenAmount, receiveStableTokenAmount);
+        return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount);
     }
 
-    function transferTokenTo(address token, address to, uint256 amount) external onlyPositionManagerOrOrderManager {
+    function transferTokenTo(
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyPositionManagerOrOrderManager {
         IERC20(token).safeTransfer(to, amount);
     }
 
@@ -807,17 +772,21 @@ contract Pool is IPool, Roleable {
         return pairs[_pairIndex];
     }
 
-    function getTradingConfig(uint256 _pairIndex) external view override returns (TradingConfig memory) {
+    function getTradingConfig(
+        uint256 _pairIndex
+    ) external view override returns (TradingConfig memory) {
         return tradingConfigs[_pairIndex];
     }
 
-    function getTradingFeeConfig(uint256 _pairIndex) external view override returns (TradingFeeConfig memory) {
+    function getTradingFeeConfig(
+        uint256 _pairIndex
+    ) external view override returns (TradingFeeConfig memory) {
         return tradingFeeConfigs[_pairIndex];
     }
 
-    function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
-        return fundingFeeConfigs[_pairIndex];
-    }
+    // function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
+    //     return fundingFeeConfigs[_pairIndex];
+    // }
 
     function positionManagersAt(uint256 index) external view returns (address) {
         return positionManagers.at(index);

@@ -1,19 +1,23 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
-import './interfaces/IAddressesProvider.sol';
-import './libraries/Errors.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IAddressesProvider.sol";
+import "./libraries/Errors.sol";
 
 contract AddressesProvider is Ownable, IAddressesProvider {
-    bytes32 private constant TIMELOCK = 'TIMELOCK';
-    bytes32 private constant ROLE_MANAGER = 'ROLE_MANAGER';
-    bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
-    bytes32 private constant INDEX_PRICE_ORACLE = 'INDEX_PRICE_ORACLE';
+    bytes32 private constant TIMELOCK = "TIMELOCK";
+    bytes32 private constant ROLE_MANAGER = "ROLE_MANAGER";
+    bytes32 private constant PRICE_ORACLE = "PRICE_ORACLE";
+    bytes32 private constant INDEX_PRICE_ORACLE = "INDEX_PRICE_ORACLE";
+    bytes32 private constant FUNDING_RATE = "FUNDING_RATE";
 
     address public override timelock;
     address public override priceOracle;
     address public override indexPriceOracle;
+    address public override fundingRate;
+
+    bool private _initialize;
 
     mapping(bytes32 => address) private _addresses;
 
@@ -22,7 +26,7 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     }
 
     modifier onlyTimelock() {
-        require(msg.sender == timelock, 'only timelock');
+        require(msg.sender == timelock, "only timelock");
         _;
     }
 
@@ -46,11 +50,23 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         emit AddressSet(id, oldAddress, newAddress);
     }
 
-    function initOracle(address newPriceOracle, address newIndexPriceOracle) external onlyOwner {
-        require(priceOracle == address(0) && indexPriceOracle == address(0), 'first init');
-        require(newPriceOracle != address(0) && newIndexPriceOracle != address(0), '!0');
+    function initialize(
+        address newPriceOracle,
+        address newIndexPriceOracle,
+        address newFundingRateAddress
+    ) external onlyOwner {
+        require(!_initialize, "init");
+        require(
+            newPriceOracle != address(0) &&
+                newIndexPriceOracle != address(0) &&
+                newFundingRateAddress != address(0),
+            "!0"
+        );
         priceOracle = newPriceOracle;
         indexPriceOracle = newIndexPriceOracle;
+        fundingRate = newFundingRateAddress;
+
+        emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);
         emit AddressSet(PRICE_ORACLE, address(0), newPriceOracle);
         emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
     }
@@ -59,6 +75,12 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         address oldPriceOracle = _addresses[PRICE_ORACLE];
         priceOracle = newPriceOracle;
         emit AddressSet(PRICE_ORACLE, oldPriceOracle, newPriceOracle);
+    }
+
+    function setFundingRate(address newFundingRate) external onlyTimelock {
+        address oldFundingRate = _addresses[FUNDING_RATE];
+        fundingRate = newFundingRate;
+        emit AddressSet(FUNDING_RATE, oldFundingRate, fundingRate);
     }
 
     function setIndexPriceOracle(address newIndexPriceOracle) external onlyTimelock {
