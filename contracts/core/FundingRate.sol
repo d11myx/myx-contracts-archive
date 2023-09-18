@@ -32,6 +32,11 @@ contract FundingRate is IFundingRate, Roleable {
         fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
     }
 
+    function getFundingInterval(uint256 _pairIndex) public view override returns (uint256) {
+        FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[_pairIndex];
+        return fundingFeeConfig.fundingInterval;
+    }
+
     function getFundingRate(
         uint256 _pairIndex,
         // uint256 fundingInterval,
