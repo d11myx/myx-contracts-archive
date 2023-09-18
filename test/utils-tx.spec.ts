@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove } from './helpers/misc';
-import { TradeType, getFundingRate } from '../helpers';
+import { TradeType, getFundingRate, getFundingRateInTs } from '../helpers';
 import { expect } from './shared/expect';
 
 describe('Utils: tx', () => {
@@ -77,7 +77,7 @@ describe('Utils: tx', () => {
             expect(shortTracker).to.be.eq('2000000000000000000');
 
             const nextFundingRate = await positionManager.getNextFundingRate(pairIndex);
-            const fundingRate = await getFundingRate(testEnv, pairIndex);
+            const fundingRate = await getFundingRateInTs(testEnv, pairIndex);
 
             expect(nextFundingRate).to.be.eq(fundingRate);
         });

@@ -25,15 +25,6 @@ interface IPool {
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
-//    event Swap(
-//        address indexed funder,
-//        address indexed receiver,
-//        uint256 indexed pairIndex,
-//        bool isBuy, // buy indexToken with stableToken
-//        uint256 amountIn,
-//        uint256 amountOut
-//    );
-
     event AddLiquidity(
         address indexed funder,
         address indexed account,
@@ -53,7 +44,8 @@ interface IPool {
         uint256 indexed pairIndex,
         uint256 indexAmount,
         uint256 stableAmount,
-        uint256 lpAmount
+        uint256 lpAmount,
+        uint256 feeAmount
     );
 
     struct Vault {
@@ -73,6 +65,7 @@ interface IPool {
         uint256 kOfSwap; //Initial k value of liquidity
         uint256 expectIndexTokenP; //   for 100%
         uint256 addLpFeeP; // Add liquidity fee
+        uint256 removeLpFeeP; // remove liquidity fee
         uint256 lpFeeDistributeP;
     }
 
@@ -97,13 +90,13 @@ interface IPool {
         uint256 keeperFeeDistributeP;
     }
 
-    struct FundingFeeConfig {
-        int256 minFundingRate; // Minimum capital rate 1e8 for 100%
-        int256 maxFundingRate; // The maximum capital rate is 1e8 for 100%
-        uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is  for 100%
-        uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 1e8 for 100%
-        int256 interest;
-    }
+    // struct FundingFeeConfig {
+    //     int256 minFundingRate; // Minimum capital rate 1e8 for 100%
+    //     int256 maxFundingRate; // The maximum capital rate is 1e8 for 100%
+    //     uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is  for 100%
+    //     uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 1e8 for 100%
+    //     int256 interest;
+    // }
 
     function getPairIndex(address indexToken, address stableToken) external view returns (uint256);
 
@@ -113,7 +106,7 @@ interface IPool {
 
     function getTradingFeeConfig(uint256) external view returns (TradingFeeConfig memory);
 
-    function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
+    // function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
 
     function getVault(uint256 _pairIndex) external view returns (Vault memory vault);
 
@@ -130,10 +123,6 @@ interface IPool {
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external;
 
     function setLPProfit(uint256 _pairIndex, int256 _profit) external;
-
-    // function decreaseLPProfit(uint256 _pairIndex, int256 _profit) external;
-
-    // function liquitySwap(uint256 _pairIndex, bool _buyIndexToken, uint256 _amountIn, uint256 _amountOut) external;
 
     function addLiquidity(
         address recipient,
@@ -157,25 +146,7 @@ interface IPool {
         uint256 _pairIndex,
         uint256 _amount,
         bytes calldata data
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount);
-
-//    function swap(
-//        uint256 _pairIndex,
-//        bool _isBuy,
-//        uint256 _amountIn,
-//        uint256 _minOut,
-//        bytes calldata data
-//    ) external returns (uint256 amountIn, uint256 amountOut);
-//
-//    function swapForAccount(
-//        address _funder,
-//        address _receiver,
-//        uint256 _pairIndex,
-//        bool _isBuy,
-//        uint256 _amountIn,
-//        uint256 _minOut,
-//        bytes calldata data
-//    ) external returns (uint256 amountIn, uint256 amountOut);
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
     function getMintLpAmount(
         uint256 _pairIndex,
