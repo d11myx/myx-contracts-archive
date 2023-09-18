@@ -32,7 +32,7 @@ library TradingHelper {
         bool isLong,
         uint256 orderSize,
         uint256 executionPrice
-    ) internal view returns (uint256 executionSize) {
+    ) internal pure returns (uint256 executionSize) {
         executionSize = orderSize;
 
         if (exposureAmount >= 0) {

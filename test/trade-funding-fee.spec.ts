@@ -5,7 +5,7 @@ import {
     Duration,
     increase,
     TradeType,
-    getFundingRate,
+    getFundingRateInTs,
     getFundingFeeTracker,
     getPositionFundingFee,
     getPositionTradingFee,
@@ -96,7 +96,7 @@ describe('Trade: funding fee', () => {
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
-            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+            const targetFundingRate = await getFundingRateInTs(testEnv, pairIndex);
 
             expect(currentFundingRate).to.be.eq(targetFundingRate);
 
@@ -177,7 +177,7 @@ describe('Trade: funding fee', () => {
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
-            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+            const targetFundingRate = await getFundingRateInTs(testEnv, pairIndex);
 
             expect(currentFundingRate).to.be.eq(targetFundingRate);
 
@@ -282,7 +282,7 @@ describe('Trade: funding fee', () => {
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
-            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+            const targetFundingRate = await getFundingRateInTs(testEnv, pairIndex);
 
             expect(currentFundingRate).to.be.eq(targetFundingRate);
 
@@ -362,7 +362,7 @@ describe('Trade: funding fee', () => {
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
-            const targetFundingRate = await getFundingRate(testEnv, pairIndex);
+            const targetFundingRate = await getFundingRateInTs(testEnv, pairIndex);
 
             expect(currentFundingRate).to.be.eq(targetFundingRate);
 
