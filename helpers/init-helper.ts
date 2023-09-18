@@ -1,4 +1,4 @@
-import { Pool, Token } from '../types';
+import { FundingRate, Pool, Token } from '../types';
 import { loadReserveConfig } from './market-config-helper';
 import { MARKET_NAME } from './env';
 import { SignerWithAddress } from '../test/helpers/make-suite';
@@ -6,7 +6,13 @@ import { SymbolMap } from './types';
 import { waitForTx } from './utilities/tx';
 import { log } from './contract-deployments';
 
-export async function initPairs(deployer: SignerWithAddress, pairTokens: SymbolMap<Token>, usdt: Token, pool: Pool) {
+export async function initPairs(
+    deployer: SignerWithAddress,
+    pairTokens: SymbolMap<Token>,
+    usdt: Token,
+    pool: Pool,
+    fundingRate: FundingRate,
+) {
     log(`Initializing pairs`);
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
 
@@ -25,7 +31,7 @@ export async function initPairs(deployer: SignerWithAddress, pairTokens: SymbolM
         await waitForTx(await pool.updatePair(pairIndex, pair));
         await waitForTx(await pool.updateTradingConfig(pairIndex, tradingConfig));
         await waitForTx(await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
-        await waitForTx(await pool.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+        await waitForTx(await fundingRate.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
         log(`added pair [${symbol}, ${MARKET_NAME}] at index`, (await pool.pairsCount()).sub(1).toString());
     }

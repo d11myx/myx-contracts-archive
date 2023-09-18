@@ -38,6 +38,7 @@ export const btcPairInfo: PairInfoConfig = {
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
         interest: 0,
+        fundingInterval: 28800,
     },
 };
 
@@ -77,5 +78,6 @@ export const ethPairInfo: PairInfoConfig = {
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
         interest: 0,
+        fundingInterval: 28800,
     },
 };

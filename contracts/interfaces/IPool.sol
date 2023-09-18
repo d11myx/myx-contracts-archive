@@ -90,13 +90,13 @@ interface IPool {
         uint256 keeperFeeDistributeP;
     }
 
-    struct FundingFeeConfig {
-        int256 minFundingRate; // Minimum capital rate 1e8 for 100%
-        int256 maxFundingRate; // The maximum capital rate is 1e8 for 100%
-        uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is  for 100%
-        uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 1e8 for 100%
-        int256 interest;
-    }
+    // struct FundingFeeConfig {
+    //     int256 minFundingRate; // Minimum capital rate 1e8 for 100%
+    //     int256 maxFundingRate; // The maximum capital rate is 1e8 for 100%
+    //     uint256 fundingWeightFactor; // The weight coefficient of the fund rate of both sides is  for 100%
+    //     uint256 liquidityPremiumFactor; // The coefficient of liquidity to premium is 1e8 for 100%
+    //     int256 interest;
+    // }
 
     function getPairIndex(address indexToken, address stableToken) external view returns (uint256);
 
@@ -106,7 +106,7 @@ interface IPool {
 
     function getTradingFeeConfig(uint256) external view returns (TradingFeeConfig memory);
 
-    function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
+    // function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
 
     function getVault(uint256 _pairIndex) external view returns (Vault memory vault);
 
