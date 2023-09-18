@@ -15,7 +15,7 @@ contract FundingRate is IFundingRate, Roleable {
     using Math for uint256;
     using SafeMath for uint256;
 
-    uint256 public fundingInterval;
+    // uint256 public fundingInterval;
 
     mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
@@ -36,11 +36,12 @@ contract FundingRate is IFundingRate, Roleable {
 
     function getFundingRate(
         uint256 _pairIndex,
+        uint256 fundingInterval,
         int256 currentExposureAmountChecker,
         int256 lpVaulue,
         uint256 longTracker,
         uint256 shortTracker
-    ) public view returns (int256 fundingRate) {
+    ) public view override returns (int256 fundingRate) {
         // IPool.Pair memory pair = pool.getPair(_pairIndex);
         FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[_pairIndex];
         int256 w = int256(fundingFeeConfig.fundingWeightFactor);
