@@ -216,7 +216,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         roleManager: roleManager,
         pairTokens: tokens,
         pool: pool,
-
+        fundingRate: fundingRate,
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
         positionManager: positionManager,
