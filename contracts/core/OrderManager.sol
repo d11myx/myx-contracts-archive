@@ -470,6 +470,27 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         return order;
     }
 
+    function increaseOrderExecutedSize(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        uint256 increaseSize
+    ) external override {
+        if (isIncrease) {
+             if (tradeType == TradingTypes.TradeType.MARKET) {
+                increaseMarketOrders[orderId].executedSize += increaseSize;
+            } else if (tradeType == TradingTypes.TradeType.LIMIT) {
+                increaseLimitOrders[orderId].executedSize += increaseSize;
+            }
+        } else {
+            if (tradeType == TradingTypes.TradeType.MARKET) {
+                decreaseMarketOrders[orderId].executedSize += increaseSize;
+            } else {
+                decreaseLimitOrders[orderId].executedSize += increaseSize;
+            }
+        }
+    }
+
     function addOrderToPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
         bytes32 positionKey = PositionKey.getPositionKey(order.account, order.pairIndex, order.isLong);
         positionOrderIndex[positionKey][order.orderId] = positionOrders[positionKey].length;
