@@ -15,32 +15,44 @@ contract FundingRate is IFundingRate, Roleable {
     using Math for uint256;
     using SafeMath for uint256;
 
-    IPool public immutable pool;
-
     uint256 public fundingInterval;
 
-    constructor(IAddressesProvider addressProvider, IPool _pool) Roleable(addressProvider) {
-        pool = _pool;
+    mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
+
+    constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
+
+    function updateFundingFeeConfig(
+        uint256 _pairIndex,
+        FundingFeeConfig calldata _fundingFeeConfig
+    ) external onlyPoolAdmin {
+        require(
+            _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
+                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage(),
+            "exceed 100%"
+        );
+
+        fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
     }
 
     function getFundingRate(
         uint256 _pairIndex,
         int256 currentExposureAmountChecker,
+        int256 lpVaulue,
         uint256 longTracker,
         uint256 shortTracker
     ) public view returns (int256 fundingRate) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
-        IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
+        // IPool.Pair memory pair = pool.getPair(_pairIndex);
+        FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[_pairIndex];
         int256 w = int256(fundingFeeConfig.fundingWeightFactor);
         int256 q = int256(longTracker + shortTracker);
         int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
 
-        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        uint256 _price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
-        int256 l = int256(
-            (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
-                (lpVault.stableTotalAmount - lpVault.stableReservedAmount)
-        );
+        // IPool.Vault memory lpVault = pool.getVault(_pairIndex);
+        // uint256 _price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(indexToken);
+        // int256 l = int256(
+        //     (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
+        //         (lpVault.stableTotalAmount - lpVault.stableReservedAmount)
+        // );
 
         if (q == 0) {
             fundingRate = 0;
@@ -48,12 +60,12 @@ contract FundingRate is IFundingRate, Roleable {
             fundingRate =
                 (w * currentExposureAmountChecker * int256(PrecisionUtils.fundingRatePrecision())) /
                 (k * q);
-            if (l != 0) {
+            if (lpVaulue != 0) {
                 fundingRate =
                     fundingRate +
                     ((int256(PrecisionUtils.fundingRatePrecision()) - w) *
                         currentExposureAmountChecker) /
-                    (k * l);
+                    (k * lpVaulue);
             }
         }
         fundingRate = (fundingRate - fundingFeeConfig.interest)
