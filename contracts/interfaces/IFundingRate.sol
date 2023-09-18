@@ -11,6 +11,7 @@ interface IFundingRate {
 
     function getFundingRate(
         uint256 _pairIndex,
+        uint256 fundingInterval,
         int256 currentExposureAmountChecker,
         int256 lpVaulue,
         uint256 longTracker,
