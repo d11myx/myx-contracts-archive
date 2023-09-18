@@ -43,7 +43,7 @@ contract PositionManager is FeeManager, Pausable {
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
-    uint256 public fundingInterval = 28800;
+    // uint256 public fundingInterval = 28800;
 
     address public addressExecutor;
     address public addressOrderManager;
@@ -76,11 +76,11 @@ contract PositionManager is FeeManager, Pausable {
         addressOrderManager = _addressOrderManager;
     }
 
-    function updateFundingInterval(uint256 newInterval) external onlyPoolAdmin {
-        uint256 oldInterval = fundingInterval;
-        fundingInterval = newInterval;
-        emit UpdateFundingInterval(oldInterval, newInterval);
-    }
+    // function updateFundingInterval(uint256 newInterval) external onlyPoolAdmin {
+    //     uint256 oldInterval = fundingInterval;
+    //     fundingInterval = newInterval;
+    //     emit UpdateFundingInterval(oldInterval, newInterval);
+    // }
 
     function _takeFundingFeeAddTraderFee(
         uint256 _pairIndex,
@@ -546,6 +546,9 @@ contract PositionManager is FeeManager, Pausable {
     }
 
     function _updateFundingRate(uint256 _pairIndex, uint256 _price) internal {
+        uint256 fundingInterval = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingInterval(
+            _pairIndex
+        );
         if (lastFundingRateUpdateTimes[_pairIndex] == 0) {
             lastFundingRateUpdateTimes[_pairIndex] =
                 (block.timestamp / fundingInterval) *
@@ -605,7 +608,9 @@ contract PositionManager is FeeManager, Pausable {
     function getNextFundingRateUpdateTime(
         uint256 _pairIndex
     ) external view override returns (uint256) {
-        return lastFundingRateUpdateTimes[_pairIndex] + fundingInterval;
+        return
+            lastFundingRateUpdateTimes[_pairIndex] +
+            IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingInterval(_pairIndex);
     }
 
     function _nextFundingRate(
