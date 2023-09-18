@@ -625,7 +625,7 @@ contract PositionManager is FeeManager, Pausable {
 
         fundingRate = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingRate(
             _pairIndex,
-            fundingInterval,
+            // fundingInterval,
             currentExposureAmountChecker,
             l,
             longTracker[_pairIndex],

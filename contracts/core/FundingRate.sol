@@ -34,7 +34,7 @@ contract FundingRate is IFundingRate, Roleable {
 
     function getFundingRate(
         uint256 _pairIndex,
-        uint256 fundingInterval,
+        // uint256 fundingInterval,
         int256 currentExposureAmountChecker,
         int256 lpVaulue,
         uint256 longTracker,
@@ -62,6 +62,6 @@ contract FundingRate is IFundingRate, Roleable {
         fundingRate = (fundingRate - fundingFeeConfig.interest)
             .max(fundingFeeConfig.minFundingRate)
             .min(fundingFeeConfig.maxFundingRate);
-        fundingRate = fundingRate / int256(365) / int256(86400 / fundingInterval);
+        fundingRate = fundingRate / int256(365) / int256(86400 / fundingFeeConfig.fundingInterval);
     }
 }
