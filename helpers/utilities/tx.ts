@@ -179,7 +179,7 @@ export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
     const q = longTracker.add(shortTracker);
     const w = fundingFeeConfig.fundingWeightFactor;
     const k = fundingFeeConfig.liquidityPremiumFactor;
-    const interest = fundingFeeConfig.interest;
+    const r = fundingFeeConfig.r;
     const diffBTCAmount = BigNumber.from(indexTotalAmount).sub(BigNumber.from(indexReservedAmount));
     const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
     const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount);
@@ -194,7 +194,7 @@ export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
         }
     }
 
-    fundingRateRatio = BigNumber.from(fundingRateRatio).sub(interest);
+    fundingRateRatio = BigNumber.from(fundingRateRatio).sub(r);
     fundingRateRatio = fundingRateRatio.lt(fundingFeeConfig.minFundingRate)
         ? fundingFeeConfig.minFundingRate
         : fundingRateRatio.gt(fundingFeeConfig.maxFundingRate)

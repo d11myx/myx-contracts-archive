@@ -37,7 +37,7 @@ export const btcPairInfo: PairInfoConfig = {
         maxFundingRate: 36500000, //=0.1% * 365
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
-        interest: 0,
+        r: 0,
         fundingInterval: 28800,
     },
 };
@@ -77,7 +77,7 @@ export const ethPairInfo: PairInfoConfig = {
         maxFundingRate: 36500000, //=0.1% * 365
         fundingWeightFactor: 1000000, //1%
         liquidityPremiumFactor: 100000000, //100%
-        interest: 0,
+        r: 0,
         fundingInterval: 28800,
     },
 };
