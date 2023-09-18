@@ -43,7 +43,7 @@ contract PositionManager is FeeManager, Pausable {
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
-    uint256 public fundingInterval;
+    uint256 public fundingInterval = 28800;
 
     address public addressExecutor;
     address public addressOrderManager;
@@ -52,11 +52,8 @@ contract PositionManager is FeeManager, Pausable {
         IAddressesProvider addressProvider,
         IPool pool,
         address _pledgeAddress,
-        IFeeCollector feeCollector,
-        uint256 _fundingInterval
-    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {
-        fundingInterval = _fundingInterval;
-    }
+        IFeeCollector feeCollector
+    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {}
 
     modifier onlyExecutor() {
         require(msg.sender == addressExecutor, "forbidden");

@@ -172,7 +172,7 @@ export async function deployTrading(
         pool.address,
         pledge.address,
         feeCollector.address,
-        8 * 60 * 60,
+
     ])) as any as PositionManager;
     log(`deployed PositionManager at ${positionManager.address}`);
 
