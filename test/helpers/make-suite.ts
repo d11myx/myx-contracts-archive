@@ -14,6 +14,7 @@ import {
     Executor,
     OrderManager,
     FeeManager,
+    FundingRate,
 } from '../../types';
 import {
     SymbolMap,
@@ -21,7 +22,7 @@ import {
     getIndexPriceFeed,
     getOraclePriceFeed,
     getPool,
-    roleManager,
+    getFundingRate,
     getToken,
     getWETH,
     MOCK_TOKEN_PREFIX,
@@ -59,6 +60,7 @@ export interface TestEnv {
     roleManager: RoleManager;
     pairTokens: SymbolMap<Token>;
     pool: Pool;
+    fundingRate: FundingRate;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
     router: Router;
@@ -80,6 +82,7 @@ export const testEnv: TestEnv = {
     roleManager: {} as RoleManager,
     pairTokens: {} as SymbolMap<Token>,
     pool: {} as Pool,
+    fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
     router: {} as Router,
@@ -135,6 +138,8 @@ export async function setupTestEnv() {
     // pair
     testEnv.pool = await getPool();
 
+    testEnv.fundingRate = await getFundingRate();
+
     // trading
     testEnv.router = await getRouter();
     testEnv.executor = await getExecutor();
@@ -174,7 +179,12 @@ export async function newTestEnv(): Promise<TestEnv> {
     await roleManager.addPoolAdmin(deployer.address);
     await roleManager.addKeeper(keeper.address);
 
-    const { oraclePriceFeed, indexPriceFeed } = await deployPrice(deployer, keeper, addressesProvider, tokens);
+    const { oraclePriceFeed, indexPriceFeed, fundingRate } = await deployPrice(
+        deployer,
+        keeper,
+        addressesProvider,
+        tokens,
+    );
 
     const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
@@ -190,7 +200,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     await pool.addPositionManager(positionManager.address);
     await pool.addOrderManager(orderManager.address);
-    await initPairs(deployer, tokens, usdt, pool);
+    await initPairs(deployer, tokens, usdt, pool, fundingRate);
 
     await roleManager.addKeeper(executor.address);
     return {

@@ -134,7 +134,7 @@ export async function deployPrice(
         .connect(deployer.signer)
         .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address);
     // await addressesProvider.connect(deployer.signer).setIndexPriceOracle();
-    return { oraclePriceFeed, indexPriceFeed };
+    return { oraclePriceFeed, indexPriceFeed, fundingRate };
 }
 
 export async function deployPair(
