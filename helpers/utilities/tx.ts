@@ -161,14 +161,14 @@ export const Duration = {
  * @param pairIndex {Number} currency pair index
  * @returns funding rate
  */
-export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
-    const { positionManager, pool, oraclePriceFeed } = testEnv;
+export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
+    const { positionManager, pool, fundingRate, oraclePriceFeed } = testEnv;
     const { indexTotalAmount, indexReservedAmount, stableTotalAmount, stableReservedAmount } = await pool.getVault(
         pairIndex,
     );
 
     const fundingInterval = 28800;
-    const fundingFeeConfig = await pool.getFundingFeeConfig(pairIndex);
+    const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
     const pair = await pool.getPair(pairIndex);
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const exposedPosition = await positionManager.getExposedPositions(pairIndex);
@@ -184,26 +184,26 @@ export async function getFundingRate(testEnv: TestEnv, pairIndex: number) {
     const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
     const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount);
 
-    let fundingRate;
+    let fundingRateRatio;
     if (q.eq(0)) {
-        fundingRate = 0;
+        fundingRateRatio = 0;
     } else {
-        fundingRate = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
+        fundingRateRatio = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
         if (!l.eq(0)) {
-            fundingRate = fundingRate.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
+            fundingRateRatio = fundingRateRatio.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
         }
     }
 
-    fundingRate = BigNumber.from(fundingRate).sub(interest);
-    fundingRate = fundingRate.lt(fundingFeeConfig.minFundingRate)
+    fundingRateRatio = BigNumber.from(fundingRateRatio).sub(interest);
+    fundingRateRatio = fundingRateRatio.lt(fundingFeeConfig.minFundingRate)
         ? fundingFeeConfig.minFundingRate
-        : fundingRate.gt(fundingFeeConfig.maxFundingRate)
+        : fundingRateRatio.gt(fundingFeeConfig.maxFundingRate)
         ? fundingFeeConfig.maxFundingRate
-        : fundingRate;
+        : fundingRateRatio;
 
-    fundingRate = fundingRate.div(365).div(86400 / fundingInterval);
-    fundingRate = exposedPosition.gte(0) ? fundingRate : -fundingRate;
-    return fundingRate;
+    fundingRateRatio = fundingRateRatio.div(365).div(86400 / fundingInterval);
+    fundingRateRatio = exposedPosition.gte(0) ? fundingRateRatio : -fundingRateRatio;
+    return fundingRateRatio;
 }
 
 /**
