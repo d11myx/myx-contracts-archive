@@ -15,8 +15,6 @@ contract FundingRate is IFundingRate, Roleable {
     using Math for uint256;
     using SafeMath for uint256;
 
-    // uint256 public fundingInterval;
-
     mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
     constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
@@ -42,18 +40,10 @@ contract FundingRate is IFundingRate, Roleable {
         uint256 longTracker,
         uint256 shortTracker
     ) public view override returns (int256 fundingRate) {
-        // IPool.Pair memory pair = pool.getPair(_pairIndex);
         FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[_pairIndex];
         int256 w = int256(fundingFeeConfig.fundingWeightFactor);
         int256 q = int256(longTracker + shortTracker);
         int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
-
-        // IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        // uint256 _price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(indexToken);
-        // int256 l = int256(
-        //     (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
-        //         (lpVault.stableTotalAmount - lpVault.stableReservedAmount)
-        // );
 
         if (q == 0) {
             fundingRate = 0;

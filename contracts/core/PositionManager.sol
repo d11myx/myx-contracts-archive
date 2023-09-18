@@ -484,7 +484,7 @@ contract PositionManager is FeeManager, Pausable {
     }
 
     function _handleCollateral(Position.Info storage position, int256 collateral) internal {
-        uint256 collateralBefore = position.collateral;
+        // uint256 collateralBefore = position.collateral;
         if (collateral < 0) {
             position.collateral = position.collateral.sub(collateral.abs());
             pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
@@ -615,12 +615,7 @@ contract PositionManager is FeeManager, Pausable {
         uint256 _pairIndex,
         uint256 _price
     ) internal view returns (int256 fundingRate) {
-        // IPool.FundingFeeConfig memory fundingFeeConfig = pool.getFundingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex) * int256(_price);
-
-        // int256 w = int256(fundingFeeConfig.fundingWeightFactor);
-        // int256 q = int256(longTracker[_pairIndex] + shortTracker[_pairIndex]);
-        // int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
         int256 l = int256(
@@ -636,25 +631,6 @@ contract PositionManager is FeeManager, Pausable {
             longTracker[_pairIndex],
             shortTracker[_pairIndex]
         );
-
-        // if (q == 0) {
-        //     fundingRate = 0;
-        // } else {
-        //     fundingRate =
-        //         (w * currentExposureAmountChecker * int256(PrecisionUtils.fundingRatePrecision())) /
-        //         (k * q);
-        //     if (l != 0) {
-        //         fundingRate =
-        //             fundingRate +
-        //             ((int256(PrecisionUtils.fundingRatePrecision()) - w) *
-        //                 currentExposureAmountChecker) /
-        //             (k * l);
-        //     }
-        // }
-        // fundingRate = (fundingRate - fundingFeeConfig.interest)
-        //     .max(fundingFeeConfig.minFundingRate)
-        //     .min(fundingFeeConfig.maxFundingRate);
-        // fundingRate = fundingRate / int256(365) / int256(86400 / fundingInterval);
     }
 
     function getPosition(
