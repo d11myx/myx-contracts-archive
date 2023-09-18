@@ -39,7 +39,7 @@ contract Pool is IPool, Roleable {
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
-    mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
+    // mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
     mapping(address => mapping(address => uint256)) public override getPairIndex;
     mapping(address => mapping(address => bool)) public isPairListed;
@@ -158,18 +158,18 @@ contract Pool is IPool, Roleable {
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updateFundingFeeConfig(
-        uint256 _pairIndex,
-        FundingFeeConfig calldata _fundingFeeConfig
-    ) external onlyPoolAdmin {
-        require(
-            _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage(),
-            'exceed 100%'
-        );
+    // function updateFundingFeeConfig(
+    //     uint256 _pairIndex,
+    //     FundingFeeConfig calldata _fundingFeeConfig
+    // ) external onlyPoolAdmin {
+    //     require(
+    //         _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
+    //             _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage(),
+    //         'exceed 100%'
+    //     );
 
-        fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
-    }
+    //     fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
+    // }
 
     function updatePairMiner(uint256 _pairIndex, address _account, bool _enable) external onlyPoolAdmin {
         Pair memory pair = pairs[_pairIndex];
@@ -695,9 +695,9 @@ contract Pool is IPool, Roleable {
         return tradingFeeConfigs[_pairIndex];
     }
 
-    function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
-        return fundingFeeConfigs[_pairIndex];
-    }
+    // function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
+    //     return fundingFeeConfigs[_pairIndex];
+    // }
 
     function positionManagersAt(uint256 index) external view returns (address) {
         return positionManagers.at(index);
