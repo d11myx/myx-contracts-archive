@@ -81,7 +81,7 @@ interface IPositionManager {
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
 
-    function updateFundingInterval(uint256 newInterval) external;
+    // function updateFundingInterval(uint256 newInterval) external;
 
     function increasePosition(
         uint256 _pairIndex,

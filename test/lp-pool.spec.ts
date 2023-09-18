@@ -120,12 +120,17 @@ describe('LP: Pool cases', () => {
             // userPaid = actual vaultTotal
             const vaultTotal = expectRemoveLiquidity.receiveIndexTokenAmount
                 .mul(pairPrice)
-                .add(expectRemoveLiquidity.receiveStableTokenAmount);
+                .add(expectRemoveLiquidity.receiveStableTokenAmount)
+                .add(expectRemoveLiquidity.feeAmount);
             const userPaid = lpAmount.mul(lpPrice);
             expect(userPaid).to.be.eq(vaultTotal);
 
             expect(vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount)).to.be.eq(
-                vaultBefore.indexTotalAmount.mul(pairPrice).add(vaultBefore.stableTotalAmount).sub(lpAmount),
+                vaultBefore.indexTotalAmount
+                    .mul(pairPrice)
+                    .add(vaultBefore.stableTotalAmount)
+                    .sub(lpAmount)
+                    .add(expectRemoveLiquidity.feeAmount),
             );
         });
     });

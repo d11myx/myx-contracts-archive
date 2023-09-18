@@ -10,7 +10,7 @@ import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('Pool: Edge cases', () => {
     before('addPair', async () => {
-        const { poolAdmin, pool, usdt } = testEnv;
+        const { poolAdmin, pool, usdt, fundingRate } = testEnv;
 
         const token = await deployMockToken('Test');
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
@@ -30,21 +30,25 @@ describe('Pool: Edge cases', () => {
         await waitForTx(await pool.connect(poolAdmin.signer).updatePair(pairIndex, pair));
         await waitForTx(await pool.connect(poolAdmin.signer).updateTradingConfig(pairIndex, tradingConfig));
         await waitForTx(await pool.connect(poolAdmin.signer).updateTradingFeeConfig(pairIndex, tradingFeeConfig));
-        await waitForTx(await pool.connect(poolAdmin.signer).updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+        await waitForTx(
+            await fundingRate.connect(poolAdmin.signer).updateFundingFeeConfig(pairIndex, fundingFeeConfig),
+        );
 
         const countAfter = await pool.pairsCount();
         expect(countAfter).to.be.eq(countBefore.add(1));
     });
 
     it('check pair info', async () => {
-        const { pool, btc, usdt } = testEnv;
+        const { pool, fundingRate, btc, usdt } = testEnv;
 
         const pairIndex = 0;
 
         expect(await pool.pairs(pairIndex)).deep.be.eq(await pool.getPair(pairIndex));
         expect(await pool.tradingConfigs(pairIndex)).deep.be.eq(await pool.getTradingConfig(pairIndex));
         expect(await pool.tradingFeeConfigs(pairIndex)).deep.be.eq(await pool.getTradingFeeConfig(pairIndex));
-        expect(await pool.fundingFeeConfigs(pairIndex)).deep.be.eq(await pool.getFundingFeeConfig(pairIndex));
+        expect(await fundingRate.fundingFeeConfigs(pairIndex)).deep.be.eq(
+            await fundingRate.fundingFeeConfigs(pairIndex),
+        );
 
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
         const pair = await pool.getPair(pairIndex);
