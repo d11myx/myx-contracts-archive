@@ -1,9 +1,24 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
 
-pragma solidity 0.8.20;
+import "./IPriceFeed.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 
-interface IOraclePriceFeed {
-    event SetToken(address indexed toekn, address indexed priceFeed, uint256 priceDecimals);
+interface IOraclePriceFeed is IPriceFeed {
 
-    function getPrice(address _token) external view returns (uint256);
+    event AssetPriceIdUpdated(
+        address asset,
+        bytes32 priceId
+    );
+
+    event PythAddressUpdated(address oldAddress, address newAddress);
+
+    function updatePythAddress(IPyth _pyth) external;
+
+    function setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) external;
+
+    function getUpdateData(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (bytes[] memory updateData);
 }

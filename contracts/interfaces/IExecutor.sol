@@ -58,6 +58,7 @@ interface IExecutor {
 
     struct ExecutePositionInfo {
         Position.Info position;
+        uint256 executionSize;
         uint8 level;
         uint256 commissionRatio;
     }
