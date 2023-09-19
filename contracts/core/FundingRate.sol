@@ -55,7 +55,7 @@ contract FundingRate is IFundingRate, Roleable {
         uint256 l = vault.indexTotalAmount.mulPrice(price) + vault.stableTotalAmount;
 
         // A = (U/U+V - 0.5) * MAX(U,V)/L * 100
-        int256 a = u == v || u == 0 ? int256(0) : (int256(u.divPercentage(u + v)) - int256(PrecisionUtils.fundingRatePrecision().div(2)))
+        int256 a = u == v ? int256(0) : ((u == 0 ? int256(0) : int256(u.divPercentage(u + v))) - int256(PrecisionUtils.fundingRatePrecision().div(2)))
             * int256(Math.max(u, v).divPercentage(l)) * 100 / int256(PrecisionUtils.fundingRatePrecision());
 
         // S = ABS(2*R-1)=ABS(U-V)/(U+V)
