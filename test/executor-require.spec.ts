@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { TradeType } from '../helpers';
+import { EXECUTION_LOGIC_ID, TradeType } from '../helpers';
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from 'chai';
@@ -68,7 +68,7 @@ describe('Executor: require check', () => {
                     keeper,
                     users: [trader, user1],
                     router,
-                    executor,
+                    executionLogic,
                     orderManager,
                     positionManager,
                 } = testEnv;
@@ -94,9 +94,9 @@ describe('Executor: require check', () => {
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createDecreaseOrder(request);
                 await expect(
-                    executor.connect(user1.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
+                    executionLogic.connect(user1.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
                 ).to.be.revertedWith('opk');
-                await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
+                await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
             });
         });
     });
