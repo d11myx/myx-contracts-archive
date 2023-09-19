@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import "../interfaces/IPositionManager.sol";
+import "../interfaces/IUniSwapV3Router.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
@@ -36,6 +37,8 @@ contract Pool is IPool, Roleable {
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public immutable poolTokenFactory;
+    address public router;
+    mapping(uint256 => mapping(address => bytes)) tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -74,6 +77,10 @@ contract Pool is IPool, Roleable {
 
     function addPositionManager(address _positionManager) external onlyPoolAdmin {
         positionManagers.add(_positionManager);
+    }
+
+    function setRouter(address _router) external onlyPoolAdmin {
+        router = _router;
     }
 
     function removePositionManager(address _positionManager) external onlyPoolAdmin {
@@ -275,17 +282,34 @@ contract Pool is IPool, Roleable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function setLPProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
+        Pair memory pair = pairs[_pairIndex];
         if (_profit > 0) {
             vault.stableTotalAmount += _profit.abs();
         } else {
-            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-            require(_profit.abs() <= availableStable, "stable token not enough");
+            if (vault.stableTotalAmount < _profit.abs()) {
+                swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+            }
             vault.stableTotalAmount -= _profit.abs();
         }
 
-        emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
+        emit UpdateLPProfit(_pairIndex, pair.stableToken, _profit, vault.stableTotalAmount);
+    }
+
+    function setLPIndexProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+        Vault storage vault = vaults[_pairIndex];
+        Pair memory pair = pairs[_pairIndex];
+        if (_profit > 0) {
+            vault.indexTotalAmount += _profit.abs();
+        } else {
+            if (vault.indexTotalAmount < _profit.abs()) {
+                swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+            }
+            vault.stableTotalAmount -= _profit.abs();
+        }
+
+        emit UpdateLPProfit(_pairIndex, pair.indexToken, _profit, vault.indexTotalAmount);
     }
 
     function addLiquidity(
@@ -367,6 +391,28 @@ contract Pool is IPool, Roleable {
         }
     }
 
+    function swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) public {
+        Pair memory pair = pairs[_pairIndex];
+        uint256 price = getPrice(pair.indexToken);
+        bytes memory path = tokenPath[_pairIndex][tokenIn];
+        uint256 amountInMaximum;
+        if (tokenIn == pair.indexToken) {
+            amountInMaximum = (amountOut * 12) / (price * 10);
+        } else if (tokenIn == pair.stableToken) {
+            amountInMaximum = (amountOut * price * 12) / 10;
+        }
+        IERC20(pair.indexToken).approve(router, amountInMaximum);
+        IUniSwapV3Router(router).exactOutput(
+            IUniSwapV3Router.ExactOutputParams({
+                path: path,
+                recipient: address(this),
+                deadline: block.timestamp + 1000,
+                amountOut: amountOut,
+                amountInMaximum: amountInMaximum
+            })
+        );
+    }
+
     // calculate lp amount for add liquidity
     function getMintLpAmount(
         uint256 _pairIndex,
@@ -429,8 +475,9 @@ contract Pool is IPool, Roleable {
 
             if (_indexAmount > 0 && _stableAmount == 0) {
                 uint256 currentIndexRatio = indexTotalDelta.divPercentage(totalDelta);
-                int256 indexUnbalanced = int256(currentIndexRatio.divPercentage(pair.expectIndexTokenP))
-                    - int256(PrecisionUtils.percentage());
+                int256 indexUnbalanced = int256(
+                    currentIndexRatio.divPercentage(pair.expectIndexTokenP)
+                ) - int256(PrecisionUtils.percentage());
                 if (indexUnbalanced < 0 && indexUnbalanced.abs() > pair.maxUnbalancedP) {
                     availableDiscountRate = pair.unbalancedDiscountRate;
                     availableDiscountAmount = expectIndexDelta.mul(indexTotalDelta);
@@ -439,8 +486,11 @@ contract Pool is IPool, Roleable {
 
             if (_stableAmount > 0 && _indexAmount == 0) {
                 uint256 currentStableRatio = stableTotalDelta.divPercentage(totalDelta);
-                int256 stableUnbalanced = int256(currentStableRatio.divPercentage(
-                    PrecisionUtils.percentage().sub(pair.expectIndexTokenP))) - int256(PrecisionUtils.percentage());
+                int256 stableUnbalanced = int256(
+                    currentStableRatio.divPercentage(
+                        PrecisionUtils.percentage().sub(pair.expectIndexTokenP)
+                    )
+                ) - int256(PrecisionUtils.percentage());
                 if (stableUnbalanced < 0 && stableUnbalanced.abs() > pair.maxUnbalancedP) {
                     availableDiscountRate = pair.unbalancedDiscountRate;
                     availableDiscountAmount = expectStableDelta.mul(stableTotalDelta);
@@ -790,6 +840,20 @@ contract Pool is IPool, Roleable {
         address to,
         uint256 amount
     ) external onlyPositionManagerOrOrderManager {
+        require(IERC20(token).balanceOf(address(this)) > amount, "bal");
+        IERC20(token).safeTransfer(to, amount);
+    }
+
+    function transferTokenOrSwap(
+        uint256 pairIndex,
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyPositionManagerOrOrderManager {
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        if (bal < amount) {
+            swapInUni(pairIndex, token, amount);
+        }
         IERC20(token).safeTransfer(to, amount);
     }
 

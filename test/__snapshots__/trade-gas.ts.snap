@@ -1,11 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Router: increase position ar addLiquidity cast 1`] = `341279`;
+exports[`Router: increase position ar createDecreaseOrder cast 1`] = `425618`;
 
-exports[`Router: increase position ar createDecreaseOrder cast 1`] = `425508`;
+exports[`Router: increase position ar createIncreaseOrderWithoutTpSl cast 1`] = `448085`;
 
-exports[`Router: increase position ar createIncreaseOrderWithoutTpSl cast 1`] = `447975`;
+exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `364759`;
 
-exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `360897`;
-
-exports[`Router: increase position ar executeIncreaseOrder cast 1`] = `569455`;
+exports[`Router: increase position ar executeIncreaseOrder cast 1`] = `571116`;

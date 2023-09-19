@@ -29,7 +29,7 @@ export type FundingFeeConfigStruct = {
     maxFundingRate: PromiseOrValue<BigNumberish>;
     fundingWeightFactor: PromiseOrValue<BigNumberish>;
     liquidityPremiumFactor: PromiseOrValue<BigNumberish>;
-    interest: PromiseOrValue<BigNumberish>;
+    r: PromiseOrValue<BigNumberish>;
     fundingInterval: PromiseOrValue<BigNumberish>;
 };
 
