@@ -402,7 +402,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-        _handleCollateral(pairIndex, position, collateral);
+        // _handleCollateral(pairIndex, position, collateral);
         // settlement trading fee and funding fee
         int256 charge;
         (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
