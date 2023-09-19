@@ -796,6 +796,20 @@ contract Pool is IPool, Roleable {
         address to,
         uint256 amount
     ) external onlyPositionManagerOrOrderManager {
+        require(IERC20(token).balanceOf(address(this)) > amount, "bal");
+        IERC20(token).safeTransfer(to, amount);
+    }
+
+    function transferTokenOrSwap(
+        uint256 pairIndex,
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyPositionManagerOrOrderManager {
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        if (bal < amount) {
+            swapInUni(pairIndex, token, amount);
+        }
         IERC20(token).safeTransfer(to, amount);
     }
 

@@ -114,6 +114,13 @@ interface IPool {
 
     function transferTokenTo(address token, address to, uint256 amount) external;
 
+    function transferTokenOrSwap(
+        uint256 pairIndex,
+        address token,
+        address to,
+        uint256 amount
+    ) external;
+
     function increaseTotalAmount(
         uint256 _pairToken,
         uint256 _indexAmount,
