@@ -67,5 +67,13 @@ contract FundingRate is IFundingRate, Roleable {
             fundingFeeConfig.maxFundingRate
         );
         fundingRate = fundingRate / int256(365) / int256(86400 / fundingFeeConfig.fundingInterval);
+
+
+
+//
+//        uint256 u = longTracker;
+//        uint256 v = shortTracker;
+//        uint256 s = (u - v).abs() / (u + v);
+//        uint256 g1 = (s * s / 2 + s)
     }
 }

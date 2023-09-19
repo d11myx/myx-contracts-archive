@@ -24,6 +24,7 @@ import {
     TestCallBack,
     FundingRate,
     PriceOracle,
+    ExecutionLogic,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -50,6 +51,7 @@ import {
     TEST_CALLBACK_ID,
     FUNDING_RATE,
     PRICE_ORACLE_ID,
+    EXECUTION_LOGIC_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 
@@ -124,6 +126,13 @@ export const getRouter = async (address?: string): Promise<Router> => {
 
 export const getExecutor = async (address?: string): Promise<Executor> => {
     return getContract<Executor>('Executor', address || (await hre.deployments.get(EXECUTOR_ID)).address);
+};
+
+export const getExecutionLogic = async (address?: string): Promise<ExecutionLogic> => {
+    return getContract<ExecutionLogic>(
+        'ExecutionLogic',
+        address || (await hre.deployments.get(EXECUTION_LOGIC_ID)).address,
+    );
 };
 
 export const getOrderManager = async (address?: string): Promise<OrderManager> => {

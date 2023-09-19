@@ -79,6 +79,13 @@ contract OraclePriceFeed is IOraclePriceFeed {
         }
     }
 
+    function getUpdateFee(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (uint) {
+        return pyth.getUpdateFee(getUpdateData(tokens, prices));
+    }
+
     function _getPrice(bytes32 priceId) internal view returns (PythStructs.Price memory) {
         return pyth.getPriceUnsafe(priceId);
     }

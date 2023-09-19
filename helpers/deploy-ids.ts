@@ -15,6 +15,7 @@ export const PAIR_LIQUIDITY_ID = `PoolLiquidity`;
 export const FEE_COLLECTOR_ID = `FeeCollector`;
 export const ROUTER_ID = `Router`;
 export const EXECUTOR_ID = `Executor`;
+export const EXECUTION_LOGIC_ID = `ExecutionLogic`;
 export const ORDER_MANAGER_ID = `OrderManager`;
 export const POSITION_MANAGER_ID = `PositionManager`;
 export const TEST_CALLBACK_ID = `TestCallBack`;
