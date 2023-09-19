@@ -11,7 +11,7 @@ import '../libraries/PositionKey.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/Roleable.sol';
 import '../libraries/TradingTypes.sol';
-import '../interfaces/IOraclePriceFeed.sol';
+import "../interfaces/IPriceOracle.sol";
 import '../interfaces/IPool.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IAddressesProvider.sol';
@@ -107,7 +107,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
         if (request.tradeType == TradingTypes.TradeType.MARKET || request.tradeType == TradingTypes.TradeType.LIMIT) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-            uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+            uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 require(
                     request.sizeAmount == 0
@@ -203,7 +203,6 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
         bool isIncrease,
         string memory reason
     ) public nonReentrant onlyCreateOrderAddress(msg.sender) whenNotPaused {
-        emit CancelOrder(orderId, tradeType, reason);
         if (isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = getIncreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
@@ -217,6 +216,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             }
             _cancelDecreaseOrder(order);
         }
+        emit CancelOrder(orderId, tradeType, reason);
     }
 
     function cancelAllPositionOrders(
@@ -468,6 +468,27 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
             order = decreaseLimitOrders[orderId];
         }
         return order;
+    }
+
+    function increaseOrderExecutedSize(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        uint256 increaseSize
+    ) external override {
+        if (isIncrease) {
+             if (tradeType == TradingTypes.TradeType.MARKET) {
+                increaseMarketOrders[orderId].executedSize += increaseSize;
+            } else if (tradeType == TradingTypes.TradeType.LIMIT) {
+                increaseLimitOrders[orderId].executedSize += increaseSize;
+            }
+        } else {
+            if (tradeType == TradingTypes.TradeType.MARKET) {
+                decreaseMarketOrders[orderId].executedSize += increaseSize;
+            } else {
+                decreaseLimitOrders[orderId].executedSize += increaseSize;
+            }
+        }
     }
 
     function addOrderToPosition(PositionOrder memory order) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
