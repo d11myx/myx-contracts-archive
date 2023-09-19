@@ -19,7 +19,7 @@ interface IPriceOracle {
 
     function updateOraclePrice(address[] calldata tokens, uint256[] calldata prices) external payable;
 
-    function updateIndexPrice(address[] calldata tokens, uint256[] calldata prices) external payable;
+    function updateIndexPrice(address[] calldata tokens, uint256[] calldata prices) external;
 
     function updatePrice(address[] calldata tokens, uint256[] calldata prices) external payable;
 

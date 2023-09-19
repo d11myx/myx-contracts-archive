@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
-import "../interfaces/IPythPriceFeed.sol";
+import "../interfaces/IOraclePriceFeed.sol";
 
-contract PythPriceFeed is IPythPriceFeed {
+contract OraclePriceFeed is IOraclePriceFeed {
 
     IPyth public pyth;
     mapping(address => bytes32) public assetIds;
@@ -30,7 +30,7 @@ contract PythPriceFeed is IPythPriceFeed {
     }
 
     function updatePrice(address[] calldata tokens, uint256[] calldata prices) external payable override {
-        bytes[] memory updateData = _getUpdateData(tokens, prices);
+        bytes[] memory updateData = getUpdateData(tokens, prices);
 
         uint fee = pyth.getUpdateFee(updateData);
         if (msg.value < fee) {
@@ -59,10 +59,10 @@ contract PythPriceFeed is IPythPriceFeed {
         }
     }
 
-    function _getUpdateData(
+    function getUpdateData(
         address[] calldata tokens,
         uint256[] calldata prices
-    ) internal view returns (bytes[] memory updateData) {
+    ) public view returns (bytes[] memory updateData) {
         require(tokens.length == prices.length, "inconsistent params length");
 
         updateData = new bytes[](prices.length);
@@ -80,7 +80,7 @@ contract PythPriceFeed is IPythPriceFeed {
     }
 
     function _getPrice(bytes32 priceId) internal view returns (PythStructs.Price memory) {
-        return pyth.getPrice(priceId);
+        return pyth.getPriceUnsafe(priceId);
     }
 
     function createPriceFeedUpdateData(
