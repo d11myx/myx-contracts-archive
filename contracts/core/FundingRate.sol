@@ -23,8 +23,9 @@ contract FundingRate is IFundingRate, Roleable {
         FundingFeeConfig calldata _fundingFeeConfig
     ) external onlyPoolAdmin {
         require(
-            _fundingFeeConfig.fundingWeightFactor <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.liquidityPremiumFactor <= PrecisionUtils.percentage(),
+            _fundingFeeConfig.growthRate <= PrecisionUtils.percentage() &&
+                _fundingFeeConfig.baseRate <= PrecisionUtils.percentage() &&
+                _fundingFeeConfig.maxRate <= PrecisionUtils.percentage(),
             "exceed 100%"
         );
 
@@ -37,43 +38,40 @@ contract FundingRate is IFundingRate, Roleable {
     }
 
     function getFundingRate(
-        uint256 _pairIndex,
-        // uint256 fundingInterval,
-        int256 currentExposureAmountChecker,
-        int256 lpVaulue,
+        uint256 pairIndex,
         uint256 longTracker,
-        uint256 shortTracker
+        uint256 shortTracker,
+        IPool.Vault memory vault,
+        uint256 price
     ) public view override returns (int256 fundingRate) {
-        FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[_pairIndex];
-        int256 w = int256(fundingFeeConfig.fundingWeightFactor);
-        int256 q = int256(longTracker + shortTracker);
-        int256 k = int256(fundingFeeConfig.liquidityPremiumFactor);
+        FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[pairIndex];
 
-        if (q == 0) {
-            fundingRate = 0;
-        } else {
-            fundingRate =
-                (w * currentExposureAmountChecker * int256(PrecisionUtils.fundingRatePrecision())) /
-                (k * q);
-            if (lpVaulue != 0) {
-                fundingRate =
-                    fundingRate +
-                    ((int256(PrecisionUtils.fundingRatePrecision()) - w) *
-                        currentExposureAmountChecker) /
-                    (k * lpVaulue);
-            }
+        uint256 baseRate = fundingFeeConfig.baseRate;
+        uint256 maxRate = fundingFeeConfig.maxRate;
+        uint256 k = fundingFeeConfig.growthRate;
+
+        uint256 u = longTracker;
+        uint256 v = shortTracker;
+        uint256 l = vault.indexTotalAmount.mulPrice(price) + vault.stableTotalAmount;
+
+        // A = (U/U+V - 0.5) * MAX(U,V)/L * 100
+        int256 a = u == v || u == 0 ? int256(0) : (int256(u.divPercentage(u + v)) - int256(PrecisionUtils.fundingRatePrecision().div(2)))
+            * int256(Math.max(u, v).divPercentage(l)) * 100 / int256(PrecisionUtils.fundingRatePrecision());
+
+        // S = ABS(2*R-1)=ABS(U-V)/(U+V)
+        uint256 s = u == v ? 0 : (int256(u) - int256(v)).abs().divPercentage(u + v);
+
+        // G1 = MIN((S+S*S/2) * k + r, r(max))
+        uint256 g1 = Math.min((s * s / 2 + s) * k + baseRate, maxRate);
+
+        if (u == v) {
+            return int256(g1);
         }
-        fundingRate = (fundingRate - fundingFeeConfig.r).max(fundingFeeConfig.minFundingRate).min(
-            fundingFeeConfig.maxFundingRate
-        );
-        fundingRate = fundingRate / int256(365) / int256(86400 / fundingFeeConfig.fundingInterval);
-
-
-
-//
-//        uint256 u = longTracker;
-//        uint256 v = shortTracker;
-//        uint256 s = (u - v).abs() / (u + v);
-//        uint256 g1 = (s * s / 2 + s)
+        // G1+ABS(G1*A/10) * (u-v)/abs(u-v)
+        fundingRate = int256(g1) + int256(g1) * int256(a.abs()) / 10;
+        if (u < v) {
+            fundingRate *= -1;
+        }
+        fundingRate = fundingRate / int256(86400 / fundingFeeConfig.fundingInterval);
     }
 }
