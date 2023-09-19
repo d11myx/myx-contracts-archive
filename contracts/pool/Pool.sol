@@ -139,6 +139,8 @@ contract Pool is IPool, Roleable {
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
         pair.expectIndexTokenP = _pair.expectIndexTokenP;
+        pair.maxUnbalancedP = _pair.maxUnbalancedP;
+        pair.unbalancedDiscountRate = _pair.unbalancedDiscountRate;
         pair.addLpFeeP = _pair.addLpFeeP;
         pair.removeLpFeeP = _pair.removeLpFeeP;
     }
@@ -458,9 +460,9 @@ contract Pool is IPool, Roleable {
 
         // calculate deposit usdt value without slippage
         uint256 slipDelta;
-        slipToken;
-        slipAmount;
         uint256 stableTotalAmount = _getStableTotalAmount(pair, vault);
+        uint256 availableDiscountRate;
+        uint256 availableDiscountAmount;
         if (indexReserveDelta + stableTotalAmount > 0) {
             // after deposit
             uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
@@ -470,6 +472,26 @@ contract Pool is IPool, Roleable {
             uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
             uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
             uint256 expectStableDelta = totalDelta - expectIndexDelta;
+
+            if (_indexAmount > 0 && _stableAmount == 0) {
+                uint256 currentIndexRatio = indexTotalDelta.divPercentage(totalDelta);
+                int256 indexUnbalanced = int256(currentIndexRatio.divPercentage(pair.expectIndexTokenP))
+                    - int256(PrecisionUtils.percentage());
+                if (indexUnbalanced < 0 && indexUnbalanced.abs() > pair.maxUnbalancedP) {
+                    availableDiscountRate = pair.unbalancedDiscountRate;
+                    availableDiscountAmount = expectIndexDelta.mul(indexTotalDelta);
+                }
+            }
+
+            if (_stableAmount > 0 && _indexAmount == 0) {
+                uint256 currentStableRatio = stableTotalDelta.divPercentage(totalDelta);
+                int256 stableUnbalanced = int256(currentStableRatio.divPercentage(
+                    PrecisionUtils.percentage().sub(pair.expectIndexTokenP))) - int256(PrecisionUtils.percentage());
+                if (stableUnbalanced < 0 && stableUnbalanced.abs() > pair.maxUnbalancedP) {
+                    availableDiscountRate = pair.unbalancedDiscountRate;
+                    availableDiscountAmount = expectStableDelta.mul(stableTotalDelta);
+                }
+            }
 
             (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(
                 pair.kOfSwap,
@@ -511,11 +533,29 @@ contract Pool is IPool, Roleable {
                 afterFeeStableAmount = afterFeeStableAmount - slipDelta;
             }
         }
-        // mint lp
-        mintAmount = AmountMath.getIndexAmount(
-            indexDepositDelta + afterFeeStableAmount - slipDelta,
-            lpFairPrice(_pairIndex)
-        );
+
+        uint256 mintDelta = indexDepositDelta + afterFeeStableAmount - slipDelta;
+
+        // mint with discount
+        if (availableDiscountRate > 0) {
+            if (mintDelta > availableDiscountAmount) {
+                mintAmount += AmountMath.getIndexAmount(
+                    availableDiscountAmount,
+                    lpFairPrice(_pairIndex).mul(PrecisionUtils.percentage() - availableDiscountRate)
+                );
+                mintDelta -= availableDiscountAmount;
+            } else {
+                mintAmount += AmountMath.getIndexAmount(
+                    mintDelta,
+                    lpFairPrice(_pairIndex).mul(PrecisionUtils.percentage() - availableDiscountRate)
+                );
+                mintDelta -= mintDelta;
+            }
+        }
+
+        if (mintDelta > 0) {
+            mintAmount += AmountMath.getIndexAmount(mintDelta, lpFairPrice(_pairIndex));
+        }
 
         return (
             mintAmount,
