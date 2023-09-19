@@ -82,7 +82,7 @@ contract Executor is IExecutor, Pausable {
         uint256[] memory prices,
         uint256 timestamp,
         ExecuteOrder[] memory increaseOrders
-    ) external override onlyPositionKeeper whenNotPaused {
+    ) external payable override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         _setPrices(tokens, prices, timestamp);
@@ -95,7 +95,7 @@ contract Executor is IExecutor, Pausable {
         uint256[] memory prices,
         uint256 timestamp,
         ExecuteOrder[] memory decreaseOrders
-    ) external override onlyPositionKeeper whenNotPaused {
+    ) external payable override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         _setPrices(tokens, prices, timestamp);
@@ -108,7 +108,7 @@ contract Executor is IExecutor, Pausable {
         uint256[] memory prices,
         uint256 timestamp,
         ExecuteOrder[] memory increaseOrders
-    ) external override onlyPositionKeeper whenNotPaused {
+    ) external payable override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         _setPrices(tokens, prices, timestamp);
@@ -121,7 +121,7 @@ contract Executor is IExecutor, Pausable {
         uint256[] memory prices,
         uint256 timestamp,
         ExecuteOrder[] memory decreaseOrders
-    ) external override onlyPositionKeeper whenNotPaused {
+    ) external payable override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         _setPrices(tokens, prices, timestamp);
@@ -595,7 +595,7 @@ contract Executor is IExecutor, Pausable {
         TradingTypes.TradeType tradeType,
         uint8 level,
         uint256 commissionRatio
-    ) external override onlyPositionKeeper whenNotPaused {
+    ) external payable override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         _setPrices(tokens, prices, timestamp);
@@ -604,7 +604,7 @@ contract Executor is IExecutor, Pausable {
     }
 
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) internal {
-        IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice(_tokens, _prices);
+        IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(_tokens, _prices);
     }
 
     function executeADLAndDecreaseOrder(
@@ -670,7 +670,7 @@ contract Executor is IExecutor, Pausable {
         uint256[] memory prices,
         uint256 timestamp,
         ExecutePosition[] memory executePositions
-    ) external override onlyPositionKeeper whenNotPaused {
+    ) external payable override onlyPositionKeeper whenNotPaused {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         _setPrices(tokens, prices, timestamp);
