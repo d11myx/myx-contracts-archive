@@ -17,6 +17,7 @@ import 'keccak256';
 import 'merkletreejs';
 import { getCurrentTimestamp } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
 import { DEFAULT_NAMED_ACCOUNTS, loadTasks } from './helpers';
+import 'hardhat-dependency-compiler';
 
 dotenv.config();
 
@@ -306,6 +307,10 @@ const config: HardhatUserConfig = {
     typechain: {
         outDir: 'types',
         target: 'ethers-v5',
+        externalArtifacts: ['@pythnetwork/pyth-sdk-solidity/MockPyth.sol'],
+    },
+    dependencyCompiler: {
+        paths: ['@pythnetwork/pyth-sdk-solidity/MockPyth.sol'],
     },
 };
 export default config;
