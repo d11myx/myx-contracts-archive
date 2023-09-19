@@ -44,7 +44,7 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
 
     IPool public immutable pool;
     IPositionManager public immutable positionManager;
-    address public addressExecutor;
+    address public addressExecutionLogic;
     address public router;
 
     constructor(
@@ -62,25 +62,22 @@ contract OrderManager is IOrderManager, ReentrancyGuard, Roleable, Pausable {
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutor, "onlyExecutor");
+        require(msg.sender == addressExecutionLogic, "onlyExecutor");
         _;
     }
 
     modifier onlyCreateOrderAddress(address account) {
-        require(
-            msg.sender == router || msg.sender == addressExecutor || account == msg.sender,
-            "no access"
-        );
+        require(msg.sender == router || msg.sender == addressExecutionLogic || account == msg.sender, "no access");
         _;
     }
 
     modifier onlyExecutorOrAccount(address account) {
-        require(msg.sender == address(addressExecutor) || account == msg.sender, "no access");
+        require(msg.sender == address(addressExecutionLogic) || account == msg.sender, "no access");
         _;
     }
 
-    function setExecutor(address _addressExecutor) external onlyPoolAdmin {
-        addressExecutor = _addressExecutor;
+    function setExecutor(address _addressExecutionLogic) external onlyPoolAdmin {
+        addressExecutionLogic = _addressExecutionLogic;
     }
 
     function setRouter(address _router) external onlyPoolAdmin {

@@ -88,7 +88,7 @@ describe('PositionManager: decrease position', () => {
                 users: [depositor, trader],
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 positionManager,
                 orderManager,
                 pool,
@@ -137,7 +137,7 @@ describe('PositionManager: decrease position', () => {
             // await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
             // TODO stable token not enough swap
             // await expect(
-            //     executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
+            //     executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
             // ).to.be.revertedWith('stable token not enough');
         });
     });
