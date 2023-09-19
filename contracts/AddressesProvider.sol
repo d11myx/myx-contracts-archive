@@ -48,16 +48,9 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         emit AddressSet(id, oldAddress, newAddress);
     }
 
-    function initialize(
-        address newPriceOracle,
-        address newFundingRateAddress
-    ) external onlyOwner {
+    function initialize(address newPriceOracle, address newFundingRateAddress) external onlyOwner {
         require(!_initialize, "init");
-        require(
-            newPriceOracle != address(0) &&
-                newFundingRateAddress != address(0),
-            "!0"
-        );
+        require(newPriceOracle != address(0) && newFundingRateAddress != address(0), "!0");
         priceOracle = newPriceOracle;
         fundingRate = newFundingRateAddress;
 

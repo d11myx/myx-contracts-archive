@@ -28,11 +28,9 @@ describe('Trade: Limit order cases', () => {
         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
 
-        await snapshotGasCost(
-            testCallBack
-                .connect(depositor.signer)
-                .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount),
-        );
+        await testCallBack
+            .connect(depositor.signer)
+            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
     describe('long > short', () => {
