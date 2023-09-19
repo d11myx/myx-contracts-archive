@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@openzeppelin/contracts/security/Pausable.sol';
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import {PositionStatus, IPositionManager} from '../interfaces/IPositionManager.sol';
-import '../interfaces/IPool.sol';
-import '../interfaces/IFeeManager.sol';
-import '../libraries/Roleable.sol';
-import '../libraries/PrecisionUtils.sol';
-import '../libraries/Int256Utils.sol';
-import './FeeCollector.sol';
+import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
+import "../interfaces/IPool.sol";
+import "../interfaces/IFeeManager.sol";
+import "../libraries/Roleable.sol";
+import "../libraries/PrecisionUtils.sol";
+import "../libraries/Int256Utils.sol";
+import "./FeeCollector.sol";
 
 abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, Roleable {
     using SafeERC20 for IERC20;
@@ -46,7 +46,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
     }
 
     function claimStakingTradingFee() external override nonReentrant returns (uint256) {
-        require(msg.sender == stakingPool, '!=staking');
+        require(msg.sender == stakingPool, "!=staking");
         uint256 claimableStakingTradingFee = stakingTradingFee;
         if (claimableStakingTradingFee > 0) {
             pool.transferTokenTo(pledgeAddress, msg.sender, claimableStakingTradingFee);
@@ -100,10 +100,12 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
 
         uint256 surplusFee = tradingFee - vipAmount;
 
-        uint256 referralsAmount = surplusFee.mulPercentage(Math.min(referenceRate, feeCollector.maxReferralsRatio()));
+        uint256 referralsAmount = surplusFee.mulPercentage(
+            Math.min(referenceRate, feeCollector.maxReferralsRatio())
+        );
 
         lpAmount = surplusFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
-        pool.setLPProfit(pair.pairIndex, int256(lpAmount));
+        pool.setLPStableProfit(pair.pairIndex, int256(lpAmount));
 
         uint256 keeperAmount = surplusFee.mulPercentage(tradingFeeConfig.keeperFeeDistributeP);
         userTradingFee[keeper] += keeperAmount;
@@ -111,7 +113,11 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
         uint256 stakingAmount = surplusFee.mulPercentage(tradingFeeConfig.stakingFeeDistributeP);
         stakingTradingFee += stakingAmount;
 
-        uint256 distributorAmount = surplusFee - referralsAmount - lpAmount - keeperAmount - stakingAmount;
+        uint256 distributorAmount = surplusFee -
+            referralsAmount -
+            lpAmount -
+            keeperAmount -
+            stakingAmount;
         treasuryFee += distributorAmount.add(referralsAmount);
 
         emit DistributeTradingFee(

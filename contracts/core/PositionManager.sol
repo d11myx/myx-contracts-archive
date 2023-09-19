@@ -254,7 +254,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function _calLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal {
         int256 profit = _currentLpProfit(_pairIndex, lpIsLong, amount);
-        pool.setLPProfit(_pairIndex, profit);
+        pool.setLPStableProfit(_pairIndex, profit);
     }
 
     function lpProfit(uint pairIndex, address token) external view override returns (int256) {
@@ -277,7 +277,9 @@ contract PositionManager is FeeManager, Pausable {
     ) internal view returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        uint256 _price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
+        uint256 _price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
+            pair.indexToken
+        );
         if (lpIsLong) {
             if (_price > lpVault.averagePrice) {
                 return int256(amount.mulPrice(_price - lpVault.averagePrice));
@@ -334,7 +336,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-        _handleCollateral(position, collateral);
+        _handleCollateral(pairIndex, position, collateral);
         // settlement trading fee and funding fee
         int256 charge;
         (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -400,7 +402,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-
+        // _handleCollateral(pairIndex, position, collateral);
         // settlement trading fee and funding fee
         int256 charge;
         (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -426,10 +428,15 @@ contract PositionManager is FeeManager, Pausable {
             ? position.collateral = position.collateral.sub(pnl.abs())
             : position.collateral = position.collateral.add(pnl.abs());
 
-        _handleCollateral(position, collateral);
+        _handleCollateral(pairIndex, position, collateral);
 
         if (position.positionAmount == 0) {
-            pool.transferTokenTo(pledgeAddress, position.account, position.collateral);
+            pool.transferTokenOrSwap(
+                pairIndex,
+                pledgeAddress,
+                position.account,
+                position.collateral
+            );
             position.collateral = 0;
         }
 
@@ -462,8 +469,10 @@ contract PositionManager is FeeManager, Pausable {
             PositionKey.getPositionKey(account, pairIndex, isLong)
         ];
         uint256 collateralBefore = position.collateral;
-        _handleCollateral(position, collateral);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
+        _handleCollateral(pairIndex, position, collateral);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
+            pair.indexToken
+        );
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         (uint256 afterPosition, ) = position.validLeverage(
             price,
@@ -484,11 +493,16 @@ contract PositionManager is FeeManager, Pausable {
         );
     }
 
-    function _handleCollateral(Position.Info storage position, int256 collateral) internal {
+    function _handleCollateral(
+        uint256 pairIndex,
+        Position.Info storage position,
+        int256 collateral
+    ) internal {
+        // uint256 collateralBefore = position.collateral;
         if (collateral < 0) {
             require(position.collateral >= collateral.abs(), "collateral not enough");
             position.collateral = position.collateral.sub(collateral.abs());
-            pool.transferTokenTo(pledgeAddress, position.account, collateral.abs());
+            pool.transferTokenOrSwap(pairIndex, pledgeAddress, position.account, collateral.abs());
         } else {
             position.collateral = position.collateral.add(collateral.abs());
         }
@@ -500,7 +514,9 @@ contract PositionManager is FeeManager, Pausable {
         uint256 _sizeAmount
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
+            pair.indexToken
+        );
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
         return _tradingFee(_pairIndex, _isLong, sizeDelta);
     }
@@ -544,7 +560,9 @@ contract PositionManager is FeeManager, Pausable {
 
     function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
+            pair.indexToken
+        );
         _updateFundingRate(_pairIndex, price);
     }
 
@@ -576,14 +594,14 @@ contract PositionManager is FeeManager, Pausable {
         uint256 lpPosition;
         if (longTracker[_pairIndex] > shortTracker[_pairIndex]) {
             lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
-            pool.setLPProfit(
+            pool.setLPStableProfit(
                 _pairIndex,
                 (nextFundingRate * int256(lpPosition)) /
                     int256(PrecisionUtils.fundingRatePrecision())
             );
         } else {
             lpPosition = shortTracker[_pairIndex] - longTracker[_pairIndex];
-            pool.setLPProfit(
+            pool.setLPStableProfit(
                 _pairIndex,
                 (-nextFundingRate * int256(lpPosition)) /
                     int256(PrecisionUtils.fundingRatePrecision())
@@ -604,7 +622,9 @@ contract PositionManager is FeeManager, Pausable {
 
     function getNextFundingRate(uint256 _pairIndex) external view override returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
+            pair.indexToken
+        );
         return _nextFundingRate(_pairIndex, price);
     }
 

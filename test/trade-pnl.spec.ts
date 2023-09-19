@@ -117,6 +117,10 @@ describe('Trade: profit & Loss', () => {
 
             const userPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
+            console.log('collateral:' + userPositionAfter.collateral);
+            console.log('userPositionBefore.collateral:' + userPositionBefore.collateral);
+            console.log('pnl:' + pnl);
+            console.log('decreasingCollateral:' + decreasingCollateral);
             expect(userPositionAfter.positionAmount).to.be.eq(userPositionBefore.positionAmount.sub(decreasingSize));
             expect(userPositionAfter.collateral).to.be.eq(
                 userPositionBefore.collateral.add(pnl).sub(decreasingCollateral.abs()),

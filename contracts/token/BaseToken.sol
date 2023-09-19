@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-import './interfaces/IBaseToken.sol';
+import "./interfaces/IBaseToken.sol";
 
 abstract contract BaseToken is IBaseToken, ERC20, Ownable {
     bool public privateTransferMode;
@@ -13,7 +13,7 @@ abstract contract BaseToken is IBaseToken, ERC20, Ownable {
     mapping(address => bool) public isHandler;
 
     modifier onlyMiner() {
-        require(miners[msg.sender], 'miner forbidden');
+        require(miners[msg.sender], "miner forbidden");
         _;
     }
 
@@ -39,15 +39,19 @@ abstract contract BaseToken is IBaseToken, ERC20, Ownable {
 
     function transfer(address to, uint256 amount) public virtual override returns (bool) {
         if (privateTransferMode) {
-            require(isHandler[msg.sender], 'msg.sender not whitelisted');
+            require(isHandler[msg.sender], "msg.sender not whitelisted");
         }
         _transfer(msg.sender, to, amount);
         return true;
     }
 
-    function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public virtual override returns (bool) {
         if (privateTransferMode) {
-            require(isHandler[msg.sender], 'msg.sender not whitelisted');
+            require(isHandler[msg.sender], "msg.sender not whitelisted");
         }
         _spendAllowance(from, msg.sender, amount);
         _transfer(from, to, amount);
