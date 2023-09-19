@@ -70,6 +70,13 @@ interface IOrderManager {
         TradingTypes.TradeType tradeType
     ) external view returns (TradingTypes.DecreasePositionOrder memory order);
 
+    function increaseOrderExecutedSize(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        uint256 increaseSize
+    ) external;
+
     function addOrderToPosition(PositionOrder memory order) external;
 
     function removeOrderFromPosition(PositionOrder memory order) external;

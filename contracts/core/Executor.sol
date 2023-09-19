@@ -230,7 +230,6 @@ contract Executor is IExecutor, Pausable {
 
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
-
         // check position and leverage
         (uint256 afterPosition,) = position.validLeverage(
             executionPrice,
@@ -258,6 +257,7 @@ contract Executor is IExecutor, Pausable {
 
         // add executed size
         order.executedSize += executionSize;
+        orderManager.increaseOrderExecutedSize(order.orderId, order.tradeType, true, executionSize);
 
         // create order tp sl
         _createOrderTpSl(order);
@@ -377,15 +377,15 @@ contract Executor is IExecutor, Pausable {
             return;
         }
 
-        // valid order size
-        order.sizeAmount = Math.min(order.sizeAmount, position.positionAmount);
-
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
         uint256 executionSize = order.sizeAmount - order.executedSize;
         if (executionSize > tradingConfig.maxTradeAmount) {
             executionSize = tradingConfig.maxTradeAmount;
         }
+
+        // valid order size
+        executionSize = Math.min(executionSize, position.positionAmount);
 
         // validate can be triggered
         uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
@@ -480,6 +480,7 @@ contract Executor is IExecutor, Pausable {
 
         // add executed size
         order.executedSize += executionSize;
+        orderManager.increaseOrderExecutedSize(order.orderId, order.tradeType, false, executionSize);
 
         // remove order
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.executedSize >= order.sizeAmount) {
