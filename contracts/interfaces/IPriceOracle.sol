@@ -17,6 +17,11 @@ interface IPriceOracle {
 
     function getIndexPrice(address token) external view returns (uint256);
 
+    function getUpdateFee(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (uint);
+
     function updateOraclePrice(address[] calldata tokens, uint256[] calldata prices) external payable;
 
     function updateIndexPrice(address[] calldata tokens, uint256[] calldata prices) external;
