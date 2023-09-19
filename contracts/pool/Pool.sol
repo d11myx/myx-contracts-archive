@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import "../interfaces/IPositionManager.sol";
+import "../interfaces/IUniSwapV3Router.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
@@ -36,6 +37,8 @@ contract Pool is IPool, Roleable {
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public immutable poolTokenFactory;
+    address public router;
+    mapping(uint256 => bytes) tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -74,6 +77,10 @@ contract Pool is IPool, Roleable {
 
     function addPositionManager(address _positionManager) external onlyPoolAdmin {
         positionManagers.add(_positionManager);
+    }
+
+    function setRouter(address _router) external onlyPoolAdmin {
+        router = _router;
     }
 
     function removePositionManager(address _positionManager) external onlyPoolAdmin {
@@ -363,6 +370,21 @@ contract Pool is IPool, Roleable {
                 "ts"
             );
         }
+    }
+
+    function swapInUni(uint256 _pairIndex, uint256 amountOut) public {
+        Pair memory pair = pairs[_pairIndex];
+        uint256 price = getPrice(pair.indexToken);
+        bytes memory path = tokenPath[_pairIndex];
+        IUniSwapV3Router(router).exactOutput(
+            IUniSwapV3Router.ExactOutputParams({
+                path: path,
+                recipient: address(this),
+                deadline: block.timestamp + 1000,
+                amountOut: amountOut,
+                amountInMaximum: (amountOut * 15) / (price * 10)
+            })
+        );
     }
 
     // calculate lp amount for add liquidity
