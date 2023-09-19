@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '../interfaces/IPoolToken.sol';
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../interfaces/IPoolToken.sol";
 
-import '../libraries/Roleable.sol';
+import "../libraries/Roleable.sol";
 
 contract PoolToken is IPoolToken, Roleable, ERC20 {
     address public indexToken;
@@ -26,7 +26,7 @@ contract PoolToken is IPoolToken, Roleable, ERC20 {
     }
 
     modifier onlyMiner() {
-        require(miners[msg.sender], 'miner forbidden');
+        require(miners[msg.sender], "miner forbidden");
         _;
     }
 

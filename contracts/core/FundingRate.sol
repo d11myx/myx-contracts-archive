@@ -63,9 +63,9 @@ contract FundingRate is IFundingRate, Roleable {
                     (k * lpVaulue);
             }
         }
-        fundingRate = (fundingRate - fundingFeeConfig.r)
-            .max(fundingFeeConfig.minFundingRate)
-            .min(fundingFeeConfig.maxFundingRate);
+        fundingRate = (fundingRate - fundingFeeConfig.r).max(fundingFeeConfig.minFundingRate).min(
+            fundingFeeConfig.maxFundingRate
+        );
         fundingRate = fundingRate / int256(365) / int256(86400 / fundingFeeConfig.fundingInterval);
     }
 }

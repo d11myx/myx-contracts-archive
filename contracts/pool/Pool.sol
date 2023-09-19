@@ -475,8 +475,9 @@ contract Pool is IPool, Roleable {
 
             if (_indexAmount > 0 && _stableAmount == 0) {
                 uint256 currentIndexRatio = indexTotalDelta.divPercentage(totalDelta);
-                int256 indexUnbalanced = int256(currentIndexRatio.divPercentage(pair.expectIndexTokenP))
-                    - int256(PrecisionUtils.percentage());
+                int256 indexUnbalanced = int256(
+                    currentIndexRatio.divPercentage(pair.expectIndexTokenP)
+                ) - int256(PrecisionUtils.percentage());
                 if (indexUnbalanced < 0 && indexUnbalanced.abs() > pair.maxUnbalancedP) {
                     availableDiscountRate = pair.unbalancedDiscountRate;
                     availableDiscountAmount = expectIndexDelta.mul(indexTotalDelta);
@@ -485,8 +486,11 @@ contract Pool is IPool, Roleable {
 
             if (_stableAmount > 0 && _indexAmount == 0) {
                 uint256 currentStableRatio = stableTotalDelta.divPercentage(totalDelta);
-                int256 stableUnbalanced = int256(currentStableRatio.divPercentage(
-                    PrecisionUtils.percentage().sub(pair.expectIndexTokenP))) - int256(PrecisionUtils.percentage());
+                int256 stableUnbalanced = int256(
+                    currentStableRatio.divPercentage(
+                        PrecisionUtils.percentage().sub(pair.expectIndexTokenP)
+                    )
+                ) - int256(PrecisionUtils.percentage());
                 if (stableUnbalanced < 0 && stableUnbalanced.abs() > pair.maxUnbalancedP) {
                     availableDiscountRate = pair.unbalancedDiscountRate;
                     availableDiscountAmount = expectStableDelta.mul(stableTotalDelta);
