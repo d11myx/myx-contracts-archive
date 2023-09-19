@@ -5,27 +5,32 @@ import {
     FUNDING_RATE,
     getAddressesProvider,
     INDEX_PRICE_FEED_ID,
-    loadReserveConfig,
-    MARKET_NAME,
-    MOCK_PRICE_FEED_PREFIX,
+    MOCK_PRICE_FEED_ID,
     ORACLE_PRICE_FEED_ID,
+    PRICE_ORACLE_ID,
     waitForTx,
 } from '../../helpers';
-import { FundingRate, IndexPriceFeed, MockPriceFeed, OraclePriceFeed } from '../../types';
+import { FundingRate, IndexPriceFeed, MockPyth, OraclePriceFeed, PriceOracle } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
-    const { deployer, keeper } = await getNamedAccounts();
+    const { deployer } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
 
-    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
-
     const addressesProvider = await getAddressesProvider();
+
+    const mockPythArtifact = await deploy(`${MOCK_PRICE_FEED_ID}`, {
+        from: deployer,
+        contract: 'MockPyth',
+        args: [60, 1],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const mockPyth = (await hre.ethers.getContractAt(mockPythArtifact.abi, mockPythArtifact.address)) as MockPyth;
 
     const oraclePriceFeedArtifact = await deploy(`${ORACLE_PRICE_FEED_ID}`, {
         from: deployer,
         contract: 'OraclePriceFeed',
-        args: [addressesProvider.address],
+        args: [mockPyth.address, [], []],
         ...COMMON_DEPLOY_PARAMS,
     });
     const oraclePriceFeed = (await hre.ethers.getContractAt(
@@ -33,34 +38,27 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         oraclePriceFeedArtifact.address,
     )) as OraclePriceFeed;
 
-    const priceFeedPairs: string[] = [MARKET_NAME];
-    priceFeedPairs.push(...Object.keys(pairConfigs));
-
-    for (let pair of priceFeedPairs) {
-        const mockPriceFeedArtifact = await deploy(`${MOCK_PRICE_FEED_PREFIX}${pair}`, {
-            from: deployer,
-            contract: 'MockPriceFeed',
-            args: [],
-            ...COMMON_DEPLOY_PARAMS,
-        });
-        const mockPriceFeed = (await hre.ethers.getContractAt(
-            mockPriceFeedArtifact.abi,
-            mockPriceFeedArtifact.address,
-        )) as MockPriceFeed;
-
-        await waitForTx(await mockPriceFeed.connect(deployerSigner).setAdmin(keeper, true));
-    }
-
     const indexPriceFeedArtifact = await deploy(`${INDEX_PRICE_FEED_ID}`, {
         from: deployer,
         contract: 'IndexPriceFeed',
-        args: [addressesProvider.address],
+        args: [[], []],
         ...COMMON_DEPLOY_PARAMS,
     });
     const indexPriceFeed = (await hre.ethers.getContractAt(
         indexPriceFeedArtifact.abi,
         indexPriceFeedArtifact.address,
     )) as IndexPriceFeed;
+
+    const priceOracleArtifact = await deploy(`${PRICE_ORACLE_ID}`, {
+        from: deployer,
+        contract: 'PriceOracle',
+        args: [oraclePriceFeed.address, indexPriceFeed.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const priceOracle = (await hre.ethers.getContractAt(
+        priceOracleArtifact.abi,
+        priceOracleArtifact.address,
+    )) as PriceOracle;
 
     const FundingRateArtifact = await deploy(`${FUNDING_RATE}`, {
         from: deployer,
@@ -74,11 +72,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as FundingRate;
 
     await waitForTx(
-        await addressesProvider
-            .connect(deployerSigner)
-            .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address),
+        await addressesProvider.connect(deployerSigner).initialize(priceOracle.address, fundingRate.address),
     );
-    // await waitForTx(await addressesProvider.connect(deployerSigner).setIndexPriceOracle());
 };
 
 func.id = `Oracles`;
