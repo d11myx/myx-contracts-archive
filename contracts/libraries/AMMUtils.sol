@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/utils/math/Math.sol';
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 library AMMUtils {
     function getReserve(
@@ -9,8 +9,8 @@ library AMMUtils {
         uint256 price,
         uint256 pricePrecision
     ) internal pure returns (uint256 reserveA, uint256 reserveB) {
-        require(price > 0, 'Invalid price');
-        require(k > 0, 'Invalid k');
+        require(price > 0, "Invalid price");
+        require(k > 0, "Invalid k");
 
         reserveB = Math.sqrt(Math.mulDiv(k, price, pricePrecision));
         reserveA = k / reserveB;
@@ -26,7 +26,7 @@ library AMMUtils {
             return 0;
         }
 
-        require(reserveIn > 0 && reserveOut > 0, 'Invalid reserve');
+        require(reserveIn > 0 && reserveOut > 0, "Invalid reserve");
         amountOut = Math.mulDiv(amountIn, reserveOut, reserveIn + amountIn);
     }
 }

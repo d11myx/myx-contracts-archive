@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '@openzeppelin/contracts/utils/Address.sol';
-import '@openzeppelin/contracts/access/AccessControl.sol';
-import './interfaces/IRoleManager.sol';
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./interfaces/IRoleManager.sol";
 
 contract RoleManager is AccessControl, IRoleManager {
     using Address for address;
 
-    bytes32 public constant POOL_ADMIN_ROLE = keccak256('POOL_ADMIN');
-    bytes32 public constant OPERATOR_ROLE = keccak256('OPERATOR_ROLE');
-    bytes32 public constant TREASURER_ROLE = keccak256('TREASURER_ROLE');
-    bytes32 public constant KEEPER_ROLE = keccak256('KEEPER_ROLE');
+    bytes32 public constant POOL_ADMIN_ROLE = keccak256("POOL_ADMIN");
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    bytes32 public constant TREASURER_ROLE = keccak256("TREASURER_ROLE");
+    bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
 
     mapping(address => bool) public accountBlackList;
 
@@ -19,7 +19,10 @@ contract RoleManager is AccessControl, IRoleManager {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function setRoleAdmin(bytes32 role, bytes32 adminRole) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setRoleAdmin(
+        bytes32 role,
+        bytes32 adminRole
+    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         _setRoleAdmin(role, adminRole);
     }
 
