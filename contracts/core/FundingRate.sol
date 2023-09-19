@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "../interfaces/IFundingRate.sol";
-import "../interfaces/IOraclePriceFeed.sol";
 import "../interfaces/IPool.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Roleable.sol";

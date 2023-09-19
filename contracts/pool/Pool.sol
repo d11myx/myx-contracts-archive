@@ -12,7 +12,7 @@ import "../interfaces/IPositionManager.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
-import "../interfaces/IOraclePriceFeed.sol";
+import "../interfaces/IPriceOracle.sol";
 import "../token/interfaces/IBaseToken.sol";
 
 import "../libraries/AmountMath.sol";
@@ -765,7 +765,7 @@ contract Pool is IPool, Roleable {
     }
 
     function getPrice(address _token) public view returns (uint256) {
-        return IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
+        return IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(_token);
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {

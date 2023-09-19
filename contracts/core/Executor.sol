@@ -10,7 +10,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
-import '../interfaces/IIndexPriceFeed.sol';
+import "../interfaces/IPriceOracle.sol";
 import '../interfaces/IPool.sol';
 import '../helpers/ValidationHelper.sol';
 import '../helpers/TradingHelper.sol';
@@ -226,7 +226,12 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
-        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        int256 collateral;
+        if (order.collateral > 0) {
+            collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        } else {
+            collateral = order.executedSize + executionSize >= order.sizeAmount ? order.collateral : int256(0);
+        }
 
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
@@ -407,7 +412,12 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
-        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        int256 collateral;
+        if (order.collateral > 0) {
+            collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        } else {
+            collateral = order.executedSize + executionSize >= order.sizeAmount ? order.collateral : int256(0);
+        }
 
         // check position and leverage
         position.validLeverage(
@@ -594,7 +604,7 @@ contract Executor is IExecutor, Pausable {
     }
 
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) internal {
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(_tokens, _prices, _timestamp);
+        IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice(_tokens, _prices);
     }
 
     function executeADLAndDecreaseOrder(
@@ -621,6 +631,7 @@ contract Executor is IExecutor, Pausable {
 
             ExecutePositionInfo memory adlPosition = adlPositions[i];
             adlPosition.position = position;
+            adlPosition.executionSize = executePosition.sizeAmount;
             adlPosition.level = executePosition.level;
             adlPosition.commissionRatio = executePosition.commissionRatio;
         }
@@ -639,7 +650,7 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: price,
                     isLong: adlPosition.position.isLong,
-                    sizeAmount: - int256(adlPosition.position.positionAmount),
+                    sizeAmount: - int256(adlPosition.executionSize),
                     maxSlippage: 0,
                     data: abi.encode(adlPosition.position.account)
                 })
