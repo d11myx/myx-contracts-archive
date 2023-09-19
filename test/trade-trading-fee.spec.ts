@@ -4,7 +4,7 @@ import { increasePosition, decreasePosition, mintAndApprove } from './helpers/mi
 import { expect } from './shared/expect';
 import { TradeType, getPositionTradingFee, getDistributeTradingFee } from '../helpers';
 import { BigNumber } from 'ethers';
-import { TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Trade: trading fee', () => {
     describe('user paid trading fee, platform should be received trading fee and it will be distributed', () => {
@@ -94,7 +94,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 router,
                 positionManager,
-                executor,
+                executionLogic,
                 orderManager,
                 keeper,
             } = testEnv;
@@ -124,7 +124,7 @@ describe('Trade: trading fee', () => {
 
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, normal, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, normal, 0);
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
             // vip = 1
@@ -142,7 +142,7 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest2);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip1, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip1, 0);
             const trader2Position = await positionManager.getPosition(trader2.address, pairIndex, true);
 
             // vip = 2
@@ -160,7 +160,7 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader3.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest3);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip2, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip2, 0);
             const trader3Position = await positionManager.getPosition(trader3.address, pairIndex, true);
 
             // vip = 3
@@ -178,7 +178,7 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader4.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest4);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip3, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip3, 0);
             const trader4Position = await positionManager.getPosition(trader4.address, pairIndex, true);
 
             // vip = 4
@@ -196,7 +196,7 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader5.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest5);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip4, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip4, 0);
             const trader5Position = await positionManager.getPosition(trader5.address, pairIndex, true);
 
             // vip = 5
@@ -214,7 +214,7 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader6.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest6);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip5, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip5, 0);
             const trader6Position = await positionManager.getPosition(trader6.address, pairIndex, true);
 
             // trading fee

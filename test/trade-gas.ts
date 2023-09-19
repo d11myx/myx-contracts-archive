@@ -108,10 +108,12 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executor,
+            executionLogic,
             orderManager,
         } = localTestEnv;
-        await snapshotGasCost(executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0));
+        await snapshotGasCost(
+            executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
+        );
     });
     it('createDecreaseOrder cast', async () => {
         const {
@@ -123,7 +125,7 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executor,
+            executionLogic,
             orderManager,
         } = localTestEnv;
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -154,10 +156,12 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executor,
+            executionLogic,
             orderManager,
         } = localTestEnv;
-        await snapshotGasCost(executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0));
+        await snapshotGasCost(
+            executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
+        );
 
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
         const lastTimePrice = traderPosition.averagePrice;

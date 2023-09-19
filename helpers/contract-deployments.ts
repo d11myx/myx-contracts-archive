@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     AddressesProvider,
+    ExecutionLogic,
     Executor,
     FeeCollector,
     FundingRate,
@@ -188,31 +189,31 @@ export async function deployTrading(
     log(`deployed Router at ${router.address}`);
     await waitForTx(await orderManager.setRouter(router.address));
 
-    const liquidationLogic = await deployContract('LiquidationLogic', []);
+    // const liquidationLogic = await deployContract('LiquidationLogic', []);
 
-    let executor = (await deployContract(
-        'Executor',
-        [
-            addressProvider.address,
-            pool.address,
-            orderManager.address,
-            positionManager.address,
-            feeCollector.address,
-            60 * 10, //todo testing time
-        ],
-        {
-            LiquidationLogic: liquidationLogic.address,
-        },
-    )) as any as Executor;
+    let executionLogic = (await deployContract('ExecutionLogic', [
+        addressProvider.address,
+        pool.address,
+        orderManager.address,
+        positionManager.address,
+        feeCollector.address,
+        60 * 10, //todo testing time
+    ])) as any as ExecutionLogic;
+    log(`deployed ExecutionLogic at ${executionLogic.address}`);
+
+    let executor = (await deployContract('Executor', [
+        addressProvider.address,
+        executionLogic.address,
+    ])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
 
-    // await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
+    await waitForTx(await executionLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
 
-    await positionManager.setExecutor(executor.address);
+    await positionManager.setExecutor(executionLogic.address);
     await positionManager.setOrderManager(orderManager.address);
-    await orderManager.setExecutor(executor.address);
+    await orderManager.setExecutor(executionLogic.address);
 
-    return { positionManager, router, executor, orderManager };
+    return { positionManager, router, executionLogic, executor, orderManager };
 }
 export async function deployMockCallback() {
     return (await deployContract('TestCallBack', [])) as TestCallBack;

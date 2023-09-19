@@ -42,7 +42,7 @@ describe('Trade: Limit order cases', () => {
                 positionManager,
                 orderManager,
                 router,
-                executor,
+                executionLogic,
             } = testEnv;
 
             // update BTC price
@@ -67,7 +67,7 @@ describe('Trade: Limit order cases', () => {
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`---positionAft: `, positionAft);
 
-            await executor
+            await executionLogic
                 .connect(keeper.signer)
                 .executeIncreaseLimitOrders([{ orderId: orderId, level: 0, commissionRatio: 0 }]);
             // expect(positionAft.positionAmount).to.be.eq(size);
