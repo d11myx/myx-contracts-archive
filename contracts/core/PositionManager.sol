@@ -254,7 +254,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function _calLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal {
         int256 profit = _currentLpProfit(_pairIndex, lpIsLong, amount);
-        pool.setLPProfit(_pairIndex, profit);
+        pool.setLPStableProfit(_pairIndex, profit);
     }
 
     function lpProfit(uint pairIndex, address token) external view override returns (int256) {
@@ -573,14 +573,14 @@ contract PositionManager is FeeManager, Pausable {
         uint256 lpPosition;
         if (longTracker[_pairIndex] > shortTracker[_pairIndex]) {
             lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
-            pool.setLPProfit(
+            pool.setLPStableProfit(
                 _pairIndex,
                 (nextFundingRate * int256(lpPosition)) /
                     int256(PrecisionUtils.fundingRatePrecision())
             );
         } else {
             lpPosition = shortTracker[_pairIndex] - longTracker[_pairIndex];
-            pool.setLPProfit(
+            pool.setLPStableProfit(
                 _pairIndex,
                 (-nextFundingRate * int256(lpPosition)) /
                     int256(PrecisionUtils.fundingRatePrecision())

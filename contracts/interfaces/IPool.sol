@@ -3,7 +3,12 @@ pragma solidity 0.8.20;
 
 interface IPool {
     // Events
-    event PairAdded(address indexed indexToken, address indexed stableToken, address lpToken, uint256 index);
+    event PairAdded(
+        address indexed indexToken,
+        address indexed stableToken,
+        address lpToken,
+        uint256 index
+    );
 
     event UpdateTotalAmount(
         uint256 indexed pairIndex,
@@ -21,7 +26,12 @@ interface IPool {
         uint256 stableReservedAmount
     );
 
-    event UpdateLPProfit(uint256 indexed pairIndex, int256 profit, uint256 stableTotalAmount);
+    event UpdateLPProfit(
+        uint256 indexed pairIndex,
+        address token,
+        int256 profit,
+        uint256 stableTotalAmount
+    );
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
@@ -104,17 +114,33 @@ interface IPool {
 
     function transferTokenTo(address token, address to, uint256 amount) external;
 
-    function increaseTotalAmount(uint256 _pairToken, uint256 _indexAmount, uint256 _stableAmount) external;
+    function increaseTotalAmount(
+        uint256 _pairToken,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external;
 
-    function decreaseTotalAmount(uint256 _pairToken, uint256 _indexAmount, uint256 _stableAmount) external;
+    function decreaseTotalAmount(
+        uint256 _pairToken,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external;
 
-    function increaseReserveAmount(uint256 _pairToken, uint256 _indexAmount, uint256 _stableAmount) external;
+    function increaseReserveAmount(
+        uint256 _pairToken,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external;
 
-    function decreaseReserveAmount(uint256 _pairToken, uint256 _indexAmount, uint256 _stableAmount) external;
+    function decreaseReserveAmount(
+        uint256 _pairToken,
+        uint256 _indexAmount,
+        uint256 _stableAmount
+    ) external;
 
     function updateAveragePrice(uint256 _pairIndex, uint256 _averagePrice) external;
 
-    function setLPProfit(uint256 _pairIndex, int256 _profit) external;
+    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external;
 
     function addLiquidity(
         address recipient,
@@ -138,7 +164,9 @@ interface IPool {
         uint256 _pairIndex,
         uint256 _amount,
         bytes calldata data
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
+    )
+        external
+        returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
     function getMintLpAmount(
         uint256 _pairIndex,
