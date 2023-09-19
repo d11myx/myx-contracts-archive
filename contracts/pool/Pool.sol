@@ -38,7 +38,7 @@ contract Pool is IPool, Roleable {
 
     IPoolTokenFactory public immutable poolTokenFactory;
     address public router;
-    mapping(uint256 => bytes) tokenPath;
+    mapping(uint256 => mapping(address => bytes)) tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -280,17 +280,34 @@ contract Pool is IPool, Roleable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function setLPProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
+        Pair memory pair = pairs[_pairIndex];
         if (_profit > 0) {
             vault.stableTotalAmount += _profit.abs();
         } else {
-            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-            require(_profit.abs() <= availableStable, "stable token not enough");
+            if (vault.stableTotalAmount < _profit.abs()) {
+                swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+            }
             vault.stableTotalAmount -= _profit.abs();
         }
 
-        emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
+        emit UpdateLPProfit(_pairIndex, pair.stableToken, _profit, vault.stableTotalAmount);
+    }
+
+    function setLPIndexProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+        Vault storage vault = vaults[_pairIndex];
+        Pair memory pair = pairs[_pairIndex];
+        if (_profit > 0) {
+            vault.indexTotalAmount += _profit.abs();
+        } else {
+            if (vault.indexTotalAmount < _profit.abs()) {
+                swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+            }
+            vault.stableTotalAmount -= _profit.abs();
+        }
+
+        emit UpdateLPProfit(_pairIndex, pair.indexToken, _profit, vault.indexTotalAmount);
     }
 
     function addLiquidity(
@@ -372,17 +389,24 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function swapInUni(uint256 _pairIndex, uint256 amountOut) public {
+    function swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) public {
         Pair memory pair = pairs[_pairIndex];
         uint256 price = getPrice(pair.indexToken);
-        bytes memory path = tokenPath[_pairIndex];
+        bytes memory path = tokenPath[_pairIndex][tokenIn];
+        uint256 amountInMaximum;
+        if (tokenIn == pair.indexToken) {
+            amountInMaximum = (amountOut * 12) / (price * 10);
+        } else if (tokenIn == pair.stableToken) {
+            amountInMaximum = (amountOut * price * 12) / 10;
+        }
+        IERC20(pair.indexToken).approve(router, amountInMaximum);
         IUniSwapV3Router(router).exactOutput(
             IUniSwapV3Router.ExactOutputParams({
                 path: path,
                 recipient: address(this),
                 deadline: block.timestamp + 1000,
                 amountOut: amountOut,
-                amountInMaximum: (amountOut * 15) / (price * 10)
+                amountInMaximum: amountInMaximum
             })
         );
     }
