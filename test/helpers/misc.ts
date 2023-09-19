@@ -1,20 +1,25 @@
-import { MockPriceFeed, Token } from '../../types';
+import { Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import hre, { ethers } from 'hardhat';
-import { getBlockTimestamp, TradeType, waitForTx } from '../../helpers';
+import { TradeType, waitForTx } from '../../helpers';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { TradingTypes } from '../../types/contracts/core/Router';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
-    const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-    const btcPriceFeed = (await ethers.getContractAt('MockPriceFeed', btcPriceFeedAddress)) as MockPriceFeed;
-    await waitForTx(await btcPriceFeed.connect(keeper.signer).setLatestAnswer(ethers.utils.parseUnits(btcPrice, 8)));
+
+    const updateData = await oraclePriceFeed.getUpdateData([btc.address], [ethers.utils.parseUnits(btcPrice, 8)]);
+    const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
+    const fee = mockPyth.getUpdateFee(updateData);
     await waitForTx(
-        await indexPriceFeed
+        await oraclePriceFeed
             .connect(keeper.signer)
-            .setPrices([btc.address], [ethers.utils.parseUnits(btcPrice, 30)], (await getBlockTimestamp()) + 100),
+            .updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 8)], { value: fee }),
+    );
+
+    await waitForTx(
+        await indexPriceFeed.connect(keeper.signer).updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 8)]),
     );
 }
 

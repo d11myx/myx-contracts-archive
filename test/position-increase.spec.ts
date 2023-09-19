@@ -1,9 +1,8 @@
 import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
-import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
 import { deployMockCallback, getBlockTimestamp, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
-import { mintAndApprove } from './helpers/misc';
+import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: increase position ar', () => {
@@ -34,12 +33,7 @@ describe('Router: increase position ar', () => {
 
     describe('Router: collateral test cases', () => {
         before(async () => {
-            const { btc, oraclePriceFeed } = testEnv;
-
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+            await updateBTCPrice(testEnv, '30000');
         });
         after(async () => {});
 
@@ -296,10 +290,7 @@ describe('Router: increase position ar', () => {
                 positionManager,
             } = testEnv;
 
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+            await updateBTCPrice(testEnv, '30000');
 
             // closing position
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -474,10 +465,7 @@ describe('Router: increase position ar', () => {
                 executor,
             } = testEnv;
 
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+            await updateBTCPrice(testEnv, '30000');
 
             // closing position
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -581,8 +569,6 @@ describe('Router: increase position ar', () => {
     });
 
     describe('Router: calculate open position price', () => {
-        let btcPriceFeed: MockPriceFeed;
-
         before(async () => {
             const {
                 keeper,
@@ -596,10 +582,7 @@ describe('Router: increase position ar', () => {
                 executor,
             } = testEnv;
 
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+            await updateBTCPrice(testEnv, '30000');
 
             // closing position
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -739,20 +722,7 @@ describe('Router: increase position ar', () => {
             } = testEnv;
 
             // modify btc price
-            const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-            const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-            const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-
-            await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('40000', 8)));
-            await waitForTx(
-                await indexPriceFeed
-                    .connect(keeper.signer)
-                    .setPrices(
-                        [btc.address],
-                        [ethers.utils.parseUnits('40000', 30)],
-                        (await getBlockTimestamp()) + 100,
-                    ),
-            );
+            await updateBTCPrice(testEnv, '40000');
 
             const collateral = ethers.utils.parseUnits('10000', 18);
 
