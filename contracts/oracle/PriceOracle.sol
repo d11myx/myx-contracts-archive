@@ -49,7 +49,7 @@ contract PriceOracle is IPriceOracle {
         oraclePriceFeed.updatePrice{value: msg.value}(tokens, prices);
     }
 
-    function updateIndexPrice(address[] calldata tokens, uint256[] calldata prices) external payable override {
+    function updateIndexPrice(address[] calldata tokens, uint256[] calldata prices) external override {
         require(tokens.length == prices.length, 'inconsistent params length');
 
         if (tokens.length == 0) {
@@ -64,15 +64,15 @@ contract PriceOracle is IPriceOracle {
             return;
         }
 
-        this.updateOraclePrice(tokens, prices);
+        this.updateOraclePrice{value: msg.value}(tokens, prices);
         this.updateIndexPrice(tokens, prices);
     }
 
     function _getPrice(address token, PriceType priceType) internal view returns (uint256 price) {
         if (priceType == PriceType.INDEX) {
-            price = indexPriceFeed.getPrice(token) * ((PRICE_DECIMALS - indexPriceFeed.decimals()) ** 10);
+            price = indexPriceFeed.getPrice(token) * (10 ** (PRICE_DECIMALS - indexPriceFeed.decimals()));
         } else if (priceType == PriceType.ORACLE) {
-            price = oraclePriceFeed.getPrice(token) * ((PRICE_DECIMALS - oraclePriceFeed.decimals()) ** 10);
+            price = oraclePriceFeed.getPrice(token) * (10 ** (PRICE_DECIMALS - oraclePriceFeed.decimals()));
         } else {
             revert('unknown price type');
         }

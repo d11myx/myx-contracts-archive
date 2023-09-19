@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./IPriceFeed.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 
-interface IPythPriceFeed is IPriceFeed {
+interface IOraclePriceFeed is IPriceFeed {
 
     event AssetPriceIdUpdated(
         address asset,
@@ -16,4 +16,9 @@ interface IPythPriceFeed is IPriceFeed {
     function updatePythAddress(IPyth _pyth) external;
 
     function setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) external;
+
+    function getUpdateData(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (bytes[] memory updateData);
 }

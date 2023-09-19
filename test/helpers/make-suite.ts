@@ -15,6 +15,7 @@ import {
     OrderManager,
     FeeManager,
     FundingRate,
+    PriceOracle,
 } from '../../types';
 import {
     SymbolMap,
@@ -38,6 +39,7 @@ import {
     getPositionManager,
     deployLibraries,
     getRoleManager,
+    getPriceOracle,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -63,6 +65,7 @@ export interface TestEnv {
     fundingRate: FundingRate;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
+    priceOracle: PriceOracle;
     router: Router;
     executor: Executor;
     orderManager: OrderManager;
@@ -85,6 +88,7 @@ export const testEnv: TestEnv = {
     fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
+    priceOracle: {} as PriceOracle,
     router: {} as Router,
     executor: {} as Executor,
     orderManager: {} as OrderManager,
@@ -134,6 +138,7 @@ export async function setupTestEnv() {
     // oracle
     testEnv.oraclePriceFeed = await getOraclePriceFeed();
     testEnv.indexPriceFeed = await getIndexPriceFeed();
+    testEnv.priceOracle = await getPriceOracle();
 
     // pair
     testEnv.pool = await getPool();
@@ -179,7 +184,7 @@ export async function newTestEnv(): Promise<TestEnv> {
     await roleManager.addPoolAdmin(deployer.address);
     await roleManager.addKeeper(keeper.address);
 
-    const { oraclePriceFeed, indexPriceFeed, fundingRate } = await deployPrice(
+    const { oraclePriceFeed, indexPriceFeed, priceOracle, fundingRate } = await deployPrice(
         deployer,
         keeper,
         addressesProvider,
@@ -219,6 +224,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         fundingRate: fundingRate,
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
+        priceOracle: priceOracle,
         positionManager: positionManager,
         router: router,
         executor: executor,
