@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '../libraries/Position.sol';
-import '../interfaces/IPool.sol';
-import '../interfaces/IOrderManager.sol';
-import '../interfaces/IPositionManager.sol';
-import '../interfaces/IAddressesProvider.sol';
-import '../helpers/TradingHelper.sol';
-import '../interfaces/IExecutor.sol';
+import "../libraries/Position.sol";
+import "../interfaces/IPool.sol";
+import "../interfaces/IOrderManager.sol";
+import "../interfaces/IPositionManager.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../helpers/TradingHelper.sol";
+import "../interfaces/IExecutor.sol";
 
 library LiquidationLogic {
     using PrecisionUtils for uint256;
@@ -35,7 +35,7 @@ library LiquidationLogic {
         uint8 level,
         uint256 commissionRatio
     ) external {
-        require(commissionRatio < MAX_RATIO, 'max ratio');
+        require(commissionRatio < MAX_RATIO, "max ratio");
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
             return;
@@ -43,7 +43,11 @@ library LiquidationLogic {
         IPool.Pair memory pair = pool.getPair(position.pairIndex);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
 
-        uint256 price = TradingHelper.getValidPrice(addressesProvider, pair.indexToken, tradingConfig);
+        uint256 price = TradingHelper.getValidPrice(
+            addressesProvider,
+            pair.indexToken,
+            tradingConfig
+        );
 
         int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
         uint256 tradingFee = positionManager.getTradingFee(
@@ -51,8 +55,15 @@ library LiquidationLogic {
             position.isLong,
             position.positionAmount
         );
-        int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
-        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + fundingFee;
+        int256 fundingFee = positionManager.getFundingFee(
+            position.account,
+            position.pairIndex,
+            position.isLong
+        );
+        int256 exposureAsset = int256(position.collateral) +
+            unrealizedPnl -
+            int256(tradingFee) +
+            fundingFee;
 
         bool needLiquidate;
         if (exposureAsset <= 0) {
@@ -86,7 +97,12 @@ library LiquidationLogic {
             })
         );
 
-        executor.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio);
+        executor.executeDecreaseOrder(
+            orderId,
+            TradingTypes.TradeType.MARKET,
+            level,
+            commissionRatio
+        );
 
         emit ExecuteLiquidation(
             positionKey,

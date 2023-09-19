@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Timelock {
     using SafeMath for uint256;
@@ -47,8 +47,8 @@ contract Timelock {
     mapping(bytes32 => bool) public queuedTransactions;
 
     constructor(uint256 delay_) {
-        require(delay_ >= MINIMUM_DELAY, ' Delay must exceed minimum delay.');
-        require(delay_ <= MAXIMUM_DELAY, ' Delay must not exceed maximum delay.');
+        require(delay_ >= MINIMUM_DELAY, " Delay must exceed minimum delay.");
+        require(delay_ <= MAXIMUM_DELAY, " Delay must not exceed maximum delay.");
 
         admin = msg.sender;
         delay = delay_;
@@ -56,16 +56,16 @@ contract Timelock {
     }
 
     function setDelay(uint256 delay_) public {
-        require(msg.sender == address(this), 'Call must come from Timelock.');
-        require(delay_ >= MINIMUM_DELAY, 'Delay must exceed minimum delay.');
-        require(delay_ <= MAXIMUM_DELAY, 'Delay must not exceed maximum delay.');
+        require(msg.sender == address(this), "Call must come from Timelock.");
+        require(delay_ >= MINIMUM_DELAY, "Delay must exceed minimum delay.");
+        require(delay_ <= MAXIMUM_DELAY, "Delay must not exceed maximum delay.");
         delay = delay_;
 
         emit NewDelay(delay);
     }
 
     function acceptAdmin() public {
-        require(msg.sender == pendingAdmin, 'Call must come from pendingAdmin.');
+        require(msg.sender == pendingAdmin, "Call must come from pendingAdmin.");
         admin = msg.sender;
         pendingAdmin = address(0);
 
@@ -75,9 +75,9 @@ contract Timelock {
     function setPendingAdmin(address pendingAdmin_) public {
         // allows one time setting of admin for deployment purposes
         if (adminInitialized) {
-            require(msg.sender == address(this), 'Call must come from Timelock.');
+            require(msg.sender == address(this), "Call must come from Timelock.");
         } else {
-            require(msg.sender == admin, 'First call must come from admin.');
+            require(msg.sender == admin, "First call must come from admin.");
             adminInitialized = true;
         }
         pendingAdmin = pendingAdmin_;
@@ -92,8 +92,11 @@ contract Timelock {
         bytes memory data,
         uint256 eta
     ) public returns (bytes32) {
-        require(msg.sender == admin, 'queueTransaction: Call must come from admin.');
-        require(eta >= block.timestamp.add(delay), 'queueTransaction: Estimated execution block must satisfy delay.');
+        require(msg.sender == admin, "queueTransaction: Call must come from admin.");
+        require(
+            eta >= block.timestamp.add(delay),
+            "queueTransaction: Estimated execution block must satisfy delay."
+        );
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = true;
@@ -109,7 +112,7 @@ contract Timelock {
         bytes memory data,
         uint256 eta
     ) public {
-        require(msg.sender == admin, 'cancelTransaction: Call must come from admin.');
+        require(msg.sender == admin, "cancelTransaction: Call must come from admin.");
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = false;
@@ -124,12 +127,12 @@ contract Timelock {
         bytes memory data,
         uint256 eta
     ) public returns (bytes memory) {
-        require(msg.sender == admin, 'Call must come from admin.');
+        require(msg.sender == admin, "Call must come from admin.");
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         require(queuedTransactions[txHash], "Transaction hasn't been queued.");
         require(block.timestamp >= eta, "Transaction hasn't surpassed time lock.");
-        require(block.timestamp <= eta.add(GRACE_PERIOD), 'Transaction is stale.');
+        require(block.timestamp <= eta.add(GRACE_PERIOD), "Transaction is stale.");
 
         queuedTransactions[txHash] = false;
 
@@ -143,7 +146,7 @@ contract Timelock {
 
         // solium-disable-next-line security/no-call-value
         (bool success, bytes memory returnData) = target.call{value: value}(callData);
-        require(success, 'Transaction execution reverted.');
+        require(success, "Transaction execution reverted.");
 
         emit ExecuteTransaction(txHash, target, value, signature, data, eta);
 

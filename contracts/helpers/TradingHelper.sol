@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import '../libraries/PrecisionUtils.sol';
-import '../interfaces/IAddressesProvider.sol';
+import "../libraries/PrecisionUtils.sol";
+import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPriceOracle.sol";
-import '../interfaces/IPool.sol';
+import "../interfaces/IPool.sol";
 
 library TradingHelper {
     using PrecisionUtils for uint256;
@@ -17,10 +17,12 @@ library TradingHelper {
         uint256 oraclePrice = IPriceOracle(addressesProvider.priceOracle()).getOraclePrice(token);
         uint256 indexPrice = IPriceOracle(addressesProvider.priceOracle()).getIndexPrice(token);
 
-        uint256 diffP = oraclePrice > indexPrice ? oraclePrice - indexPrice : indexPrice - oraclePrice;
+        uint256 diffP = oraclePrice > indexPrice
+            ? oraclePrice - indexPrice
+            : indexPrice - oraclePrice;
         diffP = diffP.calculatePercentage(oraclePrice);
 
-        require(diffP <= tradingConfig.maxPriceDeviationP, 'exceed max price deviation');
+        require(diffP <= tradingConfig.maxPriceDeviationP, "exceed max price deviation");
         return oraclePrice;
     }
 
@@ -36,30 +38,35 @@ library TradingHelper {
         if (exposureAmount >= 0) {
             if (isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-//                require(executionSize <= availableIndex, 'iit');
+                //                require(executionSize <= availableIndex, 'iit');
                 if (executionSize > availableIndex) {
                     executionSize = availableIndex;
                 }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-//                require(
-//                    executionSize <= uint256(exposureAmount) + availableStable.divPrice(executionPrice),
-//                    'ist'
-//                );
-                if (executionSize > uint256(exposureAmount) + availableStable.divPrice(executionPrice)) {
-                    executionSize = uint256(exposureAmount) + availableStable.divPrice(executionPrice);
+                //                require(
+                //                    executionSize <= uint256(exposureAmount) + availableStable.divPrice(executionPrice),
+                //                    'ist'
+                //                );
+                if (
+                    executionSize >
+                    uint256(exposureAmount) + availableStable.divPrice(executionPrice)
+                ) {
+                    executionSize =
+                        uint256(exposureAmount) +
+                        availableStable.divPrice(executionPrice);
                 }
             }
         } else {
             if (isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-//                require(executionSize <= uint256(- exposureAmount) + availableIndex, 'iit');
-                if (executionSize > uint256(- exposureAmount) + availableIndex) {
-                    executionSize = uint256(- exposureAmount) + availableIndex;
+                //                require(executionSize <= uint256(- exposureAmount) + availableIndex, 'iit');
+                if (executionSize > uint256(-exposureAmount) + availableIndex) {
+                    executionSize = uint256(-exposureAmount) + availableIndex;
                 }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-//                require(executionSize <= availableStable.divPrice(executionPrice), 'ist');
+                //                require(executionSize <= availableStable.divPrice(executionPrice), 'ist');
                 if (executionSize > availableStable.divPrice(executionPrice)) {
                     executionSize = availableStable.divPrice(executionPrice);
                 }
