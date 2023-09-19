@@ -17,7 +17,7 @@ import "../libraries/Roleable.sol";
 
 import "../interfaces/IFundingRate.sol";
 import "../interfaces/IPool.sol";
-import "../interfaces/IOraclePriceFeed.sol";
+import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
@@ -277,7 +277,7 @@ contract PositionManager is FeeManager, Pausable {
     ) internal view returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        uint256 _price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        uint256 _price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
         if (lpIsLong) {
             if (_price > lpVault.averagePrice) {
                 return int256(amount.mulPrice(_price - lpVault.averagePrice));
@@ -459,7 +459,7 @@ contract PositionManager is FeeManager, Pausable {
         ];
         uint256 collateralBefore = position.collateral;
         _handleCollateral(position, collateral);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         (uint256 afterPosition, ) = position.validLeverage(
             price,
@@ -497,7 +497,7 @@ contract PositionManager is FeeManager, Pausable {
         uint256 _sizeAmount
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
         return _tradingFee(_pairIndex, _isLong, sizeDelta);
     }
@@ -541,7 +541,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
         _updateFundingRate(_pairIndex, price);
     }
 
@@ -601,7 +601,7 @@ contract PositionManager is FeeManager, Pausable {
 
     function getNextFundingRate(uint256 _pairIndex) external view override returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
         return _nextFundingRate(_pairIndex, price);
     }
 

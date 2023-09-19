@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import "../interfaces/IPriceOracle.sol";
+import "../interfaces/IPriceFeed.sol";
+
+contract PriceOracle is IPriceOracle {
+
+    uint256 public immutable PRICE_DECIMALS = 30;
+
+    mapping(address => IPriceFeed) public tokenPriceFeeds;
+
+    IPriceFeed public oraclePriceFeed;
+    IPriceFeed public indexPriceFeed;
+
+    constructor(IPriceFeed _oraclePriceFeed, IPriceFeed _indexPriceFeed) {
+        oraclePriceFeed = _oraclePriceFeed;
+        indexPriceFeed = _indexPriceFeed;
+    }
+
+    function updateOraclePriceFeed(address _oraclePriceFeed) external override {
+        address oldPriceFeed = address(oraclePriceFeed);
+        oraclePriceFeed = IPriceFeed(_oraclePriceFeed);
+
+        emit OraclePriceFeedUpdated(oldPriceFeed, address(oraclePriceFeed));
+    }
+
+    function updateIndexPriceFeed(address _indexPriceFeed) external override {
+        address oldPriceFeed = address(indexPriceFeed);
+        indexPriceFeed = IPriceFeed(_indexPriceFeed);
+
+        emit IndexPriceFeedUpdated(oldPriceFeed, address(indexPriceFeed));
+    }
+
+    function getOraclePrice(address token) external view override returns (uint256) {
+        return _getPrice(token, PriceType.ORACLE);
+    }
+
+    function getIndexPrice(address token) external view override returns (uint256) {
+        return _getPrice(token, PriceType.INDEX);
+    }
+
+    function updateOraclePrice(address[] calldata tokens, uint256[] calldata prices) external payable override {
+        require(tokens.length == prices.length, 'inconsistent params length');
+
+        if (tokens.length == 0) {
+            return;
+        }
+        oraclePriceFeed.updatePrice{value: msg.value}(tokens, prices);
+    }
+
+    function updateIndexPrice(address[] calldata tokens, uint256[] calldata prices) external payable override {
+        require(tokens.length == prices.length, 'inconsistent params length');
+
+        if (tokens.length == 0) {
+            return;
+        }
+        indexPriceFeed.updatePrice(tokens, prices);
+    }
+
+    function updatePrice(address[] calldata tokens, uint256[] calldata prices) external payable override {
+        require(tokens.length == prices.length, 'inconsistent params length');
+        if (tokens.length == 0) {
+            return;
+        }
+
+        this.updateOraclePrice(tokens, prices);
+        this.updateIndexPrice(tokens, prices);
+    }
+
+    function _getPrice(address token, PriceType priceType) internal view returns (uint256 price) {
+        if (priceType == PriceType.INDEX) {
+            price = indexPriceFeed.getPrice(token) * ((PRICE_DECIMALS - indexPriceFeed.decimals()) ** 10);
+        } else if (priceType == PriceType.ORACLE) {
+            price = oraclePriceFeed.getPrice(token) * ((PRICE_DECIMALS - oraclePriceFeed.decimals()) ** 10);
+        } else {
+            revert('unknown price type');
+        }
+    }
+}
