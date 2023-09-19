@@ -64,6 +64,8 @@ interface IPool {
         bool enable;
         uint256 kOfSwap; //Initial k value of liquidity
         uint256 expectIndexTokenP; //   for 100%
+        uint256 maxUnbalancedP;
+        uint256 unbalancedDiscountRate;
         uint256 addLpFeeP; // Add liquidity fee
         uint256 removeLpFeeP; // remove liquidity fee
         uint256 lpFeeDistributeP;
