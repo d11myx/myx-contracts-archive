@@ -1,16 +1,8 @@
-import { TestEnv, newTestEnv, localTestEnv } from './helpers/make-suite';
+import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
-import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
-import {
-    deployMockCallback,
-    getBlockTimestamp,
-    MAX_UINT_AMOUNT,
-    ORDER_MANAGER_ID,
-    TradeType,
-    waitForTx,
-} from '../helpers';
-import { mintAndApprove } from './helpers/misc';
+import { deployMockCallback, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
@@ -37,10 +29,7 @@ describe('Router: increase position ar', () => {
         await roleManager.connect(deployer.signer).addOperator(operator.address);
         await roleManager.connect(operator.signer).removeAccountBlackList(depositor.address);
 
-        const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-        const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-        const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-        await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+        await updateBTCPrice(localTestEnv, '30000');
     });
 
     it('addLiquidity cast', async () => {

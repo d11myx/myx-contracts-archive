@@ -10,7 +10,7 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import '../interfaces/IOrderManager.sol';
 import '../interfaces/IPositionManager.sol';
-import '../interfaces/IIndexPriceFeed.sol';
+import "../interfaces/IPriceOracle.sol";
 import '../interfaces/IPool.sol';
 import '../helpers/ValidationHelper.sol';
 import '../helpers/TradingHelper.sol';
@@ -226,11 +226,15 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
-        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        int256 collateral;
+        if (order.collateral > 0) {
+            collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        } else {
+            collateral = order.executedSize + executionSize >= order.sizeAmount ? order.collateral : int256(0);
+        }
 
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
-
         // check position and leverage
         (uint256 afterPosition,) = position.validLeverage(
             executionPrice,
@@ -258,6 +262,7 @@ contract Executor is IExecutor, Pausable {
 
         // add executed size
         order.executedSize += executionSize;
+        orderManager.increaseOrderExecutedSize(order.orderId, order.tradeType, true, executionSize);
 
         // create order tp sl
         _createOrderTpSl(order);
@@ -377,15 +382,15 @@ contract Executor is IExecutor, Pausable {
             return;
         }
 
-        // valid order size
-        order.sizeAmount = Math.min(order.sizeAmount, position.positionAmount);
-
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
         uint256 executionSize = order.sizeAmount - order.executedSize;
         if (executionSize > tradingConfig.maxTradeAmount) {
             executionSize = tradingConfig.maxTradeAmount;
         }
+
+        // valid order size
+        executionSize = Math.min(executionSize, position.positionAmount);
 
         // validate can be triggered
         uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
@@ -407,7 +412,12 @@ contract Executor is IExecutor, Pausable {
             }
         }
 
-        int256 collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        int256 collateral;
+        if (order.collateral > 0) {
+            collateral = order.executedSize == 0 ? order.collateral : int256(0);
+        } else {
+            collateral = order.executedSize + executionSize >= order.sizeAmount ? order.collateral : int256(0);
+        }
 
         // check position and leverage
         position.validLeverage(
@@ -480,6 +490,7 @@ contract Executor is IExecutor, Pausable {
 
         // add executed size
         order.executedSize += executionSize;
+        orderManager.increaseOrderExecutedSize(order.orderId, order.tradeType, false, executionSize);
 
         // remove order
         if (order.tradeType == TradingTypes.TradeType.MARKET || order.executedSize >= order.sizeAmount) {
@@ -593,7 +604,7 @@ contract Executor is IExecutor, Pausable {
     }
 
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) internal {
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).setPrices(_tokens, _prices, _timestamp);
+        IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice(_tokens, _prices);
     }
 
     function executeADLAndDecreaseOrder(
@@ -620,6 +631,7 @@ contract Executor is IExecutor, Pausable {
 
             ExecutePositionInfo memory adlPosition = adlPositions[i];
             adlPosition.position = position;
+            adlPosition.executionSize = executePosition.sizeAmount;
             adlPosition.level = executePosition.level;
             adlPosition.commissionRatio = executePosition.commissionRatio;
         }
@@ -638,7 +650,7 @@ contract Executor is IExecutor, Pausable {
                     collateral: 0,
                     openPrice: price,
                     isLong: adlPosition.position.isLong,
-                    sizeAmount: - int256(adlPosition.position.positionAmount),
+                    sizeAmount: - int256(adlPosition.executionSize),
                     maxSlippage: 0,
                     data: abi.encode(adlPosition.position.account)
                 })
