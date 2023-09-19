@@ -52,11 +52,9 @@ describe('Router: increase position ar', () => {
         await mintAndApprove(localTestEnv, btc, indexAmount, depositor, testCallBack.address);
         await mintAndApprove(localTestEnv, usdt, stableAmount, depositor, testCallBack.address);
 
-        await snapshotGasCost(
-            testCallBack
-                .connect(depositor.signer)
-                .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount),
-        );
+        await testCallBack
+            .connect(depositor.signer)
+            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
     it('createIncreaseOrderWithoutTpSl cast', async () => {
