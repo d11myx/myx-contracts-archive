@@ -4,7 +4,7 @@ import { mintAndApprove, decreasePosition, increasePosition } from './helpers/mi
 import { expect } from './shared/expect';
 import { TradeType } from '../helpers';
 import { BigNumber, constants } from 'ethers';
-import { TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Trade: ioc', () => {
     const pairIndex = 0;
@@ -41,7 +41,7 @@ describe('Trade: ioc', () => {
                 router,
                 positionManager,
                 orderManager,
-                executor,
+                executionLogic,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', 18);
@@ -61,7 +61,7 @@ describe('Trade: ioc', () => {
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const marketOrder = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -78,7 +78,7 @@ describe('Trade: ioc', () => {
                 positionManager,
                 pool,
                 orderManager,
-                executor,
+                executionLogic,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', 18);
@@ -104,7 +104,7 @@ describe('Trade: ioc', () => {
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const marketOrder = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
@@ -235,7 +235,7 @@ describe('Trade: ioc', () => {
                 router,
                 positionManager,
                 orderManager,
-                executor,
+                executionLogic,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', 18);
@@ -255,7 +255,7 @@ describe('Trade: ioc', () => {
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.LIMIT, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.LIMIT, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const limitOrder = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
@@ -272,7 +272,7 @@ describe('Trade: ioc', () => {
                 positionManager,
                 pool,
                 orderManager,
-                executor,
+                executionLogic,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('300000', 18);
@@ -298,7 +298,7 @@ describe('Trade: ioc', () => {
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.LIMIT, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.LIMIT, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const limitOrder = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
@@ -316,7 +316,7 @@ describe('Trade: ioc', () => {
                 positionManager,
                 pool,
                 orderManager,
-                executor,
+                executionLogic,
             } = testEnv;
 
             const sizeAmount = ethers.utils.parseUnits('50', 18);
@@ -330,7 +330,7 @@ describe('Trade: ioc', () => {
                 .connect(depositor.signer)
                 .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 
-            await executor
+            await executionLogic
                 .connect(keeper.signer)
                 .executeIncreaseLimitOrders([{ orderId, level: 0, commissionRatio: 0 }]);
 
@@ -373,7 +373,7 @@ describe('Trade: ioc', () => {
                 positionManager,
                 orderManager,
                 pool,
-                executor,
+                executionLogic,
                 keeper,
             } = testEnv;
 
@@ -431,7 +431,7 @@ describe('Trade: ioc', () => {
             let limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
             expect(limitOrder.executedSize).to.be.eq('10000000000000000000000');
 
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.LIMIT, 0, 0);
+            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.LIMIT, 0, 0);
             limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
 
             expect(limitOrder.sizeAmount).to.be.eq('0');

@@ -45,7 +45,7 @@ contract PositionManager is FeeManager, Pausable {
 
     // uint256 public fundingInterval = 28800;
 
-    address public addressExecutor;
+    address public addressExecutionLogic;
     address public addressOrderManager;
 
     constructor(
@@ -56,7 +56,7 @@ contract PositionManager is FeeManager, Pausable {
     ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {}
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutor, "forbidden");
+        require(msg.sender == addressExecutionLogic, "forbidden");
         _;
     }
 
@@ -68,8 +68,8 @@ contract PositionManager is FeeManager, Pausable {
         _unpause();
     }
 
-    function setExecutor(address _addressExecutor) external onlyPoolAdmin {
-        addressExecutor = _addressExecutor;
+    function setExecutor(address _addressExecutionLogic) external onlyPoolAdmin {
+        addressExecutionLogic = _addressExecutionLogic;
     }
 
     function setOrderManager(address _addressOrderManager) external onlyPoolAdmin {
@@ -463,7 +463,7 @@ contract PositionManager is FeeManager, Pausable {
         bool isLong,
         int256 collateral
     ) external override {
-        require(account == msg.sender || addressExecutor == msg.sender, "forbidden");
+        require(account == msg.sender || addressExecutionLogic == msg.sender, "forbidden");
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[
             PositionKey.getPositionKey(account, pairIndex, isLong)

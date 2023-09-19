@@ -49,7 +49,7 @@ describe('Trade: TP & SL', () => {
             users: [trader],
             usdt,
             router,
-            executor,
+            executionLogic,
             orderManager,
             positionManager,
         } = testEnv;
@@ -76,7 +76,7 @@ describe('Trade: TP & SL', () => {
 
         let orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrder(request);
-        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+        await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const positionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
         let positionOrders = await orderManager.getPositionOrders(positionKey);
@@ -101,7 +101,7 @@ describe('Trade: TP & SL', () => {
 
         orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrder(request1);
-        await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+        await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         positionOrders = await orderManager.getPositionOrders(positionKey);
 
