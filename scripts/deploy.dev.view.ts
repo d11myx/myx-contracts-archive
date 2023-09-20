@@ -1,10 +1,12 @@
 import { ethers } from 'hardhat';
 import {
     getExecutor,
+    getIndexPriceFeed,
     getOraclePriceFeed,
     getOrderManager,
     getPool,
     getPositionManager,
+    getPriceOracle,
     getRewardDistributor,
     getRouter,
     ZERO_ADDRESS,
@@ -27,8 +29,8 @@ async function main() {
     const orderManager = await getOrderManager();
     const positionManager = await getPositionManager();
     // const executor = await getExecutor();
-    // const oraclePriceFeed = await getOraclePriceFeed();
-    // const pool = await getPool();
+    const priceOracle = await getPriceOracle();
+    const pool = await getPool();
     // const rewardDistributor = await getRewardDistributor();
 
     // console.log(`router:`, router.address);
@@ -36,18 +38,70 @@ async function main() {
 
     // console.log(await pool.getPair(0));
     // console.log(await pool.getPair(1));
-    //
-    // const btcPrice = ethers.utils.formatUnits(
-    //     await oraclePriceFeed.getPrice('0xA015800A0C690C74A04DAf3002087DbD4D23bE24'),
-    //     30,
+    console.log(await pool.getDepositAmount(0, ethers.utils.parseEther('100000')));
+
+    const btcOraclePrice = ethers.utils.formatUnits(
+        await priceOracle.getOraclePrice('0x3fF8C9A44733E54a48170ed3839a80C46C912b00'),
+        30,
+    );
+    const ethOraclePrice = ethers.utils.formatUnits(
+        await priceOracle.getOraclePrice('0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc'),
+        30,
+    );
+    const btcIndexPrice = ethers.utils.formatUnits(
+        await priceOracle.getIndexPrice('0x3fF8C9A44733E54a48170ed3839a80C46C912b00'),
+        30,
+    );
+    const ethIndexPrice = ethers.utils.formatUnits(
+        await priceOracle.getIndexPrice('0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc'),
+        30,
+    );
+    const oraclePriceFeed = await getOraclePriceFeed();
+    console.log(await oraclePriceFeed.getPrice('0x3fF8C9A44733E54a48170ed3839a80C46C912b00'));
+    console.log(await oraclePriceFeed.getPrice('0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc'));
+    const indexPriceFeed = await getIndexPriceFeed();
+    console.log(await indexPriceFeed.getPrice('0x3fF8C9A44733E54a48170ed3839a80C46C912b00'));
+    console.log(await indexPriceFeed.getPrice('0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc'));
+    console.log(`btc price:`, btcOraclePrice);
+    console.log(`eth price:`, ethOraclePrice);
+    console.log(`btc price:`, btcIndexPrice);
+    console.log(`eth price:`, ethIndexPrice);
+
+    const fee = await oraclePriceFeed.getUpdateFee(
+        [
+            '0x3fF8C9A44733E54a48170ed3839a80C46C912b00',
+            '0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc',
+            '0x87ae754028dAC18f1D1D8EB76B557C280906a6aa',
+        ],
+        ['2704051500000', '163443750000', '100000000'],
+    );
+    await oraclePriceFeed.updatePrice(
+        [
+            '0x3fF8C9A44733E54a48170ed3839a80C46C912b00',
+            '0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc',
+            '0x87ae754028dAC18f1D1D8EB76B557C280906a6aa',
+        ],
+        ['2704051500000', '163443750000', '100000000'],
+        { value: fee },
+    );
+
+    // await indexPriceFeed.updatePrice(
+    //     [
+    //         '0x3fF8C9A44733E54a48170ed3839a80C46C912b00',
+    //         '0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc',
+    //         '0x87ae754028dAC18f1D1D8EB76B557C280906a6aa',
+    //     ],
+    //     ['2710031000000', '163709000000', '100000000'],
     // );
-    // const ethPrice = ethers.utils.formatUnits(
-    //     await oraclePriceFeed.getPrice('0x437afc3306b2911B39024cafF860A07b43427d83'),
-    //     30,
-    // );
-    // console.log(`btc price:`, btcPrice);
-    // console.log(`eth price:`, ethPrice);
-    console.log(await orderManager.increaseLimitOrders(40));
+
+    // console.log(await priceOracle.indexPriceFeed());
+    // console.log(await priceOracle.oraclePriceFeed());
+    // console.log(indexPriceFeed.address);
+    // console.log(oraclePriceFeed.address);
+    // console.log(await oraclePriceFeed.getPrice('0x87ae754028dAC18f1D1D8EB76B557C280906a6aa'));
+    // console.log(await indexPriceFeed.getPrice('0x87ae754028dAC18f1D1D8EB76B557C280906a6aa'));
+
+    // console.log(await orderManager.increaseLimitOrders(40));
 
     // console.log(await orderManager.increaseLimitOrders(53));
     //

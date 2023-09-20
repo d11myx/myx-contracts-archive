@@ -15,19 +15,12 @@ contract IndexPriceFeed is IIndexPriceFeed {
         return 8;
     }
 
-    function updatePrice(address[] calldata tokens, uint256[] memory prices) external payable override {
+    function updatePrice(address[] calldata tokens, uint256[] memory prices) external override {
         _setAssetPrices(tokens, prices);
     }
 
     function getPrice(address token) external view override returns (uint256) {
         return assetPrices[token];
-    }
-
-    function getUpdateFee(
-        address[] calldata tokens,
-        uint256[] calldata prices
-    ) external view returns (uint) {
-        return 0;
     }
 
     function _setAssetPrices(address[] memory assets, uint256[] memory prices) public {

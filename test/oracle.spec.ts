@@ -1,12 +1,11 @@
 import { ethers } from 'hardhat';
-import { MockPyth, OraclePriceFeed, PriceOracle } from '../types';
+import { IndexPriceFeed, MockPyth, OraclePriceFeed, PriceOracle } from '../types';
 import { testEnv } from './helpers/make-suite';
-import { getBlockTimestamp, ZERO_ADDRESS } from '../helpers';
+import { getBlockTimestamp } from '../helpers';
 import { expect } from './shared/expect';
-import { BigNumber } from 'ethers';
 
 describe('Oracle: oracle cases', () => {
-    let mockPyth: MockPyth, oraclePriceFeed: OraclePriceFeed, priceOracle: PriceOracle;
+    let mockPyth: MockPyth, oraclePriceFeed: OraclePriceFeed, indexPriceFeed: IndexPriceFeed, priceOracle: PriceOracle;
 
     before(async () => {
         const mockPythFactory = await ethers.getContractFactory('MockPyth');
@@ -15,15 +14,15 @@ describe('Oracle: oracle cases', () => {
         const oraclePriceFeedFactory = await ethers.getContractFactory('OraclePriceFeed');
         oraclePriceFeed = (await oraclePriceFeedFactory.deploy(mockPyth.address, [], [])) as OraclePriceFeed;
 
+        const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
+        indexPriceFeed = (await indexPriceFeedFactory.deploy([], [])) as IndexPriceFeed;
+
         const priceOracleFactory = await ethers.getContractFactory('PriceOracle');
-        priceOracle = await priceOracleFactory.deploy(oraclePriceFeed.address, ZERO_ADDRESS);
+        priceOracle = await priceOracleFactory.deploy(oraclePriceFeed.address, indexPriceFeed.address);
     });
 
     it('update price feed', async () => {
-        const { btc } = testEnv;
-        console.log(await mockPyth.getValidTimePeriod());
-
-        console.log(await oraclePriceFeed.pyth());
+        const { btc, eth } = testEnv;
 
         const id = '0x87a67534df591d2dd5ec577ab3c75668a8e3d35e92e27bf29d9e2e52df8de412';
         const price = '163240000000';
@@ -48,10 +47,12 @@ describe('Oracle: oracle cases', () => {
 
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(id);
 
-        const fee = await mockPyth.getUpdateFee([priceFeedData]);
-        await mockPyth.updatePriceFeedsIfNecessary([priceFeedData], [id], [publishTime], { value: fee });
+        const fee = await priceOracle.getUpdateFee([btc.address], [price]);
+        await priceOracle.updatePrice([btc.address], [price], { value: fee });
 
         expect(await oraclePriceFeed.getPrice(btc.address)).to.be.eq(price);
+        expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(price);
         expect(await priceOracle.getOraclePrice(btc.address)).to.be.eq(price + '0000000000000000000000');
+        expect(await priceOracle.getIndexPrice(btc.address)).to.be.eq(price + '0000000000000000000000');
     });
 });
