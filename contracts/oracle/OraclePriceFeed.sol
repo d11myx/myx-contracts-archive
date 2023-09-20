@@ -82,7 +82,7 @@ contract OraclePriceFeed is IOraclePriceFeed {
     function getUpdateFee(
         address[] calldata tokens,
         uint256[] calldata prices
-    ) external view returns (uint) {
+    ) external view override returns (uint) {
         return pyth.getUpdateFee(getUpdateData(tokens, prices));
     }
 
