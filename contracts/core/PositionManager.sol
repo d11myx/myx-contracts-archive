@@ -640,22 +640,10 @@ contract PositionManager is FeeManager, Pausable {
         uint256 _pairIndex,
         uint256 _price
     ) internal view returns (int256 fundingRate) {
-        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex) * int256(_price);
-
-        IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        int256 l = int256(
-            (lpVault.indexTotalAmount - lpVault.indexReservedAmount).mulPrice(_price) +
-                (lpVault.stableTotalAmount - lpVault.stableReservedAmount)
-        );
+        IPool.Vault memory vault = pool.getVault(_pairIndex);
 
         fundingRate = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingRate(
-            _pairIndex,
-            // fundingInterval,
-            currentExposureAmountChecker,
-            l,
-            longTracker[_pairIndex],
-            shortTracker[_pairIndex]
-        );
+            _pairIndex,longTracker[_pairIndex], shortTracker[_pairIndex], vault, _price);
     }
 
     function getPosition(
