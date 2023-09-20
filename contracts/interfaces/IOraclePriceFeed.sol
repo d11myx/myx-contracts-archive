@@ -17,8 +17,15 @@ interface IOraclePriceFeed is IPriceFeed {
 
     function setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) external;
 
+    function updatePrice(address[] calldata tokens, uint256[] calldata prices) external payable;
+
     function getUpdateData(
         address[] calldata tokens,
         uint256[] calldata prices
     ) external view returns (bytes[] memory updateData);
+
+    function getUpdateFee(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (uint);
 }
