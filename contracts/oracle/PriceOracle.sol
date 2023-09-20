@@ -40,6 +40,13 @@ contract PriceOracle is IPriceOracle {
         return _getPrice(token, PriceType.INDEX);
     }
 
+    function getUpdateFee(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (uint) {
+        return oraclePriceFeed.getUpdateFee(tokens, prices);
+    }
+
     function updateOraclePrice(address[] calldata tokens, uint256[] calldata prices) external payable override {
         require(tokens.length == prices.length, 'inconsistent params length');
 

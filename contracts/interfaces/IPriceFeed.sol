@@ -9,4 +9,9 @@ interface IPriceFeed {
 
     function decimals() external view returns (uint256);
 
+    function getUpdateFee(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (uint);
+
 }

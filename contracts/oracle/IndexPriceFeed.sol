@@ -23,6 +23,13 @@ contract IndexPriceFeed is IIndexPriceFeed {
         return assetPrices[token];
     }
 
+    function getUpdateFee(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external view returns (uint) {
+        return 0;
+    }
+
     function _setAssetPrices(address[] memory assets, uint256[] memory prices) public {
         require(assets.length == prices.length, "inconsistent params length");
         for (uint256 i = 0; i < assets.length; i++) {
