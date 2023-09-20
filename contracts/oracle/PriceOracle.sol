@@ -2,32 +2,31 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IPriceOracle.sol";
-import "../interfaces/IPriceFeed.sol";
+import "../interfaces/IOraclePriceFeed.sol";
+import "../interfaces/IIndexPriceFeed.sol";
 
 contract PriceOracle is IPriceOracle {
 
     uint256 public immutable PRICE_DECIMALS = 30;
 
-    mapping(address => IPriceFeed) public tokenPriceFeeds;
+    IOraclePriceFeed public oraclePriceFeed;
+    IIndexPriceFeed public indexPriceFeed;
 
-    IPriceFeed public oraclePriceFeed;
-    IPriceFeed public indexPriceFeed;
-
-    constructor(IPriceFeed _oraclePriceFeed, IPriceFeed _indexPriceFeed) {
+    constructor(IOraclePriceFeed _oraclePriceFeed, IIndexPriceFeed _indexPriceFeed) {
         oraclePriceFeed = _oraclePriceFeed;
         indexPriceFeed = _indexPriceFeed;
     }
 
     function updateOraclePriceFeed(address _oraclePriceFeed) external override {
         address oldPriceFeed = address(oraclePriceFeed);
-        oraclePriceFeed = IPriceFeed(_oraclePriceFeed);
+        oraclePriceFeed = IOraclePriceFeed(_oraclePriceFeed);
 
         emit OraclePriceFeedUpdated(oldPriceFeed, address(oraclePriceFeed));
     }
 
     function updateIndexPriceFeed(address _indexPriceFeed) external override {
         address oldPriceFeed = address(indexPriceFeed);
-        indexPriceFeed = IPriceFeed(_indexPriceFeed);
+        indexPriceFeed = IIndexPriceFeed(_indexPriceFeed);
 
         emit IndexPriceFeedUpdated(oldPriceFeed, address(indexPriceFeed));
     }
@@ -71,8 +70,8 @@ contract PriceOracle is IPriceOracle {
             return;
         }
 
-        this.updateOraclePrice{value: msg.value}(tokens, prices);
         this.updateIndexPrice(tokens, prices);
+        this.updateOraclePrice{value: msg.value}(tokens, prices);
     }
 
     function _getPrice(address token, PriceType priceType) internal view returns (uint256 price) {

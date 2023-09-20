@@ -60,21 +60,17 @@ async function main() {
     }
 
     const btcFeeConfig: IFundingRate.FundingFeeConfigStruct = {
-        minFundingRate: -36500000, //=-0.1% * 365
-        maxFundingRate: 36500000, //=0.1% * 365
-        fundingWeightFactor: 1000000, //1%
-        liquidityPremiumFactor: 100000000, //100%
-        interest: 0,
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
         fundingInterval: 60 * 60,
     };
     await fundingRate.updateFundingFeeConfig(0, btcFeeConfig);
 
     const ethFeeConfig: IFundingRate.FundingFeeConfigStruct = {
-        minFundingRate: -36500000, //=-0.1% * 365
-        maxFundingRate: 36500000, //=0.1% * 365
-        fundingWeightFactor: 1000000, //1%
-        liquidityPremiumFactor: 100000000, //100%
-        interest: 0,
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
         fundingInterval: 60 * 60,
     };
     await fundingRate.updateFundingFeeConfig(1, ethFeeConfig);
