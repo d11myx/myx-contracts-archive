@@ -22,6 +22,7 @@ describe('LP: Pool cases', () => {
                 btc,
                 pool,
                 priceOracle,
+                positionManager,
             } = testEnv;
 
             const pairPrice = BigNumber.from(
@@ -67,6 +68,9 @@ describe('LP: Pool cases', () => {
             const vaultTotal = vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount);
             const userPaid = indexAmount.mul(pairPrice).add(stableAmount);
             expect(userPaid).to.be.eq(vaultTotal.add(totalFee));
+
+            console.log('===================');
+            console.log(await positionManager.getNextFundingRate(pairIndex));
         });
 
         it('should decreased correct liquidity', async () => {
@@ -183,6 +187,9 @@ describe('LP: Pool cases', () => {
 
                 const exposedPositions = await positionManager.getExposedPositions(pairIndex);
                 expect(exposedPositions).to.be.gt(0);
+
+                console.log('===================');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('user increase long, long tracker increased, index reserved added', async () => {
@@ -246,6 +253,7 @@ describe('LP: Pool cases', () => {
                     router,
                     pool,
                     priceOracle,
+                    positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
@@ -287,6 +295,9 @@ describe('LP: Pool cases', () => {
                 expect(availableShortAfter).to.be.eq(availableShortBefore.add(lpFeeAmount));
 
                 expect(vaultAfter.indexReservedAmount).to.be.eq(vaultBefore.indexReservedAmount.sub(size));
+
+                console.log('===================');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('user increase short, long tracker decreased, index reserved subtracted', async () => {
@@ -297,6 +308,7 @@ describe('LP: Pool cases', () => {
                     router,
                     pool,
                     priceOracle,
+                    positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
@@ -341,6 +353,9 @@ describe('LP: Pool cases', () => {
                 expect(availableShortAfter).to.be.eq(availableShortBefore.add(lpFeeAmount));
 
                 expect(vaultAfter.indexReservedAmount).to.be.eq(vaultBefore.indexReservedAmount.sub(size));
+
+                console.log('===================');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('user decrease short, long tracker increased, index reserved added', async () => {
@@ -351,6 +366,7 @@ describe('LP: Pool cases', () => {
                     router,
                     pool,
                     priceOracle,
+                    positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
@@ -393,6 +409,9 @@ describe('LP: Pool cases', () => {
                 expect(availableShortAfter).to.be.eq(availableShortBefore.add(lpFeeAmount));
 
                 expect(vaultAfter.indexReservedAmount).to.be.eq(vaultBefore.indexReservedAmount.add(size));
+
+                console.log('===================');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
         });
 
@@ -423,6 +442,9 @@ describe('LP: Pool cases', () => {
 
                 const exposedPositions = await positionManager.getExposedPositions(pairIndex);
                 expect(exposedPositions).to.be.lt(0);
+
+                console.log('===================1111');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('user increase long, short tracker decreased, stable reserved subtracted', async () => {
@@ -433,6 +455,7 @@ describe('LP: Pool cases', () => {
                     router,
                     pool,
                     priceOracle,
+                    positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
@@ -478,6 +501,9 @@ describe('LP: Pool cases', () => {
                 expect(vaultAfter.stableReservedAmount).to.be.eq(
                     vaultBefore.stableReservedAmount.sub(size.mul(pairPrice)),
                 );
+
+                console.log('===================1111');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('user decrease long, short tracker increased, stable reserved added', async () => {
@@ -488,6 +514,7 @@ describe('LP: Pool cases', () => {
                     router,
                     pool,
                     priceOracle,
+                    positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
@@ -531,6 +558,9 @@ describe('LP: Pool cases', () => {
                 expect(vaultAfter.stableReservedAmount).to.be.eq(
                     vaultBefore.stableReservedAmount.add(size.mul(pairPrice)),
                 );
+
+                console.log('===================1111');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('user increase short, short tracker increased, stable reserved added', async () => {
@@ -541,6 +571,7 @@ describe('LP: Pool cases', () => {
                     router,
                     pool,
                     priceOracle,
+                    positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
@@ -585,6 +616,9 @@ describe('LP: Pool cases', () => {
                 expect(availableShortAfter).to.be.eq(availableShortBefore.sub(delta).add(lpFeeAmount));
 
                 expect(vaultAfter.stableReservedAmount).to.be.eq(vaultBefore.stableReservedAmount.add(delta));
+
+                console.log('===================1111');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('user decrease short, short tracker decreased, stable reserved subtracted', async () => {
@@ -595,6 +629,7 @@ describe('LP: Pool cases', () => {
                     router,
                     pool,
                     priceOracle,
+                    positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
@@ -637,6 +672,9 @@ describe('LP: Pool cases', () => {
                 expect(availableShortAfter).to.be.eq(availableShortBefore.add(delta).add(lpFeeAmount));
 
                 expect(vaultAfter.stableReservedAmount).to.be.eq(vaultBefore.stableReservedAmount.sub(delta));
+
+                console.log('===================1111');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
         });
 
@@ -748,6 +786,9 @@ describe('LP: Pool cases', () => {
                 expect(vaultAfter.stableReservedAmount).to.be.eq(
                     vaultBefore.stableReservedAmount.add(pairPrice.mul(ethers.utils.parseEther('10'))),
                 );
+
+                console.log('===================1111');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
 
             it('short tracker to long tracker, index reserved added, stable reserved cleaned', async () => {
@@ -818,6 +859,9 @@ describe('LP: Pool cases', () => {
                     vaultBefore.stableReservedAmount.sub(vaultBefore.stableReservedAmount),
                 );
                 expect(vaultAfter.stableReservedAmount).to.be.eq(0);
+
+                console.log('===================1111');
+                console.log(await positionManager.getNextFundingRate(pairIndex));
             });
         });
     });
