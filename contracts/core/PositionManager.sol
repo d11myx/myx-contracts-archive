@@ -508,7 +508,7 @@ contract PositionManager is FeeManager, Pausable {
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         (uint256 afterPosition, ) = position.validLeverage(
             price,
-            0,
+            collateral,
             0,
             false,
             tradingConfig.maxLeverage,
