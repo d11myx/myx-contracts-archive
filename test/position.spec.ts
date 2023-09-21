@@ -275,14 +275,14 @@ describe('Position', () => {
             } = testEnv;
             const size = ethers.utils.parseUnits('0', 18);
 
-            console.log(collateral);
+            // console.log(collateral);
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const oldPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('oldPosition', oldPosition);
+            // console.log('oldPosition', oldPosition);
             await increasePosition(testEnv, trader, pairIndex, collateral, price, size, TradeType.MARKET, true);
 
             const latestPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('latestPosition', latestPosition);
+            // console.log('latestPosition', latestPosition);
 
             expect(latestPosition.positionAmount).to.be.eq(oldPosition.positionAmount);
             expect(latestPosition.collateral).to.be.gt(oldPosition.collateral);
@@ -299,11 +299,11 @@ describe('Position', () => {
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const oldPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('oldPosition', oldPosition);
+            // console.log('oldPosition', oldPosition);
             await increasePosition(testEnv, trader, pairIndex, collateral, price, size, TradeType.MARKET, true);
 
             const latestPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('latestPosition', latestPosition);
+            // console.log('latestPosition', latestPosition);
 
             expect(latestPosition.positionAmount).to.be.gt(oldPosition.positionAmount);
             expect(latestPosition.collateral).to.be.gt(oldPosition.collateral);
@@ -320,7 +320,7 @@ describe('Position', () => {
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const oldPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('oldPosition', oldPosition);
+            // console.log('oldPosition', oldPosition);
             await increasePosition(
                 testEnv,
                 trader,
@@ -333,7 +333,7 @@ describe('Position', () => {
             );
 
             const latestPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('latestPosition', latestPosition);
+            // console.log('latestPosition', latestPosition);
 
             expect(latestPosition.positionAmount).to.be.eq(oldPosition.positionAmount);
             expect(latestPosition.collateral).to.be.lt(oldPosition.collateral);

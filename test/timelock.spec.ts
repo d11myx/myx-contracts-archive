@@ -86,8 +86,8 @@ describe('Timelock', () => {
         await testToken.transferOwnership(timelock.address);
         let timestamp = await latest();
         let eta = Duration.days(4);
-        console.log('timestamp:' + timestamp);
-        console.log('eta:' + eta);
+        // console.log('timestamp:' + timestamp);
+        // console.log('eta:' + eta);
         await timelock.queueTransaction(
             testToken.address,
             '0',
@@ -152,7 +152,7 @@ describe('Timelock', () => {
         } = testEnv;
         await timelock.setPendingAdmin(alice.address);
         expect(await timelock.pendingAdmin()).to.be.eq(alice.address);
-        console.log(await timelock.pendingAdmin());
+        // console.log(await timelock.pendingAdmin());
         await timelock.connect(alice.signer).acceptAdmin();
         let pendingAdmin = await timelock.pendingAdmin();
         expect(pendingAdmin).to.be.eq(ZERO_ADDRESS);

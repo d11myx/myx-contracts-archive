@@ -40,14 +40,14 @@ describe('Router: Edge cases', () => {
             .addLiquidity(pool.address, pair.indexToken, pair.stableToken, btcAmount, usdtAmount);
 
         const pairVaultInfo = await pool.getVault(pairIndex);
-        console.log(
-            `indexTotalAmount:`,
-            ethers.utils.formatUnits(pairVaultInfo.indexTotalAmount, await btc.decimals()),
-        );
-        console.log(
-            `stableTotalAmount:`,
-            ethers.utils.formatUnits(pairVaultInfo.stableTotalAmount, await usdt.decimals()),
-        );
+        // console.log(
+        //     `indexTotalAmount:`,
+        //     ethers.utils.formatUnits(pairVaultInfo.indexTotalAmount, await btc.decimals()),
+        // );
+        // console.log(
+        //     `stableTotalAmount:`,
+        //     ethers.utils.formatUnits(pairVaultInfo.stableTotalAmount, await usdt.decimals()),
+        // );
     });
 
     it('open position with adding collateral', async () => {
@@ -84,12 +84,12 @@ describe('Router: Edge cases', () => {
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
         const orderId = 0;
-        console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+        // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
-        console.log(`position:`, position);
+        // console.log(`position:`, position);
         expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('10', 18));
     });
 
@@ -386,8 +386,8 @@ describe('Router: Edge cases', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        console.log(`---userBalanceBefore: `, userBalanceBefore);
-        console.log(`---positionBefore: `, positionBefore);
+        // console.log(`---userBalanceBefore: `, userBalanceBefore);
+        // console.log(`---positionBefore: `, positionBefore);
 
         const withdrawCollateral = ethers.utils.parseUnits('0', 18).sub(positionBefore.collateral);
 
@@ -500,12 +500,12 @@ describe('Router: Edge cases', () => {
             );
 
             const pairVaultInfo = await pool.getVault(pairIndex);
-            console.log(
-                'indexTotalAmount',
-                pairVaultInfo.indexTotalAmount,
-                'indexReservedAmount',
-                pairVaultInfo.indexReservedAmount,
-            );
+            // console.log(
+            //     'indexTotalAmount',
+            //     pairVaultInfo.indexTotalAmount,
+            //     'indexReservedAmount',
+            //     pairVaultInfo.indexReservedAmount,
+            // );
             // expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(
             //     '306000000000000000',
             // );
@@ -532,7 +532,7 @@ describe('Router: Edge cases', () => {
             // execute ADL
             let traderPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
             let traderCurPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(traderCurPosition);
+            // console.log(traderCurPosition);
             await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
                 [
                     {

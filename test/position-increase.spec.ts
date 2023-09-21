@@ -51,7 +51,7 @@ describe('Router: increase position ar', () => {
 
             // View user's position
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log("user's position", traderPosition);
+            // console.log("user's position", traderPosition);
 
             const increasePositionRequest: TradingTypes.IncreasePositionWithTpSlRequestStruct = {
                 account: trader.address,
@@ -99,13 +99,13 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+            // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`position:`, position);
+            // console.log(`position:`, position);
 
             expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('5', 18));
         });
@@ -123,7 +123,7 @@ describe('Router: increase position ar', () => {
             } = testEnv;
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`user's current postion: `, traderPosition);
+            // console.log(`user's current postion: `, traderPosition);
 
             const amount = ethers.utils.parseUnits('30000', 18);
 
@@ -139,13 +139,13 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+            // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`update position:`, position);
+            // console.log(`update position:`, position);
 
             expect(position.positionAmount).to.be.eq(
                 traderPosition.positionAmount.add(ethers.utils.parseUnits('5', 18)),
@@ -164,7 +164,7 @@ describe('Router: increase position ar', () => {
             } = testEnv;
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`before position: `, traderPosition);
+            // console.log(`before position: `, traderPosition);
 
             // const traderBalance = await usdt.balanceOf(trader.address)
             // console.log(`user balance: `, traderBalance)
@@ -181,13 +181,13 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+            // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`after position :`, positionAfter);
+            // console.log(`after position :`, positionAfter);
 
             expect(positionAfter.positionAmount).to.be.eq(
                 traderPosition.positionAmount.add(ethers.utils.parseUnits('5', 18)),
@@ -209,8 +209,8 @@ describe('Router: increase position ar', () => {
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const traderCollateral = traderPosition.collateral;
 
-            console.log(`user balanceBefore: `, balanceBefore);
-            console.log(`user traderCollateral: `, traderCollateral);
+            // console.log(`user balanceBefore: `, balanceBefore);
+            // console.log(`user traderCollateral: `, traderCollateral);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -226,7 +226,7 @@ describe('Router: increase position ar', () => {
             const orderId = await orderManager.ordersIndex();
 
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+            // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
@@ -236,10 +236,10 @@ describe('Router: increase position ar', () => {
             // user address add collateral
             const balanceAfter = await usdt.balanceOf(trader.address);
 
-            console.log(`user balanceBefore: `, balanceBefore);
-            console.log(`user traderCollateral: `, traderCollateral);
-            console.log(`After collateral: `, collateralAfter);
-            console.log(`After balance: `, balanceAfter);
+            // console.log(`user balanceBefore: `, balanceBefore);
+            // console.log(`user traderCollateral: `, traderCollateral);
+            // console.log(`After collateral: `, collateralAfter);
+            // console.log(`After balance: `, balanceAfter);
 
             // expect(traderCollateral).to.be.eq(collateralAfter.add(ethers.utils.parseUnits('500', 18)));
         });
@@ -257,8 +257,8 @@ describe('Router: increase position ar', () => {
             const traderPosition = positionManager.getPosition(trader.address, pairIndex, true);
             const traderCollateral = (await traderPosition).collateral;
 
-            console.log(`user balance: `, balance);
-            console.log('user collateral: ', traderCollateral);
+            // console.log(`user balance: `, balance);
+            // console.log('user collateral: ', traderCollateral);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -294,7 +294,7 @@ describe('Router: increase position ar', () => {
 
             // closing position
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('before user position: ', traderPosition);
+            // console.log('before user position: ', traderPosition);
 
             const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
@@ -311,9 +311,9 @@ describe('Router: increase position ar', () => {
             await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const balance = await usdt.balanceOf(trader.address);
-            console.log(`User balance: `, balance);
+            // console.log(`User balance: `, balance);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('closed user position: ', position);
+            // console.log('closed user position: ', position);
         });
         after(async () => {});
 
@@ -382,7 +382,7 @@ describe('Router: increase position ar', () => {
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`new open position: `, position);
+            // console.log(`new open position: `, position);
         });
 
         //TODO: fix
@@ -447,7 +447,7 @@ describe('Router: increase position ar', () => {
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`position: `, position);
+            // console.log(`position: `, position);
         });
     });
 
@@ -469,7 +469,7 @@ describe('Router: increase position ar', () => {
 
             // closing position
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('before user position: ', traderPosition);
+            // console.log('before user position: ', traderPosition);
 
             const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
@@ -486,9 +486,9 @@ describe('Router: increase position ar', () => {
             await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const balance = await usdt.balanceOf(trader.address);
-            console.log(`User balance: `, balance);
+            // console.log(`User balance: `, balance);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('closed user position: ', position);
+            // console.log('closed user position: ', position);
         });
         after(async () => {});
 
@@ -561,10 +561,10 @@ describe('Router: increase position ar', () => {
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`position: `, position);
+            // console.log(`position: `, position);
 
             const longTracker = await positionManager.longTracker(pairIndex);
-            console.log(`longTracker: `, longTracker);
+            // console.log(`longTracker: `, longTracker);
         });
     });
 
@@ -586,7 +586,7 @@ describe('Router: increase position ar', () => {
 
             // closing position
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('before user position: ', traderPosition);
+            // console.log('before user position: ', traderPosition);
 
             const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
@@ -633,8 +633,8 @@ describe('Router: increase position ar', () => {
 
             const firstPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const firstOpenPrice = firstPosition.averagePrice;
-            console.log(`firstPosition: `, firstPosition);
-            console.log(`firstOpenPrice: `, firstOpenPrice);
+            // console.log(`firstPosition: `, firstPosition);
+            // console.log(`firstOpenPrice: `, firstOpenPrice);
         });
 
         it('failed to open position, validate average open price', async () => {
@@ -649,8 +649,8 @@ describe('Router: increase position ar', () => {
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const traderOpenAverage = traderPosition.averagePrice;
-            console.log(`traderPosition: `, traderPosition);
-            console.log(`traderOpenAverage: `, traderOpenAverage);
+            // console.log(`traderPosition: `, traderPosition);
+            // console.log(`traderOpenAverage: `, traderOpenAverage);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -669,8 +669,8 @@ describe('Router: increase position ar', () => {
 
             const uncompletedPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const uncompletedPositionPrice = uncompletedPosition.averagePrice;
-            console.log(`uncompletedPosition: `, uncompletedPosition);
-            console.log(`uncompletedPositionPrice: `, uncompletedPositionPrice);
+            // console.log(`uncompletedPosition: `, uncompletedPosition);
+            // console.log(`uncompletedPositionPrice: `, uncompletedPositionPrice);
         });
 
         it('decrease position, validate average open price', async () => {
@@ -699,13 +699,13 @@ describe('Router: increase position ar', () => {
 
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const lastTimePrice = traderPosition.averagePrice;
-            console.log(`before closing position: `, traderPosition);
-            console.log(`price before closing position: `, lastTimePrice);
+            // console.log(`before closing position: `, traderPosition);
+            // console.log(`price before closing position: `, lastTimePrice);
 
             const closingPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const closingPositionPrice = closingPosition.averagePrice;
-            console.log(`afer closing position: `, closingPosition);
-            console.log(`price afer closing position: `, closingPositionPrice);
+            // console.log(`afer closing position: `, closingPosition);
+            // console.log(`price afer closing position: `, closingPositionPrice);
         });
 
         it('increase position, update btc price, calculate average open price', async () => {
@@ -742,9 +742,9 @@ describe('Router: increase position ar', () => {
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const secondPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`secondPosition: `, secondPosition);
+            // console.log(`secondPosition: `, secondPosition);
             const secondOpenPrice = secondPosition.averagePrice;
-            console.log(`secondOpenPrice: `, secondOpenPrice);
+            // console.log(`secondOpenPrice: `, secondOpenPrice);
         });
     });
 });

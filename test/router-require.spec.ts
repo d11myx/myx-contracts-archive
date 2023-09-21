@@ -123,7 +123,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const { pool } = testEnv;
 
                 const pair = await pool.getPair(pairIndex);
-                console.log(`pair: `, pair);
+                // console.log(`pair: `, pair);
                 const newPair: IPool.PairStruct = {
                     pairIndex: pairIndex,
                     indexToken: pair.indexToken,
@@ -154,7 +154,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 // disable pair
                 const pairBef = await pool.getPair(pairIndex);
-                console.log(`pair: `, pairBef);
+                // console.log(`pair: `, pairBef);
                 const newPair: IPool.PairStruct = {
                     pairIndex: pairIndex,
                     indexToken: pairBef.indexToken,
@@ -172,7 +172,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 await pool.updatePair(pairIndex, newPair);
 
                 const pairAft = await pool.getPair(pairIndex);
-                console.log(`pairAft: `, pairAft);
+                // console.log(`pairAft: `, pairAft);
 
                 const collateral = ethers.utils.parseUnits('10000', 18);
                 const size = ethers.utils.parseUnits('10', 18);
@@ -219,8 +219,8 @@ describe('Router: check require condition, trigger errors', async () => {
                 const minTradeAmount = tradingConfig.minTradeAmount;
                 const maxTradeAmount = tradingConfig.maxTradeAmount;
 
-                console.log(`--minTradeAmount: `, minTradeAmount);
-                console.log(`--maxTradeAmount: `, maxTradeAmount);
+                // console.log(`--minTradeAmount: `, minTradeAmount);
+                // console.log(`--maxTradeAmount: `, maxTradeAmount);
 
                 const collateral = ethers.utils.parseUnits('10000', 18);
                 const sizeAmount = ethers.utils.parseUnits('5', 15);
@@ -265,8 +265,8 @@ describe('Router: check require condition, trigger errors', async () => {
                 const minTradeAmount = tradingConfig.minTradeAmount;
                 const maxTradeAmount = tradingConfig.maxTradeAmount;
 
-                console.log(`minTradeAmount: `, minTradeAmount);
-                console.log(`maxTradeAmount: `, maxTradeAmount);
+                // console.log(`minTradeAmount: `, minTradeAmount);
+                // console.log(`maxTradeAmount: `, maxTradeAmount);
 
                 const amount = ethers.utils.parseUnits('30000', 18);
                 const collateral = ethers.utils.parseUnits('1000', 18);
