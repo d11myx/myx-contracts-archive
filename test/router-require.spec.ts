@@ -40,7 +40,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 users: [user1, user2],
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 orderManager,
             } = testEnv;
 
@@ -73,7 +73,7 @@ describe('Router: check require condition, trigger errors', async () => {
             // setting createIncreateOrder: msg.sender = user
             const orderId = await orderManager.ordersIndex();
             await router.connect(user2.signer).createIncreaseOrder(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             // await expect(router.connect(user2.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('not order sender or handler');
         });
 
@@ -132,6 +132,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     enable: true,
                     kOfSwap: pair.kOfSwap,
                     expectIndexTokenP: pair.expectIndexTokenP,
+                    maxUnbalancedP: pair.maxUnbalancedP,
+                    unbalancedDiscountRate: pair.unbalancedDiscountRate,
                     addLpFeeP: pair.addLpFeeP,
                     removeLpFeeP: pair.addLpFeeP,
                     lpFeeDistributeP: pair.lpFeeDistributeP,
@@ -161,6 +163,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     enable: false,
                     kOfSwap: pairBef.kOfSwap,
                     expectIndexTokenP: pairBef.expectIndexTokenP,
+                    maxUnbalancedP: pairBef.maxUnbalancedP,
+                    unbalancedDiscountRate: pairBef.unbalancedDiscountRate,
                     addLpFeeP: pairBef.addLpFeeP,
                     removeLpFeeP: pairBef.addLpFeeP,
                     lpFeeDistributeP: pairBef.lpFeeDistributeP,

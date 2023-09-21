@@ -11,6 +11,8 @@ export const btcPairInfo: PairInfoConfig = {
         enable: true,
         kOfSwap: ethers.utils.parseUnits('1', 50),
         expectIndexTokenP: 50000000, //50%
+        maxUnbalancedP: 10000000, //10%
+        unbalancedDiscountRate: 10000000, //10%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 100000, //0.1%
         lpFeeDistributeP: 100000000,
@@ -33,12 +35,10 @@ export const btcPairInfo: PairInfoConfig = {
         stakingFeeDistributeP: 10000000, //10%
     },
     fundingFeeConfig: {
-        minFundingRate: -36500000, //=-0.1% * 365
-        maxFundingRate: 36500000, //=0.1% * 365
-        fundingWeightFactor: 1000000, //1%
-        liquidityPremiumFactor: 100000000, //100%
-        interest: 0,
-        fundingInterval: 28800,
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
+        fundingInterval: 60 * 60,
     },
 };
 
@@ -51,6 +51,8 @@ export const ethPairInfo: PairInfoConfig = {
         enable: true,
         kOfSwap: ethers.utils.parseUnits('1', 50),
         expectIndexTokenP: 50000000, //50%
+        maxUnbalancedP: 10000000, //10%
+        unbalancedDiscountRate: 10000000, //10%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 100000, //0.1%
         lpFeeDistributeP: 100000000,
@@ -73,11 +75,9 @@ export const ethPairInfo: PairInfoConfig = {
         stakingFeeDistributeP: 10000000, //10%
     },
     fundingFeeConfig: {
-        minFundingRate: -36500000, //=-0.1% * 365
-        maxFundingRate: 36500000, //=0.1% * 365
-        fundingWeightFactor: 1000000, //1%
-        liquidityPremiumFactor: 100000000, //100%
-        interest: 0,
-        fundingInterval: 28800,
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
+        fundingInterval: 60 * 60,
     },
 };

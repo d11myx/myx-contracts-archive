@@ -1,16 +1,18 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     AddressesProvider,
+    ExecutionLogic,
     Executor,
     FeeCollector,
     FundingRate,
     IndexPriceFeed,
-    MockPriceFeed,
+    MockPyth,
     OraclePriceFeed,
     OrderManager,
     Pool,
     PoolTokenFactory,
     PositionManager,
+    PriceOracle,
     RoleManager,
     Router,
     TestCallBack,
@@ -19,12 +21,12 @@ import {
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { deployContract, getBlockTimestamp, waitForTx } from './utilities/tx';
+import { deployContract, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
-import { getToken, getWETH } from './contract-getters';
+import { getWETH } from './contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -86,55 +88,50 @@ export async function deployPrice(
 ) {
     log(` - setup price`);
 
+    const mockPyth = (await deployContract('MockPyth', [60, 1])) as any as MockPyth;
+
     const oraclePriceFeed = (await deployContract('OraclePriceFeed', [
-        addressesProvider.address,
+        mockPyth.address,
+        [],
+        [],
     ])) as any as OraclePriceFeed;
     log(`deployed OraclePriceFeed at ${oraclePriceFeed.address}`);
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
+    const pairTokenPriceIds = [];
     for (let [pair, token] of Object.entries(tokens)) {
-        const priceFeed = (await deployContract('MockPriceFeed', [])) as any as MockPriceFeed;
-        log(`deployed MockPriceFeed with ${pair} at ${priceFeed.address}`);
-
-        await priceFeed.connect(deployer.signer).setAdmin(keeper.address, true);
-        await priceFeed.connect(keeper.signer).setLatestAnswer(MOCK_PRICES[pair]);
-
         const pairTokenAddress = token.address;
         if (!pairTokenAddress) {
             throw `wait for deployed before using`;
         }
-        await oraclePriceFeed.initTokenConfig(pairTokenAddress, priceFeed.address, 8);
 
         pairTokenAddresses.push(pairTokenAddress);
-        pairTokenPrices.push(
-            ethers.utils.parseUnits(ethers.utils.formatUnits(MOCK_PRICES[pair].toString(), 8).toString(), 30),
-        );
+        pairTokenPrices.push(MOCK_PRICES[pair]);
+        pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
     }
 
-    const indexPriceFeed = (await deployContract('IndexPriceFeed', [
-        addressesProvider.address,
-    ])) as any as IndexPriceFeed;
+    const indexPriceFeed = (await deployContract('IndexPriceFeed', [[], []])) as any as IndexPriceFeed;
     log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
-    await indexPriceFeed.connect(deployer.signer).setTokens(pairTokenAddresses, [10, 10]);
+    const priceOracle = (await deployContract('PriceOracle', [
+        oraclePriceFeed.address,
+        indexPriceFeed.address,
+    ])) as any as PriceOracle;
+    log(`deployed PriceOracle at ${priceOracle.address}`);
 
-    await indexPriceFeed.connect(deployer.signer).setMaxTimeDeviation(10000);
+    await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices);
 
-    await indexPriceFeed
-        .connect(keeper.signer)
-        .setPrices(pairTokenAddresses, pairTokenPrices, (await getBlockTimestamp()) + 100);
-
-    await oraclePriceFeed.setIndexPriceFeed(indexPriceFeed.address);
+    await oraclePriceFeed.connect(keeper.signer).setAssetPriceIds(pairTokenAddresses, pairTokenPriceIds);
+    const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
+    const fee = mockPyth.getUpdateFee(updateData);
+    await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
 
     const fundingRate = (await deployContract('FundingRate', [addressesProvider.address])) as any as FundingRate;
     log(`deployed FundingRate at ${fundingRate.address}`);
 
-    await addressesProvider
-        .connect(deployer.signer)
-        .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address);
-    // await addressesProvider.connect(deployer.signer).setIndexPriceOracle();
-    return { oraclePriceFeed, indexPriceFeed, fundingRate };
+    await addressesProvider.connect(deployer.signer).initialize(priceOracle.address, fundingRate.address);
+    return { oraclePriceFeed, indexPriceFeed, priceOracle, fundingRate };
 }
 
 export async function deployPair(
@@ -172,7 +169,6 @@ export async function deployTrading(
         pool.address,
         pledge.address,
         feeCollector.address,
-
     ])) as any as PositionManager;
     log(`deployed PositionManager at ${positionManager.address}`);
 
@@ -193,31 +189,31 @@ export async function deployTrading(
     log(`deployed Router at ${router.address}`);
     await waitForTx(await orderManager.setRouter(router.address));
 
-    const liquidationLogic = await deployContract('LiquidationLogic', []);
+    // const liquidationLogic = await deployContract('LiquidationLogic', []);
 
-    let executor = (await deployContract(
-        'Executor',
-        [
-            addressProvider.address,
-            pool.address,
-            orderManager.address,
-            positionManager.address,
-            feeCollector.address,
-            60 * 10, //todo testing time
-        ],
-        {
-            LiquidationLogic: liquidationLogic.address,
-        },
-    )) as any as Executor;
+    let executionLogic = (await deployContract('ExecutionLogic', [
+        addressProvider.address,
+        pool.address,
+        orderManager.address,
+        positionManager.address,
+        feeCollector.address,
+        60 * 10, //todo testing time
+    ])) as any as ExecutionLogic;
+    log(`deployed ExecutionLogic at ${executionLogic.address}`);
+
+    let executor = (await deployContract('Executor', [
+        addressProvider.address,
+        executionLogic.address,
+    ])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
 
-    // await waitForTx(await orderManager.connect(poolAdmin.signer).updatePositionManager(positionManager.address));
+    await waitForTx(await executionLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
 
-    await positionManager.setExecutor(executor.address);
+    await positionManager.setExecutor(executionLogic.address);
     await positionManager.setOrderManager(orderManager.address);
-    await orderManager.setExecutor(executor.address);
+    await orderManager.setExecutor(executionLogic.address);
 
-    return { positionManager, router, executor, orderManager };
+    return { positionManager, router, executionLogic, executor, orderManager };
 }
 export async function deployMockCallback() {
     return (await deployContract('TestCallBack', [])) as TestCallBack;

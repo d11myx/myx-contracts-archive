@@ -2,6 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
+    EXECUTION_LOGIC_ID,
     EXECUTOR_ID,
     FEE_COLLECTOR_ID,
     getAddressesProvider,
@@ -14,19 +15,16 @@ import {
     ROUTER_ID,
     waitForTx,
 } from '../../helpers';
-import { Router, Executor, PositionManager, OrderManager, FeeCollector } from '../../types';
+import { Router, Executor, PositionManager, OrderManager, FeeCollector, ExecutionLogic } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
-    const { deploy, get } = deployments;
-    const { deployer, poolAdmin } = await getNamedAccounts();
+    const { deploy } = deployments;
+    const { deployer } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
-    const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
 
     const addressProvider = await getAddressesProvider();
     const pool = await getPool();
     let usdt = await getToken();
-
-    const liquidationLogicArtifact = await get('LiquidationLogic');
 
     // FeeCollector
     const feeCollectorArtifact = await deploy(`${FEE_COLLECTOR_ID}`, {
@@ -79,10 +77,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
     await waitForTx(await orderManager.setRouter(router.address));
 
-    // Executor
-    const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
+    // ExecutionLogic
+    const executionLogicArtifact = await deploy(`${EXECUTION_LOGIC_ID}`, {
         from: deployer,
-        contract: 'Executor',
+        contract: 'ExecutionLogic',
         args: [
             addressProvider.address,
             pool.address,
@@ -91,21 +89,30 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             feeCollector.address,
             60 * 5, // todo testing
         ],
-        libraries: {
-            LiquidationLogic: liquidationLogicArtifact.address,
-        },
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const executionLogic = (await hre.ethers.getContractAt(
+        executionLogicArtifact.abi,
+        executionLogicArtifact.address,
+    )) as ExecutionLogic;
+
+    // Executor
+    const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
+        from: deployer,
+        contract: 'Executor',
+        args: [addressProvider.address, executionLogic.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
 
-    // await waitForTx(await orderManager.connect(poolAdminSigner).updatePositionManager(positionManager.address));
+    await waitForTx(await executionLogic.updateExecutor(executor.address));
 
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
-    await waitForTx(await positionManager.setExecutor(executor.address));
-    await waitForTx(await positionManager.setOrderManager(orderManager.address));
-    await waitForTx(await orderManager.setExecutor(executor.address));
+    await waitForTx(await positionManager.setExecutor(executionLogic.address));
+    await waitForTx(await positionManager.setOrderManager(executionLogic.address));
+    await waitForTx(await orderManager.setExecutor(executionLogic.address));
 
     await waitForTx(await pool.addPositionManager(positionManager.address));
     await waitForTx(await pool.addOrderManager(orderManager.address));

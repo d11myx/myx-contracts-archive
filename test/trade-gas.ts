@@ -1,16 +1,8 @@
-import { TestEnv, newTestEnv, localTestEnv } from './helpers/make-suite';
+import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
-import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
-import {
-    deployMockCallback,
-    getBlockTimestamp,
-    MAX_UINT_AMOUNT,
-    ORDER_MANAGER_ID,
-    TradeType,
-    waitForTx,
-} from '../helpers';
-import { mintAndApprove } from './helpers/misc';
+import { deployMockCallback, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
@@ -37,10 +29,7 @@ describe('Router: increase position ar', () => {
         await roleManager.connect(deployer.signer).addOperator(operator.address);
         await roleManager.connect(operator.signer).removeAccountBlackList(depositor.address);
 
-        const priceFeedFactory = await ethers.getContractFactory('MockPriceFeed');
-        const btcPriceFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-        const btcPriceFeed = priceFeedFactory.attach(btcPriceFeedAddress);
-        await waitForTx(await btcPriceFeed.setLatestAnswer(ethers.utils.parseUnits('30000', 8)));
+        await updateBTCPrice(localTestEnv, '30000');
     });
 
     it('addLiquidity cast', async () => {
@@ -63,11 +52,9 @@ describe('Router: increase position ar', () => {
         await mintAndApprove(localTestEnv, btc, indexAmount, depositor, testCallBack.address);
         await mintAndApprove(localTestEnv, usdt, stableAmount, depositor, testCallBack.address);
 
-        await snapshotGasCost(
-            testCallBack
-                .connect(depositor.signer)
-                .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount),
-        );
+        await testCallBack
+            .connect(depositor.signer)
+            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
     it('createIncreaseOrderWithoutTpSl cast', async () => {
@@ -121,10 +108,12 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executor,
+            executionLogic,
             orderManager,
         } = localTestEnv;
-        await snapshotGasCost(executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0));
+        await snapshotGasCost(
+            executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
+        );
     });
     it('createDecreaseOrder cast', async () => {
         const {
@@ -136,7 +125,7 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executor,
+            executionLogic,
             orderManager,
         } = localTestEnv;
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -167,10 +156,12 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executor,
+            executionLogic,
             orderManager,
         } = localTestEnv;
-        await snapshotGasCost(executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0));
+        await snapshotGasCost(
+            executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0),
+        );
 
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
         const lastTimePrice = traderPosition.averagePrice;

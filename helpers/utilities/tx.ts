@@ -162,15 +162,14 @@ export const Duration = {
  * @returns funding rate
  */
 export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
-    const { positionManager, pool, fundingRate, oraclePriceFeed } = testEnv;
-    const { indexTotalAmount, indexReservedAmount, stableTotalAmount, stableReservedAmount } = await pool.getVault(
-        pairIndex,
-    );
+    const { positionManager, pool, fundingRate, priceOracle } = testEnv;
+    const { indexTotalAmount, indexReservedAmount, stableTotalAmount, stableReservedAmount } =
+        await pool.getVault(pairIndex);
 
     const fundingInterval = 28800;
     const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
     const pair = await pool.getPair(pairIndex);
-    const price = await oraclePriceFeed.getPrice(pair.indexToken);
+    const price = await priceOracle.getOraclePrice(pair.indexToken);
     const exposedPosition = await positionManager.getExposedPositions(pairIndex);
     const longTracker = await positionManager.longTracker(pairIndex);
     const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -179,7 +178,7 @@ export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
     const q = longTracker.add(shortTracker);
     const w = fundingFeeConfig.fundingWeightFactor;
     const k = fundingFeeConfig.liquidityPremiumFactor;
-    const interest = fundingFeeConfig.interest;
+    const r = fundingFeeConfig.r;
     const diffBTCAmount = BigNumber.from(indexTotalAmount).sub(BigNumber.from(indexReservedAmount));
     const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
     const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount);
@@ -194,7 +193,7 @@ export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
         }
     }
 
-    fundingRateRatio = BigNumber.from(fundingRateRatio).sub(interest);
+    fundingRateRatio = BigNumber.from(fundingRateRatio).sub(r);
     fundingRateRatio = fundingRateRatio.lt(fundingFeeConfig.minFundingRate)
         ? fundingFeeConfig.minFundingRate
         : fundingRateRatio.gt(fundingFeeConfig.maxFundingRate)
@@ -311,10 +310,10 @@ export async function getPositionTradingFee(
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
-    const { positionManager, pool, oraclePriceFeed } = testEnv;
+    const { positionManager, pool, priceOracle } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
-    const price = await oraclePriceFeed.getPrice(pair.indexToken);
+    const price = await priceOracle.getOraclePrice(pair.indexToken);
     const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
     const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
     const positionPrice = positionAmount.mul(price).div(PRICE_PRECISION);

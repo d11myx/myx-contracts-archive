@@ -13,6 +13,8 @@ import {
     MOCK_TOKEN_PREFIX,
     SymbolMap,
     waitForTx,
+    getPriceOracle,
+    getRoleManager,
 } from '../helpers';
 import { IPool, MockPriceFeed, Token } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -29,7 +31,7 @@ async function main() {
     const orderManager = await getOrderManager();
     const positionManager = await getPositionManager();
     const executor = await getExecutor();
-    const oraclePriceFeed = await getOraclePriceFeed();
+    const priceOracle = await getPriceOracle();
     const roleManager = await getRoleManager();
     const pool = await getPool();
     const testCallBack = await getTestCallBack();
@@ -41,25 +43,11 @@ async function main() {
     const keeper = '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63';
 
     console.log(`executor:`, executor.address);
-    console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
-    console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
+    console.log(`btc price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30));
+    console.log(`eth price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(eth.address), 30));
 
     await waitForTx(await roleManager.connect(deployer).addKeeper(keeper));
     await waitForTx(await roleManager.connect(deployer).addPoolAdmin(keeper));
-
-    const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-    const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);
-
-    const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
-
-    const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
-    const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
-
-    await waitForTx(await btcFeed.setAdmin(keeper, true));
-    await waitForTx(await ethFeed.setAdmin(keeper, true));
-
-    console.log(await btcFeed.isAdmin(keeper));
-    console.log(await ethFeed.isAdmin(keeper));
 
     await positionManager.updateFundingInterval(10 * 60);
 

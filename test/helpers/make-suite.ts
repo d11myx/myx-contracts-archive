@@ -15,6 +15,8 @@ import {
     OrderManager,
     FeeManager,
     FundingRate,
+    PriceOracle,
+    ExecutionLogic,
 } from '../../types';
 import {
     SymbolMap,
@@ -38,6 +40,8 @@ import {
     getPositionManager,
     deployLibraries,
     getRoleManager,
+    getPriceOracle,
+    getExecutionLogic,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -63,7 +67,9 @@ export interface TestEnv {
     fundingRate: FundingRate;
     oraclePriceFeed: OraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
+    priceOracle: PriceOracle;
     router: Router;
+    executionLogic: ExecutionLogic;
     executor: Executor;
     orderManager: OrderManager;
     positionManager: PositionManager;
@@ -85,7 +91,9 @@ export const testEnv: TestEnv = {
     fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as OraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
+    priceOracle: {} as PriceOracle,
     router: {} as Router,
+    executionLogic: {} as ExecutionLogic,
     executor: {} as Executor,
     orderManager: {} as OrderManager,
     positionManager: {} as PositionManager,
@@ -134,6 +142,7 @@ export async function setupTestEnv() {
     // oracle
     testEnv.oraclePriceFeed = await getOraclePriceFeed();
     testEnv.indexPriceFeed = await getIndexPriceFeed();
+    testEnv.priceOracle = await getPriceOracle();
 
     // pair
     testEnv.pool = await getPool();
@@ -142,6 +151,7 @@ export async function setupTestEnv() {
 
     // trading
     testEnv.router = await getRouter();
+    testEnv.executionLogic = await getExecutionLogic();
     testEnv.executor = await getExecutor();
     testEnv.orderManager = await getOrderManager();
     testEnv.positionManager = await getPositionManager();
@@ -179,7 +189,7 @@ export async function newTestEnv(): Promise<TestEnv> {
     await roleManager.addPoolAdmin(deployer.address);
     await roleManager.addKeeper(keeper.address);
 
-    const { oraclePriceFeed, indexPriceFeed, fundingRate } = await deployPrice(
+    const { oraclePriceFeed, indexPriceFeed, priceOracle, fundingRate } = await deployPrice(
         deployer,
         keeper,
         addressesProvider,
@@ -188,7 +198,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
-    const { positionManager, router, executor, orderManager } = await deployTrading(
+    const { positionManager, router, executionLogic, executor, orderManager } = await deployTrading(
         deployer,
         deployer,
         addressesProvider,
@@ -219,8 +229,10 @@ export async function newTestEnv(): Promise<TestEnv> {
         fundingRate: fundingRate,
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
+        priceOracle: priceOracle,
         positionManager: positionManager,
         router: router,
+        executionLogic: executionLogic,
         executor: executor,
         orderManager: orderManager,
     } as TestEnv;
