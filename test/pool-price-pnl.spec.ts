@@ -4,7 +4,7 @@ import { before } from 'mocha';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { deployMockCallback, getBlockTimestamp, TradeType, waitForTx } from '../helpers';
 import { TradingTypes } from '../types/contracts/interfaces/IRouter';
-import { MockPriceFeed, PoolToken } from '../types';
+import { PoolToken } from '../types';
 import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
 
@@ -78,7 +78,7 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 router,
-                executor,
+                executionLogic,
                 positionManager,
                 orderManager,
             } = testEnv;
@@ -108,7 +108,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             expect(positionAft.averagePrice).to.be.eq(
@@ -125,7 +125,7 @@ describe('Modify LP Average Price', async () => {
                 users: [trader],
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 positionManager,
                 orderManager,
             } = testEnv;
@@ -157,7 +157,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             const uintNum = ethers.utils.parseUnits('1', 18);
@@ -175,7 +175,7 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 router,
-                executor,
+                executionLogic,
                 positionManager,
                 orderManager,
             } = testEnv;
@@ -205,7 +205,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -228,7 +228,7 @@ describe('Modify LP Average Price', async () => {
                 btc,
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 positionManager,
                 orderManager,
                 oraclePriceFeed,
@@ -261,7 +261,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -278,8 +278,6 @@ describe('Modify LP Average Price', async () => {
     });
 
     describe('Platform is short position', async () => {
-        let btcPriceFeed: MockPriceFeed;
-
         before('increase short position: +10 BTC, openPrice: 30000', async () => {
             const {
                 deployer,
@@ -318,7 +316,7 @@ describe('Modify LP Average Price', async () => {
                 users: [trader],
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 orderManager,
                 positionManager,
             } = testEnv;
@@ -347,7 +345,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
             expect(positionAft.averagePrice).to.be.eq(
@@ -364,7 +362,7 @@ describe('Modify LP Average Price', async () => {
                 users: [trader],
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 orderManager,
                 positionManager,
             } = testEnv;
@@ -393,7 +391,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
-            await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
             expect(positionAft.averagePrice).to.be.eq(
@@ -410,7 +408,7 @@ describe('Modify LP Average Price', async () => {
                 users: [trader],
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 orderManager,
                 positionManager,
             } = testEnv;
@@ -439,7 +437,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 
@@ -461,7 +459,7 @@ describe('Modify LP Average Price', async () => {
                 users: [trader],
                 usdt,
                 router,
-                executor,
+                executionLogic,
                 orderManager,
                 positionManager,
             } = testEnv;
@@ -490,7 +488,7 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 

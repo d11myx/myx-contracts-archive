@@ -1,12 +1,9 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
 
-pragma solidity 0.8.20;
+import "./IPriceFeed.sol";
 
-interface IIndexPriceFeed {
-    event PriceUpdate(address token, uint256 price, address priceFeed);
-    event PriceData(address token, uint256 refPrice, uint256 fastPrice);
+interface IIndexPriceFeed is IPriceFeed {
 
-    function getPrice(address _token) external view returns (uint256);
-
-    function setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) external;
+    function updatePrice(address[] calldata tokens, uint256[] memory prices) external;
 }
