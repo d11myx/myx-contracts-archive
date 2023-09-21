@@ -28,11 +28,9 @@ describe('Trade: Limit order cases', () => {
         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
 
-        await snapshotGasCost(
-            testCallBack
-                .connect(depositor.signer)
-                .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount),
-        );
+        await testCallBack
+            .connect(depositor.signer)
+            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
     describe('long > short', () => {
@@ -44,7 +42,7 @@ describe('Trade: Limit order cases', () => {
                 positionManager,
                 orderManager,
                 router,
-                executor,
+                executionLogic,
             } = testEnv;
 
             // update BTC price
@@ -69,7 +67,7 @@ describe('Trade: Limit order cases', () => {
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             console.log(`---positionAft: `, positionAft);
 
-            await executor
+            await executionLogic
                 .connect(keeper.signer)
                 .executeIncreaseLimitOrders([{ orderId: orderId, level: 0, commissionRatio: 0 }]);
             // expect(positionAft.positionAmount).to.be.eq(size);

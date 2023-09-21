@@ -1,7 +1,6 @@
 import { ethers } from 'hardhat';
 import {
     getExecutor,
-    getOraclePriceFeed,
     getOrderManager,
     getPool,
     getPositionManager,
@@ -12,9 +11,12 @@ import {
     SymbolMap,
     waitForTx,
     getRoleManager,
+    getPriceOracle,
+    getFundingRate,
 } from '../helpers';
-import { IPool, MockPriceFeed, Token } from '../types';
+import { Token } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { IFundingRate } from '../types/contracts/core/FundingRate';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -27,8 +29,9 @@ async function main() {
     const router = await getRouter();
     const orderManager = await getOrderManager();
     const positionManager = await getPositionManager();
+    const fundingRate = await getFundingRate();
     const executor = await getExecutor();
-    const oraclePriceFeed = await getOraclePriceFeed();
+    const priceOracle = await getPriceOracle();
     const roleManager = await getRoleManager();
     const pool = await getPool();
     const testCallBack = await getTestCallBack();
@@ -37,12 +40,8 @@ async function main() {
     console.log(`executor:`, executor.address);
 
     const { usdt, btc, eth } = await getTokens();
-    console.log(`btc price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
-    console.log(`eth price:`, ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30));
-
-    const btcFeedAddress = await oraclePriceFeed.priceFeeds(btc.address);
-    const ethFeedAddress = await oraclePriceFeed.priceFeeds(eth.address);
-    const mockPriceFeedFactory = (await ethers.getContractFactory('MockPriceFeed')) as MockPriceFeed;
+    console.log(`btc price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30));
+    console.log(`eth price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(eth.address), 30));
 
     const keepers: string[] = [
         '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',
@@ -58,18 +57,23 @@ async function main() {
 
         await waitForTx(await roleManager.addKeeper(keeper));
         await waitForTx(await roleManager.addPoolAdmin(keeper));
-
-        const btcFeed = mockPriceFeedFactory.attach(btcFeedAddress);
-        const ethFeed = mockPriceFeedFactory.attach(ethFeedAddress);
-
-        await waitForTx(await btcFeed.setAdmin(keeper, true));
-        await waitForTx(await ethFeed.setAdmin(keeper, true));
-
-        console.log(await btcFeed.isAdmin(keeper));
-        console.log(await ethFeed.isAdmin(keeper));
     }
 
-    await positionManager.updateFundingInterval(60 * 60);
+    const btcFeeConfig: IFundingRate.FundingFeeConfigStruct = {
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
+        fundingInterval: 60 * 60,
+    };
+    await fundingRate.updateFundingFeeConfig(0, btcFeeConfig);
+
+    const ethFeeConfig: IFundingRate.FundingFeeConfigStruct = {
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
+        fundingInterval: 60 * 60,
+    };
+    await fundingRate.updateFundingFeeConfig(1, ethFeeConfig);
 
     // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
     // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));

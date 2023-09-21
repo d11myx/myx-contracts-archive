@@ -1,5 +1,6 @@
 import { task } from 'hardhat/config';
 import { getWalletBalances } from '../../helpers/utilities/tx';
+import { getPool } from '../../helpers';
 
 task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, ...hre }) => {
     const allDeployments = await deployments.all();
@@ -33,4 +34,10 @@ task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, .
     console.log('');
     console.log('MockedTokens');
     console.table(mockedTokens);
+
+    console.log('');
+    const pool = await getPool();
+    console.log(`BTC-USDT LP: ${(await pool.pairs(0)).pairToken}`);
+    console.log(`ETH-USDT LP: ${(await pool.pairs(1)).pairToken}`);
+    console.log('');
 });

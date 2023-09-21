@@ -9,12 +9,10 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     bytes32 private constant TIMELOCK = "TIMELOCK";
     bytes32 private constant ROLE_MANAGER = "ROLE_MANAGER";
     bytes32 private constant PRICE_ORACLE = "PRICE_ORACLE";
-    bytes32 private constant INDEX_PRICE_ORACLE = "INDEX_PRICE_ORACLE";
     bytes32 private constant FUNDING_RATE = "FUNDING_RATE";
 
     address public override timelock;
     address public override priceOracle;
-    address public override indexPriceOracle;
     address public override fundingRate;
 
     bool private _initialize;
@@ -50,25 +48,14 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         emit AddressSet(id, oldAddress, newAddress);
     }
 
-    function initialize(
-        address newPriceOracle,
-        address newIndexPriceOracle,
-        address newFundingRateAddress
-    ) external onlyOwner {
+    function initialize(address newPriceOracle, address newFundingRateAddress) external onlyOwner {
         require(!_initialize, "init");
-        require(
-            newPriceOracle != address(0) &&
-                newIndexPriceOracle != address(0) &&
-                newFundingRateAddress != address(0),
-            "!0"
-        );
+        require(newPriceOracle != address(0) && newFundingRateAddress != address(0), "!0");
         priceOracle = newPriceOracle;
-        indexPriceOracle = newIndexPriceOracle;
         fundingRate = newFundingRateAddress;
 
         emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);
         emit AddressSet(PRICE_ORACLE, address(0), newPriceOracle);
-        emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
     }
 
     function setPriceOracle(address newPriceOracle) external onlyTimelock {
@@ -81,12 +68,6 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         address oldFundingRate = _addresses[FUNDING_RATE];
         fundingRate = newFundingRate;
         emit AddressSet(FUNDING_RATE, oldFundingRate, fundingRate);
-    }
-
-    function setIndexPriceOracle(address newIndexPriceOracle) external onlyTimelock {
-        address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
-        indexPriceOracle = newIndexPriceOracle;
-        emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
     }
 
     function setRolManager(address newAddress) external onlyOwner {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '../libraries/PrecisionUtils.sol';
-import '../interfaces/IFeeCollector.sol';
-import '../interfaces/IAddressesProvider.sol';
-import '../interfaces/IRoleManager.sol';
+import "../libraries/PrecisionUtils.sol";
+import "../interfaces/IFeeCollector.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 
 contract FeeCollector is IFeeCollector {
     // Discount ratio of every level (level => discountRatio)
@@ -26,12 +26,15 @@ contract FeeCollector is IFeeCollector {
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESSES_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'onlyPoolAdmin');
+        require(
+            IRoleManager(ADDRESSES_PROVIDER.roleManager()).isPoolAdmin(msg.sender),
+            "onlyPoolAdmin"
+        );
         _;
     }
 
     function updateLevelDiscountRatio(uint8 level, uint256 newRatio) external override {
-        require(newRatio <= PrecisionUtils.percentage(), 'exceeds max ratio');
+        require(newRatio <= PrecisionUtils.percentage(), "exceeds max ratio");
 
         uint256 oldRatio = levelDiscountRatios[level];
         levelDiscountRatios[level] = newRatio;
@@ -40,7 +43,7 @@ contract FeeCollector is IFeeCollector {
     }
 
     function updateMaxReferralsRatio(uint256 newRatio) external override {
-        require(newRatio <= PrecisionUtils.percentage(), 'exceeds max ratio');
+        require(newRatio <= PrecisionUtils.percentage(), "exceeds max ratio");
 
         uint256 oldRatio = maxReferralsRatio;
         maxReferralsRatio = newRatio;

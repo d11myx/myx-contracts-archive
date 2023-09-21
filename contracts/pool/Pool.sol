@@ -9,10 +9,11 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import "../interfaces/IPositionManager.sol";
+import "../interfaces/IUniSwapV3Router.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
-import "../interfaces/IOraclePriceFeed.sol";
+import "../interfaces/IPriceOracle.sol";
 import "../token/interfaces/IBaseToken.sol";
 
 import "../libraries/AmountMath.sol";
@@ -36,6 +37,8 @@ contract Pool is IPool, Roleable {
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public immutable poolTokenFactory;
+    address public router;
+    mapping(uint256 => mapping(address => bytes)) tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -74,6 +77,10 @@ contract Pool is IPool, Roleable {
 
     function addPositionManager(address _positionManager) external onlyPoolAdmin {
         positionManagers.add(_positionManager);
+    }
+
+    function setRouter(address _router) external onlyPoolAdmin {
+        router = _router;
     }
 
     function removePositionManager(address _positionManager) external onlyPoolAdmin {
@@ -132,6 +139,8 @@ contract Pool is IPool, Roleable {
         pair.enable = _pair.enable;
         pair.kOfSwap = _pair.kOfSwap;
         pair.expectIndexTokenP = _pair.expectIndexTokenP;
+        pair.maxUnbalancedP = _pair.maxUnbalancedP;
+        pair.unbalancedDiscountRate = _pair.unbalancedDiscountRate;
         pair.addLpFeeP = _pair.addLpFeeP;
         pair.removeLpFeeP = _pair.removeLpFeeP;
     }
@@ -273,17 +282,34 @@ contract Pool is IPool, Roleable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function setLPProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
+        Pair memory pair = pairs[_pairIndex];
         if (_profit > 0) {
             vault.stableTotalAmount += _profit.abs();
         } else {
-            uint256 availableStable = vault.stableTotalAmount - vault.stableReservedAmount;
-            require(_profit.abs() <= availableStable, "stable token not enough");
+            if (vault.stableTotalAmount < _profit.abs()) {
+                swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+            }
             vault.stableTotalAmount -= _profit.abs();
         }
 
-        emit UpdateLPProfit(_pairIndex, int256(_profit), vault.stableTotalAmount);
+        emit UpdateLPProfit(_pairIndex, pair.stableToken, _profit, vault.stableTotalAmount);
+    }
+
+    function setLPIndexProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+        Vault storage vault = vaults[_pairIndex];
+        Pair memory pair = pairs[_pairIndex];
+        if (_profit > 0) {
+            vault.indexTotalAmount += _profit.abs();
+        } else {
+            if (vault.indexTotalAmount < _profit.abs()) {
+                swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+            }
+            vault.stableTotalAmount -= _profit.abs();
+        }
+
+        emit UpdateLPProfit(_pairIndex, pair.indexToken, _profit, vault.indexTotalAmount);
     }
 
     function addLiquidity(
@@ -365,6 +391,28 @@ contract Pool is IPool, Roleable {
         }
     }
 
+    function swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) public {
+        Pair memory pair = pairs[_pairIndex];
+        uint256 price = getPrice(pair.indexToken);
+        bytes memory path = tokenPath[_pairIndex][tokenIn];
+        uint256 amountInMaximum;
+        if (tokenIn == pair.indexToken) {
+            amountInMaximum = (amountOut * 12) / (price * 10);
+        } else if (tokenIn == pair.stableToken) {
+            amountInMaximum = (amountOut * price * 12) / 10;
+        }
+        IERC20(pair.indexToken).approve(router, amountInMaximum);
+        IUniSwapV3Router(router).exactOutput(
+            IUniSwapV3Router.ExactOutputParams({
+                path: path,
+                recipient: address(this),
+                deadline: block.timestamp + 1000,
+                amountOut: amountOut,
+                amountInMaximum: amountInMaximum
+            })
+        );
+    }
+
     // calculate lp amount for add liquidity
     function getMintLpAmount(
         uint256 _pairIndex,
@@ -412,9 +460,9 @@ contract Pool is IPool, Roleable {
 
         // calculate deposit usdt value without slippage
         uint256 slipDelta;
-        slipToken;
-        slipAmount;
         uint256 stableTotalAmount = _getStableTotalAmount(pair, vault);
+        uint256 availableDiscountRate;
+        uint256 availableDiscountAmount;
         if (indexReserveDelta + stableTotalAmount > 0) {
             // after deposit
             uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
@@ -424,6 +472,30 @@ contract Pool is IPool, Roleable {
             uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
             uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
             uint256 expectStableDelta = totalDelta - expectIndexDelta;
+
+            if (_indexAmount > 0 && _stableAmount == 0) {
+                uint256 currentIndexRatio = indexTotalDelta.divPercentage(totalDelta);
+                int256 indexUnbalanced = int256(
+                    currentIndexRatio.divPercentage(pair.expectIndexTokenP)
+                ) - int256(PrecisionUtils.percentage());
+                if (indexUnbalanced < 0 && indexUnbalanced.abs() > pair.maxUnbalancedP) {
+                    availableDiscountRate = pair.unbalancedDiscountRate;
+                    availableDiscountAmount = expectIndexDelta.mul(indexTotalDelta);
+                }
+            }
+
+            if (_stableAmount > 0 && _indexAmount == 0) {
+                uint256 currentStableRatio = stableTotalDelta.divPercentage(totalDelta);
+                int256 stableUnbalanced = int256(
+                    currentStableRatio.divPercentage(
+                        PrecisionUtils.percentage().sub(pair.expectIndexTokenP)
+                    )
+                ) - int256(PrecisionUtils.percentage());
+                if (stableUnbalanced < 0 && stableUnbalanced.abs() > pair.maxUnbalancedP) {
+                    availableDiscountRate = pair.unbalancedDiscountRate;
+                    availableDiscountAmount = expectStableDelta.mul(stableTotalDelta);
+                }
+            }
 
             (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(
                 pair.kOfSwap,
@@ -465,11 +537,29 @@ contract Pool is IPool, Roleable {
                 afterFeeStableAmount = afterFeeStableAmount - slipDelta;
             }
         }
-        // mint lp
-        mintAmount = AmountMath.getIndexAmount(
-            indexDepositDelta + afterFeeStableAmount - slipDelta,
-            lpFairPrice(_pairIndex)
-        );
+
+        uint256 mintDelta = indexDepositDelta + afterFeeStableAmount - slipDelta;
+
+        // mint with discount
+        if (availableDiscountRate > 0) {
+            if (mintDelta > availableDiscountAmount) {
+                mintAmount += AmountMath.getIndexAmount(
+                    availableDiscountAmount,
+                    lpFairPrice(_pairIndex).mul(PrecisionUtils.percentage() - availableDiscountRate)
+                );
+                mintDelta -= availableDiscountAmount;
+            } else {
+                mintAmount += AmountMath.getIndexAmount(
+                    mintDelta,
+                    lpFairPrice(_pairIndex).mul(PrecisionUtils.percentage() - availableDiscountRate)
+                );
+                mintDelta -= mintDelta;
+            }
+        }
+
+        if (mintDelta > 0) {
+            mintAmount += AmountMath.getIndexAmount(mintDelta, lpFairPrice(_pairIndex));
+        }
 
         return (
             mintAmount,
@@ -750,6 +840,20 @@ contract Pool is IPool, Roleable {
         address to,
         uint256 amount
     ) external onlyPositionManagerOrOrderManager {
+        require(IERC20(token).balanceOf(address(this)) > amount, "bal");
+        IERC20(token).safeTransfer(to, amount);
+    }
+
+    function transferTokenOrSwap(
+        uint256 pairIndex,
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyPositionManagerOrOrderManager {
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        if (bal < amount) {
+            swapInUni(pairIndex, token, amount);
+        }
         IERC20(token).safeTransfer(to, amount);
     }
 
@@ -765,7 +869,7 @@ contract Pool is IPool, Roleable {
     }
 
     function getPrice(address _token) public view returns (uint256) {
-        return IOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
+        return IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(_token);
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
