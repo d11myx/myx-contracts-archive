@@ -165,25 +165,27 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
-        int256 collateral;
-        if (order.collateral > 0) {
-            collateral = order.executedSize == 0 ? order.collateral : int256(0);
-        } else {
-            collateral = order.executedSize + executionSize >= order.sizeAmount ? order.collateral : int256(0);
-        }
-
         // get position
         Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         // check position and leverage
         (uint256 afterPosition,) = position.validLeverage(
             executionPrice,
-            collateral,
+            order.collateral,
             executionSize,
             true,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
         require(afterPosition > 0, 'zpa');
+
+        int256 collateral;
+        if (order.collateral > 0) {
+            collateral = order.executedSize == 0 || order.tradeType == TradingTypes.TradeType.MARKET ? order.collateral : int256(0);
+        } else {
+            collateral = order.executedSize + executionSize >= order.sizeAmount
+                || order.tradeType == TradingTypes.TradeType.MARKET
+                ? order.collateral : int256(0);
+        }
 
         // increase position
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
@@ -351,17 +353,10 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
-        int256 collateral;
-        if (order.collateral > 0) {
-            collateral = order.executedSize == 0 ? order.collateral : int256(0);
-        } else {
-            collateral = order.executedSize + executionSize >= order.sizeAmount ? order.collateral : int256(0);
-        }
-
         // check position and leverage
         position.validLeverage(
             executionPrice,
-            collateral,
+            order.collateral,
             executionSize,
             false,
             // tradingConfig.minLeverage,
@@ -400,7 +395,7 @@ contract ExecutionLogic is IExecutionLogic {
                 pairIndex,
                 order.tradeType,
                 order.isLong,
-                collateral,
+                order.collateral,
                 order.sizeAmount,
                 order.triggerPrice,
                 executionSize,
@@ -412,6 +407,15 @@ contract ExecutionLogic is IExecutionLogic {
                 0
             );
             return;
+        }
+
+        int256 collateral;
+        if (order.collateral > 0) {
+            collateral = order.executedSize == 0 || order.tradeType == TradingTypes.TradeType.MARKET ? order.collateral : int256(0);
+        } else {
+            collateral = order.executedSize + executionSize >= order.sizeAmount
+            || order.tradeType == TradingTypes.TradeType.MARKET
+                ? order.collateral : int256(0);
         }
 
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
@@ -456,6 +460,7 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
+        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
             // cancel all decrease order
             IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(
