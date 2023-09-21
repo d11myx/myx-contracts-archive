@@ -334,7 +334,7 @@ describe('Router: Edge cases', () => {
             positionManager
                 .connect(trader.signer)
                 .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral),
-        ).to.be.revertedWith('collateral not enough for pnl');
+        ).to.be.revertedWith('collateral not enough');
     });
 
     it('userLoss < collateral, withdraw of partial collateral', async () => {
@@ -400,7 +400,7 @@ describe('Router: Edge cases', () => {
             positionManager
                 .connect(trader.signer)
                 .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral),
-        ).to.be.revertedWith('collateral not enough for pnl');
+        ).to.be.revertedWith('collateral not enough');
 
         await updateBTCPrice(testEnv, '30000');
     });
