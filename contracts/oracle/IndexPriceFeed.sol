@@ -11,7 +11,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
         _setAssetPrices(assets, prices);
     }
 
-    function decimals() external view override returns (uint256) {
+    function decimals() external pure override returns (uint256) {
         return 8;
     }
 
