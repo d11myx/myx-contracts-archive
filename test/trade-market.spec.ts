@@ -324,7 +324,7 @@ describe('Trade: Market order cases', () => {
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, false);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
-            console.log(`---positionAft:`, positionAft);
+            // console.log(`---positionAft:`, positionAft);
             expect(positionAft.positionAmount).to.be.eq(positionBef.positionAmount.sub(size));
         });
     });
