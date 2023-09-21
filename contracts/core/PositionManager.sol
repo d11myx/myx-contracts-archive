@@ -510,7 +510,7 @@ contract PositionManager is FeeManager, Pausable {
             price,
             collateral,
             0,
-            false,
+            true,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
