@@ -460,6 +460,7 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
+        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
             // cancel all decrease order
             IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(
