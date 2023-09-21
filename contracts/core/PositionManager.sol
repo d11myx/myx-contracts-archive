@@ -350,9 +350,25 @@ contract PositionManager is FeeManager, Pausable {
             oraclePrice
         );
 
-        charge < 0
-            ? position.collateral = position.collateral.sub(charge.abs())
-            : position.collateral = position.collateral.add(charge.abs());
+        if (charge >= 0) {
+            position.collateral = position.collateral.add(charge.abs());
+        } else {
+            // If the margin is sufficient, it will be deducted directly from the position.
+            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
+            if (position.collateral >= charge.abs()) {
+                position.collateral = position.collateral.sub(charge.abs());
+            } else {
+                // adjust position averagePrice
+                uint256 lossPer = charge.abs().divPrice(position.positionAmount);
+                position.isLong
+                    ? position.averagePrice = position.averagePrice + lossPer
+                    : position.averagePrice = position.averagePrice - lossPer;
+            }
+        }
+//        charge < 0
+//            ? position.collateral = position.collateral.sub(charge.abs())
+//            : position.collateral = position.collateral.add(charge.abs());
+
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount += sizeAmount;
 
@@ -423,10 +439,26 @@ contract PositionManager is FeeManager, Pausable {
         _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
-        pnl += charge;
-        pnl < 0
-            ? position.collateral = position.collateral.sub(pnl.abs())
-            : position.collateral = position.collateral.add(pnl.abs());
+
+        int256 totalSettlementAmount = pnl + charge;
+        if (totalSettlementAmount >= 0) {
+            position.collateral = position.collateral.add(totalSettlementAmount.abs());
+        } else {
+            // If the margin is sufficient, it will be deducted directly from the position.
+            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
+            if (position.collateral >= totalSettlementAmount.abs()) {
+                position.collateral = position.collateral.sub(totalSettlementAmount.abs());
+            } else {
+                // adjust position averagePrice
+                uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
+                position.isLong
+                    ? position.averagePrice = position.averagePrice + lossPer
+                    : position.averagePrice = position.averagePrice - lossPer;
+            }
+        }
+//        totalSettlementAmount < 0
+//            ? position.collateral = position.collateral.sub(totalSettlementAmount.abs())
+//            : position.collateral = position.collateral.add(totalSettlementAmount.abs());
 
         _handleCollateral(pairIndex, position, collateral);
 
