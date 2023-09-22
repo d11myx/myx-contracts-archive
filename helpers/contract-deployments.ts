@@ -183,7 +183,6 @@ export async function deployTrading(
         weth.address,
         addressProvider.address,
         orderManager.address,
-        positionManager.address,
         pool.address,
     ])) as Router;
     log(`deployed Router at ${router.address}`);

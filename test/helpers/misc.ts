@@ -110,7 +110,7 @@ export async function decreasePosition(
     const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
     // execute order
-    const tx = await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType, 0, 0);
+    const tx = await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, tradeType, 0, 0, false);
     const receipt = await tx.wait();
 
     return { orderId: orderId, executeReceipt: receipt };
