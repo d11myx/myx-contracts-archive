@@ -59,21 +59,21 @@ async function main() {
         await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
 
-    const btcFeeConfig: IFundingRate.FundingFeeConfigStruct = {
-        growthRate: 2000000, //0.02
-        baseRate: 20000, //0.0002
-        maxRate: 10000000, //0.1
-        fundingInterval: 60 * 60,
-    };
-    await fundingRate.updateFundingFeeConfig(0, btcFeeConfig);
-
-    const ethFeeConfig: IFundingRate.FundingFeeConfigStruct = {
-        growthRate: 2000000, //0.02
-        baseRate: 20000, //0.0002
-        maxRate: 10000000, //0.1
-        fundingInterval: 60 * 60,
-    };
-    await fundingRate.updateFundingFeeConfig(1, ethFeeConfig);
+    // const btcFeeConfig: IFundingRate.FundingFeeConfigStruct = {
+    //     growthRate: 2000000, //0.02
+    //     baseRate: 20000, //0.0002
+    //     maxRate: 10000000, //0.1
+    //     fundingInterval: 60 * 60,
+    // };
+    // await fundingRate.updateFundingFeeConfig(0, btcFeeConfig);
+    //
+    // const ethFeeConfig: IFundingRate.FundingFeeConfigStruct = {
+    //     growthRate: 2000000, //0.02
+    //     baseRate: 20000, //0.0002
+    //     maxRate: 10000000, //0.1
+    //     fundingInterval: 60 * 60,
+    // };
+    // await fundingRate.updateFundingFeeConfig(1, ethFeeConfig);
 
     // await waitForTx(await usdt.approve(testCallBack.address, MAX_UINT_AMOUNT));
     // await waitForTx(await btc.approve(testCallBack.address, MAX_UINT_AMOUNT));
