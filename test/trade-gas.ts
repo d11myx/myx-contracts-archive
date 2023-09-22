@@ -75,7 +75,7 @@ describe('Router: increase position ar', () => {
 
         // View user's position
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-        console.log("user's position", traderPosition);
+        // console.log("user's position", traderPosition);
 
         const collateral = ethers.utils.parseUnits('10000', 18);
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
@@ -94,7 +94,7 @@ describe('Router: increase position ar', () => {
 
         orderId = await orderManager.ordersIndex();
 
-        console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+        // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
         await snapshotGasCost(router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest));
     });
@@ -129,7 +129,7 @@ describe('Router: increase position ar', () => {
             orderManager,
         } = localTestEnv;
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
-        console.log(`position:`, position);
+        // console.log(`position:`, position);
 
         expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('5', 18));
 
@@ -165,12 +165,12 @@ describe('Router: increase position ar', () => {
 
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
         const lastTimePrice = traderPosition.averagePrice;
-        console.log(`before closing position: `, traderPosition);
-        console.log(`price before closing position: `, lastTimePrice);
+        // console.log(`before closing position: `, traderPosition);
+        // console.log(`price before closing position: `, lastTimePrice);
 
         const closingPosition = await positionManager.getPosition(trader.address, pairIndex, true);
         const closingPositionPrice = closingPosition.averagePrice;
-        console.log(`afer closing position: `, closingPosition);
-        console.log(`price afer closing position: `, closingPositionPrice);
+        // console.log(`afer closing position: `, closingPosition);
+        // console.log(`price afer closing position: `, closingPositionPrice);
     });
 });
