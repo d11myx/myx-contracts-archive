@@ -65,7 +65,7 @@ describe('Trade: Limit order cases', () => {
             );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`---positionAft: `, positionAft);
+            // console.log(`---positionAft: `, positionAft);
 
             await executionLogic
                 .connect(keeper.signer)

@@ -97,8 +97,14 @@ library Position {
         int256 availableCollateral = int256(self.collateral);
 
         // pnl
-        if (self.positionAmount > 0) {
-            availableCollateral += getUnrealizedPnl(self, self.positionAmount, price);
+//        if (self.positionAmount > 0) {
+//            availableCollateral += getUnrealizedPnl(self, self.positionAmount, price);
+//        }
+        int256 pnl = getUnrealizedPnl(self, self.positionAmount, price);
+        if (!_increase && _sizeAmount > 0 && pnl < 0) {
+            availableCollateral += getUnrealizedPnl(self, _sizeAmount, price);
+        } else {
+            availableCollateral += pnl;
         }
 
         // adjust collateral

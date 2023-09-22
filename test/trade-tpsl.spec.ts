@@ -151,7 +151,7 @@ describe('Trade: TP & SL', () => {
 
             // const orderKey = await orderManager.getOrderKey(orderId, TradeType.LIMIT, true);
             let orderTpSl = await orderManager.orderWithTpSl(orderId);
-            console.log(`orderTpSl:`, orderTpSl);
+            // console.log(`orderTpSl:`, orderTpSl);
 
             expect(orderTpSl.tp).to.be.eq(ethers.utils.parseEther('1'));
             expect(orderTpSl.sl).to.be.eq(ethers.utils.parseEther('2'));
