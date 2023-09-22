@@ -257,7 +257,8 @@ contract ExecutionLogic is IExecutionLogic {
                 order.orderId,
                 TradingTypes.TradeType.MARKET,
                 order.level,
-                order.commissionRatio
+                order.commissionRatio,
+                false
             )
             {} catch Error(string memory reason) {
                 orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false, reason);
@@ -275,7 +276,8 @@ contract ExecutionLogic is IExecutionLogic {
                 order.orderId,
                 TradingTypes.TradeType.LIMIT,
                 order.level,
-                order.commissionRatio
+                order.commissionRatio,
+                false
             )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
@@ -287,16 +289,18 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
-        uint256 commissionRatio
+        uint256 commissionRatio,
+        bool isSystem
     ) external override onlyExecutorOrKeeper {
-        _executeDecreaseOrder(_orderId, _tradeType, level, commissionRatio);
+        _executeDecreaseOrder(_orderId, _tradeType, level, commissionRatio, isSystem);
     }
 
     function _executeDecreaseOrder(
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
-        uint256 commissionRatio
+        uint256 commissionRatio,
+        bool isSystem
     ) internal {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
@@ -312,7 +316,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, false, 'pair enable');
+            orderManager.cancelOrder(order.orderId, order.tradeType, false, '!enabled');
             return;
         }
 
@@ -326,7 +330,7 @@ contract ExecutionLogic is IExecutionLogic {
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
         uint256 executionSize = order.sizeAmount - order.executedSize;
-        if (executionSize > tradingConfig.maxTradeAmount) {
+        if (executionSize > tradingConfig.maxTradeAmount && !isSystem) {
             executionSize = tradingConfig.maxTradeAmount;
         }
 
@@ -582,10 +586,11 @@ contract ExecutionLogic is IExecutionLogic {
                 orderId,
                 TradingTypes.TradeType.MARKET,
                 adlPosition.level,
-                adlPosition.commissionRatio
+                adlPosition.commissionRatio,
+                true
             );
         }
-        this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio);
+        this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio, true);
     }
 
     function liquidatePositions(
@@ -657,7 +662,7 @@ contract ExecutionLogic is IExecutionLogic {
             })
         );
 
-        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio);
+        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio, true);
 
         emit ExecuteLiquidation(
             positionKey,
