@@ -87,8 +87,8 @@ describe('Pool: Edge cases', () => {
             const pairAfterObj = await pool.getPair(pairIndex);
             let pairAfter: IPool.PairStructOutput = { ...pairAfterObj };
 
-            console.log(pairAfter);
-            console.log(pairToUpdate);
+            // console.log(pairAfter);
+            // console.log(pairToUpdate);
             //TODO Fix:updatePair unSuccessful
 
             // expect(pairAfter).deep.be.eq(pairToUpdate);
