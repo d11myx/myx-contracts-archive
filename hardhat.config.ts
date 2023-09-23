@@ -107,6 +107,7 @@ const config: HardhatUserConfig = {
                 enabled: true,
                 runs: 200,
             },
+            // evmVersion: 'london',
             viaIR: true,
         },
     },
@@ -278,8 +279,8 @@ const config: HardhatUserConfig = {
             //1438000
             url: 'https://rpc.goerli.linea.build',
             chainId: 59140,
-            gasPrice: 193432400,
-            blockGasLimit: 10000000,
+            // gasPrice: 3034324000,
+            // blockGasLimit: 10000000,
             accounts: [
                 LINEA_GOERLI_PRIVATE_KEY0,
                 LINEA_GOERLI_PRIVATE_KEY1,
