@@ -39,13 +39,17 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     await waitForTx(await indexPriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices));
 
-    await oraclePriceFeed.connect(poolAdminSigner).setAssetPriceIds(pairTokenAddresses, pairTokenPriceIds);
+    await waitForTx(
+        await oraclePriceFeed.connect(poolAdminSigner).setAssetPriceIds(pairTokenAddresses, pairTokenPriceIds),
+    );
 
     const mockPyth = await hre.ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
 
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = await mockPyth.getUpdateFee(updateData);
-    await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
+    await waitForTx(
+        await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee }),
+    );
 
     // for (let pair of priceFeedPairs) {
     //     const pairToken = pair == MARKET_NAME ? await getToken() : await getMockToken(pair);
