@@ -114,16 +114,18 @@ describe('Trade: profit & Loss', () => {
                 ethers.utils.parseUnits(btcPrice, 30),
             );
             const pnl = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'pnl');
+            const tradingFee = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'tradingFee');
+            const fundingFee = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'fundingFee');
 
             const userPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
-            console.log('collateral:' + userPositionAfter.collateral);
-            console.log('userPositionBefore.collateral:' + userPositionBefore.collateral);
-            console.log('pnl:' + pnl);
-            console.log('decreasingCollateral:' + decreasingCollateral);
             expect(userPositionAfter.positionAmount).to.be.eq(userPositionBefore.positionAmount.sub(decreasingSize));
             expect(userPositionAfter.collateral).to.be.eq(
-                userPositionBefore.collateral.add(pnl).sub(decreasingCollateral.abs()),
+                userPositionBefore.collateral
+                    .add(pnl)
+                    .sub(BigNumber.from(tradingFee).abs())
+                    .add(BigNumber.from(fundingFee))
+                    .sub(decreasingCollateral.abs()),
             );
         });
     });
@@ -175,7 +177,7 @@ describe('Trade: profit & Loss', () => {
                     true,
                     ethers.utils.parseUnits(btcPrice, 30),
                 ),
-            ).to.be.revertedWith('collateral not enough for pnl');
+            ).to.be.revertedWith('collateral not enough');
 
             decreasingSize = userPositionBefore.positionAmount.mul(99).div(100);
             const availableCollateral = userPositionBefore.collateral
@@ -193,12 +195,14 @@ describe('Trade: profit & Loss', () => {
                 ethers.utils.parseUnits(btcPrice, 30),
             );
             const pnl = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'pnl');
+            const tradingFee = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'tradingFee');
+            const fundingFee = await extraHash(executeReceipt?.transactionHash, 'ExecuteDecreaseOrder', 'fundingFee');
 
             const userPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(userPositionAfter.positionAmount).to.be.eq(userPositionBefore.positionAmount.sub(decreasingSize));
             expect(userPositionAfter.collateral).to.be.eq(
-                userPositionBefore.collateral.add(pnl).sub(decreasingCollateral.abs()),
+                userPositionBefore.collateral.add(pnl).sub(tradingFee).add(fundingFee).sub(decreasingCollateral.abs()),
             );
 
             const sizeAfter = new Decimal(userPositionAfter.positionAmount.toString()).div(1e18);

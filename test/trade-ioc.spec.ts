@@ -431,7 +431,7 @@ describe('Trade: ioc', () => {
             let limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
             expect(limitOrder.executedSize).to.be.eq('10000000000000000000000');
 
-            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.LIMIT, 0, 0);
+            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.LIMIT, 0, 0, false);
             limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
 
             expect(limitOrder.sizeAmount).to.be.eq('0');

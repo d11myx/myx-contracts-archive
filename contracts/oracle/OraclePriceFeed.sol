@@ -15,7 +15,7 @@ contract OraclePriceFeed is IOraclePriceFeed {
         _setAssetPriceIds(assets, priceIds);
     }
 
-    function decimals() external view override returns (uint256) {
+    function decimals() external pure override returns (uint256) {
         return 8;
     }
 
