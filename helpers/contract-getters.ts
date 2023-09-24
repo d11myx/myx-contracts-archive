@@ -54,6 +54,7 @@ import {
     EXECUTION_LOGIC_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
+import { SymbolMap } from './types';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -194,3 +195,21 @@ export const getConvertor = async (address?: string): Promise<Convertor> => {
 export const getTestCallBack = async (address?: string): Promise<TestCallBack> => {
     return getContract<TestCallBack>('TestCallBack', address || (await hre.deployments.get(TEST_CALLBACK_ID)).address);
 };
+
+export async function getTokens() {
+    const allDeployments = await hre.deployments.all();
+    const mockTokenKeys = Object.keys(allDeployments).filter((key) => key.includes(MOCK_TOKEN_PREFIX));
+
+    let pairTokens: SymbolMap<Token> = {};
+    for (let [key, deployment] of Object.entries(allDeployments)) {
+        if (mockTokenKeys.includes(key)) {
+            pairTokens[key.replace(MOCK_TOKEN_PREFIX, '')] = await getToken(deployment.address);
+        }
+    }
+    // tokens
+    const usdt = await getToken();
+    const btc = pairTokens['BTC'];
+    const eth = pairTokens['ETH'];
+
+    return { usdt, btc, eth };
+}
