@@ -28,50 +28,71 @@ library TradingHelper {
 
     function exposureAmountChecker(
         IPool.Vault memory lpVault,
-        int256 exposureAmount,
+        int256 exposedPositions,
         bool isLong,
         uint256 orderSize,
         uint256 executionPrice
     ) internal pure returns (uint256 executionSize) {
         executionSize = orderSize;
 
-        if (exposureAmount >= 0) {
+        if (exposedPositions >= 0) {
             if (isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                //                require(executionSize <= availableIndex, 'iit');
                 if (executionSize > availableIndex) {
                     executionSize = availableIndex;
                 }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                //                require(
-                //                    executionSize <= uint256(exposureAmount) + availableStable.divPrice(executionPrice),
-                //                    'ist'
-                //                );
                 if (
                     executionSize >
-                    uint256(exposureAmount) + availableStable.divPrice(executionPrice)
+                    uint256(exposedPositions) + availableStable.divPrice(executionPrice)
                 ) {
                     executionSize =
-                        uint256(exposureAmount) +
+                        uint256(exposedPositions) +
                         availableStable.divPrice(executionPrice);
                 }
             }
         } else {
             if (isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                //                require(executionSize <= uint256(- exposureAmount) + availableIndex, 'iit');
-                if (executionSize > uint256(-exposureAmount) + availableIndex) {
-                    executionSize = uint256(-exposureAmount) + availableIndex;
+                if (executionSize > uint256(- exposedPositions) + availableIndex) {
+                    executionSize = uint256(- exposedPositions) + availableIndex;
                 }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                //                require(executionSize <= availableStable.divPrice(executionPrice), 'ist');
                 if (executionSize > availableStable.divPrice(executionPrice)) {
                     executionSize = availableStable.divPrice(executionPrice);
                 }
             }
         }
         return executionSize;
+    }
+
+    function needADL(
+        IPool.Vault memory lpVault,
+        int256 exposedPositions,
+        bool isLong,
+        uint256 executionSize,
+        uint256 executionPrice
+    ) internal pure returns (bool) {
+        bool needADL;
+        if (exposedPositions >= 0) {
+            if (!isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                needADL = executionSize > availableIndex;
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                needADL = executionSize > uint256(exposedPositions) + availableStable.divPrice(executionPrice);
+            }
+        } else {
+            if (!isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                needADL = executionSize > uint256(- exposedPositions) + availableIndex;
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                needADL = executionSize > availableStable.divPrice(executionPrice);
+            }
+        }
+        return needADL;
     }
 }

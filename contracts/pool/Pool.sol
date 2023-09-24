@@ -480,7 +480,7 @@ contract Pool is IPool, Roleable {
                 ) - int256(PrecisionUtils.percentage());
                 if (indexUnbalanced < 0 && indexUnbalanced.abs() > pair.maxUnbalancedP) {
                     availableDiscountRate = pair.unbalancedDiscountRate;
-                    availableDiscountAmount = expectIndexDelta.mul(indexTotalDelta);
+                    availableDiscountAmount = expectIndexDelta.sub(indexTotalDelta);
                 }
             }
 
@@ -493,7 +493,7 @@ contract Pool is IPool, Roleable {
                 ) - int256(PrecisionUtils.percentage());
                 if (stableUnbalanced < 0 && stableUnbalanced.abs() > pair.maxUnbalancedP) {
                     availableDiscountRate = pair.unbalancedDiscountRate;
-                    availableDiscountAmount = expectStableDelta.mul(stableTotalDelta);
+                    availableDiscountAmount = expectStableDelta.sub(stableTotalDelta);
                 }
             }
 
@@ -545,13 +545,13 @@ contract Pool is IPool, Roleable {
             if (mintDelta > availableDiscountAmount) {
                 mintAmount += AmountMath.getIndexAmount(
                     availableDiscountAmount,
-                    lpFairPrice(_pairIndex).mul(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
                 );
                 mintDelta -= availableDiscountAmount;
             } else {
                 mintAmount += AmountMath.getIndexAmount(
                     mintDelta,
-                    lpFairPrice(_pairIndex).mul(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
                 );
                 mintDelta -= mintDelta;
             }
@@ -850,6 +850,9 @@ contract Pool is IPool, Roleable {
         address to,
         uint256 amount
     ) external onlyPositionManagerOrOrderManager {
+        if (amount == 0) {
+            return;
+        }
         uint256 bal = IERC20(token).balanceOf(address(this));
         if (bal < amount) {
             swapInUni(pairIndex, token, amount);
