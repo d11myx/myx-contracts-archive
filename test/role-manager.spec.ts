@@ -13,7 +13,7 @@ describe('Access Control List Manager', () => {
 
     beforeEach(async () => {
         const { deployer, keeper } = testEnv;
-        const timelock = (await deployContract('Timelock', [ '43200'])) as Timelock;
+        const timelock = (await deployContract('Timelock', ['43200'])) as Timelock;
         const addressesProvider = (await deployContract('AddressesProvider', [timelock.address])) as AddressesProvider;
         roleManager = (await deployContract('RoleManager', [])) as RoleManager;
         await addressesProvider.setRolManager(roleManager.address);
@@ -48,7 +48,7 @@ describe('Access Control List Manager', () => {
         } = testEnv;
         let KEEPER_ROLE = await roleManager.KEEPER_ROLE();
 
-        console.log('KEEPER_ROLE:' + KEEPER_ROLE);
+        // console.log('KEEPER_ROLE:' + KEEPER_ROLE);
         let keeperRole = await roleManager.KEEPER_ROLE();
         await roleManager.addKeeper(keeper1.address);
         expect(await roleManager.isKeeper(keeper2.address)).to.be.eq(false);

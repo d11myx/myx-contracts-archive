@@ -40,14 +40,14 @@ describe('Router: Edge cases', () => {
             .addLiquidity(pool.address, pair.indexToken, pair.stableToken, btcAmount, usdtAmount);
 
         const pairVaultInfo = await pool.getVault(pairIndex);
-        console.log(
-            `indexTotalAmount:`,
-            ethers.utils.formatUnits(pairVaultInfo.indexTotalAmount, await btc.decimals()),
-        );
-        console.log(
-            `stableTotalAmount:`,
-            ethers.utils.formatUnits(pairVaultInfo.stableTotalAmount, await usdt.decimals()),
-        );
+        // console.log(
+        //     `indexTotalAmount:`,
+        //     ethers.utils.formatUnits(pairVaultInfo.indexTotalAmount, await btc.decimals()),
+        // );
+        // console.log(
+        //     `stableTotalAmount:`,
+        //     ethers.utils.formatUnits(pairVaultInfo.stableTotalAmount, await usdt.decimals()),
+        // );
     });
 
     it('open position with adding collateral', async () => {
@@ -84,12 +84,12 @@ describe('Router: Edge cases', () => {
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
         const orderId = 0;
-        console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
+        // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
-        console.log(`position:`, position);
+        // console.log(`position:`, position);
         expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('10', 18));
     });
 
@@ -157,6 +157,7 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            router,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -186,6 +187,7 @@ describe('Router: Edge cases', () => {
         expect(userBalance).to.be.eq(withdrawCollateral.abs());
         expect(positionBefore.collateral.sub(withdrawCollateral.abs())).to.be.eq(positionAfter.collateral);
 
+        await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
         await positionManager
             .connect(trader.signer)
             .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
@@ -196,6 +198,7 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            router,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -225,6 +228,7 @@ describe('Router: Edge cases', () => {
         expect(userBalanceAfter).to.be.eq(userBalanceBefore.add(withdrawCollateral.abs()));
         expect(positionAfter.collateral).to.be.eq(positionBefore.collateral.sub(withdrawCollateral.abs()));
 
+        await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
         await positionManager
             .connect(trader.signer)
             .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
@@ -235,6 +239,7 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            router,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -264,6 +269,7 @@ describe('Router: Edge cases', () => {
         expect(positionAfter.collateral).to.be.eq(0);
         expect(userBalanceAfter).to.be.eq(userBalanceBefore.add(withdrawCollateral.abs()));
 
+        await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
         await positionManager
             .connect(trader.signer)
             .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
@@ -274,6 +280,7 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            router,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -302,6 +309,7 @@ describe('Router: Edge cases', () => {
         expect(positionAfter.collateral).to.be.eq(0);
         expect(userBalanceAfter).to.be.eq(userBalanceBefore.add(withdrawCollateral.abs()));
 
+        await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
         await positionManager
             .connect(trader.signer)
             .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
@@ -318,6 +326,8 @@ describe('Router: Edge cases', () => {
         expect(exposePosition).to.be.gt(0);
 
         const collateral = ethers.utils.parseUnits('200000', 18);
+
+        await mintAndApprove(testEnv, usdt, collateral.abs(), trader, positionManager.address);
         await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
@@ -334,7 +344,7 @@ describe('Router: Edge cases', () => {
             positionManager
                 .connect(trader.signer)
                 .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral),
-        ).to.be.revertedWith('collateral not enough for pnl');
+        ).to.be.revertedWith('collateral not enough');
     });
 
     it('userLoss < collateral, withdraw of partial collateral', async () => {
@@ -348,6 +358,7 @@ describe('Router: Edge cases', () => {
         expect(exposePosition).to.be.gt(0);
 
         const collateral = ethers.utils.parseUnits('200000', 18);
+        await mintAndApprove(testEnv, usdt, collateral.abs(), trader, positionManager.address);
         await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
@@ -382,12 +393,13 @@ describe('Router: Edge cases', () => {
         expect(exposePosition).to.be.gt(0);
 
         const collateral = ethers.utils.parseUnits('200000', 18);
+        await mintAndApprove(testEnv, usdt, collateral.abs(), trader, positionManager.address);
         await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        console.log(`---userBalanceBefore: `, userBalanceBefore);
-        console.log(`---positionBefore: `, positionBefore);
+        // console.log(`---userBalanceBefore: `, userBalanceBefore);
+        // console.log(`---positionBefore: `, positionBefore);
 
         const withdrawCollateral = ethers.utils.parseUnits('0', 18).sub(positionBefore.collateral);
 
@@ -400,7 +412,7 @@ describe('Router: Edge cases', () => {
             positionManager
                 .connect(trader.signer)
                 .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral),
-        ).to.be.revertedWith('collateral not enough for pnl');
+        ).to.be.revertedWith('collateral not enough');
 
         await updateBTCPrice(testEnv, '30000');
     });
@@ -500,12 +512,12 @@ describe('Router: Edge cases', () => {
             );
 
             const pairVaultInfo = await pool.getVault(pairIndex);
-            console.log(
-                'indexTotalAmount',
-                pairVaultInfo.indexTotalAmount,
-                'indexReservedAmount',
-                pairVaultInfo.indexReservedAmount,
-            );
+            // console.log(
+            //     'indexTotalAmount',
+            //     pairVaultInfo.indexTotalAmount,
+            //     'indexReservedAmount',
+            //     pairVaultInfo.indexReservedAmount,
+            // );
             // expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(
             //     '306000000000000000',
             // );
@@ -524,7 +536,9 @@ describe('Router: Edge cases', () => {
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(shorter.signer).createDecreaseOrder(decreasePositionRequest);
 
-            await executionLogic.connect(keeper.signer).executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0);
+            await executionLogic
+                .connect(keeper.signer)
+                .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false);
 
             const decreaseOrderInfo = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
             expect(decreaseOrderInfo.needADL).to.be.eq(true);
@@ -532,7 +546,7 @@ describe('Router: Edge cases', () => {
             // execute ADL
             let traderPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
             let traderCurPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(traderCurPosition);
+            // console.log(traderCurPosition);
             await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
                 [
                     {

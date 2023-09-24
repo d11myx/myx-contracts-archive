@@ -46,7 +46,7 @@ library Position {
     }
 
     function getUnrealizedPnl(Info memory self, uint256 _sizeAmount, uint256 price) internal pure returns (int256 pnl) {
-        if (price == self.averagePrice || self.averagePrice == 0) {
+        if (price == self.averagePrice || self.averagePrice == 0 || _sizeAmount == 0) {
             return 0;
         }
 
@@ -76,6 +76,11 @@ library Position {
         uint256 maxLeverage,
         uint256 maxPositionAmount
     ) internal pure returns (uint256, uint256) {
+        // only increase collateral
+        if (_sizeAmount == 0 && _collateral >= 0) {
+            return (self.positionAmount, self.collateral);
+        }
+
         uint256 afterPosition;
         if (_increase) {
             afterPosition = self.positionAmount + _sizeAmount;
@@ -87,21 +92,29 @@ library Position {
         if (afterPosition == 0) {
             return (0, 0);
         }
+        require(afterPosition <= maxPositionAmount, 'exceeds max position');
 
-        // check collateral
-        int256 totalCollateral = int256(self.collateral) + _collateral;
-        require(totalCollateral >= 0, 'collateral not enough for decrease');
+        int256 availableCollateral = int256(self.collateral);
 
         // pnl
-        if (self.positionAmount > 0) {
-            totalCollateral += getUnrealizedPnl(self, self.positionAmount, price);
+//        if (self.positionAmount > 0) {
+//            availableCollateral += getUnrealizedPnl(self, self.positionAmount, price);
+//        }
+        int256 pnl = getUnrealizedPnl(self, self.positionAmount, price);
+        if (!_increase && _sizeAmount > 0 && pnl < 0) {
+            availableCollateral += getUnrealizedPnl(self, _sizeAmount, price);
+        } else {
+            availableCollateral += pnl;
         }
 
-        require(totalCollateral >= 0, 'collateral not enough for pnl');
-        require(afterPosition <= (totalCollateral.abs() * maxLeverage).divPrice(price), 'exceed max leverage');
-        // require(afterPosition > totalCollateral.abs().divPrice(price) * minLeverage, 'exceed min leverage');
-        require(afterPosition <= maxPositionAmount, 'exceed max position');
+        // adjust collateral
+        if (_collateral != 0) {
+            availableCollateral += _collateral;
+        }
+        require(availableCollateral >= 0, 'collateral not enough');
 
-        return (afterPosition, totalCollateral.abs());
+        require(afterPosition <= (availableCollateral.abs() * maxLeverage).divPrice(price), 'exceeds max leverage');
+
+        return (afterPosition, availableCollateral.abs());
     }
 }

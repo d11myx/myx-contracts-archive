@@ -14,7 +14,6 @@ import "../libraries/PositionKey.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/Roleable.sol";
-
 import "../interfaces/IFundingRate.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IPriceOracle.sol";
@@ -75,12 +74,6 @@ contract PositionManager is FeeManager, Pausable {
     function setOrderManager(address _addressOrderManager) external onlyPoolAdmin {
         addressOrderManager = _addressOrderManager;
     }
-
-    // function updateFundingInterval(uint256 newInterval) external onlyPoolAdmin {
-    //     uint256 oldInterval = fundingInterval;
-    //     fundingInterval = newInterval;
-    //     emit UpdateFundingInterval(oldInterval, newInterval);
-    // }
 
     function _takeFundingFeeAddTraderFee(
         uint256 _pairIndex,
@@ -350,9 +343,25 @@ contract PositionManager is FeeManager, Pausable {
             oraclePrice
         );
 
-        charge < 0
-            ? position.collateral = position.collateral.sub(charge.abs())
-            : position.collateral = position.collateral.add(charge.abs());
+        if (charge >= 0) {
+            position.collateral = position.collateral.add(charge.abs());
+        } else {
+            // If the margin is sufficient, it will be deducted directly from the position.
+            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
+            if (position.collateral >= charge.abs()) {
+                position.collateral = position.collateral.sub(charge.abs());
+            } else {
+                // adjust position averagePrice
+                uint256 lossPer = charge.abs().divPrice(position.positionAmount);
+                position.isLong
+                    ? position.averagePrice = position.averagePrice + lossPer
+                    : position.averagePrice = position.averagePrice - lossPer;
+            }
+        }
+//        charge < 0
+//            ? position.collateral = position.collateral.sub(charge.abs())
+//            : position.collateral = position.collateral.add(charge.abs());
+
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount += sizeAmount;
 
@@ -423,10 +432,26 @@ contract PositionManager is FeeManager, Pausable {
         _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
-        pnl += charge;
-        pnl < 0
-            ? position.collateral = position.collateral.sub(pnl.abs())
-            : position.collateral = position.collateral.add(pnl.abs());
+
+        int256 totalSettlementAmount = pnl + charge;
+        if (totalSettlementAmount >= 0) {
+            position.collateral = position.collateral.add(totalSettlementAmount.abs());
+        } else {
+            // If the margin is sufficient, it will be deducted directly from the position.
+            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
+            if (position.collateral >= totalSettlementAmount.abs()) {
+                position.collateral = position.collateral.sub(totalSettlementAmount.abs());
+            } else {
+                // adjust position averagePrice
+                uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
+                position.isLong
+                    ? position.averagePrice = position.averagePrice + lossPer
+                    : position.averagePrice = position.averagePrice - lossPer;
+            }
+        }
+//        totalSettlementAmount < 0
+//            ? position.collateral = position.collateral.sub(totalSettlementAmount.abs())
+//            : position.collateral = position.collateral.add(totalSettlementAmount.abs());
 
         _handleCollateral(pairIndex, position, collateral);
 
@@ -463,26 +488,28 @@ contract PositionManager is FeeManager, Pausable {
         bool isLong,
         int256 collateral
     ) external override {
-        require(account == msg.sender || addressExecutionLogic == msg.sender, "forbidden");
+        require(account == msg.sender || addressOrderManager == msg.sender, "forbidden");
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[
             PositionKey.getPositionKey(account, pairIndex, isLong)
         ];
+        if (collateral > 0) {
+            IERC20(pair.stableToken).transferFrom(account, address(pool), uint256(collateral));
+        }
         uint256 collateralBefore = position.collateral;
         _handleCollateral(pairIndex, position, collateral);
         uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
             pair.indexToken
         );
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
-        (uint256 afterPosition, ) = position.validLeverage(
+        position.validLeverage(
             price,
+            collateral,
             0,
-            0,
-            false,
+            true,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
-        require(afterPosition > 0, "zero position amount");
 
         emit AdjustCollateral(
             position.account,
