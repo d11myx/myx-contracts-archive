@@ -156,53 +156,58 @@ export const Duration = {
 /**
  * calculation epoch funding rate
  *
- * @description (Clamp([w * (U - V) / K * Q + (1 - w) * (U - V) / K * L ] - Interest, min, max)/) / 365 / (24/4)
  * @param testEnv {TestEnv} current test env
  * @param pairIndex {Number} currency pair index
  * @returns funding rate
  */
 export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
     const { positionManager, pool, fundingRate, priceOracle } = testEnv;
-    const { indexTotalAmount, indexReservedAmount, stableTotalAmount, stableReservedAmount } =
-        await pool.getVault(pairIndex);
+    const { indexTotalAmount, stableTotalAmount } = await pool.getVault(pairIndex);
 
-    const fundingInterval = 28800;
-    const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
     const pair = await pool.getPair(pairIndex);
     const price = await priceOracle.getOraclePrice(pair.indexToken);
-    const exposedPosition = await positionManager.getExposedPositions(pairIndex);
+    const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
     const longTracker = await positionManager.longTracker(pairIndex);
     const shortTracker = await positionManager.shortTracker(pairIndex);
 
-    const uv = exposedPosition.abs().mul(price);
-    const q = longTracker.add(shortTracker);
-    const w = fundingFeeConfig.fundingWeightFactor;
-    const k = fundingFeeConfig.liquidityPremiumFactor;
-    const r = fundingFeeConfig.r;
-    const diffBTCAmount = BigNumber.from(indexTotalAmount).sub(BigNumber.from(indexReservedAmount));
-    const diffUSDTAmount = BigNumber.from(stableTotalAmount).sub(BigNumber.from(stableReservedAmount));
-    const l = diffBTCAmount.mul(price).div(PRICE_PRECISION).add(diffUSDTAmount);
+    const u = longTracker;
+    const v = shortTracker;
+    const l = indexTotalAmount.add(stableTotalAmount.mul(PRICE_PRECISION).div(price));
+    const k = fundingFeeConfig.growthRate;
+    const r = fundingFeeConfig.baseRate;
+    const maxRate = fundingFeeConfig.maxRate;
+    const fundingInterval = fundingFeeConfig.fundingInterval;
 
-    let fundingRateRatio;
-    if (q.eq(0)) {
-        fundingRateRatio = 0;
-    } else {
-        fundingRateRatio = BigNumber.from(w).mul(uv).mul(PERCENTAGE).div(k.mul(q));
-        if (!l.eq(0)) {
-            fundingRateRatio = fundingRateRatio.add(BigNumber.from(PERCENTAGE).sub(w).mul(uv).div(k.mul(l)));
-        }
+    // A = (U/U+V - 0.5) * MAX(U,V)/L * 100
+    const max = u.gt(v) ? u : v;
+    let a = u.eq(v)
+        ? 0
+        : u
+              .mul(PERCENTAGE)
+              .div(u.add(v))
+              .sub(BigNumber.from(PERCENTAGE).div(2))
+              .mul(max.mul(PERCENTAGE).div(l))
+              .mul(100)
+              .div(PERCENTAGE);
+    a = BigNumber.from(a);
+
+    // S = ABS(2*R-1)=ABS(U-V)/(U+V)
+    let s = u.eq(v) ? 0 : u.sub(v).abs().mul(PERCENTAGE).div(u.add(v));
+    s = BigNumber.from(s);
+
+    // G1 = MIN((S+S*S/2) * k + r, r(max))
+    const min = s.mul(s).div(2).div(PERCENTAGE).add(s).mul(k).div(PERCENTAGE).add(r);
+    const g1 = min.lt(maxRate) ? min : maxRate;
+    if (u.eq(v)) {
+        return g1;
     }
 
-    fundingRateRatio = BigNumber.from(fundingRateRatio).sub(r);
-    fundingRateRatio = fundingRateRatio.lt(fundingFeeConfig.minFundingRate)
-        ? fundingFeeConfig.minFundingRate
-        : fundingRateRatio.gt(fundingFeeConfig.maxFundingRate)
-        ? fundingFeeConfig.maxFundingRate
-        : fundingRateRatio;
-
-    fundingRateRatio = fundingRateRatio.div(365).div(86400 / fundingInterval);
-    fundingRateRatio = exposedPosition.gte(0) ? fundingRateRatio : -fundingRateRatio;
-    return fundingRateRatio;
+    // G1+ABS(G1*A/10) * (u-v)/abs(u-v)
+    let currentFundingFee = g1.add(g1.mul(a.abs()).div(10).div(PERCENTAGE));
+    if (u.lt(v)) {
+        currentFundingFee = currentFundingFee.mul(-1);
+    }
+    return currentFundingFee.div(86400 / fundingInterval.toNumber());
 }
 
 /**
@@ -371,4 +376,119 @@ export async function getDistributeTradingFee(
     const treasuryFee = distributorAmount.add(referralsAmount);
 
     return { userTradingFee, treasuryFee, stakingAmount, keeperAmount };
+}
+
+/**
+ * calculation mint lp amount
+ *
+ * @description ((totalDelta - slipDelta) * pricePrecision) / pairPrice
+ * @param testEnv {TestEnv} current test env
+ * @param pairIndex {Number} currency pair index
+ * @param indexAmount {BigNumber} btc amount
+ * @param stableAmount {BigNumber} usdt amount
+ * @param slipDelta {BigNumber} slipDate
+ * @returns lp amount
+ */
+export async function getMintLpAmount(
+    testEnv: TestEnv,
+    pairIndex: number,
+    indexAmount: BigNumber,
+    stableAmount: BigNumber,
+    slipDelta?: BigNumber,
+) {
+    const { pool, priceOracle, btc } = testEnv;
+
+    const pair = await pool.getPair(pairIndex);
+    const pairPrice = BigNumber.from(
+        ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+    );
+    const lpFairPrice = await pool.lpFairPrice(pairIndex);
+    const indexFeeAmount = indexAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
+    const stableFeeAmount = stableAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
+    const indexDepositDelta = indexAmount.sub(indexFeeAmount).mul(pairPrice);
+    const usdtDepositDelta = stableAmount.sub(stableFeeAmount);
+    const totalDelta = indexDepositDelta.add(usdtDepositDelta);
+    const mintDelta = totalDelta.sub(slipDelta ? slipDelta : '0');
+
+    return mintDelta.mul(PRICE_PRECISION).div(lpFairPrice);
+}
+
+export async function getLpSlippageDelta(
+    testEnv: TestEnv,
+    pairIndex: number,
+    indexAmount: BigNumber,
+    stableAmount: BigNumber,
+) {
+    const { pool } = testEnv;
+
+    let slipDelta;
+    const pair = await pool.getPair(pairIndex);
+    const profit = await pool.getProfit(pair.pairIndex, pair.indexToken);
+    const vault = await pool.getVault(pairIndex);
+    const price = await pool.getPrice(pair.indexToken);
+
+    // index
+    const indexTotalAmount = getTotalAmount(vault.indexTotalAmount, profit);
+
+    const indexReserveDelta = getStableDelta(indexTotalAmount, price);
+    const indexFeeAmount = getLpFee(indexAmount, pair.addLpFeeP);
+    const afterFeeIndexAmount = indexAmount.sub(indexFeeAmount);
+    const indexDepositDelta = getStableDelta(afterFeeIndexAmount, price);
+    const indexTotalDelta = indexReserveDelta.add(indexDepositDelta);
+
+    // stable
+    const stableTotalAmount = getTotalAmount(vault.stableTotalAmount, profit);
+    const stableFeeAmount = getLpFee(stableAmount, pair.addLpFeeP);
+    const afterFeeStableAmount = stableAmount.sub(stableFeeAmount);
+    const stableTotalDelta = stableTotalAmount.add(afterFeeStableAmount);
+
+    // expect
+    const totalDelta = indexTotalDelta.add(stableTotalDelta);
+    const expectIndexDelta = totalDelta.mul(pair.expectIndexTokenP).div(PERCENTAGE);
+    const expectStableDelta = totalDelta.sub(expectIndexDelta);
+
+    // btc > usdt
+    if (indexTotalDelta > expectIndexDelta) {
+        const needSwapIndexDelta = indexTotalDelta.sub(expectIndexDelta);
+        const swapIndexDelta =
+            indexDepositDelta > needSwapIndexDelta ? indexDepositDelta.sub(needSwapIndexDelta) : indexDepositDelta;
+
+        slipDelta = swapIndexDelta.sub(getAmountOut(swapIndexDelta, price, pair.kOfSwap));
+    }
+
+    // udst > btc
+    if (stableTotalDelta > expectStableDelta) {
+        const needSwapStableDelta = stableTotalDelta.sub(expectStableDelta);
+        const swapStableDelta =
+            afterFeeStableAmount > needSwapStableDelta
+                ? afterFeeStableAmount.sub(needSwapStableDelta)
+                : afterFeeStableAmount;
+
+        slipDelta = swapStableDelta.sub(getAmountOut(swapStableDelta, price, pair.kOfSwap));
+    }
+
+    return slipDelta;
+}
+
+function getTotalAmount(totalAmount: BigNumber, profit: BigNumber) {
+    if (profit.lt(0)) {
+        return totalAmount.sub(profit.abs());
+    } else {
+        return totalAmount.add(profit.abs());
+    }
+}
+
+function getStableDelta(amount: BigNumber, price: BigNumber) {
+    return amount.mul(price).div(PRICE_PRECISION);
+}
+
+function getLpFee(amount: BigNumber, lpFeeRate: BigNumber) {
+    return amount.mul(lpFeeRate).div(PERCENTAGE);
+}
+
+function getAmountOut(swapDelta: BigNumber, price: BigNumber, k: BigNumber) {
+    const swapIndexAmount = swapDelta.mul(PRICE_PRECISION).div(price);
+    const reserveB = Math.sqrt(Number(k.mul(price).div(PRICE_PRECISION)));
+    const reserveA = k.div(reserveB);
+    return swapIndexAmount.mul(reserveB).div(swapIndexAmount.add(reserveA));
 }

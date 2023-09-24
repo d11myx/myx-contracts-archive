@@ -221,7 +221,7 @@ describe('Trade: slippage', () => {
         });
     });
 
-    describe('slippage fee', () => {
+    describe('slippage handling fee', () => {
         let testEnv: TestEnv;
 
         before('add liquidity', async () => {
