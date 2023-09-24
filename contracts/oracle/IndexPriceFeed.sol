@@ -27,6 +27,8 @@ contract IndexPriceFeed is IIndexPriceFeed {
         require(assets.length == prices.length, "inconsistent params length");
         for (uint256 i = 0; i < assets.length; i++) {
             assetPrices[assets[i]] = prices[i];
+
+            emit PriceUpdate(assets[i], prices[i], msg.sender);
         }
     }
 }

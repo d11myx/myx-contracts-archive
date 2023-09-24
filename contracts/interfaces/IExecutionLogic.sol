@@ -98,7 +98,8 @@ interface IExecutionLogic {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
-        uint256 commissionRatio
+        uint256 commissionRatio,
+        bool isSystem
     ) external;
 
     function executeADLAndDecreaseOrder(
