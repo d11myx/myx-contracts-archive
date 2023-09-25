@@ -23,6 +23,7 @@
         "test:trading:fee": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-trading-fee.spec.ts",
         "test:pnl:settlement": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-pnl-settlement.spec.ts",
         "test:trade:ioc": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-ioc.spec.ts",
+        "test:trade:slippage": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-slippage.spec.ts",
         "deploy": "npx hardhat deploy",
         "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'",
         "sizer": "hardhat size-contracts",
