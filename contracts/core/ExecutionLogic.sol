@@ -367,11 +367,10 @@ contract ExecutionLogic is IExecutionLogic {
             tradingConfig.maxPositionAmount
         );
 
-        IPool.Vault memory lpVault = pool.getVault(pairIndex);
+//        IPool.Vault memory lpVault = pool.getVault(pairIndex);
 
-        int256 exposedPositions = positionManager.getExposedPositions(order.pairIndex);
-        bool needADL = TradingHelper.needADL(lpVault, exposedPositions, order.isLong, executionSize, executionPrice);
-
+//        int256 exposedPositions = positionManager.getExposedPositions(order.pairIndex);
+        bool needADL = positionManager.needADL(order.pairIndex, order.isLong, executionSize, executionPrice);
         if (needADL) {
             orderManager.setOrderNeedADL(_orderId, order.tradeType, needADL);
 
@@ -516,6 +515,15 @@ contract ExecutionLogic is IExecutionLogic {
         orderManager.removeOrderTpSl(order.orderId);
     }
 
+    function needADL(
+        uint256 pairIndex,
+        bool isLong,
+        uint256 executionSize,
+        uint256 executionPrice
+    ) public view returns (bool) {
+        return positionManager.needADL(pairIndex, isLong, executionSize, executionPrice);
+    }
+
     function executeADLAndDecreaseOrder(
         ExecutePosition[] memory executePositions,
         uint256 _orderId,
@@ -526,8 +534,8 @@ contract ExecutionLogic is IExecutionLogic {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
 //        require(order.needADL, 'noADL');
 
-        IPool.Vault memory lpVault = pool.getVault(order.pairIndex);
-        int256 exposedPositions = positionManager.getExposedPositions(order.pairIndex);
+//        IPool.Vault memory lpVault = pool.getVault(order.pairIndex);
+//        int256 exposedPositions = positionManager.getExposedPositions(order.pairIndex);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(order.pairIndex);
         IPool.Pair memory pair = pool.getPair(order.pairIndex);
 
@@ -543,7 +551,8 @@ contract ExecutionLogic is IExecutionLogic {
                 executionPrice = Math.max(order.triggerPrice, executionPrice);
             }
         }
-        bool needADL = TradingHelper.needADL(lpVault, exposedPositions, order.isLong, executionSize, executionPrice);
+
+        bool needADL = positionManager.needADL(order.pairIndex, order.isLong, executionSize, executionPrice);
         if (!needADL) {
             this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio, false);
             return;
@@ -564,7 +573,7 @@ contract ExecutionLogic is IExecutionLogic {
             adlPosition.level = executePosition.level;
             adlPosition.commissionRatio = executePosition.commissionRatio;
         }
-        require(executeTotalAmount == order.sizeAmount, 'ADL pa');
+        require(executeTotalAmount == order.sizeAmount - order.executedSize, 'ADL pa');
 
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
 
