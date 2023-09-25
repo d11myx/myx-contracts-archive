@@ -71,6 +71,13 @@ interface IPositionManager {
 
     function getNextFundingRateUpdateTime(uint256 _pairIndex) external view returns (uint256);
 
+    function needADL(
+        uint256 pairIndex,
+        bool isLong,
+        uint256 executionSize,
+        uint256 executionPrice
+    ) external view returns (bool);
+
     function getPosition(
         address _account,
         uint256 _pairIndex,

@@ -68,31 +68,31 @@ library TradingHelper {
         return executionSize;
     }
 
-    function needADL(
-        IPool.Vault memory lpVault,
-        int256 exposedPositions,
-        bool isLong,
-        uint256 executionSize,
-        uint256 executionPrice
-    ) internal pure returns (bool) {
-        bool needADL;
-        if (exposedPositions >= 0) {
-            if (!isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                needADL = executionSize > availableIndex;
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                needADL = executionSize > uint256(exposedPositions) + availableStable.divPrice(executionPrice);
-            }
-        } else {
-            if (!isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                needADL = executionSize > uint256(- exposedPositions) + availableIndex;
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                needADL = executionSize > availableStable.divPrice(executionPrice);
-            }
-        }
-        return needADL;
-    }
+//    function needADL(
+//        IPool.Vault memory lpVault,
+//        int256 exposedPositions,
+//        bool isLong,
+//        uint256 executionSize,
+//        uint256 executionPrice
+//    ) internal pure returns (bool) {
+//        bool needADL;
+//        if (exposedPositions >= 0) {
+//            if (!isLong) {
+//                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+//                needADL = executionSize > availableIndex;
+//            } else {
+//                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+//                needADL = executionSize > uint256(exposedPositions) + availableStable.divPrice(executionPrice);
+//            }
+//        } else {
+//            if (!isLong) {
+//                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+//                needADL = executionSize > uint256(- exposedPositions) + availableIndex;
+//            } else {
+//                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+//                needADL = executionSize > availableStable.divPrice(executionPrice);
+//            }
+//        }
+//        return needADL;
+//    }
 }
