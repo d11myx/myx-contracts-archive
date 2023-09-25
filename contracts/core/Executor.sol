@@ -108,6 +108,15 @@ contract Executor is IExecutor {
         executionLogic.liquidatePositions(executePositions);
     }
 
+    function needADL(
+        uint256 pairIndex,
+        bool isLong,
+        uint256 executionSize,
+        uint256 executionPrice
+    ) external view returns (bool) {
+        return executionLogic.needADL(pairIndex, isLong, executionSize, executionPrice);
+    }
+
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) internal {
         IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(_tokens, _prices);
     }

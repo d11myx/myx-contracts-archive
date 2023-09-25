@@ -113,4 +113,11 @@ interface IExecutionLogic {
     function liquidatePositions(
         ExecutePosition[] memory executePositions
     ) external;
+
+    function needADL(
+        uint256 pairIndex,
+        bool isLong,
+        uint256 executionSize,
+        uint256 executionPrice
+    ) external view returns (bool);
 }
