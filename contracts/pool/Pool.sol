@@ -44,7 +44,7 @@ contract Pool is IPool, Roleable {
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
 
     mapping(address => mapping(address => uint256)) public override getPairIndex;
-    mapping(address => mapping(address => bool)) public isPairListed;
+    mapping(address => mapping(address => address)) public getPairToken;
 
     uint256 public pairsCount;
     mapping(uint256 => Pair) public pairs;
@@ -107,11 +107,11 @@ contract Pool is IPool, Roleable {
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != address(0) && _stableToken != address(0), "zero address");
         require(!isStableToken[_indexToken], "!stable token");
-        require(!isPairListed[_indexToken][_stableToken], "pair already listed");
+        require(getPairToken[_indexToken][_stableToken] == address(0), "exists");
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
-        isPairListed[_indexToken][_stableToken] = true;
+        getPairToken[_indexToken][_stableToken] = pairToken;
         getPairIndex[_indexToken][_stableToken] = pairsCount;
 
         Pair storage pair = pairs[pairsCount];
@@ -248,6 +248,8 @@ contract Pool is IPool, Roleable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
+        require(vault.indexTotalAmount >= vault.indexReservedAmount, "insufficient index amount");
+        require(vault.stableTotalAmount >= vault.stableReservedAmount, "insufficient stable amount");
         emit UpdateReserveAmount(
             _pairIndex,
             int256(_indexAmount),
@@ -625,6 +627,9 @@ contract Pool is IPool, Roleable {
             afterFeeStableAmount
         ) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount);
 
+        feeTokenAmounts[pair.indexToken] += indexFeeAmount;
+        feeTokenAmounts[pair.stableToken] += stableFeeAmount;
+
         IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
@@ -662,21 +667,34 @@ contract Pool is IPool, Roleable {
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "invalid pair");
 
-        IPool.Vault memory vault = getVault(_pairIndex);
-
         (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount) = getReceivedAmount(
             _pairIndex,
             _amount
         );
 
-        require(
-            receiveIndexTokenAmount <= vault.indexTotalAmount - vault.indexReservedAmount,
-            "insufficient indexToken amount"
-        );
-        require(
-            receiveStableTokenAmount <= vault.stableTotalAmount - vault.stableReservedAmount,
-            "insufficient stableToken amount"
-        );
+        IPool.Vault memory vault = getVault(_pairIndex);
+        uint256 price = getPrice(pair.indexToken);
+
+        uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
+        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+
+        uint256 totalAvailable = availableIndexToken.mulPrice(price) + availableStableToken;
+        uint256 totalReceive = receiveIndexTokenAmount.mulPrice(price) + receiveStableTokenAmount;
+        require(totalReceive <= totalAvailable, "insufficient available balance");
+
+        uint256 indexTokenAdd;
+        uint256 stableTokenAdd;
+        if (availableIndexToken < receiveIndexTokenAmount) {
+            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
+            receiveIndexTokenAmount = availableIndexToken;
+        }
+
+        if (availableStableToken < receiveStableTokenAmount) {
+            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
+            receiveStableTokenAmount = availableStableToken;
+        }
+        receiveIndexTokenAmount += indexTokenAdd;
+        receiveStableTokenAmount += stableTokenAdd;
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);

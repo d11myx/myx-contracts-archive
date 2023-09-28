@@ -19,6 +19,7 @@ import "../interfaces/IPool.sol";
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
+import "./RiskReserve.sol";
 
 contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
@@ -346,8 +347,6 @@ contract PositionManager is FeeManager, Pausable {
         if (charge >= 0) {
             position.collateral = position.collateral.add(charge.abs());
         } else {
-            // If the margin is sufficient, it will be deducted directly from the position.
-            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
             if (position.collateral >= charge.abs()) {
                 position.collateral = position.collateral.sub(charge.abs());
             } else {
@@ -358,9 +357,6 @@ contract PositionManager is FeeManager, Pausable {
                     : position.averagePrice = position.averagePrice - lossPer;
             }
         }
-//        charge < 0
-//            ? position.collateral = position.collateral.sub(charge.abs())
-//            : position.collateral = position.collateral.add(charge.abs());
 
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount += sizeAmount;
@@ -437,21 +433,23 @@ contract PositionManager is FeeManager, Pausable {
         if (totalSettlementAmount >= 0) {
             position.collateral = position.collateral.add(totalSettlementAmount.abs());
         } else {
-            // If the margin is sufficient, it will be deducted directly from the position.
-            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
             if (position.collateral >= totalSettlementAmount.abs()) {
                 position.collateral = position.collateral.sub(totalSettlementAmount.abs());
             } else {
-                // adjust position averagePrice
-                uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
-                position.isLong
-                    ? position.averagePrice = position.averagePrice + lossPer
-                    : position.averagePrice = position.averagePrice - lossPer;
+                if (position.positionAmount == 0) {
+                    uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
+                    // todo RiskReserve
+                    pool.setLPStableProfit(pairIndex, -int256(subsidy));
+                    position.collateral = position.collateral.sub(int256(totalSettlementAmount + int256(subsidy)).abs());
+                } else {
+                    // adjust position averagePrice
+                    uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
+                    position.isLong
+                        ? position.averagePrice = position.averagePrice + lossPer
+                        : position.averagePrice = position.averagePrice - lossPer;
+                }
             }
         }
-//        totalSettlementAmount < 0
-//            ? position.collateral = position.collateral.sub(totalSettlementAmount.abs())
-//            : position.collateral = position.collateral.add(totalSettlementAmount.abs());
 
         _handleCollateral(pairIndex, position, collateral);
 
