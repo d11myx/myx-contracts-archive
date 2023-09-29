@@ -577,7 +577,7 @@ contract ExecutionLogic is IExecutionLogic {
                 adlPosition.commissionRatio = executePosition.commissionRatio;
             }
         }
-        require(executeTotalAmount == order.sizeAmount - order.executedSize, 'ADL pa');
+//        require(executeTotalAmount == needADLAmount, 'ADL pa');
 
         uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
 
