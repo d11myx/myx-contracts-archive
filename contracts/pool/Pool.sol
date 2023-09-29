@@ -71,7 +71,12 @@ contract Pool is IPool, Roleable {
     }
 
     modifier onlyPositionManager() {
-        require(positionManagers.contains(msg.sender), "forbidden");
+        require(positionManagers.contains(msg.sender), "onlyPositionManager");
+        _;
+    }
+
+    modifier onlyTreasury() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender), "onlyTreasury");
         _;
     }
 
@@ -667,7 +672,9 @@ contract Pool is IPool, Roleable {
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "invalid pair");
 
-        (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount) = getReceivedAmount(
+        uint256 feeIndexTokenAmount;
+        uint256 feeStableTokenAmount;
+        (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount) = getReceivedAmount(
             _pairIndex,
             _amount
         );
@@ -695,12 +702,16 @@ contract Pool is IPool, Roleable {
         }
         receiveIndexTokenAmount += indexTokenAdd;
         receiveStableTokenAmount += stableTokenAdd;
-
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
+
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
+
         IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
         IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
+
+        feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
+        feeTokenAmounts[pair.stableToken] += feeStableTokenAmount;
 
         emit RemoveLiquidity(
             msg.sender,
@@ -713,6 +724,15 @@ contract Pool is IPool, Roleable {
         );
 
         return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount);
+    }
+
+    function claimFee(address token, uint256 amount) external onlyTreasury {
+        require(feeTokenAmounts[token] >= amount, 'exceeded');
+
+        feeTokenAmounts[token] -= amount;
+        IERC20(token).safeTransfer(msg.sender, amount);
+
+        emit ClaimedFee(msg.sender, token, amount);
     }
 
     function lpFairPrice(uint256 _pairIndex) public view returns (uint256) {
@@ -801,10 +821,12 @@ contract Pool is IPool, Roleable {
         returns (
             uint256 receiveIndexTokenAmount,
             uint256 receiveStableTokenAmount,
-            uint256 feeAmount
+            uint256 feeAmount,
+            uint256 feeIndexTokenAmount,
+            uint256 feeStableTokenAmount
         )
     {
-        if (_lpAmount == 0) return (0, 0, 0);
+        if (_lpAmount == 0) return (0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "invalid pair");
@@ -819,8 +841,8 @@ contract Pool is IPool, Roleable {
         uint256 stableReserveDelta = vault.stableTotalAmount;
 
         uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
-        feeAmount = receiveDelta.mulPercentage(pair.removeLpFeeP);
-        receiveDelta = receiveDelta - feeAmount;
+//        feeAmount = receiveDelta.mulPercentage(pair.removeLpFeeP);
+//        receiveDelta = receiveDelta - feeAmount;
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
@@ -850,7 +872,14 @@ contract Pool is IPool, Roleable {
         receiveIndexTokenAmount = AmountMath.getIndexAmount(receiveIndexTokenDelta, price);
         receiveStableTokenAmount = receiveStableTokenDelta;
 
-        return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount);
+        feeIndexTokenAmount = receiveIndexTokenAmount.mulPercentage(pair.removeLpFeeP);
+        feeStableTokenAmount = receiveStableTokenAmount.mulPercentage(pair.removeLpFeeP);
+        feeAmount = feeIndexTokenAmount.mulPrice(price) + feeStableTokenAmount;
+
+        receiveIndexTokenAmount -= feeIndexTokenAmount;
+        receiveStableTokenAmount -= feeStableTokenAmount;
+
+        return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount);
     }
 
     function transferTokenTo(

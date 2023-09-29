@@ -58,6 +58,12 @@ interface IPool {
         uint256 feeAmount
     );
 
+    event ClaimedFee(
+        address sender,
+        address token,
+        uint256 amount
+    );
+
     struct Vault {
         uint256 indexTotalAmount; // total amount of tokens
         uint256 indexReservedAmount; // amount of tokens reserved for open positions
@@ -193,4 +199,8 @@ interface IPool {
             uint256 afterFeeIndexAmount,
             uint256 afterFeeStableAmount
         );
+
+    function claimFee(address token, uint256 amount) external;
+
+    function lpFairPrice(uint256 _pairIndex) external view returns (uint256);
 }
