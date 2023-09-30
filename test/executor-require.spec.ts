@@ -94,11 +94,13 @@ describe('Executor: require check', () => {
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createDecreaseOrder(request);
                 await expect(
-                    executionLogic.connect(user1.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false),
+                    executionLogic
+                        .connect(user1.signer)
+                        .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true),
                 ).to.be.revertedWith('opk');
                 await executionLogic
                     .connect(keeper.signer)
-                    .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false);
+                    .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
             });
         });
     });
