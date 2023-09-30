@@ -160,7 +160,7 @@ describe('Router: increase position ar', () => {
             orderManager,
         } = localTestEnv;
         await snapshotGasCost(
-            executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false),
+            executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true),
         );
 
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);

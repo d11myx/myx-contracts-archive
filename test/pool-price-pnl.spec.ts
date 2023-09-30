@@ -205,7 +205,9 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false);
+            await executionLogic
+                .connect(keeper.signer)
+                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -261,7 +263,9 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false);
+            await executionLogic
+                .connect(keeper.signer)
+                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -437,7 +441,9 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false);
+            await executionLogic
+                .connect(keeper.signer)
+                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 
@@ -488,7 +494,9 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false);
+            await executionLogic
+                .connect(keeper.signer)
+                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 
