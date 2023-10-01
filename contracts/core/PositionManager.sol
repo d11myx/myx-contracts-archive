@@ -673,6 +673,36 @@ contract PositionManager is FeeManager, Pausable {
             _pairIndex,longTracker[_pairIndex], shortTracker[_pairIndex], vault, _price);
     }
 
+    function needADL(
+        uint256 pairIndex,
+        bool isLong,
+        uint256 executionSize,
+        uint256 executionPrice
+    ) external view returns (bool) {
+        IPool.Vault memory lpVault = pool.getVault(pairIndex);
+        int256 exposedPositions = this.getExposedPositions(pairIndex);
+
+        bool needADL;
+        if (exposedPositions >= 0) {
+            if (!isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                needADL = executionSize > availableIndex;
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                needADL = executionSize > uint256(exposedPositions) + availableStable.divPrice(executionPrice);
+            }
+        } else {
+            if (!isLong) {
+                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                needADL = executionSize > uint256(- exposedPositions) + availableIndex;
+            } else {
+                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+                needADL = executionSize > availableStable.divPrice(executionPrice);
+            }
+        }
+        return needADL;
+    }
+
     function getPosition(
         address _account,
         uint256 _pairIndex,
