@@ -99,7 +99,9 @@ interface IExecutionLogic {
         TradingTypes.TradeType _tradeType,
         uint8 level,
         uint256 commissionRatio,
-        bool isSystem
+        bool isSystem,
+        uint256 executionSize,
+        bool onlyOnce
     ) external;
 
     function executeADLAndDecreaseOrder(
@@ -119,5 +121,5 @@ interface IExecutionLogic {
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) external view returns (bool);
+    ) external view returns (bool needADL);
 }
