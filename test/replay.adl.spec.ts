@@ -38,29 +38,14 @@ describe('Replay: ADL', () => {
 
     it('long tracker > short tracker, close long position', async () => {
         const {
-            btc,
             usdt,
-            pool,
             router,
-            priceOracle,
             positionManager,
-            executionLogic,
             users: [trader],
         } = testEnv;
 
-        const pairPrice = BigNumber.from(
-            ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
-        );
-
-        const vault = await pool.getVault(pairIndex);
-        console.log(vault);
-        const availableIndex = vault.indexTotalAmount.sub(vault.indexReservedAmount);
-        const availableStable = vault.stableTotalAmount.sub(vault.stableReservedAmount);
-        console.log(availableIndex.mul(pairPrice).add(availableStable));
-
         await mintAndApprove(testEnv, usdt, ethers.utils.parseEther('100000000'), trader, router.address);
 
-        console.log(1);
         // at btc price of 26975.71, open long 9.2282
         await updateBTCPrice(testEnv, '26975.71');
         await increasePosition(
@@ -73,7 +58,6 @@ describe('Replay: ADL', () => {
             TradeType.MARKET,
             true,
         );
-        console.log(2);
 
         // at btc price of 26987.41, open short 18.1643
         await updateBTCPrice(testEnv, '26987.41');
@@ -87,7 +71,6 @@ describe('Replay: ADL', () => {
             TradeType.MARKET,
             false,
         );
-        console.log(3);
 
         // at btc price of 26984.56, open long 18.1565
         await updateBTCPrice(testEnv, '26984.56');
@@ -101,7 +84,6 @@ describe('Replay: ADL', () => {
             TradeType.MARKET,
             true,
         );
-        console.log(4);
 
         const userLongPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         // console.log(userLongPositionBefore);
@@ -112,16 +94,12 @@ describe('Replay: ADL', () => {
         );
         expect(userShortPositionBefore.positionAmount).to.be.eq(ethers.utils.parseEther('18.1643'));
 
-        console.log(`getVault:`, await pool.getVault(pairIndex));
-        console.log(`getExposedPositions:`, await positionManager.getExposedPositions(pairIndex));
-
         const needADL = await positionManager.needADL(
             pairIndex,
             true,
             ethers.utils.parseEther('27.3847'),
             ethers.utils.parseUnits('26981.38', 30),
         );
-        console.log(`needADL:`, needADL);
         expect(needADL.needADL).to.be.true;
 
         // at btc price of 26981.38, close long 27.022
@@ -141,22 +119,9 @@ describe('Replay: ADL', () => {
             true,
             adlPositions,
         );
-        await hre.run('decode-event', { hash: executeReceipt.transactionHash, log: false });
+        // await hre.run('decode-event', { hash: executeReceipt.transactionHash, log: false });
         const userLongPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-        console.log(userLongPositionAfter);
         const userShortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
-        console.log(userShortPositionAfter);
-
-        // ======1 0.038859259259259259
-        // ======1 18.488766925655794106
-
-        // ======2 18.527626184915053364
-        // ======2 0.005524011710172430
-
-        // ======3 9.631693110570847471
-        // ======3 8.903592109992220933
-
-        // ======4 18.527626184915053364
-        // ======4 0.008993425609166670
+        expect(userLongPositionAfter.positionAmount).to.be.eq(0);
     });
 });
