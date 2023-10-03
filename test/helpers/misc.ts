@@ -40,8 +40,8 @@ export async function increasePosition(
     user: SignerWithAddress,
     pairIndex: number,
     collateral: BigNumber | string,
-    openPrice: BigNumber,
-    size: BigNumber,
+    openPrice: BigNumber | string,
+    size: BigNumber | string,
     tradeType: TradeType,
     isLong: boolean,
 ) {
