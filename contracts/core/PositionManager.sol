@@ -707,15 +707,20 @@ contract PositionManager is FeeManager, Pausable {
         IPool.Vault memory vault = pool.getVault(pairIndex);
         int256 exposedPositions = this.getExposedPositions(pairIndex);
 
-        uint256 available;
-        if (!isLong) {
-            available = vault.indexTotalAmount - vault.indexReservedAmount + vault.stableReservedAmount.divPrice(executionPrice);
+        int256 available;
+        if (isLong) {
+            available = int256(vault.stableTotalAmount) * int256(PrecisionUtils.pricePrecision()) / int256(executionPrice) + exposedPositions;
         } else {
-            available = (vault.stableTotalAmount - vault.stableReservedAmount).divPrice(executionPrice) + vault.indexReservedAmount;
+            available = int256(vault.indexTotalAmount) - exposedPositions;
         }
-        if (executionSize > available) {
+
+        if (available <= 0) {
+            return (true, executionSize);
+        }
+
+        if (executionSize > available.abs()) {
             needADL = true;
-            needADLAmount = executionSize - available;
+            needADLAmount = executionSize - available.abs();
         }
         return (needADL, needADLAmount);
     }
