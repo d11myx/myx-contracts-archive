@@ -677,45 +677,58 @@ contract PositionManager is FeeManager, Pausable {
         uint256 executionSize,
         uint256 executionPrice
     ) external view returns (bool needADL, uint256 needADLAmount) {
-        IPool.Vault memory lpVault = pool.getVault(pairIndex);
+//        IPool.Vault memory lpVault = pool.getVault(pairIndex);
+//        int256 exposedPositions = this.getExposedPositions(pairIndex);
+//
+//        bool needADL;
+//        uint256 needADLAmount;
+//        if (exposedPositions >= 0) {
+//            if (!isLong) {
+//                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+//                uint256 available = availableIndex > exposedPositions.abs() ? availableIndex - exposedPositions.abs() : 0;
+//                if (executionSize > available) {
+//                    needADL = true;
+//                    needADLAmount += executionSize - available;
+//                }
+//            } else {
+//                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+//                uint256 available = availableStable.divPrice(executionPrice) + exposedPositions.abs();
+//                if (executionSize > available) {
+//                    needADL = true;
+//                    needADLAmount = executionSize - available;
+//                }
+//            }
+//        } else {
+//            if (!isLong) {
+//                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+//                uint256 available = availableIndex + exposedPositions.abs();
+//                if (executionSize > available) {
+//                    needADL = true;
+//                    needADLAmount = executionSize - available;
+//                }
+//            } else {
+//                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
+//                uint256 parsedAvailableIndex = availableStable.divPrice(executionPrice);
+//                uint256 available = parsedAvailableIndex > exposedPositions.abs()
+//                    ? parsedAvailableIndex - exposedPositions.abs() : 0;
+//                if (executionSize > available) {
+//                    needADL = true;
+//                    needADLAmount = executionSize - available;
+//                }
+//            }
+//        }
+        IPool.Vault memory vault = pool.getVault(pairIndex);
         int256 exposedPositions = this.getExposedPositions(pairIndex);
 
-        bool needADL;
-        uint256 needADLAmount;
-        if (exposedPositions >= 0) {
-            if (!isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                uint256 available = availableIndex > exposedPositions.abs() ? availableIndex - exposedPositions.abs() : 0;
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount += executionSize - available;
-                }
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                uint256 available = availableStable.divPrice(executionPrice) + exposedPositions.abs();
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount = executionSize - available;
-                }
-            }
+        uint256 available;
+        if (!isLong) {
+            available = vault.indexTotalAmount - vault.indexReservedAmount + vault.stableReservedAmount.divPrice(executionPrice);
         } else {
-            if (!isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                uint256 available = availableIndex + exposedPositions.abs();
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount = executionSize - available;
-                }
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                uint256 parsedAvailableIndex = availableStable.divPrice(executionPrice);
-                uint256 available = parsedAvailableIndex > exposedPositions.abs()
-                    ? parsedAvailableIndex - exposedPositions.abs() : 0;
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount = executionSize - available;
-                }
-            }
+            available = (vault.stableTotalAmount - vault.stableReservedAmount).divPrice(executionPrice) + vault.indexReservedAmount;
+        }
+        if (executionSize > available) {
+            needADL = true;
+            needADLAmount = executionSize - available;
         }
         return (needADL, needADLAmount);
     }

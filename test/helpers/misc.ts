@@ -1,4 +1,4 @@
-import { Token } from '../../types';
+import { IExecutionLogic, Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import hre, { ethers } from 'hardhat';
@@ -113,6 +113,41 @@ export async function decreasePosition(
     const tx = await executionLogic
         .connect(keeper.signer)
         .executeDecreaseOrder(orderId, tradeType, 0, 0, false, 0, tradeType == TradeType.MARKET);
+    const receipt = await tx.wait();
+
+    return { orderId: orderId, executeReceipt: receipt };
+}
+
+export async function adlPosition(
+    testEnv: TestEnv,
+    user: SignerWithAddress,
+    pairIndex: number,
+    collateral: BigNumber,
+    size: BigNumber,
+    triggerPrice: BigNumber,
+    tradeType: TradeType,
+    isLong: boolean,
+    adlPositions: IExecutionLogic.ExecutePositionStruct[],
+) {
+    const { keeper, router, executionLogic, orderManager } = testEnv;
+
+    const request: TradingTypes.DecreasePositionRequestStruct = {
+        account: user.address,
+        pairIndex: pairIndex,
+        tradeType: tradeType,
+        collateral: collateral,
+        triggerPrice: triggerPrice,
+        isLong: isLong,
+        sizeAmount: size,
+        maxSlippage: 0,
+    };
+
+    // create increase order
+    const orderId = await orderManager.ordersIndex();
+    await router.connect(user.signer).createDecreaseOrder(request);
+    const tx = await executionLogic
+        .connect(keeper.signer)
+        .executeADLAndDecreaseOrder(adlPositions, orderId, tradeType, 0, 0);
     const receipt = await tx.wait();
 
     return { orderId: orderId, executeReceipt: receipt };
