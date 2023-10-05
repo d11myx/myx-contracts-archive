@@ -273,7 +273,7 @@ describe('Router: Edge cases', () => {
 
             await executionLogic
                 .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false);
+                .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false, 0, true);
 
             const decreaseOrderInfo = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
             expect(decreaseOrderInfo.needADL).to.be.eq(true);
