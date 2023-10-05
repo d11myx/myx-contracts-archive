@@ -19,6 +19,7 @@ import "../interfaces/IPool.sol";
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
+import "./RiskReserve.sol";
 
 contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
@@ -346,8 +347,6 @@ contract PositionManager is FeeManager, Pausable {
         if (charge >= 0) {
             position.collateral = position.collateral.add(charge.abs());
         } else {
-            // If the margin is sufficient, it will be deducted directly from the position.
-            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
             if (position.collateral >= charge.abs()) {
                 position.collateral = position.collateral.sub(charge.abs());
             } else {
@@ -358,9 +357,6 @@ contract PositionManager is FeeManager, Pausable {
                     : position.averagePrice = position.averagePrice - lossPer;
             }
         }
-//        charge < 0
-//            ? position.collateral = position.collateral.sub(charge.abs())
-//            : position.collateral = position.collateral.add(charge.abs());
 
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount += sizeAmount;
@@ -437,21 +433,23 @@ contract PositionManager is FeeManager, Pausable {
         if (totalSettlementAmount >= 0) {
             position.collateral = position.collateral.add(totalSettlementAmount.abs());
         } else {
-            // If the margin is sufficient, it will be deducted directly from the position.
-            // If the margin is insufficient, it will be spent by adjusting the average price of the position.
             if (position.collateral >= totalSettlementAmount.abs()) {
                 position.collateral = position.collateral.sub(totalSettlementAmount.abs());
             } else {
-                // adjust position averagePrice
-                uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
-                position.isLong
-                    ? position.averagePrice = position.averagePrice + lossPer
-                    : position.averagePrice = position.averagePrice - lossPer;
+                if (position.positionAmount == 0) {
+                    uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
+                    // todo RiskReserve
+                    pool.setLPStableProfit(pairIndex, -int256(subsidy));
+                    position.collateral = position.collateral.sub(int256(totalSettlementAmount + int256(subsidy)).abs());
+                } else {
+                    // adjust position averagePrice
+                    uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
+                    position.isLong
+                        ? position.averagePrice = position.averagePrice + lossPer
+                        : position.averagePrice = position.averagePrice - lossPer;
+                }
             }
         }
-//        totalSettlementAmount < 0
-//            ? position.collateral = position.collateral.sub(totalSettlementAmount.abs())
-//            : position.collateral = position.collateral.add(totalSettlementAmount.abs());
 
         _handleCollateral(pairIndex, position, collateral);
 
@@ -678,29 +676,48 @@ contract PositionManager is FeeManager, Pausable {
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) external view returns (bool) {
+    ) external view returns (bool needADL, uint256 needADLAmount) {
         IPool.Vault memory lpVault = pool.getVault(pairIndex);
         int256 exposedPositions = this.getExposedPositions(pairIndex);
 
         bool needADL;
+        uint256 needADLAmount;
         if (exposedPositions >= 0) {
             if (!isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                needADL = executionSize > availableIndex;
+                uint256 available = availableIndex > exposedPositions.abs() ? availableIndex - exposedPositions.abs() : 0;
+                if (executionSize > available) {
+                    needADL = true;
+                    needADLAmount += executionSize - available;
+                }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                needADL = executionSize > uint256(exposedPositions) + availableStable.divPrice(executionPrice);
+                uint256 available = availableStable.divPrice(executionPrice) + exposedPositions.abs();
+                if (executionSize > available) {
+                    needADL = true;
+                    needADLAmount = executionSize - available;
+                }
             }
         } else {
             if (!isLong) {
                 uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                needADL = executionSize > uint256(- exposedPositions) + availableIndex;
+                uint256 available = availableIndex + exposedPositions.abs();
+                if (executionSize > available) {
+                    needADL = true;
+                    needADLAmount = executionSize - available;
+                }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                needADL = executionSize > availableStable.divPrice(executionPrice);
+                uint256 parsedAvailableIndex = availableStable.divPrice(executionPrice);
+                uint256 available = parsedAvailableIndex > exposedPositions.abs()
+                    ? parsedAvailableIndex - exposedPositions.abs() : 0;
+                if (executionSize > available) {
+                    needADL = true;
+                    needADLAmount = executionSize - available;
+                }
             }
         }
-        return needADL;
+        return (needADL, needADLAmount);
     }
 
     function getPosition(

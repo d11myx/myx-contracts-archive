@@ -76,7 +76,7 @@ interface IPositionManager {
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) external view returns (bool);
+    ) external view returns (bool needADL, uint256 needADLAmount);
 
     function getPosition(
         address _account,
