@@ -25,6 +25,7 @@
         "test:trade:ioc": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-ioc.spec.ts",
         "test:trade:slippage": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-slippage.spec.ts",
         "test:lp:mlp": "npm run compile && npx hardhat test test/__setup.spec.ts test/lp-mlp.spec.ts",
+        "test:position": "npm run compile && npx hardhat test test/__setup.spec.ts test/position.spec.ts",
         "deploy": "npx hardhat deploy",
         "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'",
         "sizer": "hardhat size-contracts",
