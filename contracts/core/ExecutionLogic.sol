@@ -412,7 +412,7 @@ contract ExecutionLogic is IExecutionLogic {
             pairIndex,
             order.orderId,
             order.account,
-            msg.sender,
+            tx.origin,
             executionSize,
             order.isLong,
             collateral,
@@ -614,28 +614,20 @@ contract ExecutionLogic is IExecutionLogic {
                 );
             }
         }
-        this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio, true, 0, order.tradeType == TradingTypes.TradeType.MARKET);
+        this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio, true, 0, false);
     }
 
     function liquidatePositions(
-        ExecutePosition[] memory executePositions
+        bytes32[] memory positionKeys
     ) external override onlyExecutorOrKeeper {
-        for (uint256 i = 0; i < executePositions.length; i++) {
-            ExecutePosition memory executePosition = executePositions[i];
-            _liquidationPosition(
-                executePosition.positionKey,
-                executePosition.level,
-                executePosition.commissionRatio
-            );
+        for (uint256 i = 0; i < positionKeys.length; i++) {
+            _liquidationPosition(positionKeys[i]);
         }
     }
 
     function _liquidationPosition(
-        bytes32 positionKey,
-        uint8 level,
-        uint256 commissionRatio
+        bytes32 positionKey
     ) private {
-        require(commissionRatio < feeCollector.maxReferralsRatio(), 'max ratio');
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
             return;
@@ -686,7 +678,7 @@ contract ExecutionLogic is IExecutionLogic {
             })
         );
 
-        this.executeDecreaseOrder(orderId, TradingTypes.TradeType.MARKET, level, commissionRatio, true, 0, true);
+        _executeLiquidationOrder(orderId);
 
         emit ExecuteLiquidation(
             positionKey,
@@ -696,6 +688,104 @@ contract ExecutionLogic is IExecutionLogic {
             position.collateral,
             position.positionAmount,
             price
+        );
+    }
+
+    function _executeLiquidationOrder(
+        uint256 orderId
+    ) internal {
+        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+        if (order.account == address(0)) {
+            return;
+        }
+
+        uint256 pairIndex = order.pairIndex;
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+
+        Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+        if (position.positionAmount == 0) {
+            return;
+        }
+
+        orderManager.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
+
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+
+        uint256 executionSize = order.sizeAmount - order.executedSize;
+        executionSize = Math.min(executionSize, position.positionAmount);
+
+        uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+
+        (bool needADL,) = positionManager.needADL(order.pairIndex, order.isLong, executionSize, executionPrice);
+        if (needADL) {
+            orderManager.setOrderNeedADL(orderId, order.tradeType, needADL);
+
+            emit ExecuteDecreaseOrder(
+                order.account,
+                orderId,
+                pairIndex,
+                order.tradeType,
+                order.isLong,
+                order.collateral,
+                order.sizeAmount,
+                order.triggerPrice,
+                executionSize,
+                executionPrice,
+                order.executedSize,
+                needADL,
+                0,
+                0,
+                0
+            );
+            return;
+        }
+
+        (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
+            pairIndex,
+            order.orderId,
+            order.account,
+            tx.origin,
+            executionSize,
+            order.isLong,
+            0,
+            0,
+            0,
+            executionPrice
+        );
+
+        // add executed size
+        order.executedSize += executionSize;
+
+        // remove decrease order
+        orderManager.removeOrderFromPosition(
+            IOrderManager.PositionOrder(
+                order.account,
+                order.pairIndex,
+                order.isLong,
+                false,
+                order.tradeType,
+                order.orderId,
+                executionSize
+            )
+        );
+        orderManager.removeDecreaseMarketOrders(orderId);
+
+        emit ExecuteDecreaseOrder(
+            order.account,
+            orderId,
+            pairIndex,
+            order.tradeType,
+            order.isLong,
+            0,
+            order.sizeAmount,
+            order.triggerPrice,
+            executionSize,
+            executionPrice,
+            order.executedSize,
+            needADL,
+            pnl,
+            tradingFee,
+            fundingFee
         );
     }
 }
