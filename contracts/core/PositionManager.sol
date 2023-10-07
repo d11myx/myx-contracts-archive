@@ -615,22 +615,49 @@ contract PositionManager is FeeManager, Pausable {
             fundingInterval;
         currentFundingRate[_pairIndex] = nextFundingRate;
 
+        IPool.Vault memory vault = pool.getVault(_pairIndex);
+
         // fund rate for settlement lp
-        uint256 lpPosition;
         if (longTracker[_pairIndex] > shortTracker[_pairIndex]) {
-            lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
-            pool.setLPStableProfit(
-                _pairIndex,
-                (nextFundingRate * int256(lpPosition)) /
-                    int256(PrecisionUtils.fundingRatePrecision())
-            );
-        } else {
-            lpPosition = shortTracker[_pairIndex] - longTracker[_pairIndex];
-            pool.setLPStableProfit(
-                _pairIndex,
-                (-nextFundingRate * int256(lpPosition)) /
-                    int256(PrecisionUtils.fundingRatePrecision())
-            );
+            uint256 lpPosition = longTracker[_pairIndex] - shortTracker[_pairIndex];
+            int256 profit = (nextFundingRate * int256(lpPosition)) / int256(PrecisionUtils.fundingRatePrecision());
+            uint256 priceChangePer = profit.abs().calculatePrice(lpPosition);
+            if (profit > 0) {
+                pool.updateAveragePrice(
+                    _pairIndex,
+                    vault.averagePrice + priceChangePer
+                );
+            } else if (profit < 0) {
+                pool.updateAveragePrice(
+                    _pairIndex,
+                    vault.averagePrice - priceChangePer
+                );
+            }
+//            pool.setLPStableProfit(
+//                _pairIndex,
+//                (nextFundingRate * int256(lpPosition)) /
+//                    int256(PrecisionUtils.fundingRatePrecision())
+//            );
+        } else if (longTracker[_pairIndex] < shortTracker[_pairIndex]) {
+            uint256 lpPosition = shortTracker[_pairIndex] - longTracker[_pairIndex];
+            int256 profit = (-nextFundingRate * int256(lpPosition)) / int256(PrecisionUtils.fundingRatePrecision());
+            uint256 priceChangePer = profit.abs().calculatePrice(lpPosition);
+            if (profit > 0) {
+                pool.updateAveragePrice(
+                    _pairIndex,
+                    vault.averagePrice - priceChangePer
+                );
+            } else if (profit < 0) {
+                pool.updateAveragePrice(
+                    _pairIndex,
+                    vault.averagePrice + priceChangePer
+                );
+            }
+//            pool.setLPStableProfit(
+//                _pairIndex,
+//                (-nextFundingRate * int256(lpPosition)) /
+//                    int256(PrecisionUtils.fundingRatePrecision())
+//            );
         }
 
         emit UpdateFundingRate(
@@ -677,45 +704,23 @@ contract PositionManager is FeeManager, Pausable {
         uint256 executionSize,
         uint256 executionPrice
     ) external view returns (bool needADL, uint256 needADLAmount) {
-        IPool.Vault memory lpVault = pool.getVault(pairIndex);
+        IPool.Vault memory vault = pool.getVault(pairIndex);
         int256 exposedPositions = this.getExposedPositions(pairIndex);
 
-        bool needADL;
-        uint256 needADLAmount;
-        if (exposedPositions >= 0) {
-            if (!isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                uint256 available = availableIndex > exposedPositions.abs() ? availableIndex - exposedPositions.abs() : 0;
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount += executionSize - available;
-                }
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                uint256 available = availableStable.divPrice(executionPrice) + exposedPositions.abs();
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount = executionSize - available;
-                }
-            }
+        int256 available;
+        if (isLong) {
+            available = int256(vault.stableTotalAmount) * int256(PrecisionUtils.pricePrecision()) / int256(executionPrice) + exposedPositions;
         } else {
-            if (!isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                uint256 available = availableIndex + exposedPositions.abs();
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount = executionSize - available;
-                }
-            } else {
-                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                uint256 parsedAvailableIndex = availableStable.divPrice(executionPrice);
-                uint256 available = parsedAvailableIndex > exposedPositions.abs()
-                    ? parsedAvailableIndex - exposedPositions.abs() : 0;
-                if (executionSize > available) {
-                    needADL = true;
-                    needADLAmount = executionSize - available;
-                }
-            }
+            available = int256(vault.indexTotalAmount) - exposedPositions;
+        }
+
+        if (available <= 0) {
+            return (true, executionSize);
+        }
+
+        if (executionSize > available.abs()) {
+            needADL = true;
+            needADLAmount = executionSize - available.abs();
         }
         return (needADL, needADLAmount);
     }
