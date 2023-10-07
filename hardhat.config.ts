@@ -86,6 +86,17 @@ const LINEA_GOERLI_PRIVATE_KEY7 = '0x86c5dbbff3912151b7b7c8d5411cbe88740084a3509
 const LINEA_GOERLI_PRIVATE_KEY8 = '0x8bc175705f87bdce6a819abe782fb9e5702b862ac4231dcbfd7fc84d242bae31';
 const LINEA_GOERLI_PRIVATE_KEY9 = '0x172a20c3bfb16ea00f0353cd5a07339dc464d8f095f247ed03b1a4d0a97a8ccd'; //
 
+const SEPOLIA_PRIVATE_KEY0 = '0x7074b28de6ddebea791096f6c40817ba29ac8564c8ad6e82106ad332b33b02b8';
+const SEPOLIA_PRIVATE_KEY1 = '0x7d0a44f5349b84051d4919671f7ebcd470d53dda33e3654bede72b019d8d48b3';
+const SEPOLIA_PRIVATE_KEY2 = '0xc42f2dfe4399dacad260aad3b017123909a41ad8aef1bcd828e3534fd57edeb9';
+const SEPOLIA_PRIVATE_KEY3 = '0x5610f4845fd1be4da8c9cd655bd999a5560764fc065a55c949d5e93a258d152e';
+const SEPOLIA_PRIVATE_KEY4 = '0x6679e3099432bd83aada8cbae33784515754552f90ba9651b8362fe201c25566';
+const SEPOLIA_PRIVATE_KEY5 = '0x52f06dbe38982137b936bcebde7c5a2fb7e21d3b0c2438b45111402fb9cd225a';
+const SEPOLIA_PRIVATE_KEY6 = '0x4f13b9855d01893ae3aa103847fa7b00a28a87444b6fe327175e1664d03cd3c8';
+const SEPOLIA_PRIVATE_KEY7 = '0x038b31063d6a8c486369b7f70b5cf95277382f8e44d1ed606ea2e51e0eeda6d9';
+const SEPOLIA_PRIVATE_KEY8 = '0x354f078375a1957b6b6456b2a7cdeb78a7a55d462aa021eac956723091ff75a0';
+const SEPOLIA_PRIVATE_KEY9 = '0xbb6291472e81513909bb702b3063058d60890fee3b2f791d9d14cba11072b816';
+
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const TASK_FOLDERS = ['./misc'];
 
@@ -292,6 +303,22 @@ const config: HardhatUserConfig = {
                 LINEA_GOERLI_PRIVATE_KEY7,
                 LINEA_GOERLI_PRIVATE_KEY8,
                 LINEA_GOERLI_PRIVATE_KEY9,
+            ],
+        },
+        sepolia_test: {
+            url: 'https://scroll-sepolia.blockpi.network/v1/rpc/public',
+            chainId: 534351,
+            accounts: [
+                SEPOLIA_PRIVATE_KEY0,
+                SEPOLIA_PRIVATE_KEY1,
+                SEPOLIA_PRIVATE_KEY2,
+                SEPOLIA_PRIVATE_KEY3,
+                SEPOLIA_PRIVATE_KEY4,
+                SEPOLIA_PRIVATE_KEY5,
+                SEPOLIA_PRIVATE_KEY6,
+                SEPOLIA_PRIVATE_KEY7,
+                SEPOLIA_PRIVATE_KEY8,
+                SEPOLIA_PRIVATE_KEY9,
             ],
         },
     },
