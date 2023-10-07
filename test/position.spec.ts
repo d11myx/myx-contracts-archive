@@ -121,7 +121,7 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                executionLogic
+                await executionLogic
                     .connect(keeper.signer)
                     .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
 
@@ -227,7 +227,7 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                executionLogic
+                await executionLogic
                     .connect(keeper.signer)
                     .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
 
@@ -356,7 +356,7 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '20000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-                executionLogic
+                await executionLogic
                     .connect(keeper.signer)
                     .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
 
@@ -491,7 +491,7 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '35700');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                executionLogic
+                await executionLogic
                     .connect(keeper.signer)
                     .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
 
@@ -640,7 +640,7 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '37710');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                executionLogic
+                await executionLogic
                     .connect(keeper.signer)
                     .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
 
