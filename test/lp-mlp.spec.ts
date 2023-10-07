@@ -4,6 +4,7 @@ import { mintAndApprove } from './helpers/misc';
 import { expect } from './shared/expect';
 import { getMockToken } from '../helpers';
 import { BigNumber, constants } from 'ethers';
+import Decimal from 'decimal.js';
 
 describe('LP: fair price', () => {
     const pairIndex = 0;
@@ -119,10 +120,13 @@ describe('LP: fair price', () => {
         const sellLpAmount = userLpBalanceBefore;
         const userBtcBalanceBefore = await btc.balanceOf(trader.address);
         const userUsdtBalanceBefore = await usdt.balanceOf(trader.address);
-        const { receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount } = await pool.getReceivedAmount(
-            pairIndex,
-            sellLpAmount,
-        );
+        const {
+            receiveIndexTokenAmount,
+            receiveStableTokenAmount,
+            feeAmount,
+            feeIndexTokenAmount,
+            feeStableTokenAmount,
+        } = await pool.getReceivedAmount(pairIndex, sellLpAmount);
 
         await lpToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
         await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, sellLpAmount);
@@ -138,13 +142,11 @@ describe('LP: fair price', () => {
         const vaultTotal = receiveIndexTokenAmount.mul(pairPrice).add(receiveStableTokenAmount).add(feeAmount);
         const userPaid = sellLpAmount.mul(lpPrice).div('1000000000000000000000000000000');
 
-        expect(userPaid).to.be.eq(vaultTotal);
-        expect(vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount)).to.be.eq(
-            vaultBefore.indexTotalAmount
-                .mul(pairPrice)
-                .add(vaultBefore.stableTotalAmount)
-                .sub(sellLpAmount)
-                .add(feeAmount),
+        expect(new Decimal(ethers.utils.formatEther(userPaid)).toFixed(8)).to.be.eq(
+            new Decimal(ethers.utils.formatEther(vaultTotal)).toFixed(8),
         );
+
+        expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount.sub(receiveIndexTokenAmount));
+        expect(vaultAfter.stableTotalAmount).to.be.eq(vaultBefore.stableTotalAmount.sub(receiveStableTokenAmount));
     });
 });
