@@ -1,12 +1,12 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
-import { mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { mintAndApprove, updateBTCPrice, increasePosition } from './helpers/misc';
 import { TradeType, getMockToken } from '../helpers';
 import { TradingTypes } from '../types/contracts/interfaces/IRouter';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 import { MARKET_NAME } from '../helpers/env';
-import { constants } from 'ethers';
+import { constants, BigNumber } from 'ethers';
 
 describe('Position', () => {
     const pairIndex = 0;
@@ -693,8 +693,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('34', 18);
+                const stableAmount = ethers.utils.parseUnits('1000000', 18);
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -704,9 +704,9 @@ describe('Position', () => {
                     .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
             });
 
-            it('short position trigger ADL', async () => {
+            it('short decrease position will wait for adl', async () => {
                 const {
-                    users: [trader],
+                    users: [longTrader, shortTrader],
                     usdt,
                     router,
                     positionManager,
@@ -715,127 +715,103 @@ describe('Position', () => {
                     keeper,
                     pool,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
+                const collateral = ethers.utils.parseUnits('30000', 18);
+                const collateral2 = ethers.utils.parseUnits('27000', 18);
                 const size = ethers.utils.parseUnits('30', 18);
-                const openPrice = ethers.utils.parseUnits('300000', 30);
+                const openPrice = ethers.utils.parseUnits('30000', 30);
+                const size2 = ethers.utils.parseUnits('18.66', 18);
 
                 /**
-                 * trader increase short entrust position
+                 * open position trader take all indexToken
                  */
-                let shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
-                expect(shortPositionBefore.positionAmount).to.be.eq('0');
+                await mintAndApprove(testEnv, usdt, collateral, longTrader, router.address);
+                let longTraderBalance = await usdt.balanceOf(longTrader.address);
+                expect(longTraderBalance).to.be.eq(collateral);
 
-                await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-                let balance = await usdt.balanceOf(trader.address);
-                expect(balance).to.be.eq(collateral);
-
-                const increseEntrustPositionRequest: TradingTypes.IncreasePositionRequestStruct = {
-                    account: trader.address,
+                await increasePosition(
+                    testEnv,
+                    longTrader,
                     pairIndex,
-                    tradeType: TradeType.MARKET,
-                    collateral: collateral,
-                    openPrice,
-                    isLong: false,
-                    sizeAmount: size,
-                    maxSlippage: 0,
-                };
-
-                const entrustOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseEntrustPositionRequest);
-                const entrustOrderBefore = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
-                shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
-                balance = await usdt.balanceOf(trader.address);
-
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
-                expect(shortPositionBefore.positionAmount).to.be.eq('0');
-                expect(balance).to.be.eq('0');
-
-                /**
-                 * increase short position
-                 */
-                await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-                balance = await usdt.balanceOf(trader.address);
-                expect(balance).to.be.eq(collateral);
-
-                const incresePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
-                    account: trader.address,
-                    pairIndex,
-                    tradeType: TradeType.MARKET,
                     collateral,
                     openPrice,
+                    size2,
+                    TradeType.MARKET,
+                    true,
+                );
+                longTraderBalance = await usdt.balanceOf(longTrader.address);
+                expect(longTraderBalance).to.be.eq('0');
+
+                await mintAndApprove(testEnv, usdt, collateral2, shortTrader, router.address);
+                let shortTraderBalance = await usdt.balanceOf(shortTrader.address);
+                expect(shortTraderBalance).to.be.eq(collateral2);
+
+                await increasePosition(
+                    testEnv,
+                    shortTrader,
+                    pairIndex,
+                    collateral2,
+                    openPrice,
+                    size,
+                    TradeType.MARKET,
+                    false,
+                );
+                shortTraderBalance = await usdt.balanceOf(shortTrader.address);
+                expect(shortTraderBalance).to.be.eq('0');
+
+                await increasePosition(
+                    testEnv,
+                    longTrader,
+                    pairIndex,
+                    BigNumber.from(0),
+                    openPrice,
+                    size,
+                    TradeType.MARKET,
+                    true,
+                );
+
+                /**
+                 * short decrease position will wait for adl
+                 */
+                const shortTraderPositionBefore = await positionManager.getPosition(
+                    shortTrader.address,
+                    pairIndex,
+                    false,
+                );
+                const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
+                    account: shortTrader.address,
+                    pairIndex: pairIndex,
+                    tradeType: TradeType.MARKET,
+                    collateral: 0,
+                    triggerPrice: openPrice,
                     isLong: false,
-                    sizeAmount: size,
+                    sizeAmount: shortTraderPositionBefore.positionAmount,
                     maxSlippage: 0,
                 };
-
-                const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
-                await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
-                shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
-                balance = await usdt.balanceOf(trader.address);
-
-                expect(balance).to.be.eq('0');
-                expect(shortPositionBefore.positionAmount).to.be.eq(size);
-
-                // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
-                const tradingConfigBefore = btcPair.tradingConfig;
-                tradingConfigBefore.maintainMarginRate = 15000000;
-                await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
-                const tradingConfigAfter = await pool.getTradingConfig(pairIndex);
-
-                expect(tradingConfigAfter.maintainMarginRate).to.be.eq(tradingConfigBefore.maintainMarginRate);
-
-                // remove liquidity
-                const pair = await pool.getPair(pairIndex);
-                const lpToken = await getMockToken('', pair.pairToken);
-                const vaultBefore = await pool.getVault(pairIndex);
-                const lpAmount = ethers.utils.parseEther('3000000');
-                await lpToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
-                await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, lpAmount);
-
-                // update price and liquidatePositions
-                await updateBTCPrice(testEnv, '35700');
-                const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                executionLogic
+                const decreaseOrderId = await orderManager.ordersIndex();
+                await router.connect(shortTrader.signer).createDecreaseOrder(decreasePositionRequest);
+                await executionLogic
                     .connect(keeper.signer)
-                    .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
+                    .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false, 0, true);
+                const decreaseOrderInfo = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
 
-                balance = await usdt.balanceOf(trader.address);
-                const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
-                const entrustOrderAfter = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
+                expect(decreaseOrderInfo.needADL).to.be.eq(true);
 
-                // calculate totalSettlementAmount
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-                const tradingConfig = await pool.getTradingConfig(pairIndex);
-                const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
-                const totalSettlementAmount = pnl.abs().add(tradingFee);
-
-                // calculate riskRate
-                const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
-                const riskRate = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice)
-                    .div('1000000000000000000000000000000')
-                    .mul(tradingConfig.maintainMarginRate)
-                    .div('100000000')
-                    .mul('100000000')
-                    .div(exposureAsset);
-
-                console.log('balance: ', balance);
-
-                expect(riskRate.div('1000000')).to.be.eq('105');
-                // expect(balance).to.be.eq(
-                //     shortPositionBefore.collateral.sub(totalSettlementAmount).add(entrustOrderBefore.collateral),
-                // );
-                // expect(shortPositionAfter.positionAmount).to.be.eq('0');
-                // expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
+                // execute ADL
+                const positionKey = await positionManager.getPositionKey(longTrader.address, pairIndex, true);
+                await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
+                    [
+                        {
+                            positionKey,
+                            sizeAmount: shortTraderPositionBefore.positionAmount,
+                            level: 0,
+                            commissionRatio: 0,
+                        },
+                    ],
+                    decreaseOrderId,
+                    TradeType.MARKET,
+                    0,
+                    0,
+                );
             });
         });
     });
