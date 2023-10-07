@@ -49,7 +49,7 @@ interface IExecutor {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        IExecutionLogic.ExecutePosition[] memory executePositions
+        bytes32[] memory positionKeys
     ) external payable;
 
     function needADL(

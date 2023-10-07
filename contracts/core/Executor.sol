@@ -99,13 +99,13 @@ contract Executor is IExecutor {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        IExecutionLogic.ExecutePosition[] memory executePositions
+        bytes32[] memory positionKeys
     ) external payable override onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, 'ip');
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.liquidatePositions(executePositions);
+        executionLogic.liquidatePositions(positionKeys);
     }
 
     function needADL(
