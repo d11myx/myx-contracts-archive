@@ -5,16 +5,18 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRiskReserve.sol";
+import "../interfaces/IPool.sol";
 import "../libraries/Roleable.sol";
 
 contract RiskReserve is IRiskReserve, Roleable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    mapping(address => int256) public assetReservedAmount;
+    mapping(address => int256) public getReservedAmount;
 
     address public addressDao;
     address public addressPositionManager;
+    IPool public pool;
 
     constructor(
         address _addressDao,
@@ -45,30 +47,33 @@ contract RiskReserve is IRiskReserve, Roleable {
         emit UpdatedPositionManagerAddress(msg.sender, oldAddress, addressPositionManager);
     }
 
+    function updatePoolAddress(address newAddress) external override onlyPoolAdmin {
+        address oldAddress = address(pool);
+        pool = IPool(newAddress);
+        emit UpdatedPoolAddress(msg.sender, oldAddress, address(pool));
+    }
+
     function increase(address asset, uint256 amount) external override onlyPositionManager {
-        assetReservedAmount[asset] += int256(amount);
+        getReservedAmount[asset] += int256(amount);
     }
 
     function decrease(address asset, uint256 amount) external override onlyPositionManager {
-        assetReservedAmount[asset] -= int256(amount);
+        getReservedAmount[asset] -= int256(amount);
     }
 
     function recharge(address asset, uint256 amount) external override {
-        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
-        assetReservedAmount[asset] += int256(amount);
+        IERC20(asset).safeTransferFrom(msg.sender, address(pool), amount);
+        getReservedAmount[asset] += int256(amount);
     }
 
-    function withdraw(address asset, uint256 amount, address to) external override onlyDao {
-        require(int256(amount) <= assetReservedAmount[asset], 'insufficient reserved amount');
-        require(amount <= IERC20(asset).balanceOf(address(this)), 'insufficient balance');
+    function withdraw(address asset, address to, uint256 amount) external override onlyDao {
+        require(int256(amount) <= getReservedAmount[asset], 'insufficient balance');
 
         if (amount > 0) {
-            IERC20(asset).safeTransfer(to, amount);
-        }
-        emit Withdraw(msg.sender, asset, amount, to);
-    }
+            getReservedAmount[asset] -= int256(amount);
 
-    function rescue(address asset, address to) external override onlyPoolAdmin {
-        IERC20(asset).safeTransfer(to, IERC20(asset).balanceOf(address(this)));
+            pool.transferTokenTo(asset, to, amount);
+            emit Withdraw(msg.sender, asset, amount, to);
+        }
     }
 }

@@ -15,6 +15,12 @@ interface IRiskReserve {
         address newAddress
     );
 
+    event UpdatedPoolAddress(
+        address sender,
+        address oldAddress,
+        address newAddress
+    );
+
     event Withdraw(
         address sender,
         address asset,
@@ -26,13 +32,13 @@ interface IRiskReserve {
 
     function updatePositionManagerAddress(address newAddress) external;
 
+    function updatePoolAddress(address newAddress) external;
+
     function increase(address asset, uint256 amount) external;
 
     function decrease(address asset, uint256 amount) external;
 
     function recharge(address asset, uint256 amount) external;
 
-    function withdraw(address asset, uint256 amount, address to) external;
-
-    function rescue(address asset, address to) external;
+    function withdraw(address asset, address to, uint256 amount) external;
 }
