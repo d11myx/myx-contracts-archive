@@ -2,12 +2,14 @@
 pragma solidity 0.8.20;
 
 interface IFeeManager {
+
     event DistributeTradingFee(
         address account,
         uint256 pairIndex,
         uint256 sizeDelta,
         uint256 tradingFee,
-        uint256 referenceAmount,
+        uint256 vipAmount,
+        uint256 referralAmount,
         uint256 lpAmount,
         uint256 keeperAmount,
         uint256 stakingAmount,
