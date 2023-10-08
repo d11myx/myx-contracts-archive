@@ -12,14 +12,23 @@ import {
     getWETH,
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
+    RISK_RESERVE_ID,
     ROUTER_ID,
     waitForTx,
 } from '../../helpers';
-import { Router, Executor, PositionManager, OrderManager, FeeCollector, ExecutionLogic } from '../../types';
+import {
+    Router,
+    Executor,
+    PositionManager,
+    OrderManager,
+    FeeCollector,
+    ExecutionLogic,
+    RiskReserve,
+} from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
-    const { deployer } = await getNamedAccounts();
+    const { deployer, dao } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
 
     const addressProvider = await getAddressesProvider();
@@ -38,11 +47,23 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         feeCollectorArtifact.address,
     )) as FeeCollector;
 
+    // RiskReserve
+    const riskReserveArtifact = await deploy(`${RISK_RESERVE_ID}`, {
+        from: deployer,
+        contract: 'RiskReserve',
+        args: [dao, addressProvider.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const riskReserve = (await hre.ethers.getContractAt(
+        riskReserveArtifact.abi,
+        riskReserveArtifact.address,
+    )) as RiskReserve;
+
     // PositionManager
     const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
         from: deployer,
         contract: 'PositionManager',
-        args: [addressProvider.address, pool.address, usdt.address, feeCollector.address],
+        args: [addressProvider.address, pool.address, usdt.address, feeCollector.address, riskReserve.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const positionManager = (await hre.ethers.getContractAt(
@@ -105,7 +126,12 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
 
+    await waitForTx(await pool.setRiskReserve(riskReserve.address));
+
     await waitForTx(await executionLogic.updateExecutor(executor.address));
+
+    await waitForTx(await riskReserve.updatePositionManagerAddress(positionManager.address));
+    await waitForTx(await riskReserve.updatePoolAddress(pool.address));
 
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));

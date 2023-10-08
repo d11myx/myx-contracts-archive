@@ -38,7 +38,8 @@ contract Pool is IPool, Roleable {
 
     IPoolTokenFactory public immutable poolTokenFactory;
     address public router;
-    mapping(uint256 => mapping(address => bytes)) tokenPath;
+    address public riskReserve;
+    mapping(uint256 => mapping(address => bytes)) public tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -62,10 +63,10 @@ contract Pool is IPool, Roleable {
         poolTokenFactory = _poolTokenFactory;
     }
 
-    modifier onlyPositionManagerOrOrderManager() {
+    modifier onlyPositionManagerOrOrderManagerOrRiskReserve() {
         require(
-            positionManagers.contains(msg.sender) || orderManagers.contains(msg.sender),
-            "onlyPositionManagerOrOrderManager"
+            positionManagers.contains(msg.sender) || orderManagers.contains(msg.sender) || riskReserve == msg.sender,
+            "onlyPositionManagerOrOrderManagerOrRiskReserve"
         );
         _;
     }
@@ -80,12 +81,16 @@ contract Pool is IPool, Roleable {
         _;
     }
 
-    function addPositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManagers.add(_positionManager);
-    }
-
     function setRouter(address _router) external onlyPoolAdmin {
         router = _router;
+    }
+
+    function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
+        riskReserve = _riskReserve;
+    }
+
+    function addPositionManager(address _positionManager) external onlyPoolAdmin {
+        positionManagers.add(_positionManager);
     }
 
     function removePositionManager(address _positionManager) external onlyPoolAdmin {
@@ -106,6 +111,10 @@ contract Pool is IPool, Roleable {
 
     function removeStableToken(address _token) external onlyPoolAdmin {
         delete isStableToken[_token];
+    }
+
+    function updateTokenPath(uint256 pairIndex, address tokenIn, bytes memory path) external onlyPoolAdmin {
+        tokenPath[pairIndex][tokenIn] = path;
     }
 
     // Manage pairs
@@ -886,7 +895,7 @@ contract Pool is IPool, Roleable {
         address token,
         address to,
         uint256 amount
-    ) external onlyPositionManagerOrOrderManager {
+    ) external onlyPositionManagerOrOrderManagerOrRiskReserve {
         require(IERC20(token).balanceOf(address(this)) > amount, "bal");
         IERC20(token).safeTransfer(to, amount);
     }
@@ -896,7 +905,7 @@ contract Pool is IPool, Roleable {
         address token,
         address to,
         uint256 amount
-    ) external onlyPositionManagerOrOrderManager {
+    ) external onlyPositionManagerOrOrderManagerOrRiskReserve {
         if (amount == 0) {
             return;
         }
