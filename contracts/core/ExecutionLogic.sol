@@ -418,7 +418,8 @@ contract ExecutionLogic is IExecutionLogic {
             collateral,
             level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
             commissionRatio,
-            executionPrice
+            executionPrice,
+            false
         );
 
         // add executed size
@@ -707,8 +708,6 @@ contract ExecutionLogic is IExecutionLogic {
             return;
         }
 
-        orderManager.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
-
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
         uint256 executionSize = order.sizeAmount - order.executedSize;
@@ -750,24 +749,15 @@ contract ExecutionLogic is IExecutionLogic {
             0,
             0,
             0,
-            executionPrice
+            executionPrice,
+            true
         );
 
         // add executed size
         order.executedSize += executionSize;
 
-        // remove decrease order
-        orderManager.removeOrderFromPosition(
-            IOrderManager.PositionOrder(
-                order.account,
-                order.pairIndex,
-                order.isLong,
-                false,
-                order.tradeType,
-                order.orderId,
-                executionSize
-            )
-        );
+        // remove order
+        orderManager.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
         orderManager.removeDecreaseMarketOrders(orderId);
 
         emit ExecuteDecreaseOrder(
