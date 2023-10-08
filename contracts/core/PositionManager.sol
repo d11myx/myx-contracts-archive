@@ -19,7 +19,7 @@ import "../interfaces/IPool.sol";
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
-import "./RiskReserve.sol";
+import "../interfaces/IRiskReserve.sol";
 
 contract PositionManager is FeeManager, Pausable {
     using SafeERC20 for IERC20;
@@ -47,13 +47,17 @@ contract PositionManager is FeeManager, Pausable {
 
     address public addressExecutionLogic;
     address public addressOrderManager;
+    IRiskReserve public riskReserve;
 
     constructor(
         IAddressesProvider addressProvider,
         IPool pool,
         address _pledgeAddress,
-        IFeeCollector feeCollector
-    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {}
+        IFeeCollector feeCollector,
+        IRiskReserve _riskReserve
+    ) FeeManager(addressProvider, pool, _pledgeAddress, feeCollector) {
+        riskReserve = _riskReserve;
+    }
 
     modifier onlyExecutor() {
         require(msg.sender == addressExecutionLogic, "forbidden");
@@ -83,7 +87,7 @@ contract PositionManager is FeeManager, Pausable {
         uint256 _sizeAmount,
         bool _isLong,
         uint256 vipRate,
-        uint256 referenceRate,
+        uint256 referralRate,
         uint256 _price
     ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -100,7 +104,7 @@ contract PositionManager is FeeManager, Pausable {
             sizeDelta,
             tradingFee,
             vipRate,
-            referenceRate
+            referralRate
         );
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
@@ -298,7 +302,7 @@ contract PositionManager is FeeManager, Pausable {
         bool isLong,
         int256 collateral,
         uint256 vipRate,
-        uint256 referenceRate,
+        uint256 referralRate,
         uint256 oraclePrice
     )
         external
@@ -340,7 +344,7 @@ contract PositionManager is FeeManager, Pausable {
             sizeAmount,
             isLong,
             vipRate,
-            referenceRate,
+            referralRate,
             oraclePrice
         );
 
@@ -389,8 +393,9 @@ contract PositionManager is FeeManager, Pausable {
         bool isLong,
         int256 collateral,
         uint256 vipRate,
-        uint256 referenceRate,
-        uint256 oraclePrice
+        uint256 referralRate,
+        uint256 oraclePrice,
+        bool useRiskReserve
     )
         external
         onlyExecutor
@@ -407,7 +412,7 @@ contract PositionManager is FeeManager, Pausable {
 
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
-        // _handleCollateral(pairIndex, position, collateral);
+
         // settlement trading fee and funding fee
         int256 charge;
         (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -417,7 +422,7 @@ contract PositionManager is FeeManager, Pausable {
             sizeAmount,
             isLong,
             vipRate,
-            referenceRate,
+            referralRate,
             oraclePrice
         );
 
@@ -438,8 +443,9 @@ contract PositionManager is FeeManager, Pausable {
             } else {
                 if (position.positionAmount == 0) {
                     uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
-                    // todo RiskReserve
-                    pool.setLPStableProfit(pairIndex, -int256(subsidy));
+                    IPool.Pair memory pair = pool.getPair(pairIndex);
+                    riskReserve.decrease(pair.stableToken, subsidy);
+//                    pool.setLPStableProfit(pairIndex, -int256(subsidy));
                     position.collateral = position.collateral.sub(int256(totalSettlementAmount + int256(subsidy)).abs());
                 } else {
                     // adjust position averagePrice
@@ -453,13 +459,19 @@ contract PositionManager is FeeManager, Pausable {
 
         _handleCollateral(pairIndex, position, collateral);
 
-        if (position.positionAmount == 0) {
-            pool.transferTokenOrSwap(
-                pairIndex,
-                pledgeAddress,
-                position.account,
-                position.collateral
-            );
+        if (position.positionAmount == 0 && position.collateral > 0) {
+            if (useRiskReserve) {
+                IPool.Pair memory pair = pool.getPair(pairIndex);
+                pool.setLPStableProfit(pairIndex, -int256(position.collateral));
+                riskReserve.increase(pair.stableToken, position.collateral);
+            } else {
+                pool.transferTokenOrSwap(
+                    pairIndex,
+                    pledgeAddress,
+                    position.account,
+                    position.collateral
+                );
+            }
             position.collateral = 0;
         }
 
@@ -523,7 +535,9 @@ contract PositionManager is FeeManager, Pausable {
         Position.Info storage position,
         int256 collateral
     ) internal {
-        // uint256 collateralBefore = position.collateral;
+        if (collateral == 0) {
+            return;
+        }
         if (collateral < 0) {
             require(position.collateral >= collateral.abs(), "collateral not enough");
             position.collateral = position.collateral.sub(collateral.abs());
