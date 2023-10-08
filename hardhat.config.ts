@@ -305,7 +305,7 @@ const config: HardhatUserConfig = {
                 LINEA_GOERLI_PRIVATE_KEY9,
             ],
         },
-        sepolia_test: {
+        scroll_sepolia: {
             url: 'https://scroll-sepolia.blockpi.network/v1/rpc/public',
             chainId: 534351,
             accounts: [
