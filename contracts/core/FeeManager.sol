@@ -91,7 +91,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
         uint256 sizeDelta,
         uint256 tradingFee,
         uint256 vipRate,
-        uint256 referenceRate
+        uint256 referralRate
     ) internal returns (uint256 lpAmount) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
@@ -101,7 +101,7 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
         uint256 surplusFee = tradingFee - vipAmount;
 
         uint256 referralsAmount = surplusFee.mulPercentage(
-            Math.min(referenceRate, feeCollector.maxReferralsRatio())
+            Math.min(referralRate, feeCollector.maxReferralsRatio())
         );
 
         lpAmount = surplusFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);

@@ -113,7 +113,7 @@ interface IExecutionLogic {
     ) external;
 
     function liquidatePositions(
-        ExecutePosition[] memory executePositions
+        bytes32[] memory positionKeys
     ) external;
 
     function needADL(

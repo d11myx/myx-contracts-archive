@@ -1,26 +1,15 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import {
-    COMMON_DEPLOY_PARAMS,
-    getAddressesProvider,
-    getOraclePriceFeed,
-    getWETH,
-    PAIR_INFO_ID,
-    PAIR_LIQUIDITY_ID,
-    POOL_TOKEN_FACTORY,
-} from '../../helpers';
+import { COMMON_DEPLOY_PARAMS, getAddressesProvider, PAIR_INFO_ID, POOL_TOKEN_FACTORY } from '../../helpers';
 import { Pool, PoolTokenFactory } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
-    const { deployer, feeReceiver, slipReceiver } = await getNamedAccounts();
+    const { deployer } = await getNamedAccounts();
 
     const addressProvider = await getAddressesProvider();
-    const oraclePriceFeed = await getOraclePriceFeed();
-    const weth = await getWETH();
 
     // PoolTokenFactory
-
     const poolTokenFactoryArtifact = await deploy(`${POOL_TOKEN_FACTORY}`, {
         from: deployer,
         contract: 'PoolTokenFactory',
@@ -39,6 +28,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const pool = (await hre.ethers.getContractAt(pairInfoArtifact.abi, pairInfoArtifact.address)) as Pool;
+
+    //TODO uniswap config
+    // await pool.setRouter(ZERO_ADDRESS);
+    // await pool.updateTokenPath();
 };
 
 func.id = `Pairs`;
