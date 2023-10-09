@@ -1,5 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { upgrades } from 'hardhat';
 import {
     COMMON_DEPLOY_PARAMS,
     EXECUTION_LOGIC_ID,
@@ -60,7 +61,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as RiskReserve;
 
     // PositionManager
-    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
+    // upgrades.deployProxy
+    const positionManagerArtifact = await  deploy(`${POSITION_MANAGER_ID}`, {
         from: deployer,
         contract: 'PositionManager',
         args: [addressProvider.address, pool.address, usdt.address, feeCollector.address, riskReserve.address],
