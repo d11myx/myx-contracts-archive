@@ -6,17 +6,25 @@ import '../interfaces/IAddressesProvider.sol';
 import '../interfaces/IRoleManager.sol';
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IExecutionLogic.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract Executor is IExecutor {
+contract Executor is IExecutor, Initializable {
 
-    IAddressesProvider public immutable ADDRESS_PROVIDER;
+    IAddressesProvider public ADDRESS_PROVIDER;
+    IExecutionLogic public executionLogic;
 
-    IExecutionLogic public immutable executionLogic;
+//    constructor(
+//        IAddressesProvider addressProvider,
+//        IExecutionLogic _executionLogic
+//    ) {
+//        ADDRESS_PROVIDER = addressProvider;
+//        executionLogic = _executionLogic;
+//    }
 
-    constructor(
+    function initialize(
         IAddressesProvider addressProvider,
         IExecutionLogic _executionLogic
-    ) {
+    ) public initializer {
         ADDRESS_PROVIDER = addressProvider;
         executionLogic = _executionLogic;
     }
