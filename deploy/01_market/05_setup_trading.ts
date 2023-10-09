@@ -3,6 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { upgrades } from 'hardhat';
 import {
     COMMON_DEPLOY_PARAMS,
+    deployProxy,
     EXECUTION_LOGIC_ID,
     EXECUTOR_ID,
     FEE_COLLECTOR_ID,
@@ -120,7 +121,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as ExecutionLogic;
 
     // Executor
-    const executorArtifact = await deploy(`${EXECUTOR_ID}`, {
+    const executorArtifact = await deployProxy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
         args: [addressProvider.address, executionLogic.address],
