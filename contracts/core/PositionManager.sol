@@ -506,11 +506,8 @@ contract PositionManager is FeeManager, Pausable {
         if (collateral > 0) {
             IERC20(pair.stableToken).transferFrom(account, address(pool), uint256(collateral));
         }
-        uint256 collateralBefore = position.collateral;
-        _handleCollateral(pairIndex, position, collateral);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
-            pair.indexToken
-        );
+
+        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         position.validLeverage(
             price,
@@ -520,6 +517,9 @@ contract PositionManager is FeeManager, Pausable {
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
+
+        uint256 collateralBefore = position.collateral;
+        _handleCollateral(pairIndex, position, collateral);
 
         emit AdjustCollateral(
             position.account,
