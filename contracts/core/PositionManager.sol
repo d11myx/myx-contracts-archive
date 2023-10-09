@@ -592,9 +592,7 @@ contract PositionManager is FeeManager, Pausable {
         } else {
             fundingFee = 1;
         }
-        fundingFee *=
-            (int256(position.positionAmount) * fundingFeeTracker) /
-            int256(PrecisionUtils.fundingRatePrecision());
+        fundingFee *= int256(position.positionAmount * fundingFeeTracker.abs() / PrecisionUtils.fundingRatePrecision());
     }
 
     function updateFundingRate(uint256 _pairIndex) external whenNotPaused {

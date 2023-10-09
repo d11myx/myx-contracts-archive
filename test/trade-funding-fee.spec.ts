@@ -12,6 +12,7 @@ import {
 } from '../helpers';
 import { expect } from './shared/expect';
 import { BigNumber } from 'ethers';
+import { it } from 'mocha';
 
 describe('Trade: funding fee', () => {
     const pairIndex = 0;
@@ -403,9 +404,158 @@ describe('Trade: funding fee', () => {
             expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // shorter user will be paid fundingFee
-            expect(positionCollateral.sub(balanceDiff).sub(tradingFee).abs()).to.be.eq(userFundingFee);
+            expect(positionCollateral.sub(balanceDiff).sub(tradingFee).abs()).to.be.eq(userFundingFee.abs());
         });
     });
 
     describe('longTracker = shortTracker', async () => {});
+
+    describe('long and short should be balanced', async () => {
+        it('long = short', async () => {
+            const {
+                users: [trader, user1],
+                usdt,
+                router,
+                positionManager,
+            } = testEnv;
+
+            const collateral = ethers.utils.parseUnits('30000', 18);
+            const size = ethers.utils.parseUnits('9', 18);
+            let openPrice = ethers.utils.parseUnits('30000', 30);
+
+            await mintAndApprove(testEnv, usdt, collateral, user1, router.address);
+            await increasePosition(
+                testEnv,
+                user1,
+                pairIndex,
+                collateral,
+                openPrice,
+                ethers.utils.parseUnits('30', 18),
+                TradeType.MARKET,
+                true,
+            );
+
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
+
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
+
+            expect(await positionManager.getExposedPositions(pairIndex)).to.be.eq(0);
+
+            // update funding fee
+            await increase(Duration.hours(10));
+            await positionManager.updateFundingRate(pairIndex);
+
+            const longFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
+            const shortFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
+
+            expect(longFundingFee).to.be.lt(0);
+            expect(shortFundingFee).to.be.gt(0);
+
+            expect(longFundingFee.abs()).to.be.eq(shortFundingFee.abs());
+        });
+
+        it('long > short', async () => {
+            const {
+                users: [trader, user1],
+                usdt,
+                router,
+                positionManager,
+            } = testEnv;
+
+            const collateral = ethers.utils.parseUnits('30000', 18);
+            const size = ethers.utils.parseUnits('9', 18);
+            let openPrice = ethers.utils.parseUnits('30000', 30);
+
+            await mintAndApprove(testEnv, usdt, collateral, user1, router.address);
+            await increasePosition(
+                testEnv,
+                user1,
+                pairIndex,
+                collateral,
+                openPrice,
+                ethers.utils.parseUnits('30', 18),
+                TradeType.MARKET,
+                true,
+            );
+
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
+
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, false);
+
+            expect(await positionManager.getExposedPositions(pairIndex)).to.be.gt(0);
+
+            // update funding fee
+            await increase(Duration.hours(10));
+            await positionManager.updateFundingRate(pairIndex);
+
+            const longFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
+            const shortFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
+
+            expect(longFundingFee).to.be.lt(0);
+            expect(shortFundingFee).to.be.gt(0);
+
+            expect(longFundingFee.abs()).to.be.eq(shortFundingFee.abs());
+        });
+
+        it('long < short', async () => {
+            it('long > short', async () => {
+                const {
+                    users: [trader, user1],
+                    usdt,
+                    router,
+                    positionManager,
+                } = testEnv;
+                console.log(await positionManager.getExposedPositions(pairIndex));
+
+                const collateral = ethers.utils.parseUnits('30000', 18);
+                const size = ethers.utils.parseUnits('9', 18);
+                let openPrice = ethers.utils.parseUnits('30000', 30);
+
+                await mintAndApprove(testEnv, usdt, collateral, user1, router.address);
+                await increasePosition(
+                    testEnv,
+                    user1,
+                    pairIndex,
+                    collateral,
+                    openPrice,
+                    ethers.utils.parseUnits('30', 18),
+                    TradeType.MARKET,
+                    false,
+                );
+
+                await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+                await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
+
+                await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+                await increasePosition(
+                    testEnv,
+                    trader,
+                    pairIndex,
+                    collateral,
+                    openPrice,
+                    size,
+                    TradeType.MARKET,
+                    false,
+                );
+
+                expect(await positionManager.getExposedPositions(pairIndex)).to.be.lt(0);
+
+                // update funding fee
+                await increase(Duration.hours(10));
+                await positionManager.updateFundingRate(pairIndex);
+
+                const longFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
+                const shortFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
+
+                expect(longFundingFee).to.be.gt(0);
+                expect(shortFundingFee).to.be.lt(0);
+
+                expect(longFundingFee.abs()).to.be.eq(shortFundingFee.abs());
+            });
+        });
+    });
 });
