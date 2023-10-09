@@ -286,7 +286,7 @@ export function getPositionFundingFee(
         fundingFee = 1;
     }
 
-    return positionAmount.mul(diffFundingFeeTracker).div(PERCENTAGE).mul(fundingFee);
+    return positionAmount.mul(diffFundingFeeTracker.abs()).div(PERCENTAGE).mul(fundingFee);
 }
 
 /**
