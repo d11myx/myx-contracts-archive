@@ -22,7 +22,7 @@ import {
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { deployContract, waitForTx } from './utilities/tx';
+import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
@@ -211,7 +211,7 @@ export async function deployTrading(
     ])) as any as ExecutionLogic;
     log(`deployed ExecutionLogic at ${executionLogic.address}`);
 
-    let executor = (await deployContract('Executor', [
+    let executor = (await deployUpgradeableContract('Executor', [
         addressProvider.address,
         executionLogic.address,
     ])) as any as Executor;
