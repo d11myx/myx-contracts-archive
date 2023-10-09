@@ -99,7 +99,7 @@ interface IPositionManager {
         bool _isLong,
         int256 _collateral,
         uint256 vipRate,
-        uint256 referenceRate,
+        uint256 referralRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
 
@@ -112,8 +112,9 @@ interface IPositionManager {
         bool _isLong,
         int256 _collateral,
         uint256 vipRate,
-        uint256 referenceRate,
-        uint256 _price
+        uint256 referralRate,
+        uint256 _price,
+        bool useRiskReserve
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
     function adjustCollateral(uint256 pairIndex, address account, bool isLong, int256 collateral) external;
