@@ -17,6 +17,7 @@ import {
     FundingRate,
     PriceOracle,
     ExecutionLogic,
+    RiskReserve,
 } from '../../types';
 import {
     SymbolMap,
@@ -42,6 +43,7 @@ import {
     getRoleManager,
     getPriceOracle,
     getExecutionLogic,
+    getRiskReserve,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -73,6 +75,7 @@ export interface TestEnv {
     executor: Executor;
     orderManager: OrderManager;
     positionManager: PositionManager;
+    riskReserve: RiskReserve;
 }
 
 export const testEnv: TestEnv = {
@@ -97,6 +100,7 @@ export const testEnv: TestEnv = {
     executor: {} as Executor,
     orderManager: {} as OrderManager,
     positionManager: {} as PositionManager,
+    riskReserve: {} as RiskReserve,
 } as TestEnv;
 
 export async function setupTestEnv() {
@@ -155,6 +159,7 @@ export async function setupTestEnv() {
     testEnv.executor = await getExecutor();
     testEnv.orderManager = await getOrderManager();
     testEnv.positionManager = await getPositionManager();
+    testEnv.riskReserve = await getRiskReserve();
 }
 
 export async function newTestEnv(): Promise<TestEnv> {
@@ -198,7 +203,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
-    const { positionManager, router, executionLogic, executor, orderManager } = await deployTrading(
+    const { positionManager, router, executionLogic, executor, orderManager, riskReserve } = await deployTrading(
         deployer,
         deployer,
         addressesProvider,
@@ -235,5 +240,6 @@ export async function newTestEnv(): Promise<TestEnv> {
         executionLogic: executionLogic,
         executor: executor,
         orderManager: orderManager,
+        riskReserve: riskReserve,
     } as TestEnv;
 }

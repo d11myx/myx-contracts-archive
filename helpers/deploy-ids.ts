@@ -13,6 +13,7 @@ export const PAIR_INFO_ID = `Pool`;
 export const POOL_TOKEN_FACTORY = `PoolTokenFactory`;
 export const PAIR_LIQUIDITY_ID = `PoolLiquidity`;
 export const FEE_COLLECTOR_ID = `FeeCollector`;
+export const RISK_RESERVE_ID = `RiskReserve`;
 export const ROUTER_ID = `Router`;
 export const EXECUTOR_ID = `Executor`;
 export const EXECUTION_LOGIC_ID = `ExecutionLogic`;

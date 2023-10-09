@@ -13,6 +13,7 @@ import {
     PoolTokenFactory,
     PositionManager,
     PriceOracle,
+    RiskReserve,
     RoleManager,
     Router,
     TestCallBack,
@@ -27,6 +28,7 @@ import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
+import { POSITION_MANAGER_ID } from './deploy-ids';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -145,6 +147,10 @@ export async function deployPair(
     const pool = (await deployContract('Pool', [addressProvider.address, poolTokenFactory.address])) as any as Pool;
     log(`deployed Pool at ${pool.address}`);
 
+    //TODO uniswap config
+    // await pool.setRouter(ZERO_ADDRESS);
+    // await pool.updateTokenPath();
+
     return { poolTokenFactory, pool };
 }
 
@@ -163,12 +169,17 @@ export async function deployTrading(
     // const usdt = await getToken();
 
     let feeCollector = (await deployContract('FeeCollector', [addressProvider.address])) as any as FeeCollector;
+    let riskReserve = (await deployContract('RiskReserve', [
+        deployer.address,
+        addressProvider.address,
+    ])) as any as RiskReserve;
 
     let positionManager = (await deployContract('PositionManager', [
         addressProvider.address,
         pool.address,
         pledge.address,
         feeCollector.address,
+        riskReserve.address,
     ])) as any as PositionManager;
     log(`deployed PositionManager at ${positionManager.address}`);
 
@@ -206,13 +217,18 @@ export async function deployTrading(
     ])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
 
+    await waitForTx(await pool.connect(poolAdmin.signer).setRiskReserve(riskReserve.address));
+
+    await waitForTx(await riskReserve.connect(poolAdmin.signer).updatePositionManagerAddress(positionManager.address));
+    await waitForTx(await riskReserve.connect(poolAdmin.signer).updatePoolAddress(pool.address));
+
     await waitForTx(await executionLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
 
     await positionManager.setExecutor(executionLogic.address);
     await positionManager.setOrderManager(orderManager.address);
     await orderManager.setExecutor(executionLogic.address);
 
-    return { positionManager, router, executionLogic, executor, orderManager };
+    return { positionManager, router, executionLogic, executor, orderManager, riskReserve };
 }
 export async function deployMockCallback() {
     return (await deployContract('TestCallBack', [])) as TestCallBack;
