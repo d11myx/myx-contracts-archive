@@ -137,6 +137,28 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
             );
     }
 
+    function createDecreaseOrders(
+        TradingTypes.DecreasePositionRequest[] memory requests
+    ) external returns (uint256[] memory orderIds) {
+        for (uint256 i = 0; i < requests.length; i++) {
+            TradingTypes.DecreasePositionRequest memory request = requests[i];
+
+            orderIds[i] = orderManager.createOrder(TradingTypes.CreateOrderRequest({
+                account: msg.sender,
+                pairIndex: request.pairIndex,
+                tradeType: request.tradeType,
+                collateral: request.collateral,
+                openPrice: request.triggerPrice,
+                isLong: request.isLong,
+                sizeAmount: -int256(request.sizeAmount),
+                maxSlippage: request.maxSlippage,
+                data: abi.encode(msg.sender)
+            })
+            );
+        }
+        return orderIds;
+    }
+
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
         orderManager.cancelOrder(orderId, tradeType, true, "cancelIncreaseOrder");
     }
@@ -145,7 +167,14 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         orderManager.cancelOrder(orderId, tradeType, false, "cancelDecreaseOrder");
     }
 
-    function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external {
+    function cancelOrders(CancelOrderRequest[] memory requests) external {
+        for (uint256 i = 0; i < requests.length; i++) {
+            CancelOrderRequest memory request = requests[i];
+            orderManager.cancelOrder(request.orderId, request.tradeType, request.isIncrease, "cancelOrders");
+        }
+    }
+
+    function cancelPositionOrders(uint256 pairIndex, bool isLong, bool isIncrease) external {
         bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
         IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
 
