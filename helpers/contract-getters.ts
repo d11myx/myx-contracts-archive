@@ -25,6 +25,7 @@ import {
     FundingRate,
     PriceOracle,
     ExecutionLogic,
+    RiskReserve,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -52,6 +53,7 @@ import {
     FUNDING_RATE,
     PRICE_ORACLE_ID,
     EXECUTION_LOGIC_ID,
+    RISK_RESERVE_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -145,6 +147,10 @@ export const getPositionManager = async (address?: string): Promise<PositionMana
         'PositionManager',
         address || (await hre.deployments.get(POSITION_MANAGER_ID)).address,
     );
+};
+
+export const getRiskReserve = async (address?: string): Promise<RiskReserve> => {
+    return getContract<RiskReserve>('RiskReserve', address || (await hre.deployments.get(RISK_RESERVE_ID)).address);
 };
 
 export const getMYX = async (address?: string): Promise<MYX> => {

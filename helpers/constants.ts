@@ -52,6 +52,9 @@ export const DEFAULT_NAMED_ACCOUNTS = {
     keeper: {
         default: 0,
     },
+    dao: {
+        default: 0,
+    },
     feeReceiver: {
         default: 0,
     },
