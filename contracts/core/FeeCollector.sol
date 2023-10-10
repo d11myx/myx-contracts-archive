@@ -6,17 +6,17 @@ import "../interfaces/IFeeCollector.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
-contract FeeCollector is IFeeCollector {
+import "../libraries/Upgradeable.sol";
+
+contract FeeCollector is IFeeCollector, Upgradeable {
     // Discount ratio of every level (level => LevelDiscount)
     mapping(uint8 => LevelDiscount) public levelDiscounts;
 
     // Maximum of referrals ratio
     uint256 public override maxReferralsRatio;
 
-    IAddressesProvider public immutable ADDRESSES_PROVIDER;
-
-    constructor(IAddressesProvider addressesProvider) {
-        ADDRESSES_PROVIDER = addressesProvider;
+    function initialize(IAddressesProvider addressesProvider) public initializer {
+        ADDRESS_PROVIDER = addressesProvider;
         maxReferralsRatio = PrecisionUtils.percentage();
         levelDiscounts[1] = LevelDiscount(1e6, 1e6);
         levelDiscounts[2] = LevelDiscount(2e6, 2e6);
@@ -25,21 +25,19 @@ contract FeeCollector is IFeeCollector {
         levelDiscounts[5] = LevelDiscount(5e6, 5e6);
     }
 
-    modifier onlyPoolAdmin() {
-        require(
-            IRoleManager(ADDRESSES_PROVIDER.roleManager()).isPoolAdmin(msg.sender),
-            "onlyPoolAdmin"
-        );
-        _;
-    }
-
-    function getLevelDiscounts(uint8 level) external override view returns (LevelDiscount memory) {
+    function getLevelDiscounts(uint8 level) external view override returns (LevelDiscount memory) {
         return levelDiscounts[level];
     }
 
-    function updateLevelDiscountRatio(uint8 level, LevelDiscount calldata discount) external override {
-        require(discount.makerDiscountRatio <= PrecisionUtils.percentage()
-            && discount.takerDiscountRatio <= PrecisionUtils.percentage(), "exceeds max ratio");
+    function updateLevelDiscountRatio(
+        uint8 level,
+        LevelDiscount calldata discount
+    ) external override {
+        require(
+            discount.makerDiscountRatio <= PrecisionUtils.percentage() &&
+                discount.takerDiscountRatio <= PrecisionUtils.percentage(),
+            "exceeds max ratio"
+        );
 
         LevelDiscount memory oldDiscount = levelDiscounts[level];
         levelDiscounts[level] = discount;
