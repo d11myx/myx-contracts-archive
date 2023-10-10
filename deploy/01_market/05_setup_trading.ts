@@ -38,7 +38,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     let usdt = await getToken();
 
     // FeeCollector
-    const feeCollectorArtifact = await deploy(`${FEE_COLLECTOR_ID}`, {
+    const feeCollectorArtifact = await deployProxy(`${FEE_COLLECTOR_ID}`, [], {
         from: deployer,
         contract: 'FeeCollector',
         args: [addressProvider.address],
@@ -50,7 +50,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as FeeCollector;
 
     // RiskReserve
-    const riskReserveArtifact = await deploy(`${RISK_RESERVE_ID}`, {
+    const riskReserveArtifact = await deployProxy(`${RISK_RESERVE_ID}`, [], {
         from: deployer,
         contract: 'RiskReserve',
         args: [dao, addressProvider.address],
@@ -63,7 +63,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     // PositionManager
     // upgrades.deployProxy
-    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
+    const positionManagerArtifact = await deployProxy(`${POSITION_MANAGER_ID}`, [], {
         from: deployer,
         contract: 'PositionManager',
         args: [addressProvider.address, pool.address, usdt.address, feeCollector.address, riskReserve.address],
@@ -75,7 +75,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as PositionManager;
 
     // OrderManager
-    const orderManagerArtifact = await deploy(`${ORDER_MANAGER_ID}`, {
+    const orderManagerArtifact = await deployProxy(`${ORDER_MANAGER_ID}`, [], {
         from: deployer,
         contract: 'OrderManager',
         args: [addressProvider.address, pool.address, positionManager.address],

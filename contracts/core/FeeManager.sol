@@ -30,6 +30,8 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
     address public pledgeAddress;
     address public stakingPool;
 
+    constructor() ReentrancyGuard() {}
+
     function setStakingPool(address newAddress) external onlyPoolAdmin {
         stakingPool = newAddress;
     }
