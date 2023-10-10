@@ -2,14 +2,14 @@ Accounts after deployment
 ┌─────────┬──────────────────────┬──────────────────────────────────────────────┬────────────────────────────┐
 │ (index) │         name         │                   account                    │          balance           │
 ├─────────┼──────────────────────┼──────────────────────────────────────────────┼────────────────────────────┤
-│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739760299773594' │
-│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739760299773594' │
+│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739759184372884' │
+│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739759184372884' │
 │    2    │      'operator'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │        '1000000.0'         │
 │    3    │     'treasurer'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │        '1000000.0'         │
-│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739760299773594' │
-│    5    │        'dao'         │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739760299773594' │
-│    6    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739760299773594' │
-│    7    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739760299773594' │
+│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739759184372884' │
+│    5    │        'dao'         │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739759184372884' │
+│    6    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739759184372884' │
+│    7    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.99739759184372884' │
 │    8    │   'teamAndAdvisor'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
 │    9    │  'privatePlacement'  │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
 │   10    │     'community'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │        '1000000.0'         │
@@ -43,18 +43,18 @@ Deployments
 │   OrderManager    │ '0x64d36A9e9A13d4b198d352a711B1E7AbF868A4Ab' │
 │      Router       │ '0xFaF592e792936e684D59c1211796154975F4426b' │
 │  ExecutionLogic   │ '0x74c3Bc926A7bDF81D6A9a212F0dCb8166E538b28' │
-│     Executor      │ '0x0dA35C9F10678f915fe457C3524EF91683B0b3E7' │
-│   TestCallBack    │ '0x9E582400cD9cAEd1a492fB63658E9D800F6b3945' │
-│        MYX        │ '0xd9158B1913e5567493a0E4eDc9dd3Fe8dEaBCD8C' │
-│       RaMYX       │ '0x295528430103cEBC738CbF3cca765ee9d2b11011' │
-│       StMYX       │ '0xf4011F3Cb6e77a14C5943192Ac7197fEfE887b63' │
-│      Vester       │ '0x9470Ca8ad8FC4474B09c58B9C445bc1cA8866804' │
-│    StakingPool    │ '0xcf0220a29D13d47b3d4f2DC59E7468F9e606B097' │
-│   LPStakingPool   │ '0x48ABD3Ca302d693Ce71417516E7e6d3f83974Ff4' │
-│     Convertor     │ '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583' │
-│ RewardDistributor │ '0xb679e480650730032D9a6f762eaAf2EC79d08149' │
-│  FeeDistributor   │ '0x2fa8e11dF61515913EFf40C95bf25C00dc72CDb8' │
-│      Faucet       │ '0x6eEaa11e8cE5654d5265453EA30e9CC2aC8EC943' │
+│     Executor      │ '0x256628FF76a2db9c3Fb10A1512B8bEdC4f1D0dF9' │
+│   TestCallBack    │ '0x295528430103cEBC738CbF3cca765ee9d2b11011' │
+│        MYX        │ '0xf4011F3Cb6e77a14C5943192Ac7197fEfE887b63' │
+│       RaMYX       │ '0x9470Ca8ad8FC4474B09c58B9C445bc1cA8866804' │
+│       StMYX       │ '0x509f6c6C41C671d7F4aa223a6219bD9C889f23c0' │
+│      Vester       │ '0xcf0220a29D13d47b3d4f2DC59E7468F9e606B097' │
+│    StakingPool    │ '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583' │
+│   LPStakingPool   │ '0xb679e480650730032D9a6f762eaAf2EC79d08149' │
+│     Convertor     │ '0x2fa8e11dF61515913EFf40C95bf25C00dc72CDb8' │
+│ RewardDistributor │ '0x75608fD59edb71152C7360F789B3245Cd1CB4Afc' │
+│  FeeDistributor   │ '0xabDE58dBa1E456BE2BaC701CE40aCF4A3BFfA1dB' │
+│      Faucet       │ '0x6eCBe043FA1DfC62a27A5041C5abfd51Dcb51e56' │
 └───────────────────┴──────────────────────────────────────────────┘
 
 MockedTokens
