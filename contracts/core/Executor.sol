@@ -1,25 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '../interfaces/IExecutor.sol';
-import '../interfaces/IAddressesProvider.sol';
-import '../interfaces/IRoleManager.sol';
+import "../interfaces/IExecutor.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IExecutionLogic.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../libraries/Upgradeable.sol";
 
-contract Executor is IExecutor, Initializable {
-
-    IAddressesProvider public ADDRESS_PROVIDER;
+contract Executor is IExecutor, Upgradeable {
+    // IAddressesProvider public ADDRESS_PROVIDER;
     IExecutionLogic public executionLogic;
-
-//    constructor(
-//        IAddressesProvider addressProvider,
-//        IExecutionLogic _executionLogic
-//    ) {
-//        ADDRESS_PROVIDER = addressProvider;
-//        executionLogic = _executionLogic;
-//    }
 
     function initialize(
         IAddressesProvider addressProvider,
@@ -30,7 +21,7 @@ contract Executor is IExecutor, Initializable {
     }
 
     modifier onlyPositionKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), 'opk');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), "opk");
         _;
     }
 
@@ -40,7 +31,7 @@ contract Executor is IExecutor, Initializable {
         uint256 timestamp,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable override onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         _setPrices(tokens, prices, timestamp);
 
@@ -53,7 +44,7 @@ contract Executor is IExecutor, Initializable {
         uint256 timestamp,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable override onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         _setPrices(tokens, prices, timestamp);
 
@@ -66,7 +57,7 @@ contract Executor is IExecutor, Initializable {
         uint256 timestamp,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable override onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         _setPrices(tokens, prices, timestamp);
 
@@ -79,7 +70,7 @@ contract Executor is IExecutor, Initializable {
         uint256 timestamp,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable override onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         _setPrices(tokens, prices, timestamp);
 
@@ -96,11 +87,17 @@ contract Executor is IExecutor, Initializable {
         uint8 level,
         uint256 commissionRatio
     ) external payable override onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeADLAndDecreaseOrder(executePositions, orderId, tradeType, level, commissionRatio);
+        executionLogic.executeADLAndDecreaseOrder(
+            executePositions,
+            orderId,
+            tradeType,
+            level,
+            commissionRatio
+        );
     }
 
     function setPricesAndLiquidatePositions(
@@ -109,7 +106,7 @@ contract Executor is IExecutor, Initializable {
         uint256 timestamp,
         bytes32[] memory positionKeys
     ) external payable override onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, 'ip');
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         _setPrices(tokens, prices, timestamp);
 
@@ -125,7 +122,14 @@ contract Executor is IExecutor, Initializable {
         return executionLogic.needADL(pairIndex, isLong, executionSize, executionPrice);
     }
 
-    function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256 _timestamp) internal {
-        IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(_tokens, _prices);
+    function _setPrices(
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        uint256 _timestamp
+    ) internal {
+        IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(
+            _tokens,
+            _prices
+        );
     }
 }
