@@ -97,7 +97,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         address _keeper,
         uint256 _sizeAmount,
         bool _isLong,
-        uint256 vipRate,
+        IFeeCollector.LevelDiscount memory discount,
         uint256 referralRate,
         uint256 _price
     ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
@@ -105,7 +105,8 @@ contract PositionManager is FeeManager, PausableUpgradeable {
 
         uint256 sizeDelta = _sizeAmount.mulPrice(_price);
 
-        tradingFee = _tradingFee(_pairIndex, _isLong, sizeDelta);
+        bool isTaker;
+        (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDelta);
         charge -= int256(tradingFee);
 
         uint256 lpAmount = _distributeTradingFee(
@@ -114,7 +115,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
             _keeper,
             sizeDelta,
             tradingFee,
-            vipRate,
+            isTaker ? discount.takerDiscountRatio : discount.makerDiscountRatio,
             referralRate
         );
 
@@ -312,7 +313,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         uint256 sizeAmount,
         bool isLong,
         int256 collateral,
-        uint256 vipRate,
+        IFeeCollector.LevelDiscount memory discount,
         uint256 referralRate,
         uint256 oraclePrice
     )
@@ -346,6 +347,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         // update funding fee
         _updateFundingRate(pairIndex, oraclePrice);
         _handleCollateral(pairIndex, position, collateral);
+
         // settlement trading fee and funding fee
         int256 charge;
         (charge, tradingFee, fundingFee) = _takeFundingFeeAddTraderFee(
@@ -354,7 +356,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
             keeper,
             sizeAmount,
             isLong,
-            vipRate,
+            discount,
             referralRate,
             oraclePrice
         );
@@ -403,7 +405,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         uint256 sizeAmount,
         bool isLong,
         int256 collateral,
-        uint256 vipRate,
+        IFeeCollector.LevelDiscount memory discount,
         uint256 referralRate,
         uint256 oraclePrice,
         bool useRiskReserve
@@ -432,7 +434,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
             keeper,
             sizeAmount,
             isLong,
-            vipRate,
+            discount,
             referralRate,
             oraclePrice
         );
@@ -572,14 +574,16 @@ contract PositionManager is FeeManager, PausableUpgradeable {
             pair.indexToken
         );
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
-        return _tradingFee(_pairIndex, _isLong, sizeDelta);
+
+        (tradingFee,) = _tradingFee(_pairIndex, _isLong, sizeDelta);
+        return tradingFee;
     }
 
     function _tradingFee(
         uint256 _pairIndex,
         bool _isLong,
         uint256 sizeDelta
-    ) internal view returns (uint256 tradingFee) {
+    ) internal view returns (uint256 tradingFee, bool isTaker) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
@@ -587,12 +591,14 @@ contract PositionManager is FeeManager, PausableUpgradeable {
             tradingFee = _isLong
                 ? sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP)
                 : sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP);
+            isTaker = _isLong;
         } else {
             tradingFee = _isLong
                 ? sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP)
                 : sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP);
+            isTaker = !_isLong;
         }
-        return tradingFee;
+        return (tradingFee, isTaker);
     }
 
     function getFundingFee(

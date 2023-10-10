@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import '../libraries/Position.sol';
+import "./IFeeCollector.sol";
 
 enum PositionStatus {
     Balance,
@@ -98,7 +99,7 @@ interface IPositionManager {
         uint256 _sizeAmount,
         bool _isLong,
         int256 _collateral,
-        uint256 vipRate,
+        IFeeCollector.LevelDiscount memory discount,
         uint256 referralRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
@@ -111,7 +112,7 @@ interface IPositionManager {
         uint256 _sizeAmount,
         bool _isLong,
         int256 _collateral,
-        uint256 vipRate,
+        IFeeCollector.LevelDiscount memory discount,
         uint256 referralRate,
         uint256 _price,
         bool useRiskReserve

@@ -9,29 +9,46 @@ import "../interfaces/IRoleManager.sol";
 import "../libraries/Upgradeable.sol";
 
 contract FeeCollector is IFeeCollector, Upgradeable {
-    // Discount ratio of every level (level => discountRatio)
-    mapping(uint8 => uint256) public override levelDiscountRatios;
+    // Discount ratio of every level (level => LevelDiscount)
+    mapping(uint8 => LevelDiscount) public levelDiscounts;
 
     // Maximum of referrals ratio
     uint256 public override maxReferralsRatio;
 
     function initialize(IAddressesProvider addressesProvider) public initializer {
         ADDRESS_PROVIDER = addressesProvider;
-        maxReferralsRatio = 1e8;
-        levelDiscountRatios[1] = 1e6;
-        levelDiscountRatios[2] = 2e6;
-        levelDiscountRatios[3] = 3e6;
-        levelDiscountRatios[4] = 4e6;
-        levelDiscountRatios[5] = 5e6;
+        maxReferralsRatio = PrecisionUtils.percentage();
+        levelDiscounts[1] = LevelDiscount(1e6, 1e6);
+        levelDiscounts[2] = LevelDiscount(2e6, 2e6);
+        levelDiscounts[3] = LevelDiscount(3e6, 3e6);
+        levelDiscounts[4] = LevelDiscount(4e6, 4e6);
+        levelDiscounts[5] = LevelDiscount(5e6, 5e6);
     }
 
-    function updateLevelDiscountRatio(uint8 level, uint256 newRatio) external override {
-        require(newRatio <= PrecisionUtils.percentage(), "exceeds max ratio");
+    function getLevelDiscounts(uint8 level) external view override returns (LevelDiscount memory) {
+        return levelDiscounts[level];
+    }
 
-        uint256 oldRatio = levelDiscountRatios[level];
-        levelDiscountRatios[level] = newRatio;
+    function updateLevelDiscountRatio(
+        uint8 level,
+        LevelDiscount calldata discount
+    ) external override {
+        require(
+            discount.makerDiscountRatio <= PrecisionUtils.percentage() &&
+                discount.takerDiscountRatio <= PrecisionUtils.percentage(),
+            "exceeds max ratio"
+        );
 
-        emit UpdateLevelDiscountRatio(level, oldRatio, newRatio);
+        LevelDiscount memory oldDiscount = levelDiscounts[level];
+        levelDiscounts[level] = discount;
+
+        emit UpdateLevelDiscountRatio(
+            level,
+            oldDiscount.makerDiscountRatio,
+            oldDiscount.takerDiscountRatio,
+            levelDiscounts[level].makerDiscountRatio,
+            levelDiscounts[level].takerDiscountRatio
+        );
     }
 
     function updateMaxReferralsRatio(uint256 newRatio) external override {
