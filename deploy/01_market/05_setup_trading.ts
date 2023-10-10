@@ -125,10 +125,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as ExecutionLogic;
 
     // Executor
-    const executorArtifact = await deployProxy(`${EXECUTOR_ID}`, [addressProvider.address], {
+    const executorArtifact = await deployProxy(`${EXECUTOR_ID}`, [], {
         from: deployer,
         contract: 'Executor',
-        args: [executionLogic.address],
+        args: [addressProvider.address, executionLogic.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
