@@ -19,7 +19,7 @@ export const deployProxy = async (
 ): Promise<DeployResult> => {
     const contract = await deployUpgradeableContract(options.contract as string, options.args, {
         constructorArgs: constructorArgs,
-        initializer: false,
+        initializer: `initialize`,
     });
 
     const factory = await hre.ethers.getContractFactory(options.contract as string);
