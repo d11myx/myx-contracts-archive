@@ -40,7 +40,7 @@ export const deployWETH = async (): Promise<WETH> => {
     return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
 };
 
-const logFlag = false;
+const logFlag = true;
 
 export function log(message?: any, ...optionalParams: any[]) {
     if (logFlag) {
@@ -129,7 +129,9 @@ export async function deployPrice(
     const fee = mockPyth.getUpdateFee(updateData);
     await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
 
-    const fundingRate = (await deployContract('FundingRate', [addressesProvider.address])) as any as FundingRate;
+    const fundingRate = (await deployUpgradeableContract('FundingRate', [
+        addressesProvider.address,
+    ])) as any as FundingRate;
     log(`deployed FundingRate at ${fundingRate.address}`);
 
     await addressesProvider.connect(deployer.signer).initialize(priceOracle.address, fundingRate.address);
@@ -144,7 +146,10 @@ export async function deployPair(
 ) {
     log(` - setup pairs`);
     const poolTokenFactory = (await deployContract('PoolTokenFactory', [addressProvider.address])) as PoolTokenFactory;
-    const pool = (await deployContract('Pool', [addressProvider.address, poolTokenFactory.address])) as any as Pool;
+    const pool = (await deployUpgradeableContract('Pool', [
+        addressProvider.address,
+        poolTokenFactory.address,
+    ])) as any as Pool;
     log(`deployed Pool at ${pool.address}`);
 
     //TODO uniswap config
@@ -168,13 +173,15 @@ export async function deployTrading(
     const weth = await getWETH();
     // const usdt = await getToken();
 
-    let feeCollector = (await deployContract('FeeCollector', [addressProvider.address])) as any as FeeCollector;
-    let riskReserve = (await deployContract('RiskReserve', [
+    let feeCollector = (await deployUpgradeableContract('FeeCollector', [
+        addressProvider.address,
+    ])) as any as FeeCollector;
+    let riskReserve = (await deployUpgradeableContract('RiskReserve', [
         deployer.address,
         addressProvider.address,
     ])) as any as RiskReserve;
 
-    let positionManager = (await deployContract('PositionManager', [
+    let positionManager = (await deployUpgradeableContract('PositionManager', [
         addressProvider.address,
         pool.address,
         pledge.address,
@@ -183,7 +190,7 @@ export async function deployTrading(
     ])) as any as PositionManager;
     log(`deployed PositionManager at ${positionManager.address}`);
 
-    let orderManager = (await deployContract('OrderManager', [
+    let orderManager = (await deployUpgradeableContract('OrderManager', [
         addressProvider.address,
         pool.address,
         positionManager.address,
@@ -216,6 +223,7 @@ export async function deployTrading(
         executionLogic.address,
     ])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
+    log(`executionLogic pool : ${await executor.executionLogic()}`);
 
     await waitForTx(await pool.connect(poolAdmin.signer).setRiskReserve(riskReserve.address));
 

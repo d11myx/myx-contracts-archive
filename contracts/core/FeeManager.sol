@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+
 import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
+import "../interfaces/IFeeCollector.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IFeeManager.sol";
-import "../libraries/Roleable.sol";
+
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
-import "./FeeCollector.sol";
 
-abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, Roleable {
+import "../libraries/Upgradeable.sol";
+
+abstract contract FeeManager is ReentrancyGuardUpgradeable, IFeeManager, IPositionManager, Upgradeable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using PrecisionUtils for uint256;
@@ -25,21 +28,11 @@ abstract contract FeeManager is ReentrancyGuard, IFeeManager, IPositionManager, 
 
     uint256 public override treasuryFee;
 
-    IPool public immutable pool;
-    IFeeCollector public immutable feeCollector;
-    address public immutable pledgeAddress;
+    IPool public pool;
+    IFeeCollector public feeCollector;
+    address public pledgeAddress;
     address public stakingPool;
 
-    constructor(
-        IAddressesProvider addressProvider,
-        IPool _pool,
-        address _pledgeAddress,
-        IFeeCollector _feeCollector
-    ) Roleable(addressProvider) {
-        pledgeAddress = _pledgeAddress;
-        pool = _pool;
-        feeCollector = _feeCollector;
-    }
 
     function setStakingPool(address newAddress) external onlyPoolAdmin {
         stakingPool = newAddress;
