@@ -5,18 +5,23 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 
 contract Upgradeable is Initializable, UUPSUpgradeable {
-    IAddressesProvider public immutable ADDRESS_PROVIDER;
+    IAddressesProvider public ADDRESS_PROVIDER;
 
-    constructor(IAddressesProvider addressProvider) initializer {
-        ADDRESS_PROVIDER = addressProvider;
+    modifier onlyAdmin() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isAdmin(msg.sender), "onlyAdmin");
+        _;
     }
 
-    // function initialize() public initializer {
-    //     // __Ownable_init();
-    //     // __UUPSUpgradeable_init();
-    // }
+    modifier onlyPoolAdmin() {
+        require(
+            IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender),
+            "onlyPoolAdmin"
+        );
+        _;
+    }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override {
         require(msg.sender == ADDRESS_PROVIDER.timelock(), "Unauthorized access");

@@ -2,6 +2,7 @@ import { BigNumber, Contract, ContractTransaction, ethers } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TestEnv } from '../../test/helpers/make-suite';
 import { DeployOptions, DeployResult } from 'hardhat-deploy/types';
+import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
@@ -10,8 +11,16 @@ declare var hre: HardhatRuntimeEnvironment;
 
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
 
-export const deployProxy = async (name: string, options: DeployOptions): Promise<DeployResult> => {
-    const contract = await deployUpgradeableContract(options.contract as string, options.args);
+export const deployProxy = async (
+    name: string,
+    constructorArgs: any[],
+    options: DeployOptions
+
+): Promise<DeployResult> => {
+    const contract = await deployUpgradeableContract(options.contract as string, options.args, {
+        constructorArgs: constructorArgs,
+        initializer: false,
+    });
 
     const factory = await hre.ethers.getContractFactory(options.contract as string);
 
@@ -89,11 +98,12 @@ export const deployContract = async <ContractType extends Contract>(
 export const deployUpgradeableContract = async <ContractType extends Contract>(
     contract: string,
     args?: any[],
+    opts?: DeployProxyOptions,
 ): Promise<ContractType> => {
     const [deployer] = await hre.ethers.getSigners();
 
     const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
-    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, args, { initializer: false });
+    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, args, opts);
 
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };

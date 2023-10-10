@@ -211,10 +211,7 @@ export async function deployTrading(
     ])) as any as ExecutionLogic;
     log(`deployed ExecutionLogic at ${executionLogic.address}`);
 
-    let executor = (await deployUpgradeableContract('Executor', [
-        addressProvider.address,
-        executionLogic.address,
-    ])) as any as Executor;
+    let executor = (await deployUpgradeableContract('Executor', [executionLogic.address])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await pool.connect(poolAdmin.signer).setRiskReserve(riskReserve.address));

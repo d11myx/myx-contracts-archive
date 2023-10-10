@@ -63,7 +63,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     // PositionManager
     // upgrades.deployProxy
-    const positionManagerArtifact = await  deploy(`${POSITION_MANAGER_ID}`, {
+    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
         from: deployer,
         contract: 'PositionManager',
         args: [addressProvider.address, pool.address, usdt.address, feeCollector.address, riskReserve.address],
@@ -121,13 +121,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as ExecutionLogic;
 
     // Executor
-    const executorArtifact = await deployProxy(`${EXECUTOR_ID}`, {
+    const executorArtifact = await deployProxy(`${EXECUTOR_ID}`, [addressProvider.address], {
         from: deployer,
         contract: 'Executor',
-        args: [addressProvider.address, executionLogic.address],
+        args: [executionLogic.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
+    console.log('executor:' + executor.address);
+    const currentImplAddress = await upgrades.erc1967.getImplementationAddress(executor.address);
+    console.log('currentImplAddress:' + currentImplAddress);
 
     await waitForTx(await pool.setRiskReserve(riskReserve.address));
 
