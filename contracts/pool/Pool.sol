@@ -18,7 +18,7 @@ import "../token/interfaces/IBaseToken.sol";
 
 import "../libraries/AmountMath.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../libraries/Roleable.sol";
+import "../libraries/Upgradeable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
@@ -27,7 +27,7 @@ import "../interfaces/IPoolTokenFactory.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../helpers/ValidationHelper.sol";
 
-contract Pool is IPool, Roleable {
+contract Pool is IPool, Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
@@ -36,7 +36,7 @@ contract Pool is IPool, Roleable {
     using SafeMath for uint256;
     uint256 private constant MAX_FEE = 1e6;
 
-    IPoolTokenFactory public immutable poolTokenFactory;
+    IPoolTokenFactory public poolTokenFactory;
     address public router;
     address public riskReserve;
     mapping(uint256 => mapping(address => bytes)) public tokenPath;
@@ -56,16 +56,19 @@ contract Pool is IPool, Roleable {
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
 
-    constructor(
+    function initialize(
         IAddressesProvider addressProvider,
         IPoolTokenFactory _poolTokenFactory
-    ) Roleable(addressProvider) {
+    ) public initializer {
+        ADDRESS_PROVIDER = addressProvider;
         poolTokenFactory = _poolTokenFactory;
     }
 
     modifier onlyPositionManagerOrOrderManagerOrRiskReserve() {
         require(
-            positionManagers.contains(msg.sender) || orderManagers.contains(msg.sender) || riskReserve == msg.sender,
+            positionManagers.contains(msg.sender) ||
+                orderManagers.contains(msg.sender) ||
+                riskReserve == msg.sender,
             "onlyPositionManagerOrOrderManagerOrRiskReserve"
         );
         _;
@@ -77,7 +80,10 @@ contract Pool is IPool, Roleable {
     }
 
     modifier onlyTreasury() {
-        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender), "onlyTreasury");
+        require(
+            IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender),
+            "onlyTreasury"
+        );
         _;
     }
 
@@ -113,7 +119,11 @@ contract Pool is IPool, Roleable {
         delete isStableToken[_token];
     }
 
-    function updateTokenPath(uint256 pairIndex, address tokenIn, bytes memory path) external onlyPoolAdmin {
+    function updateTokenPath(
+        uint256 pairIndex,
+        address tokenIn,
+        bytes memory path
+    ) external onlyPoolAdmin {
         tokenPath[pairIndex][tokenIn] = path;
     }
 
@@ -263,7 +273,10 @@ contract Pool is IPool, Roleable {
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
         require(vault.indexTotalAmount >= vault.indexReservedAmount, "insufficient index amount");
-        require(vault.stableTotalAmount >= vault.stableReservedAmount, "insufficient stable amount");
+        require(
+            vault.stableTotalAmount >= vault.stableReservedAmount,
+            "insufficient stable amount"
+        );
         emit UpdateReserveAmount(
             _pairIndex,
             int256(_indexAmount),
@@ -561,13 +574,17 @@ contract Pool is IPool, Roleable {
             if (mintDelta > availableDiscountAmount) {
                 mintAmount += AmountMath.getIndexAmount(
                     availableDiscountAmount,
-                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(
+                        PrecisionUtils.percentage() - availableDiscountRate
+                    )
                 );
                 mintDelta -= availableDiscountAmount;
             } else {
                 mintAmount += AmountMath.getIndexAmount(
                     mintDelta,
-                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(
+                        PrecisionUtils.percentage() - availableDiscountRate
+                    )
                 );
                 mintDelta -= mintDelta;
             }
@@ -683,10 +700,13 @@ contract Pool is IPool, Roleable {
 
         uint256 feeIndexTokenAmount;
         uint256 feeStableTokenAmount;
-        (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount) = getReceivedAmount(
-            _pairIndex,
-            _amount
-        );
+        (
+            receiveIndexTokenAmount,
+            receiveStableTokenAmount,
+            feeAmount,
+            feeIndexTokenAmount,
+            feeStableTokenAmount
+        ) = getReceivedAmount(_pairIndex, _amount);
 
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
@@ -723,7 +743,7 @@ contract Pool is IPool, Roleable {
     }
 
     function claimFee(address token, uint256 amount) external onlyTreasury {
-        require(feeTokenAmounts[token] >= amount, 'exceeded');
+        require(feeTokenAmounts[token] >= amount, "exceeded");
 
         feeTokenAmounts[token] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
@@ -892,7 +912,13 @@ contract Pool is IPool, Roleable {
         receiveIndexTokenAmount += indexTokenAdd;
         receiveStableTokenAmount += stableTokenAdd;
 
-        return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount);
+        return (
+            receiveIndexTokenAmount,
+            receiveStableTokenAmount,
+            feeAmount,
+            feeIndexTokenAmount,
+            feeStableTokenAmount
+        );
     }
 
     function transferTokenTo(
