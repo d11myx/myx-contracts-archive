@@ -74,6 +74,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         positionManagerArtifact.address,
     )) as PositionManager;
 
+    console.log('positionManager pool:' + (await positionManager.pool()));
     // OrderManager
     const orderManagerArtifact = await deployProxy(`${ORDER_MANAGER_ID}`, [], {
         from: deployer,
@@ -84,6 +85,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         // },
         ...COMMON_DEPLOY_PARAMS,
     });
+    console.log('pool:' + pool.address);
     const orderManager = (await hre.ethers.getContractAt(
         orderManagerArtifact.abi,
         orderManagerArtifact.address,
@@ -99,6 +101,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
+    console.log('orderManager :' + (await orderManager.address));
+    console.log('orderManager pool:' + (await orderManager.pool()));
     await waitForTx(await orderManager.setRouter(router.address));
 
     // ExecutionLogic
@@ -129,6 +133,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
     console.log('executor:' + executor.address);
+    console.log(`executionLogic address : ${await executor.executionLogic()}`);
     const currentImplAddress = await upgrades.erc1967.getImplementationAddress(executor.address);
     console.log('currentImplAddress:' + currentImplAddress);
 
