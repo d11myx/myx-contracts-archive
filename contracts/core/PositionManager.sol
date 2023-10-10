@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 
 import "./FeeManager.sol";
 import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
@@ -13,7 +14,7 @@ import "../libraries/Position.sol";
 import "../libraries/PositionKey.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
-import "../libraries/Roleable.sol";
+
 import "../interfaces/IFundingRate.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IPriceOracle.sol";
@@ -21,7 +22,7 @@ import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IRiskReserve.sol";
 
-contract PositionManager is FeeManager, Pausable {
+contract PositionManager is FeeManager, PausableUpgradeable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -49,7 +50,7 @@ contract PositionManager is FeeManager, Pausable {
     address public addressOrderManager;
     IRiskReserve public riskReserve;
 
-    constructor() FeeManager() Pausable() {}
+    // constructor() FeeManager() Pausable() {}
 
     function initialize(
         IAddressesProvider addressProvider,
@@ -58,11 +59,15 @@ contract PositionManager is FeeManager, Pausable {
         IFeeCollector _feeCollector,
         IRiskReserve _riskReserve
     ) public initializer {
+        __ReentrancyGuard_init();
+        __Pausable_init();
+        
         ADDRESS_PROVIDER = addressProvider;
         pledgeAddress = _pledgeAddress;
         pool = _pool;
         feeCollector = _feeCollector;
         riskReserve = _riskReserve;
+
     }
 
     modifier onlyExecutor() {
