@@ -119,6 +119,7 @@ abstract contract FeeManager is ReentrancyGuardUpgradeable, IFeeManager, IPositi
             sizeDelta,
             tradingFee,
             vipAmount,
+            vipRate,
             referralsAmount,
             lpAmount,
             keeperAmount,
