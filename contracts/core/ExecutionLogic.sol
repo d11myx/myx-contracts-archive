@@ -196,7 +196,7 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             order.isLong,
             collateral,
-            level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
+            feeCollector.getLevelDiscounts(level),
             commissionRatio,
             executionPrice
         );
@@ -416,7 +416,7 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             order.isLong,
             collateral,
-            level == 0 ? 0 : feeCollector.levelDiscountRatios(level),
+            feeCollector.getLevelDiscounts(level),
             commissionRatio,
             executionPrice,
             false
@@ -747,7 +747,10 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             order.isLong,
             0,
-            0,
+            IFeeCollector.LevelDiscount({
+                makerDiscountRatio: 0,
+                takerDiscountRatio: 0
+            }),
             0,
             executionPrice,
             true
