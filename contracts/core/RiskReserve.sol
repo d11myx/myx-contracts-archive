@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRiskReserve.sol";
 import "../interfaces/IPool.sol";
-import "../libraries/Roleable.sol";
+import "../libraries/Upgradeable.sol";
 
-contract RiskReserve is IRiskReserve, Roleable {
+contract RiskReserve is IRiskReserve, Upgradeable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -18,20 +18,21 @@ contract RiskReserve is IRiskReserve, Roleable {
     address public addressPositionManager;
     IPool public pool;
 
-    constructor(
+    function initialize(
         address _addressDao,
         IAddressesProvider addressProvider
-    ) Roleable(addressProvider) {
+    ) public initializer {
+        ADDRESS_PROVIDER = addressProvider;
         addressDao = _addressDao;
     }
 
     modifier onlyDao() {
-        require(msg.sender == addressDao, 'onlyDao');
+        require(msg.sender == addressDao, "onlyDao");
         _;
     }
 
     modifier onlyPositionManager() {
-        require(msg.sender == addressPositionManager, 'onlyPositionManager');
+        require(msg.sender == addressPositionManager, "onlyPositionManager");
         _;
     }
 
@@ -67,7 +68,7 @@ contract RiskReserve is IRiskReserve, Roleable {
     }
 
     function withdraw(address asset, address to, uint256 amount) external override onlyDao {
-        require(int256(amount) <= getReservedAmount[asset], 'insufficient balance');
+        require(int256(amount) <= getReservedAmount[asset], "insufficient balance");
 
         if (amount > 0) {
             getReservedAmount[asset] -= int256(amount);
