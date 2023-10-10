@@ -49,6 +49,8 @@ contract PositionManager is FeeManager, Pausable {
     address public addressOrderManager;
     IRiskReserve public riskReserve;
 
+    constructor() FeeManager() Pausable() {}
+
     function initialize(
         IAddressesProvider addressProvider,
         IPool _pool,

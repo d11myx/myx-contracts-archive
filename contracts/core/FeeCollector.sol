@@ -6,31 +6,23 @@ import "../interfaces/IFeeCollector.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
-contract FeeCollector is IFeeCollector {
+import "../libraries/Upgradeable.sol";
+
+contract FeeCollector is IFeeCollector, Upgradeable {
     // Discount ratio of every level (level => discountRatio)
     mapping(uint8 => uint256) public override levelDiscountRatios;
 
     // Maximum of referrals ratio
     uint256 public override maxReferralsRatio;
 
-    IAddressesProvider public immutable ADDRESSES_PROVIDER;
-
-    constructor(IAddressesProvider addressesProvider) {
-        ADDRESSES_PROVIDER = addressesProvider;
+    function initialize(IAddressesProvider addressesProvider) public initializer {
+        ADDRESS_PROVIDER = addressesProvider;
         maxReferralsRatio = 1e8;
         levelDiscountRatios[1] = 1e6;
         levelDiscountRatios[2] = 2e6;
         levelDiscountRatios[3] = 3e6;
         levelDiscountRatios[4] = 4e6;
         levelDiscountRatios[5] = 5e6;
-    }
-
-    modifier onlyPoolAdmin() {
-        require(
-            IRoleManager(ADDRESSES_PROVIDER.roleManager()).isPoolAdmin(msg.sender),
-            "onlyPoolAdmin"
-        );
-        _;
     }
 
     function updateLevelDiscountRatio(uint8 level, uint256 newRatio) external override {
