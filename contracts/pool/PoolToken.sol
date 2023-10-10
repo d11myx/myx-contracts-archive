@@ -19,10 +19,11 @@ contract PoolToken is IPoolToken, Roleable, ERC20 {
         address _miner,
         string memory name_,
         string memory symbol_
-    ) Roleable(addressProvider) ERC20(name_, symbol_) {
+    ) ERC20(name_, symbol_) Roleable() {
         indexToken = _indexToken;
         stableToken = _stableToken;
         miners[_miner] = true;
+        ADDRESS_PROVIDER = addressProvider;
     }
 
     modifier onlyMiner() {

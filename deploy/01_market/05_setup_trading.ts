@@ -1,5 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { upgrades } from 'hardhat';
 import {
     COMMON_DEPLOY_PARAMS,
     deployProxy,
@@ -37,7 +38,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     let usdt = await getToken();
 
     // FeeCollector
-    const feeCollectorArtifact = await deploy(`${FEE_COLLECTOR_ID}`, {
+    const feeCollectorArtifact = await deployProxy(`${FEE_COLLECTOR_ID}`, [], {
         from: deployer,
         contract: 'FeeCollector',
         args: [addressProvider.address],
@@ -49,7 +50,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as FeeCollector;
 
     // RiskReserve
-    const riskReserveArtifact = await deploy(`${RISK_RESERVE_ID}`, {
+    const riskReserveArtifact = await deployProxy(`${RISK_RESERVE_ID}`, [], {
         from: deployer,
         contract: 'RiskReserve',
         args: [dao, addressProvider.address],
@@ -61,7 +62,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as RiskReserve;
 
     // PositionManager
-    const positionManagerArtifact = await deploy(`${POSITION_MANAGER_ID}`, {
+    // upgrades.deployProxy
+    const positionManagerArtifact = await deployProxy(`${POSITION_MANAGER_ID}`, [], {
         from: deployer,
         contract: 'PositionManager',
         args: [addressProvider.address, pool.address, usdt.address, feeCollector.address, riskReserve.address],
@@ -72,8 +74,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         positionManagerArtifact.address,
     )) as PositionManager;
 
+    console.log('positionManager pool:' + (await positionManager.pool()));
     // OrderManager
-    const orderManagerArtifact = await deploy(`${ORDER_MANAGER_ID}`, {
+    const orderManagerArtifact = await deployProxy(`${ORDER_MANAGER_ID}`, [], {
         from: deployer,
         contract: 'OrderManager',
         args: [addressProvider.address, pool.address, positionManager.address],
@@ -82,6 +85,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         // },
         ...COMMON_DEPLOY_PARAMS,
     });
+    console.log('pool:' + pool.address);
     const orderManager = (await hre.ethers.getContractAt(
         orderManagerArtifact.abi,
         orderManagerArtifact.address,
@@ -97,6 +101,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;
+    console.log('orderManager :' + (await orderManager.address));
+    console.log('orderManager pool:' + (await orderManager.pool()));
     await waitForTx(await orderManager.setRouter(router.address));
 
     // ExecutionLogic
@@ -119,13 +125,17 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as ExecutionLogic;
 
     // Executor
-    const executorArtifact = await deployProxy(`${EXECUTOR_ID}`, {
+    const executorArtifact = await deployProxy(`${EXECUTOR_ID}`, [], {
         from: deployer,
         contract: 'Executor',
         args: [addressProvider.address, executionLogic.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = (await hre.ethers.getContractAt(executorArtifact.abi, executorArtifact.address)) as Executor;
+    console.log('executor:' + executor.address);
+    console.log(`executionLogic address : ${await executor.executionLogic()}`);
+    const currentImplAddress = await upgrades.erc1967.getImplementationAddress(executor.address);
+    console.log('currentImplAddress:' + currentImplAddress);
 
     await waitForTx(await pool.setRiskReserve(riskReserve.address));
 
