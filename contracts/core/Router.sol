@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import "@openzeppelin/contracts/utils/Address.sol";
 
 import "../libraries/PositionKey.sol";
+import "../libraries/Upgradeable.sol";
 import "../libraries/ETHGateway.sol";
 import "../libraries/Multicall.sol";
 import "../interfaces/IRouter.sol";
@@ -143,17 +144,18 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         for (uint256 i = 0; i < requests.length; i++) {
             TradingTypes.DecreasePositionRequest memory request = requests[i];
 
-            orderIds[i] = orderManager.createOrder(TradingTypes.CreateOrderRequest({
-                account: msg.sender,
-                pairIndex: request.pairIndex,
-                tradeType: request.tradeType,
-                collateral: request.collateral,
-                openPrice: request.triggerPrice,
-                isLong: request.isLong,
-                sizeAmount: -int256(request.sizeAmount),
-                maxSlippage: request.maxSlippage,
-                data: abi.encode(msg.sender)
-            })
+            orderIds[i] = orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: msg.sender,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.triggerPrice,
+                    isLong: request.isLong,
+                    sizeAmount: -int256(request.sizeAmount),
+                    maxSlippage: request.maxSlippage,
+                    data: abi.encode(msg.sender)
+                })
             );
         }
         return orderIds;
@@ -170,7 +172,12 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
     function cancelOrders(CancelOrderRequest[] memory requests) external {
         for (uint256 i = 0; i < requests.length; i++) {
             CancelOrderRequest memory request = requests[i];
-            orderManager.cancelOrder(request.orderId, request.tradeType, request.isIncrease, "cancelOrders");
+            orderManager.cancelOrder(
+                request.orderId,
+                request.tradeType,
+                request.isIncrease,
+                "cancelOrders"
+            );
         }
     }
 
