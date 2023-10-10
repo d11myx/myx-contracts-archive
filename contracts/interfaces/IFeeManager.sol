@@ -9,6 +9,7 @@ interface IFeeManager {
         uint256 sizeDelta,
         uint256 tradingFee,
         uint256 vipAmount,
+        uint256 vipRate,
         uint256 referralAmount,
         uint256 lpAmount,
         uint256 keeperAmount,

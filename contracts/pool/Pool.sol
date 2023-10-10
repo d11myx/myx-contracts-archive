@@ -698,19 +698,6 @@ contract Pool is IPool, Roleable {
         uint256 totalReceive = receiveIndexTokenAmount.mulPrice(price) + receiveStableTokenAmount;
         require(totalReceive <= totalAvailable, "insufficient available balance");
 
-        uint256 indexTokenAdd;
-        uint256 stableTokenAdd;
-        if (availableIndexToken < receiveIndexTokenAmount) {
-            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
-            receiveIndexTokenAmount = availableIndexToken;
-        }
-
-        if (availableStableToken < receiveStableTokenAmount) {
-            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
-            receiveStableTokenAmount = availableStableToken;
-        }
-        receiveIndexTokenAmount += indexTokenAdd;
-        receiveStableTokenAmount += stableTokenAdd;
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
@@ -887,6 +874,23 @@ contract Pool is IPool, Roleable {
 
         receiveIndexTokenAmount -= feeIndexTokenAmount;
         receiveStableTokenAmount -= feeStableTokenAmount;
+
+        uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
+        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+
+        uint256 indexTokenAdd;
+        uint256 stableTokenAdd;
+        if (availableIndexToken < receiveIndexTokenAmount) {
+            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
+            receiveIndexTokenAmount = availableIndexToken;
+        }
+
+        if (availableStableToken < receiveStableTokenAmount) {
+            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
+            receiveStableTokenAmount = availableStableToken;
+        }
+        receiveIndexTokenAmount += indexTokenAdd;
+        receiveStableTokenAmount += stableTokenAdd;
 
         return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount);
     }
