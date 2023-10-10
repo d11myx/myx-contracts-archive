@@ -51,6 +51,7 @@ contract OrderManager is
     IPool public pool;
     IPositionManager public positionManager;
     address public addressExecutionLogic;
+    address public addressLiquidationLogic;
     address public router;
 
     function initialize(
@@ -72,25 +73,31 @@ contract OrderManager is
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutionLogic, "onlyExecutor");
+        require(msg.sender == addressExecutionLogic || msg.sender == addressLiquidationLogic, "onlyExecutor");
         _;
     }
 
     modifier onlyCreateOrderAddress(address account) {
         require(
-            msg.sender == router || msg.sender == addressExecutionLogic || account == msg.sender,
+            msg.sender == router || msg.sender == addressExecutionLogic
+                || msg.sender == addressLiquidationLogic || account == msg.sender,
             "no access"
         );
         _;
     }
 
     modifier onlyExecutorOrAccount(address account) {
-        require(msg.sender == address(addressExecutionLogic) || account == msg.sender, "no access");
+        require(msg.sender == address(addressExecutionLogic)
+            || msg.sender == address(addressLiquidationLogic) || account == msg.sender, "no access");
         _;
     }
 
-    function setExecutor(address _addressExecutionLogic) external onlyPoolAdmin {
+    function setExecutionLogic(address _addressExecutionLogic) external onlyPoolAdmin {
         addressExecutionLogic = _addressExecutionLogic;
+    }
+
+    function setLiquidationLogic(address _addressLiquidationLogic) external onlyPoolAdmin {
+        addressLiquidationLogic = _addressLiquidationLogic;
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
