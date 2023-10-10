@@ -93,7 +93,7 @@ export const deployUpgradeableContract = async <ContractType extends Contract>(
     const [deployer] = await hre.ethers.getSigners();
 
     const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
-    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, args, { initializer: false });
+    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, args);
 
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
