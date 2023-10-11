@@ -7,11 +7,10 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 
-import '../interfaces/IFeeManager.sol';
 import '../token/interfaces/IBaseToken.sol';
 import './interfaces/IStakingPool.sol';
 import './interfaces/IRewardDistributor.sol';
-import '../interfaces/IPositionManager.sol';
+import '../interfaces/IFeeCollector.sol';
 
 // staking pool for MYX / raMYX
 contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
@@ -31,7 +30,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
     // rewardToken -> user -> stakeAmount
     mapping(address => mapping(address => uint256)) public userStaked;
 
-    IPositionManager public positionManager;
+    IFeeCollector public feeCollector;
 
     uint256 public cumulativeRewardPerToken;
     mapping(address => uint256) public userCumulativeRewardPerTokens;
@@ -46,7 +45,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         address[] memory _stakeTokens,
         address _stToken,
         address _rewardToken,
-        IPositionManager _positionManager
+        IFeeCollector _feeCollector
     ) {
         for (uint256 i = 0; i < _stakeTokens.length; i++) {
             address stakeToken = _stakeTokens[i];
@@ -54,7 +53,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         }
         stToken = _stToken;
         rewardToken = _rewardToken;
-        positionManager = _positionManager;
+        feeCollector = _feeCollector;
     }
 
     modifier onlyHandler() {
@@ -144,7 +143,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
             return 0;
         }
 
-        uint256 pendingReward = IFeeManager(address(positionManager)).claimStakingTradingFee();
+        uint256 pendingReward = feeCollector.claimStakingTradingFee();
         if (pendingReward > 0) {
             cumulativeRewardPerToken += pendingReward.mulDiv(PRECISION, totalSupply);
         }
@@ -163,7 +162,7 @@ contract StakingPool is IStakingPool, Pausable, ReentrancyGuard, Ownable {
         if (totalSupply == 0 || balance == 0) {
             return 0;
         }
-        uint256 pendingReward = IFeeManager(address(positionManager)).stakingTradingFee();
+        uint256 pendingReward = feeCollector.stakingTradingFee();
         uint256 nextCumulativeFeePerToken = cumulativeRewardPerToken + pendingReward.mulDiv(PRECISION, totalSupply);
         claimableReward = balance.mulDiv(nextCumulativeFeePerToken - userCumulativeRewardPerTokens[account], PRECISION);
     }
