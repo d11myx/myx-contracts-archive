@@ -115,7 +115,11 @@ export async function deployPrice(
         pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
     }
 
-    const indexPriceFeed = (await deployContract('IndexPriceFeed', [[], []])) as any as IndexPriceFeed;
+    const indexPriceFeed = (await deployContract('IndexPriceFeed', [
+        addressesProvider.address,
+        [],
+        [],
+    ])) as any as IndexPriceFeed;
     log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
     const priceOracle = (await deployContract('PriceOracle', [

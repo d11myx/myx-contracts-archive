@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { IndexPriceFeed, MockPyth, OraclePriceFeed, PriceOracle } from '../types';
+import { AddressesProvider, IndexPriceFeed, MockPyth, OraclePriceFeed, PriceOracle, Timelock } from '../types';
 import { testEnv } from './helpers/make-suite';
 import { getBlockTimestamp } from '../helpers';
 import { expect } from './shared/expect';
@@ -11,11 +11,17 @@ describe('Oracle: oracle cases', () => {
         const mockPythFactory = await ethers.getContractFactory('MockPyth');
         mockPyth = await mockPythFactory.deploy(100, 60);
 
+        const timelockFactory = await ethers.getContractFactory('Timelock');
+        let timelock = (await timelockFactory.deploy('43200')) as Timelock;
+
+        const addressesProviderFactory = await ethers.getContractFactory('AddressesProvider');
+
+        let addressProvider = (await addressesProviderFactory.deploy(timelock.address)) as AddressesProvider;
         const oraclePriceFeedFactory = await ethers.getContractFactory('OraclePriceFeed');
         oraclePriceFeed = (await oraclePriceFeedFactory.deploy(mockPyth.address, [], [])) as OraclePriceFeed;
 
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
-        indexPriceFeed = (await indexPriceFeedFactory.deploy([], [])) as IndexPriceFeed;
+        indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
 
         const priceOracleFactory = await ethers.getContractFactory('PriceOracle');
         priceOracle = await priceOracleFactory.deploy(oraclePriceFeed.address, indexPriceFeed.address);
@@ -44,7 +50,6 @@ describe('Oracle: oracle cases', () => {
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(ethers.utils.formatBytes32String(''));
 
         await oraclePriceFeed.setAssetPriceIds([btc.address], [id]);
-        
 
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(id);
 
