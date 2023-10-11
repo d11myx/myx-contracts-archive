@@ -11,7 +11,6 @@ import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
 import '../token/interfaces/IBaseToken.sol';
 import './interfaces/IRewardDistributor.sol';
 import '../interfaces/IPositionManager.sol';
-import '../interfaces/IFeeManager.sol';
 
 // distribute reward myx for staking
 contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownable {
