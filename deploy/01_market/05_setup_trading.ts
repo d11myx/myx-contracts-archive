@@ -43,7 +43,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const feeCollectorArtifact = await deployProxy(`${FEE_COLLECTOR_ID}`, [], {
         from: deployer,
         contract: 'FeeCollector',
-        args: [addressProvider.address],
+        args: [addressProvider.address, pool.address, usdt.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const feeCollector = (await hre.ethers.getContractAt(
@@ -152,6 +152,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     console.log('currentImplAddress:' + currentImplAddress);
 
     await waitForTx(await pool.setRiskReserve(riskReserve.address));
+    await waitForTx(await pool.setFeeCollector(feeCollector.address));
 
     await waitForTx(await executionLogic.updateExecutor(executor.address));
     await waitForTx(await liquidationLogic.updateExecutor(executor.address));
