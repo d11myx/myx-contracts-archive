@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./FeeManager.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
 import "../libraries/Position.sol";
 import "../libraries/PositionKey.sol";
@@ -17,8 +17,10 @@ import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IRiskReserve.sol";
+import '../interfaces/IFeeCollector.sol';
+import "../libraries/Upgradeable.sol";
 
-contract PositionManager is FeeManager, PausableUpgradeable {
+contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, ReentrancyGuardUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -45,6 +47,9 @@ contract PositionManager is FeeManager, PausableUpgradeable {
 
     EnumerableSet.AddressSet private logics;
     IRiskReserve public riskReserve;
+    IPool public pool;
+    IFeeCollector public feeCollector;
+    address public pledgeAddress;
 
     // constructor() FeeManager() Pausable() {}
 
@@ -109,7 +114,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDelta);
         charge -= int256(tradingFee);
 
-        uint256 lpAmount = _distributeTradingFee(
+        uint256 lpAmount = feeCollector.distributeTradingFee(
             pair,
             _account,
             _keeper,

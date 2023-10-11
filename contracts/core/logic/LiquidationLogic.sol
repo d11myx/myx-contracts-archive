@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '../libraries/Position.sol';
-
-import '../interfaces/ILiquidationLogic.sol';
-import '../interfaces/IAddressesProvider.sol';
-import '../interfaces/IRoleManager.sol';
-import '../interfaces/IOrderManager.sol';
-import '../interfaces/IPositionManager.sol';
-import '../interfaces/IPool.sol';
-import '../helpers/TradingHelper.sol';
-import '../interfaces/IFeeCollector.sol';
+import '../../libraries/Position.sol';
+import '../../interfaces/ILiquidationLogic.sol';
+import '../../interfaces/IAddressesProvider.sol';
+import '../../interfaces/IRoleManager.sol';
+import '../../interfaces/IOrderManager.sol';
+import '../../interfaces/IPositionManager.sol';
+import '../../interfaces/IPool.sol';
+import '../../helpers/TradingHelper.sol';
+import '../../interfaces/IFeeCollector.sol';
 
 contract LiquidationLogic is ILiquidationLogic {
     using PrecisionUtils for uint256;
