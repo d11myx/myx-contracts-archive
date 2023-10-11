@@ -42,7 +42,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const indexPriceFeedArtifact = await deploy(`${INDEX_PRICE_FEED_ID}`, {
         from: deployer,
         contract: 'IndexPriceFeed',
-        args: [[], []],
+        args: [addressesProvider.address, [], []],
         ...COMMON_DEPLOY_PARAMS,
     });
     const indexPriceFeed = (await hre.ethers.getContractAt(
