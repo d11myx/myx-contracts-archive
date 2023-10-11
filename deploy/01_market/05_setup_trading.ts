@@ -163,9 +163,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
-    await waitForTx(await positionManager.addLogic(executionLogic.address));
-    await waitForTx(await positionManager.addLogic(liquidationLogic.address));
-    await waitForTx(await positionManager.addLogic(executionLogic.address));
+    await waitForTx(await positionManager.updateExecutionLogic(executionLogic.address));
+    await waitForTx(await positionManager.updateLiquidationLogic(liquidationLogic.address));
+    // await waitForTx(await positionManager.addLogic(executionLogic.address));
     await waitForTx(await orderManager.setExecutionLogic(executionLogic.address));
     await waitForTx(await orderManager.setLiquidationLogic(liquidationLogic.address));
 

@@ -245,9 +245,9 @@ export async function deployTrading(
     await waitForTx(await executionLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
     await waitForTx(await liquidationLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
 
-    await positionManager.addLogic(executionLogic.address);
-    await positionManager.addLogic(liquidationLogic.address);
-    await positionManager.addLogic(orderManager.address);
+    await positionManager.updateExecutionLogic(executionLogic.address);
+    await positionManager.updateLiquidationLogic(liquidationLogic.address);
+    // await positionManager.addLogic(orderManager.address);
     await orderManager.setExecutionLogic(executionLogic.address);
     await orderManager.setLiquidationLogic(liquidationLogic.address);
 
