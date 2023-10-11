@@ -855,10 +855,10 @@ contract Pool is IPool, Upgradeable {
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
-
         uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
-        //        feeAmount = receiveDelta.mulPercentage(pair.removeLpFeeP);
-        //        receiveDelta = receiveDelta - feeAmount;
+
+        require(indexReserveDelta + stableReserveDelta >= receiveDelta, "insufficient available balance");
+
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
