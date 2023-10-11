@@ -26,6 +26,7 @@ import {
     PriceOracle,
     ExecutionLogic,
     RiskReserve,
+    LiquidationLogic,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -54,6 +55,7 @@ import {
     PRICE_ORACLE_ID,
     EXECUTION_LOGIC_ID,
     RISK_RESERVE_ID,
+    LIQUIDATION_LOGIC_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -135,6 +137,13 @@ export const getExecutionLogic = async (address?: string): Promise<ExecutionLogi
     return getContract<ExecutionLogic>(
         'ExecutionLogic',
         address || (await hre.deployments.get(EXECUTION_LOGIC_ID)).address,
+    );
+};
+
+export const getLiquidationLogic = async (address?: string): Promise<LiquidationLogic> => {
+    return getContract<LiquidationLogic>(
+        'LiquidationLogic',
+        address || (await hre.deployments.get(LIQUIDATION_LOGIC_ID)).address,
     );
 };
 

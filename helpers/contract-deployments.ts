@@ -6,6 +6,7 @@ import {
     FeeCollector,
     FundingRate,
     IndexPriceFeed,
+    LiquidationLogic,
     MockPyth,
     OraclePriceFeed,
     OrderManager,
@@ -206,7 +207,13 @@ export async function deployTrading(
     log(`deployed Router at ${router.address}`);
     await waitForTx(await orderManager.setRouter(router.address));
 
-    // const liquidationLogic = await deployContract('LiquidationLogic', []);
+    let liquidationLogic = (await deployContract('LiquidationLogic', [
+        addressProvider.address,
+        pool.address,
+        orderManager.address,
+        positionManager.address,
+    ])) as any as LiquidationLogic;
+    log(`deployed LiquidationLogic at ${liquidationLogic.address}`);
 
     let executionLogic = (await deployContract('ExecutionLogic', [
         addressProvider.address,
@@ -221,6 +228,7 @@ export async function deployTrading(
     let executor = (await deployUpgradeableContract('Executor', [
         addressProvider.address,
         executionLogic.address,
+        liquidationLogic.address,
     ])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
     log(`executionLogic pool : ${await executor.executionLogic()}`);
@@ -231,12 +239,15 @@ export async function deployTrading(
     await waitForTx(await riskReserve.connect(poolAdmin.signer).updatePoolAddress(pool.address));
 
     await waitForTx(await executionLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
+    await waitForTx(await liquidationLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
 
-    await positionManager.setExecutor(executionLogic.address);
-    await positionManager.setOrderManager(orderManager.address);
-    await orderManager.setExecutor(executionLogic.address);
+    await positionManager.addLogic(executionLogic.address);
+    await positionManager.addLogic(liquidationLogic.address);
+    await positionManager.addLogic(orderManager.address);
+    await orderManager.setExecutionLogic(executionLogic.address);
+    await orderManager.setLiquidationLogic(liquidationLogic.address);
 
-    return { positionManager, router, executionLogic, executor, orderManager, riskReserve };
+    return { positionManager, router, executionLogic, liquidationLogic, executor, orderManager, riskReserve };
 }
 export async function deployMockCallback() {
     return (await deployContract('TestCallBack', [])) as TestCallBack;

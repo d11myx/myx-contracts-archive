@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./FeeManager.sol";
 import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
 import "../libraries/Position.sol";
 import "../libraries/PositionKey.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
-
 import "../interfaces/IFundingRate.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IPriceOracle.sol";
@@ -23,6 +19,7 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IRiskReserve.sol";
 
 contract PositionManager is FeeManager, PausableUpgradeable {
+    using EnumerableSet for EnumerableSet.AddressSet;
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -46,8 +43,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
 
     // uint256 public fundingInterval = 28800;
 
-    address public addressExecutionLogic;
-    address public addressOrderManager;
+    EnumerableSet.AddressSet private logics;
     IRiskReserve public riskReserve;
 
     // constructor() FeeManager() Pausable() {}
@@ -61,7 +57,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
     ) public initializer {
         __ReentrancyGuard_init();
         __Pausable_init();
-        
+
         ADDRESS_PROVIDER = addressProvider;
         pledgeAddress = _pledgeAddress;
         pool = _pool;
@@ -71,8 +67,12 @@ contract PositionManager is FeeManager, PausableUpgradeable {
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutionLogic, "forbidden");
+        _onlyExecutor();
         _;
+    }
+
+    function _onlyExecutor() private view {
+        require(logics.contains(msg.sender), "onlyExecutor");
     }
 
     function setPaused() external onlyAdmin {
@@ -83,12 +83,12 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         _unpause();
     }
 
-    function setExecutor(address _addressExecutionLogic) external onlyPoolAdmin {
-        addressExecutionLogic = _addressExecutionLogic;
+    function addLogic(address _logic) external onlyPoolAdmin {
+        logics.add(_logic);
     }
 
-    function setOrderManager(address _addressOrderManager) external onlyPoolAdmin {
-        addressOrderManager = _addressOrderManager;
+    function removeLogic(address _logic) external onlyPoolAdmin {
+        logics.remove(_logic);
     }
 
     function _takeFundingFeeAddTraderFee(
@@ -324,7 +324,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         returns (uint256 tradingFee, int256 fundingFee)
     {
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        require(pair.stableToken == pledgeAddress, "!=plege");
+        require(pair.stableToken == pledgeAddress, "!pledge");
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
 
@@ -418,7 +418,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
     {
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
-        require(position.account != address(0), "position not found");
+        require(position.account != address(0), "!0");
 
         uint256 beforeCollateral = position.collateral;
         uint256 beforePositionAmount = position.positionAmount;
@@ -513,7 +513,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         bool isLong,
         int256 collateral
     ) external override {
-        require(account == msg.sender || addressOrderManager == msg.sender, "forbidden");
+        require(account == msg.sender || logics.contains(msg.sender), "forbidden");
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[
             PositionKey.getPositionKey(account, pairIndex, isLong)
@@ -734,7 +734,7 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) external view returns (bool needADL, uint256 needADLAmount) {
+    ) external view returns (bool need, uint256 needADLAmount) {
         IPool.Vault memory vault = pool.getVault(pairIndex);
         int256 exposedPositions = this.getExposedPositions(pairIndex);
 
@@ -753,10 +753,10 @@ contract PositionManager is FeeManager, PausableUpgradeable {
         }
 
         if (executionSize > available.abs()) {
-            needADL = true;
+            need = true;
             needADLAmount = executionSize - available.abs();
         }
-        return (needADL, needADLAmount);
+        return (need, needADLAmount);
     }
 
     function getPosition(
