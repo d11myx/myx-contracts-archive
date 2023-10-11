@@ -30,6 +30,7 @@ import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
 import { POSITION_MANAGER_ID } from './deploy-ids';
+import usdt from '../markets/usdt';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -41,7 +42,7 @@ export const deployWETH = async (): Promise<WETH> => {
     return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
 };
 
-const logFlag = true;
+const logFlag = false;
 
 export function log(message?: any, ...optionalParams: any[]) {
     if (logFlag) {
@@ -176,6 +177,8 @@ export async function deployTrading(
 
     let feeCollector = (await deployUpgradeableContract('FeeCollector', [
         addressProvider.address,
+        pool.address,
+        pledge.address,
     ])) as any as FeeCollector;
     let riskReserve = (await deployUpgradeableContract('RiskReserve', [
         deployer.address,
@@ -234,6 +237,7 @@ export async function deployTrading(
     log(`executionLogic pool : ${await executor.executionLogic()}`);
 
     await waitForTx(await pool.connect(poolAdmin.signer).setRiskReserve(riskReserve.address));
+    await waitForTx(await pool.connect(poolAdmin.signer).setFeeCollector(feeCollector.address));
 
     await waitForTx(await riskReserve.connect(poolAdmin.signer).updatePositionManagerAddress(positionManager.address));
     await waitForTx(await riskReserve.connect(poolAdmin.signer).updatePoolAddress(pool.address));
@@ -247,7 +251,16 @@ export async function deployTrading(
     await orderManager.setExecutionLogic(executionLogic.address);
     await orderManager.setLiquidationLogic(liquidationLogic.address);
 
-    return { positionManager, router, executionLogic, liquidationLogic, executor, orderManager, riskReserve };
+    return {
+        positionManager,
+        router,
+        executionLogic,
+        liquidationLogic,
+        executor,
+        orderManager,
+        riskReserve,
+        feeCollector,
+    };
 }
 export async function deployMockCallback() {
     return (await deployContract('TestCallBack', [])) as TestCallBack;
