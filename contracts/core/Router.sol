@@ -15,6 +15,7 @@ import "../interfaces/ILiquidityCallback.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IOrderCallback.sol";
+import "../libraries/TradingTypes.sol";
 
 contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGateway {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -141,6 +142,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
     function createDecreaseOrders(
         TradingTypes.DecreasePositionRequest[] memory requests
     ) external returns (uint256[] memory orderIds) {
+
+        orderIds = new uint256[](requests.length);
         for (uint256 i = 0; i < requests.length; i++) {
             TradingTypes.DecreasePositionRequest memory request = requests[i];
 

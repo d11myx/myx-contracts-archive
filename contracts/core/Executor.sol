@@ -7,17 +7,21 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IExecutionLogic.sol";
 import "../libraries/Upgradeable.sol";
+import "../interfaces/ILiquidationLogic.sol";
 
 contract Executor is IExecutor, Upgradeable {
-    // IAddressesProvider public ADDRESS_PROVIDER;
+
     IExecutionLogic public executionLogic;
+    ILiquidationLogic public liquidationLogic;
 
     function initialize(
         IAddressesProvider addressProvider,
-        IExecutionLogic _executionLogic
+        IExecutionLogic _executionLogic,
+        ILiquidationLogic _liquidationLogic
     ) public initializer {
         ADDRESS_PROVIDER = addressProvider;
         executionLogic = _executionLogic;
+        liquidationLogic = _liquidationLogic;
     }
 
     modifier onlyPositionKeeper() {
@@ -110,7 +114,7 @@ contract Executor is IExecutor, Upgradeable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.liquidatePositions(positionKeys);
+        liquidationLogic.liquidatePositions(positionKeys);
     }
 
     function needADL(
