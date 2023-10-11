@@ -51,8 +51,6 @@ contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, 
     IFeeCollector public feeCollector;
     address public pledgeAddress;
 
-    // constructor() FeeManager() Pausable() {}
-
     function initialize(
         IAddressesProvider addressProvider,
         IPool _pool,
