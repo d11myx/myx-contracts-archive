@@ -44,6 +44,7 @@ describe('Oracle: oracle cases', () => {
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(ethers.utils.formatBytes32String(''));
 
         await oraclePriceFeed.setAssetPriceIds([btc.address], [id]);
+        
 
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(id);
 
