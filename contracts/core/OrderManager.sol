@@ -73,22 +73,31 @@ contract OrderManager is
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == addressExecutionLogic || msg.sender == addressLiquidationLogic, "onlyExecutor");
+        require(
+            msg.sender == addressExecutionLogic || msg.sender == addressLiquidationLogic,
+            "onlyExecutor"
+        );
         _;
     }
 
     modifier onlyCreateOrderAddress(address account) {
         require(
-            msg.sender == router || msg.sender == addressExecutionLogic
-                || msg.sender == addressLiquidationLogic || account == msg.sender,
+            msg.sender == router ||
+                msg.sender == addressExecutionLogic ||
+                msg.sender == addressLiquidationLogic ||
+                account == msg.sender,
             "no access"
         );
         _;
     }
 
     modifier onlyExecutorOrAccount(address account) {
-        require(msg.sender == address(addressExecutionLogic)
-            || msg.sender == address(addressLiquidationLogic) || account == msg.sender, "no access");
+        require(
+            msg.sender == address(addressExecutionLogic) ||
+                msg.sender == address(addressLiquidationLogic) ||
+                account == msg.sender,
+            "no access"
+        );
         _;
     }
 
