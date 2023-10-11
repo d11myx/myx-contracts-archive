@@ -31,6 +31,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
     address public pledgeAddress;
 
     address public addressStakingPool;
+    address public addressPositionManager;
     IPool public pool;
 
     function initialize(IAddressesProvider addressesProvider, IPool _pool, address _pledgeAddress) public initializer {
@@ -38,46 +39,27 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         pool = _pool;
         pledgeAddress = _pledgeAddress;
         maxReferralsRatio = 1e7;
-//        levelDiscounts[1] = LevelDiscount(1e6, 1e6);
-//        levelDiscounts[2] = LevelDiscount(2e6, 2e6);
-//        levelDiscounts[3] = LevelDiscount(3e6, 3e6);
-//        levelDiscounts[4] = LevelDiscount(4e6, 4e6);
-//        levelDiscounts[5] = LevelDiscount(5e6, 5e6);
+    }
+
+    modifier onlyPositionManager() {
+        require(msg.sender == addressPositionManager, "onlyPositionManager");
+        _;
+    }
+
+    modifier onlyStakingPool() {
+        require(msg.sender == addressStakingPool, "onlyStakingPool");
+        _;
     }
 
     function getLevelDiscounts(uint8 level) external view override returns (LevelDiscount memory) {
         return levelDiscounts[level];
     }
 
-    function updateLevelDiscountRatio(
-        uint8 level,
-        LevelDiscount memory discount
-    ) external override {
-        require(
-            discount.makerDiscountRatio <= PrecisionUtils.percentage() &&
-                discount.takerDiscountRatio <= PrecisionUtils.percentage(),
-            "exceeds max ratio"
-        );
+    function updatePositionManagerAddress(address newAddress) external onlyPoolAdmin {
+        address oldAddress = addressPositionManager;
+        addressPositionManager = newAddress;
 
-        LevelDiscount memory oldDiscount = levelDiscounts[level];
-        levelDiscounts[level] = discount;
-
-        emit UpdateLevelDiscountRatio(
-            level,
-            oldDiscount.makerDiscountRatio,
-            oldDiscount.takerDiscountRatio,
-            levelDiscounts[level].makerDiscountRatio,
-            levelDiscounts[level].takerDiscountRatio
-        );
-    }
-
-    function updateMaxReferralsRatio(uint256 newRatio) external override {
-        require(newRatio <= PrecisionUtils.percentage(), "exceeds max ratio");
-
-        uint256 oldRatio = maxReferralsRatio;
-        maxReferralsRatio = newRatio;
-
-        emit UpdateMaxReferralsRatio(oldRatio, newRatio);
+        emit UpdatedPositionManagerAddress(msg.sender, oldAddress, newAddress);
     }
 
     function updateStakingPoolAddress(address newAddress) external onlyPoolAdmin {
@@ -87,9 +69,34 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         emit UpdatedStakingPoolAddress(msg.sender, oldAddress, newAddress);
     }
 
-    function claimStakingTradingFee() external override nonReentrant returns (uint256) {
-        require(msg.sender == addressStakingPool, "!=staking");
+    function updateLevelDiscountRatios(
+        uint8[] memory levels,
+        LevelDiscount[] memory discounts
+    ) external override onlyPoolAdmin {
+        require(levels.length == discounts.length, "inconsistent params length");
 
+        for (uint256 i = 0; i < levels.length; i++) {
+            _updateLevelDiscountRatio(levels[i], discounts[i]);
+        }
+    }
+
+    function updateLevelDiscountRatio(
+        uint8 level,
+        LevelDiscount memory discount
+    ) external override onlyPoolAdmin {
+        _updateLevelDiscountRatio(level, discount);
+    }
+
+    function updateMaxReferralsRatio(uint256 newRatio) external override onlyPoolAdmin {
+        require(newRatio <= PrecisionUtils.percentage(), "exceeds max ratio");
+
+        uint256 oldRatio = maxReferralsRatio;
+        maxReferralsRatio = newRatio;
+
+        emit UpdateMaxReferralsRatio(oldRatio, newRatio);
+    }
+
+    function claimStakingTradingFee() external override nonReentrant onlyStakingPool returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee;
         if (claimableStakingTradingFee > 0) {
             pool.transferTokenTo(pledgeAddress, msg.sender, claimableStakingTradingFee);
@@ -117,16 +124,6 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return _claimUserTradingFee();
     }
 
-    function _claimUserTradingFee() internal returns (uint256) {
-        uint256 claimableUserTradingFee = userTradingFee[msg.sender];
-        if (claimableUserTradingFee > 0) {
-            pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
-            userTradingFee[msg.sender] = 0;
-        }
-        emit ClaimedUserTradingFee(msg.sender, pledgeAddress, claimableUserTradingFee);
-        return claimableUserTradingFee;
-    }
-
     function distributeTradingFee(
         IPool.Pair memory pair,
         address account,
@@ -135,7 +132,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         uint256 tradingFee,
         uint256 vipRate,
         uint256 referralRate
-    ) external override returns (uint256 lpAmount) {
+    ) external onlyPositionManager override returns (uint256 lpAmount) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
         uint256 vipAmount = tradingFee.mulPercentage(vipRate);
@@ -173,6 +170,35 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
             keeperAmount,
             stakingAmount,
             distributorAmount
+        );
+    }
+
+    function _claimUserTradingFee() internal returns (uint256) {
+        uint256 claimableUserTradingFee = userTradingFee[msg.sender];
+        if (claimableUserTradingFee > 0) {
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
+            userTradingFee[msg.sender] = 0;
+        }
+        emit ClaimedUserTradingFee(msg.sender, pledgeAddress, claimableUserTradingFee);
+        return claimableUserTradingFee;
+    }
+
+    function _updateLevelDiscountRatio(uint8 level, LevelDiscount memory discount) internal {
+        require(
+            discount.makerDiscountRatio <= PrecisionUtils.percentage() &&
+            discount.takerDiscountRatio <= PrecisionUtils.percentage(),
+            "exceeds max ratio"
+        );
+
+        LevelDiscount memory oldDiscount = levelDiscounts[level];
+        levelDiscounts[level] = discount;
+
+        emit UpdateLevelDiscountRatio(
+            level,
+            oldDiscount.makerDiscountRatio,
+            oldDiscount.takerDiscountRatio,
+            levelDiscounts[level].makerDiscountRatio,
+            levelDiscounts[level].takerDiscountRatio
         );
     }
 }
