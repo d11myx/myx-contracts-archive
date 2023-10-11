@@ -23,7 +23,7 @@ contract Upgradeable is Initializable, UUPSUpgradeable {
         _;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal virtual override {
+    function _authorizeUpgrade(address) internal virtual override {
         require(msg.sender == ADDRESS_PROVIDER.timelock(), "Unauthorized access");
     }
 }
