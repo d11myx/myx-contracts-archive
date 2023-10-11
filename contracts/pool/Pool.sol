@@ -34,6 +34,7 @@ contract Pool is IPool, Upgradeable {
     using Int256Utils for int256;
     using Math for uint256;
     using SafeMath for uint256;
+
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public poolTokenFactory;
@@ -209,20 +210,6 @@ contract Pool is IPool, Upgradeable {
             "distribute exceed 1%"
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
-    }
-
-    function updatePairMiner(
-        uint256 _pairIndex,
-        address _account,
-        bool _enable
-    ) external onlyPoolAdmin {
-        Pair memory pair = pairs[_pairIndex];
-        require(
-            pair.indexToken != address(0) && pair.stableToken != address(0),
-            "pair not existed"
-        );
-
-        IBaseToken(pair.pairToken).setMiner(_account, _enable);
     }
 
     function increaseTotalAmount(
