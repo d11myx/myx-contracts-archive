@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import "../libraries/Position.sol";
-
-import "../interfaces/IExecutionLogic.sol";
-import "../interfaces/IAddressesProvider.sol";
-import "../interfaces/IRoleManager.sol";
-import "../interfaces/IOrderManager.sol";
-import "../interfaces/IPositionManager.sol";
-import "../interfaces/IPriceOracle.sol";
-import "../interfaces/IPool.sol";
-import "../helpers/ValidationHelper.sol";
-import "../helpers/TradingHelper.sol";
-import "../interfaces/IFeeCollector.sol";
-import "../interfaces/IExecutor.sol";
+import "../../libraries/Position.sol";
+import "../../interfaces/IExecutionLogic.sol";
+import "../../interfaces/IAddressesProvider.sol";
+import "../../interfaces/IRoleManager.sol";
+import "../../interfaces/IOrderManager.sol";
+import "../../interfaces/IPositionManager.sol";
+import "../../interfaces/IPriceOracle.sol";
+import "../../interfaces/IPool.sol";
+import "../../helpers/ValidationHelper.sol";
+import "../../helpers/TradingHelper.sol";
+import "../../interfaces/IFeeCollector.sol";
+import "../../interfaces/IExecutor.sol";
 
 contract ExecutionLogic is IExecutionLogic {
     using PrecisionUtils for uint256;

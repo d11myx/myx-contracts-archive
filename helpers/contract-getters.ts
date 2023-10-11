@@ -27,6 +27,7 @@ import {
     ExecutionLogic,
     RiskReserve,
     LiquidationLogic,
+    FeeCollector,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -56,6 +57,7 @@ import {
     EXECUTION_LOGIC_ID,
     RISK_RESERVE_ID,
     LIQUIDATION_LOGIC_ID,
+    FEE_COLLECTOR_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -160,6 +162,10 @@ export const getPositionManager = async (address?: string): Promise<PositionMana
 
 export const getRiskReserve = async (address?: string): Promise<RiskReserve> => {
     return getContract<RiskReserve>('RiskReserve', address || (await hre.deployments.get(RISK_RESERVE_ID)).address);
+};
+
+export const getFeeCollector = async (address?: string): Promise<FeeCollector> => {
+    return getContract<FeeCollector>('FeeCollector', address || (await hre.deployments.get(FEE_COLLECTOR_ID)).address);
 };
 
 export const getMYX = async (address?: string): Promise<MYX> => {

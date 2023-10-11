@@ -39,6 +39,7 @@ contract Pool is IPool, Upgradeable {
     IPoolTokenFactory public poolTokenFactory;
     address public router;
     address public riskReserve;
+    address public feeCollector;
     mapping(uint256 => mapping(address => bytes)) public tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
@@ -64,18 +65,24 @@ contract Pool is IPool, Upgradeable {
         poolTokenFactory = _poolTokenFactory;
     }
 
-    modifier onlyPositionManagerOrOrderManagerOrRiskReserve() {
+    modifier transferAllowed() {
         require(
             positionManagers.contains(msg.sender) ||
                 orderManagers.contains(msg.sender) ||
-                riskReserve == msg.sender,
-            "onlyPositionManagerOrOrderManagerOrRiskReserve"
+                riskReserve == msg.sender ||
+                feeCollector == msg.sender,
+            "permission denied"
         );
         _;
     }
 
     modifier onlyPositionManager() {
         require(positionManagers.contains(msg.sender), "onlyPositionManager");
+        _;
+    }
+
+    modifier onlyPositionManagerOrFeeCollector() {
+        require(positionManagers.contains(msg.sender) || msg.sender == feeCollector, "onlyPositionManagerOrFeeCollector");
         _;
     }
 
@@ -93,6 +100,10 @@ contract Pool is IPool, Upgradeable {
 
     function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
         riskReserve = _riskReserve;
+    }
+
+    function setFeeCollector(address _feeCollector) external onlyPoolAdmin {
+        feeCollector = _feeCollector;
     }
 
     function addPositionManager(address _positionManager) external onlyPoolAdmin {
@@ -311,7 +322,7 @@ contract Pool is IPool, Upgradeable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManagerOrFeeCollector {
         Vault storage vault = vaults[_pairIndex];
         Pair memory pair = pairs[_pairIndex];
         if (_profit > 0) {
@@ -925,7 +936,7 @@ contract Pool is IPool, Upgradeable {
         address token,
         address to,
         uint256 amount
-    ) external onlyPositionManagerOrOrderManagerOrRiskReserve {
+    ) external transferAllowed {
         require(IERC20(token).balanceOf(address(this)) > amount, "bal");
         IERC20(token).safeTransfer(to, amount);
     }
@@ -935,7 +946,7 @@ contract Pool is IPool, Upgradeable {
         address token,
         address to,
         uint256 amount
-    ) external onlyPositionManagerOrOrderManagerOrRiskReserve {
+    ) external transferAllowed {
         if (amount == 0) {
             return;
         }
