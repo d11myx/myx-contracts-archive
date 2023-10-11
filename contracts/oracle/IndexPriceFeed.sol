@@ -3,18 +3,36 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IIndexPriceFeed.sol";
 
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
+
 contract IndexPriceFeed is IIndexPriceFeed {
+    IAddressesProvider public immutable ADDRESS_PROVIDER;
+
     mapping(address => uint256) public assetPrices;
 
-    constructor(address[] memory assets, uint256[] memory prices) {
+    constructor(
+        IAddressesProvider addressProvider,
+        address[] memory assets,
+        uint256[] memory prices
+    ) {
+        ADDRESS_PROVIDER = addressProvider;
         _setAssetPrices(assets, prices);
+    }
+
+    modifier onlyKeeper() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(tx.origin), "opk");
+        _;
     }
 
     function decimals() external pure override returns (uint256) {
         return 8;
     }
 
-    function updatePrice(address[] calldata tokens, uint256[] memory prices) external override {
+    function updatePrice(
+        address[] calldata tokens,
+        uint256[] memory prices
+    ) external override onlyKeeper {
         _setAssetPrices(tokens, prices);
     }
 
