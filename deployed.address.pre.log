@@ -2,14 +2,14 @@ Accounts after deployment
 ┌─────────┬──────────────────────┬──────────────────────────────────────────────┬─────────────────────────────┐
 │ (index) │         name         │                   account                    │           balance           │
 ├─────────┼──────────────────────┼──────────────────────────────────────────────┼─────────────────────────────┤
-│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397635431026856' │
-│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397635431026856' │
+│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397631211696477' │
+│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397631211696477' │
 │    2    │      'operator'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
 │    3    │     'treasurer'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
-│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397635431026856' │
-│    5    │        'dao'         │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397635431026856' │
-│    6    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397635431026856' │
-│    7    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397635431026856' │
+│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397631211696477' │
+│    5    │        'dao'         │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397631211696477' │
+│    6    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397631211696477' │
+│    7    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.997397631211696477' │
 │    8    │   'teamAndAdvisor'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
 │    9    │  'privatePlacement'  │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
 │   10    │     'community'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
@@ -45,17 +45,17 @@ Deployments
 │  ExecutionLogic   │ '0xb07fB1a2F76574FD5243C1aA25Bb992cE9490B9C' │
 │ LiquidationLogic  │ '0x72336C1702f9725e65D6aDecE2b30Ca714903BfF' │
 │     Executor      │ '0xD2351c3f1D876274162aae2127B00829cae069Da' │
-│   TestCallBack    │ '0x75608fD59edb71152C7360F789B3245Cd1CB4Afc' │
-│        MYX        │ '0xabDE58dBa1E456BE2BaC701CE40aCF4A3BFfA1dB' │
-│       RaMYX       │ '0xbe33f8b86faE5cB59579AFbCAC0F29ABFAd78E85' │
-│       StMYX       │ '0xdeC8f0eb4A92f9f2481F292f9E5B4002a5D20bD8' │
-│      Vester       │ '0x12237d09f6E493138B3202a065688e5926e1c234' │
-│    StakingPool    │ '0xB16b6fA68034d5D0519826BBA6aF1D67e15aD734' │
-│   LPStakingPool   │ '0x893e277CfcE20E43E6B8969C919D21e3C24409C9' │
-│     Convertor     │ '0x01B6e9f6D0d2827984df5A77f7D9B240be5D9038' │
-│ RewardDistributor │ '0x6F1A8c220906E004AC8Ad51e806d89d166b8711B' │
-│  FeeDistributor   │ '0x54f195676c4e2DBB16850932894540919D678aAE' │
-│      Faucet       │ '0x487f3D100119B5aFe42292fd59Afc765d85aE79f' │
+│   TestCallBack    │ '0xabDE58dBa1E456BE2BaC701CE40aCF4A3BFfA1dB' │
+│        MYX        │ '0xbe33f8b86faE5cB59579AFbCAC0F29ABFAd78E85' │
+│       RaMYX       │ '0xdeC8f0eb4A92f9f2481F292f9E5B4002a5D20bD8' │
+│       StMYX       │ '0x12237d09f6E493138B3202a065688e5926e1c234' │
+│      Vester       │ '0x56CB5a0D5fF8D3a732cfCd5AE98469D82a9fA324' │
+│    StakingPool    │ '0x893e277CfcE20E43E6B8969C919D21e3C24409C9' │
+│   LPStakingPool   │ '0x01B6e9f6D0d2827984df5A77f7D9B240be5D9038' │
+│     Convertor     │ '0x6F1A8c220906E004AC8Ad51e806d89d166b8711B' │
+│ RewardDistributor │ '0x54f195676c4e2DBB16850932894540919D678aAE' │
+│  FeeDistributor   │ '0x961911adEBFfeaaEDBC0435F336d7d64a9b67BB2' │
+│      Faucet       │ '0x1B17eA9aebc8F2A7F402c925fba300bC750a250B' │
 └───────────────────┴──────────────────────────────────────────────┘
 
 MockedTokens

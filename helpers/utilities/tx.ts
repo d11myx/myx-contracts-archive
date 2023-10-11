@@ -14,8 +14,7 @@ export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
 export const deployProxy = async (
     name: string,
     constructorArgs: any[],
-    options: DeployOptions
-
+    options: DeployOptions,
 ): Promise<DeployResult> => {
     const contract = await deployUpgradeableContract(options.contract as string, options.args, {
         constructorArgs: constructorArgs,
@@ -49,6 +48,8 @@ export const deployProxy = async (
         userdoc: undefined,
         address: contract.address,
     });
+
+    // await new Promise((f) => setTimeout(f, 10000));
 
     return {
         abi: artifact.abi,
@@ -113,10 +114,10 @@ export const getContract = async <ContractType extends Contract>(
     address?: string,
 ): Promise<ContractType> => {
     const artifact = await hre.deployments.getArtifact(id);
-    return hre.ethers.getContractAt(
+    return (await hre.ethers.getContractAt(
         artifact.abi,
-        address || (await (await hre.deployments.get(id)).address),
-    ) as any as ContractType;
+        address || (await hre.deployments.get(id)).address,
+    )) as any as ContractType;
 };
 
 interface AccountItem {
