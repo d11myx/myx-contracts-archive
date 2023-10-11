@@ -10,7 +10,6 @@ import "../libraries/Upgradeable.sol";
 import "../interfaces/ILiquidationLogic.sol";
 
 contract Executor is IExecutor, Upgradeable {
-
     IExecutionLogic public executionLogic;
     ILiquidationLogic public liquidationLogic;
 
@@ -126,11 +125,7 @@ contract Executor is IExecutor, Upgradeable {
         return executionLogic.needADL(pairIndex, isLong, executionSize, executionPrice);
     }
 
-    function _setPrices(
-        address[] memory _tokens,
-        uint256[] memory _prices,
-        uint256 _timestamp
-    ) internal {
+    function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256) internal {
         IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(
             _tokens,
             _prices
