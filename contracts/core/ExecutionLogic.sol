@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '../libraries/Position.sol';
+import "../libraries/Position.sol";
 
-import '../interfaces/IExecutionLogic.sol';
-import '../interfaces/IAddressesProvider.sol';
-import '../interfaces/IRoleManager.sol';
-import '../interfaces/IOrderManager.sol';
-import '../interfaces/IPositionManager.sol';
+import "../interfaces/IExecutionLogic.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
+import "../interfaces/IOrderManager.sol";
+import "../interfaces/IPositionManager.sol";
 import "../interfaces/IPriceOracle.sol";
-import '../interfaces/IPool.sol';
-import '../helpers/ValidationHelper.sol';
-import '../helpers/TradingHelper.sol';
-import '../interfaces/IFeeCollector.sol';
+import "../interfaces/IPool.sol";
+import "../helpers/ValidationHelper.sol";
+import "../helpers/TradingHelper.sol";
+import "../interfaces/IFeeCollector.sol";
 import "../interfaces/IExecutor.sol";
 
 contract ExecutionLogic is IExecutionLogic {
@@ -49,12 +49,17 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'opa');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "opa");
         _;
     }
 
     modifier onlyExecutorOrKeeper() {
-        require(msg.sender == executor || msg.sender == address(this) || IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), 'oe');
+        require(
+            msg.sender == executor ||
+                msg.sender == address(this) ||
+                IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender),
+            "oe"
+        );
         _;
     }
 
@@ -75,14 +80,19 @@ contract ExecutionLogic is IExecutionLogic {
             ExecuteOrder memory order = orders[i];
 
             try
-            this.executeIncreaseOrder(
-                order.orderId,
-                TradingTypes.TradeType.MARKET,
-                order.level,
-                order.commissionRatio
-            )
+                this.executeIncreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.MARKET,
+                    order.level,
+                    order.commissionRatio
+                )
             {} catch Error(string memory reason) {
-                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, true, reason);
+                orderManager.cancelOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.MARKET,
+                    true,
+                    reason
+                );
             }
         }
     }
@@ -93,12 +103,12 @@ contract ExecutionLogic is IExecutionLogic {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
-            this.executeIncreaseOrder(
-                order.orderId,
-                TradingTypes.TradeType.LIMIT,
-                order.level,
-                order.commissionRatio
-            )
+                this.executeIncreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.LIMIT,
+                    order.level,
+                    order.commissionRatio
+                )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
             }
@@ -111,7 +121,10 @@ contract ExecutionLogic is IExecutionLogic {
         uint8 level,
         uint256 commissionRatio
     ) external override onlyExecutorOrKeeper {
-        TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(_orderId, _tradeType);
+        TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+            _orderId,
+            _tradeType
+        );
         if (order.account == address(0)) {
             return;
         }
@@ -125,16 +138,21 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, true, 'pair enable');
+            orderManager.cancelOrder(order.orderId, order.tradeType, true, "pair enable");
             return;
         }
 
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
 
         // validate can be triggered
-        uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 executionPrice = TradingHelper.getValidPrice(
+            ADDRESS_PROVIDER,
+            pair.indexToken,
+            tradingConfig
+        );
         bool isAbove = order.isLong &&
-            (order.tradeType == TradingTypes.TradeType.MARKET || order.tradeType == TradingTypes.TradeType.LIMIT);
+            (order.tradeType == TradingTypes.TradeType.MARKET ||
+                order.tradeType == TradingTypes.TradeType.LIMIT);
         ValidationHelper.validatePriceTriggered(
             tradingConfig,
             order.tradeType,
@@ -159,16 +177,26 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 orderSize = order.sizeAmount - order.executedSize;
         uint256 executionSize;
         if (orderSize > 0) {
-            (executionSize) = TradingHelper.exposureAmountChecker(lpVault, exposureAmount, order.isLong, orderSize, executionPrice);
+            (executionSize) = TradingHelper.exposureAmountChecker(
+                lpVault,
+                exposureAmount,
+                order.isLong,
+                orderSize,
+                executionPrice
+            );
             if (executionSize == 0) {
                 return;
             }
         }
 
         // get position
-        Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+        Position.Info memory position = positionManager.getPosition(
+            order.account,
+            order.pairIndex,
+            order.isLong
+        );
         // check position and leverage
-        (uint256 afterPosition,) = position.validLeverage(
+        (uint256 afterPosition, ) = position.validLeverage(
             executionPrice,
             order.collateral,
             executionSize,
@@ -176,15 +204,18 @@ contract ExecutionLogic is IExecutionLogic {
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount
         );
-        require(afterPosition > 0, 'zpa');
+        require(afterPosition > 0, "zpa");
 
         int256 collateral;
         if (order.collateral > 0) {
-            collateral = order.executedSize == 0 || order.tradeType == TradingTypes.TradeType.MARKET ? order.collateral : int256(0);
+            collateral = order.executedSize == 0 || order.tradeType == TradingTypes.TradeType.MARKET
+                ? order.collateral
+                : int256(0);
         } else {
-            collateral = order.executedSize + executionSize >= order.sizeAmount
-                || order.tradeType == TradingTypes.TradeType.MARKET
-                ? order.collateral : int256(0);
+            collateral = order.executedSize + executionSize >= order.sizeAmount ||
+                order.tradeType == TradingTypes.TradeType.MARKET
+                ? order.collateral
+                : int256(0);
         }
 
         // increase position
@@ -209,7 +240,10 @@ contract ExecutionLogic is IExecutionLogic {
         _createOrderTpSl(order);
 
         // remove order
-        if (order.tradeType == TradingTypes.TradeType.MARKET || order.executedSize >= order.sizeAmount) {
+        if (
+            order.tradeType == TradingTypes.TradeType.MARKET ||
+            order.executedSize >= order.sizeAmount
+        ) {
             orderManager.removeOrderFromPosition(
                 IOrderManager.PositionOrder(
                     order.account,
@@ -253,17 +287,22 @@ contract ExecutionLogic is IExecutionLogic {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
-            this.executeDecreaseOrder(
-                order.orderId,
-                TradingTypes.TradeType.MARKET,
-                order.level,
-                order.commissionRatio,
-                false,
-                0,
-                true
-            )
+                this.executeDecreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.MARKET,
+                    order.level,
+                    order.commissionRatio,
+                    false,
+                    0,
+                    true
+                )
             {} catch Error(string memory reason) {
-                orderManager.cancelOrder(order.orderId, TradingTypes.TradeType.MARKET, false, reason);
+                orderManager.cancelOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.MARKET,
+                    false,
+                    reason
+                );
             }
         }
     }
@@ -274,15 +313,15 @@ contract ExecutionLogic is IExecutionLogic {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
-            this.executeDecreaseOrder(
-                order.orderId,
-                TradingTypes.TradeType.LIMIT,
-                order.level,
-                order.commissionRatio,
-                false,
-                0,
-                false
-            )
+                this.executeDecreaseOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.LIMIT,
+                    order.level,
+                    order.commissionRatio,
+                    false,
+                    0,
+                    false
+                )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
             }
@@ -298,7 +337,15 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 executionSize,
         bool onlyOnce
     ) external override onlyExecutorOrKeeper {
-        _executeDecreaseOrder(_orderId, _tradeType, level, commissionRatio, isSystem, executionSize, onlyOnce);
+        _executeDecreaseOrder(
+            _orderId,
+            _tradeType,
+            level,
+            commissionRatio,
+            isSystem,
+            executionSize,
+            onlyOnce
+        );
     }
 
     function _executeDecreaseOrder(
@@ -310,7 +357,10 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 executionSize,
         bool onlyOnce
     ) internal {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
+        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            _orderId,
+            _tradeType
+        );
         if (order.account == address(0)) {
             return;
         }
@@ -324,12 +374,16 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, false, '!enabled');
+            orderManager.cancelOrder(order.orderId, order.tradeType, false, "!enabled");
             return;
         }
 
         // get position
-        Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+        Position.Info memory position = positionManager.getPosition(
+            order.account,
+            order.pairIndex,
+            order.isLong
+        );
         if (position.positionAmount == 0) {
             orderManager.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
             return;
@@ -348,7 +402,11 @@ contract ExecutionLogic is IExecutionLogic {
         executionSize = Math.min(executionSize, position.positionAmount);
 
         // validate can be triggered
-        uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 executionPrice = TradingHelper.getValidPrice(
+            ADDRESS_PROVIDER,
+            pair.indexToken,
+            tradingConfig
+        );
         ValidationHelper.validatePriceTriggered(
             tradingConfig,
             order.tradeType,
@@ -377,9 +435,14 @@ contract ExecutionLogic is IExecutionLogic {
             tradingConfig.maxPositionAmount
         );
 
-        (bool needADL,) = positionManager.needADL(order.pairIndex, order.isLong, executionSize, executionPrice);
-        if (needADL) {
-            orderManager.setOrderNeedADL(_orderId, order.tradeType, needADL);
+        (bool _needADL, ) = positionManager.needADL(
+            order.pairIndex,
+            order.isLong,
+            executionSize,
+            executionPrice
+        );
+        if (_needADL) {
+            orderManager.setOrderNeedADL(_orderId, order.tradeType, _needADL);
 
             emit ExecuteDecreaseOrder(
                 order.account,
@@ -393,7 +456,7 @@ contract ExecutionLogic is IExecutionLogic {
                 executionSize,
                 executionPrice,
                 order.executedSize,
-                needADL,
+                _needADL,
                 0,
                 0,
                 0
@@ -405,7 +468,9 @@ contract ExecutionLogic is IExecutionLogic {
         if (order.collateral > 0) {
             collateral = order.executedSize == 0 || onlyOnce ? order.collateral : int256(0);
         } else {
-            collateral = order.executedSize + executionSize >= order.sizeAmount || onlyOnce ? order.collateral : int256(0);
+            collateral = order.executedSize + executionSize >= order.sizeAmount || onlyOnce
+                ? order.collateral
+                : int256(0);
         }
 
         (uint256 tradingFee, int256 fundingFee, int256 pnl) = positionManager.decreasePosition(
@@ -424,7 +489,12 @@ contract ExecutionLogic is IExecutionLogic {
 
         // add executed size
         order.executedSize += executionSize;
-        orderManager.increaseOrderExecutedSize(order.orderId, order.tradeType, false, executionSize);
+        orderManager.increaseOrderExecutedSize(
+            order.orderId,
+            order.tradeType,
+            false,
+            executionSize
+        );
 
         // remove order
         if (onlyOnce || order.executedSize >= order.sizeAmount) {
@@ -461,7 +531,12 @@ contract ExecutionLogic is IExecutionLogic {
             for (uint256 i = 0; i < orders.length; i++) {
                 IOrderManager.PositionOrder memory positionOrder = orders[i];
                 if (!positionOrder.isIncrease) {
-                    orderManager.cancelOrder(positionOrder.orderId, positionOrder.tradeType, false, '! increase');
+                    orderManager.cancelOrder(
+                        positionOrder.orderId,
+                        positionOrder.tradeType,
+                        false,
+                        "! increase"
+                    );
                 }
             }
         }
@@ -478,7 +553,7 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             executionPrice,
             order.executedSize,
-            needADL,
+            _needADL,
             pnl,
             tradingFee,
             fundingFee
@@ -496,7 +571,7 @@ contract ExecutionLogic is IExecutionLogic {
                     collateral: 0,
                     openPrice: orderTpSl.tpPrice,
                     isLong: order.isLong,
-                    sizeAmount: - int256(orderTpSl.tp),
+                    sizeAmount: -int256(orderTpSl.tp),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -511,7 +586,7 @@ contract ExecutionLogic is IExecutionLogic {
                     collateral: 0,
                     openPrice: orderTpSl.slPrice,
                     isLong: order.isLong,
-                    sizeAmount: - int256(orderTpSl.sl),
+                    sizeAmount: -int256(orderTpSl.sl),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -526,9 +601,9 @@ contract ExecutionLogic is IExecutionLogic {
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) public view returns (bool needADL) {
-        (needADL, ) = positionManager.needADL(pairIndex, isLong, executionSize, executionPrice);
-        return needADL;
+    ) public view returns (bool _needADL) {
+        (_needADL, ) = positionManager.needADL(pairIndex, isLong, executionSize, executionPrice);
+        return _needADL;
     }
 
     function executeADLAndDecreaseOrder(
@@ -538,7 +613,10 @@ contract ExecutionLogic is IExecutionLogic {
         uint8 _level,
         uint256 _commissionRatio
     ) external override onlyExecutorOrKeeper {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(_orderId, _tradeType);
+        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            _orderId,
+            _tradeType
+        );
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(order.pairIndex);
         IPool.Pair memory pair = pool.getPair(order.pairIndex);
 
@@ -546,7 +624,11 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 executionSize = order.sizeAmount - order.executedSize;
 
         // execution price
-        uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 executionPrice = TradingHelper.getValidPrice(
+            ADDRESS_PROVIDER,
+            pair.indexToken,
+            tradingConfig
+        );
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             if (!order.isLong) {
                 executionPrice = Math.min(order.triggerPrice, executionPrice);
@@ -555,38 +637,67 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
-        (bool needADL, uint256 needADLAmount) = positionManager.needADL(order.pairIndex, order.isLong, executionSize, executionPrice);
-        if (!needADL) {
-            this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio, false, 0, _tradeType == TradingTypes.TradeType.MARKET);
+        (bool _needADL, uint256 needADLAmount) = positionManager.needADL(
+            order.pairIndex,
+            order.isLong,
+            executionSize,
+            executionPrice
+        );
+        if (!_needADL) {
+            this.executeDecreaseOrder(
+                order.orderId,
+                order.tradeType,
+                _level,
+                _commissionRatio,
+                false,
+                0,
+                _tradeType == TradingTypes.TradeType.MARKET
+            );
             return;
         }
 
-        this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio, true, executionSize - needADLAmount, false);
+        this.executeDecreaseOrder(
+            order.orderId,
+            order.tradeType,
+            _level,
+            _commissionRatio,
+            true,
+            executionSize - needADLAmount,
+            false
+        );
 
-        ExecutePositionInfo[] memory adlPositions = new ExecutePositionInfo[](executePositions.length);
+        ExecutePositionInfo[] memory adlPositions = new ExecutePositionInfo[](
+            executePositions.length
+        );
         uint256 executeTotalAmount;
         for (uint256 i = 0; i < adlPositions.length; i++) {
             ExecutePosition memory executePosition = executePositions[i];
 
-            uint256 executionSize;
-            Position.Info memory position = positionManager.getPositionByKey(executePosition.positionKey);
+            uint256 adlExecutionSize;
+            Position.Info memory position = positionManager.getPositionByKey(
+                executePosition.positionKey
+            );
             if (position.positionAmount >= needADLAmount - executeTotalAmount) {
-                executionSize = needADLAmount - executeTotalAmount;
+                adlExecutionSize = needADLAmount - executeTotalAmount;
             } else {
-                executionSize = position.positionAmount;
+                adlExecutionSize = position.positionAmount;
             }
 
-            if (executionSize > 0) {
-                executeTotalAmount += executionSize;
+            if (adlExecutionSize > 0) {
+                executeTotalAmount += adlExecutionSize;
 
                 ExecutePositionInfo memory adlPosition = adlPositions[i];
                 adlPosition.position = position;
-                adlPosition.executionSize = executionSize;
+                adlPosition.executionSize = adlExecutionSize;
                 adlPosition.level = executePosition.level;
                 adlPosition.commissionRatio = executePosition.commissionRatio;
             }
         }
-        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 price = TradingHelper.getValidPrice(
+            ADDRESS_PROVIDER,
+            pair.indexToken,
+            tradingConfig
+        );
 
         for (uint256 i = 0; i < adlPositions.length; i++) {
             ExecutePositionInfo memory adlPosition = adlPositions[i];
@@ -599,7 +710,7 @@ contract ExecutionLogic is IExecutionLogic {
                         collateral: 0,
                         openPrice: price,
                         isLong: adlPosition.position.isLong,
-                        sizeAmount: - int256(adlPosition.executionSize),
+                        sizeAmount: -int256(adlPosition.executionSize),
                         maxSlippage: 0,
                         data: abi.encode(adlPosition.position.account)
                     })
@@ -615,6 +726,14 @@ contract ExecutionLogic is IExecutionLogic {
                 );
             }
         }
-        this.executeDecreaseOrder(order.orderId, order.tradeType, _level, _commissionRatio, true, 0, false);
+        this.executeDecreaseOrder(
+            order.orderId,
+            order.tradeType,
+            _level,
+            _commissionRatio,
+            true,
+            0,
+            false
+        );
     }
 }
