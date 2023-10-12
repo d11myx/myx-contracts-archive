@@ -6,6 +6,7 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPythOraclePriceFeed.sol";
+import "../interfaces/IRoleManager.sol";
 
 contract PythOraclePriceFeed is IPythOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -24,11 +25,16 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         _setAssetPriceIds(assets, priceIds);
     }
 
-    function decimals() public pure override returns (uint256) {
-        return 8;
+    modifier onlyTimelock() {
+        require(msg.sender == ADDRESS_PROVIDER.timelock(), "only timelock");
+        _;
+    }
+    modifier onlyKeeper() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(tx.origin), "opk");
+        _;
     }
 
-    function updatePythAddress(IPyth _pyth) external override {
+    function updatePythAddress(IPyth _pyth) external override onlyTimelock {
         address oldAddress = address(pyth);
         pyth = _pyth;
         emit PythAddressUpdated(oldAddress, address(pyth));
@@ -37,14 +43,14 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     function setAssetPriceIds(
         address[] memory assets,
         bytes32[] memory priceIds
-    ) external override {
+    ) external override onlyTimelock {
         _setAssetPriceIds(assets, priceIds);
     }
 
     function updatePrice(
         address[] calldata tokens,
         uint256[] calldata prices
-    ) external payable override {
+    ) external payable override onlyKeeper {
         bytes[] memory updateData = getUpdateData(tokens, prices);
 
         uint fee = pyth.getUpdateFee(updateData);
@@ -52,6 +58,14 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
             revert("insufficient fee");
         }
         pyth.updatePriceFeeds{value: fee}(updateData);
+    }
+
+    function _setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) private {
+        require(assets.length == priceIds.length, "inconsistent params length");
+        for (uint256 i = 0; i < assets.length; i++) {
+            assetIds[assets[i]] = priceIds[i];
+            emit AssetPriceIdUpdated(assets[i], priceIds[i]);
+        }
     }
 
     function getPrice(address token) external view override returns (uint256) {
@@ -64,14 +78,6 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
             return 0;
         }
         return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - decimals()));
-    }
-
-    function _setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) public {
-        require(assets.length == priceIds.length, "inconsistent params length");
-        for (uint256 i = 0; i < assets.length; i++) {
-            assetIds[assets[i]] = priceIds[i];
-            emit AssetPriceIdUpdated(assets[i], priceIds[i]);
-        }
     }
 
     function getUpdateData(
@@ -111,6 +117,10 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
 
     function _getPrice(bytes32 priceId) internal view returns (PythStructs.Price memory) {
         return pyth.getPriceUnsafe(priceId);
+    }
+
+    function decimals() public pure override returns (uint256) {
+        return 8;
     }
 
     function createPriceFeedUpdateData(
