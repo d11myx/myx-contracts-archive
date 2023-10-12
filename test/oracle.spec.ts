@@ -32,7 +32,12 @@ describe('Oracle: oracle cases', () => {
 
         await addressProvider.setRolManager(roleManager.address);
 
-        oraclePriceFeed = (await oraclePriceFeedFactory.deploy(mockPyth.address, [], [])) as OraclePriceFeed;
+        oraclePriceFeed = (await oraclePriceFeedFactory.deploy(
+            addressProvider.address,
+            mockPyth.address,
+            [],
+            [],
+        )) as OraclePriceFeed;
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
         indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
 
