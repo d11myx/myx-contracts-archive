@@ -151,6 +151,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const currentImplAddress = await upgrades.erc1967.getImplementationAddress(executor.address);
     console.log('currentImplAddress:' + currentImplAddress);
 
+    await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
+
     await waitForTx(await pool.setRiskReserve(riskReserve.address));
     await waitForTx(await pool.setFeeCollector(feeCollector.address));
 
