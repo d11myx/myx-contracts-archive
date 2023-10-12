@@ -9,13 +9,13 @@ interface IPriceOracle {
 
     event IndexPriceFeedUpdated(address oldPriceFeed, address newPriceFeed);
 
-    function updateOraclePriceFeed(address _oraclePriceFeed) external;
+    // function updateOraclePriceFeed(address _oraclePriceFeed) external;
 
-    function updateIndexPriceFeed(address _indexPriceFeed) external;
+    // function updateIndexPriceFeed(address _indexPriceFeed) external;
 
-    function getOraclePrice(address token) external view returns (uint256);
+    // function getOraclePrice(address token) external view returns (uint256);
 
-    function getIndexPrice(address token) external view returns (uint256);
+    // function getIndexPrice(address token) external view returns (uint256);
 
     function getUpdateFee(
         address[] calldata tokens,
