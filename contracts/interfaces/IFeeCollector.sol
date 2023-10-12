@@ -17,6 +17,8 @@ interface IFeeCollector {
 
     event UpdatedStakingPoolAddress(address sender, address oldAddress, address newAddress);
 
+    event UpdatedPositionManagerAddress(address sender, address oldAddress, address newAddress);
+
     event DistributeTradingFee(
         address account,
         uint256 pairIndex,
@@ -53,6 +55,8 @@ interface IFeeCollector {
     function userTradingFee(address _account) external view returns (uint256);
 
     function getLevelDiscounts(uint8 level) external view returns (LevelDiscount memory);
+
+    function updateLevelDiscountRatios(uint8[] memory levels, LevelDiscount[] memory discounts) external;
 
     function updateLevelDiscountRatio(uint8 level, LevelDiscount memory newRatio) external;
 
