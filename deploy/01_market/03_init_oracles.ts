@@ -4,7 +4,6 @@ import {
     getIndexPriceFeed,
     getMockToken,
     getOraclePriceFeed,
-
     getToken,
     loadReserveConfig,
     MARKET_NAME,
@@ -21,7 +20,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
-
 
     const priceFeedPairs: string[] = [MARKET_NAME];
     priceFeedPairs.push(...Object.keys(pairConfigs));
@@ -50,13 +48,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(
         await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee }),
     );
-
-    // for (let pair of priceFeedPairs) {
-    //     const pairToken = pair == MARKET_NAME ? await getToken() : await getMockToken(pair);
-    //
-    //     console.log(`getOraclePrice: ${pair} :`, await priceOracle.getOraclePrice(pairToken.address));
-    //     console.log(`getIndexPrice: ${pair} :`, await priceOracle.getIndexPrice(pairToken.address));
-    // }
 };
 func.id = `InitOracles`;
 func.tags = ['market', 'init-oracles'];
