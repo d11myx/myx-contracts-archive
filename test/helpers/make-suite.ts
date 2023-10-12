@@ -14,7 +14,6 @@ import {
     Executor,
     OrderManager,
     FundingRate,
-
     ExecutionLogic,
     RiskReserve,
     LiquidationLogic,
@@ -199,7 +198,7 @@ export async function newTestEnv(): Promise<TestEnv> {
     await roleManager.addPoolAdmin(deployer.address);
     await roleManager.addKeeper(keeper.address);
 
-    const { oraclePriceFeed, indexPriceFeed, priceOracle, fundingRate } = await deployPrice(
+    const { oraclePriceFeed, indexPriceFeed, fundingRate } = await deployPrice(
         deployer,
         keeper,
         addressesProvider,
@@ -240,7 +239,6 @@ export async function newTestEnv(): Promise<TestEnv> {
         fundingRate: fundingRate,
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
-        priceOracle: priceOracle,
         positionManager: positionManager,
         router: router,
         executionLogic: executionLogic,

@@ -61,7 +61,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as FundingRate;
 
     await waitForTx(
-        await addressesProvider.connect(deployerSigner).initialize(priceOracle.address, fundingRate.address),
+        await addressesProvider
+            .connect(deployerSigner)
+            .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address),
     );
 };
 
