@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { getPriceOracle, getRoleManager, getTokens, waitForTx } from '../helpers';
+import { getIndexPriceFeed, getOraclePriceFeed, getRoleManager, getTokens, waitForTx } from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -10,13 +10,14 @@ async function main() {
     console.log(await deployer.getBalance());
 
     const roleManager = await getRoleManager();
-    const priceOracle = await getPriceOracle();
+    const priceOracle = await getOraclePriceFeed();
+    const indexPriceFeed = await getIndexPriceFeed();
 
     const { usdt, btc, eth } = await getTokens();
-    console.log(`btc oracle price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30));
-    console.log(`eth oracle price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(eth.address), 30));
-    console.log(`btc index price:`, ethers.utils.formatUnits(await priceOracle.getIndexPrice(btc.address), 30));
-    console.log(`eth index price:`, ethers.utils.formatUnits(await priceOracle.getIndexPrice(eth.address), 30));
+    console.log(`btc oracle price:`, ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30));
+    console.log(`eth oracle price:`, ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30));
+    console.log(`btc index price:`, ethers.utils.formatUnits(await indexPriceFeed.getPrice(btc.address), 30));
+    console.log(`eth index price:`, ethers.utils.formatUnits(await indexPriceFeed.getPrice(eth.address), 30));
 
     const keepers: string[] = [
         '0xA85583325A974bE1B47a492589Ce4370a6C20628',

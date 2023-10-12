@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { getPriceOracle, getRoleManager, getTokens, waitForTx } from '../helpers';
+import { getIndexPriceFeed, getOraclePriceFeed, getRoleManager, getTokens, waitForTx } from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -10,13 +10,14 @@ async function main() {
     console.log(await deployer.getBalance());
 
     const roleManager = await getRoleManager();
-    const priceOracle = await getPriceOracle();
+    const priceOracle = await getOraclePriceFeed();
+    const indexPriceFeed = await getIndexPriceFeed();
 
     const { usdt, btc, eth } = await getTokens();
-    console.log(`btc oracle price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30));
-    console.log(`eth oracle price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(eth.address), 30));
-    console.log(`btc index price:`, ethers.utils.formatUnits(await priceOracle.getIndexPrice(btc.address), 30));
-    console.log(`eth index price:`, ethers.utils.formatUnits(await priceOracle.getIndexPrice(eth.address), 30));
+    console.log(`btc oracle price:`, ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30));
+    console.log(`eth oracle price:`, ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30));
+    console.log(`btc index price:`, ethers.utils.formatUnits(await indexPriceFeed.getPrice(btc.address), 30));
+    console.log(`eth index price:`, ethers.utils.formatUnits(await indexPriceFeed.getPrice(eth.address), 30));
 
     const keepers: string[] = [
         '0xE98abdBdBAEBC1DC7e04CFD0a0Ae76965503E27D',
@@ -28,7 +29,7 @@ async function main() {
         '0x91bB296D80c077E3E5343931B213D4Bbe664482B',
         '0x9512117e428b08f12e4BeBa8D9eE00F01CCe8Cc8',
         '0xD26F7f224326057154413c38e9942EBcf8dAe154',
-        '0xF25b17220ecD5c75B63322EFF2a79bf19317C579'
+        '0xF25b17220ecD5c75B63322EFF2a79bf19317C579',
     ];
 
     for (let keeper of keepers) {
@@ -38,7 +39,6 @@ async function main() {
         await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
 }
-
 
 main().catch((error) => {
     console.error(error);
