@@ -3,7 +3,7 @@ import {
     AddressesProvider,
     Executor,
     IndexPriceFeed,
-    OraclePriceFeed,
+    PythOraclePriceFeed,
     Pool,
     OrderManager,
     RoleManager,
@@ -98,9 +98,9 @@ export const getPriceOracle = async (address?: string): Promise<PriceOracle> => 
     return getContract<PriceOracle>('PriceOracle', address || (await hre.deployments.get(PRICE_ORACLE_ID)).address);
 };
 
-export const getOraclePriceFeed = async (address?: string): Promise<OraclePriceFeed> => {
-    return getContract<OraclePriceFeed>(
-        'OraclePriceFeed',
+export const getOraclePriceFeed = async (address?: string): Promise<PythOraclePriceFeed> => {
+    return getContract<PythOraclePriceFeed>(
+        'PythOraclePriceFeed',
         address || (await hre.deployments.get(ORACLE_PRICE_FEED_ID)).address,
     );
 };

@@ -8,7 +8,7 @@ import {
     RoleManager,
     Token,
     PositionManager,
-    OraclePriceFeed,
+    PythOraclePriceFeed,
     WETH,
     Router,
     Executor,
@@ -70,7 +70,7 @@ export interface TestEnv {
     pairTokens: SymbolMap<Token>;
     pool: Pool;
     fundingRate: FundingRate;
-    oraclePriceFeed: OraclePriceFeed;
+    oraclePriceFeed: PythOraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
     priceOracle: PriceOracle;
     router: Router;
@@ -97,7 +97,7 @@ export const testEnv: TestEnv = {
     pairTokens: {} as SymbolMap<Token>,
     pool: {} as Pool,
     fundingRate: {} as FundingRate,
-    oraclePriceFeed: {} as OraclePriceFeed,
+    oraclePriceFeed: {} as PythOraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
     priceOracle: {} as PriceOracle,
     router: {} as Router,

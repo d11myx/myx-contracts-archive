@@ -8,7 +8,7 @@ import {
     IndexPriceFeed,
     LiquidationLogic,
     MockPyth,
-    OraclePriceFeed,
+    PythOraclePriceFeed,
     OrderManager,
     Pool,
     PoolTokenFactory,
@@ -94,13 +94,13 @@ export async function deployPrice(
 
     const mockPyth = (await deployContract('MockPyth', [60, 1])) as any as MockPyth;
 
-    const oraclePriceFeed = (await deployContract('OraclePriceFeed', [
+    const oraclePriceFeed = (await deployContract('PythOraclePriceFeed', [
         addressesProvider.address,
         mockPyth.address,
         [],
         [],
-    ])) as any as OraclePriceFeed;
-    log(`deployed OraclePriceFeed at ${oraclePriceFeed.address}`);
+    ])) as any as PythOraclePriceFeed;
+    log(`deployed PythOraclePriceFeed at ${oraclePriceFeed.address}`);
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
@@ -147,7 +147,7 @@ export async function deployPrice(
 
 export async function deployPair(
     addressProvider: AddressesProvider,
-    vaultPriceFeed: OraclePriceFeed,
+    vaultPriceFeed: PythOraclePriceFeed,
     deployer: SignerWithAddress,
     weth: WETH,
 ) {

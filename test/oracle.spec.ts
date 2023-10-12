@@ -3,7 +3,7 @@ import {
     AddressesProvider,
     IndexPriceFeed,
     MockPyth,
-    OraclePriceFeed,
+    PythOraclePriceFeed,
     PriceOracle,
     RoleManager,
     Timelock,
@@ -13,7 +13,7 @@ import { getBlockTimestamp } from '../helpers';
 import { expect } from './shared/expect';
 
 describe('Oracle: oracle cases', () => {
-    let mockPyth: MockPyth, oraclePriceFeed: OraclePriceFeed, indexPriceFeed: IndexPriceFeed, priceOracle: PriceOracle;
+    let mockPyth: MockPyth, oraclePriceFeed: PythOraclePriceFeed, indexPriceFeed: IndexPriceFeed, priceOracle: PriceOracle;
 
     before(async () => {
         const mockPythFactory = await ethers.getContractFactory('MockPyth');
@@ -25,7 +25,7 @@ describe('Oracle: oracle cases', () => {
         const addressesProviderFactory = await ethers.getContractFactory('AddressesProvider');
 
         let addressProvider = (await addressesProviderFactory.deploy(timelock.address)) as AddressesProvider;
-        const oraclePriceFeedFactory = await ethers.getContractFactory('OraclePriceFeed');
+        const oraclePriceFeedFactory = await ethers.getContractFactory('PythOraclePriceFeed');
 
         const rolemanagerFactory = await ethers.getContractFactory('RoleManager');
         let roleManager = (await rolemanagerFactory.deploy()) as RoleManager;
@@ -37,7 +37,7 @@ describe('Oracle: oracle cases', () => {
             mockPyth.address,
             [],
             [],
-        )) as OraclePriceFeed;
+        )) as PythOraclePriceFeed;
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
         indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
 
