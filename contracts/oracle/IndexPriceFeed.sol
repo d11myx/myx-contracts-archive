@@ -8,7 +8,7 @@ import "../interfaces/IRoleManager.sol";
 
 contract IndexPriceFeed is IIndexPriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
-
+    uint256 public immutable PRICE_DECIMALS = 30;
     mapping(address => uint256) public assetPrices;
 
     constructor(
@@ -25,7 +25,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
         _;
     }
 
-    function decimals() external pure override returns (uint256) {
+    function decimals() public pure override returns (uint256) {
         return 8;
     }
 
@@ -37,7 +37,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
     }
 
     function getPrice(address token) external view override returns (uint256) {
-        return assetPrices[token];
+        return assetPrices[token] * (10 ** (PRICE_DECIMALS - decimals()));
     }
 
     function _setAssetPrices(address[] memory assets, uint256[] memory prices) private {

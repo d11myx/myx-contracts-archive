@@ -9,7 +9,7 @@ import "../interfaces/IOraclePriceFeed.sol";
 
 contract PythOraclePriceFeed is IOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
-
+    uint256 public immutable PRICE_DECIMALS = 30;
     IPyth public pyth;
     mapping(address => bytes32) public assetIds;
 
@@ -24,7 +24,7 @@ contract PythOraclePriceFeed is IOraclePriceFeed {
         _setAssetPriceIds(assets, priceIds);
     }
 
-    function decimals() external pure override returns (uint256) {
+    function decimals() public pure override returns (uint256) {
         return 8;
     }
 
@@ -63,7 +63,7 @@ contract PythOraclePriceFeed is IOraclePriceFeed {
         if (pythPrice.price < 0) {
             return 0;
         }
-        return uint256(uint64(pythPrice.price));
+        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - decimals()));
     }
 
     function _setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) public {
