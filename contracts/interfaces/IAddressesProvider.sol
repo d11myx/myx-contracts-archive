@@ -10,5 +10,7 @@ interface IAddressesProvider {
 
     function priceOracle() external view returns (address);
 
+    function indexPriceOracle() external view returns (address);
+
     function roleManager() external view returns (address);
 }

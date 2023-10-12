@@ -8,7 +8,6 @@ import {
     INDEX_PRICE_FEED_ID,
     MOCK_PRICE_FEED_ID,
     ORACLE_PRICE_FEED_ID,
-    PRICE_ORACLE_ID,
     waitForTx,
 } from '../../helpers';
 import { FundingRate, IndexPriceFeed, MockPyth, PythOraclePriceFeed } from '../../types';
