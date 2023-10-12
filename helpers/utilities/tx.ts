@@ -49,6 +49,8 @@ export const deployProxy = async (
         address: contract.address,
     });
 
+    // await new Promise((f) => setTimeout(f, 10000));
+
     return {
         abi: artifact.abi,
         address: contract.address,
@@ -112,10 +114,10 @@ export const getContract = async <ContractType extends Contract>(
     address?: string,
 ): Promise<ContractType> => {
     const artifact = await hre.deployments.getArtifact(id);
-    return hre.ethers.getContractAt(
+    return (await hre.ethers.getContractAt(
         artifact.abi,
-        address || (await (await hre.deployments.get(id)).address),
-    ) as any as ContractType;
+        address || (await hre.deployments.get(id)).address,
+    )) as any as ContractType;
 };
 
 interface AccountItem {

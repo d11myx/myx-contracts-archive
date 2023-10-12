@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
 import "../libraries/Position.sol";
@@ -20,13 +19,9 @@ import "../interfaces/IRiskReserve.sol";
 import "../interfaces/IFeeCollector.sol";
 import "../libraries/Upgradeable.sol";
 
-contract PositionManager is
-    IPositionManager,
-    PausableUpgradeable,
-    Upgradeable,
-    ReentrancyGuardUpgradeable
-{
-    using EnumerableSet for EnumerableSet.AddressSet;
+
+contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, ReentrancyGuardUpgradeable {
+
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -50,12 +45,15 @@ contract PositionManager is
 
     // uint256 public fundingInterval = 28800;
 
-    EnumerableSet.AddressSet private logics;
     IRiskReserve public riskReserve;
     IPool public pool;
     IFeeCollector public feeCollector;
     address public pledgeAddress;
 
+    address public executionLogic;
+    address public liquidationLogic;
+
+    // constructor() FeeManager() Pausable() {}
     function initialize(
         IAddressesProvider addressProvider,
         IPool _pool,
@@ -74,12 +72,8 @@ contract PositionManager is
     }
 
     modifier onlyExecutor() {
-        _onlyExecutor();
+        require(msg.sender == executionLogic || msg.sender == liquidationLogic, "onlyExecutor");
         _;
-    }
-
-    function _onlyExecutor() private view {
-        require(logics.contains(msg.sender), "onlyExecutor");
     }
 
     function setPaused() external onlyAdmin {
@@ -90,12 +84,16 @@ contract PositionManager is
         _unpause();
     }
 
-    function addLogic(address _logic) external onlyPoolAdmin {
-        logics.add(_logic);
+    function updateExecutionLogic(address _executionLogic) external onlyPoolAdmin {
+        address oldAddress = executionLogic;
+        executionLogic = _executionLogic;
+        emit UpdatedExecutionLogic(msg.sender, oldAddress, executionLogic);
     }
 
-    function removeLogic(address _logic) external onlyPoolAdmin {
-        logics.remove(_logic);
+    function updateLiquidationLogic(address _liquidationLogic) external onlyPoolAdmin {
+        address oldAddress = liquidationLogic;
+        liquidationLogic = _liquidationLogic;
+        emit UpdatedLiquidationLogic(msg.sender, oldAddress, liquidationLogic);
     }
 
     function _takeFundingFeeAddTraderFee(
@@ -518,7 +516,8 @@ contract PositionManager is
         bool isLong,
         int256 collateral
     ) external override {
-        require(account == msg.sender || logics.contains(msg.sender), "forbidden");
+        require(account == msg.sender, "forbidden");
+
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[
             PositionKey.getPositionKey(account, pairIndex, isLong)
