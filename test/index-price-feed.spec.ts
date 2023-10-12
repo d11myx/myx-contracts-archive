@@ -36,7 +36,7 @@
 //   let fastPriceFeed
 
 //   beforeEach(async () => {
-//     vaultPriceFeed = await deployContract("OraclePriceFeed", [])
+//     vaultPriceFeed = await deployContract("PythOraclePriceFeed", [])
 
 //     bnb = await deployContract("Token", [])
 //     bnbPriceFeed = await deployContract("PriceFeed", [])
