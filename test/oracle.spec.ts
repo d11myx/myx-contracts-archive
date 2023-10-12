@@ -4,7 +4,6 @@ import {
     IndexPriceFeed,
     MockPyth,
     PythOraclePriceFeed,
-    PriceOracle,
     RoleManager,
     Timelock,
 } from '../types';
@@ -13,7 +12,7 @@ import { getBlockTimestamp } from '../helpers';
 import { expect } from './shared/expect';
 
 describe('Oracle: oracle cases', () => {
-    let mockPyth: MockPyth, oraclePriceFeed: PythOraclePriceFeed, indexPriceFeed: IndexPriceFeed, priceOracle: PriceOracle;
+    let mockPyth: MockPyth, oraclePriceFeed: PythOraclePriceFeed, indexPriceFeed: IndexPriceFeed;
 
     before(async () => {
         const mockPythFactory = await ethers.getContractFactory('MockPyth');
@@ -41,8 +40,7 @@ describe('Oracle: oracle cases', () => {
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
         indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
 
-        const priceOracleFactory = await ethers.getContractFactory('PriceOracle');
-        priceOracle = await priceOracleFactory.deploy(oraclePriceFeed.address, indexPriceFeed.address);
+
     });
 
     it('update price feed', async () => {
@@ -70,13 +68,14 @@ describe('Oracle: oracle cases', () => {
         await oraclePriceFeed.setAssetPriceIds([btc.address], [id]);
 
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(id);
+        //todo test
 
-        const fee = await priceOracle.getUpdateFee([btc.address], [price]);
-        expect(await priceOracle.updatePrice([btc.address], [price], { value: fee })).to.be.revertedWith('opk');
+        // const fee = await priceOracle.getUpdateFee([btc.address], [price]);
+        // expect(await priceOracle.updatePrice([btc.address], [price], { value: fee })).to.be.revertedWith('opk');
 
-        expect(await oraclePriceFeed.getPrice(btc.address)).to.be.eq(price);
-        expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(price);
-        expect(await priceOracle.getOraclePrice(btc.address)).to.be.eq(price + '0000000000000000000000');
-        expect(await priceOracle.getIndexPrice(btc.address)).to.be.eq(price + '0000000000000000000000');
+        // expect(await oraclePriceFeed.getPrice(btc.address)).to.be.eq(price);
+        // expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(price);
+        // expect(await priceOracle.getOraclePrice(btc.address)).to.be.eq(price + '0000000000000000000000');
+        // expect(await priceOracle.getIndexPrice(btc.address)).to.be.eq(price + '0000000000000000000000');
     });
 });

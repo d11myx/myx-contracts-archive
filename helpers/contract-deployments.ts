@@ -13,7 +13,7 @@ import {
     Pool,
     PoolTokenFactory,
     PositionManager,
-    PriceOracle,
+
     RiskReserve,
     RoleManager,
     Router,
@@ -123,11 +123,6 @@ export async function deployPrice(
     ])) as any as IndexPriceFeed;
     log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
-    const priceOracle = (await deployContract('PriceOracle', [
-        oraclePriceFeed.address,
-        indexPriceFeed.address,
-    ])) as any as PriceOracle;
-    log(`deployed PriceOracle at ${priceOracle.address}`);
 
     await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices);
 
