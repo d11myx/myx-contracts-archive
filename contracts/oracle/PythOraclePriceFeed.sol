@@ -5,9 +5,9 @@ import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "../interfaces/IAddressesProvider.sol";
-import "../interfaces/IOraclePriceFeed.sol";
+import "../interfaces/IPythOraclePriceFeed.sol";
 
-contract PythOraclePriceFeed is IOraclePriceFeed {
+contract PythOraclePriceFeed is IPythOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     uint256 public immutable PRICE_DECIMALS = 30;
     IPyth public pyth;
