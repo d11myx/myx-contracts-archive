@@ -3,14 +3,23 @@ pragma solidity ^0.8.0;
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+
+import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IOraclePriceFeed.sol";
 
 contract OraclePriceFeed is IOraclePriceFeed {
+    IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     IPyth public pyth;
     mapping(address => bytes32) public assetIds;
 
-    constructor(address _pyth, address[] memory assets, bytes32[] memory priceIds) {
+    constructor(
+        IAddressesProvider addressProvider,
+        address _pyth,
+        address[] memory assets,
+        bytes32[] memory priceIds
+    ) {
+        ADDRESS_PROVIDER = addressProvider;
         pyth = IPyth(_pyth);
         _setAssetPriceIds(assets, priceIds);
     }
@@ -25,16 +34,22 @@ contract OraclePriceFeed is IOraclePriceFeed {
         emit PythAddressUpdated(oldAddress, address(pyth));
     }
 
-    function setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) external override {
+    function setAssetPriceIds(
+        address[] memory assets,
+        bytes32[] memory priceIds
+    ) external override {
         _setAssetPriceIds(assets, priceIds);
     }
 
-    function updatePrice(address[] calldata tokens, uint256[] calldata prices) external payable override {
+    function updatePrice(
+        address[] calldata tokens,
+        uint256[] calldata prices
+    ) external payable override {
         bytes[] memory updateData = getUpdateData(tokens, prices);
 
         uint fee = pyth.getUpdateFee(updateData);
         if (msg.value < fee) {
-            revert('insufficient fee');
+            revert("insufficient fee");
         }
         pyth.updatePriceFeeds{value: fee}(updateData);
     }
@@ -42,7 +57,7 @@ contract OraclePriceFeed is IOraclePriceFeed {
     function getPrice(address token) external view override returns (uint256) {
         bytes32 priceId = assetIds[token];
         if (priceId == 0) {
-            revert('price feed not found');
+            revert("price feed not found");
         }
         PythStructs.Price memory pythPrice = _getPrice(priceId);
         if (pythPrice.price < 0) {
@@ -75,7 +90,15 @@ contract OraclePriceFeed is IOraclePriceFeed {
             int64 emaPrice = int64(int256(prices[i]));
             uint64 emaConf = 0;
             uint64 publishTime = uint64(block.timestamp);
-            updateData[i] = createPriceFeedUpdateData(id, price, conf, expo, emaPrice, emaConf, publishTime);
+            updateData[i] = createPriceFeedUpdateData(
+                id,
+                price,
+                conf,
+                expo,
+                emaPrice,
+                emaConf,
+                publishTime
+            );
         }
     }
 

@@ -53,6 +53,7 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         require(newPriceOracle != address(0) && newFundingRateAddress != address(0), "!0");
         priceOracle = newPriceOracle;
         fundingRate = newFundingRateAddress;
+        _initialize = true;
 
         emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);
         emit AddressSet(PRICE_ORACLE, address(0), newPriceOracle);

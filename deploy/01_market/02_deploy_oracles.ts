@@ -31,7 +31,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const oraclePriceFeedArtifact = await deploy(`${ORACLE_PRICE_FEED_ID}`, {
         from: deployer,
         contract: 'OraclePriceFeed',
-        args: [mockPyth.address, [], []],
+        args: [addressesProvider.address, mockPyth.address, [], []],
         ...COMMON_DEPLOY_PARAMS,
     });
     const oraclePriceFeed = (await hre.ethers.getContractAt(

@@ -95,6 +95,7 @@ export async function deployPrice(
     const mockPyth = (await deployContract('MockPyth', [60, 1])) as any as MockPyth;
 
     const oraclePriceFeed = (await deployContract('OraclePriceFeed', [
+        addressesProvider.address,
         mockPyth.address,
         [],
         [],
