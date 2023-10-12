@@ -13,7 +13,6 @@ import {
     Pool,
     PoolTokenFactory,
     PositionManager,
-
     RiskReserve,
     RoleManager,
     Router,
@@ -123,7 +122,6 @@ export async function deployPrice(
     ])) as any as IndexPriceFeed;
     log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
-
     await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices);
 
     await oraclePriceFeed.connect(keeper.signer).setAssetPriceIds(pairTokenAddresses, pairTokenPriceIds);
@@ -136,8 +134,10 @@ export async function deployPrice(
     ])) as any as FundingRate;
     log(`deployed FundingRate at ${fundingRate.address}`);
 
-    await addressesProvider.connect(deployer.signer).initialize(priceOracle.address, fundingRate.address);
-    return { oraclePriceFeed, indexPriceFeed, priceOracle, fundingRate };
+    await addressesProvider
+        .connect(deployer.signer)
+        .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address);
+    return { oraclePriceFeed, indexPriceFeed, fundingRate };
 }
 
 export async function deployPair(

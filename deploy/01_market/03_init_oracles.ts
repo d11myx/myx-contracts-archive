@@ -4,7 +4,7 @@ import {
     getIndexPriceFeed,
     getMockToken,
     getOraclePriceFeed,
-    getPriceOracle,
+
     getToken,
     loadReserveConfig,
     MARKET_NAME,
@@ -21,7 +21,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
-    const priceOracle = await getPriceOracle();
+
 
     const priceFeedPairs: string[] = [MARKET_NAME];
     priceFeedPairs.push(...Object.keys(pairConfigs));
