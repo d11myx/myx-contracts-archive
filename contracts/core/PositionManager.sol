@@ -13,14 +13,19 @@ import "../libraries/PrecisionUtils.sol";
 import "../libraries/Int256Utils.sol";
 import "../interfaces/IFundingRate.sol";
 import "../interfaces/IPool.sol";
-import "../interfaces/IPriceOracle.sol";
+import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IRiskReserve.sol";
-import '../interfaces/IFeeCollector.sol';
+import "../interfaces/IFeeCollector.sol";
 import "../libraries/Upgradeable.sol";
 
-contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, ReentrancyGuardUpgradeable {
+contract PositionManager is
+    IPositionManager,
+    PausableUpgradeable,
+    Upgradeable,
+    ReentrancyGuardUpgradeable
+{
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
@@ -66,7 +71,6 @@ contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, 
         pool = _pool;
         feeCollector = _feeCollector;
         riskReserve = _riskReserve;
-
     }
 
     modifier onlyExecutor() {
@@ -290,9 +294,7 @@ contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, 
     ) internal view returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        uint256 _price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
-            pair.indexToken
-        );
+        uint256 _price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         if (lpIsLong) {
             if (_price > lpVault.averagePrice) {
                 return int256(amount.mulPrice(_price - lpVault.averagePrice));
@@ -525,9 +527,7 @@ contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, 
             IERC20(pair.stableToken).transferFrom(account, address(pool), uint256(collateral));
         }
 
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
-            pair.indexToken
-        );
+        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         position.validLeverage(
             price,
@@ -573,12 +573,10 @@ contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, 
         uint256 _sizeAmount
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
-            pair.indexToken
-        );
+        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         uint256 sizeDelta = _sizeAmount.mulPrice(price);
 
-        (tradingFee,) = _tradingFee(_pairIndex, _isLong, sizeDelta);
+        (tradingFee, ) = _tradingFee(_pairIndex, _isLong, sizeDelta);
         return tradingFee;
     }
 
@@ -624,9 +622,7 @@ contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, 
 
     function updateFundingRate(uint256 _pairIndex) external whenNotPaused {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
-            pair.indexToken
-        );
+        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         _updateFundingRate(_pairIndex, price);
     }
 
@@ -703,9 +699,7 @@ contract PositionManager is IPositionManager, PausableUpgradeable, Upgradeable, 
 
     function getNextFundingRate(uint256 _pairIndex) external view override returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
-            pair.indexToken
-        );
+        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         return _nextFundingRate(_pairIndex, price);
     }
 
