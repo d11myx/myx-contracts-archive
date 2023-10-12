@@ -11,7 +11,7 @@ import {
     PRICE_ORACLE_ID,
     waitForTx,
 } from '../../helpers';
-import { FundingRate, IndexPriceFeed, MockPyth, PythOraclePriceFeed, PriceOracle } from '../../types';
+import { FundingRate, IndexPriceFeed, MockPyth, PythOraclePriceFeed } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -49,17 +49,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         indexPriceFeedArtifact.abi,
         indexPriceFeedArtifact.address,
     )) as IndexPriceFeed;
-
-    const priceOracleArtifact = await deploy(`${PRICE_ORACLE_ID}`, {
-        from: deployer,
-        contract: 'PriceOracle',
-        args: [oraclePriceFeed.address, indexPriceFeed.address],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const priceOracle = (await hre.ethers.getContractAt(
-        priceOracleArtifact.abi,
-        priceOracleArtifact.address,
-    )) as PriceOracle;
 
     const FundingRateArtifact = await deployProxy(`${FUNDING_RATE}`, [], {
         from: deployer,

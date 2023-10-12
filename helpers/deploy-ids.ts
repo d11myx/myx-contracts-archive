@@ -8,7 +8,6 @@ export const ROLE_MANAGER_ID = `RoleManager`;
 export const ORACLE_PRICE_FEED_ID = `PythOraclePriceFeed`;
 export const MOCK_PRICE_FEED_ID = `MockPriceFeed`;
 export const INDEX_PRICE_FEED_ID = `IndexPriceFeed`;
-export const PRICE_ORACLE_ID = `PriceOracle`;
 export const FUNDING_RATE = `FundingRate`;
 export const PAIR_INFO_ID = `Pool`;
 export const POOL_TOKEN_FACTORY = `PoolTokenFactory`;
