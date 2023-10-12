@@ -23,7 +23,6 @@ import {
     FeeDistributor,
     TestCallBack,
     FundingRate,
-    PriceOracle,
     ExecutionLogic,
     RiskReserve,
     LiquidationLogic,
@@ -92,10 +91,6 @@ export const getAddressesProvider = async (address?: string): Promise<AddressesP
 
 export const getRoleManager = async (address?: string): Promise<RoleManager> => {
     return getContract<RoleManager>('RoleManager', address || (await hre.deployments.get(ROLE_MANAGER_ID)).address);
-};
-
-export const getPriceOracle = async (address?: string): Promise<PriceOracle> => {
-    return getContract<PriceOracle>('PriceOracle', address || (await hre.deployments.get(PRICE_ORACLE_ID)).address);
 };
 
 export const getOraclePriceFeed = async (address?: string): Promise<PythOraclePriceFeed> => {

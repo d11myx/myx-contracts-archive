@@ -14,7 +14,7 @@ import {
     Executor,
     OrderManager,
     FundingRate,
-    PriceOracle,
+
     ExecutionLogic,
     RiskReserve,
     LiquidationLogic,
@@ -42,7 +42,6 @@ import {
     getPositionManager,
     deployLibraries,
     getRoleManager,
-    getPriceOracle,
     getExecutionLogic,
     getRiskReserve,
     getLiquidationLogic,
@@ -72,7 +71,6 @@ export interface TestEnv {
     fundingRate: FundingRate;
     oraclePriceFeed: PythOraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
-    priceOracle: PriceOracle;
     router: Router;
     executionLogic: ExecutionLogic;
     liquidationLogic: LiquidationLogic;
@@ -99,7 +97,6 @@ export const testEnv: TestEnv = {
     fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as PythOraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
-    priceOracle: {} as PriceOracle,
     router: {} as Router,
     executionLogic: {} as ExecutionLogic,
     liquidationLogic: {} as LiquidationLogic,
@@ -153,7 +150,6 @@ export async function setupTestEnv() {
     // oracle
     testEnv.oraclePriceFeed = await getOraclePriceFeed();
     testEnv.indexPriceFeed = await getIndexPriceFeed();
-    testEnv.priceOracle = await getPriceOracle();
 
     // pair
     testEnv.pool = await getPool();
