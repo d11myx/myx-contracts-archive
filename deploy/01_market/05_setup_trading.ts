@@ -151,6 +151,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const currentImplAddress = await upgrades.erc1967.getImplementationAddress(executor.address);
     console.log('currentImplAddress:' + currentImplAddress);
 
+    await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
+
     await waitForTx(await pool.setRiskReserve(riskReserve.address));
     await waitForTx(await pool.setFeeCollector(feeCollector.address));
 
@@ -163,9 +165,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const roleManager = await getRoleManager();
     await waitForTx(await roleManager.connect(deployerSigner).addKeeper(executor.address));
 
-    await waitForTx(await positionManager.addLogic(executionLogic.address));
-    await waitForTx(await positionManager.addLogic(liquidationLogic.address));
-    await waitForTx(await positionManager.addLogic(executionLogic.address));
+    await waitForTx(await positionManager.updateExecutionLogic(executionLogic.address));
+    await waitForTx(await positionManager.updateLiquidationLogic(liquidationLogic.address));
+    // await waitForTx(await positionManager.addLogic(executionLogic.address));
     await waitForTx(await orderManager.setExecutionLogic(executionLogic.address));
     await waitForTx(await orderManager.setLiquidationLogic(liquidationLogic.address));
 
