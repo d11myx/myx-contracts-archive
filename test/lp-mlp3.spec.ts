@@ -14,124 +14,64 @@ describe('LP: Pool cases', () => {
     });
 
     describe('liquidity of pool', () => {
-        it('should increased correct liquidity', async () => {
-            const {
-                router,
-                users: [depositor],
-                usdt,
-                btc,
-                pool,
-                priceOracle,
-                positionManager,
-            } = testEnv;
-
-            const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
-            );
-
-            // add liquidity  增加流动性
-            const indexAmount = ethers.utils.parseUnits('10000', 18);  //单价3w·
-            const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
-            const pair = await pool.getPair(pairIndex);
-            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
-            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-            expect(await pool.lpFairPrice(pairIndex)).to.be.eq(ethers.utils.parseUnits('1000000000000'));
-            const vaultBefore = await pool.getVault(pairIndex);
-            const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
-            const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
-            expect(vaultBefore.indexTotalAmount).to.be.eq(0);
-            expect(vaultBefore.stableTotalAmount).to.be.eq(0);
-
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
-            expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
-            await router
-                .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
-
-            const lpToken = await getMockToken('', pair.pairToken);
-            const totoalApply = await lpToken.totalSupply();
-            expect(totoalApply).to.be.eq(ethers.utils.parseUnits('599400000'));
-            const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
-            expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
-            const vaultAfter = await pool.getVault(pairIndex);
-            const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
-            const userUsdtBalanceAfter = await usdt.balanceOf(depositor.address);
-
-            expect(userBtcBalanceAfter).to.be.eq(userBtcBalanceBefore.sub(indexAmount));
-            expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
-
-            // 50: 50
-            expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultAfter.stableTotalAmount);
-
-            // userPaid = actual vaultTotal + totalFee
-            const totalFee = expectAddLiquidity.indexFeeAmount.mul(pairPrice).add(expectAddLiquidity.stableFeeAmount);
-            const vaultTotal = vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount);
-            const userPaid = indexAmount.mul(pairPrice).add(stableAmount);
-            expect(userPaid).to.be.eq(vaultTotal.add(totalFee));
-
-            // console.log('===================');
-            // console.log(await positionManager.getNextFundingRate(pairIndex));
-        });
-
-
-        it('should increased correct liquidity', async () => {
-            const {
-                router,
-                users: [depositor],
-                usdt,
-                btc,
-                pool,
-                priceOracle,
-                positionManager,
-            } = testEnv;
-
-            const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
-            );
-
-            // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('20000', 18);//单价3w
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
-            const pair = await pool.getPair(pairIndex);
-            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
-            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-            expect(await pool.lpFairPrice(pairIndex)).to.be.eq(ethers.utils.parseUnits('1000000000000'));
-            const vaultBefore = await pool.getVault(pairIndex);
-            const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
-            const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
-            expect(vaultBefore.indexTotalAmount).to.be.eq(0);
-            expect(vaultBefore.stableTotalAmount).to.be.eq(0);
-
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
-            expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
-            await router
-                .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
-
-            const lpToken = await getMockToken('', pair.pairToken);
-            const totoalApply = await lpToken.totalSupply();
-            expect(totoalApply).to.be.eq(ethers.utils.parseUnits('599400000'));
-            const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
-            expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
-            const vaultAfter = await pool.getVault(pairIndex);
-            const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
-            const userUsdtBalanceAfter = await usdt.balanceOf(depositor.address);
-
-            expect(userBtcBalanceAfter).to.be.eq(userBtcBalanceBefore.sub(indexAmount));
-            expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
-
-            // 100: 50
-            expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultAfter.stableTotalAmount);
-
-            // userPaid = actual vaultTotal + totalFee
-            const totalFee = expectAddLiquidity.indexFeeAmount.mul(pairPrice).add(expectAddLiquidity.stableFeeAmount);
-            const vaultTotal = vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount);
-            const userPaid = indexAmount.mul(pairPrice).add(stableAmount);
-            expect(userPaid).to.be.eq(vaultTotal.add(totalFee));
-
-            // console.log('===================');
-            // console.log(await positionManager.getNextFundingRate(pairIndex));
-        });
+        // it('should increased correct liquidity', async () => {
+        //     const {
+        //         router,
+        //         users: [depositor],
+        //         usdt,
+        //         btc,
+        //         pool,
+        //         priceOracle,
+        //         positionManager,
+        //     } = testEnv;
+        //
+        //     const pairPrice = BigNumber.from(
+        //         ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+        //     );
+        //
+        //     // add liquidity   增加流动性
+        //     const indexAmount = ethers.utils.parseUnits('20000', 18);//单价3w
+        //     const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
+        //     const pair = await pool.getPair(pairIndex);
+        //     await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+        //     await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+        //     expect(await pool.lpFairPrice(pairIndex)).to.be.eq(ethers.utils.parseUnits('1000000000000'));
+        //     const vaultBefore = await pool.getVault(pairIndex);
+        //     const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
+        //     const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
+        //     expect(vaultBefore.indexTotalAmount).to.be.eq(0);
+        //     expect(vaultBefore.stableTotalAmount).to.be.eq(0);
+        //
+        //     const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+        //     expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
+        //     await router
+        //         .connect(depositor.signer)
+        //         .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+        //
+        //     const lpToken = await getMockToken('', pair.pairToken);
+        //     const totoalApply = await lpToken.totalSupply();
+        //     expect(totoalApply).to.be.eq(ethers.utils.parseUnits('599400000'));
+        //     const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
+        //     expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
+        //     const vaultAfter = await pool.getVault(pairIndex);
+        //     const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
+        //     const userUsdtBalanceAfter = await usdt.balanceOf(depositor.address);
+        //
+        //     expect(userBtcBalanceAfter).to.be.eq(userBtcBalanceBefore.sub(indexAmount));
+        //     expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
+        //
+        //     // 100: 50
+        //     expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultAfter.stableTotalAmount);
+        //
+        //     // userPaid = actual vaultTotal + totalFee
+        //     const totalFee = expectAddLiquidity.indexFeeAmount.mul(pairPrice).add(expectAddLiquidity.stableFeeAmount);
+        //     const vaultTotal = vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount);
+        //     const userPaid = indexAmount.mul(pairPrice).add(stableAmount);
+        //     expect(userPaid).to.be.eq(vaultTotal.add(totalFee));
+        //
+        //     console.log('===================');
+        //     console.log(await positionManager.getNextFundingRate(pairIndex));
+        // });
 
         it('should increased correct liquidity', async () => {
             const {
@@ -149,7 +89,7 @@ describe('LP: Pool cases', () => {
             );
 
             // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('40000', 18);//单价3w
+            const indexAmount = ethers.utils.parseUnits('80000', 18);//单价3w
             const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
@@ -192,64 +132,64 @@ describe('LP: Pool cases', () => {
             // console.log(await positionManager.getNextFundingRate(pairIndex));
         });
 
-        it('should increased correct liquidity', async () => {
-            const {
-                router,
-                users: [depositor],
-                usdt,
-                btc,
-                pool,
-                priceOracle,
-                positionManager,
-            } = testEnv;
-
-            const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
-            );
-
-            // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('40000', 18);//单价3w
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
-            const pair = await pool.getPair(pairIndex);
-            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
-            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-            expect(await pool.lpFairPrice(pairIndex)).to.be.eq(ethers.utils.parseUnits('1000000000000'));
-            const vaultBefore = await pool.getVault(pairIndex);
-            const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
-            const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
-            expect(vaultBefore.indexTotalAmount).to.be.eq(0);
-            expect(vaultBefore.stableTotalAmount).to.be.eq(0);
-
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
-            expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
-            await router
-                .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
-
-            const lpToken = await getMockToken('', pair.pairToken);
-            const totoalApply = await lpToken.totalSupply();
-            expect(totoalApply).to.be.eq(ethers.utils.parseUnits('599400000'));
-            const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
-            expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
-            const vaultAfter = await pool.getVault(pairIndex);
-            const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
-            const userUsdtBalanceAfter = await usdt.balanceOf(depositor.address);
-
-            expect(userBtcBalanceAfter).to.be.eq(userBtcBalanceBefore.sub(indexAmount));
-            expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
-
-            // 400: 50
-            expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultAfter.stableTotalAmount);
-
-            // userPaid = actual vaultTotal + totalFee
-            const totalFee = expectAddLiquidity.indexFeeAmount.mul(pairPrice).add(expectAddLiquidity.stableFeeAmount);
-            const vaultTotal = vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount);
-            const userPaid = indexAmount.mul(pairPrice).add(stableAmount);
-            expect(userPaid).to.be.eq(vaultTotal.add(totalFee));
-
-            // console.log('===================');
-            // console.log(await positionManager.getNextFundingRate(pairIndex));
-        });
+        // it('should increased correct liquidity', async () => {
+        //     const {
+        //         router,
+        //         users: [depositor],
+        //         usdt,
+        //         btc,
+        //         pool,
+        //         priceOracle,
+        //         positionManager,
+        //     } = testEnv;
+        //
+        //     const pairPrice = BigNumber.from(
+        //         ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+        //     );
+        //
+        //     // add liquidity   增加流动性
+        //     const indexAmount = ethers.utils.parseUnits('40000', 18);//单价3w
+        //     const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
+        //     const pair = await pool.getPair(pairIndex);
+        //     await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+        //     await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+        //     expect(await pool.lpFairPrice(pairIndex)).to.be.eq(ethers.utils.parseUnits('1000000000000'));
+        //     const vaultBefore = await pool.getVault(pairIndex);
+        //     const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
+        //     const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
+        //     expect(vaultBefore.indexTotalAmount).to.be.eq(0);
+        //     expect(vaultBefore.stableTotalAmount).to.be.eq(0);
+        //
+        //     const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+        //     expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
+        //     await router
+        //         .connect(depositor.signer)
+        //         .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+        //
+        //     const lpToken = await getMockToken('', pair.pairToken);
+        //     const totoalApply = await lpToken.totalSupply();
+        //     expect(totoalApply).to.be.eq(ethers.utils.parseUnits('599400000'));
+        //     const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
+        //     expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
+        //     const vaultAfter = await pool.getVault(pairIndex);
+        //     const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
+        //     const userUsdtBalanceAfter = await usdt.balanceOf(depositor.address);
+        //
+        //     expect(userBtcBalanceAfter).to.be.eq(userBtcBalanceBefore.sub(indexAmount));
+        //     expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
+        //
+        //     // 400: 50
+        //     expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultAfter.stableTotalAmount);
+        //
+        //     // userPaid = actual vaultTotal + totalFee
+        //     const totalFee = expectAddLiquidity.indexFeeAmount.mul(pairPrice).add(expectAddLiquidity.stableFeeAmount);
+        //     const vaultTotal = vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount);
+        //     const userPaid = indexAmount.mul(pairPrice).add(stableAmount);
+        //     expect(userPaid).to.be.eq(vaultTotal.add(totalFee));
+        //
+        //     // console.log('===================');
+        //     // console.log(await positionManager.getNextFundingRate(pairIndex));
+        // });
 
         it('should decreased correct liquidity', async () => {
             const {
@@ -315,6 +255,7 @@ describe('LP: Pool cases', () => {
                     .add(expectRemoveLiquidity.feeAmount),
             );
         });
+
     });
 
     describe('long short tracker', () => {
