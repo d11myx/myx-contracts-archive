@@ -2,6 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
+    deployProxy,
     FUNDING_RATE,
     getAddressesProvider,
     INDEX_PRICE_FEED_ID,
@@ -60,7 +61,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         priceOracleArtifact.address,
     )) as PriceOracle;
 
-    const FundingRateArtifact = await deploy(`${FUNDING_RATE}`, {
+    const FundingRateArtifact = await deployProxy(`${FUNDING_RATE}`, [], {
         from: deployer,
         contract: 'FundingRate',
         args: [addressesProvider.address],

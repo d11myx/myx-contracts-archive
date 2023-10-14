@@ -14,6 +14,12 @@ interface IRouter {
         uint256 sl; // Stop loss quantity
     }
 
+    struct CancelOrderRequest {
+        uint256 orderId;
+        TradingTypes.TradeType tradeType;
+        bool isIncrease;
+    }
+
     event UpdateTradingRouter(address oldAddress, address newAddress);
 
     function createIncreaseOrder(
@@ -26,11 +32,17 @@ interface IRouter {
 
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256);
 
+    function createDecreaseOrders(
+        TradingTypes.DecreasePositionRequest[] memory requests
+    ) external returns (uint256[] memory orderIds);
+
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
 
-    function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
+    function cancelOrders(CancelOrderRequest[] memory requests) external;
+
+    function cancelPositionOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
 
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request

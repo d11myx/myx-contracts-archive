@@ -1,6 +1,8 @@
 import { BigNumber, Contract, ContractTransaction, ethers } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TestEnv } from '../../test/helpers/make-suite';
+import { DeployOptions, DeployResult } from 'hardhat-deploy/types';
+import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
@@ -8,6 +10,72 @@ const PERCENTAGE = '100000000';
 declare var hre: HardhatRuntimeEnvironment;
 
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
+
+export const deployProxy = async (
+    name: string,
+    constructorArgs: any[],
+    options: DeployOptions,
+): Promise<DeployResult> => {
+    const contract = await deployUpgradeableContract(options.contract as string, options.args, {
+        constructorArgs: constructorArgs,
+        initializer: `initialize`,
+    });
+
+    const factory = await hre.ethers.getContractFactory(options.contract as string);
+
+    const artifact = await hre.artifacts.readArtifact(options.contract as string);
+    await hre.deployments.save(name, {
+        abi: artifact.abi,
+        args: options.args,
+        bytecode: artifact.bytecode,
+        deployedBytecode: artifact.deployedBytecode,
+        devdoc: undefined,
+        execute: { args: [], methodName: '' },
+        facets: [],
+        factoryDeps: [],
+        gasEstimates: undefined,
+        history: [],
+        implementation: '',
+        libraries: undefined,
+        linkedData: undefined,
+        metadata: '',
+        methodIdentifiers: undefined,
+        receipt: undefined,
+        solcInput: '',
+        solcInputHash: '',
+        storageLayout: undefined,
+        transactionHash: '',
+        userdoc: undefined,
+        address: contract.address,
+    });
+
+    // await new Promise((f) => setTimeout(f, 10000));
+
+    return {
+        abi: artifact.abi,
+        address: contract.address,
+        args: options.args,
+        bytecode: artifact.bytecode,
+        deployedBytecode: artifact.deployedBytecode,
+        devdoc: undefined,
+        facets: [],
+        factoryDeps: [],
+        gasEstimates: undefined,
+        history: [],
+        implementation: '',
+        libraries: undefined,
+        linkedData: undefined,
+        metadata: '',
+        methodIdentifiers: undefined,
+        newlyDeployed: false,
+        numDeployments: 0,
+        receipt: undefined,
+        solcInputHash: '',
+        storageLayout: undefined,
+        transactionHash: '',
+        userdoc: undefined,
+    };
+};
 
 export const deployContract = async <ContractType extends Contract>(
     contract: string,
@@ -28,27 +96,28 @@ export const deployContract = async <ContractType extends Contract>(
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
 
-// export const deployUpgradeableContract = async <ContractType extends Contract>(
-//     contract: string,
-//     args?: any,
-// ): Promise<ContractType> => {
-//     const [deployer] = await hre.ethers.getSigners();
-//
-//     const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
-//     let contractDeployed = await hre.upgrades.deployProxy(contractFactory, [...args]);
-//
-//     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
-// };
+export const deployUpgradeableContract = async <ContractType extends Contract>(
+    contract: string,
+    args?: any[],
+    opts?: DeployProxyOptions,
+): Promise<ContractType> => {
+    const [deployer] = await hre.ethers.getSigners();
+
+    const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
+    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, args, opts);
+
+    return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
+};
 
 export const getContract = async <ContractType extends Contract>(
     id: string,
     address?: string,
 ): Promise<ContractType> => {
     const artifact = await hre.deployments.getArtifact(id);
-    return hre.ethers.getContractAt(
+    return (await hre.ethers.getContractAt(
         artifact.abi,
-        address || (await (await hre.deployments.get(id)).address),
-    ) as any as ContractType;
+        address || (await hre.deployments.get(id)).address,
+    )) as any as ContractType;
 };
 
 interface AccountItem {
@@ -286,7 +355,7 @@ export function getPositionFundingFee(
         fundingFee = 1;
     }
 
-    return positionAmount.mul(diffFundingFeeTracker).div(PERCENTAGE).mul(fundingFee);
+    return positionAmount.mul(diffFundingFeeTracker.abs()).div(PERCENTAGE).mul(fundingFee);
 }
 
 /**
