@@ -13,11 +13,12 @@ import {
     Router,
     Executor,
     OrderManager,
-    FeeManager,
     FundingRate,
     PriceOracle,
     ExecutionLogic,
     RiskReserve,
+    LiquidationLogic,
+    FeeCollector,
 } from '../../types';
 import {
     SymbolMap,
@@ -44,6 +45,8 @@ import {
     getPriceOracle,
     getExecutionLogic,
     getRiskReserve,
+    getLiquidationLogic,
+    getFeeCollector,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -72,10 +75,12 @@ export interface TestEnv {
     priceOracle: PriceOracle;
     router: Router;
     executionLogic: ExecutionLogic;
+    liquidationLogic: LiquidationLogic;
     executor: Executor;
     orderManager: OrderManager;
     positionManager: PositionManager;
     riskReserve: RiskReserve;
+    feeCollector: FeeCollector;
 }
 
 export const testEnv: TestEnv = {
@@ -97,10 +102,12 @@ export const testEnv: TestEnv = {
     priceOracle: {} as PriceOracle,
     router: {} as Router,
     executionLogic: {} as ExecutionLogic,
+    liquidationLogic: {} as LiquidationLogic,
     executor: {} as Executor,
     orderManager: {} as OrderManager,
     positionManager: {} as PositionManager,
     riskReserve: {} as RiskReserve,
+    feeCollector: {} as FeeCollector,
 } as TestEnv;
 
 export async function setupTestEnv() {
@@ -156,10 +163,12 @@ export async function setupTestEnv() {
     // trading
     testEnv.router = await getRouter();
     testEnv.executionLogic = await getExecutionLogic();
+    testEnv.liquidationLogic = await getLiquidationLogic();
     testEnv.executor = await getExecutor();
     testEnv.orderManager = await getOrderManager();
     testEnv.positionManager = await getPositionManager();
     testEnv.riskReserve = await getRiskReserve();
+    testEnv.feeCollector = await getFeeCollector();
 }
 
 export async function newTestEnv(): Promise<TestEnv> {
@@ -203,15 +212,16 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
-    const { positionManager, router, executionLogic, executor, orderManager, riskReserve } = await deployTrading(
-        deployer,
-        deployer,
-        addressesProvider,
-        roleManager,
-        pool,
-        usdt,
-        validationHelper,
-    );
+    const {
+        positionManager,
+        router,
+        executionLogic,
+        liquidationLogic,
+        executor,
+        orderManager,
+        riskReserve,
+        feeCollector,
+    } = await deployTrading(deployer, deployer, addressesProvider, roleManager, pool, usdt, validationHelper);
 
     await pool.addPositionManager(positionManager.address);
     await pool.addOrderManager(orderManager.address);
@@ -238,8 +248,10 @@ export async function newTestEnv(): Promise<TestEnv> {
         positionManager: positionManager,
         router: router,
         executionLogic: executionLogic,
+        liquidationLogic: liquidationLogic,
         executor: executor,
         orderManager: orderManager,
         riskReserve: riskReserve,
+        feeCollector: feeCollector,
     } as TestEnv;
 }
