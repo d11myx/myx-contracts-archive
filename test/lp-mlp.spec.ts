@@ -35,6 +35,7 @@ describe('LP: fair price', () => {
     it('buy mlp', async () => {
         const {
             users: [, trader],
+
             usdt,
             btc,
             router,
