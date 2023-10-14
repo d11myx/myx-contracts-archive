@@ -1,4 +1,4 @@
-# myx - Decentralized Derivatives Protocol
+# MYX - Decentralized Derivatives Protocol
 
 ## Introduction
 

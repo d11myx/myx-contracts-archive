@@ -18,7 +18,7 @@ import "../token/interfaces/IBaseToken.sol";
 
 import "../libraries/AmountMath.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../libraries/Roleable.sol";
+import "../libraries/Upgradeable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
@@ -27,7 +27,7 @@ import "../interfaces/IPoolTokenFactory.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../helpers/ValidationHelper.sol";
 
-contract Pool is IPool, Roleable {
+contract Pool is IPool, Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
@@ -36,9 +36,10 @@ contract Pool is IPool, Roleable {
     using SafeMath for uint256;
     uint256 private constant MAX_FEE = 1e6;
 
-    IPoolTokenFactory public immutable poolTokenFactory;
+    IPoolTokenFactory public poolTokenFactory;
     address public router;
     address public riskReserve;
+    address public feeCollector;
     mapping(uint256 => mapping(address => bytes)) public tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
@@ -56,17 +57,21 @@ contract Pool is IPool, Roleable {
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
 
-    constructor(
+    function initialize(
         IAddressesProvider addressProvider,
         IPoolTokenFactory _poolTokenFactory
-    ) Roleable(addressProvider) {
+    ) public initializer {
+        ADDRESS_PROVIDER = addressProvider;
         poolTokenFactory = _poolTokenFactory;
     }
 
-    modifier onlyPositionManagerOrOrderManagerOrRiskReserve() {
+    modifier transferAllowed() {
         require(
-            positionManagers.contains(msg.sender) || orderManagers.contains(msg.sender) || riskReserve == msg.sender,
-            "onlyPositionManagerOrOrderManagerOrRiskReserve"
+            positionManagers.contains(msg.sender) ||
+                orderManagers.contains(msg.sender) ||
+                riskReserve == msg.sender ||
+                feeCollector == msg.sender,
+            "permission denied"
         );
         _;
     }
@@ -76,8 +81,16 @@ contract Pool is IPool, Roleable {
         _;
     }
 
+    modifier onlyPositionManagerOrFeeCollector() {
+        require(positionManagers.contains(msg.sender) || msg.sender == feeCollector, "onlyPositionManagerOrFeeCollector");
+        _;
+    }
+
     modifier onlyTreasury() {
-        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender), "onlyTreasury");
+        require(
+            IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender),
+            "onlyTreasury"
+        );
         _;
     }
 
@@ -87,6 +100,10 @@ contract Pool is IPool, Roleable {
 
     function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
         riskReserve = _riskReserve;
+    }
+
+    function setFeeCollector(address _feeCollector) external onlyPoolAdmin {
+        feeCollector = _feeCollector;
     }
 
     function addPositionManager(address _positionManager) external onlyPoolAdmin {
@@ -113,7 +130,11 @@ contract Pool is IPool, Roleable {
         delete isStableToken[_token];
     }
 
-    function updateTokenPath(uint256 pairIndex, address tokenIn, bytes memory path) external onlyPoolAdmin {
+    function updateTokenPath(
+        uint256 pairIndex,
+        address tokenIn,
+        bytes memory path
+    ) external onlyPoolAdmin {
         tokenPath[pairIndex][tokenIn] = path;
     }
 
@@ -263,7 +284,10 @@ contract Pool is IPool, Roleable {
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
         require(vault.indexTotalAmount >= vault.indexReservedAmount, "insufficient index amount");
-        require(vault.stableTotalAmount >= vault.stableReservedAmount, "insufficient stable amount");
+        require(
+            vault.stableTotalAmount >= vault.stableReservedAmount,
+            "insufficient stable amount"
+        );
         emit UpdateReserveAmount(
             _pairIndex,
             int256(_indexAmount),
@@ -298,7 +322,7 @@ contract Pool is IPool, Roleable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManagerOrFeeCollector {
         Vault storage vault = vaults[_pairIndex];
         Pair memory pair = pairs[_pairIndex];
         if (_profit > 0) {
@@ -561,13 +585,17 @@ contract Pool is IPool, Roleable {
             if (mintDelta > availableDiscountAmount) {
                 mintAmount += AmountMath.getIndexAmount(
                     availableDiscountAmount,
-                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(
+                        PrecisionUtils.percentage() - availableDiscountRate
+                    )
                 );
                 mintDelta -= availableDiscountAmount;
             } else {
                 mintAmount += AmountMath.getIndexAmount(
                     mintDelta,
-                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(
+                        PrecisionUtils.percentage() - availableDiscountRate
+                    )
                 );
                 mintDelta -= mintDelta;
             }
@@ -683,10 +711,13 @@ contract Pool is IPool, Roleable {
 
         uint256 feeIndexTokenAmount;
         uint256 feeStableTokenAmount;
-        (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount) = getReceivedAmount(
-            _pairIndex,
-            _amount
-        );
+        (
+            receiveIndexTokenAmount,
+            receiveStableTokenAmount,
+            feeAmount,
+            feeIndexTokenAmount,
+            feeStableTokenAmount
+        ) = getReceivedAmount(_pairIndex, _amount);
 
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
@@ -698,19 +729,6 @@ contract Pool is IPool, Roleable {
         uint256 totalReceive = receiveIndexTokenAmount.mulPrice(price) + receiveStableTokenAmount;
         require(totalReceive <= totalAvailable, "insufficient available balance");
 
-        uint256 indexTokenAdd;
-        uint256 stableTokenAdd;
-        if (availableIndexToken < receiveIndexTokenAmount) {
-            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
-            receiveIndexTokenAmount = availableIndexToken;
-        }
-
-        if (availableStableToken < receiveStableTokenAmount) {
-            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
-            receiveStableTokenAmount = availableStableToken;
-        }
-        receiveIndexTokenAmount += indexTokenAdd;
-        receiveStableTokenAmount += stableTokenAdd;
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
@@ -736,7 +754,7 @@ contract Pool is IPool, Roleable {
     }
 
     function claimFee(address token, uint256 amount) external onlyTreasury {
-        require(feeTokenAmounts[token] >= amount, 'exceeded');
+        require(feeTokenAmounts[token] >= amount, "exceeded");
 
         feeTokenAmounts[token] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
@@ -848,10 +866,10 @@ contract Pool is IPool, Roleable {
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
-
         uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
-//        feeAmount = receiveDelta.mulPercentage(pair.removeLpFeeP);
-//        receiveDelta = receiveDelta - feeAmount;
+
+        require(indexReserveDelta + stableReserveDelta >= receiveDelta, "insufficient available balance");
+
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
@@ -888,14 +906,37 @@ contract Pool is IPool, Roleable {
         receiveIndexTokenAmount -= feeIndexTokenAmount;
         receiveStableTokenAmount -= feeStableTokenAmount;
 
-        return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount);
+        uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
+        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+
+        uint256 indexTokenAdd;
+        uint256 stableTokenAdd;
+        if (availableIndexToken < receiveIndexTokenAmount) {
+            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
+            receiveIndexTokenAmount = availableIndexToken;
+        }
+
+        if (availableStableToken < receiveStableTokenAmount) {
+            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
+            receiveStableTokenAmount = availableStableToken;
+        }
+        receiveIndexTokenAmount += indexTokenAdd;
+        receiveStableTokenAmount += stableTokenAdd;
+
+        return (
+            receiveIndexTokenAmount,
+            receiveStableTokenAmount,
+            feeAmount,
+            feeIndexTokenAmount,
+            feeStableTokenAmount
+        );
     }
 
     function transferTokenTo(
         address token,
         address to,
         uint256 amount
-    ) external onlyPositionManagerOrOrderManagerOrRiskReserve {
+    ) external transferAllowed {
         require(IERC20(token).balanceOf(address(this)) > amount, "bal");
         IERC20(token).safeTransfer(to, amount);
     }
@@ -905,7 +946,7 @@ contract Pool is IPool, Roleable {
         address token,
         address to,
         uint256 amount
-    ) external onlyPositionManagerOrOrderManagerOrRiskReserve {
+    ) external transferAllowed {
         if (amount == 0) {
             return;
         }
