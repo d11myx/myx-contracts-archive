@@ -27,6 +27,7 @@ import {
     RiskReserve,
     LiquidationLogic,
     FeeCollector,
+    Timelock,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -56,6 +57,7 @@ import {
     RISK_RESERVE_ID,
     LIQUIDATION_LOGIC_ID,
     FEE_COLLECTOR_ID,
+    TIMELOCK_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -74,12 +76,9 @@ export const getWETH = async (address?: string): Promise<WETH> => {
     return getContract<WETH>('WETH', address || (await hre.deployments.get('WETH')).address);
 };
 
-// export const getMockPriceFeed = async (pair: string, address?: string): Promise<MockPriceFeed> => {
-//     return getContract<MockPriceFeed>(
-//         'MockPriceFeed',
-//         address || (await hre.deployments.get(MOCK_PRICE_FEED_PREFIX + pair)).address,
-//     );
-// };
+export const getTimelock = async (address?: string): Promise<Timelock> => {
+    return getContract<Timelock>('Timelock', address || (await hre.deployments.get(TIMELOCK_ID)).address);
+};
 
 export const getAddressesProvider = async (address?: string): Promise<AddressesProvider> => {
     return getContract<AddressesProvider>(
