@@ -1,25 +1,20 @@
 import { ethers } from 'hardhat';
-import {
-    AddressesProvider,
-    IndexPriceFeed,
-    MockPyth,
-    PythOraclePriceFeed,
-    RoleManager,
-    Timelock,
-} from '../types';
+import { AddressesProvider, IndexPriceFeed, MockPyth, PythOraclePriceFeed, RoleManager, Timelock } from '../types';
 import { testEnv } from './helpers/make-suite';
-import { getBlockTimestamp } from '../helpers';
+import { Duration, getBlockTimestamp, increase, latest, waitForTx } from '../helpers';
 import { expect } from './shared/expect';
+import { encodeParameterArray } from './helpers/misc';
 
 describe('Oracle: oracle cases', () => {
     let mockPyth: MockPyth, oraclePriceFeed: PythOraclePriceFeed, indexPriceFeed: IndexPriceFeed;
+    let timelock: Timelock;
 
     before(async () => {
         const mockPythFactory = await ethers.getContractFactory('MockPyth');
         mockPyth = await mockPythFactory.deploy(100, 60);
 
         const timelockFactory = await ethers.getContractFactory('Timelock');
-        let timelock = (await timelockFactory.deploy('43200')) as Timelock;
+        timelock = (await timelockFactory.deploy('43200')) as Timelock;
 
         const addressesProviderFactory = await ethers.getContractFactory('AddressesProvider');
 
@@ -39,8 +34,6 @@ describe('Oracle: oracle cases', () => {
         )) as PythOraclePriceFeed;
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
         indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
-
-
     });
 
     it('update price feed', async () => {
@@ -64,9 +57,26 @@ describe('Oracle: oracle cases', () => {
         );
 
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(ethers.utils.formatBytes32String(''));
-
-        await oraclePriceFeed.setAssetPriceIds([btc.address], [id]);
-
+        let timestamp = await latest();
+        let eta = Duration.days(1);
+        await timelock.queueTransaction(
+            oraclePriceFeed.address,
+            0,
+            'setAssetPriceIds(address[],bytes32[])',
+            encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
+            eta.add(timestamp),
+        );
+        await increase(Duration.days(1));
+        // await oraclePriceFeed.setAssetPriceIds([btc.address], [id]);
+        await waitForTx(
+            await timelock.executeTransaction(
+                oraclePriceFeed.address,
+                0,
+                'setAssetPriceIds(address[],bytes32[])',
+                encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
+                eta.add(timestamp),
+            ),
+        );
         expect(await oraclePriceFeed.assetIds(btc.address)).to.be.eq(id);
         //todo test
 
