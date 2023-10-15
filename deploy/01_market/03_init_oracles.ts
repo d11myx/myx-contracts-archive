@@ -43,13 +43,13 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     let timestamp = await latest();
     let eta = Duration.days(1);
-    await timelock.queueTransaction(
-        indexPriceFeed.address,
-        '0',
-        'updatePrice(address[],uint256[])',
-        encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-        eta.add(timestamp),
-    );
+    // await timelock.queueTransaction(
+    //     indexPriceFeed.address,
+    //     '0',
+    //     'updatePrice(address[],uint256[])',
+    //     encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
+    //     eta.add(timestamp),
+    // );
     const mockPyth = await hre.ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
 
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
@@ -70,15 +70,15 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     // );
     await increase(Duration.days(1));
     //  getTimelock();
-    await waitForTx(
-        await timelock.executeTransaction(
-            indexPriceFeed.address,
-            '0',
-            'updatePrice(address[],uint256[])',
-            encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-            eta.add(timestamp),
-        ),
-    );
+    // await waitForTx(
+    //     await timelock.executeTransaction(
+    //         indexPriceFeed.address,
+    //         '0',
+    //         'updatePrice(address[],uint256[])',
+    //         encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
+    //         eta.add(timestamp),
+    //     ),
+    // );
 
     await waitForTx(
         await timelock.executeTransaction(
@@ -89,6 +89,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             eta.add(timestamp),
         ),
     );
+
+    await waitForTx(await indexPriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices));
     await waitForTx(
         await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee }),
     );
