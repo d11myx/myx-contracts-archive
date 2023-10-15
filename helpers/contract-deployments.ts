@@ -19,6 +19,7 @@ import {
     TestCallBack,
     Token,
     WETH,
+    Timelock,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -84,8 +85,10 @@ export async function deployToken() {
 }
 
 export async function deployPrice(
+
     deployer: SignerWithAddress,
     keeper: SignerWithAddress,
+    timerlock: Timelock,
     addressesProvider: AddressesProvider,
     tokens: SymbolMap<Token>,
 ) {
