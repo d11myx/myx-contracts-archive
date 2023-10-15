@@ -18,6 +18,7 @@ import {
     RiskReserve,
     LiquidationLogic,
     FeeCollector,
+    Timelock,
 } from '../../types';
 import {
     SymbolMap,
@@ -189,7 +190,7 @@ export async function newTestEnv(): Promise<TestEnv> {
 
     const { weth, usdt, tokens } = await deployToken();
 
-    const timelock = (await deployContract('Timelock', ['43200'])) as AddressesProvider;
+    const timelock = (await deployContract('Timelock', ['43200'])) as Timelock;
     const addressesProvider = (await deployContract('AddressesProvider', [timelock.address])) as AddressesProvider;
     const roleManager = (await deployContract('RoleManager', [])) as RoleManager;
 
@@ -201,6 +202,7 @@ export async function newTestEnv(): Promise<TestEnv> {
     const { oraclePriceFeed, indexPriceFeed, fundingRate } = await deployPrice(
         deployer,
         keeper,
+        timelock,
         addressesProvider,
         tokens,
     );
