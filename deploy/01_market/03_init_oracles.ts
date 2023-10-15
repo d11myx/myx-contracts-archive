@@ -56,9 +56,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const fee = await mockPyth.getUpdateFee(updateData);
     await timelock.queueTransaction(
         oraclePriceFeed.address,
-        fee,
+        0,
         'setAssetPriceIds(address[],bytes32[])',
         encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+        eta.add(timestamp),
+    );
+    await timelock.queueTransaction(
+        oraclePriceFeed.address,
+        fee,
+        'updatePrice(address[],uint256[])',
+        encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
         eta.add(timestamp),
     );
     await increase(Duration.days(1));
@@ -76,9 +83,18 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(
         await timelock.executeTransaction(
             oraclePriceFeed.address,
-            fee,
+            0,
             'setAssetPriceIds(address[],bytes32[])',
             encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+            eta.add(timestamp),
+        ),
+    );
+    await waitForTx(
+        await timelock.executeTransaction(
+            oraclePriceFeed.address,
+            fee,
+            'updatePrice(address[],uint256[])',
+            encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
             eta.add(timestamp),
         ),
     );
