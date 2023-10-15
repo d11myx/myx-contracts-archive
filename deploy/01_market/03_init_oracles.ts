@@ -61,13 +61,13 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
         eta.add(timestamp),
     );
-    await timelock.queueTransaction(
-        oraclePriceFeed.address,
-        fee,
-        'updatePrice(address[],uint256[])',
-        encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-        eta.add(timestamp),
-    );
+    // await timelock.queueTransaction(
+    //     oraclePriceFeed.address,
+    //     fee,
+    //     'updatePrice(address[],uint256[])',
+    //     encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
+    //     eta.add(timestamp),
+    // );
     await increase(Duration.days(1));
     //  getTimelock();
     await waitForTx(
@@ -90,14 +90,18 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ),
     );
     await waitForTx(
-        await timelock.executeTransaction(
-            oraclePriceFeed.address,
-            fee,
-            'updatePrice(address[],uint256[])',
-            encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-            eta.add(timestamp),
-        ),
+        await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee }),
     );
+
+    // await waitForTx(
+    //     await timelock.executeTransaction(
+    //         oraclePriceFeed.address,
+    //         fee,
+    //         'updatePrice(address[],uint256[])',
+    //         encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
+    //         eta.add(timestamp),
+    //     ),
+    // );
 };
 func.id = `InitOracles`;
 func.tags = ['market', 'init-oracles'];
