@@ -23,7 +23,7 @@ import {
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
+import { Duration, deployContract, deployUpgradeableContract, increase, latest, waitForTx } from './utilities/tx';
 import { MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
@@ -31,6 +31,10 @@ import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
 import { POSITION_MANAGER_ID } from './deploy-ids';
 import usdt from '../markets/usdt';
+export function encodeParameterArray(types: string[], values: string[][]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -85,10 +89,9 @@ export async function deployToken() {
 }
 
 export async function deployPrice(
-
     deployer: SignerWithAddress,
     keeper: SignerWithAddress,
-    timerlock: Timelock,
+    timelock: Timelock,
     addressesProvider: AddressesProvider,
     tokens: SymbolMap<Token>,
 ) {
@@ -127,7 +130,25 @@ export async function deployPrice(
 
     await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices);
 
-    await oraclePriceFeed.connect(keeper.signer).setAssetPriceIds(pairTokenAddresses, pairTokenPriceIds);
+    let timestamp = await latest();
+    let eta = Duration.days(1);
+    await timelock.queueTransaction(
+        oraclePriceFeed.address,
+        0,
+        'setAssetPriceIds(address[],bytes32[])',
+        encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+        eta.add(timestamp),
+    );
+    await increase(Duration.days(1));
+    await waitForTx(
+        await timelock.executeTransaction(
+            oraclePriceFeed.address,
+            0,
+            'setAssetPriceIds(address[],bytes32[])',
+            encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+            eta.add(timestamp),
+        ),
+    );
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = mockPyth.getUpdateFee(updateData);
     await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
