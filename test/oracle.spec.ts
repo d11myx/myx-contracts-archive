@@ -12,6 +12,7 @@ import { testEnv } from './helpers/make-suite';
 import {
     Duration,
     encodeParameterArray,
+    encodeParameters,
     getBlockTimestamp,
     increase,
     latest,
@@ -67,6 +68,30 @@ describe('Oracle: oracle cases', () => {
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
         indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
         await roleManager.addKeeper(user1.address);
+    });
+    it('test updatePythAddress', async () => {
+        await expect(pythOraclePriceFeed.updatePythAddress(mockPyth.address)).to.be.revertedWith('only timelock');
+
+        let timestamp = await latest();
+        let eta = Duration.days(1);
+        await timelock.queueTransaction(
+            pythOraclePriceFeed.address,
+            0,
+            'updatePythAddress(address)',
+            encodeParameters(['address'], [eth.address]),
+            eta.add(timestamp),
+        );
+        await increase(Duration.days(1));
+        expect(await pythOraclePriceFeed.pyth()).to.be.eq(mockPyth.address);
+
+        await timelock.executeTransaction(
+            pythOraclePriceFeed.address,
+            0,
+            'updatePythAddress(address)',
+            encodeParameters(['address'], [eth.address]),
+            eta.add(timestamp),
+        );
+        expect(await pythOraclePriceFeed.pyth()).to.be.eq(eth.address);
     });
 
     it('update price feed', async () => {
