@@ -47,7 +47,7 @@ contract Timelock {
     mapping(bytes32 => bool) public queuedTransactions;
 
     constructor(uint256 delay_) {
-        require(delay_ >= MINIMUM_DELAY, " Delay must exceed minimum delay.");
+        // require(delay_ >= MINIMUM_DELAY, " Delay must exceed minimum delay.");
         require(delay_ <= MAXIMUM_DELAY, " Delay must not exceed maximum delay.");
 
         admin = msg.sender;

@@ -14,11 +14,7 @@ import {
     getCurrentTimestamp,
     getCurrentTimestampBigInt,
 } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
-
-function encodeParameters(types: string[], values: string[]) {
-    const abi = new ethers.utils.AbiCoder();
-    return abi.encode(types, values);
-}
+import { encodeParameters } from './helpers/misc';
 
 describe('Timelock', () => {
     let timelock: Timelock;

@@ -13,7 +13,7 @@ import "../interfaces/IUniSwapV3Router.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
-import "../interfaces/IPriceOracle.sol";
+import "../interfaces/IPriceFeed.sol";
 import "../token/interfaces/IBaseToken.sol";
 
 import "../libraries/AmountMath.sol";
@@ -34,6 +34,7 @@ contract Pool is IPool, Upgradeable {
     using Int256Utils for int256;
     using Math for uint256;
     using SafeMath for uint256;
+
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public poolTokenFactory;
@@ -82,7 +83,10 @@ contract Pool is IPool, Upgradeable {
     }
 
     modifier onlyPositionManagerOrFeeCollector() {
-        require(positionManagers.contains(msg.sender) || msg.sender == feeCollector, "onlyPositionManagerOrFeeCollector");
+        require(
+            positionManagers.contains(msg.sender) || msg.sender == feeCollector,
+            "onlyPositionManagerOrFeeCollector"
+        );
         _;
     }
 
@@ -211,20 +215,6 @@ contract Pool is IPool, Upgradeable {
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updatePairMiner(
-        uint256 _pairIndex,
-        address _account,
-        bool _enable
-    ) external onlyPoolAdmin {
-        Pair memory pair = pairs[_pairIndex];
-        require(
-            pair.indexToken != address(0) && pair.stableToken != address(0),
-            "pair not existed"
-        );
-
-        IBaseToken(pair.pairToken).setMiner(_account, _enable);
-    }
-
     function increaseTotalAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
@@ -322,7 +312,10 @@ contract Pool is IPool, Upgradeable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManagerOrFeeCollector {
+    function setLPStableProfit(
+        uint256 _pairIndex,
+        int256 _profit
+    ) external onlyPositionManagerOrFeeCollector {
         Vault storage vault = vaults[_pairIndex];
         Pair memory pair = pairs[_pairIndex];
         if (_profit > 0) {
@@ -868,7 +861,10 @@ contract Pool is IPool, Upgradeable {
         uint256 stableReserveDelta = vault.stableTotalAmount;
         uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
 
-        require(indexReserveDelta + stableReserveDelta >= receiveDelta, "insufficient available balance");
+        require(
+            indexReserveDelta + stableReserveDelta >= receiveDelta,
+            "insufficient available balance"
+        );
 
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
@@ -932,11 +928,7 @@ contract Pool is IPool, Upgradeable {
         );
     }
 
-    function transferTokenTo(
-        address token,
-        address to,
-        uint256 amount
-    ) external transferAllowed {
+    function transferTokenTo(address token, address to, uint256 amount) external transferAllowed {
         require(IERC20(token).balanceOf(address(this)) > amount, "bal");
         IERC20(token).safeTransfer(to, amount);
     }
@@ -969,7 +961,7 @@ contract Pool is IPool, Upgradeable {
     }
 
     function getPrice(address _token) public view returns (uint256) {
-        return IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(_token);
+        return IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
