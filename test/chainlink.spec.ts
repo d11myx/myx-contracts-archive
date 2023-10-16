@@ -3,7 +3,14 @@ import { fromWei, toWei } from 'web3-utils';
 
 import { ethers, waffle } from 'hardhat';
 
-import { MockChainLink, ChainlinkPriceFeed, ERC20DecimalsMock, Timelock, AddressesProvider } from '../types';
+import {
+    MockChainLink,
+    ChainlinkPriceFeed,
+    ERC20DecimalsMock,
+    Timelock,
+    AddressesProvider,
+    RoleManager,
+} from '../types';
 
 import BN from 'bn.js';
 import BigNumber from 'bignumber.js';
@@ -62,24 +69,29 @@ describe('ChainlinkpriceOracle Spec', () => {
         chainlinkMock3 = (await MockChainLink.deploy()) as MockChainLink;
 
         const timelockFactory = await ethers.getContractFactory('Timelock');
-        let timelock = (await timelockFactory.deploy('43200')) as Timelock;
+        let timelock = (await timelockFactory.deploy('3600')) as Timelock;
 
         const addressesProviderFactory = await ethers.getContractFactory('AddressesProvider');
 
         let addressProvider = (await addressesProviderFactory.deploy(timelock.address)) as AddressesProvider;
+        const rolemanagerFactory = await ethers.getContractFactory('RoleManager');
+        let roleManager = (await rolemanagerFactory.deploy()) as RoleManager;
 
-        chainlinkPriceFeed = (await ChainlinkPriceFeed.deploy(addressProvider.address)) as ChainlinkPriceFeed;
+        await addressProvider.setRolManager(roleManager.address);
+
+        chainlinkPriceFeed = (await ChainlinkPriceFeed.deploy(addressProvider.address,[],[])) as ChainlinkPriceFeed;
     });
 
     describe('setTokenConfig', () => {
         it('setTokenConfig', async () => {
-        //     await expect(chainlinkPriceFeed.setTokenConfig(eth.address, EMPTY_ADDRESS, 18)).to.be.revertedWith('is 0');
-        //     await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address,18);
-        //     expect(await chainlinkPriceFeed.tokenOracles(eth.address)).eq(chainlinkMockETH.address);
-        //     expect(await chainlinkPriceFeed.tokenDecimas(eth.address)).eq(8);
-        //     expect(await chainlinkPriceFeed.tokenOracles(btc.address)).eq(EMPTY_ADDRESS);
-        //     expect(await chainlinkPriceFeed.tokenDecimas(btc.address)).eq(0);
-        // });
+            // await chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS]);
+            // await expect(chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS])).to.be.revertedWith('is 0');
+            // await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
+            // expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            // expect(await chainlinkPriceFeed.decimals()).eq(30);
+            // expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
+            // expect(await chainlinkPriceFeed.decimals()).eq(30);
+        });
 
         // it('add multi oracle', async () => {
         //     await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
