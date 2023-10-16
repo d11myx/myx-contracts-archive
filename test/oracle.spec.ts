@@ -1,9 +1,8 @@
 import { ethers } from 'hardhat';
 import { AddressesProvider, IndexPriceFeed, MockPyth, PythOraclePriceFeed, RoleManager, Timelock } from '../types';
 import { testEnv } from './helpers/make-suite';
-import { Duration, getBlockTimestamp, increase, latest, waitForTx } from '../helpers';
+import { Duration, encodeParameterArray, getBlockTimestamp, increase, latest, waitForTx } from '../helpers';
 import { expect } from './shared/expect';
-import { encodeParameterArray } from './helpers/misc';
 
 describe('Oracle: oracle cases', () => {
     let mockPyth: MockPyth, oraclePriceFeed: PythOraclePriceFeed, indexPriceFeed: IndexPriceFeed;
