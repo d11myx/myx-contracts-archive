@@ -9,6 +9,7 @@ export * from './market-config-helper';
 export * from './types';
 export * from './utilities/signer';
 export * from './utilities/tx';
+export * from './utilities/bn';
 export * from '../tasks/misc/print-deployments';
 export * from '../tasks/misc/encode-event';
 export * from '../tasks/misc/decode-event';
