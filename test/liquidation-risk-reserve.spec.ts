@@ -213,9 +213,9 @@ describe('Liquidation: Risk Reserve', () => {
     });
 
     async function positionRisk(position: Position.InfoStructOutput) {
-        const { positionManager, btc, priceOracle, pool } = testEnv;
+        const { positionManager, btc, oraclePriceFeed, pool } = testEnv;
 
-        const price = await priceOracle.getOraclePrice(btc.address);
+        const price = await oraclePriceFeed.getPrice(btc.address);
 
         const fundingFee = await positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
         const tradingFee = await positionManager.getTradingFee(
