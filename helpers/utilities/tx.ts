@@ -561,3 +561,15 @@ function getAmountOut(swapDelta: BigNumber, price: BigNumber, k: BigNumber) {
     const reserveA = k.div(reserveB);
     return swapIndexAmount.mul(reserveB).div(swapIndexAmount.add(reserveA));
 }
+
+
+export function encodeParameters(types: string[], values: string[]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+
+export function encodeParameterArray(types: string[], values: string[][]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+

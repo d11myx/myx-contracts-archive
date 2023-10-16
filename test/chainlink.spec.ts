@@ -16,6 +16,7 @@ import BN from 'bn.js';
 import BigNumber from 'bignumber.js';
 import { string } from 'yargs';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { Duration, encodeParameterArray, increase, latest } from '../helpers';
 const CHAINLINK_DECIMAL = 8;
 
 export function toFullBN(val: number | string, decimals = 18): BN {
@@ -54,6 +55,7 @@ describe('ChainlinkpriceOracle Spec', () => {
         user2: SignerWithAddress;
     const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000';
     let usdc: ERC20DecimalsMock;
+    let timelock: Timelock;
 
     beforeEach(async () => {
         [owner, dev, spender, other, user1, user2] = await ethers.getSigners();
@@ -69,7 +71,7 @@ describe('ChainlinkpriceOracle Spec', () => {
         chainlinkMock3 = (await MockChainLink.deploy()) as MockChainLink;
 
         const timelockFactory = await ethers.getContractFactory('Timelock');
-        let timelock = (await timelockFactory.deploy('3600')) as Timelock;
+        timelock = (await timelockFactory.deploy('3600')) as Timelock;
 
         const addressesProviderFactory = await ethers.getContractFactory('AddressesProvider');
 
@@ -79,18 +81,54 @@ describe('ChainlinkpriceOracle Spec', () => {
 
         await addressProvider.setRolManager(roleManager.address);
 
-        chainlinkPriceFeed = (await ChainlinkPriceFeed.deploy(addressProvider.address,[],[])) as ChainlinkPriceFeed;
+        chainlinkPriceFeed = (await ChainlinkPriceFeed.deploy(addressProvider.address, [], [])) as ChainlinkPriceFeed;
     });
 
     describe('setTokenConfig', () => {
         it('setTokenConfig', async () => {
-            // await chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS]);
-            // await expect(chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS])).to.be.revertedWith('is 0');
-            // await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-            // expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
-            // expect(await chainlinkPriceFeed.decimals()).eq(30);
-            // expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
-            // expect(await chainlinkPriceFeed.decimals()).eq(30);
+            await expect(chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS])).to.be.revertedWith(
+                'only timelock',
+            );
+            let timestamp = await latest();
+            let eta = Duration.days(1);
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [EMPTY_ADDRESS]]),
+                eta.add(timestamp),
+            );
+
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+            await increase(Duration.days(1));
+            await expect(
+                timelock.executeTransaction(
+                    chainlinkPriceFeed.address,
+                    0,
+                    'setTokenConfig(address[],address[])',
+                    encodeParameterArray(['address[]', 'address[]'], [[eth.address], [EMPTY_ADDRESS]]),
+                    eta.add(timestamp),
+                ),
+            ).to.be.revertedWith('Transaction execution reverted.');
+
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+
+            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.decimals()).eq(30);
+            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
+            expect(await chainlinkPriceFeed.decimals()).eq(30);
         });
 
         // it('add multi oracle', async () => {
