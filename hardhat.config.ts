@@ -305,6 +305,11 @@ const config: HardhatUserConfig = {
                 LINEA_GOERLI_PRIVATE_KEY9,
             ],
         },
+        linea_mainnet: {
+            url: 'https://rpc.linea.build',
+            chainId: 59144,
+            accounts: [],
+        },
         scroll_sepolia: {
             url: 'https://scroll-sepolia.blockpi.network/v1/rpc/public',
             chainId: 534351,
