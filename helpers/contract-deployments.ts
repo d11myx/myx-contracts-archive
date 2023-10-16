@@ -8,29 +8,33 @@ import {
     IndexPriceFeed,
     LiquidationLogic,
     MockPyth,
-    OraclePriceFeed,
+    PythOraclePriceFeed,
     OrderManager,
     Pool,
     PoolTokenFactory,
     PositionManager,
-    PriceOracle,
     RiskReserve,
     RoleManager,
     Router,
     TestCallBack,
     Token,
     WETH,
+    Timelock,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
-import { MOCK_PRICES } from './constants';
+import { Duration, deployContract, deployUpgradeableContract, increase, latest, waitForTx } from './utilities/tx';
+import { MOCK_INDEX_PRICES, MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
 import { POSITION_MANAGER_ID } from './deploy-ids';
 import usdt from '../markets/usdt';
+export function encodeParameterArray(types: string[], values: string[][]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -87,6 +91,7 @@ export async function deployToken() {
 export async function deployPrice(
     deployer: SignerWithAddress,
     keeper: SignerWithAddress,
+    timelock: Timelock,
     addressesProvider: AddressesProvider,
     tokens: SymbolMap<Token>,
 ) {
@@ -94,15 +99,17 @@ export async function deployPrice(
 
     const mockPyth = (await deployContract('MockPyth', [60, 1])) as any as MockPyth;
 
-    const oraclePriceFeed = (await deployContract('OraclePriceFeed', [
+    const oraclePriceFeed = (await deployContract('PythOraclePriceFeed', [
+        addressesProvider.address,
         mockPyth.address,
         [],
         [],
-    ])) as any as OraclePriceFeed;
-    log(`deployed OraclePriceFeed at ${oraclePriceFeed.address}`);
+    ])) as any as PythOraclePriceFeed;
+    log(`deployed PythOraclePriceFeed at ${oraclePriceFeed.address}`);
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
+    const pairTokenIndexPrices = [];
     const pairTokenPriceIds = [];
     for (let [pair, token] of Object.entries(tokens)) {
         const pairTokenAddress = token.address;
@@ -112,21 +119,38 @@ export async function deployPrice(
 
         pairTokenAddresses.push(pairTokenAddress);
         pairTokenPrices.push(MOCK_PRICES[pair]);
+        pairTokenIndexPrices.push(MOCK_INDEX_PRICES[pair]);
         pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
     }
 
-    const indexPriceFeed = (await deployContract('IndexPriceFeed', [[], []])) as any as IndexPriceFeed;
+    const indexPriceFeed = (await deployContract('IndexPriceFeed', [
+        addressesProvider.address,
+        [],
+        [],
+    ])) as any as IndexPriceFeed;
     log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
-    const priceOracle = (await deployContract('PriceOracle', [
+    await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenIndexPrices);
+
+    let timestamp = await latest();
+    let eta = Duration.days(1);
+    await timelock.queueTransaction(
         oraclePriceFeed.address,
-        indexPriceFeed.address,
-    ])) as any as PriceOracle;
-    log(`deployed PriceOracle at ${priceOracle.address}`);
-
-    await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices);
-
-    await oraclePriceFeed.connect(keeper.signer).setAssetPriceIds(pairTokenAddresses, pairTokenPriceIds);
+        0,
+        'setAssetPriceIds(address[],bytes32[])',
+        encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+        eta.add(timestamp),
+    );
+    await increase(Duration.days(1));
+    await waitForTx(
+        await timelock.executeTransaction(
+            oraclePriceFeed.address,
+            0,
+            'setAssetPriceIds(address[],bytes32[])',
+            encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+            eta.add(timestamp),
+        ),
+    );
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = mockPyth.getUpdateFee(updateData);
     await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
@@ -136,13 +160,15 @@ export async function deployPrice(
     ])) as any as FundingRate;
     log(`deployed FundingRate at ${fundingRate.address}`);
 
-    await addressesProvider.connect(deployer.signer).initialize(priceOracle.address, fundingRate.address);
-    return { oraclePriceFeed, indexPriceFeed, priceOracle, fundingRate };
+    await addressesProvider
+        .connect(deployer.signer)
+        .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address);
+    return { oraclePriceFeed, indexPriceFeed, fundingRate };
 }
 
 export async function deployPair(
     addressProvider: AddressesProvider,
-    vaultPriceFeed: OraclePriceFeed,
+    vaultPriceFeed: PythOraclePriceFeed,
     deployer: SignerWithAddress,
     weth: WETH,
 ) {
