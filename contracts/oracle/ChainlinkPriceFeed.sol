@@ -35,6 +35,7 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
 
     constructor(IAddressesProvider _addressProvider, address[] memory _assets,address[] memory _feeds) {
         ADDRESS_PROVIDER = _addressProvider;
+        _setAssetPrices(_assets,_feeds);
     }
 
      modifier onlyTimelock() {
@@ -59,7 +60,7 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
      function _setAssetPrices(address[] memory assets, address[] memory feeds) private {
         require(assets.length == feeds.length, "inconsistent params length");
         for (uint256 i = 0; i < assets.length; i++) {
-            require(assets[i]!=address(0)&&feeds[i]!=address(0),"is 0");
+            require(assets[i] != address(0),"!0");
             priceFeeds[assets[i]] = feeds[i];
             emit FeedUpdate(assets[i], feeds[i]);
         }

@@ -4,6 +4,10 @@ import { TestEnv } from '../../test/helpers/make-suite';
 import { DeployOptions, DeployResult } from 'hardhat-deploy/types';
 import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
+import BN from 'bn.js';
+
+import { string } from 'yargs';
+
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
 
@@ -561,3 +565,15 @@ function getAmountOut(swapDelta: BigNumber, price: BigNumber, k: BigNumber) {
     const reserveA = k.div(reserveB);
     return swapIndexAmount.mul(reserveB).div(swapIndexAmount.add(reserveA));
 }
+
+
+export function encodeParameters(types: string[], values: string[]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+
+export function encodeParameterArray(types: string[], values: string[][]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+

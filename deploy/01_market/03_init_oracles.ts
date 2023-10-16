@@ -2,6 +2,9 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     Duration,
+
+    encodeParameterArray,
+
     getIndexPriceFeed,
     getMockToken,
     getOraclePriceFeed,
@@ -16,7 +19,7 @@ import {
     waitForTx,
 } from '../../helpers';
 import { ethers } from 'ethers';
-import { encodeParameterArray, encodeParameters } from '../../test/helpers/misc';
+
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { poolAdmin } = await getNamedAccounts();
