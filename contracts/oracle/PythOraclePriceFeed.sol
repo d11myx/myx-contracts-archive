@@ -77,7 +77,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         if (pythPrice.price < 0) {
             return 0;
         }
-        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - decimals()));
+        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - 8));
     }
 
     function getUpdateData(
@@ -120,7 +120,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     }
 
     function decimals() public pure override returns (uint256) {
-        return 8;
+        return PRICE_DECIMALS;
     }
 
     function createPriceFeedUpdateData(
