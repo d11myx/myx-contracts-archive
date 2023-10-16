@@ -4,6 +4,10 @@ import { TestEnv } from '../../test/helpers/make-suite';
 import { DeployOptions, DeployResult } from 'hardhat-deploy/types';
 import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
+import BN from 'bn.js';
+
+import { string } from 'yargs';
+
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
 
@@ -230,11 +234,11 @@ export const Duration = {
  * @returns funding rate
  */
 export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
-    const { positionManager, pool, fundingRate, priceOracle } = testEnv;
+    const { positionManager, pool, fundingRate, oraclePriceFeed } = testEnv;
     const { indexTotalAmount, stableTotalAmount } = await pool.getVault(pairIndex);
 
     const pair = await pool.getPair(pairIndex);
-    const price = await priceOracle.getOraclePrice(pair.indexToken);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
     const longTracker = await positionManager.longTracker(pairIndex);
     const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -384,10 +388,10 @@ export async function getPositionTradingFee(
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
-    const { positionManager, pool, priceOracle } = testEnv;
+    const { positionManager, pool, oraclePriceFeed } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
-    const price = await priceOracle.getOraclePrice(pair.indexToken);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
     const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
     const positionPrice = positionAmount.mul(price).div(PRICE_PRECISION);
@@ -465,11 +469,11 @@ export async function getMintLpAmount(
     stableAmount: BigNumber,
     slipDelta?: BigNumber,
 ) {
-    const { pool, priceOracle, btc } = testEnv;
+    const { pool, oraclePriceFeed, btc } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
     const pairPrice = BigNumber.from(
-        ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+        ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
     );
     const lpFairPrice = await pool.lpFairPrice(pairIndex);
     const indexFeeAmount = indexAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
@@ -561,3 +565,15 @@ function getAmountOut(swapDelta: BigNumber, price: BigNumber, k: BigNumber) {
     const reserveA = k.div(reserveB);
     return swapIndexAmount.mul(reserveB).div(swapIndexAmount.add(reserveA));
 }
+
+
+export function encodeParameters(types: string[], values: string[]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+
+export function encodeParameterArray(types: string[], values: string[][]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+

@@ -252,7 +252,7 @@ describe('Trade: slippage', () => {
                 usdt,
                 btc,
                 router,
-                priceOracle,
+                oraclePriceFeed,
                 pool,
             } = testEnv;
 
@@ -260,7 +260,7 @@ describe('Trade: slippage', () => {
             const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
@@ -316,7 +316,7 @@ describe('Trade: slippage', () => {
                 usdt,
                 btc,
                 router,
-                priceOracle,
+                oraclePriceFeed,
                 pool,
             } = testEnv;
 
@@ -324,7 +324,7 @@ describe('Trade: slippage', () => {
             const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
@@ -379,14 +379,14 @@ describe('Trade: slippage', () => {
                 users: [trader],
                 btc,
                 router,
-                priceOracle,
+                oraclePriceFeed,
                 pool,
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('10000', 18);
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
@@ -431,7 +431,7 @@ describe('Trade: slippage', () => {
                 usdt,
                 btc,
                 router,
-                priceOracle,
+                oraclePriceFeed,
                 pool,
             } = testEnv;
 
@@ -439,7 +439,7 @@ describe('Trade: slippage', () => {
             const stableAmount = ethers.utils.parseUnits('900000000', 18);
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
 
             const vaultBefore = await pool.getVault(pairIndex);
@@ -495,14 +495,14 @@ describe('Trade: slippage', () => {
                 usdt,
                 btc,
                 router,
-                priceOracle,
+                oraclePriceFeed,
                 pool,
             } = testEnv;
 
             const stableAmount = ethers.utils.parseUnits('300000000', 18);
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
