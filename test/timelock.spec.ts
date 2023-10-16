@@ -1,5 +1,5 @@
 import { testEnv } from './helpers/make-suite';
-import { Duration, increase, increaseTo, latest, waitForTx } from '../helpers/utilities/tx';
+import { Duration, encodeParameters, increase, increaseTo, latest, waitForTx } from '../helpers/utilities/tx';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 import { expect } from './shared/expect';
 import { IPool, TestOwnableToken, Timelock } from '../types';
@@ -15,10 +15,6 @@ import {
     getCurrentTimestampBigInt,
 } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
 
-function encodeParameters(types: string[], values: string[]) {
-    const abi = new ethers.utils.AbiCoder();
-    return abi.encode(types, values);
-}
 
 describe('Timelock', () => {
     let timelock: Timelock;

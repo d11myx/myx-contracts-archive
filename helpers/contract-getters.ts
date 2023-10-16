@@ -3,7 +3,7 @@ import {
     AddressesProvider,
     Executor,
     IndexPriceFeed,
-    OraclePriceFeed,
+    PythOraclePriceFeed,
     Pool,
     OrderManager,
     RoleManager,
@@ -23,11 +23,11 @@ import {
     FeeDistributor,
     TestCallBack,
     FundingRate,
-    PriceOracle,
     ExecutionLogic,
     RiskReserve,
     LiquidationLogic,
     FeeCollector,
+    Timelock,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -53,11 +53,11 @@ import {
     FEE_DISTRIBUTOR_ID,
     TEST_CALLBACK_ID,
     FUNDING_RATE,
-    PRICE_ORACLE_ID,
     EXECUTION_LOGIC_ID,
     RISK_RESERVE_ID,
     LIQUIDATION_LOGIC_ID,
     FEE_COLLECTOR_ID,
+    TIMELOCK_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -76,12 +76,9 @@ export const getWETH = async (address?: string): Promise<WETH> => {
     return getContract<WETH>('WETH', address || (await hre.deployments.get('WETH')).address);
 };
 
-// export const getMockPriceFeed = async (pair: string, address?: string): Promise<MockPriceFeed> => {
-//     return getContract<MockPriceFeed>(
-//         'MockPriceFeed',
-//         address || (await hre.deployments.get(MOCK_PRICE_FEED_PREFIX + pair)).address,
-//     );
-// };
+export const getTimelock = async (address?: string): Promise<Timelock> => {
+    return getContract<Timelock>('Timelock', address || (await hre.deployments.get(TIMELOCK_ID)).address);
+};
 
 export const getAddressesProvider = async (address?: string): Promise<AddressesProvider> => {
     return getContract<AddressesProvider>(
@@ -94,13 +91,9 @@ export const getRoleManager = async (address?: string): Promise<RoleManager> => 
     return getContract<RoleManager>('RoleManager', address || (await hre.deployments.get(ROLE_MANAGER_ID)).address);
 };
 
-export const getPriceOracle = async (address?: string): Promise<PriceOracle> => {
-    return getContract<PriceOracle>('PriceOracle', address || (await hre.deployments.get(PRICE_ORACLE_ID)).address);
-};
-
-export const getOraclePriceFeed = async (address?: string): Promise<OraclePriceFeed> => {
-    return getContract<OraclePriceFeed>(
-        'OraclePriceFeed',
+export const getOraclePriceFeed = async (address?: string): Promise<PythOraclePriceFeed> => {
+    return getContract<PythOraclePriceFeed>(
+        'PythOraclePriceFeed',
         address || (await hre.deployments.get(ORACLE_PRICE_FEED_ID)).address,
     );
 };
