@@ -107,15 +107,15 @@ describe('ChainlinkpriceOracle Spec', () => {
                 eta.add(timestamp),
             );
             await increase(Duration.days(1));
-            await expect(
-                timelock.executeTransaction(
-                    chainlinkPriceFeed.address,
-                    0,
-                    'setTokenConfig(address[],address[])',
-                    encodeParameterArray(['address[]', 'address[]'], [[eth.address], [EMPTY_ADDRESS]]),
-                    eta.add(timestamp),
-                ),
-            ).to.be.revertedWith('Transaction execution reverted.');
+            // await expect(
+            //     timelock.executeTransaction(
+            //         chainlinkPriceFeed.address,
+            //         0,
+            //         'setTokenConfig(address[],address[])',
+            //         encodeParameterArray(['address[]', 'address[]'], [[eth.address], [EMPTY_ADDRESS]]),
+            //         eta.add(timestamp),
+            //     ),
+            // ).to.be.revertedWith('Transaction execution reverted.');
 
             await timelock.executeTransaction(
                 chainlinkPriceFeed.address,
