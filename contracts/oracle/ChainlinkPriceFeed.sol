@@ -17,7 +17,7 @@ pragma solidity 0.8.20;
 contract ChainlinkPriceFeed is IPriceFeed, Roleable {
     using SafeMath for uint256;
 
-    uint256 public constant PRICE_PRECISION = 10 ** 30;
+    uint256 public immutable PRICE_DECIMALS = 30;
     uint256 public constant BASIS_POINTS_DIVISOR = 10000;
     uint256 public constant MAX_SPREAD_BASIS_POINTS = 50;
     uint256 public constant MAX_ADJUSTMENT_INTERVAL = 2 hours;
@@ -30,14 +30,13 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
     address public chainlinkFlags;
 
     mapping(address => address) public priceFeeds;
-    mapping(address => uint256) public priceDecimals;
 
     constructor(IAddressesProvider _addressProvider) {
         ADDRESS_PROVIDER = _addressProvider;
     }
 
     function decimals() public pure override returns (uint256) {
-        return 8;
+        return PRICE_DECIMALS;
     }
 
     function setChainlinkFlags(address _chainlinkFlags) external onlyPoolAdmin {
@@ -46,11 +45,9 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
 
     function setTokenConfig(
         address _token,
-        address _priceFeed,
-        uint256 _priceDecimals
+        address _priceFeed
     ) external onlyPoolAdmin {
         priceFeeds[_token] = _priceFeed;
-        priceDecimals[_token] = _priceDecimals;
     }
 
     function getPrice(address _token) public view override returns (uint256) {
@@ -80,7 +77,7 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
 
         require(price > 0, "could not fetch price");
 
-        uint256 _priceDecimals = priceDecimals[_token];
-        return price.mul(PRICE_PRECISION).div(10 ** _priceDecimals);
+        // uint256 _priceDecimals = priceDecimals[_token];
+        return price*(10 ** (PRICE_DECIMALS - 8));
     }
 }

@@ -26,7 +26,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
     }
 
     function decimals() public pure override returns (uint256) {
-        return 8;
+        return PRICE_DECIMALS;
     }
 
     function updatePrice(
@@ -37,7 +37,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
     }
 
     function getPrice(address token) external view override returns (uint256) {
-        return assetPrices[token] * (10 ** (PRICE_DECIMALS - decimals()));
+        return assetPrices[token];
     }
 
     function _setAssetPrices(address[] memory assets, uint256[] memory prices) private {
