@@ -8,7 +8,7 @@ import "../libraries/Roleable.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IChainlinkFlags.sol";
-import "../interfaces/IChainlinkFeed.sol";
+import "../interfaces/AggregatorV3Interface.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
@@ -73,7 +73,7 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
             }
         }
 
-        IChainlinkFeed priceFeed = IChainlinkFeed(priceFeedAddress);
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
 
         uint256 price = 0;
         int256 _p = priceFeed.latestAnswer();
