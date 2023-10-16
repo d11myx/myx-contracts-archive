@@ -24,7 +24,7 @@ import {
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
 import { Duration, deployContract, deployUpgradeableContract, increase, latest, waitForTx } from './utilities/tx';
-import { MOCK_PRICES } from './constants';
+import { MOCK_INDEX_PRICES, MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
@@ -109,6 +109,7 @@ export async function deployPrice(
 
     const pairTokenAddresses = [];
     const pairTokenPrices = [];
+    const pairTokenIndexPrices = [];
     const pairTokenPriceIds = [];
     for (let [pair, token] of Object.entries(tokens)) {
         const pairTokenAddress = token.address;
@@ -118,6 +119,7 @@ export async function deployPrice(
 
         pairTokenAddresses.push(pairTokenAddress);
         pairTokenPrices.push(MOCK_PRICES[pair]);
+        pairTokenIndexPrices.push(MOCK_INDEX_PRICES[pair]);
         pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
     }
 
@@ -128,7 +130,7 @@ export async function deployPrice(
     ])) as any as IndexPriceFeed;
     log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
-    await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices);
+    await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenIndexPrices);
 
     let timestamp = await latest();
     let eta = Duration.days(1);

@@ -11,6 +11,7 @@ import {
     latest,
     loadReserveConfig,
     MARKET_NAME,
+    MOCK_INDEX_PRICES,
     MOCK_PRICES,
     waitForTx,
 } from '../../helpers';
@@ -31,12 +32,14 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const pairTokenAddresses: string[] = [];
     const pairTokenPrices: string[] = [];
+    const pairTokenIndexPrices = [];
     const pairTokenPriceIds = [];
     for (let pair of priceFeedPairs) {
         const pairToken = pair == MARKET_NAME ? await getToken() : await getMockToken(pair);
 
         pairTokenAddresses.push(pairToken.address);
         pairTokenPrices.push(MOCK_PRICES[pair].toString());
+        pairTokenIndexPrices.push(MOCK_INDEX_PRICES[pair]);
         pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
     }
     let timelock = await getTimelock();
@@ -90,7 +93,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ),
     );
 
-    await waitForTx(await indexPriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices));
+    await waitForTx(
+        await indexPriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenIndexPrices),
+    );
     await waitForTx(
         await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee }),
     );
