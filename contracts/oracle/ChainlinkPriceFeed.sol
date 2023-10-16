@@ -14,7 +14,7 @@ import "../interfaces/IRoleManager.sol";
 
 pragma solidity 0.8.20;
 
-contract OraclePriceFeed is IPriceFeed, Roleable {
+contract ChainlinkPriceFeed is IPriceFeed, Roleable {
     using SafeMath for uint256;
 
     uint256 public constant PRICE_PRECISION = 10 ** 30;
