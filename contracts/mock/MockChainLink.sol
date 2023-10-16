@@ -10,7 +10,7 @@ contract MockChainLink is AggregatorV3Interface {
     uint256[] timestamps;
 
     function getRoundData(
-        uint80 _roundId
+        uint80
     )
         external
         view
@@ -22,6 +22,7 @@ contract MockChainLink is AggregatorV3Interface {
             uint80 answeredInRound
         )
     {
+        roundIds[0];
         return (1, 0, 1, 1, 1);
     }
 
@@ -40,6 +41,11 @@ contract MockChainLink is AggregatorV3Interface {
         return (roundIds[index], answers[index], 8, timestamps[index], 1);
     }
 
+    function latestAnswer() external view returns (int256) {
+        uint256 index = roundIds.length - 1;
+        return answers[index];
+    }
+
     function decimals() external pure returns (uint8) {
         return 8;
     }
@@ -52,11 +58,7 @@ contract MockChainLink is AggregatorV3Interface {
         return 1;
     }
 
-    function setAnswer(
-        uint80 _roundId,
-        int256 _answer,
-        uint256 _updatedAt
-    ) external {
+    function setAnswer(uint80 _roundId, int256 _answer, uint256 _updatedAt) external {
         roundIds.push(_roundId);
         answers.push(_answer);
         timestamps.push(_updatedAt);

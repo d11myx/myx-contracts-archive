@@ -29,13 +29,11 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
 
     address public chainlinkFlags;
 
-    IAddressesProvider addressProvider;
-
     mapping(address => address) public priceFeeds;
     mapping(address => uint256) public priceDecimals;
 
     constructor(IAddressesProvider _addressProvider) {
-        ADDRESS_PROVIDER = addressProvider;
+        ADDRESS_PROVIDER = _addressProvider;
     }
 
     function decimals() public pure override returns (uint256) {
