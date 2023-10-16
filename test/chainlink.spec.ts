@@ -1,19 +1,16 @@
 import { expect, use } from "chai";
 import { fromWei,  toWei } from "web3-utils";
-import {
-    PriceOracle,
-    MockChainLink,
-    ERC20DecimalsMock,
-} from "../typechain-types";
+
 import { ethers, waffle } from "hardhat";
 
 import { toChainLinkAnswer, toFullBNStr } from "./util";
 
 import { SignerWithAddress } from "./fixturs.test";
+import { MockChainLink,ChainlinkPriceFeed,ERC20DecimalsMock } from "../types";
 
 describe("ChainlinkpriceOracle Spec", () => {
     let addresses: string[];
-    let priceOracle!: PriceOracle;
+    let priceOracle!: ChainlinkPriceFeed;
     let chainlinkMockETH!: MockChainLink;
     let chainlinkMockBTC!: MockChainLink;
     let chainlinkMock3!: MockChainLink;
@@ -60,7 +57,7 @@ describe("ChainlinkpriceOracle Spec", () => {
         chainlinkMockBTC = (await MockChainLink.deploy()) as MockChainLink;
         chainlinkMock3 = (await MockChainLink.deploy()) as MockChainLink;
 
-        priceOracle = (await PriceOracle.deploy(usdc.address)) as PriceOracle;
+        priceOracle = (await PriceOracle.deploy(usdc.address)) as ChainlinkPriceFeed;
     });
 
     describe("setOracle", () => {
