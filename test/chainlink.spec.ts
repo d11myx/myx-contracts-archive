@@ -131,15 +131,34 @@ describe('ChainlinkpriceOracle Spec', () => {
             expect(await chainlinkPriceFeed.decimals()).eq(30);
         });
 
-        // it('add multi oracle', async () => {
-        //     await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-        //     await chainlinkPriceFeed.setTokenConfig(btc.address, chainlinkMockBTC.address);
-        //     await chainlinkPriceFeed.setTokenConfig(token3.address, chainlinkMock3.address);
+        it('add multi oracle', async () => {
+            let timestamp = await latest();
+            let eta = Duration.days(1);
 
-        //     expect(await chainlinkPriceFeed.tokenOracles(eth.address)).eq(chainlinkMockETH.address);
-        //     expect(await chainlinkPriceFeed.tokenOracles(btc.address)).eq(chainlinkMockBTC.address);
-        //     expect(await chainlinkPriceFeed.tokenOracles(token3.address)).eq(chainlinkMock3.address);
-        // });
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address,btc.address,token3.address], [chainlinkMockETH.address,chainlinkMockBTC.address,chainlinkMock3.address]]),
+                eta.add(timestamp),
+            );
+
+
+
+            await increase(Duration.days(1));
+
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address,btc.address,token3.address], [chainlinkMockETH.address,chainlinkMockBTC.address,chainlinkMock3.address]]),
+                eta.add(timestamp),
+            );
+
+            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(chainlinkMockBTC.address);
+            expect(await chainlinkPriceFeed.priceFeeds(token3.address)).eq(chainlinkMock3.address);
+        });
     });
 
     // describe('remove oracle', () => {
