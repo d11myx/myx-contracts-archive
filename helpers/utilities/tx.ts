@@ -230,11 +230,11 @@ export const Duration = {
  * @returns funding rate
  */
 export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
-    const { positionManager, pool, fundingRate, priceOracle } = testEnv;
+    const { positionManager, pool, fundingRate, oraclePriceFeed } = testEnv;
     const { indexTotalAmount, stableTotalAmount } = await pool.getVault(pairIndex);
 
     const pair = await pool.getPair(pairIndex);
-    const price = await priceOracle.getOraclePrice(pair.indexToken);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
     const longTracker = await positionManager.longTracker(pairIndex);
     const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -384,10 +384,10 @@ export async function getPositionTradingFee(
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
-    const { positionManager, pool, priceOracle } = testEnv;
+    const { positionManager, pool, oraclePriceFeed } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
-    const price = await priceOracle.getOraclePrice(pair.indexToken);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
     const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
     const positionPrice = positionAmount.mul(price).div(PRICE_PRECISION);
@@ -465,11 +465,11 @@ export async function getMintLpAmount(
     stableAmount: BigNumber,
     slipDelta?: BigNumber,
 ) {
-    const { pool, priceOracle, btc } = testEnv;
+    const { pool, oraclePriceFeed, btc } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
     const pairPrice = BigNumber.from(
-        ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+        ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
     );
     const lpFairPrice = await pool.lpFairPrice(pairIndex);
     const indexFeeAmount = indexAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
