@@ -240,9 +240,9 @@ describe('Replay: ADL', () => {
     });
 
     async function calculateOpenSize(testEnv: TestEnv, isLong: boolean): Promise<string> {
-        const { pool, priceOracle, btc } = testEnv;
+        const { pool, oraclePriceFeed, btc } = testEnv;
 
-        const pairPrice = new Decimal(ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30));
+        const pairPrice = new Decimal(ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
 
         const vault = await pool.getVault(pairIndex);
         if (isLong) {

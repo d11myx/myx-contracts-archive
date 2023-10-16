@@ -11,8 +11,8 @@ import {
     SymbolMap,
     waitForTx,
     getRoleManager,
-    getPriceOracle,
     getFundingRate,
+    getOraclePriceFeed,
 } from '../helpers';
 import { Token } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -31,7 +31,7 @@ async function main() {
     const positionManager = await getPositionManager();
     const fundingRate = await getFundingRate();
     const executor = await getExecutor();
-    const priceOracle = await getPriceOracle();
+    const priceOracle = await getOraclePriceFeed();
     const roleManager = await getRoleManager();
     const pool = await getPool();
     const testCallBack = await getTestCallBack();
@@ -40,8 +40,8 @@ async function main() {
     console.log(`executor:`, executor.address);
 
     const { usdt, btc, eth } = await getTokens();
-    console.log(`btc price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30));
-    console.log(`eth price:`, ethers.utils.formatUnits(await priceOracle.getOraclePrice(eth.address), 30));
+    console.log(`btc price:`, ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30));
+    console.log(`eth price:`, ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30));
 
     const keepers: string[] = [
         '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',

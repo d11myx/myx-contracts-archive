@@ -7,19 +7,23 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/PositionKey.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/Upgradeable.sol";
 import "../libraries/TradingTypes.sol";
-import "../interfaces/IPriceOracle.sol";
+
+import "../helpers/ValidationHelper.sol";
+
+import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IOrderManager.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IOrderCallback.sol";
-import "../helpers/ValidationHelper.sol";
+
 
 contract OrderManager is
     IOrderManager,
@@ -151,7 +155,7 @@ contract OrderManager is
             request.tradeType == TradingTypes.TradeType.LIMIT
         ) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-            uint256 price = IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(
+            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(
                 pair.indexToken
             );
             if (request.sizeAmount >= 0) {
