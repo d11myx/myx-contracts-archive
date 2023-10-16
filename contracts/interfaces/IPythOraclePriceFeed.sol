@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./IPriceFeed.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 
-interface IOraclePriceFeed is IPriceFeed {
+interface IPythOraclePriceFeed is IPriceFeed {
 
     event AssetPriceIdUpdated(
         address asset,

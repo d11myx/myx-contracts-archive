@@ -7,7 +7,6 @@ import {
     getOrderManager,
     getPool,
     getPositionManager,
-    getPriceOracle,
     getRouter,
     getTokens,
     POOL_TOKEN_FACTORY,
@@ -28,7 +27,7 @@ async function main() {
     const positionManager = await getPositionManager();
     // const executor = await getExecutor();
     // const executionLogic = await getExecutionLogic();
-    const priceOracle = await getPriceOracle();
+    const priceOracle = await getOraclePriceFeed();
     const pool = await getPool();
 
     // console.log(await pool.getPair(0));
@@ -45,10 +44,10 @@ async function main() {
     // console.log(`totalSupply:`, await poolToken.totalSupply());
 
     const { btc, eth, usdt } = await getTokens();
-    const btcOraclePrice = ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30);
-    const ethOraclePrice = ethers.utils.formatUnits(await priceOracle.getOraclePrice(eth.address), 30);
-    const btcIndexPrice = ethers.utils.formatUnits(await priceOracle.getIndexPrice(btc.address), 30);
-    const ethIndexPrice = ethers.utils.formatUnits(await priceOracle.getIndexPrice(eth.address), 30);
+    const btcOraclePrice = ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30);
+    const ethOraclePrice = ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30);
+    const btcIndexPrice = ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30);
+    const ethIndexPrice = ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30);
     console.log(`btc price:`, btcOraclePrice);
     console.log(`eth price:`, ethOraclePrice);
     console.log(`btc price:`, btcIndexPrice);
