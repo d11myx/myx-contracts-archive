@@ -236,18 +236,34 @@ describe('ChainlinkpriceOracle Spec', () => {
         });
     });
 
-    // describe('getprice', () => {
-    //     beforeEach(async () => {
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
+    describe('getprice', () => {
+        beforeEach(async () => {
+            let timestamp = await latest();
+            let eta = Duration.days(1);
 
-    //         await chainlinkMockETH.setAnswer(0, toChainLinkAnswer(1600), 1);
-    //     });
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+            await increase(Duration.days(1));
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+            await chainlinkMockETH.setAnswer(0, toChainLinkAnswer(1600), 1);
+        });
 
-    //     it('getPrice', async () => {
-    //         const price = await chainlinkPriceFeed.getPrice(eth.address);
-    //         expect(price).to.eq(toWei('1600'));
-    //     });
-    // });
+        it('getPrice', async () => {
+            const price = await chainlinkPriceFeed.getPrice(eth.address);
+            expect(price).to.eq(toFullBNStr('1600', 30));
+        });
+    });
 
     // describe('tokenToUnerlyingPrice', () => {
     //     beforeEach(async () => {
