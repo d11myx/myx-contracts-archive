@@ -9,7 +9,16 @@ import {
     Timelock,
 } from '../types';
 import { testEnv } from './helpers/make-suite';
-import { Duration, encodeParameterArray, getBlockTimestamp, increase, latest, toFullBN, waitForTx } from '../helpers';
+import {
+    Duration,
+    encodeParameterArray,
+    getBlockTimestamp,
+    increase,
+    latest,
+    toFullBN,
+    toFullBNStr,
+    waitForTx,
+} from '../helpers';
 import { expect } from './shared/expect';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
@@ -62,7 +71,7 @@ describe('Oracle: oracle cases', () => {
 
     it('update price feed', async () => {
         const id = '0x87a67534df591d2dd5ec577ab3c75668a8e3d35e92e27bf29d9e2e52df8de412';
-        const price = "16320000";
+        const price = '16320000';
         const confidence = 60000000;
         const expo = 0;
         const emaPrice = '163158326000';
@@ -109,9 +118,7 @@ describe('Oracle: oracle cases', () => {
         await indexPriceFeed.connect(user1).updatePrice([btc.address], [price]);
 
         console.log('btc:' + btc.address);
-        expect(await pythOraclePriceFeed.getPrice(btc.address)).to.be.eq(toFullBN(price, 24));
-        // expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(price);
-        // expect(await pythOraclePriceFeed.getPrice(btc.address)).to.be.eq(price);
-        // expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(toFullBN(price, 8));
+        expect(await pythOraclePriceFeed.getPrice(btc.address)).to.be.eq(toFullBNStr(price, 22));
+        expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(price);
     });
 });
