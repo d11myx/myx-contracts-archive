@@ -19,7 +19,7 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     );
 
     await waitForTx(
-        await indexPriceFeed.connect(keeper.signer).updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 8)]),
+        await indexPriceFeed.connect(keeper.signer).updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 30)]),
     );
 }
 
