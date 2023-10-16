@@ -2772,7 +2772,7 @@ bufio@^1.0.7:
   resolved "https://registry.npmjs.org/bufio/-/bufio-1.2.0.tgz"
   integrity sha512-UlFk8z/PwdhYQTXSQQagwGAdtRI83gib2n4uy4rQnenxUM2yQi8lBDzF230BNk+3wAoZDxYRoBwVVUPgHa9MCA==
 
-buildcheck@~0.0.6:
+buildcheck@^0.0.6, buildcheck@~0.0.6:
   version "0.0.6"
   resolved "https://registry.npmjs.org/buildcheck/-/buildcheck-0.0.6.tgz"
   integrity sha512-8f9ZJCUXyT1M35Jx7MkBgmBMo3oHTTBIPLiY9xyL0pl3T5RwcPEY8cUHr5LBNfu/fk6c2T4DJZuVM/8ZZT2D2A==

@@ -29,9 +29,9 @@ describe('LP: Pool cases', () => {
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
 
-            // add liquidity
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            // add liquidity  增加流动性
+            const indexAmount = ethers.utils.parseUnits('10000', 18); //单价3w·
+            const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -72,6 +72,8 @@ describe('LP: Pool cases', () => {
             // console.log('===================');
             // console.log(await positionManager.getNextFundingRate(pairIndex));
         });
+
+
 
         it('should decreased correct liquidity', async () => {
             const {

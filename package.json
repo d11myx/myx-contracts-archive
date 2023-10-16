@@ -40,6 +40,7 @@
         "@types/sinon-chai": "^3.2.9",
         "@typescript-eslint/eslint-plugin": "4.29.2",
         "@typescript-eslint/parser": "4.29.2",
+        "buildcheck": "^0.0.6",
         "eslint": "^7.29.0",
         "eslint-config-prettier": "8.3.0",
         "eslint-plugin-import": "2.24.1",
