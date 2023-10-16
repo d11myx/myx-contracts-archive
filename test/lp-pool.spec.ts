@@ -30,7 +30,7 @@ describe('LP: Pool cases', () => {
             );
 
             // add liquidity  增加流动性
-            const indexAmount = ethers.utils.parseUnits('10000', 18);  //单价3w·
+            const indexAmount = ethers.utils.parseUnits('10000', 18); //单价3w·
             const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
@@ -73,7 +73,6 @@ describe('LP: Pool cases', () => {
             // console.log(await positionManager.getNextFundingRate(pairIndex));
         });
 
-
         it('should increased correct liquidity', async () => {
             const {
                 router,
@@ -81,17 +80,17 @@ describe('LP: Pool cases', () => {
                 usdt,
                 btc,
                 pool,
-                priceOracle,
+                oraclePriceFeed,
                 positionManager,
             } = testEnv;
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
 
             // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('20000', 18);//单价3w
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
+            const indexAmount = ethers.utils.parseUnits('20000', 18); //单价3w
+            const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -140,17 +139,17 @@ describe('LP: Pool cases', () => {
                 usdt,
                 btc,
                 pool,
-                priceOracle,
+                oraclePriceFeed,
                 positionManager,
             } = testEnv;
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
 
             // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('40000', 18);//单价3w
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
+            const indexAmount = ethers.utils.parseUnits('40000', 18); //单价3w
+            const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -199,17 +198,17 @@ describe('LP: Pool cases', () => {
                 usdt,
                 btc,
                 pool,
-                priceOracle,
+                oraclePriceFeed,
                 positionManager,
             } = testEnv;
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
 
             // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('40000', 18);//单价3w
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
+            const indexAmount = ethers.utils.parseUnits('40000', 18); //单价3w
+            const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
