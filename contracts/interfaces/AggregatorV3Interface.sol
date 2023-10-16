@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.20;
 
-interface IChainlinkFeed {
+interface AggregatorV3Interface {
     function description() external view returns (string memory);
 
     function aggregator() external view returns (address);
