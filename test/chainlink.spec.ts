@@ -139,11 +139,15 @@ describe('ChainlinkpriceOracle Spec', () => {
                 chainlinkPriceFeed.address,
                 0,
                 'setTokenConfig(address[],address[])',
-                encodeParameterArray(['address[]', 'address[]'], [[eth.address,btc.address,token3.address], [chainlinkMockETH.address,chainlinkMockBTC.address,chainlinkMock3.address]]),
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
                 eta.add(timestamp),
             );
-
-
 
             await increase(Duration.days(1));
 
@@ -151,7 +155,13 @@ describe('ChainlinkpriceOracle Spec', () => {
                 chainlinkPriceFeed.address,
                 0,
                 'setTokenConfig(address[],address[])',
-                encodeParameterArray(['address[]', 'address[]'], [[eth.address,btc.address,token3.address], [chainlinkMockETH.address,chainlinkMockBTC.address,chainlinkMock3.address]]),
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
                 eta.add(timestamp),
             );
 
@@ -161,31 +171,70 @@ describe('ChainlinkpriceOracle Spec', () => {
         });
     });
 
-    // describe('remove oracle', () => {
-    //     it('test owner', async () => {
-    //         await expect(chainlinkPriceFeed.connect(dev).setTokenConfig(eth.address, chainlinkMockETH.address)).to.be.revertedWith(
-    //             'Ownable: caller is not the owner',
-    //         );
-    //         await expect(chainlinkPriceFeed.connect(dev).removeOracle(eth.address)).to.be.revertedWith(
-    //             'Ownable: caller is not the owner',
-    //         );
-    //     });
-    //     it('remove oracle', async () => {
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-    //         await chainlinkPriceFeed.removeOracle(eth.address);
-    //         expect(await chainlinkPriceFeed.tokenOracles(eth.address)).eq(EMPTY_ADDRESS);
-    //         expect(await chainlinkPriceFeed.tokenDecimas(eth.address)).eq(0);
+    describe('remove oracle', () => {
+        // it('test owner', async () => {
+        //     await expect(chainlinkPriceFeed.connect(dev).setTokenConfig(eth.address, chainlinkMockETH.address)).to.be.revertedWith(
+        //         'Ownable: caller is not the owner',
+        //     );
+        //     await expect(chainlinkPriceFeed.connect(dev).removeOracle(eth.address)).to.be.revertedWith(
+        //         'Ownable: caller is not the owner',
+        //     );
+        // });
+        it('remove oracle', async () => {
+            let timestamp = await latest();
+            let eta = Duration.days(1);
 
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-    //         await chainlinkPriceFeed.setTokenConfig(btc.address, chainlinkMockBTC.address);
-    //         await chainlinkPriceFeed.removeOracle(btc.address);
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
 
-    //         expect(await chainlinkPriceFeed.tokenOracles(btc.address)).eq(EMPTY_ADDRESS);
-    //         expect(await chainlinkPriceFeed.tokenDecimas(btc.address)).eq(0);
-    //         expect(await chainlinkPriceFeed.tokenOracles(eth.address)).eq(chainlinkMockETH.address);
-    //         expect(await chainlinkPriceFeed.tokenDecimas(eth.address)).eq(8);
-    //     });
-    // });
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[btc.address], [EMPTY_ADDRESS]]),
+                eta.add(timestamp),
+            );
+
+            await increase(Duration.days(1));
+
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
+
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[btc.address], [EMPTY_ADDRESS]]),
+                eta.add(timestamp),
+            );
+
+            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
+            expect(await chainlinkPriceFeed.priceFeeds(token3.address)).eq(chainlinkMock3.address);
+        });
+    });
 
     // describe('getprice', () => {
     //     beforeEach(async () => {
