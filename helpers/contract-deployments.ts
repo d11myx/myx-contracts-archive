@@ -23,7 +23,7 @@ import {
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { Duration, deployContract, deployUpgradeableContract, increase, latest, waitForTx } from './utilities/tx';
+import { Duration, deployContract, deployUpgradeableContract, encodeParameterArray, increase, latest, waitForTx } from './utilities/tx';
 import { MOCK_INDEX_PRICES, MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
@@ -31,10 +31,6 @@ import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
 import { POSITION_MANAGER_ID } from './deploy-ids';
 import usdt from '../markets/usdt';
-export function encodeParameterArray(types: string[], values: string[][]) {
-    const abi = new ethers.utils.AbiCoder();
-    return abi.encode(types, values);
-}
 
 declare var hre: HardhatRuntimeEnvironment;
 
