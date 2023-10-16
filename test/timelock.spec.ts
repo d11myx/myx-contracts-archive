@@ -1,5 +1,5 @@
 import { testEnv } from './helpers/make-suite';
-import { Duration, increase, increaseTo, latest, waitForTx } from '../helpers/utilities/tx';
+import { Duration, encodeParameters, increase, increaseTo, latest, waitForTx } from '../helpers/utilities/tx';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 import { expect } from './shared/expect';
 import { IPool, TestOwnableToken, Timelock } from '../types';
@@ -14,7 +14,7 @@ import {
     getCurrentTimestamp,
     getCurrentTimestampBigInt,
 } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
-import { encodeParameters } from './helpers/misc';
+
 
 describe('Timelock', () => {
     let timelock: Timelock;

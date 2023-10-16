@@ -12,21 +12,9 @@ import {
     RoleManager,
 } from '../types';
 
-import BN from 'bn.js';
-import BigNumber from 'bignumber.js';
-import { string } from 'yargs';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { Duration, encodeParameterArray, increase, latest, toFullBN, toFullBNStr } from '../helpers';
 const CHAINLINK_DECIMAL = 8;
-
-export function toFullBN(val: number | string, decimals = 18): BN {
-    const tokenDigit = new BigNumber('10').exponentiatedBy(decimals);
-    const bigNumber = new BigNumber(val).multipliedBy(tokenDigit).toFixed(0);
-    return new BN(bigNumber);
-}
-
-export function toFullBNStr(val: number | string, decimals = 18): string {
-    return toFullBN(val, decimals).toString();
-}
 
 export function toChainLinkAnswer(val: number, decimals = 8): string {
     return toFullBN(val, decimals).toString();
@@ -54,6 +42,7 @@ describe('ChainlinkpriceOracle Spec', () => {
         user2: SignerWithAddress;
     const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000';
     let usdc: ERC20DecimalsMock;
+    let timelock: Timelock;
 
     beforeEach(async () => {
         [owner, dev, spender, other, user1, user2] = await ethers.getSigners();
@@ -69,7 +58,7 @@ describe('ChainlinkpriceOracle Spec', () => {
         chainlinkMock3 = (await MockChainLink.deploy()) as MockChainLink;
 
         const timelockFactory = await ethers.getContractFactory('Timelock');
-        let timelock = (await timelockFactory.deploy('3600')) as Timelock;
+        timelock = (await timelockFactory.deploy('3600')) as Timelock;
 
         const addressesProviderFactory = await ethers.getContractFactory('AddressesProvider');
 
@@ -79,167 +68,245 @@ describe('ChainlinkpriceOracle Spec', () => {
 
         await addressProvider.setRolManager(roleManager.address);
 
-        chainlinkPriceFeed = (await ChainlinkPriceFeed.deploy(addressProvider.address,[],[])) as ChainlinkPriceFeed;
+        chainlinkPriceFeed = (await ChainlinkPriceFeed.deploy(addressProvider.address, [], [])) as ChainlinkPriceFeed;
     });
 
     describe('setTokenConfig', () => {
         it('setTokenConfig', async () => {
-            // await chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS]);
-            // await expect(chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS])).to.be.revertedWith('is 0');
-            // await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-            // expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
-            // expect(await chainlinkPriceFeed.decimals()).eq(30);
-            // expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
-            // expect(await chainlinkPriceFeed.decimals()).eq(30);
+            await expect(chainlinkPriceFeed.setTokenConfig([eth.address], [EMPTY_ADDRESS])).to.be.revertedWith(
+                'only timelock',
+            );
+            let timestamp = await latest();
+            let eta = Duration.days(1);
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [EMPTY_ADDRESS]]),
+                eta.add(timestamp),
+            );
+
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+            await increase(Duration.days(1));
+            // await expect(
+            //     timelock.executeTransaction(
+            //         chainlinkPriceFeed.address,
+            //         0,
+            //         'setTokenConfig(address[],address[])',
+            //         encodeParameterArray(['address[]', 'address[]'], [[eth.address], [EMPTY_ADDRESS]]),
+            //         eta.add(timestamp),
+            //     ),
+            // ).to.be.revertedWith('Transaction execution reverted.');
+
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+
+            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.decimals()).eq(30);
+            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
+            expect(await chainlinkPriceFeed.decimals()).eq(30);
         });
 
-        // it('add multi oracle', async () => {
-        //     await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-        //     await chainlinkPriceFeed.setTokenConfig(btc.address, chainlinkMockBTC.address);
-        //     await chainlinkPriceFeed.setTokenConfig(token3.address, chainlinkMock3.address);
+        it('add multi oracle', async () => {
+            let timestamp = await latest();
+            let eta = Duration.days(1);
 
-        //     expect(await chainlinkPriceFeed.tokenOracles(eth.address)).eq(chainlinkMockETH.address);
-        //     expect(await chainlinkPriceFeed.tokenOracles(btc.address)).eq(chainlinkMockBTC.address);
-        //     expect(await chainlinkPriceFeed.tokenOracles(token3.address)).eq(chainlinkMock3.address);
-        // });
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
+
+            await increase(Duration.days(1));
+
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
+
+            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(chainlinkMockBTC.address);
+            expect(await chainlinkPriceFeed.priceFeeds(token3.address)).eq(chainlinkMock3.address);
+        });
     });
 
-    // describe('remove oracle', () => {
-    //     it('test owner', async () => {
-    //         await expect(chainlinkPriceFeed.connect(dev).setTokenConfig(eth.address, chainlinkMockETH.address)).to.be.revertedWith(
-    //             'Ownable: caller is not the owner',
-    //         );
-    //         await expect(chainlinkPriceFeed.connect(dev).removeOracle(eth.address)).to.be.revertedWith(
-    //             'Ownable: caller is not the owner',
-    //         );
-    //     });
-    //     it('remove oracle', async () => {
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-    //         await chainlinkPriceFeed.removeOracle(eth.address);
-    //         expect(await chainlinkPriceFeed.tokenOracles(eth.address)).eq(EMPTY_ADDRESS);
-    //         expect(await chainlinkPriceFeed.tokenDecimas(eth.address)).eq(0);
+    describe('remove oracle', () => {
+        // it('test owner', async () => {
+        //     await expect(chainlinkPriceFeed.connect(dev).setTokenConfig(eth.address, chainlinkMockETH.address)).to.be.revertedWith(
+        //         'Ownable: caller is not the owner',
+        //     );
+        //     await expect(chainlinkPriceFeed.connect(dev).removeOracle(eth.address)).to.be.revertedWith(
+        //         'Ownable: caller is not the owner',
+        //     );
+        // });
+        it('remove oracle', async () => {
+            let timestamp = await latest();
+            let eta = Duration.days(1);
 
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-    //         await chainlinkPriceFeed.setTokenConfig(btc.address, chainlinkMockBTC.address);
-    //         await chainlinkPriceFeed.removeOracle(btc.address);
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
 
-    //         expect(await chainlinkPriceFeed.tokenOracles(btc.address)).eq(EMPTY_ADDRESS);
-    //         expect(await chainlinkPriceFeed.tokenDecimas(btc.address)).eq(0);
-    //         expect(await chainlinkPriceFeed.tokenOracles(eth.address)).eq(chainlinkMockETH.address);
-    //         expect(await chainlinkPriceFeed.tokenDecimas(eth.address)).eq(8);
-    //     });
-    // });
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[btc.address], [EMPTY_ADDRESS]]),
+                eta.add(timestamp),
+            );
 
-    // describe('getprice', () => {
-    //     beforeEach(async () => {
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
+            await increase(Duration.days(1));
 
-    //         await chainlinkMockETH.setAnswer(0, toChainLinkAnswer(1600), 1);
-    //     });
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
 
-    //     it('getPrice', async () => {
-    //         const price = await chainlinkPriceFeed.getPrice(eth.address);
-    //         expect(price).to.eq(toWei('1600'));
-    //     });
-    // });
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[btc.address], [EMPTY_ADDRESS]]),
+                eta.add(timestamp),
+            );
 
-    // describe('tokenToUnerlyingPrice', () => {
-    //     beforeEach(async () => {
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-    //         await chainlinkPriceFeed.setTokenConfig(btc.address, chainlinkMockBTC.address);
-    //         await chainlinkPriceFeed.setTokenConfig(token3.address, chainlinkMock3.address);
+            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
+            expect(await chainlinkPriceFeed.priceFeeds(token3.address)).eq(chainlinkMock3.address);
+        });
+    });
 
-    //         await chainlinkMockETH.setAnswer(0, toChainLinkAnswer(100), 1);
-    //         await chainlinkMockBTC.setAnswer(1, toChainLinkAnswer(200), 2);
-    //         await chainlinkMock3.setAnswer(2, toChainLinkAnswer(300), 3);
-    //     });
+    describe('getprice', () => {
+        beforeEach(async () => {
+            let timestamp = await latest();
+            let eta = Duration.days(1);
 
-    //     it('getPrice', async () => {
-    //         let price = await chainlinkPriceFeed.getPrice(usdc.address);
-    //         expect(price).to.eq(toWei('1'));
-    //         price = await chainlinkPriceFeed.getPrice(eth.address);
-    //         expect(price).to.eq(toWei('100'));
-    //         price = await chainlinkPriceFeed.getPrice(btc.address);
-    //         expect(price).to.eq(toWei('200'));
-    //         price = await chainlinkPriceFeed.getPrice(token3.address);
-    //         expect(price).to.eq(toWei('300'));
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+            await increase(Duration.days(1));
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[eth.address], [chainlinkMockETH.address]]),
+                eta.add(timestamp),
+            );
+            await chainlinkMockETH.setAnswer(0, toChainLinkAnswer(1600), 1);
+        });
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(usdc.address, usdc.address);
-    //         expect(price).to.eq(toWei('1'));
+        it('getPrice', async () => {
+            const price = await chainlinkPriceFeed.getPrice(eth.address);
+            expect(price).to.eq(toFullBNStr('1600', 30));
+        });
+    });
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(eth.address, usdc.address);
-    //         expect(price).to.eq(toWei('100'));
+    describe('tokenToUnerlyingPrice', () => {
+        beforeEach(async () => {
+            let timestamp = await latest();
+            let eta = Duration.days(1);
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(btc.address, usdc.address);
-    //         expect(price).to.eq(toWei('200'));
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(token3.address, usdc.address);
-    //         expect(price).to.eq(toWei('300'));
+            await timelock.queueTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(['address[]', 'address[]'], [[btc.address], [EMPTY_ADDRESS]]),
+                eta.add(timestamp),
+            );
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(token3.address, eth.address);
-    //         expect(price).to.eq(toWei('3'));
+            await increase(Duration.days(1));
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(usdc.address, eth.address);
-    //         expect(price).to.eq(toWei('0.01'));
+            await timelock.executeTransaction(
+                chainlinkPriceFeed.address,
+                0,
+                'setTokenConfig(address[],address[])',
+                encodeParameterArray(
+                    ['address[]', 'address[]'],
+                    [
+                        [eth.address, btc.address, token3.address],
+                        [chainlinkMockETH.address, chainlinkMockBTC.address, chainlinkMock3.address],
+                    ],
+                ),
+                eta.add(timestamp),
+            );
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(usdc.address, btc.address);
-    //         expect(price).to.eq(toWei('0.005'));
+            await chainlinkMockETH.setAnswer(0, toChainLinkAnswer(100), 1);
+            await chainlinkMockBTC.setAnswer(1, toChainLinkAnswer(200), 2);
+            await chainlinkMock3.setAnswer(2, toChainLinkAnswer(300), 3);
+        });
 
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(usdc.address, token3.address);
-    //         expect(price).to.eq(toWei('0.003333333333333333'));
-
-    //         price = await chainlinkPriceFeed.tokenToUnerlyingPrice(eth.address, btc.address);
-    //         expect(price).to.eq(toWei('0.5'));
-    //     });
-    // });
-
-    // describe('tokenToUnderlyingSize', () => {
-    //     beforeEach(async () => {
-    //         await chainlinkPriceFeed.setTokenConfig(eth.address, chainlinkMockETH.address);
-    //         await chainlinkPriceFeed.setTokenConfig(btc.address, chainlinkMockBTC.address);
-    //         await chainlinkPriceFeed.setTokenConfig(token3.address, chainlinkMock3.address);
-
-    //         await chainlinkMockETH.setAnswer(0, toChainLinkAnswer(100), 1);
-    //         await chainlinkMockBTC.setAnswer(1, toChainLinkAnswer(200), 2);
-    //         await chainlinkMock3.setAnswer(2, toChainLinkAnswer(300), 3);
-    //     });
-
-    //     it('get size', async () => {
-    //         let price = await chainlinkPriceFeed.getPrice(usdc.address);
-    //         expect(price).to.eq(toWei('1'));
-    //         price = await chainlinkPriceFeed.getPrice(eth.address);
-    //         expect(price).to.eq(toWei('100'));
-    //         price = await chainlinkPriceFeed.getPrice(btc.address);
-    //         expect(price).to.eq(toWei('200'));
-    //         price = await chainlinkPriceFeed.getPrice(token3.address);
-    //         expect(price).to.eq(toWei('300'));
-
-    //         let size = await chainlinkPriceFeed.tokenToUnderlyingSize(usdc.address, usdc.address, toWei('1'));
-    //         expect(size).to.eq(toWei('1'));
-
-    //         size = await chainlinkPriceFeed.tokenToUnderlyingSize(eth.address, usdc.address, toWei('1'));
-    //         expect(size).to.eq(toFullBNStr(100, 6));
-
-    //         size = await chainlinkPriceFeed.tokenToUnderlyingSize(btc.address, usdc.address, toFullBNStr(1, 8));
-    //         expect(size).to.eq(toFullBNStr(200, 6));
-
-    //         size = await chainlinkPriceFeed.tokenToUnderlyingSize(token3.address, usdc.address, toFullBNStr(1, 18));
-    //         expect(size).to.eq(toFullBNStr(300, 6));
-
-    //         size = await chainlinkPriceFeed.tokenToUnderlyingSize(token3.address, eth.address, toFullBNStr(1, 18));
-    //         expect(size).to.eq(toWei('3'));
-
-    //         size = await chainlinkPriceFeed.tokenToUnderlyingSize(usdc.address, eth.address, toFullBNStr(100, 6));
-    //         expect(size).to.eq(toWei('1'));
-
-    //         size = await chainlinkPriceFeed.tokenToUnderlyingSize(usdc.address, btc.address, toFullBNStr(200, 6));
-    //         expect(size).to.eq(toFullBNStr(1, 8));
-
-    //         size = await chainlinkPriceFeed.tokenToUnderlyingSize(usdc.address, token3.address, toFullBNStr(300, 6));
-    //         expect(size).to.eq('999999000000000000');
-
-    //         price = await chainlinkPriceFeed.tokenToUnderlyingSize(eth.address, btc.address, toFullBNStr(2, 18));
-    //         expect(size).to.eq('999999000000000000');
-    //     });
-    // });
+        it('getPrice', async () => {
+            let price = await chainlinkPriceFeed.getPrice(eth.address);
+            expect(price).to.eq(toFullBNStr('100', 30));
+            price = await chainlinkPriceFeed.getPrice(btc.address);
+            expect(price).to.eq(toFullBNStr('200', 30));
+            price = await chainlinkPriceFeed.getPrice(token3.address);
+            expect(price).to.eq(toFullBNStr('300', 30));
+        });
+    });
 });
