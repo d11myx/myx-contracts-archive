@@ -19,7 +19,7 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     );
 
     await waitForTx(
-        await indexPriceFeed.connect(keeper.signer).updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 8)]),
+        await indexPriceFeed.connect(keeper.signer).updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 30)]),
     );
 }
 
@@ -158,4 +158,14 @@ export async function extraHash(hash: string, eventName: string, key: string): P
 
     const DistributeTradingFeeEvent = events.find((val: any) => val.name === eventName);
     return DistributeTradingFeeEvent?.events.find((val: any) => val.name === key)?.value as any;
+}
+
+export function encodeParameters(types: string[], values: string[]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+
+export function encodeParameterArray(types: string[], values: string[][]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
 }
