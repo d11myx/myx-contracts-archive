@@ -12,22 +12,9 @@ import {
     RoleManager,
 } from '../types';
 
-import BN from 'bn.js';
-import BigNumber from 'bignumber.js';
-import { string } from 'yargs';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { Duration, encodeParameterArray, increase, latest } from '../helpers';
+import { Duration, encodeParameterArray, increase, latest, toFullBN, toFullBNStr } from '../helpers';
 const CHAINLINK_DECIMAL = 8;
-
-export function toFullBN(val: number | string, decimals = 18): BN {
-    const tokenDigit = new BigNumber('10').exponentiatedBy(decimals);
-    const bigNumber = new BigNumber(val).multipliedBy(tokenDigit).toFixed(0);
-    return new BN(bigNumber);
-}
-
-export function toFullBNStr(val: number | string, decimals = 18): string {
-    return toFullBN(val, decimals).toString();
-}
 
 export function toChainLinkAnswer(val: number, decimals = 8): string {
     return toFullBN(val, decimals).toString();
