@@ -80,17 +80,17 @@ describe('LP: Pool cases', () => {
                 usdt,
                 btc,
                 pool,
-                priceOracle,
+                oraclePriceFeed,
                 positionManager,
             } = testEnv;
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
 
-            // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('80000', 18);//单价3w
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);//单价1
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('80000', 18);//
+            const stableAmount = ethers.utils.parseUnits('300000000', 18);//
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -198,12 +198,12 @@ describe('LP: Pool cases', () => {
                 usdt,
                 btc,
                 pool,
-                priceOracle,
+                oraclePriceFeed,
             } = testEnv;
             const pair = await pool.getPair(pairIndex);
 
             const pairPrice = BigNumber.from(
-                ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
             // console.log('price:' + (await pool.getPrice(pair.indexToken)));
             // console.log('lpFairPrice:' + (await pool.lpFairPrice(pairIndex)));
@@ -318,11 +318,11 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -371,12 +371,12 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -426,12 +426,12 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -484,12 +484,12 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -573,12 +573,12 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -632,12 +632,12 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -689,12 +689,12 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -747,12 +747,12 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -833,7 +833,7 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
                 await mintAndApprove(testEnv, usdt, ethers.utils.parseUnits('30000', 18), depositor, router.address);
@@ -852,7 +852,7 @@ describe('LP: Pool cases', () => {
                 expect(await positionManager.getExposedPositions(pairIndex)).to.be.gt(0);
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
@@ -917,7 +917,7 @@ describe('LP: Pool cases', () => {
                     usdt,
                     router,
                     pool,
-                    priceOracle,
+                    oraclePriceFeed,
                     positionManager,
                 } = testEnv;
 
@@ -925,7 +925,7 @@ describe('LP: Pool cases', () => {
                 expect(await positionManager.getExposedPositions(pairIndex)).to.be.lt(0);
 
                 const pairPrice = BigNumber.from(
-                    ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
                 );
 
                 const vaultBefore = await pool.getVault(pairIndex);
