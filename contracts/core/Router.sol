@@ -142,7 +142,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
     function createDecreaseOrders(
         TradingTypes.DecreasePositionRequest[] memory requests
     ) external returns (uint256[] memory orderIds) {
-
         orderIds = new uint256[](requests.length);
         for (uint256 i = 0; i < requests.length; i++) {
             TradingTypes.DecreasePositionRequest memory request = requests[i];
@@ -165,10 +164,21 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
     }
 
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
+        TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+            orderId,
+            tradeType
+        );
+        require(order.account == msg.sender, "onlyAccount");
+
         orderManager.cancelOrder(orderId, tradeType, true, "cancelIncreaseOrder");
     }
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
+        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            orderId,
+            tradeType
+        );
+        require(order.account == msg.sender, "onlyAccount");
         orderManager.cancelOrder(orderId, tradeType, false, "cancelDecreaseOrder");
     }
 
