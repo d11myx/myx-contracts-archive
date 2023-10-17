@@ -541,7 +541,7 @@ contract OrderManager is
         TradingTypes.TradeType tradeType,
         bool isIncrease,
         uint256 increaseSize
-    ) external override {
+    ) external override onlyExecutor {
         if (isIncrease) {
             if (tradeType == TradingTypes.TradeType.MARKET) {
                 increaseMarketOrders[orderId].executedSize += increaseSize;
