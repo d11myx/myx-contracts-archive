@@ -241,7 +241,16 @@ contract OrderManager is
         TradingTypes.TradeType tradeType,
         bool isIncrease,
         string memory reason
-    ) public nonReentrant onlyExecutorAndRouter whenNotPaused {
+    ) external onlyExecutorAndRouter {
+        _cancelOrder(orderId, tradeType, isIncrease, reason);
+    }
+
+    function _cancelOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        string memory reason
+    ) private {
         if (isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = getIncreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
@@ -271,7 +280,7 @@ contract OrderManager is
             uint256 lastIndex = positionOrders[key].length - 1;
             PositionOrder memory positionOrder = positionOrders[key][lastIndex];
 
-            this.cancelOrder(
+            _cancelOrder(
                 positionOrder.orderId,
                 positionOrder.tradeType,
                 positionOrder.isIncrease,
