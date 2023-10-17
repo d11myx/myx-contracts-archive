@@ -109,7 +109,7 @@ export const deployUpgradeableContract = async <ContractType extends Contract>(
 
     const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
     let contractDeployed = await hre.upgrades.deployProxy(contractFactory, args, opts);
-
+    await contractDeployed.deployed();
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
 
@@ -566,7 +566,6 @@ function getAmountOut(swapDelta: BigNumber, price: BigNumber, k: BigNumber) {
     return swapIndexAmount.mul(reserveB).div(swapIndexAmount.add(reserveA));
 }
 
-
 export function encodeParameters(types: string[], values: string[]) {
     const abi = new ethers.utils.AbiCoder();
     return abi.encode(types, values);
@@ -576,4 +575,3 @@ export function encodeParameterArray(types: string[], values: string[][]) {
     const abi = new ethers.utils.AbiCoder();
     return abi.encode(types, values);
 }
-
