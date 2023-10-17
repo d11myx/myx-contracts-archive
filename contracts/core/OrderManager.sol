@@ -285,7 +285,7 @@ contract OrderManager is
         address account,
         uint256 pairIndex,
         bool isLong
-    ) external onlyExecutorOrAccount(account) whenNotPaused {
+    ) external onlyExecutor whenNotPaused {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, account);
 
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
