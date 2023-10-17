@@ -95,16 +95,6 @@ contract OrderManager is
         _;
     }
 
-    modifier onlyExecutorOrAccount(address account) {
-        require(
-            msg.sender == address(addressExecutionLogic) ||
-                msg.sender == address(addressLiquidationLogic) ||
-                account == msg.sender,
-            "no access"
-        );
-        _;
-    }
-
     function setExecutionLogic(address _addressExecutionLogic) external onlyPoolAdmin {
         addressExecutionLogic = _addressExecutionLogic;
     }
@@ -343,7 +333,7 @@ contract OrderManager is
         }
         ordersIndex++;
 
-        this.addOrderToPosition(
+        _addOrderToPosition(
             PositionOrder(
                 order.account,
                 order.pairIndex,
@@ -414,7 +404,7 @@ contract OrderManager is
         ordersIndex++;
 
         // add decrease order
-        this.addOrderToPosition(
+        _addOrderToPosition(
             PositionOrder(
                 order.account,
                 order.pairIndex,
@@ -557,9 +547,9 @@ contract OrderManager is
         }
     }
 
-    function addOrderToPosition(
+    function _addOrderToPosition(
         PositionOrder memory order
-    ) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
+    ) private whenNotPaused {
         bytes32 positionKey = PositionKey.getPositionKey(
             order.account,
             order.pairIndex,
