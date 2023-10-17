@@ -80,8 +80,8 @@ contract AddressesProvider is Ownable, IAddressesProvider {
 
     function setIndexPriceOracle(address newIndexPriceOracle) external onlyTimelock {
         address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
-        priceOracle = newIndexPriceOracle;
-        emit AddressSet(PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
+        indexPriceOracle = newIndexPriceOracle;
+        emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
     }
 
     function setFundingRate(address newFundingRate) external onlyTimelock {

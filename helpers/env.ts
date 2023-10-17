@@ -9,4 +9,5 @@ export const COMMON_DEPLOY_PARAMS = {
     log: true,
     skipIfAlreadyDeployed: true,
     waitConfirmations: 1,
+    autoMine: true,
 };

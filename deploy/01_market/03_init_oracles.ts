@@ -2,9 +2,9 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     Duration,
-
     encodeParameterArray,
-
+    encodeParameters,
+    getAddressesProvider,
     getIndexPriceFeed,
     getMockToken,
     getOraclePriceFeed,
@@ -20,7 +20,6 @@ import {
 } from '../../helpers';
 import { ethers } from 'ethers';
 
-
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { poolAdmin } = await getNamedAccounts();
     const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
@@ -29,6 +28,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
+    const addressesProvider = await getAddressesProvider();
 
     const priceFeedPairs: string[] = [MARKET_NAME];
     priceFeedPairs.push(...Object.keys(pairConfigs));
@@ -67,6 +67,20 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
         eta.add(timestamp),
     );
+    await timelock.queueTransaction(
+        addressesProvider.address,
+        0,
+        'setPriceOracle(address)',
+        encodeParameters(['address'], [oraclePriceFeed.address]),
+        eta.add(timestamp),
+    );
+    await timelock.queueTransaction(
+        addressesProvider.address,
+        0,
+        'setIndexPriceOracle(address)',
+        encodeParameters(['address'], [indexPriceFeed.address]),
+        eta.add(timestamp),
+    );
     // await timelock.queueTransaction(
     //     oraclePriceFeed.address,
     //     fee,
@@ -92,6 +106,26 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             0,
             'setAssetPriceIds(address[],bytes32[])',
             encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+            eta.add(timestamp),
+        ),
+    );
+
+    await waitForTx(
+        await timelock.executeTransaction(
+            addressesProvider.address,
+            0,
+            'setPriceOracle(address)',
+            encodeParameters(['address'], [oraclePriceFeed.address]),
+            eta.add(timestamp),
+        ),
+    );
+
+    await waitForTx(
+        await timelock.executeTransaction(
+            addressesProvider.address,
+            0,
+            'setIndexPriceOracle(address)',
+            encodeParameters(['address'], [indexPriceFeed.address]),
             eta.add(timestamp),
         ),
     );
