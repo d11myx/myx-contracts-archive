@@ -54,8 +54,8 @@ contract OrderManager is
 
     IPool public pool;
     IPositionManager public positionManager;
-    address public addressExecutionLogic;
-    address public addressLiquidationLogic;
+    address public executionLogic;
+    address public liquidationLogic;
     address public router;
 
     function initialize(
@@ -78,7 +78,7 @@ contract OrderManager is
 
     modifier onlyExecutor() {
         require(
-            msg.sender == addressExecutionLogic || msg.sender == addressLiquidationLogic,
+            msg.sender == executionLogic || msg.sender == liquidationLogic,
             "onlyExecutor"
         );
         _;
@@ -87,8 +87,8 @@ contract OrderManager is
     modifier onlyCreateOrderAddress(address account) {
         require(
             msg.sender == router ||
-                msg.sender == addressExecutionLogic ||
-                msg.sender == addressLiquidationLogic ||
+                msg.sender == executionLogic ||
+                msg.sender == liquidationLogic ||
                 account == msg.sender,
             "no access"
         );
@@ -96,11 +96,11 @@ contract OrderManager is
     }
 
     function setExecutionLogic(address _addressExecutionLogic) external onlyPoolAdmin {
-        addressExecutionLogic = _addressExecutionLogic;
+        executionLogic = _addressExecutionLogic;
     }
 
     function setLiquidationLogic(address _addressLiquidationLogic) external onlyPoolAdmin {
-        addressLiquidationLogic = _addressLiquidationLogic;
+        liquidationLogic = _addressLiquidationLogic;
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
@@ -492,7 +492,7 @@ contract OrderManager is
         int256 collateral,
         PositionOrder memory positionOrder
     ) internal {
-        this.removeOrderFromPosition(positionOrder);
+        _removeOrderFromPosition(positionOrder);
 
         if (collateral > 0) {
             IPool.Pair memory pair = pool.getPair(pairIndex);
@@ -549,7 +549,7 @@ contract OrderManager is
 
     function _addOrderToPosition(
         PositionOrder memory order
-    ) private whenNotPaused {
+    ) private {
         bytes32 positionKey = PositionKey.getPositionKey(
             order.account,
             order.pairIndex,
@@ -559,9 +559,15 @@ contract OrderManager is
         positionOrders[positionKey].push(order);
     }
 
-    function removeOrderFromPosition(
+     function removeOrderFromPosition(
         PositionOrder memory order
-    ) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
+    ) public onlyExecutor whenNotPaused {
+        _removeOrderFromPosition(order);
+    }
+
+    function _removeOrderFromPosition(
+        PositionOrder memory order
+    ) private  {
         bytes32 positionKey = PositionKey.getPositionKey(
             order.account,
             order.pairIndex,
