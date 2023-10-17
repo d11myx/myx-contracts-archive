@@ -122,10 +122,13 @@ contract OrderManager is
     )
         public
         nonReentrant
-        onlyCreateOrderAddress(request.account)
         whenNotPaused
         returns (uint256 orderId)
     {
+         require(
+            msg.sender == executionLogic || msg.sender == liquidationLogic||msg.sender == router,
+            "onlyExecutor&Router"
+        );
         address account = request.account;
 
         // account is frozen
