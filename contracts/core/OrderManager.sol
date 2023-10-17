@@ -24,12 +24,7 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IOrderCallback.sol";
 
-contract OrderManager is
-    IOrderManager,
-    PausableUpgradeable,
-    Upgradeable,
-    ReentrancyGuardUpgradeable
-{
+contract OrderManager is IOrderManager, Upgradeable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -62,9 +57,6 @@ contract OrderManager is
         IPool _pool,
         IPositionManager _positionManager
     ) public initializer {
-        __ReentrancyGuard_init();
-        __Pausable_init();
-
         ADDRESS_PROVIDER = addressProvider;
         pool = _pool;
         positionManager = _positionManager;
@@ -88,14 +80,6 @@ contract OrderManager is
         _;
     }
 
-    function setPaused() external onlyAdmin {
-        _pause();
-    }
-
-    function setUnPaused() external onlyAdmin {
-        _unpause();
-    }
-
     function setExecutionLogic(address _addressExecutionLogic) external onlyPoolAdmin {
         executionLogic = _addressExecutionLogic;
     }
@@ -110,7 +94,7 @@ contract OrderManager is
 
     function createOrder(
         TradingTypes.CreateOrderRequest calldata request
-    ) public nonReentrant whenNotPaused returns (uint256 orderId) {
+    ) public returns (uint256 orderId) {
         require(
             msg.sender == executionLogic || msg.sender == liquidationLogic || msg.sender == router,
             "onlyExecutor&Router"
@@ -271,7 +255,7 @@ contract OrderManager is
         address account,
         uint256 pairIndex,
         bool isLong
-    ) external onlyExecutor whenNotPaused {
+    ) external onlyExecutor {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, account);
 
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
@@ -310,23 +294,23 @@ contract OrderManager is
         }
     }
 
-    function removeOrderFromPosition(PositionOrder memory order) public onlyExecutor whenNotPaused {
+    function removeOrderFromPosition(PositionOrder memory order) public onlyExecutor {
         _removeOrderFromPosition(order);
     }
 
-    function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
+    function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor {
         delete increaseMarketOrders[orderId];
     }
 
-    function removeIncreaseLimitOrders(uint256 orderId) external onlyExecutor whenNotPaused {
+    function removeIncreaseLimitOrders(uint256 orderId) external onlyExecutor {
         delete increaseLimitOrders[orderId];
     }
 
-    function removeDecreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
+    function removeDecreaseMarketOrders(uint256 orderId) external onlyExecutor {
         delete decreaseMarketOrders[orderId];
     }
 
-    function removeDecreaseLimitOrders(uint256 orderId) external onlyExecutor whenNotPaused {
+    function removeDecreaseLimitOrders(uint256 orderId) external onlyExecutor {
         delete decreaseLimitOrders[orderId];
     }
 
@@ -334,7 +318,7 @@ contract OrderManager is
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         bool needADL
-    ) external onlyExecutor whenNotPaused {
+    ) external onlyExecutor {
         TradingTypes.DecreasePositionOrder storage order;
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];
@@ -348,11 +332,11 @@ contract OrderManager is
     function saveOrderTpSl(
         uint256 orderId,
         TradingTypes.OrderWithTpSl memory tpSl
-    ) external onlyRouter whenNotPaused {
+    ) external onlyRouter {
         orderWithTpSl[orderId] = tpSl;
     }
 
-    function removeOrderTpSl(uint256 orderId) external onlyExecutor whenNotPaused {
+    function removeOrderTpSl(uint256 orderId) external onlyExecutor {
         delete orderWithTpSl[orderId];
     }
 
