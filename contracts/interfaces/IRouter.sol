@@ -14,6 +14,12 @@ interface IRouter {
         uint256 sl; // Stop loss quantity
     }
 
+    struct CancelOrderRequest {
+        uint256 orderId;
+        TradingTypes.TradeType tradeType;
+        bool isIncrease;
+    }
+
     event UpdateTradingRouter(address oldAddress, address newAddress);
 
     function createIncreaseOrder(
@@ -26,41 +32,47 @@ interface IRouter {
 
     function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256);
 
+    function createDecreaseOrders(
+        TradingTypes.DecreasePositionRequest[] memory requests
+    ) external returns (uint256[] memory orderIds);
+
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
 
-    function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
+    function cancelOrders(CancelOrderRequest[] memory requests) external;
+
+    function cancelPositionOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
 
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId);
 
-    function addLiquidity(
-        address indexToken,
-        address stableToken,
-        uint256 indexAmount,
-        uint256 stableAmount
-    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
+    // function addLiquidity(
+    //     address indexToken,
+    //     address stableToken,
+    //     uint256 indexAmount,
+    //     uint256 stableAmount
+    // ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
-    function addLiquidityForAccount(
-        address indexToken,
-        address stableToken,
-        address receiver,
-        uint256 indexAmount,
-        uint256 stableAmount
-    ) external;
+    // function addLiquidityForAccount(
+    //     address indexToken,
+    //     address stableToken,
+    //     address receiver,
+    //     uint256 indexAmount,
+    //     uint256 stableAmount
+    // ) external;
 
-    function removeLiquidity(
-        address indexToken,
-        address stableToken,
-        uint256 amount
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
+    // function removeLiquidity(
+    //     address indexToken,
+    //     address stableToken,
+    //     uint256 amount
+    // ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
-    function removeLiquidityForAccount(
-        address indexToken,
-        address stableToken,
-        address receiver,
-        uint256 amount
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
+    // function removeLiquidityForAccount(
+    //     address indexToken,
+    //     address stableToken,
+    //     address receiver,
+    //     uint256 amount
+    // ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 }

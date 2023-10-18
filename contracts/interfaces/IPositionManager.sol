@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import '../libraries/Position.sol';
+import "./IFeeCollector.sol";
 
 enum PositionStatus {
     Balance,
@@ -27,6 +28,10 @@ interface IPositionManager {
         int256 fundFeeTracker,
         int256 pnl
     );
+
+    event UpdatedExecutionLogic(address sender, address oldAddress, address newAddress);
+
+    event UpdatedLiquidationLogic(address sender, address oldAddress, address newAddress);
 
     event UpdateFundingRate(uint256 pairIndex, uint price, int256 fundingRate, uint256 lastFundingTime);
 
@@ -98,8 +103,8 @@ interface IPositionManager {
         uint256 _sizeAmount,
         bool _isLong,
         int256 _collateral,
-        uint256 vipRate,
-        uint256 referenceRate,
+        IFeeCollector.LevelDiscount memory discount,
+        uint256 referralRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
 
@@ -111,9 +116,10 @@ interface IPositionManager {
         uint256 _sizeAmount,
         bool _isLong,
         int256 _collateral,
-        uint256 vipRate,
-        uint256 referenceRate,
-        uint256 _price
+        IFeeCollector.LevelDiscount memory discount,
+        uint256 referralRate,
+        uint256 _price,
+        bool useRiskReserve
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);
 
     function adjustCollateral(uint256 pairIndex, address account, bool isLong, int256 collateral) external;

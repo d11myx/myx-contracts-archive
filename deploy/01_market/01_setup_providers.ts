@@ -1,6 +1,13 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { ADDRESSES_PROVIDER_ID, COMMON_DEPLOY_PARAMS, ROLE_MANAGER_ID, TIMELOCK_ID, waitForTx } from '../../helpers';
+import {
+    ADDRESSES_PROVIDER_ID,
+    COMMON_DEPLOY_PARAMS,
+    ROLE_MANAGER_ID,
+    TIMELOCK_ID,
+    getWETH,
+    waitForTx,
+} from '../../helpers';
 import { AddressesProvider, RoleManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
@@ -21,11 +28,12 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         timelockArtifact.address,
     )) as AddressesProvider;
 
+    const weth = await getWETH();
     // AddressesProvider
     const addressesProviderArtifact = await deploy(ADDRESSES_PROVIDER_ID, {
         from: deployer,
         contract: 'AddressesProvider',
-        args: [timelock.address],
+        args: [weth.address, timelock.address],
         ...COMMON_DEPLOY_PARAMS,
     });
 

@@ -44,8 +44,10 @@ describe('Position', () => {
                     positionManager,
                     orderManager,
                     executionLogic,
+                    liquidationLogic,
                     keeper,
                     pool,
+                    riskReserve,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', 18);
                 const size = ethers.utils.parseUnits('30', 18);
@@ -121,11 +123,11 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executionLogic
-                    .connect(keeper.signer)
-                    .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
+                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
 
                 balance = await usdt.balanceOf(trader.address);
+                const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
+
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
                 const entrustOrderAfter = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
 
@@ -142,9 +144,8 @@ describe('Position', () => {
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.add(tradingFee);
 
-                expect(balance).to.be.eq(
-                    shortPositionBefore.collateral.sub(totalSettlementAmount).add(entrustOrderBefore.collateral),
-                );
+                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(reserveBalance).to.be.eq(shortPositionBefore.collateral.sub(totalSettlementAmount));
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
                 expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
             });
@@ -181,8 +182,10 @@ describe('Position', () => {
                     positionManager,
                     orderManager,
                     executionLogic,
+                    liquidationLogic,
                     keeper,
                     pool,
+                    riskReserve,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', 18);
                 const size = ethers.utils.parseUnits('30', 18);
@@ -211,6 +214,7 @@ describe('Position', () => {
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
+                const reserveBalanceBef = await riskReserve.getReservedAmount(usdt.address);
 
                 expect(balance).to.be.eq('0');
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
@@ -227,11 +231,10 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executionLogic
-                    .connect(keeper.signer)
-                    .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
+                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
 
                 balance = await usdt.balanceOf(trader.address);
+                const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
 
                 // calculate totalSettlementAmount
@@ -247,7 +250,10 @@ describe('Position', () => {
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.add(tradingFee);
 
-                expect(balance).to.be.eq(shortPositionBefore.collateral.sub(totalSettlementAmount));
+                expect(balance).to.be.eq(0);
+                expect(reserveBalanceAft).to.be.eq(
+                    reserveBalanceBef.add(shortPositionBefore.collateral.sub(totalSettlementAmount)),
+                );
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
             });
         });
@@ -283,6 +289,7 @@ describe('Position', () => {
                     positionManager,
                     orderManager,
                     executionLogic,
+                    liquidationLogic,
                     keeper,
                     pool,
                 } = testEnv;
@@ -356,9 +363,7 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '20000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-                await executionLogic
-                    .connect(keeper.signer)
-                    .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
+                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -414,8 +419,10 @@ describe('Position', () => {
                     positionManager,
                     orderManager,
                     executionLogic,
+                    liquidationLogic,
                     keeper,
                     pool,
+                    riskReserve,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', 18);
                 const size = ethers.utils.parseUnits('30', 18);
@@ -475,6 +482,7 @@ describe('Position', () => {
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
+                const reserveBalanceBef = await riskReserve.getReservedAmount(usdt.address);
 
                 expect(balance).to.be.eq('0');
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
@@ -491,11 +499,10 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '35700');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executionLogic
-                    .connect(keeper.signer)
-                    .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
+                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
 
                 balance = await usdt.balanceOf(trader.address);
+                const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
                 const entrustOrderAfter = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
 
@@ -524,8 +531,9 @@ describe('Position', () => {
                     .div(exposureAsset);
 
                 expect(riskRate.div('1000000')).to.be.eq('105');
-                expect(balance).to.be.eq(
-                    shortPositionBefore.collateral.sub(totalSettlementAmount).add(entrustOrderBefore.collateral),
+                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(reserveBalanceAft).to.be.eq(
+                    reserveBalanceBef.add(shortPositionBefore.collateral.sub(totalSettlementAmount)),
                 );
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
                 expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
@@ -563,8 +571,10 @@ describe('Position', () => {
                     positionManager,
                     orderManager,
                     executionLogic,
+                    liquidationLogic,
                     keeper,
                     pool,
+                    riskReserve,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', 18);
                 const size = ethers.utils.parseUnits('30', 18);
@@ -624,6 +634,7 @@ describe('Position', () => {
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
+                const reserveBalanceBef = await riskReserve.getReservedAmount(usdt.address);
 
                 expect(balance).to.be.eq('0');
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
@@ -640,11 +651,10 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '37710');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executionLogic
-                    .connect(keeper.signer)
-                    .liquidatePositions([{ positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
+                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
 
                 balance = await usdt.balanceOf(trader.address);
+                const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
                 const entrustOrderAfter = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
 
@@ -673,8 +683,9 @@ describe('Position', () => {
                     .div(exposureAsset);
 
                 expect(riskRate.div('1000000')).to.be.eq('200');
-                expect(balance).to.be.eq(
-                    shortPositionBefore.collateral.sub(totalSettlementAmount).add(entrustOrderBefore.collateral),
+                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(reserveBalanceAft).to.be.eq(
+                    reserveBalanceBef.add(shortPositionBefore.collateral.sub(totalSettlementAmount)),
                 );
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
                 expect(entrustOrderAfter.sizeAmount).to.be.eq('0');

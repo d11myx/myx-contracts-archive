@@ -11,7 +11,6 @@ import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
 import '../token/interfaces/IBaseToken.sol';
 import './interfaces/IRewardDistributor.sol';
 import '../interfaces/IPositionManager.sol';
-import '../interfaces/IFeeManager.sol';
 
 // distribute reward myx for staking
 contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownable {
@@ -65,7 +64,7 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
     function updateRoot(bytes32 _merkleRoot, uint256 transferInAmount, uint256 _amount) external override onlyHandler {
         require(!merkleRootUsed[_merkleRoot], 'RewardDistributor: root already used');
         require(totalReward + transferInAmount >= _amount, 'RewardDistributor: reward not enough');
-        IERC20(rewardToken).transferFrom(msg.sender, address(this), transferInAmount);
+        IERC20(rewardToken).safeTransferFrom(msg.sender, address(this), transferInAmount);
 
         round++;
         merkleRoots[round] = _merkleRoot;

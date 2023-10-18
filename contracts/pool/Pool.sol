@@ -13,12 +13,13 @@ import "../interfaces/IUniSwapV3Router.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
-import "../interfaces/IPriceOracle.sol";
+import "../interfaces/IPriceFeed.sol";
 import "../token/interfaces/IBaseToken.sol";
+import "../interfaces/IWETH.sol";
 
 import "../libraries/AmountMath.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../libraries/Roleable.sol";
+import "../libraries/Upgradeable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
@@ -27,18 +28,21 @@ import "../interfaces/IPoolTokenFactory.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../helpers/ValidationHelper.sol";
 
-contract Pool is IPool, Roleable {
+contract Pool is IPool, Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
     using Math for uint256;
     using SafeMath for uint256;
+
     uint256 private constant MAX_FEE = 1e6;
 
-    IPoolTokenFactory public immutable poolTokenFactory;
+    IPoolTokenFactory public poolTokenFactory;
     address public router;
-    mapping(uint256 => mapping(address => bytes)) tokenPath;
+    address public riskReserve;
+    address public feeCollector;
+    mapping(uint256 => mapping(address => bytes)) public tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -55,19 +59,27 @@ contract Pool is IPool, Roleable {
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
 
-    constructor(
+    function initialize(
         IAddressesProvider addressProvider,
         IPoolTokenFactory _poolTokenFactory
-    ) Roleable(addressProvider) {
+    ) public initializer {
+        ADDRESS_PROVIDER = addressProvider;
         poolTokenFactory = _poolTokenFactory;
     }
 
-    modifier onlyPositionManagerOrOrderManager() {
+    modifier transferAllowed() {
         require(
-            positionManagers.contains(msg.sender) || orderManagers.contains(msg.sender),
-            "onlyPositionManagerOrOrderManager"
+            positionManagers.contains(msg.sender) ||
+                orderManagers.contains(msg.sender) ||
+                riskReserve == msg.sender ||
+                feeCollector == msg.sender,
+            "permission denied"
         );
         _;
+    }
+
+    receive() external payable {
+        require(msg.sender == ADDRESS_PROVIDER.WETH(), "Not WETH");
     }
 
     modifier onlyPositionManager() {
@@ -75,17 +87,42 @@ contract Pool is IPool, Roleable {
         _;
     }
 
-    modifier onlyTreasury() {
-        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender), "onlyTreasury");
+    modifier onlyPositionManagerOrFeeCollector() {
+        require(
+            positionManagers.contains(msg.sender) || msg.sender == feeCollector,
+            "onlyPositionManagerOrFeeCollector"
+        );
         _;
+    }
+
+    modifier onlyTreasury() {
+        require(
+            IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender),
+            "onlyTreasury"
+        );
+        _;
+    }
+
+    function _unwrapWETH(uint256 amount, address payable to) private {
+        IWETH(ADDRESS_PROVIDER.WETH()).withdraw(amount);
+        (bool success, ) = to.call{value: amount}(new bytes(0));
+        require(success, "err-transfer-eth");
+    }
+
+    function setSwapRouter(address _router) external onlyPoolAdmin {
+        router = _router;
+    }
+
+    function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
+        riskReserve = _riskReserve;
+    }
+
+    function setFeeCollector(address _feeCollector) external onlyPoolAdmin {
+        feeCollector = _feeCollector;
     }
 
     function addPositionManager(address _positionManager) external onlyPoolAdmin {
         positionManagers.add(_positionManager);
-    }
-
-    function setRouter(address _router) external onlyPoolAdmin {
-        router = _router;
     }
 
     function removePositionManager(address _positionManager) external onlyPoolAdmin {
@@ -106,6 +143,14 @@ contract Pool is IPool, Roleable {
 
     function removeStableToken(address _token) external onlyPoolAdmin {
         delete isStableToken[_token];
+    }
+
+    function updateTokenPath(
+        uint256 pairIndex,
+        address tokenIn,
+        bytes memory path
+    ) external onlyPoolAdmin {
+        tokenPath[pairIndex][tokenIn] = path;
     }
 
     // Manage pairs
@@ -181,20 +226,6 @@ contract Pool is IPool, Roleable {
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function updatePairMiner(
-        uint256 _pairIndex,
-        address _account,
-        bool _enable
-    ) external onlyPoolAdmin {
-        Pair memory pair = pairs[_pairIndex];
-        require(
-            pair.indexToken != address(0) && pair.stableToken != address(0),
-            "pair not existed"
-        );
-
-        IBaseToken(pair.pairToken).setMiner(_account, _enable);
-    }
-
     function increaseTotalAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
@@ -254,7 +285,10 @@ contract Pool is IPool, Roleable {
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
         require(vault.indexTotalAmount >= vault.indexReservedAmount, "insufficient index amount");
-        require(vault.stableTotalAmount >= vault.stableReservedAmount, "insufficient stable amount");
+        require(
+            vault.stableTotalAmount >= vault.stableReservedAmount,
+            "insufficient stable amount"
+        );
         emit UpdateReserveAmount(
             _pairIndex,
             int256(_indexAmount),
@@ -289,14 +323,17 @@ contract Pool is IPool, Roleable {
         emit UpdateAveragePrice(_pairIndex, _averagePrice);
     }
 
-    function setLPStableProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
+    function setLPStableProfit(
+        uint256 _pairIndex,
+        int256 _profit
+    ) external onlyPositionManagerOrFeeCollector {
         Vault storage vault = vaults[_pairIndex];
         Pair memory pair = pairs[_pairIndex];
         if (_profit > 0) {
             vault.stableTotalAmount += _profit.abs();
         } else {
             if (vault.stableTotalAmount < _profit.abs()) {
-                swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -311,7 +348,7 @@ contract Pool is IPool, Roleable {
             vault.indexTotalAmount += _profit.abs();
         } else {
             if (vault.indexTotalAmount < _profit.abs()) {
-                swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -333,7 +370,7 @@ contract Pool is IPool, Roleable {
 
     function addLiquidityForAccount(
         address _funder,
-        address recipient,
+        address  recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
@@ -345,9 +382,10 @@ contract Pool is IPool, Roleable {
     }
 
     function removeLiquidity(
-        address _receiver,
+        address payable _receiver,
         uint256 _pairIndex,
         uint256 _amount,
+        bool useETH,
         bytes calldata data
     )
         external
@@ -359,6 +397,7 @@ contract Pool is IPool, Roleable {
             _receiver,
             _pairIndex,
             _amount,
+            useETH,
             data
         );
 
@@ -398,7 +437,7 @@ contract Pool is IPool, Roleable {
         }
     }
 
-    function swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) public {
+    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) private {
         Pair memory pair = pairs[_pairIndex];
         uint256 price = getPrice(pair.indexToken);
         bytes memory path = tokenPath[_pairIndex][tokenIn];
@@ -552,13 +591,17 @@ contract Pool is IPool, Roleable {
             if (mintDelta > availableDiscountAmount) {
                 mintAmount += AmountMath.getIndexAmount(
                     availableDiscountAmount,
-                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(
+                        PrecisionUtils.percentage() - availableDiscountRate
+                    )
                 );
                 mintDelta -= availableDiscountAmount;
             } else {
                 mintAmount += AmountMath.getIndexAmount(
                     mintDelta,
-                    lpFairPrice(_pairIndex).mulPercentage(PrecisionUtils.percentage() - availableDiscountRate)
+                    lpFairPrice(_pairIndex).mulPercentage(
+                        PrecisionUtils.percentage() - availableDiscountRate
+                    )
                 );
                 mintDelta -= mintDelta;
             }
@@ -656,9 +699,10 @@ contract Pool is IPool, Roleable {
     }
 
     function _removeLiquidity(
-        address _receiver,
+        address payable _receiver,
         uint256 _pairIndex,
         uint256 _amount,
+        bool useETH,
         bytes calldata data
     )
         private
@@ -674,10 +718,13 @@ contract Pool is IPool, Roleable {
 
         uint256 feeIndexTokenAmount;
         uint256 feeStableTokenAmount;
-        (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount) = getReceivedAmount(
-            _pairIndex,
-            _amount
-        );
+        (
+            receiveIndexTokenAmount,
+            receiveStableTokenAmount,
+            feeAmount,
+            feeIndexTokenAmount,
+            feeStableTokenAmount
+        ) = getReceivedAmount(_pairIndex, _amount);
 
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
@@ -689,25 +736,17 @@ contract Pool is IPool, Roleable {
         uint256 totalReceive = receiveIndexTokenAmount.mulPrice(price) + receiveStableTokenAmount;
         require(totalReceive <= totalAvailable, "insufficient available balance");
 
-        uint256 indexTokenAdd;
-        uint256 stableTokenAdd;
-        if (availableIndexToken < receiveIndexTokenAmount) {
-            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
-            receiveIndexTokenAmount = availableIndexToken;
-        }
-
-        if (availableStableToken < receiveStableTokenAmount) {
-            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
-            receiveStableTokenAmount = availableStableToken;
-        }
-        receiveIndexTokenAmount += indexTokenAdd;
-        receiveStableTokenAmount += stableTokenAdd;
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
 
-        IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+        if (useETH && pair.indexToken == ADDRESS_PROVIDER.WETH()) {
+            _unwrapWETH(receiveIndexTokenAmount, _receiver);
+        } else {
+            IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+        }
+
         IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
 
         feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
@@ -727,7 +766,7 @@ contract Pool is IPool, Roleable {
     }
 
     function claimFee(address token, uint256 amount) external onlyTreasury {
-        require(feeTokenAmounts[token] >= amount, 'exceeded');
+        require(feeTokenAmounts[token] >= amount, "exceeded");
 
         feeTokenAmounts[token] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
@@ -839,10 +878,13 @@ contract Pool is IPool, Roleable {
 
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
-
         uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
-//        feeAmount = receiveDelta.mulPercentage(pair.removeLpFeeP);
-//        receiveDelta = receiveDelta - feeAmount;
+
+        require(
+            indexReserveDelta + stableReserveDelta >= receiveDelta,
+            "insufficient available balance"
+        );
+
         // expect delta
         uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
@@ -879,14 +921,33 @@ contract Pool is IPool, Roleable {
         receiveIndexTokenAmount -= feeIndexTokenAmount;
         receiveStableTokenAmount -= feeStableTokenAmount;
 
-        return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount, feeIndexTokenAmount, feeStableTokenAmount);
+        uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
+        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+
+        uint256 indexTokenAdd;
+        uint256 stableTokenAdd;
+        if (availableIndexToken < receiveIndexTokenAmount) {
+            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
+            receiveIndexTokenAmount = availableIndexToken;
+        }
+
+        if (availableStableToken < receiveStableTokenAmount) {
+            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
+            receiveStableTokenAmount = availableStableToken;
+        }
+        receiveIndexTokenAmount += indexTokenAdd;
+        receiveStableTokenAmount += stableTokenAdd;
+
+        return (
+            receiveIndexTokenAmount,
+            receiveStableTokenAmount,
+            feeAmount,
+            feeIndexTokenAmount,
+            feeStableTokenAmount
+        );
     }
 
-    function transferTokenTo(
-        address token,
-        address to,
-        uint256 amount
-    ) external onlyPositionManagerOrOrderManager {
+    function transferTokenTo(address token, address to, uint256 amount) external transferAllowed {
         require(IERC20(token).balanceOf(address(this)) > amount, "bal");
         IERC20(token).safeTransfer(to, amount);
     }
@@ -896,13 +957,13 @@ contract Pool is IPool, Roleable {
         address token,
         address to,
         uint256 amount
-    ) external onlyPositionManagerOrOrderManager {
+    ) external transferAllowed {
         if (amount == 0) {
             return;
         }
         uint256 bal = IERC20(token).balanceOf(address(this));
         if (bal < amount) {
-            swapInUni(pairIndex, token, amount);
+            _swapInUni(pairIndex, token, amount);
         }
         IERC20(token).safeTransfer(to, amount);
     }
@@ -919,7 +980,7 @@ contract Pool is IPool, Roleable {
     }
 
     function getPrice(address _token) public view returns (uint256) {
-        return IPriceOracle(ADDRESS_PROVIDER.priceOracle()).getOraclePrice(_token);
+        return IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {
