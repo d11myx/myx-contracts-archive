@@ -298,7 +298,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         );
 
         if (collateral > 0) {
-            IERC20(pair.stableToken).transferFrom(account, address(pool), uint256(collateral));
+            IERC20(pair.stableToken).safeTransferFrom(account, address(pool), uint256(collateral));
         }
 
         uint256 collateralBefore = position.collateral;
