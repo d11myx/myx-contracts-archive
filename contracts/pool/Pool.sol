@@ -15,6 +15,7 @@ import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../token/interfaces/IBaseToken.sol";
+import "../interfaces/IWETH.sol";
 
 import "../libraries/AmountMath.sol";
 import "../libraries/PrecisionUtils.sol";
@@ -77,6 +78,10 @@ contract Pool is IPool, Upgradeable {
         _;
     }
 
+    receive() external payable {
+        require(msg.sender == ADDRESS_PROVIDER.WETH(), "Not WETH");
+    }
+
     modifier onlyPositionManager() {
         require(positionManagers.contains(msg.sender), "onlyPositionManager");
         _;
@@ -98,7 +103,13 @@ contract Pool is IPool, Upgradeable {
         _;
     }
 
-    function setRouter(address _router) external onlyPoolAdmin {
+    function _unwrapWETH(uint256 amount, address payable to) private {
+        IWETH(ADDRESS_PROVIDER.WETH()).withdraw(amount);
+        (bool success, ) = to.call{value: amount}(new bytes(0));
+        require(success, "err-transfer-eth");
+    }
+
+    function setSwapRouter(address _router) external onlyPoolAdmin {
         router = _router;
     }
 
@@ -322,7 +333,7 @@ contract Pool is IPool, Upgradeable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             if (vault.stableTotalAmount < _profit.abs()) {
-                swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -337,7 +348,7 @@ contract Pool is IPool, Upgradeable {
             vault.indexTotalAmount += _profit.abs();
         } else {
             if (vault.indexTotalAmount < _profit.abs()) {
-                swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -359,7 +370,7 @@ contract Pool is IPool, Upgradeable {
 
     function addLiquidityForAccount(
         address _funder,
-        address recipient,
+        address  recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
@@ -371,9 +382,10 @@ contract Pool is IPool, Upgradeable {
     }
 
     function removeLiquidity(
-        address _receiver,
+        address payable _receiver,
         uint256 _pairIndex,
         uint256 _amount,
+        bool useETH,
         bytes calldata data
     )
         external
@@ -385,6 +397,7 @@ contract Pool is IPool, Upgradeable {
             _receiver,
             _pairIndex,
             _amount,
+            useETH,
             data
         );
 
@@ -424,7 +437,7 @@ contract Pool is IPool, Upgradeable {
         }
     }
 
-    function swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) public {
+    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) private {
         Pair memory pair = pairs[_pairIndex];
         uint256 price = getPrice(pair.indexToken);
         bytes memory path = tokenPath[_pairIndex][tokenIn];
@@ -686,9 +699,10 @@ contract Pool is IPool, Upgradeable {
     }
 
     function _removeLiquidity(
-        address _receiver,
+        address payable _receiver,
         uint256 _pairIndex,
         uint256 _amount,
+        bool useETH,
         bytes calldata data
     )
         private
@@ -727,7 +741,12 @@ contract Pool is IPool, Upgradeable {
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
 
-        IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+        if (useETH && pair.indexToken == ADDRESS_PROVIDER.WETH()) {
+            _unwrapWETH(receiveIndexTokenAmount, _receiver);
+        } else {
+            IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+        }
+
         IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
 
         feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
@@ -944,7 +963,7 @@ contract Pool is IPool, Upgradeable {
         }
         uint256 bal = IERC20(token).balanceOf(address(this));
         if (bal < amount) {
-            swapInUni(pairIndex, token, amount);
+            _swapInUni(pairIndex, token, amount);
         }
         IERC20(token).safeTransfer(to, amount);
     }

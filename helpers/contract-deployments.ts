@@ -224,7 +224,7 @@ export async function deployTrading(
     log(`deployed OrderManager at ${orderManager.address}`);
 
     let router = (await deployContract('Router', [
-        weth.address,
+
         addressProvider.address,
         orderManager.address,
         pool.address,
