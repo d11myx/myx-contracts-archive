@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { getWalletBalances } from '../../helpers/utilities/tx';
+import { getWalletBalances } from '../../helpers';
 import { getPool } from '../../helpers';
 
 task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, ...hre }) => {
