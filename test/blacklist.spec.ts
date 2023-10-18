@@ -92,13 +92,13 @@ describe('Blacklist cases', () => {
         let pair = await pool.getPair(0);
 
         await expect(
-            router.connect(blackUser.signer).removeLiquidity(pair.indexToken, pair.stableToken, 0),
+            router.connect(blackUser.signer).removeLiquidity(pair.indexToken, pair.stableToken, 0, false),
         ).to.be.revertedWith('blacklist account');
 
         await expect(
             router
                 .connect(user.signer)
-                .removeLiquidityForAccount(pair.indexToken, pair.stableToken, blackUser.address, 0),
+                .removeLiquidityForAccount(pair.indexToken, pair.stableToken, blackUser.address, 0, false),
         ).to.be.revertedWith('blacklist account');
     });
 
