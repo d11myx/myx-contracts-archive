@@ -64,7 +64,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             let orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             let position = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -82,7 +82,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increase2PositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
             await expect(
                 executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
@@ -102,7 +102,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader2.signer).createIncreaseOrderWithoutTpSl(increase3PositionRequest);
+            await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             position = await positionManager.getPosition(trader2.address, pairIndex, true);
 
@@ -120,7 +120,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader2.signer).createIncreaseOrderWithoutTpSl(increase4PositionRequest);
+            await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
             await expect(
                 executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
@@ -157,7 +157,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             let orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             let position = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -175,7 +175,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increase2PositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
             await expect(
                 executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
@@ -195,7 +195,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader2.signer).createIncreaseOrderWithoutTpSl(increase3PositionRequest);
+            await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             position = await positionManager.getPosition(trader2.address, pairIndex, true);
 
@@ -213,7 +213,7 @@ describe('Trade: slippage', () => {
                 maxSlippage,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader2.signer).createIncreaseOrderWithoutTpSl(increase4PositionRequest);
+            await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
             await expect(
                 executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),

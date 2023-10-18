@@ -54,7 +54,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
     }
 
-    function createIncreaseOrder(
+    function createIncreaseOrderWithTpSl(
         TradingTypes.IncreasePositionWithTpSlRequest memory request
     ) external returns (uint256 orderId) {
         request.account = msg.sender;
@@ -94,7 +94,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         return orderId;
     }
 
-    function createIncreaseOrderWithoutTpSl(
+    function createIncreaseOrder(
         TradingTypes.IncreasePositionRequest memory request
     ) external returns (uint256 orderId) {
         request.account = msg.sender;

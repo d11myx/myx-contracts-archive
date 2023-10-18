@@ -68,7 +68,7 @@
 //         const orderId = await orderManager.ordersIndex();
 //         console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-//         await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+//         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 //         await executor.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
 //         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);

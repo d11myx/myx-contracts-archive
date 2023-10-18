@@ -65,7 +65,7 @@ describe('Router: increase position ar', () => {
             const orderId = await orderManager.ordersIndex();
             console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-            // await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            // await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await expect(
                 orderManager
                     .connect(keeper.signer)

@@ -75,7 +75,7 @@ describe('Trade: TP & SL', () => {
         };
 
         let orderId = await orderManager.ordersIndex();
-        await router.connect(trader.signer).createIncreaseOrder(request);
+        await router.connect(trader.signer).createIncreaseOrderWithTpSl(request);
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const positionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
@@ -100,7 +100,7 @@ describe('Trade: TP & SL', () => {
         };
 
         orderId = await orderManager.ordersIndex();
-        await router.connect(trader.signer).createIncreaseOrder(request1);
+        await router.connect(trader.signer).createIncreaseOrderWithTpSl(request1);
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         positionOrders = await orderManager.getPositionOrders(positionKey);
@@ -136,7 +136,7 @@ describe('Trade: TP & SL', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(request);
+            await router.connect(trader.signer).createIncreaseOrder(request);
 
             const orderTpSlRequest: IRouter.CreateOrderTpSlRequestStruct = {
                 orderId: orderId,
