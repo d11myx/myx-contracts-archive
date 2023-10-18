@@ -22,7 +22,7 @@ describe('Pool: Edge cases', () => {
         const tradingFeeConfig = btcPair.tradingFeeConfig;
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
-        const countBefore = await pool.pairsCount();
+        const countBefore = await pool.pairsIndex();
         await pool.addStableToken(pair.stableToken);
         await waitForTx(await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken));
 
@@ -34,7 +34,7 @@ describe('Pool: Edge cases', () => {
             await fundingRate.connect(poolAdmin.signer).updateFundingFeeConfig(pairIndex, fundingFeeConfig),
         );
 
-        const countAfter = await pool.pairsCount();
+        const countAfter = await pool.pairsIndex();
         expect(countAfter).to.be.eq(countBefore.add(1));
     });
 
