@@ -31,8 +31,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         pool = _pool;
     }
 
-   
-
     modifier onlyPoolAdmin() {
         require(
             IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender),
