@@ -12,7 +12,7 @@ import "../interfaces/AggregatorV3Interface.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.19;
 
 contract ChainlinkPriceFeed is IPriceFeed, Roleable {
     using SafeMath for uint256;
