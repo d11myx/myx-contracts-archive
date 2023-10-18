@@ -5,7 +5,7 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 
 describe('Pool: Liquidity cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
 
     it('user added liquidity, should be received lp', async () => {
         const {

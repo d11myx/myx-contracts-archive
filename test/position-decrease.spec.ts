@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('PositionManager: decrease position', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {

@@ -8,7 +8,7 @@ import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Trade: trading fee', () => {
     describe('user paid trading fee, platform should be received trading fee and it will be distributed', () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
         let testEnv: TestEnv;
 
         before('add liquidity', async () => {

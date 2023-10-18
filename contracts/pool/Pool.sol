@@ -50,7 +50,7 @@ contract Pool is IPool, Upgradeable {
     mapping(address => mapping(address => uint256)) public override getPairIndex;
     // mapping(address => mapping(address => address)) public getPairToken;
 
-    uint256 public pairsIndex = 1;
+    uint256 public pairsIndex;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
     EnumerableSet.AddressSet private positionManagers;
@@ -65,6 +65,7 @@ contract Pool is IPool, Upgradeable {
     ) public initializer {
         ADDRESS_PROVIDER = addressProvider;
         poolTokenFactory = _poolTokenFactory;
+        pairsIndex = 1;
     }
 
     modifier transferAllowed() {

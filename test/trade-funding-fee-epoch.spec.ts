@@ -16,7 +16,7 @@ import { expect } from './shared/expect';
 
 describe('Trade: funding fee epoch', () => {
     describe('rate simulation (can only add position)', async () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
         let testEnv: TestEnv;
 
         before('add liquidity', async () => {
@@ -818,7 +818,7 @@ describe('Trade: funding fee epoch', () => {
     });
 
     describe('calculate whether different prices will achieve balance', async () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
         let testEnv: TestEnv;
 
         before('add liquidity', async () => {

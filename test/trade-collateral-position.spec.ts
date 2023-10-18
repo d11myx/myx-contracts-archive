@@ -6,7 +6,7 @@ import {decreasePosition, increasePosition, mintAndApprove, updateBTCPrice} from
 import {TradingTypes} from '../types/contracts/core/Router';
 
 describe('Router: Edge cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
