@@ -6,7 +6,7 @@ import {expect} from './shared/expect';
 import {increasePosition, mintAndApprove, updateBTCPrice} from './helpers/misc';
 
 describe('Router: Edge cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {

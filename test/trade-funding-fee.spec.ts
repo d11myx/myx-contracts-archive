@@ -15,7 +15,7 @@ import { BigNumber } from 'ethers';
 import { it } from 'mocha';
 
 describe('Trade: funding fee', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {

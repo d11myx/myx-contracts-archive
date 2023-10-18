@@ -48,9 +48,9 @@ contract Pool is IPool, Upgradeable {
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
 
     mapping(address => mapping(address => uint256)) public override getPairIndex;
-    mapping(address => mapping(address => address)) public getPairToken;
+    // mapping(address => mapping(address => address)) public getPairToken;
 
-    uint256 public pairsCount;
+    uint256 public pairsIndex;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
     EnumerableSet.AddressSet private positionManagers;
@@ -65,6 +65,7 @@ contract Pool is IPool, Upgradeable {
     ) public initializer {
         ADDRESS_PROVIDER = addressProvider;
         poolTokenFactory = _poolTokenFactory;
+        pairsIndex = 1;
     }
 
     modifier transferAllowed() {
@@ -157,21 +158,22 @@ contract Pool is IPool, Upgradeable {
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != address(0) && _stableToken != address(0), "zero address");
         require(!isStableToken[_indexToken], "!stable token");
-        require(getPairToken[_indexToken][_stableToken] == address(0), "exists");
+        require(getPairIndex[_indexToken][_stableToken] == 0, "exists");
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
-        getPairToken[_indexToken][_stableToken] = pairToken;
-        getPairIndex[_indexToken][_stableToken] = pairsCount;
+        // getPairToken[_indexToken][_stableToken] = pairToken;
+        getPairIndex[_indexToken][_stableToken] = pairsIndex;
+        getPairIndex[_stableToken][_indexToken] = pairsIndex;
 
-        Pair storage pair = pairs[pairsCount];
-        pair.pairIndex = pairsCount;
+        Pair storage pair = pairs[pairsIndex];
+        pair.pairIndex = pairsIndex;
         pair.indexToken = _indexToken;
 
         pair.stableToken = _stableToken;
         pair.pairToken = pairToken;
 
-        emit PairAdded(_indexToken, _stableToken, pairToken, pairsCount++);
+        emit PairAdded(_indexToken, _stableToken, pairToken, pairsIndex++);
     }
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
@@ -199,6 +201,11 @@ contract Pool is IPool, Upgradeable {
         uint256 _pairIndex,
         TradingConfig calldata _tradingConfig
     ) external onlyPoolAdmin {
+        Pair storage pair = pairs[_pairIndex];
+        require(
+            pair.indexToken != address(0) && pair.stableToken != address(0),
+            "pair not existed"
+        );
         require(
             _tradingConfig.maintainMarginRate <= PrecisionUtils.percentage() &&
                 _tradingConfig.priceSlipP <= PrecisionUtils.percentage() &&
@@ -212,6 +219,11 @@ contract Pool is IPool, Upgradeable {
         uint256 _pairIndex,
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
+        Pair storage pair = pairs[_pairIndex];
+        require(
+            pair.indexToken != address(0) && pair.stableToken != address(0),
+            "pair not existed"
+        );
         require(
             _tradingFeeConfig.takerFeeP <= MAX_FEE && _tradingFeeConfig.makerFeeP <= MAX_FEE,
             "trading fee exceed 1%"
@@ -370,7 +382,7 @@ contract Pool is IPool, Upgradeable {
 
     function addLiquidityForAccount(
         address _funder,
-        address  recipient,
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,

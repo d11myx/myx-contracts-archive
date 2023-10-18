@@ -6,7 +6,7 @@ import { BigNumber, constants } from 'ethers';
 import { getMockToken, TradeType } from '../helpers';
 
 describe('LP: Pool cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
@@ -46,7 +46,7 @@ describe('LP: Pool cases', () => {
             expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
             await router
                 .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 
             const lpToken = await getMockToken('', pair.pairToken);
             const totoalApply = await lpToken.totalSupply();

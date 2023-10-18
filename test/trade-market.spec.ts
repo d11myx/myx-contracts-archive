@@ -6,7 +6,7 @@ import { BigNumber } from 'ethers';
 import { deployMockCallback, ROUTER_ID, TradeType } from '../helpers';
 
 describe('Trade: Market order cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
