@@ -1,8 +1,8 @@
 import { TestEnv } from '../../test/helpers/make-suite';
 import { BigNumber, ethers } from 'ethers';
 
-const PRICE_PRECISION = 1e30;
-const PERCENTAGE = 1e8;
+const PRICE_PRECISION = '1000000000000000000000000000000';
+const PERCENTAGE = '100000000';
 
 /**
  * calculation epoch funding rate

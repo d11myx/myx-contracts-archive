@@ -59,7 +59,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     if (!uniswapRouterAddress || uniswapRouterAddress == ZERO_ADDRESS) {
         console.log(`[warring] Uniswap router address not provided`);
     } else {
-        await waitForTx(await pool.connect(poolAdminSigner).setRouter(uniswapRouterAddress));
+        await waitForTx(await pool.connect(poolAdminSigner).setSwapRouter(uniswapRouterAddress));
     }
 
     // uniswap token path

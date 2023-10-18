@@ -10,6 +10,7 @@ import {
     latest,
     loadReserveConfig,
     MARKET_NAME,
+    MOCK_INDEX_PRICES,
     MOCK_PRICES,
     waitForTx,
 } from '../../helpers';
@@ -36,7 +37,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
         pairTokenAddresses.push(pairToken.address);
         pairTokenPrices.push(MOCK_PRICES[pair].toString());
-        pairTokenIndexPrices.push(MOCK_PRICES[pair]);
+        pairTokenIndexPrices.push(MOCK_INDEX_PRICES[pair]);
         pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
     }
 
