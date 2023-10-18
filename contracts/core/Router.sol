@@ -221,8 +221,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         }
     }
 
-    function createOrderTpSl(
-        CreateOrderTpSlRequest memory request
+    function addOrderTpSl(
+        AddOrderTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId) {
         uint256 orderAmount;
         if (request.isIncrease) {
