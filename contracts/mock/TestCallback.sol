@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import '../interfaces/IPool.sol';
-import '../interfaces/ILiquidityCallback.sol';
-import '../interfaces/ISwapCallback.sol';
+import "../interfaces/IPool.sol";
+import "../interfaces/ILiquidityCallback.sol";
+import "../interfaces/ISwapCallback.sol";
 
 contract TestCallBack is ILiquidityCallback, ISwapCallback {
-
     function addLiquidity(
         address pool,
         address indexToken,
@@ -17,7 +16,13 @@ contract TestCallBack is ILiquidityCallback, ISwapCallback {
         uint256 stableAmount
     ) external {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).addLiquidity(msg.sender, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
+        IPool(pool).addLiquidity(
+            msg.sender,
+            pairIndex,
+            indexAmount,
+            stableAmount,
+            abi.encode(msg.sender)
+        );
     }
 
     function addLiquidityForAccount(
@@ -29,7 +34,13 @@ contract TestCallBack is ILiquidityCallback, ISwapCallback {
         uint256 stableAmount
     ) external {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).addLiquidity(receiver, pairIndex, indexAmount, stableAmount, abi.encode(msg.sender));
+        IPool(pool).addLiquidity(
+            receiver,
+            pairIndex,
+            indexAmount,
+            stableAmount,
+            abi.encode(msg.sender)
+        );
     }
 
     function addLiquidityCallback(
@@ -53,10 +64,17 @@ contract TestCallBack is ILiquidityCallback, ISwapCallback {
         address pool,
         address indexToken,
         address stableToken,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     ) external {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).removeLiquidity(msg.sender, pairIndex, amount, abi.encode(msg.sender));
+        IPool(pool).removeLiquidity(
+            payable(msg.sender),
+            pairIndex,
+            amount,
+            useETH,
+            abi.encode(msg.sender)
+        );
     }
 
     function removeLiquidityForAccount(
@@ -64,13 +82,24 @@ contract TestCallBack is ILiquidityCallback, ISwapCallback {
         address indexToken,
         address stableToken,
         address receiver,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     ) external {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
+        IPool(pool).removeLiquidity(
+            payable(receiver),
+            pairIndex,
+            amount,
+            useETH,
+            abi.encode(msg.sender)
+        );
     }
 
-    function removeLiquidityCallback(address pairToken, uint256 amount, bytes calldata data) external {
+    function removeLiquidityCallback(
+        address pairToken,
+        uint256 amount,
+        bytes calldata data
+    ) external {
         address sender = abi.decode(data, (address));
         IERC20(pairToken).transferFrom(sender, msg.sender, amount);
     }

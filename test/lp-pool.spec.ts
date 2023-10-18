@@ -107,7 +107,7 @@ describe('LP: Pool cases', () => {
             const lpAmount = ethers.utils.parseEther('30000');
             const expectRemoveLiquidity = await pool.getReceivedAmount(pairIndex, lpAmount);
             await lpToken.connect(depositor.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, lpAmount);
+            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, lpAmount,false);
 
             const vaultAfter = await pool.getVault(pairIndex);
             const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
