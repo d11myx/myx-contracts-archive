@@ -38,9 +38,11 @@ interface IRouter {
         TradingTypes.DecreasePositionRequest[] memory requests
     ) external returns (uint256[] memory orderIds);
 
-    function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
-
-    function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
+    function cancelOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease
+    ) external;
 
     function cancelOrders(CancelOrderRequest[] memory requests) external;
 
