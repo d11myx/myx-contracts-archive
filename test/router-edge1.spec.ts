@@ -225,7 +225,7 @@ describe('Router: Edge cases', () => {
                 executor,
             } = testEnv;
 
-            let collateral = ethers.utils.parseUnits('100000', 18);
+            let collateral = ethers.utils.parseUnits('30000', 18);
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
             // trader take all indexToken
@@ -240,7 +240,7 @@ describe('Router: Edge cases', () => {
             );
 
             // shorter open position
-            collateral = ethers.utils.parseUnits('100000', 18);
+            collateral = ethers.utils.parseUnits('27000', 18);
             await mintAndApprove(testEnv, usdt, collateral, shorter, router.address);
             await increaseUserPosition(
                 shorter,
@@ -279,7 +279,7 @@ describe('Router: Edge cases', () => {
                 account: shorter.address,
                 pairIndex: pairIndex,
                 tradeType: TradeType.MARKET,
-                collateral: ethers.utils.parseUnits('0', 18),
+                collateral: 0,
                 triggerPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: false,
                 sizeAmount: ethers.utils.parseUnits('5', 18),
