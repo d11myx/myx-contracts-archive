@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 import { deployMockCallback, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { expect } from './shared/expect';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { TradingTypes } from '../types/contracts/core/Router';
+import { IRouter, Router, TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 1;
@@ -54,7 +54,7 @@ describe('Router: Edge cases', () => {
         const {
             deployer,
             keeper,
-            users: [trader,trader1],
+            users: [trader, trader1],
             usdt,
             router,
             executionLogic,
@@ -85,12 +85,16 @@ describe('Router: Edge cases', () => {
         };
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
-
         const orderId = 0;
         // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-        expect(router.connect(trader1.signer).cancelIncreaseOrder(orderId,TradeType.MARKET)).to.be.revertedWith('onlyAccount')
+        const cancelOrder: IRouter.CancelOrderRequestStruct = {
+            orderId: orderId,
+            tradeType: TradeType.MARKET,
+            isIncrease: true,
+        };
 
+        expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
 
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
@@ -104,7 +108,7 @@ describe('Router: Edge cases', () => {
             usdt,
             deployer,
             keeper,
-            users: [trader,trader1],
+            users: [trader, trader1],
             orderManager,
             positionManager,
             router,
@@ -133,9 +137,13 @@ describe('Router: Edge cases', () => {
         await usdt.connect(trader1.signer).approve(router.address, MAX_UINT_AMOUNT);
 
         const orderId = await orderManager.ordersIndex();
-        await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-        expect(router.connect(trader1.signer).cancelIncreaseOrder(orderId,TradeType.MARKET)).to.be.revertedWith('onlyAccount')
-
+        await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+        const cancelOrder: IRouter.CancelOrderRequestStruct = {
+            orderId: orderId,
+            tradeType: TradeType.MARKET,
+            isIncrease: true,
+        };
+        expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
 
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
@@ -380,7 +388,7 @@ describe('Router: Edge cases', () => {
             const {
                 deployer,
                 keeper,
-                users: [trader,trader1],
+                users: [trader, trader1],
                 btc,
                 usdt,
                 router,
@@ -410,9 +418,13 @@ describe('Router: Edge cases', () => {
 
             // await tradingRouter.setHandler(trader.address, true);
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
-            expect(router.connect(trader1.signer).cancelIncreaseOrder(orderId,TradeType.MARKET)).to.be.revertedWith('onlyAccount')
-
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            const cancelOrder: IRouter.CancelOrderRequestStruct = {
+                orderId: orderId,
+                tradeType: TradeType.MARKET,
+                isIncrease: true,
+            };
+            expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
 
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
@@ -473,6 +485,7 @@ export async function increaseUserPosition(
 
     // await router.setHandler(user.address, true);
     const increaseOrderId = await orderManager.ordersIndex();
-    await router.connect(user.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+    await router.connect(user.signer).createIncreaseOrder(increasePositionRequest);
+
     await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
 }
