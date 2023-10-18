@@ -391,4 +391,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address sender = abi.decode(data, (address));
         IERC20(pairToken).safeTransferFrom(sender, msg.sender, amount);
     }
+
+    function salvageToken(address token, uint amount) external onlyPoolAdmin {
+        IERC20(token).transfer(msg.sender, amount);
+    }
 }
