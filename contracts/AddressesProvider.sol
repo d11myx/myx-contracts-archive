@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.20;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IAddressesProvider.sol";
@@ -82,8 +82,8 @@ contract AddressesProvider is Ownable, IAddressesProvider {
 
     function setIndexPriceOracle(address newIndexPriceOracle) external onlyTimelock {
         address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
-        priceOracle = newIndexPriceOracle;
-        emit AddressSet(PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
+        indexPriceOracle = newIndexPriceOracle;
+        emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
     }
 
     function setFundingRate(address newFundingRate) external onlyTimelock {

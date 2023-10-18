@@ -1,6 +1,6 @@
 import { testEnv } from './helpers/make-suite';
 import { waitForTx } from '../helpers';
-import { getTestCallBack, getToken, MAX_UINT_AMOUNT } from '../helpers';
+import { getToken, MAX_UINT_AMOUNT } from '../helpers';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 
@@ -12,23 +12,22 @@ describe('Pool: Liquidity cases', () => {
             pool,
             btc,
             usdt,
+            router,
             users: [, depositor],
         } = testEnv;
-
-        const testCallBack = await getTestCallBack();
 
         const pair = await pool.getPair(pairIndex);
 
         const pairTokenAddress = pair.pairToken;
         const pairToken = await getToken(pairTokenAddress);
 
-        await waitForTx(await usdt.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT));
-        await waitForTx(await btc.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT));
+        await waitForTx(await usdt.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
+        await waitForTx(await btc.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
 
         const usdtBalanceBef = await usdt.balanceOf(depositor.address);
         const btcBalanceBef = await btc.balanceOf(depositor.address);
         const depositorLpBef = await pairToken.balanceOf(depositor.address);
-        const callbackLpBef = await pairToken.balanceOf(testCallBack.address);
+        const callbackLpBef = await pairToken.balanceOf(router.address);
 
         const receivedLP = await pool.getMintLpAmount(
             pairIndex,
@@ -37,10 +36,9 @@ describe('Pool: Liquidity cases', () => {
         );
 
         await waitForTx(
-            await testCallBack
+            await router
                 .connect(depositor.signer)
                 .addLiquidity(
-                    pool.address,
                     pair.indexToken,
                     pair.stableToken,
                     ethers.utils.parseEther('1000'),
@@ -51,7 +49,7 @@ describe('Pool: Liquidity cases', () => {
         const usdtBalanceAft = await usdt.balanceOf(depositor.address);
         const btcBalanceAft = await btc.balanceOf(depositor.address);
         const depositorLpAft = await pairToken.balanceOf(depositor.address);
-        const callbackLpAft = await pairToken.balanceOf(testCallBack.address);
+        const callbackLpAft = await pairToken.balanceOf(router.address);
 
         expect(usdtBalanceAft).to.be.eq(usdtBalanceBef.sub(ethers.utils.parseEther('30000000')));
         expect(btcBalanceAft).to.be.eq(btcBalanceBef.sub(ethers.utils.parseEther('1000')));

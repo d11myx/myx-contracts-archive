@@ -20,9 +20,14 @@ export interface PairInfoConfig {
 }
 
 export interface ReserveConfiguration {
-    TokenSymbol: string;
-    TokenName: string;
-    TokenAddress: ParamsPerNetwork<string>;
+    MarketTokenSymbol: string;
+    MarketTokenName: string;
+    MarketTokenAddress: ParamsPerNetwork<string>;
+    WrapperTokenAddress: ParamsPerNetwork<string>;
     PairsConfig: SymbolMap<PairInfoConfig>;
     PairAssets: ParamsPerNetwork<SymbolMap<string>>;
+    ExecuteOrderTimeDelay: number;
+    OraclePriceFeedAddress: ParamsPerNetwork<string>;
+    UniswapRouterAddress: ParamsPerNetwork<string>;
+    UniswapTokenPathConfig: ParamsPerNetwork<SymbolMap<string>>;
 }
