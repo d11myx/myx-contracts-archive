@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../libraries/PositionKey.sol";
 import "../libraries/Upgradeable.sol";
@@ -18,6 +19,8 @@ import "../interfaces/IOrderCallback.sol";
 import "../libraries/TradingTypes.sol";
 
 contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGateway {
+    using SafeERC20 for IERC20;
+
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
     IPool public immutable pool;
@@ -359,7 +362,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address sender = abi.decode(data, (address));
 
         if (amount > 0) {
-            IERC20(collateral).transferFrom(sender, to, uint256(amount));
+            IERC20(collateral).safeTransferFrom(sender, to, uint256(amount));
         }
     }
 
@@ -373,10 +376,10 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address sender = abi.decode(data, (address));
 
         if (amountIndex > 0) {
-            IERC20(indexToken).transferFrom(sender, msg.sender, uint256(amountIndex));
+            IERC20(indexToken).safeTransferFrom(sender, msg.sender, uint256(amountIndex));
         }
         if (amountStable > 0) {
-            IERC20(stableToken).transferFrom(sender, msg.sender, uint256(amountStable));
+            IERC20(stableToken).safeTransferFrom(sender, msg.sender, uint256(amountStable));
         }
     }
 
@@ -386,6 +389,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         bytes calldata data
     ) external override onlyPool {
         address sender = abi.decode(data, (address));
-        IERC20(pairToken).transferFrom(sender, msg.sender, amount);
+        IERC20(pairToken).safeTransferFrom(sender, msg.sender, amount);
     }
 }
