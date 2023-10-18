@@ -6,7 +6,7 @@ import { expect } from './shared/expect';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { IRouter, Router, TradingTypes } from '../types/contracts/core/Router';
 
-describe('Router: Edge cases', () => {
+describe('Router: Edge cases 1', () => {
     const pairIndex = 1;
     let testEnv: TestEnv;
 
