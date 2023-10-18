@@ -36,6 +36,11 @@ export const MOCK_PRICES: { [key: string]: BigNumber } = {
     ETH: parseUnits('2000', 8),
 };
 
+export const MOCK_INDEX_PRICES: { [key: string]: BigNumber } = {
+    USDT: parseUnits('1', 30),
+    BTC: parseUnits('30000', 30),
+    ETH: parseUnits('2000', 30),
+};
 export const DEFAULT_NAMED_ACCOUNTS = {
     deployer: {
         default: 0,
@@ -50,6 +55,9 @@ export const DEFAULT_NAMED_ACCOUNTS = {
         default: 1,
     },
     keeper: {
+        default: 0,
+    },
+    dao: {
         default: 0,
     },
     feeReceiver: {

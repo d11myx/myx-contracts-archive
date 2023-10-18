@@ -97,12 +97,13 @@ library Position {
         int256 availableCollateral = int256(self.collateral);
 
         // pnl
-//        if (self.positionAmount > 0) {
-//            availableCollateral += getUnrealizedPnl(self, self.positionAmount, price);
-//        }
         int256 pnl = getUnrealizedPnl(self, self.positionAmount, price);
-        if (!_increase && _sizeAmount > 0 && pnl < 0) {
-            availableCollateral += getUnrealizedPnl(self, _sizeAmount, price);
+        if (!_increase && _sizeAmount > 0) {
+            if (pnl >= 0) {
+                availableCollateral += getUnrealizedPnl(self, self.positionAmount - _sizeAmount, price);
+            } else {
+                availableCollateral += getUnrealizedPnl(self, _sizeAmount, price);
+            }
         } else {
             availableCollateral += pnl;
         }
@@ -113,7 +114,9 @@ library Position {
         }
         require(availableCollateral >= 0, 'collateral not enough');
 
-        require(afterPosition <= (availableCollateral.abs() * maxLeverage).divPrice(price), 'exceeds max leverage');
+        if (_increase && _sizeAmount > 0) {
+            require(afterPosition <= (availableCollateral.abs() * maxLeverage).divPrice(price), 'exceeds max leverage');
+        }
 
         return (afterPosition, availableCollateral.abs());
     }

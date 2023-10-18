@@ -89,7 +89,9 @@ describe('Trade: ioc', () => {
             const pair = await pool.getPair(pairIndex);
             const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
             await poolToken.connect(depositor.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount);
+            await router
+                .connect(depositor.signer)
+                .removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -182,7 +184,9 @@ describe('Trade: ioc', () => {
             const pair = await pool.getPair(pairIndex);
             const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
             await poolToken.connect(depositor.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount);
+            await router
+                .connect(depositor.signer)
+                .removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
 
             const { orderId } = await decreasePosition(
                 testEnv,
@@ -283,7 +287,9 @@ describe('Trade: ioc', () => {
             const pair = await pool.getPair(pairIndex);
             const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
             await poolToken.connect(depositor.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount);
+            await router
+                .connect(depositor.signer)
+                .removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -413,7 +419,9 @@ describe('Trade: ioc', () => {
             const pair = await pool.getPair(pairIndex);
             const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
             await poolToken.connect(depositor.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount);
+            await router
+                .connect(depositor.signer)
+                .removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
 
             const { orderId } = await decreasePosition(
                 testEnv,

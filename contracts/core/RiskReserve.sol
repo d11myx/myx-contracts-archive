@@ -1,93 +1,80 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../interfaces/IAddressesProvider.sol";
-import "../libraries/Roleable.sol";
+import "../interfaces/IRiskReserve.sol";
+import "../interfaces/IPool.sol";
+import "../libraries/Upgradeable.sol";
 
-contract RiskReserve is Roleable {
+contract RiskReserve is IRiskReserve, Upgradeable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    mapping(address => int256) public assetReservedAmount;
+    mapping(address => int256) public getReservedAmount;
 
     address public addressDao;
     address public addressPositionManager;
+    IPool public pool;
 
-    event UpdatedDaoAddress(
-        address sender,
-        address oldAddress,
-        address newAddress
-    );
-
-    event UpdatedPositionManagerAddress(
-        address sender,
-        address oldAddress,
-        address newAddress
-    );
-
-    event Withdraw(
-        address sender,
-        address asset,
-        uint256 amount,
-        address to
-    );
-
-    constructor(
+    function initialize(
         address _addressDao,
         IAddressesProvider addressProvider
-    ) Roleable(addressProvider) {
+    ) public initializer {
+        ADDRESS_PROVIDER = addressProvider;
         addressDao = _addressDao;
     }
 
     modifier onlyDao() {
-        require(msg.sender == addressDao, 'forbidden');
+        require(msg.sender == addressDao, "onlyDao");
         _;
     }
 
     modifier onlyPositionManager() {
-        require(msg.sender == addressPositionManager, 'forbidden');
+        require(msg.sender == addressPositionManager, "onlyPositionManager");
         _;
     }
 
-    function updateDaoAddress(address newAddress) external onlyPoolAdmin {
+    function updateDaoAddress(address newAddress) external override onlyPoolAdmin {
         address oldAddress = addressDao;
         addressDao = newAddress;
         emit UpdatedDaoAddress(msg.sender, oldAddress, addressDao);
     }
 
-    function updatePositionManagerAddress(address newAddress) external onlyPoolAdmin {
+    function updatePositionManagerAddress(address newAddress) external override onlyPoolAdmin {
         address oldAddress = addressDao;
         addressPositionManager = newAddress;
         emit UpdatedPositionManagerAddress(msg.sender, oldAddress, addressPositionManager);
     }
 
-    function recharge(address asset, uint256 amount) external {
-        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
-        assetReservedAmount[asset] += int256(amount);
+    function updatePoolAddress(address newAddress) external override onlyPoolAdmin {
+        address oldAddress = address(pool);
+        pool = IPool(newAddress);
+        emit UpdatedPoolAddress(msg.sender, oldAddress, address(pool));
     }
 
-    function increase(address asset, uint256 amount) external onlyPositionManager {
-        assetReservedAmount[asset] += int256(amount);
+    function increase(address asset, uint256 amount) external override onlyPositionManager {
+        getReservedAmount[asset] += int256(amount);
     }
 
-    function decrease(address asset, uint256 amount) external onlyPositionManager {
-        require(int256(amount) <= assetReservedAmount[asset], 'insufficient reserved amount');
-        assetReservedAmount[asset] -= int256(amount);
+    function decrease(address asset, uint256 amount) external override onlyPositionManager {
+        getReservedAmount[asset] -= int256(amount);
     }
 
-    function withdraw(address asset, uint256 amount, address to) external onlyDao {
-        require(int256(amount) <= assetReservedAmount[asset], 'insufficient reserved amount');
-        require(amount <= IERC20(asset).balanceOf(address(this)), 'insufficient balance');
+    function recharge(address asset, uint256 amount) external override {
+        IERC20(asset).safeTransferFrom(msg.sender, address(pool), amount);
+        getReservedAmount[asset] += int256(amount);
+    }
+
+    function withdraw(address asset, address to, uint256 amount) external override onlyDao {
+        require(int256(amount) <= getReservedAmount[asset], "insufficient balance");
 
         if (amount > 0) {
-            IERC20(asset).safeTransfer(to, amount);
-        }
-        emit Withdraw(msg.sender, asset, amount, to);
-    }
+            getReservedAmount[asset] -= int256(amount);
 
-    function rescue(address asset, address to) external onlyPoolAdmin {
-        IERC20(asset).safeTransfer(to, IERC20(asset).balanceOf(address(this)));
+            pool.transferTokenTo(asset, to, amount);
+            emit Withdraw(msg.sender, asset, amount, to);
+        }
     }
 }

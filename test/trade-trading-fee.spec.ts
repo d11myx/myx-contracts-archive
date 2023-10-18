@@ -19,6 +19,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 pool,
                 router,
+                feeCollector,
             } = testEnv;
 
             // add liquidity
@@ -31,6 +32,14 @@ describe('Trade: trading fee', () => {
             await router
                 .connect(depositor.signer)
                 .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+
+            // config levels
+            await feeCollector.updateLevelDiscountRatio(1, { takerDiscountRatio: 1e6, makerDiscountRatio: 1e6 });
+            await feeCollector.updateLevelDiscountRatio(2, { takerDiscountRatio: 2e6, makerDiscountRatio: 2e6 });
+            await feeCollector.updateLevelDiscountRatio(3, { takerDiscountRatio: 3e6, makerDiscountRatio: 3e6 });
+            await feeCollector.updateLevelDiscountRatio(4, { takerDiscountRatio: 4e6, makerDiscountRatio: 4e6 });
+            await feeCollector.updateLevelDiscountRatio(5, { takerDiscountRatio: 5e6, makerDiscountRatio: 5e6 });
+            await feeCollector.updateLevelDiscountRatio(6, { takerDiscountRatio: 6e6, makerDiscountRatio: 6e6 });
         });
 
         it('should distribute trading fee', async () => {
@@ -40,6 +49,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 router,
                 positionManager,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', 18);
@@ -60,10 +70,10 @@ describe('Trade: trading fee', () => {
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             let distributeTradingFee = await getDistributeTradingFee(testEnv, pairIndex, tradingFee);
-            const increaseUserTradingFee = await positionManager.userTradingFee(trader.address);
-            const increaseKeeperTradingFee = await positionManager.userTradingFee(keeper.address);
-            const increaseStakingAmount = await positionManager.stakingTradingFee();
-            const increaseTreasuryFee = await positionManager.treasuryFee();
+            const increaseUserTradingFee = await feeCollector.userTradingFee(trader.address);
+            const increaseKeeperTradingFee = await feeCollector.userTradingFee(keeper.address);
+            const increaseStakingAmount = await feeCollector.stakingTradingFee();
+            const increaseTreasuryFee = await feeCollector.treasuryFee();
 
             expect(increaseUserTradingFee).to.be.eq(distributeTradingFee.userTradingFee);
             expect(increaseKeeperTradingFee).to.be.eq(distributeTradingFee.keeperAmount);
@@ -96,6 +106,7 @@ describe('Trade: trading fee', () => {
                 positionManager,
                 executionLogic,
                 orderManager,
+                feeCollector,
                 keeper,
             } = testEnv;
 
@@ -261,12 +272,12 @@ describe('Trade: trading fee', () => {
             const vip4Amount = (await getDistributeTradingFee(testEnv, pairIndex, tradingFee, vip4)).userTradingFee;
             const vip5Amount = (await getDistributeTradingFee(testEnv, pairIndex, tradingFee, vip5)).userTradingFee;
 
-            const traderTradingFee = await positionManager.userTradingFee(trader.address);
-            const trader2TradingFee = await positionManager.userTradingFee(trader2.address);
-            const trader3TradingFee = await positionManager.userTradingFee(trader3.address);
-            const trader4TradingFee = await positionManager.userTradingFee(trader4.address);
-            const trader5TradingFee = await positionManager.userTradingFee(trader5.address);
-            const trader6TradingFee = await positionManager.userTradingFee(trader6.address);
+            const traderTradingFee = await feeCollector.userTradingFee(trader.address);
+            const trader2TradingFee = await feeCollector.userTradingFee(trader2.address);
+            const trader3TradingFee = await feeCollector.userTradingFee(trader3.address);
+            const trader4TradingFee = await feeCollector.userTradingFee(trader4.address);
+            const trader5TradingFee = await feeCollector.userTradingFee(trader5.address);
+            const trader6TradingFee = await feeCollector.userTradingFee(trader6.address);
 
             expect(normalAmount).to.be.eq(traderTradingFee);
             expect(vip1Amount).to.be.eq(trader2TradingFee);
@@ -339,16 +350,17 @@ describe('Trade: trading fee', () => {
                 positionManager,
                 keeper,
                 roleManager,
+                feeCollector,
             } = testEnv;
 
             // trading fee
-            const traderTradingFee = await positionManager.userTradingFee(trader.address);
-            const trader2TradingFee = await positionManager.userTradingFee(trader2.address);
-            const trader3TradingFee = await positionManager.userTradingFee(trader3.address);
-            const trader4TradingFee = await positionManager.userTradingFee(trader4.address);
-            const trader5TradingFee = await positionManager.userTradingFee(trader5.address);
-            const trader6TradingFee = await positionManager.userTradingFee(trader6.address);
-            const keeperTradingFee = await positionManager.userTradingFee(keeper.address);
+            const traderTradingFee = await feeCollector.userTradingFee(trader.address);
+            const trader2TradingFee = await feeCollector.userTradingFee(trader2.address);
+            const trader3TradingFee = await feeCollector.userTradingFee(trader3.address);
+            const trader4TradingFee = await feeCollector.userTradingFee(trader4.address);
+            const trader5TradingFee = await feeCollector.userTradingFee(trader5.address);
+            const trader6TradingFee = await feeCollector.userTradingFee(trader6.address);
+            const keeperTradingFee = await feeCollector.userTradingFee(keeper.address);
 
             // before balance
             const keeperBalanceBefore = await usdt.balanceOf(keeper.address);
@@ -360,13 +372,13 @@ describe('Trade: trading fee', () => {
             const trader6BalanceBefore = await usdt.balanceOf(trader6.address);
 
             /// claim trading fee
-            await positionManager.connect(keeper.signer).claimKeeperTradingFee();
-            await positionManager.connect(trader.signer).claimUserTradingFee();
-            await positionManager.connect(trader2.signer).claimUserTradingFee();
-            await positionManager.connect(trader3.signer).claimUserTradingFee();
-            await positionManager.connect(trader4.signer).claimUserTradingFee();
-            await positionManager.connect(trader5.signer).claimUserTradingFee();
-            await positionManager.connect(trader6.signer).claimUserTradingFee();
+            await feeCollector.connect(keeper.signer).claimKeeperTradingFee();
+            await feeCollector.connect(trader.signer).claimUserTradingFee();
+            await feeCollector.connect(trader2.signer).claimUserTradingFee();
+            await feeCollector.connect(trader3.signer).claimUserTradingFee();
+            await feeCollector.connect(trader4.signer).claimUserTradingFee();
+            await feeCollector.connect(trader5.signer).claimUserTradingFee();
+            await feeCollector.connect(trader6.signer).claimUserTradingFee();
 
             // after balance
             const keeperBalanceAfter = await usdt.balanceOf(keeper.address);
@@ -386,18 +398,18 @@ describe('Trade: trading fee', () => {
             expect(trader6BalanceBefore.add(trader6TradingFee)).to.be.eq(trader6BalanceAfter);
 
             // claim treasury fee
-            const treasuryFee = await positionManager.treasuryFee();
+            const treasuryFee = await feeCollector.treasuryFee();
             const poolAdminBalanceBefore = await usdt.balanceOf(poolAdmin.address);
             await roleManager.addPoolAdmin(poolAdmin.address);
-            await positionManager.connect(poolAdmin.signer).claimTreauryFee();
+            await feeCollector.connect(poolAdmin.signer).claimTreasuryFee();
             const poolAdminBalanceAfter = await usdt.balanceOf(poolAdmin.address);
 
             expect(poolAdminBalanceBefore.add(treasuryFee)).to.be.eq(poolAdminBalanceAfter);
 
             // claim staking trading fee
-            await positionManager.setStakingPool(poolAdmin.address);
-            const stakingTradingFee = await positionManager.stakingTradingFee();
-            await positionManager.connect(poolAdmin.signer).claimStakingTradingFee();
+            await feeCollector.updateStakingPoolAddress(poolAdmin.address);
+            const stakingTradingFee = await feeCollector.stakingTradingFee();
+            await feeCollector.connect(poolAdmin.signer).claimStakingTradingFee();
             const poolAdminBalanceLatest = await usdt.balanceOf(poolAdmin.address);
 
             expect(poolAdminBalanceAfter.add(stakingTradingFee)).to.be.eq(poolAdminBalanceLatest);
