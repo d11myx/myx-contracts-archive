@@ -49,6 +49,11 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         _;
     }
 
+    function wrapWETH() external payable {
+        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
+        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
+    }
+
     function createIncreaseOrder(
         TradingTypes.IncreasePositionWithTpSlRequest memory request
     ) external returns (uint256 orderId) {
@@ -285,11 +290,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
             );
         }
         return (tpOrderId, slOrderId);
-    }
-
-    function wrapWETH() external payable {
-        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
-        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
     }
 
     function addLiquidity(
