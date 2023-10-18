@@ -2,7 +2,7 @@
 
 exports[`Router: increase position ar createDecreaseOrder cast 1`] = `477040`;
 
-exports[`Router: increase position ar createIncreaseOrder cast 1`] = `500302`;
+exports[`Router: increase position ar createIncreaseOrder cast 1`] = `499972`;
 
 exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `403640`;
 
