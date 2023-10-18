@@ -99,7 +99,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const routerArtifact = await deploy(`${ROUTER_ID}`, {
         from: deployer,
         contract: 'Router',
-        args: [weth.address, addressProvider.address, orderManager.address, pool.address],
+        args: [addressProvider.address, orderManager.address, pool.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = (await hre.ethers.getContractAt(routerArtifact.abi, routerArtifact.address)) as Router;

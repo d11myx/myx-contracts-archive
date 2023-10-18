@@ -6,6 +6,8 @@ interface IAddressesProvider {
 
     function fundingRate() external view returns (address);
 
+    function WETH() external view returns (address);
+
     function timelock() external view returns (address);
 
     function priceOracle() external view returns (address);

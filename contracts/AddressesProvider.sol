@@ -12,6 +12,7 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     bytes32 private constant INDEX_PRICE_ORACLE = "INDEX_PRICE_ORACLE";
     bytes32 private constant FUNDING_RATE = "FUNDING_RATE";
 
+    address public immutable override WETH;
     address public override timelock;
     address public override priceOracle;
     address public override indexPriceOracle;
@@ -21,8 +22,9 @@ contract AddressesProvider is Ownable, IAddressesProvider {
 
     mapping(bytes32 => address) private _addresses;
 
-    constructor(address _timelock) {
+    constructor(address _weth, address _timelock) {
         timelock = _timelock;
+        WETH = _weth;
     }
 
     modifier onlyTimelock() {
