@@ -6,7 +6,7 @@ import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: increase position ar', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
 
     before(async () => {
         const {
