@@ -33,7 +33,7 @@ export async function initPairs(
         await waitForTx(await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
         await waitForTx(await fundingRate.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
 
-        log(`added pair [${symbol}, ${MARKET_NAME}] at index`, (await pool.pairsCount()).sub(1).toString());
+        log(`added pair [${symbol}, ${MARKET_NAME}] at index`, (await pool.pairsIndex()).sub(1).toString());
     }
 
     log(`Configured all pairs [${Object.keys(pairConfigs)}]`);

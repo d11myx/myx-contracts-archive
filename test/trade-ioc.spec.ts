@@ -7,7 +7,7 @@ import { BigNumber, constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Trade: ioc', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     describe('increase market order', () => {

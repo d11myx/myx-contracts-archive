@@ -7,7 +7,7 @@ import { TradeType } from '../helpers';
 import Decimal from 'decimal.js';
 
 describe('Trade: profit & Loss', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {

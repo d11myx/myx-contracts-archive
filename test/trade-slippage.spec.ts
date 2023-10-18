@@ -7,7 +7,7 @@ import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/trading/Router';
 
 describe('Trade: slippage', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
 
     describe('slippage tolerance', () => {
         let testEnv: TestEnv;
@@ -283,7 +283,7 @@ describe('Trade: slippage', () => {
 
             await router
                 .connect(trader.signer)
-                .addLiquidity(trader.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
@@ -344,7 +344,7 @@ describe('Trade: slippage', () => {
 
             await router
                 .connect(trader.signer)
-                .addLiquidity(trader.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
@@ -401,7 +401,7 @@ describe('Trade: slippage', () => {
             expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.gt(vaultBefore.stableTotalAmount);
             expect(userBtcBalanceBefore).to.be.eq(indexAmount);
 
-            await router.connect(trader.signer).addLiquidity(trader.address, pair.stableToken, indexAmount, 0);
+            await router.connect(trader.signer).addLiquidity(pair.indexToken, pair.stableToken, indexAmount, 0);
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userBtcBalanceAfter = await btc.balanceOf(trader.address);
@@ -460,7 +460,7 @@ describe('Trade: slippage', () => {
 
             await router
                 .connect(trader.signer)
-                .addLiquidity(trader.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userBtcBalanceAfter = await btc.balanceOf(trader.address);
@@ -517,7 +517,7 @@ describe('Trade: slippage', () => {
             expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.gt(vaultBefore.stableTotalAmount);
             expect(userUsdtBalanceBefore).to.be.eq(stableAmount);
 
-            await router.connect(trader.signer).addLiquidity(trader.address, pair.stableToken, 0, stableAmount);
+            await router.connect(trader.signer).addLiquidity(pair.indexToken, pair.stableToken, 0, stableAmount);
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userUsdtBalanceAfter = await usdt.balanceOf(trader.address);
