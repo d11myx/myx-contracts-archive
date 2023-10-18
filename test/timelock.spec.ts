@@ -1,27 +1,13 @@
 import { testEnv } from './helpers/make-suite';
-import { Duration, encodeParameters, increase, increaseTo, latest, waitForTx } from '../helpers/utilities/tx';
-import { loadReserveConfig } from '../helpers/market-config-helper';
 import { expect } from './shared/expect';
-import { IPool, TestOwnableToken, Timelock } from '../types';
-import { BigNumber } from 'ethers';
-import { deployMockToken } from '../helpers/contract-deployments';
-import { MARKET_NAME } from '../helpers/env';
-import snapshotGasCost from './shared/snapshotGasCost';
-import { ethers } from 'hardhat';
-import { deployContract } from '../helpers/utilities/tx';
-import { ZERO_ADDRESS } from '../helpers';
-import {
-    getCurrentTimestamp,
-    getCurrentTimestampBigInt,
-} from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
-
+import { TestOwnableToken, Timelock } from '../types';
+import { deployContract } from '../helpers';
+import { Duration, encodeParameters, increase, latest, ZERO_ADDRESS } from '../helpers';
 
 describe('Timelock', () => {
     let timelock: Timelock;
     let testToken: TestOwnableToken;
     beforeEach(async () => {
-        const { poolAdmin, pool, usdt } = testEnv;
-
         timelock = (await deployContract('Timelock', ['43200'])) as Timelock;
         testToken = (await deployContract('TestOwnableToken', [])) as TestOwnableToken;
         let timestamp = await latest();
@@ -49,9 +35,7 @@ describe('Timelock', () => {
     it('should not allow non-owner to do operation', async () => {
         const {
             deployer,
-            pool,
-            usdt,
-            users: [depositor, carol, alice],
+            users: [, carol, alice],
         } = testEnv;
         expect(await timelock.pendingAdmin()).to.be.eq(ZERO_ADDRESS);
         expect(await timelock.admin()).to.be.eq(deployer.address);
@@ -74,10 +58,7 @@ describe('Timelock', () => {
 
     it('should do the timelock thing', async () => {
         const {
-            deployer,
-            pool,
-            usdt,
-            users: [depositor, carol, alice],
+            users: [, carol],
         } = testEnv;
         await testToken.transferOwnership(timelock.address);
         let timestamp = await latest();
@@ -113,10 +94,7 @@ describe('Timelock', () => {
     });
     it('test cancelTransaction', async () => {
         const {
-            deployer,
-            pool,
-            usdt,
-            users: [depositor, carol, alice],
+            users: [, carol],
         } = testEnv;
         await testToken.transferOwnership(timelock.address);
 
@@ -141,10 +119,7 @@ describe('Timelock', () => {
     });
     it('test acceptAdmin', async () => {
         const {
-            deployer,
-            pool,
-            usdt,
-            users: [depositor, carol, alice],
+            users: [, , alice],
         } = testEnv;
         await timelock.setPendingAdmin(alice.address);
         expect(await timelock.pendingAdmin()).to.be.eq(alice.address);
@@ -159,10 +134,7 @@ describe('Timelock', () => {
     });
     it('test setPendingAdmin', async () => {
         const {
-            deployer,
-            pool,
-            usdt,
-            users: [depositor, carol, alice],
+            users: [, carol, alice],
         } = testEnv;
 
         await timelock.setPendingAdmin(alice.address);
