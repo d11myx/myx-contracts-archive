@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../libraries/TradingTypes.sol";
 
 interface IRouter {
-    struct CreateOrderTpSlRequest {
+    struct AddOrderTpSlRequest {
         uint256 orderId;
         TradingTypes.TradeType tradeType;
         bool isIncrease;
