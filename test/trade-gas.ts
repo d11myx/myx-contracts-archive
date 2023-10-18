@@ -8,7 +8,7 @@ import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: increase position ar', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let localTestEnv: TestEnv;
     let orderId: BigNumber;
 

@@ -3,6 +3,7 @@ import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 
 describe('Trade: FeeCal', () => {
+    const pairIndex = 1;
     // before('add liquidity', async () => {
     //     testEnv = await newTestEnv();
     //     const {
@@ -28,10 +29,10 @@ describe('Trade: FeeCal', () => {
     it('calculate trading fee', async () => {
         const { positionManager } = testEnv;
 
-        const long = await positionManager.getTradingFee(0, true, ethers.utils.parseEther('100'));
+        const long = await positionManager.getTradingFee(pairIndex, true, ethers.utils.parseEther('100'));
         expect(long).to.be.eq('3200000000000000000000');
 
-        const short = await positionManager.getTradingFee(0, false, ethers.utils.parseEther('100'));
+        const short = await positionManager.getTradingFee(pairIndex, false, ethers.utils.parseEther('100'));
         expect(short).to.be.eq('2000000000000000000000');
     });
 });

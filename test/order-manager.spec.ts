@@ -14,7 +14,7 @@ import { mintAndApprove } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/trading/Router';
 
 describe('Router: increase position ar', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
 
     before(async () => {
         const {

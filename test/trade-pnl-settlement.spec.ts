@@ -6,7 +6,7 @@ import { BigNumber } from 'ethers';
 import { TradeType } from '../helpers';
 
 describe('Trade: settlement pnl', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {

@@ -49,6 +49,11 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         _;
     }
 
+    function wrapWETH() external payable {
+        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
+        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
+    }
+
     function createIncreaseOrder(
         TradingTypes.IncreasePositionWithTpSlRequest memory request
     ) external returns (uint256 orderId) {
@@ -287,11 +292,6 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         return (tpOrderId, slOrderId);
     }
 
-    function wrapWETH() external payable {
-        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
-        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
-    }
-
     function addLiquidity(
         address indexToken,
         address stableToken,
@@ -315,15 +315,16 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         address receiver,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).addLiquidity(
-            receiver,
-            pairIndex,
-            indexAmount,
-            stableAmount,
-            abi.encode(msg.sender)
-        );
+        return
+            IPool(pool).addLiquidity(
+                receiver,
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                abi.encode(msg.sender)
+            );
     }
 
     function removeLiquidity(
