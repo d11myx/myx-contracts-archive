@@ -10,10 +10,14 @@ export * from './types';
 export * from './utilities/signer';
 export * from './utilities/tx';
 export * from './utilities/bn';
+export * from './utilities/index';
+export * from './utilities/block';
+export * from './utilities/calculator';
 export * from '../tasks/misc/print-deployments';
 export * from '../tasks/misc/encode-event';
 export * from '../tasks/misc/decode-event';
 export * from '../tasks/misc/update-evm-time';
+export * from '../tasks/timelock/timelock-execution';
 
 import { loadTasks } from './hardhat-config-helpers';
 
