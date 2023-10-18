@@ -7,7 +7,7 @@ import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } fr
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: Edge cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
@@ -201,7 +201,7 @@ describe('Router: Edge cases', () => {
     });
 
     describe('Router: ADL cases', () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
 
         before(async () => {
             let btcPrice = '30000';
@@ -367,7 +367,7 @@ describe('Router: Edge cases', () => {
     });
 
     describe('Router: Liquidation', () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
 
         before(async () => {
             await updateBTCPrice(testEnv, '30000');
