@@ -191,7 +191,10 @@ export async function newTestEnv(): Promise<TestEnv> {
     const { weth, usdt, tokens } = await deployToken();
 
     const timelock = (await deployContract('Timelock', ['3600'])) as Timelock;
-    const addressesProvider = (await deployContract('AddressesProvider', [timelock.address])) as AddressesProvider;
+    const addressesProvider = (await deployContract('AddressesProvider', [
+        weth.address,
+        timelock.address,
+    ])) as AddressesProvider;
     const roleManager = (await deployContract('RoleManager', [])) as RoleManager;
 
     await addressesProvider.setRolManager(roleManager.address);
