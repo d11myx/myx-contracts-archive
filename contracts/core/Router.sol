@@ -170,7 +170,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         bool isIncrease
-    ) private {
+    ) private view {
         if (isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
                 orderId,
@@ -186,13 +186,14 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         }
     }
 
-    function cancelOrder(
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        bool isIncrease
-    ) external {
-        _checkOrderAccount(orderId, tradeType, isIncrease);
-        orderManager.cancelOrder(orderId, tradeType, isIncrease, "cancelOrder");
+    function cancelOrder(CancelOrderRequest memory request) external {
+        _checkOrderAccount(request.orderId, request.tradeType, request.isIncrease);
+        orderManager.cancelOrder(
+            request.orderId,
+            request.tradeType,
+            request.isIncrease,
+            "cancelOrder"
+        );
     }
 
     function cancelOrders(CancelOrderRequest[] memory requests) external {
