@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../interfaces/IFundingRate.sol";
 import "../interfaces/IPool.sol";
 import "../libraries/PrecisionUtils.sol";
-import "../libraries/Roleable.sol";
+import "../libraries/Upgradeable.sol";
 import "../libraries/Int256Utils.sol";
 
-contract FundingRate is IFundingRate, Roleable {
+contract FundingRate is IFundingRate, Upgradeable {
     using PrecisionUtils for uint256;
     using Int256Utils for int256;
     using Math for uint256;
@@ -17,7 +17,9 @@ contract FundingRate is IFundingRate, Roleable {
 
     mapping(uint256 => FundingFeeConfig) public fundingFeeConfigs;
 
-    constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
+    function initialize(IAddressesProvider addressProvider) public initializer {
+        ADDRESS_PROVIDER = addressProvider;
+    }
 
     function updateFundingFeeConfig(
         uint256 _pairIndex,
@@ -56,20 +58,33 @@ contract FundingRate is IFundingRate, Roleable {
         uint256 l = vault.indexTotalAmount + vault.stableTotalAmount.divPrice(price);
 
         // A = (U/U+V - 0.5) * MAX(U,V)/L * 100
-        int256 a = u == v ? int256(0) : (int256(u.divPercentage(u + v)) - int256(PrecisionUtils.fundingRatePrecision().div(2)))
-            * int256(Math.max(u, v).divPercentage(l)) * 100 / int256(PrecisionUtils.fundingRatePrecision());
+        int256 a = u == v
+            ? int256(0)
+            : ((int256(u.divPercentage(u + v)) -
+                int256(PrecisionUtils.fundingRatePrecision().div(2))) *
+                int256(Math.max(u, v).divPercentage(l)) *
+                100) / int256(PrecisionUtils.fundingRatePrecision());
 
         // S = ABS(2*R-1)=ABS(U-V)/(U+V)
         uint256 s = u == v ? 0 : (int256(u) - int256(v)).abs().divPercentage(u + v);
 
         // G1 = MIN((S+S*S/2) * k + r, r(max))
-        uint256 g1 = Math.min(((s * s / 2).div(PrecisionUtils.fundingRatePrecision()) + s) * k / PrecisionUtils.fundingRatePrecision() + baseRate, maxRate);
+        uint256 g1 = Math.min(
+            ((((s * s) / 2).div(PrecisionUtils.fundingRatePrecision()) + s) * k) /
+                PrecisionUtils.fundingRatePrecision() +
+                baseRate,
+            maxRate
+        );
 
         if (u == v) {
             return int256(g1);
         }
         // G1+ABS(G1*A/10) * (u-v)/abs(u-v)
-        fundingRate = int256(g1) + int256(g1) * int256(a.abs()) / 10 / int256(PrecisionUtils.fundingRatePrecision());
+        fundingRate =
+            int256(g1) +
+            (int256(g1) * int256(a.abs())) /
+            10 /
+            int256(PrecisionUtils.fundingRatePrecision());
         if (u < v) {
             fundingRate *= -1;
         }

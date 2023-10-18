@@ -101,7 +101,7 @@ describe('Replay: ADL', () => {
                 ethers.utils.parseEther('27.3847'),
                 ethers.utils.parseUnits('26981.38', 30),
             );
-            expect(needADL.needADL).to.be.true;
+            expect(needADL.need).to.be.true;
 
             // at btc price of 26981.38, close long 27.022
             await updateBTCPrice(testEnv, '26981.38');
@@ -213,7 +213,7 @@ describe('Replay: ADL', () => {
                 userShortPosition.positionAmount,
                 ethers.utils.parseUnits('26981.38', 30),
             );
-            expect(needADL.needADL).to.be.true;
+            expect(needADL.need).to.be.true;
 
             // at btc price of 26981.38, close short
             await updateBTCPrice(testEnv, '26981.38');
@@ -240,9 +240,9 @@ describe('Replay: ADL', () => {
     });
 
     async function calculateOpenSize(testEnv: TestEnv, isLong: boolean): Promise<string> {
-        const { pool, priceOracle, btc } = testEnv;
+        const { pool, oraclePriceFeed, btc } = testEnv;
 
-        const pairPrice = new Decimal(ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30));
+        const pairPrice = new Decimal(ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30));
 
         const vault = await pool.getVault(pairIndex);
         if (isLong) {

@@ -2,9 +2,10 @@
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../libraries/PositionKey.sol";
-import "../libraries/ETHGateway.sol";
+import "../libraries/Upgradeable.sol";
 import "../libraries/Multicall.sol";
 import "../interfaces/IRouter.sol";
 import "../interfaces/IAddressesProvider.sol";
@@ -13,19 +14,18 @@ import "../interfaces/IOrderManager.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPool.sol";
+import "../interfaces/IWETH.sol";
 import "../interfaces/IOrderCallback.sol";
+import "../libraries/TradingTypes.sol";
 
-contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGateway {
+contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
+    using SafeERC20 for IERC20;
+
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
     IPool public immutable pool;
 
-    constructor(
-        address _weth,
-        IAddressesProvider addressProvider,
-        IOrderManager _orderManager,
-        IPool _pool
-    ) ETHGateway(_weth) {
+    constructor(IAddressesProvider addressProvider, IOrderManager _orderManager, IPool _pool) {
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
         pool = _pool;
@@ -137,15 +137,62 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
             );
     }
 
+    function createDecreaseOrders(
+        TradingTypes.DecreasePositionRequest[] memory requests
+    ) external returns (uint256[] memory orderIds) {
+        orderIds = new uint256[](requests.length);
+        for (uint256 i = 0; i < requests.length; i++) {
+            TradingTypes.DecreasePositionRequest memory request = requests[i];
+
+            orderIds[i] = orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: msg.sender,
+                    pairIndex: request.pairIndex,
+                    tradeType: request.tradeType,
+                    collateral: request.collateral,
+                    openPrice: request.triggerPrice,
+                    isLong: request.isLong,
+                    sizeAmount: -int256(request.sizeAmount),
+                    maxSlippage: request.maxSlippage,
+                    data: abi.encode(msg.sender)
+                })
+            );
+        }
+        return orderIds;
+    }
+
     function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
+        TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+            orderId,
+            tradeType
+        );
+        require(order.account == msg.sender, "onlyAccount");
+
         orderManager.cancelOrder(orderId, tradeType, true, "cancelIncreaseOrder");
     }
 
     function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
+        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            orderId,
+            tradeType
+        );
+        require(order.account == msg.sender, "onlyAccount");
         orderManager.cancelOrder(orderId, tradeType, false, "cancelDecreaseOrder");
     }
 
-    function cancelOrders(uint256 pairIndex, bool isLong, bool isIncrease) external {
+    function cancelOrders(CancelOrderRequest[] memory requests) external {
+        for (uint256 i = 0; i < requests.length; i++) {
+            CancelOrderRequest memory request = requests[i];
+            orderManager.cancelOrder(
+                request.orderId,
+                request.tradeType,
+                request.isIncrease,
+                "cancelOrders"
+            );
+        }
+    }
+
+    function cancelPositionOrders(uint256 pairIndex, bool isLong, bool isIncrease) external {
         bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
         IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
 
@@ -240,12 +287,17 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         return (tpOrderId, slOrderId);
     }
 
+    function wrapWETH() external payable {
+        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
+        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
+    }
+
     function addLiquidity(
         address indexToken,
         address stableToken,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).addLiquidity(
@@ -263,7 +315,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address receiver,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override {
+    ) external {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         IPool(pool).addLiquidity(
             receiver,
@@ -277,28 +329,42 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
     function removeLiquidity(
         address indexToken,
         address stableToken,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     )
         external
-        override
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).removeLiquidity(msg.sender, pairIndex, amount, abi.encode(msg.sender));
+        return
+            IPool(pool).removeLiquidity(
+                payable(msg.sender),
+                pairIndex,
+                amount,
+                useETH,
+                abi.encode(msg.sender)
+            );
     }
 
     function removeLiquidityForAccount(
         address indexToken,
         address stableToken,
         address receiver,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     )
         external
-        override
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
+        return
+            IPool(pool).removeLiquidity(
+                payable(receiver),
+                pairIndex,
+                amount,
+                useETH,
+                abi.encode(msg.sender)
+            );
     }
 
     function createOrderCallback(
@@ -310,7 +376,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address sender = abi.decode(data, (address));
 
         if (amount > 0) {
-            IERC20(collateral).transferFrom(sender, to, uint256(amount));
+            IERC20(collateral).safeTransferFrom(sender, to, uint256(amount));
         }
     }
 
@@ -324,10 +390,10 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address sender = abi.decode(data, (address));
 
         if (amountIndex > 0) {
-            IERC20(indexToken).transferFrom(sender, msg.sender, uint256(amountIndex));
+            IERC20(indexToken).safeTransferFrom(sender, msg.sender, uint256(amountIndex));
         }
         if (amountStable > 0) {
-            IERC20(stableToken).transferFrom(sender, msg.sender, uint256(amountStable));
+            IERC20(stableToken).safeTransferFrom(sender, msg.sender, uint256(amountStable));
         }
     }
 
@@ -337,6 +403,10 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         bytes calldata data
     ) external override onlyPool {
         address sender = abi.decode(data, (address));
-        IERC20(pairToken).transferFrom(sender, msg.sender, amount);
+        IERC20(pairToken).safeTransferFrom(sender, msg.sender, amount);
+    }
+
+    function salvageToken(address token, uint amount) external onlyPoolAdmin {
+        IERC20(token).transfer(msg.sender, amount);
     }
 }

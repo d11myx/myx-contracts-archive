@@ -77,8 +77,6 @@ interface IOrderManager {
         uint256 increaseSize
     ) external;
 
-    function addOrderToPosition(PositionOrder memory order) external;
-
     function removeOrderFromPosition(PositionOrder memory order) external;
 
     function removeIncreaseMarketOrders(uint256 orderId) external;

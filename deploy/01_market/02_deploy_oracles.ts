@@ -2,15 +2,15 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
+    deployProxy,
     FUNDING_RATE,
     getAddressesProvider,
     INDEX_PRICE_FEED_ID,
     MOCK_PRICE_FEED_ID,
     ORACLE_PRICE_FEED_ID,
-    PRICE_ORACLE_ID,
     waitForTx,
 } from '../../helpers';
-import { FundingRate, IndexPriceFeed, MockPyth, OraclePriceFeed, PriceOracle } from '../../types';
+import { FundingRate, IndexPriceFeed, MockPyth, PythOraclePriceFeed } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -29,19 +29,19 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const oraclePriceFeedArtifact = await deploy(`${ORACLE_PRICE_FEED_ID}`, {
         from: deployer,
-        contract: 'OraclePriceFeed',
-        args: [mockPyth.address, [], []],
+        contract: 'PythOraclePriceFeed',
+        args: [addressesProvider.address, mockPyth.address, [], []],
         ...COMMON_DEPLOY_PARAMS,
     });
     const oraclePriceFeed = (await hre.ethers.getContractAt(
         oraclePriceFeedArtifact.abi,
         oraclePriceFeedArtifact.address,
-    )) as OraclePriceFeed;
+    )) as PythOraclePriceFeed;
 
     const indexPriceFeedArtifact = await deploy(`${INDEX_PRICE_FEED_ID}`, {
         from: deployer,
         contract: 'IndexPriceFeed',
-        args: [[], []],
+        args: [addressesProvider.address, [], []],
         ...COMMON_DEPLOY_PARAMS,
     });
     const indexPriceFeed = (await hre.ethers.getContractAt(
@@ -49,18 +49,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         indexPriceFeedArtifact.address,
     )) as IndexPriceFeed;
 
-    const priceOracleArtifact = await deploy(`${PRICE_ORACLE_ID}`, {
-        from: deployer,
-        contract: 'PriceOracle',
-        args: [oraclePriceFeed.address, indexPriceFeed.address],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const priceOracle = (await hre.ethers.getContractAt(
-        priceOracleArtifact.abi,
-        priceOracleArtifact.address,
-    )) as PriceOracle;
-
-    const FundingRateArtifact = await deploy(`${FUNDING_RATE}`, {
+    const FundingRateArtifact = await deployProxy(`${FUNDING_RATE}`, [], {
         from: deployer,
         contract: 'FundingRate',
         args: [addressesProvider.address],
@@ -72,7 +61,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     )) as FundingRate;
 
     await waitForTx(
-        await addressesProvider.connect(deployerSigner).initialize(priceOracle.address, fundingRate.address),
+        await addressesProvider
+            .connect(deployerSigner)
+            .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address),
     );
 };
 

@@ -1,6 +1,12 @@
 import { BigNumber, Contract, ContractTransaction, ethers } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TestEnv } from '../../test/helpers/make-suite';
+import { DeployOptions, DeployResult } from 'hardhat-deploy/types';
+import { DeployProxyOptions } from '@openzeppelin/hardhat-upgrades/dist/utils';
+
+import BN from 'bn.js';
+
+import { string } from 'yargs';
 
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
@@ -8,6 +14,72 @@ const PERCENTAGE = '100000000';
 declare var hre: HardhatRuntimeEnvironment;
 
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
+
+export const deployProxy = async (
+    name: string,
+    constructorArgs: any[],
+    options: DeployOptions,
+): Promise<DeployResult> => {
+    const contract = await deployUpgradeableContract(options.contract as string, options.args, {
+        constructorArgs: constructorArgs,
+        initializer: `initialize`,
+    });
+
+    const factory = await hre.ethers.getContractFactory(options.contract as string);
+
+    const artifact = await hre.artifacts.readArtifact(options.contract as string);
+    await hre.deployments.save(name, {
+        abi: artifact.abi,
+        args: options.args,
+        bytecode: artifact.bytecode,
+        deployedBytecode: artifact.deployedBytecode,
+        devdoc: undefined,
+        execute: { args: [], methodName: '' },
+        facets: [],
+        factoryDeps: [],
+        gasEstimates: undefined,
+        history: [],
+        implementation: '',
+        libraries: undefined,
+        linkedData: undefined,
+        metadata: '',
+        methodIdentifiers: undefined,
+        receipt: undefined,
+        solcInput: '',
+        solcInputHash: '',
+        storageLayout: undefined,
+        transactionHash: '',
+        userdoc: undefined,
+        address: contract.address,
+    });
+
+    // await new Promise((f) => setTimeout(f, 10000));
+
+    return {
+        abi: artifact.abi,
+        address: contract.address,
+        args: options.args,
+        bytecode: artifact.bytecode,
+        deployedBytecode: artifact.deployedBytecode,
+        devdoc: undefined,
+        facets: [],
+        factoryDeps: [],
+        gasEstimates: undefined,
+        history: [],
+        implementation: '',
+        libraries: undefined,
+        linkedData: undefined,
+        metadata: '',
+        methodIdentifiers: undefined,
+        newlyDeployed: false,
+        numDeployments: 0,
+        receipt: undefined,
+        solcInputHash: '',
+        storageLayout: undefined,
+        transactionHash: '',
+        userdoc: undefined,
+    };
+};
 
 export const deployContract = async <ContractType extends Contract>(
     contract: string,
@@ -28,27 +100,28 @@ export const deployContract = async <ContractType extends Contract>(
     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
 };
 
-// export const deployUpgradeableContract = async <ContractType extends Contract>(
-//     contract: string,
-//     args?: any,
-// ): Promise<ContractType> => {
-//     const [deployer] = await hre.ethers.getSigners();
-//
-//     const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
-//     let contractDeployed = await hre.upgrades.deployProxy(contractFactory, [...args]);
-//
-//     return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
-// };
+export const deployUpgradeableContract = async <ContractType extends Contract>(
+    contract: string,
+    args?: any[],
+    opts?: DeployProxyOptions,
+): Promise<ContractType> => {
+    const [deployer] = await hre.ethers.getSigners();
+
+    const contractFactory = await hre.ethers.getContractFactory(contract, deployer);
+    let contractDeployed = await hre.upgrades.deployProxy(contractFactory, args, opts);
+
+    return (await hre.ethers.getContractAt(contract, contractDeployed.address)) as any as ContractType;
+};
 
 export const getContract = async <ContractType extends Contract>(
     id: string,
     address?: string,
 ): Promise<ContractType> => {
     const artifact = await hre.deployments.getArtifact(id);
-    return hre.ethers.getContractAt(
+    return (await hre.ethers.getContractAt(
         artifact.abi,
-        address || (await (await hre.deployments.get(id)).address),
-    ) as any as ContractType;
+        address || (await hre.deployments.get(id)).address,
+    )) as any as ContractType;
 };
 
 interface AccountItem {
@@ -161,11 +234,11 @@ export const Duration = {
  * @returns funding rate
  */
 export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
-    const { positionManager, pool, fundingRate, priceOracle } = testEnv;
+    const { positionManager, pool, fundingRate, oraclePriceFeed } = testEnv;
     const { indexTotalAmount, stableTotalAmount } = await pool.getVault(pairIndex);
 
     const pair = await pool.getPair(pairIndex);
-    const price = await priceOracle.getOraclePrice(pair.indexToken);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
     const longTracker = await positionManager.longTracker(pairIndex);
     const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -286,7 +359,7 @@ export function getPositionFundingFee(
         fundingFee = 1;
     }
 
-    return positionAmount.mul(diffFundingFeeTracker).div(PERCENTAGE).mul(fundingFee);
+    return positionAmount.mul(diffFundingFeeTracker.abs()).div(PERCENTAGE).mul(fundingFee);
 }
 
 /**
@@ -315,10 +388,10 @@ export async function getPositionTradingFee(
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
-    const { positionManager, pool, priceOracle } = testEnv;
+    const { positionManager, pool, oraclePriceFeed } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
-    const price = await priceOracle.getOraclePrice(pair.indexToken);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
     const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
     const positionPrice = positionAmount.mul(price).div(PRICE_PRECISION);
@@ -396,11 +469,11 @@ export async function getMintLpAmount(
     stableAmount: BigNumber,
     slipDelta?: BigNumber,
 ) {
-    const { pool, priceOracle, btc } = testEnv;
+    const { pool, oraclePriceFeed, btc } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
     const pairPrice = BigNumber.from(
-        ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+        ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
     );
     const lpFairPrice = await pool.lpFairPrice(pairIndex);
     const indexFeeAmount = indexAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
@@ -492,3 +565,15 @@ function getAmountOut(swapDelta: BigNumber, price: BigNumber, k: BigNumber) {
     const reserveA = k.div(reserveB);
     return swapIndexAmount.mul(reserveB).div(swapIndexAmount.add(reserveA));
 }
+
+
+export function encodeParameters(types: string[], values: string[]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+
+export function encodeParameterArray(types: string[], values: string[][]) {
+    const abi = new ethers.utils.AbiCoder();
+    return abi.encode(types, values);
+}
+

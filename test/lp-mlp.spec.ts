@@ -35,6 +35,7 @@ describe('LP: fair price', () => {
     it('buy mlp', async () => {
         const {
             users: [, trader],
+
             usdt,
             btc,
             router,
@@ -105,12 +106,12 @@ describe('LP: fair price', () => {
             btc,
             router,
             pool,
-            priceOracle,
+            oraclePriceFeed,
         } = testEnv;
 
         const lpPrice = await pool.lpFairPrice(pairIndex);
         const pairPrice = BigNumber.from(
-            ethers.utils.formatUnits(await priceOracle.getOraclePrice(btc.address), 30).replace('.0', ''),
+            ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
         );
 
         const pair = await pool.getPair(pairIndex);
@@ -129,7 +130,7 @@ describe('LP: fair price', () => {
         } = await pool.getReceivedAmount(pairIndex, sellLpAmount);
 
         await lpToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
-        await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, sellLpAmount);
+        await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, sellLpAmount, false);
         const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
         const userBtcBalanceAfter = await btc.balanceOf(trader.address);
         const userUsdtBalanceAfter = await usdt.balanceOf(trader.address);

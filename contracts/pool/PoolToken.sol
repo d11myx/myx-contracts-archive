@@ -19,10 +19,11 @@ contract PoolToken is IPoolToken, Roleable, ERC20 {
         address _miner,
         string memory name_,
         string memory symbol_
-    ) Roleable(addressProvider) ERC20(name_, symbol_) {
+    ) ERC20(name_, symbol_) Roleable() {
         indexToken = _indexToken;
         stableToken = _stableToken;
         miners[_miner] = true;
+        ADDRESS_PROVIDER = addressProvider;
     }
 
     modifier onlyMiner() {
@@ -34,16 +35,12 @@ contract PoolToken is IPoolToken, Roleable, ERC20 {
         _mint(to, amount);
     }
 
-    function burn(address account, uint256 amount) external onlyMiner {
-        _burn(account, amount);
-    }
-
     function burn(uint256 amount) external {
         _burn(msg.sender, amount);
     }
 
-    //todo lock time
-    function setMiner(address account, bool enable) external onlyAdmin {
+    function setMiner(address account, bool enable) external {
+        require(msg.sender == ADDRESS_PROVIDER.timelock(), "onlyTimelock");
         miners[account] = enable;
     }
 }
