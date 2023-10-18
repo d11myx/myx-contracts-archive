@@ -322,7 +322,7 @@ contract Pool is IPool, Upgradeable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             if (vault.stableTotalAmount < _profit.abs()) {
-                swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -337,7 +337,7 @@ contract Pool is IPool, Upgradeable {
             vault.indexTotalAmount += _profit.abs();
         } else {
             if (vault.indexTotalAmount < _profit.abs()) {
-                swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -424,7 +424,7 @@ contract Pool is IPool, Upgradeable {
         }
     }
 
-    function swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) public {
+    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) private {
         Pair memory pair = pairs[_pairIndex];
         uint256 price = getPrice(pair.indexToken);
         bytes memory path = tokenPath[_pairIndex][tokenIn];
@@ -944,7 +944,7 @@ contract Pool is IPool, Upgradeable {
         }
         uint256 bal = IERC20(token).balanceOf(address(this));
         if (bal < amount) {
-            swapInUni(pairIndex, token, amount);
+            _swapInUni(pairIndex, token, amount);
         }
         IERC20(token).safeTransfer(to, amount);
     }

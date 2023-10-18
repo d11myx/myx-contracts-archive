@@ -24,13 +24,7 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IOrderCallback.sol";
 
-
-contract OrderManager is
-    IOrderManager,
-    PausableUpgradeable,
-    Upgradeable,
-    ReentrancyGuardUpgradeable
-{
+contract OrderManager is IOrderManager, Upgradeable {
     using SafeERC20 for IERC20;
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -54,8 +48,8 @@ contract OrderManager is
 
     IPool public pool;
     IPositionManager public positionManager;
-    address public addressExecutionLogic;
-    address public addressLiquidationLogic;
+    address public executionLogic;
+    address public liquidationLogic;
     address public router;
 
     function initialize(
@@ -63,9 +57,6 @@ contract OrderManager is
         IPool _pool,
         IPositionManager _positionManager
     ) public initializer {
-        __ReentrancyGuard_init();
-        __Pausable_init();
-
         ADDRESS_PROVIDER = addressProvider;
         pool = _pool;
         positionManager = _positionManager;
@@ -77,65 +68,37 @@ contract OrderManager is
     }
 
     modifier onlyExecutor() {
-        require(
-            msg.sender == addressExecutionLogic || msg.sender == addressLiquidationLogic,
-            "onlyExecutor"
-        );
+        require(msg.sender == executionLogic || msg.sender == liquidationLogic, "onlyExecutor");
         _;
     }
 
-    modifier onlyCreateOrderAddress(address account) {
+    modifier onlyExecutorAndRouter() {
         require(
-            msg.sender == router ||
-                msg.sender == addressExecutionLogic ||
-                msg.sender == addressLiquidationLogic ||
-                account == msg.sender,
-            "no access"
-        );
-        _;
-    }
-
-    modifier onlyExecutorOrAccount(address account) {
-        require(
-            msg.sender == address(addressExecutionLogic) ||
-                msg.sender == address(addressLiquidationLogic) ||
-                account == msg.sender,
+            msg.sender == router || msg.sender == executionLogic || msg.sender == liquidationLogic,
             "no access"
         );
         _;
     }
 
     function setExecutionLogic(address _addressExecutionLogic) external onlyPoolAdmin {
-        addressExecutionLogic = _addressExecutionLogic;
+        executionLogic = _addressExecutionLogic;
     }
 
     function setLiquidationLogic(address _addressLiquidationLogic) external onlyPoolAdmin {
-        addressLiquidationLogic = _addressLiquidationLogic;
+        liquidationLogic = _addressLiquidationLogic;
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
         router = _router;
     }
 
-    function getOrderTpSl(
-        uint256 orderId
-    ) public view override returns (TradingTypes.OrderWithTpSl memory) {
-        return orderWithTpSl[orderId];
-    }
-
-    function getPositionOrders(bytes32 key) public view override returns (PositionOrder[] memory) {
-        return positionOrders[key];
-    }
-
     function createOrder(
         TradingTypes.CreateOrderRequest calldata request
-    )
-        public
-        nonReentrant
-        onlyCreateOrderAddress(request.account)
-        whenNotPaused
-        returns (uint256 orderId)
-    {
+    ) public returns (uint256 orderId) {
+        require(
+            msg.sender == executionLogic || msg.sender == liquidationLogic || msg.sender == router,
+            "onlyExecutor&Router"
+        );
         address account = request.account;
 
         // account is frozen
@@ -155,9 +118,7 @@ contract OrderManager is
             request.tradeType == TradingTypes.TradeType.LIMIT
         ) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(
-                pair.indexToken
-            );
+            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 require(
                     request.sizeAmount == 0 ||
@@ -264,7 +225,16 @@ contract OrderManager is
         TradingTypes.TradeType tradeType,
         bool isIncrease,
         string memory reason
-    ) public nonReentrant onlyCreateOrderAddress(msg.sender) whenNotPaused {
+    ) external onlyExecutorAndRouter {
+        _cancelOrder(orderId, tradeType, isIncrease, reason);
+    }
+
+    function _cancelOrder(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        string memory reason
+    ) private {
         if (isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = getIncreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
@@ -285,7 +255,7 @@ contract OrderManager is
         address account,
         uint256 pairIndex,
         bool isLong
-    ) external onlyExecutorOrAccount(account) whenNotPaused {
+    ) external onlyExecutor {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, account);
 
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
@@ -294,13 +264,80 @@ contract OrderManager is
             uint256 lastIndex = positionOrders[key].length - 1;
             PositionOrder memory positionOrder = positionOrders[key][lastIndex];
 
-            this.cancelOrder(
+            _cancelOrder(
                 positionOrder.orderId,
                 positionOrder.tradeType,
                 positionOrder.isIncrease,
                 "cancelAllPositionOrders"
             );
         }
+    }
+
+    function increaseOrderExecutedSize(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease,
+        uint256 increaseSize
+    ) external override onlyExecutor {
+        if (isIncrease) {
+            if (tradeType == TradingTypes.TradeType.MARKET) {
+                increaseMarketOrders[orderId].executedSize += increaseSize;
+            } else if (tradeType == TradingTypes.TradeType.LIMIT) {
+                increaseLimitOrders[orderId].executedSize += increaseSize;
+            }
+        } else {
+            if (tradeType == TradingTypes.TradeType.MARKET) {
+                decreaseMarketOrders[orderId].executedSize += increaseSize;
+            } else {
+                decreaseLimitOrders[orderId].executedSize += increaseSize;
+            }
+        }
+    }
+
+    function removeOrderFromPosition(PositionOrder memory order) public onlyExecutor {
+        _removeOrderFromPosition(order);
+    }
+
+    function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor {
+        delete increaseMarketOrders[orderId];
+    }
+
+    function removeIncreaseLimitOrders(uint256 orderId) external onlyExecutor {
+        delete increaseLimitOrders[orderId];
+    }
+
+    function removeDecreaseMarketOrders(uint256 orderId) external onlyExecutor {
+        delete decreaseMarketOrders[orderId];
+    }
+
+    function removeDecreaseLimitOrders(uint256 orderId) external onlyExecutor {
+        delete decreaseLimitOrders[orderId];
+    }
+
+    function setOrderNeedADL(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool needADL
+    ) external onlyExecutor {
+        TradingTypes.DecreasePositionOrder storage order;
+        if (tradeType == TradingTypes.TradeType.MARKET) {
+            order = decreaseMarketOrders[orderId];
+        } else {
+            order = decreaseLimitOrders[orderId];
+            require(order.tradeType == tradeType, "trade type not match");
+        }
+        order.needADL = needADL;
+    }
+
+    function saveOrderTpSl(
+        uint256 orderId,
+        TradingTypes.OrderWithTpSl memory tpSl
+    ) external onlyRouter {
+        orderWithTpSl[orderId] = tpSl;
+    }
+
+    function removeOrderTpSl(uint256 orderId) external onlyExecutor {
+        delete orderWithTpSl[orderId];
     }
 
     function _transferOrderCollateral(
@@ -343,7 +380,7 @@ contract OrderManager is
         }
         ordersIndex++;
 
-        this.addOrderToPosition(
+        _addOrderToPosition(
             PositionOrder(
                 order.account,
                 order.pairIndex,
@@ -414,7 +451,7 @@ contract OrderManager is
         ordersIndex++;
 
         // add decrease order
-        this.addOrderToPosition(
+        _addOrderToPosition(
             PositionOrder(
                 order.account,
                 order.pairIndex,
@@ -502,12 +539,45 @@ contract OrderManager is
         int256 collateral,
         PositionOrder memory positionOrder
     ) internal {
-        this.removeOrderFromPosition(positionOrder);
+        _removeOrderFromPosition(positionOrder);
 
         if (collateral > 0) {
             IPool.Pair memory pair = pool.getPair(pairIndex);
             pool.transferTokenOrSwap(pairIndex, pair.stableToken, account, collateral.abs());
         }
+    }
+
+    function _addOrderToPosition(PositionOrder memory order) private {
+        bytes32 positionKey = PositionKey.getPositionKey(
+            order.account,
+            order.pairIndex,
+            order.isLong
+        );
+        positionOrderIndex[positionKey][order.orderId] = positionOrders[positionKey].length;
+        positionOrders[positionKey].push(order);
+    }
+
+    function _removeOrderFromPosition(PositionOrder memory order) private {
+        bytes32 positionKey = PositionKey.getPositionKey(
+            order.account,
+            order.pairIndex,
+            order.isLong
+        );
+
+        uint256 index = positionOrderIndex[positionKey][order.orderId];
+        uint256 lastIndex = positionOrders[positionKey].length - 1;
+
+        if (index < lastIndex) {
+            // swap last order
+            PositionOrder memory lastOrder = positionOrders[positionKey][
+                positionOrders[positionKey].length - 1
+            ];
+
+            positionOrders[positionKey][index] = lastOrder;
+            positionOrderIndex[positionKey][lastOrder.orderId] = index;
+        }
+        delete positionOrderIndex[positionKey][order.orderId];
+        positionOrders[positionKey].pop();
     }
 
     function getIncreaseOrder(
@@ -536,111 +606,13 @@ contract OrderManager is
         return order;
     }
 
-    function increaseOrderExecutedSize(
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        bool isIncrease,
-        uint256 increaseSize
-    ) external override onlyExecutor {
-        if (isIncrease) {
-            if (tradeType == TradingTypes.TradeType.MARKET) {
-                increaseMarketOrders[orderId].executedSize += increaseSize;
-            } else if (tradeType == TradingTypes.TradeType.LIMIT) {
-                increaseLimitOrders[orderId].executedSize += increaseSize;
-            }
-        } else {
-            if (tradeType == TradingTypes.TradeType.MARKET) {
-                decreaseMarketOrders[orderId].executedSize += increaseSize;
-            } else {
-                decreaseLimitOrders[orderId].executedSize += increaseSize;
-            }
-        }
+    function getOrderTpSl(
+        uint256 orderId
+    ) public view override returns (TradingTypes.OrderWithTpSl memory) {
+        return orderWithTpSl[orderId];
     }
 
-    function addOrderToPosition(
-        PositionOrder memory order
-    ) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
-        bytes32 positionKey = PositionKey.getPositionKey(
-            order.account,
-            order.pairIndex,
-            order.isLong
-        );
-        positionOrderIndex[positionKey][order.orderId] = positionOrders[positionKey].length;
-        positionOrders[positionKey].push(order);
-    }
-
-    function removeOrderFromPosition(
-        PositionOrder memory order
-    ) public onlyCreateOrderAddress(msg.sender) whenNotPaused {
-        bytes32 positionKey = PositionKey.getPositionKey(
-            order.account,
-            order.pairIndex,
-            order.isLong
-        );
-
-        uint256 index = positionOrderIndex[positionKey][order.orderId];
-        uint256 lastIndex = positionOrders[positionKey].length - 1;
-
-        if (index < lastIndex) {
-            // swap last order
-            PositionOrder memory lastOrder = positionOrders[positionKey][
-                positionOrders[positionKey].length - 1
-            ];
-
-            positionOrders[positionKey][index] = lastOrder;
-            positionOrderIndex[positionKey][lastOrder.orderId] = index;
-        }
-        delete positionOrderIndex[positionKey][order.orderId];
-        positionOrders[positionKey].pop();
-    }
-
-    function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
-        delete increaseMarketOrders[orderId];
-    }
-
-    function removeIncreaseLimitOrders(uint256 orderId) external onlyExecutor whenNotPaused {
-        delete increaseLimitOrders[orderId];
-    }
-
-    function removeDecreaseMarketOrders(uint256 orderId) external onlyExecutor whenNotPaused {
-        delete decreaseMarketOrders[orderId];
-    }
-
-    function removeDecreaseLimitOrders(uint256 orderId) external onlyExecutor whenNotPaused {
-        delete decreaseLimitOrders[orderId];
-    }
-
-    function setOrderNeedADL(
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        bool needADL
-    ) external onlyExecutor whenNotPaused {
-        TradingTypes.DecreasePositionOrder storage order;
-        if (tradeType == TradingTypes.TradeType.MARKET) {
-            order = decreaseMarketOrders[orderId];
-        } else {
-            order = decreaseLimitOrders[orderId];
-            require(order.tradeType == tradeType, "trade type not match");
-        }
-        order.needADL = needADL;
-    }
-
-    function saveOrderTpSl(
-        uint256 orderId,
-        TradingTypes.OrderWithTpSl memory tpSl
-    ) external onlyRouter whenNotPaused {
-        orderWithTpSl[orderId] = tpSl;
-    }
-
-    function removeOrderTpSl(uint256 orderId) external onlyExecutor whenNotPaused {
-        delete orderWithTpSl[orderId];
-    }
-
-    function setPaused() external onlyAdmin {
-        _pause();
-    }
-
-    function setUnPaused() external onlyAdmin {
-        _unpause();
+    function getPositionOrders(bytes32 key) public view override returns (PositionOrder[] memory) {
+        return positionOrders[key];
     }
 }
