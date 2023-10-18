@@ -130,7 +130,7 @@ describe('LP: fair price', () => {
         } = await pool.getReceivedAmount(pairIndex, sellLpAmount);
 
         await lpToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
-        await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, sellLpAmount);
+        await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, sellLpAmount, false);
         const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
         const userBtcBalanceAfter = await btc.balanceOf(trader.address);
         const userUsdtBalanceAfter = await usdt.balanceOf(trader.address);
