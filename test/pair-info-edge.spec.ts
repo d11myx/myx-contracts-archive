@@ -41,7 +41,7 @@ describe('Pool: Edge cases', () => {
     it('check pair info', async () => {
         const { pool, fundingRate, btc, usdt } = testEnv;
 
-        const pairIndex = 0;
+        const pairIndex = 1;
 
         expect(await pool.pairs(pairIndex)).deep.be.eq(await pool.getPair(pairIndex));
         expect(await pool.tradingConfigs(pairIndex)).deep.be.eq(await pool.getTradingConfig(pairIndex));
@@ -64,7 +64,7 @@ describe('Pool: Edge cases', () => {
                 users: [unHandler],
             } = testEnv;
 
-            const pairIndex = 0;
+            const pairIndex = 1;
             const pair = await pool.getPair(pairIndex);
             await expect(pool.connect(unHandler.signer).updatePair(pairIndex, pair)).to.be.revertedWith(
                 'onlyPoolAdmin',
@@ -74,7 +74,7 @@ describe('Pool: Edge cases', () => {
         it('check update pair', async () => {
             const { deployer, pool } = testEnv;
 
-            const pairIndex = 0;
+            const pairIndex = 1;
             const pairBefore = await pool.getPair(pairIndex);
 
             // updatePair

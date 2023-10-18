@@ -7,7 +7,7 @@ import { expect } from './shared/expect';
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: check require condition, trigger errors', async () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {

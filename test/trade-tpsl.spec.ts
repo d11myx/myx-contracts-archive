@@ -7,7 +7,7 @@ import { IRouter, TradingTypes } from '../types/contracts/core/Router';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 
 describe('Trade: TP & SL', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {

@@ -19,7 +19,7 @@ async function main() {
     console.log(`btcPrice:`, btcPrice);
 
     const account = '0x2068f8e9C9e61A330F2F713C998D372C04e3C9Cc';
-    const pairIndex = 0;
+    const pairIndex = 1;
     const isLong = false;
     await calculateMaxDecreaseMargin(positionManager, account, pairIndex, isLong, btcPrice);
 }
