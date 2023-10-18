@@ -315,15 +315,16 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         address receiver,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).addLiquidity(
-            receiver,
-            pairIndex,
-            indexAmount,
-            stableAmount,
-            abi.encode(msg.sender)
-        );
+        return
+            IPool(pool).addLiquidity(
+                receiver,
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                abi.encode(msg.sender)
+            );
     }
 
     function removeLiquidity(
