@@ -134,7 +134,7 @@ describe('Trade: trading fee', () => {
             };
 
             let orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, normal, 0);
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -152,7 +152,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader2.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest2);
+            await router.connect(trader2.signer).createIncreaseOrder(increasePositionRequest2);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip1, 0);
             const trader2Position = await positionManager.getPosition(trader2.address, pairIndex, true);
 
@@ -170,7 +170,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader3.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest3);
+            await router.connect(trader3.signer).createIncreaseOrder(increasePositionRequest3);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip2, 0);
             const trader3Position = await positionManager.getPosition(trader3.address, pairIndex, true);
 
@@ -188,7 +188,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader4.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest4);
+            await router.connect(trader4.signer).createIncreaseOrder(increasePositionRequest4);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip3, 0);
             const trader4Position = await positionManager.getPosition(trader4.address, pairIndex, true);
 
@@ -206,7 +206,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader5.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest5);
+            await router.connect(trader5.signer).createIncreaseOrder(increasePositionRequest5);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip4, 0);
             const trader5Position = await positionManager.getPosition(trader5.address, pairIndex, true);
 
@@ -224,7 +224,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader6.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest6);
+            await router.connect(trader6.signer).createIncreaseOrder(increasePositionRequest6);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip5, 0);
             const trader6Position = await positionManager.getPosition(trader6.address, pairIndex, true);
 
