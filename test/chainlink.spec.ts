@@ -10,6 +10,7 @@ import {
     Timelock,
     AddressesProvider,
     RoleManager,
+    WETH,
 } from '../types';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -47,8 +48,10 @@ describe('ChainlinkpriceOracle Spec', () => {
     beforeEach(async () => {
         [owner, dev, spender, other, user1, user2] = await ethers.getSigners();
         const ERC20DecimalsMock = await ethers.getContractFactory('ERC20DecimalsMock');
+        const WETHMock = await ethers.getContractFactory('WETH');
         const ChainlinkPriceFeed = await ethers.getContractFactory('ChainlinkPriceFeed');
         const MockChainLink = await ethers.getContractFactory('MockChainLink');
+        const weth = (await WETHMock.deploy('WETH', 'WETH', '18')) as WETH;
         eth = (await ERC20DecimalsMock.deploy('token1', 'token1', 18)) as ERC20DecimalsMock;
         btc = (await ERC20DecimalsMock.deploy('token2', 'token2', 8)) as ERC20DecimalsMock;
         token3 = (await ERC20DecimalsMock.deploy('token3', 'token3', 18)) as ERC20DecimalsMock;
@@ -62,7 +65,10 @@ describe('ChainlinkpriceOracle Spec', () => {
 
         const addressesProviderFactory = await ethers.getContractFactory('AddressesProvider');
 
-        let addressProvider = (await addressesProviderFactory.deploy(timelock.address)) as AddressesProvider;
+        let addressProvider = (await addressesProviderFactory.deploy(
+            weth.address,
+            timelock.address,
+        )) as AddressesProvider;
         const rolemanagerFactory = await ethers.getContractFactory('RoleManager');
         let roleManager = (await rolemanagerFactory.deploy()) as RoleManager;
 

@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../libraries/PositionKey.sol";
 import "../libraries/Upgradeable.sol";
-import "../libraries/ETHGateway.sol";
 import "../libraries/Multicall.sol";
 import "../interfaces/IRouter.sol";
 import "../interfaces/IAddressesProvider.sol";
@@ -15,22 +14,18 @@ import "../interfaces/IOrderManager.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPool.sol";
+import "../interfaces/IWETH.sol";
 import "../interfaces/IOrderCallback.sol";
 import "../libraries/TradingTypes.sol";
 
-contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGateway {
+contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
     using SafeERC20 for IERC20;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
     IPool public immutable pool;
 
-    constructor(
-        address _weth,
-        IAddressesProvider addressProvider,
-        IOrderManager _orderManager,
-        IPool _pool
-    ) ETHGateway(_weth) {
+    constructor(IAddressesProvider addressProvider, IOrderManager _orderManager, IPool _pool) {
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
         pool = _pool;
@@ -292,12 +287,17 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         return (tpOrderId, slOrderId);
     }
 
+    function wrapWETH() external payable {
+        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
+        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
+    }
+
     function addLiquidity(
         address indexToken,
         address stableToken,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).addLiquidity(
@@ -315,7 +315,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
         address receiver,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override {
+    ) external {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         IPool(pool).addLiquidity(
             receiver,
@@ -329,28 +329,42 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback, ETHGa
     function removeLiquidity(
         address indexToken,
         address stableToken,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     )
         external
-        override
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).removeLiquidity(msg.sender, pairIndex, amount, abi.encode(msg.sender));
+        return
+            IPool(pool).removeLiquidity(
+                payable(msg.sender),
+                pairIndex,
+                amount,
+                useETH,
+                abi.encode(msg.sender)
+            );
     }
 
     function removeLiquidityForAccount(
         address indexToken,
         address stableToken,
         address receiver,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     )
         external
-        override
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
+        return
+            IPool(pool).removeLiquidity(
+                payable(receiver),
+                pairIndex,
+                amount,
+                useETH,
+                abi.encode(msg.sender)
+            );
     }
 
     function createOrderCallback(
