@@ -21,6 +21,9 @@ import 'hardhat-dependency-compiler';
 dotenv.config();
 
 function getEnvAccounts(accountStr: string) {
+    if (!accountStr || accountStr.length <= 0) {
+        return [];
+    }
     const accounts = accountStr.split(',');
     return accounts.filter((value) => value.length > 0).map((value) => value.trim());
 }
