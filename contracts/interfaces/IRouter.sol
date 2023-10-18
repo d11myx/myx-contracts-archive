@@ -48,31 +48,31 @@ interface IRouter {
         TradingTypes.CreateTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId);
 
-    function addLiquidity(
-        address indexToken,
-        address stableToken,
-        uint256 indexAmount,
-        uint256 stableAmount
-    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
+    // function addLiquidity(
+    //     address indexToken,
+    //     address stableToken,
+    //     uint256 indexAmount,
+    //     uint256 stableAmount
+    // ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
-    function addLiquidityForAccount(
-        address indexToken,
-        address stableToken,
-        address receiver,
-        uint256 indexAmount,
-        uint256 stableAmount
-    ) external;
+    // function addLiquidityForAccount(
+    //     address indexToken,
+    //     address stableToken,
+    //     address receiver,
+    //     uint256 indexAmount,
+    //     uint256 stableAmount
+    // ) external;
 
-    function removeLiquidity(
-        address indexToken,
-        address stableToken,
-        uint256 amount
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
+    // function removeLiquidity(
+    //     address indexToken,
+    //     address stableToken,
+    //     uint256 amount
+    // ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
-    function removeLiquidityForAccount(
-        address indexToken,
-        address stableToken,
-        address receiver,
-        uint256 amount
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
+    // function removeLiquidityForAccount(
+    //     address indexToken,
+    //     address stableToken,
+    //     address receiver,
+    //     uint256 amount
+    // ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 }

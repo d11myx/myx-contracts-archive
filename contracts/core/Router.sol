@@ -297,7 +297,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         address stableToken,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
+    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).addLiquidity(
@@ -315,7 +315,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         address receiver,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external override {
+    ) external {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         IPool(pool).addLiquidity(
             receiver,
@@ -329,28 +329,42 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
     function removeLiquidity(
         address indexToken,
         address stableToken,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     )
         external
-        override
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).removeLiquidity(msg.sender, pairIndex, amount, abi.encode(msg.sender));
+        return
+            IPool(pool).removeLiquidity(
+                payable(msg.sender),
+                pairIndex,
+                amount,
+                useETH,
+                abi.encode(msg.sender)
+            );
     }
 
     function removeLiquidityForAccount(
         address indexToken,
         address stableToken,
         address receiver,
-        uint256 amount
+        uint256 amount,
+        bool useETH
     )
         external
-        override
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        return IPool(pool).removeLiquidity(receiver, pairIndex, amount, abi.encode(msg.sender));
+        return
+            IPool(pool).removeLiquidity(
+                payable(receiver),
+                pairIndex,
+                amount,
+                useETH,
+                abi.encode(msg.sender)
+            );
     }
 
     function createOrderCallback(
