@@ -70,7 +70,7 @@ describe('Router: Edge cases', () => {
             sl: ethers.utils.parseUnits('1', 18),
             maxSlippage: 0,
         };
-        await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+        await router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
         const orderId = 0;
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
@@ -108,7 +108,7 @@ describe('Router: Edge cases', () => {
             maxSlippage: 0,
         };
         const orderId = await orderManager.ordersIndex();
-        await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+        await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);

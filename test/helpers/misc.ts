@@ -63,14 +63,14 @@ export async function increasePosition(
     if (tradeType == TradeType.MARKET) {
         // create increase order
         orderId = await orderManager.ordersIndex();
-        await router.connect(user.signer).createIncreaseOrderWithoutTpSl(request);
+        await router.connect(user.signer).createIncreaseOrder(request);
         // execute order
         const tx = await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType, 0, 0);
         receipt = await tx.wait();
     } else {
         // create increase order
         orderId = await orderManager.ordersIndex();
-        await router.connect(user.signer).createIncreaseOrderWithoutTpSl(request);
+        await router.connect(user.signer).createIncreaseOrder(request);
         // execute order
         const tx = await executionLogic
             .connect(keeper.signer)

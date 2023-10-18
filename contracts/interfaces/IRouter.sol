@@ -22,11 +22,11 @@ interface IRouter {
 
     event UpdateTradingRouter(address oldAddress, address newAddress);
 
-    function createIncreaseOrder(
+    function createIncreaseOrderWithTpSl(
         TradingTypes.IncreasePositionWithTpSlRequest memory request
     ) external returns (uint256 orderId);
 
-    function createIncreaseOrderWithoutTpSl(
+    function createIncreaseOrder(
         TradingTypes.IncreasePositionRequest memory request
     ) external returns (uint256 orderId);
 

@@ -81,7 +81,7 @@ describe('Router: Edge cases', () => {
             sl: ethers.utils.parseUnits('1', 18),
             maxSlippage: 0,
         };
-        await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+        await router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
 
         const orderId = 0;
         // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
@@ -118,7 +118,7 @@ describe('Router: Edge cases', () => {
             maxSlippage: 0,
         };
         const orderId = await orderManager.ordersIndex();
-        await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+        await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
@@ -386,7 +386,7 @@ describe('Router: Edge cases', () => {
 
             // await tradingRouter.setHandler(trader.address, true);
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
@@ -447,6 +447,6 @@ export async function increaseUserPosition(
 
     // await router.setHandler(user.address, true);
     const increaseOrderId = await orderManager.ordersIndex();
-    await router.connect(user.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+    await router.connect(user.signer).createIncreaseOrder(increasePositionRequest);
     await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
 }
