@@ -77,6 +77,10 @@ contract Pool is IPool, Upgradeable {
         _;
     }
 
+    receive() external payable {
+        require(msg.sender == ADDRESS_PROVIDER.WETH(), "Not WETH");
+    }
+
     modifier onlyPositionManager() {
         require(positionManagers.contains(msg.sender), "onlyPositionManager");
         _;
@@ -98,7 +102,12 @@ contract Pool is IPool, Upgradeable {
         _;
     }
 
-    function setRouter(address _router) external onlyPoolAdmin {
+    //  function unwrapWETH(uint256 amount,address payable to) private  {
+    //         IWETH(WETH).withdraw(amount);
+    //         (bool success, ) = to.call{value: amount}(new bytes(0));
+    //         require(success, "err-transfer-eth");
+    //     }
+    function setSwapRouter(address _router) external onlyPoolAdmin {
         router = _router;
     }
 
