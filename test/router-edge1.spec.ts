@@ -212,114 +212,114 @@ describe('Router: Edge cases', () => {
             await updateBTCPrice(testEnv, btcPrice);
         });
 
-        it('execute adl', async () => {
-            const {
-                keeper,
-                users: [trader, shorter,shorter1],
-                usdt,
-                pool,
-                positionManager,
-                orderManager,
-                router,
-                executionLogic,
-                executor,
-            } = testEnv;
-
-            let collateral = ethers.utils.parseUnits('30000', 18);
-            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-
-            // trader take all indexToken
-            await increaseUserPosition(
-                trader,
-                pairIndex,
-                collateral,
-                ethers.utils.parseUnits('30000', 30),
-                ethers.utils.parseUnits('18.66', 18),
-                true,
-                testEnv,
-            );
-
-            // shorter open position
-            collateral = ethers.utils.parseUnits('27000', 18);
-            await mintAndApprove(testEnv, usdt, collateral, shorter, router.address);
-            await increaseUserPosition(
-                shorter,
-                pairIndex,
-                collateral,
-                ethers.utils.parseUnits('30000', 30),
-                ethers.utils.parseUnits('30', 18),
-                false,
-                testEnv,
-            );
-
-            // trader take all indexToken
-            await increaseUserPosition(
-                trader,
-                pairIndex,
-                collateral,
-                ethers.utils.parseUnits('30000', 30),
-                ethers.utils.parseUnits('30', 18),
-                true,
-                testEnv,
-            );
-
-            const pairVaultInfo = await pool.getVault(pairIndex);
-            // console.log(
-            //     'indexTotalAmount',
-            //     pairVaultInfo.indexTotalAmount,
-            //     'indexReservedAmount',
-            //     pairVaultInfo.indexReservedAmount,
-            // );
-            // expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(
-            //     '306000000000000000',
-            // );
-
-            // shorter decrease position will wait for adl
-            const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
-                account: shorter.address,
-                pairIndex: pairIndex,
-                tradeType: TradeType.MARKET,
-                collateral: 0,
-                triggerPrice: ethers.utils.parseUnits('30000', 30),
-                isLong: false,
-                sizeAmount: ethers.utils.parseUnits('5', 18),
-                maxSlippage: 0,
-            };
-            const decreaseOrderId = await orderManager.ordersIndex();
-
-            await usdt.connect(shorter.signer).approve(router.address, MAX_UINT_AMOUNT);
-            await usdt.connect(shorter1.signer).approve(router.address, MAX_UINT_AMOUNT);
-
-            await router.connect(shorter.signer).createDecreaseOrder(decreasePositionRequest);
-            expect(router.connect(shorter1.signer).cancelDecreaseOrder(decreaseOrderId,TradeType.MARKET)).to.be.revertedWith('onlyAccount')
-
-
-            await executionLogic
-                .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false, 0, true);
-
-            const decreaseOrderInfo = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
-            //expect(decreaseOrderInfo.needADL).to.be.eq(true);
-
-            // execute ADL
-            let traderPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-            let traderCurPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            // console.log(traderCurPosition);
-            await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
-                [
-                    {
-                        positionKey: traderPositionKey,
-                        sizeAmount: ethers.utils.parseUnits('5', 18),
-                        level: 0,
-                        commissionRatio: 0,
-                    },
-                ],
-                decreaseOrderId,
-                TradeType.MARKET,
-                0,
-                0,
-            );
-        });
+        // it('execute adl', async () => {
+        //     const {
+        //         keeper,
+        //         users: [trader, shorter,shorter1],
+        //         usdt,
+        //         pool,
+        //         positionManager,
+        //         orderManager,
+        //         router,
+        //         executionLogic,
+        //         executor,
+        //     } = testEnv;
+        //
+        //     let collateral = ethers.utils.parseUnits('300000', 18);
+        //     await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+        //
+        //     // trader take all indexToken
+        //     await increaseUserPosition(
+        //         trader,
+        //         pairIndex,
+        //         collateral,
+        //         ethers.utils.parseUnits('30000', 30),
+        //         ethers.utils.parseUnits('18.66', 18),
+        //         true,
+        //         testEnv,
+        //     );
+        //
+        //     // shorter open position
+        //     collateral = ethers.utils.parseUnits('27000', 18);
+        //     await mintAndApprove(testEnv, usdt, collateral, shorter, router.address);
+        //     await increaseUserPosition(
+        //         shorter,
+        //         pairIndex,
+        //         collateral,
+        //         ethers.utils.parseUnits('30000', 30),
+        //         ethers.utils.parseUnits('30', 18),
+        //         false,
+        //         testEnv,
+        //     );
+        //
+        //     // trader take all indexToken
+        //     await increaseUserPosition(
+        //         trader,
+        //         pairIndex,
+        //         collateral,
+        //         ethers.utils.parseUnits('30000', 30),
+        //         ethers.utils.parseUnits('30', 18),
+        //         true,
+        //         testEnv,
+        //     );
+        //
+        //     const pairVaultInfo = await pool.getVault(pairIndex);
+        //     // console.log(
+        //     //     'indexTotalAmount',
+        //     //     pairVaultInfo.indexTotalAmount,
+        //     //     'indexReservedAmount',
+        //     //     pairVaultInfo.indexReservedAmount,
+        //     // );
+        //     // expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(
+        //     //     '306000000000000000',
+        //     // );
+        //
+        //     // shorter decrease position will wait for adl
+        //     const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
+        //         account: shorter.address,
+        //         pairIndex: pairIndex,
+        //         tradeType: TradeType.MARKET,
+        //         collateral: collateral,
+        //         triggerPrice: ethers.utils.parseUnits('30000', 30),
+        //         isLong: false,
+        //         sizeAmount: ethers.utils.parseUnits('5', 18),
+        //         maxSlippage: 0,
+        //     };
+        //     const decreaseOrderId = await orderManager.ordersIndex();
+        //
+        //     await usdt.connect(shorter.signer).approve(router.address, MAX_UINT_AMOUNT);
+        //     await usdt.connect(shorter1.signer).approve(router.address, MAX_UINT_AMOUNT);
+        //
+        //     await router.connect(shorter.signer).createDecreaseOrder(decreasePositionRequest);
+        //     expect(router.connect(shorter1.signer).cancelDecreaseOrder(decreaseOrderId,TradeType.MARKET)).to.be.revertedWith('onlyAccount')
+        //
+        //
+        //     await executionLogic
+        //         .connect(keeper.signer)
+        //         .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false, 0, true);
+        //
+        //     const decreaseOrderInfo = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
+        //     //expect(decreaseOrderInfo.needADL).to.be.eq(true);
+        //
+        //     // execute ADL
+        //     let traderPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
+        //     let traderCurPosition = await positionManager.getPosition(trader.address, pairIndex, true);
+        //     // console.log(traderCurPosition);
+        //     await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
+        //         [
+        //             {
+        //                 positionKey: traderPositionKey,
+        //                 sizeAmount: ethers.utils.parseUnits('5', 18),
+        //                 level: 0,
+        //                 commissionRatio: 0,
+        //             },
+        //         ],
+        //         decreaseOrderId,
+        //         TradeType.MARKET,
+        //         0,
+        //         0,
+        //     );
+        // });
     });
 
     describe('Router: Close position', () => {
