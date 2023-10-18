@@ -7,7 +7,7 @@ import { BigNumber, constants } from 'ethers';
 import Decimal from 'decimal.js';
 
 describe('LP: fair price', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {

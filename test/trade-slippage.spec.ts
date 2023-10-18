@@ -7,7 +7,7 @@ import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/trading/Router';
 
 describe('Trade: slippage', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
 
     describe('slippage tolerance', () => {
         let testEnv: TestEnv;

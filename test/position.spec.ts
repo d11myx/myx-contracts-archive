@@ -9,7 +9,7 @@ import { MARKET_NAME } from '../helpers/env';
 import { constants, BigNumber } from 'ethers';
 
 describe('Position', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     describe('Position: liquidate positions', () => {
