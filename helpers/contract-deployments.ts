@@ -23,14 +23,14 @@ import {
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { Duration, deployContract, deployUpgradeableContract, encodeParameterArray, increase, latest, waitForTx } from './utilities/tx';
+import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
 import { MOCK_INDEX_PRICES, MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
-import { POSITION_MANAGER_ID } from './deploy-ids';
-import usdt from '../markets/usdt';
+import { Duration, latest } from './utilities/block';
+import { encodeParameterArray } from './utilities';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -128,25 +128,17 @@ export async function deployPrice(
 
     await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenIndexPrices);
 
-    let timestamp = await latest();
-    let eta = Duration.days(1);
-    await timelock.queueTransaction(
-        oraclePriceFeed.address,
-        0,
-        'setAssetPriceIds(address[],bytes32[])',
-        encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-        eta.add(timestamp),
-    );
-    await increase(Duration.days(1));
-    await waitForTx(
-        await timelock.executeTransaction(
-            oraclePriceFeed.address,
-            0,
-            'setAssetPriceIds(address[],bytes32[])',
-            encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-            eta.add(timestamp),
-        ),
-    );
+    await hre.run('time-execution', {
+        target: oraclePriceFeed.address,
+        value: '0',
+        signature: 'setAssetPriceIds(address[],bytes32[])',
+        data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+        eta: Duration.days(1)
+            .add(await latest())
+            .toString(),
+        timelockAddress: timelock.address,
+    });
+
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = mockPyth.getUpdateFee(updateData);
     await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
@@ -224,7 +216,6 @@ export async function deployTrading(
     log(`deployed OrderManager at ${orderManager.address}`);
 
     let router = (await deployContract('Router', [
-
         addressProvider.address,
         orderManager.address,
         pool.address,
