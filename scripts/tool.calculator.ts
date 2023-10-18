@@ -19,7 +19,7 @@ async function main() {
     console.log(`btcPrice:`, btcPrice);
 
     const account = '0x2068f8e9C9e61A330F2F713C998D372C04e3C9Cc';
-    const pairIndex = 0;
+    const pairIndex = 1;
     const isLong = false;
     await calculateMaxDecreaseMargin(positionManager, account, pairIndex, isLong, btcPrice);
 }
@@ -44,7 +44,7 @@ async function calculateMaxDecreaseMargin(
     const fundingFee = await positionManager.getFundingFee(account, pairIndex, isLong);
     const fundingFeeFormatted = new Decimal(fundingFee.toString()).div(1e18);
 
-    const tradingFee = await positionManager.getTradingFee(0, isLong, parseUnits(size.toString(), 18));
+    const tradingFee = await positionManager.getTradingFee(pairIndex, isLong, parseUnits(size.toString(), 18));
     const tradingFeeFormatted = new Decimal(tradingFee.toString()).div(1e18);
 
     let pnl = averagePrice.sub(price).mul(size);
