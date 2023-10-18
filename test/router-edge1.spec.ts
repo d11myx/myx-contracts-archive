@@ -119,7 +119,7 @@ describe('Router: Edge cases', () => {
             account: trader.address,
             pairIndex: pairIndex,
             tradeType: TradeType.MARKET,
-            collateral: ethers.utils.parseUnits('330000', 18),
+            collateral: ethers.utils.parseUnits('30000', 18),
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('8', 18),
@@ -155,7 +155,7 @@ describe('Router: Edge cases', () => {
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionCollateralBefore = positionBefore.collateral;
 
-        const collateral = await ethers.utils.parseUnits('330000', 18);
+        const collateral = await ethers.utils.parseUnits('10000', 18);
         const openPrice = ethers.utils.parseUnits('30000', 30);
         const sizeAmount = ethers.utils.parseUnits('8', 18);
 
@@ -333,7 +333,7 @@ describe('Router: Edge cases', () => {
 
             await updateBTCPrice(testEnv, '30000');
 
-            const collateral = ethers.utils.parseUnits('9999900000', 30);
+            const collateral = ethers.utils.parseUnits('30000', 30);
             const increaseAmount = ethers.utils.parseUnits('15', 18);
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
@@ -390,7 +390,7 @@ describe('Router: Edge cases', () => {
                 orderManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('100000', 18);
+            const collateral = ethers.utils.parseUnits('1000', 18);
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
             await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
             await usdt.connect(trader1.signer).approve(router.address, MAX_UINT_AMOUNT);
@@ -464,7 +464,7 @@ export async function increaseUserPosition(
         account: user.address,
         pairIndex: pairIndex,
         tradeType: TradeType.MARKET,
-        collateral: ethers.utils.parseUnits('330000', 18),
+        collateral: collateral,
         openPrice: price,
         isLong: isLong,
         sizeAmount: size,
@@ -473,6 +473,6 @@ export async function increaseUserPosition(
 
     // await router.setHandler(user.address, true);
     const increaseOrderId = await orderManager.ordersIndex();
-    //await router.connect(user.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+    await router.connect(user.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
     await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
 }
