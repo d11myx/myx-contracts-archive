@@ -108,7 +108,9 @@ describe('PositionManager: decrease position', () => {
             // console.log(`---poolTokenBalance: `, poolTokenBalance);
 
             await poolToken.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT);
-            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount);
+            await router
+                .connect(depositor.signer)
+                .removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
 
             // const poolVaultAft = await pool.getVault(pairIndex);
             // console.log(`---poolVaultAft: `, poolVaultAft);
