@@ -58,11 +58,7 @@ interface IPool {
         uint256 feeAmount
     );
 
-    event ClaimedFee(
-        address sender,
-        address token,
-        uint256 amount
-    );
+    event ClaimedFee(address sender, address token, uint256 amount);
 
     struct Vault {
         uint256 indexTotalAmount; // total amount of tokens
@@ -175,9 +171,10 @@ interface IPool {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
     function removeLiquidity(
-        address _receiver,
+        address payable _receiver,
         uint256 _pairIndex,
         uint256 _amount,
+        bool useETH,
         bytes calldata data
     )
         external
