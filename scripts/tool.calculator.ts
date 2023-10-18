@@ -44,7 +44,7 @@ async function calculateMaxDecreaseMargin(
     const fundingFee = await positionManager.getFundingFee(account, pairIndex, isLong);
     const fundingFeeFormatted = new Decimal(fundingFee.toString()).div(1e18);
 
-    const tradingFee = await positionManager.getTradingFee(0, isLong, parseUnits(size.toString(), 18));
+    const tradingFee = await positionManager.getTradingFee(pairIndex, isLong, parseUnits(size.toString(), 18));
     const tradingFeeFormatted = new Decimal(tradingFee.toString()).div(1e18);
 
     let pnl = averagePrice.sub(price).mul(size);
