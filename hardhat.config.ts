@@ -1,11 +1,10 @@
 import * as dotenv from 'dotenv';
 
-import { HardhatUserConfig, task } from 'hardhat/config';
+import { HardhatUserConfig } from 'hardhat/config';
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 // import 'hardhat-gas-reporter';
-import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-contract-sizer';
 import '@nomiclabs/hardhat-ethers';
 import 'hardhat-deploy';
@@ -15,7 +14,6 @@ import 'solidity-coverage';
 import 'hardhat-log-remover';
 import 'keccak256';
 import 'merkletreejs';
-import { getCurrentTimestamp } from 'hardhat/internal/hardhat-network/provider/utils/getCurrentTimestamp';
 import { DEFAULT_NAMED_ACCOUNTS, loadTasks } from './helpers';
 import 'hardhat-dependency-compiler';
 
@@ -104,8 +102,6 @@ const TASK_FOLDERS = ['./misc'];
 if (!SKIP_LOAD) {
     loadTasks(TASK_FOLDERS);
 }
-
-// const GOERLI_DEPLOY_KEY = "";
 
 const gas = 'auto';
 const gasPrice = 'auto';

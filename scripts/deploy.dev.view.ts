@@ -24,11 +24,11 @@ async function main() {
 
     // const router = await getRouter();
     // const orderManager = await getOrderManager();
-    const positionManager = await getPositionManager();
+    // const positionManager = await getPositionManager();
     // const executor = await getExecutor();
     // const executionLogic = await getExecutionLogic();
-    const priceOracle = await getOraclePriceFeed();
-    const pool = await getPool();
+    const priceOracle = await getOraclePriceFeed('0x80a595b839e53a68b730e0deeBa52f1e2C87C0fC');
+    const pool = await getPool('0x26bcd5ac4a813df6d526B34cAb5F526a1f7042a8');
 
     // console.log(await pool.getPair(0));
     // console.log(await pool.getPair(1));
@@ -53,24 +53,7 @@ async function main() {
     console.log(`btc price:`, btcIndexPrice);
     console.log(`eth price:`, ethIndexPrice);
 
-    const adl = await positionManager.needADL(
-        0,
-        true,
-        ethers.utils.parseEther('37.15'),
-        ethers.utils.parseUnits('27000', 30),
-    );
-    console.log(adl);
-
-    console.log(
-        await positionManager.needADL(
-            0,
-            true,
-            ethers.utils.parseEther('37.15').sub(adl.needADLAmount),
-            ethers.utils.parseUnits('27000', 30),
-        ),
-    );
-    console.log(await pool.getVault(0));
-    console.log(`getExposedPositions:`, await positionManager.getExposedPositions(0));
+    console.log(await pool.getVault(1));
     // 251253798489917280557928;
     // 9.305696240367308;
     // 9.276714;
@@ -109,37 +92,6 @@ async function main() {
     //         0,
     //         0,
     //     ),
-    // );
-
-    // await executionLogic.executeDecreaseOrder();
-
-    // console.log(await orderManager.getDecreaseOrder(1, TradeType.MARKET));
-
-    // const fee = await oraclePriceFeed.getUpdateFee(
-    //     [
-    //         '0x3fF8C9A44733E54a48170ed3839a80C46C912b00',
-    //         '0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc',
-    //         '0x87ae754028dAC18f1D1D8EB76B557C280906a6aa',
-    //     ],
-    //     ['2704051500000', '163443750000', '100000000'],
-    // );
-    // await oraclePriceFeed.updatePrice(
-    //     [
-    //         '0x3fF8C9A44733E54a48170ed3839a80C46C912b00',
-    //         '0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc',
-    //         '0x87ae754028dAC18f1D1D8EB76B557C280906a6aa',
-    //     ],
-    //     ['2704051500000', '163443750000', '100000000'],
-    //     { value: fee },
-    // );
-
-    // await indexPriceFeed.updatePrice(
-    //     [
-    //         '0x3fF8C9A44733E54a48170ed3839a80C46C912b00',
-    //         '0xb0AB24c940313f6A1e05d01676Db5a4E4E8c79dc',
-    //         '0x87ae754028dAC18f1D1D8EB76B557C280906a6aa',
-    //     ],
-    //     ['2710031000000', '163709000000', '100000000'],
     // );
 }
 
