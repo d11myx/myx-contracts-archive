@@ -77,6 +77,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
                     .connect(poolAdminSigner)
                     .updateTokenPath(pairIndex, pairToken.address, tokenPathConfigs[symbol]),
             );
+            console.log(`[deployment] Uniswap TokenPath for【${symbol}/${MARKET_NAME}】updated`);
         }
     }
 };
