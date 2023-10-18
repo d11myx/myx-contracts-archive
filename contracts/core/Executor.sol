@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+pragma solidity 0.8.19;
 
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
@@ -126,9 +126,6 @@ contract Executor is IExecutor, Upgradeable {
     }
 
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256) internal {
-        IPriceOracle(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(
-            _tokens,
-            _prices
-        );
+        IPriceOracle(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
     }
 }
