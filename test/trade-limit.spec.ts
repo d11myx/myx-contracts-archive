@@ -7,7 +7,7 @@ import { TradingTypes } from '../types/contracts/interfaces/IRouter';
 import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('Trade: Limit order cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {

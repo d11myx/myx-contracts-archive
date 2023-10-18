@@ -6,7 +6,7 @@ import { IPool } from '../types';
 
 describe('Funding: funding rate calculator', () => {
     let testEnv: TestEnv;
-
+    const pairIndex = 1;
     before(async () => {
         testEnv = await newTestEnv();
     });
@@ -26,17 +26,17 @@ describe('Funding: funding rate calculator', () => {
 
         let longTracker = ethers.utils.parseUnits('1000', 18);
         let shortTracker = ethers.utils.parseUnits('450', 18);
-        let rate = await fundingRate.getFundingRate(0, longTracker, shortTracker, vault, openPrice);
+        let rate = await fundingRate.getFundingRate(pairIndex, longTracker, shortTracker, vault, openPrice);
         expect(rate).to.be.eq('1860899');
 
         longTracker = ethers.utils.parseUnits('500', 18);
         shortTracker = ethers.utils.parseUnits('500', 18);
-        rate = await fundingRate.getFundingRate(0, longTracker, shortTracker, vault, openPrice);
+        rate = await fundingRate.getFundingRate(pairIndex, longTracker, shortTracker, vault, openPrice);
         expect(rate).to.be.eq('20000');
 
         longTracker = ethers.utils.parseUnits('0', 18);
         shortTracker = ethers.utils.parseUnits('550', 18);
-        rate = await fundingRate.getFundingRate(0, longTracker, shortTracker, vault, openPrice);
+        rate = await fundingRate.getFundingRate(pairIndex, longTracker, shortTracker, vault, openPrice);
         expect(rate).to.be.eq('-8776875');
     });
 });

@@ -9,7 +9,7 @@ import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
 
 describe('Modify LP Average Price', async () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {

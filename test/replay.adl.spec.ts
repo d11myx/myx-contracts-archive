@@ -8,7 +8,7 @@ import Decimal from 'decimal.js';
 import { IExecutionLogic } from '../types';
 
 describe('Replay: ADL', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
 
     describe('', () => {
         let testEnv: TestEnv;
@@ -34,7 +34,7 @@ describe('Replay: ADL', () => {
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
             await router
                 .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
         });
 
         it('long tracker > short tracker, close long position', async () => {
@@ -151,7 +151,7 @@ describe('Replay: ADL', () => {
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
             await router
                 .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
         });
 
         it('long tracker > short tracker, close long position', async () => {

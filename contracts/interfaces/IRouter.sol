@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import '../libraries/TradingTypes.sol';
+import "../libraries/TradingTypes.sol";
 
 interface IRouter {
     struct CreateOrderTpSlRequest {
@@ -30,7 +30,9 @@ interface IRouter {
         TradingTypes.IncreasePositionRequest memory request
     ) external returns (uint256 orderId);
 
-    function createDecreaseOrder(TradingTypes.DecreasePositionRequest memory request) external returns (uint256);
+    function createDecreaseOrder(
+        TradingTypes.DecreasePositionRequest memory request
+    ) external returns (uint256);
 
     function createDecreaseOrders(
         TradingTypes.DecreasePositionRequest[] memory requests
@@ -47,32 +49,4 @@ interface IRouter {
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external returns (uint256 tpOrderId, uint256 slOrderId);
-
-    // function addLiquidity(
-    //     address indexToken,
-    //     address stableToken,
-    //     uint256 indexAmount,
-    //     uint256 stableAmount
-    // ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
-
-    // function addLiquidityForAccount(
-    //     address indexToken,
-    //     address stableToken,
-    //     address receiver,
-    //     uint256 indexAmount,
-    //     uint256 stableAmount
-    // ) external;
-
-    // function removeLiquidity(
-    //     address indexToken,
-    //     address stableToken,
-    //     uint256 amount
-    // ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
-
-    // function removeLiquidityForAccount(
-    //     address indexToken,
-    //     address stableToken,
-    //     address receiver,
-    //     uint256 amount
-    // ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 }

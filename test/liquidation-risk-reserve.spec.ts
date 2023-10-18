@@ -7,7 +7,7 @@ import Decimal from 'decimal.js';
 import { expect } from './shared/expect';
 
 describe('Liquidation: Risk Reserve', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
@@ -30,7 +30,7 @@ describe('Liquidation: Risk Reserve', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
     it('user loss < position collateral, risk reserve should be increased', async () => {
