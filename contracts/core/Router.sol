@@ -251,6 +251,7 @@ contract Router is
 
         for (uint256 i = 0; i < orders.length; i++) {
             IOrderManager.PositionOrder memory positionOrder = orders[i];
+            require(positionOrder.account == msg.sender, "onlyAccount");
             if (isIncrease && positionOrder.isIncrease) {
                 orderManager.cancelOrder(
                     positionOrder.orderId,
