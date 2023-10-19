@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
-
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IAddressesProvider.sol";
 import "./libraries/Errors.sol";
 
-contract AddressesProvider is Ownable, IAddressesProvider {
+contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
     bytes32 private constant TIMELOCK = "TIMELOCK";
     bytes32 private constant ROLE_MANAGER = "ROLE_MANAGER";
     bytes32 private constant PRICE_ORACLE = "PRICE_ORACLE";
@@ -18,11 +18,9 @@ contract AddressesProvider is Ownable, IAddressesProvider {
     address public override indexPriceOracle;
     address public override fundingRate;
 
-    bool private _initialize;
-
     mapping(bytes32 => address) private _addresses;
 
-    constructor(address _weth, address _timelock) {
+    constructor(address _weth, address _timelock)  {
         timelock = _timelock;
         WETH = _weth;
     }
@@ -56,8 +54,7 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         address newPriceOracle,
         address newIndexPriceOracle,
         address newFundingRateAddress
-    ) external onlyOwner {
-        require(!_initialize, "init");
+    ) external onlyOwner initializer {
         require(
             newPriceOracle != address(0) &&
                 newFundingRateAddress != address(0) &&
@@ -67,7 +64,6 @@ contract AddressesProvider is Ownable, IAddressesProvider {
         priceOracle = newPriceOracle;
         fundingRate = newFundingRateAddress;
         indexPriceOracle = newIndexPriceOracle;
-        _initialize = true;
 
         emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
         emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);
