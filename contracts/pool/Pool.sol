@@ -362,7 +362,7 @@ contract Pool is IPool, Upgradeable {
             if (vault.indexTotalAmount < _profit.abs()) {
                 _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
             }
-            vault.stableTotalAmount -= _profit.abs();
+            vault.indexTotalAmount -= _profit.abs();
         }
 
         emit UpdateLPProfit(_pairIndex, pair.indexToken, _profit, vault.indexTotalAmount);
