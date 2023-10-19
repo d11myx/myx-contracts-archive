@@ -58,14 +58,7 @@ contract Router is
         _;
     }
 
-    function removeLiquidityCallback(
-        address pairToken,
-        uint256 amount,
-        bytes calldata data
-    ) external override onlyPool {
-        address sender = abi.decode(data, (address));
-        IERC20(pairToken).safeTransferFrom(sender, msg.sender, amount);
-    }
+
 
     function salvageToken(address token, uint amount) external onlyPoolAdmin {
         IERC20(token).transfer(msg.sender, amount);
@@ -429,6 +422,15 @@ contract Router is
                 useETH,
                 abi.encode(msg.sender)
             );
+    }
+
+    function removeLiquidityCallback(
+        address pairToken,
+        uint256 amount,
+        bytes calldata data
+    ) external override onlyPool {
+        address sender = abi.decode(data, (address));
+        IERC20(pairToken).safeTransferFrom(sender, msg.sender, amount);
     }
 
     function createOrderCallback(
