@@ -1,3 +1,4 @@
+// @ts-ignore
 import { ethers } from 'hardhat';
 import {
     getExecutionLogic,
@@ -27,8 +28,8 @@ async function main() {
     // const positionManager = await getPositionManager();
     // const executor = await getExecutor();
     // const executionLogic = await getExecutionLogic();
-    const priceOracle = await getOraclePriceFeed('0x80a595b839e53a68b730e0deeBa52f1e2C87C0fC');
-    const pool = await getPool('0x26bcd5ac4a813df6d526B34cAb5F526a1f7042a8');
+    const priceOracle = await getOraclePriceFeed();
+    const pool = await getPool();
 
     // console.log(await pool.getPair(0));
     // console.log(await pool.getPair(1));
