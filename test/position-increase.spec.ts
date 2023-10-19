@@ -101,7 +101,7 @@ describe('Router: increase position ar', () => {
             const orderId = await orderManager.ordersIndex();
             // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -141,7 +141,7 @@ describe('Router: increase position ar', () => {
             const orderId = await orderManager.ordersIndex();
             // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -183,7 +183,7 @@ describe('Router: increase position ar', () => {
             const orderId = await orderManager.ordersIndex();
             // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -225,7 +225,7 @@ describe('Router: increase position ar', () => {
 
             const orderId = await orderManager.ordersIndex();
 
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
@@ -271,7 +271,7 @@ describe('Router: increase position ar', () => {
                 maxSlippage: 0,
             };
 
-            await expect(router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest)).to.be
+            await expect(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)).to.be
                 .reverted;
         });
     });
@@ -352,8 +352,8 @@ describe('Router: increase position ar', () => {
         //
         //     // const orderId = await tradingRouter.ordersIndex();
         //
-        //     await expect(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest)).to.be.reverted;
-        //     // await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+        //     await expect(router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest)).to.be.reverted;
+        //     // await tradingRouter.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
         //     // await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
         // });
 
@@ -380,7 +380,7 @@ describe('Router: increase position ar', () => {
                 maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -416,7 +416,7 @@ describe('Router: increase position ar', () => {
         // 	}
 
         // 	// const orderId = await tradingRouter.ordersIndex();
-        // 	// await tradingRouter.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+        // 	// await tradingRouter.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
         // 	// await executeRouter.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
 
         // 	// const position = await tradingVault.getPosition(trader.address, pairIndex, true)
@@ -445,7 +445,7 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -529,7 +529,7 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await expect(
                 executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
             ).to.be.revertedWith('exceeds max slippage');
@@ -561,7 +561,7 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -634,7 +634,7 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const firstPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -670,7 +670,7 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const uncompletedPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -746,7 +746,7 @@ describe('Router: increase position ar', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const secondPosition = await positionManager.getPosition(trader.address, pairIndex, true);

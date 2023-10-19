@@ -75,7 +75,7 @@ describe('Trade: TP & SL', () => {
         };
 
         let orderId = await orderManager.ordersIndex();
-        await router.connect(trader.signer).createIncreaseOrder(request);
+        await router.connect(trader.signer).createIncreaseOrderWithTpSl(request);
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const positionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
@@ -100,7 +100,7 @@ describe('Trade: TP & SL', () => {
         };
 
         orderId = await orderManager.ordersIndex();
-        await router.connect(trader.signer).createIncreaseOrder(request1);
+        await router.connect(trader.signer).createIncreaseOrderWithTpSl(request1);
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         positionOrders = await orderManager.getPositionOrders(positionKey);
@@ -136,7 +136,7 @@ describe('Trade: TP & SL', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(request);
+            await router.connect(trader.signer).createIncreaseOrder(request);
 
             const orderTpSlRequest: IRouter.CreateOrderTpSlRequestStruct = {
                 orderId: orderId,
@@ -147,7 +147,7 @@ describe('Trade: TP & SL', () => {
                 sl: ethers.utils.parseEther('2'),
                 slPrice: 22,
             };
-            await router.connect(trader.signer).createOrderTpSl(orderTpSlRequest);
+            await router.connect(trader.signer).addOrderTpSl(orderTpSlRequest);
 
             // const orderKey = await orderManager.getOrderKey(orderId, TradeType.LIMIT, true);
             let orderTpSl = await orderManager.orderWithTpSl(orderId);
@@ -159,7 +159,7 @@ describe('Trade: TP & SL', () => {
             expect(orderTpSl.slPrice).to.be.eq(22);
 
             orderTpSlRequest.slPrice = 333;
-            await router.connect(trader.signer).createOrderTpSl(orderTpSlRequest);
+            await router.connect(trader.signer).addOrderTpSl(orderTpSlRequest);
             orderTpSl = await orderManager.orderWithTpSl(orderId);
 
             expect(orderTpSl.tp).to.be.eq(ethers.utils.parseEther('1'));

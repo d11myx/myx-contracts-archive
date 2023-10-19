@@ -57,7 +57,7 @@ describe('Router: increase position ar', () => {
             .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
     });
 
-    it('createIncreaseOrderWithoutTpSl cast', async () => {
+    it('createIncreaseOrder cast', async () => {
         const {
             deployer,
             users: [depositor, poolAdmin, operator, trader],
@@ -96,7 +96,7 @@ describe('Router: increase position ar', () => {
 
         // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-        await snapshotGasCost(router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest));
+        await snapshotGasCost(router.connect(trader.signer).createIncreaseOrder(increasePositionRequest));
     });
     it('executeIncreaseOrder cast', async () => {
         const {

@@ -32,7 +32,7 @@ describe('Router: check require condition, trigger errors', async () => {
     });
     after(async () => {});
 
-    describe('createIncreaseOrder permission check', async () => {
+    describe('createIncreaseOrderWithTpSl permission check', async () => {
         it('check msg.sender whith request.account', async () => {
             const {
                 keeper,
@@ -72,9 +72,9 @@ describe('Router: check require condition, trigger errors', async () => {
 
             // setting createIncreateOrder: msg.sender = user
             const orderId = await orderManager.ordersIndex();
-            await router.connect(user2.signer).createIncreaseOrder(increasePositionRequest);
+            await router.connect(user2.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
-            // await expect(router.connect(user2.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('not order sender or handler');
+            // await expect(router.connect(user2.signer).createIncreaseOrderWithTpSl(increasePositionRequest)).to.be.revertedWith('not order sender or handler');
         });
 
         // TODO: Function to be implemented
@@ -115,7 +115,7 @@ describe('Router: check require condition, trigger errors', async () => {
         //     const isFrozen = tradingVault.isFrozen(user1.address);
 
         //     const orderId = await tradingRouter.ordersIndex();
-        //     await expect(router.connect(user1.signer).createIncreaseOrder(increasePositionRequest)).to.be.reverted;
+        //     await expect(router.connect(user1.signer).createIncreaseOrderWithTpSl(increasePositionRequest)).to.be.reverted;
         // });
 
         describe('disable pair', async () => {
@@ -197,7 +197,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await expect(
-                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                    router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
                 ).to.be.revertedWith('trade pair not supported');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
@@ -245,7 +245,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await expect(
-                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                    router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
                 ).to.be.revertedWith('invalid trade size');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
@@ -292,7 +292,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await expect(
-                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                    router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
                 ).to.be.revertedWith('invalid trade size');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });

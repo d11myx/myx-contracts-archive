@@ -75,7 +75,7 @@ describe('Position', () => {
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseEntrustPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseEntrustPositionRequest);
                 const entrustOrderBefore = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -103,7 +103,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -210,7 +210,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -316,7 +316,7 @@ describe('Position', () => {
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseShortPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseShortPositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -343,7 +343,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseLongPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseLongPositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 const longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
                 balance = await usdt.balanceOf(trader.address);
@@ -450,7 +450,7 @@ describe('Position', () => {
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseEntrustPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseEntrustPositionRequest);
                 const entrustOrderBefore = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -478,7 +478,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -602,7 +602,7 @@ describe('Position', () => {
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseEntrustPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseEntrustPositionRequest);
                 const entrustOrderBefore = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -630,7 +630,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
