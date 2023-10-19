@@ -33,7 +33,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const { deploy } = deployments;
     const {
         deployer,
-        poolAdmin,
         teamAndAdvisor,
         privatePlacement,
         community,
@@ -43,7 +42,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         developmentReserve,
     } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
-    const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
 
     let usdt = await getToken();
     let pool = await getPool();

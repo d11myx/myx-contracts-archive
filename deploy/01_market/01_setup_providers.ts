@@ -11,7 +11,6 @@ import {
     getAddressesProvider,
     getRoleManager,
 } from '../../helpers';
-import { AddressesProvider, RoleManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
