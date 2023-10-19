@@ -60,7 +60,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const marketOrder = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
@@ -105,7 +105,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const marketOrder = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
@@ -258,7 +258,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.LIMIT, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const limitOrder = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
@@ -303,7 +303,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(positionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.LIMIT, 0, 0);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
             const limitOrder = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
