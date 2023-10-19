@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../libraries/TradingTypes.sol";
 
 interface IRouter {
-    struct CreateOrderTpSlRequest {
+    struct AddOrderTpSlRequest {
         uint256 orderId;
         TradingTypes.TradeType tradeType;
         bool isIncrease;
@@ -22,31 +22,33 @@ interface IRouter {
 
     event UpdateTradingRouter(address oldAddress, address newAddress);
 
-    function createIncreaseOrder(
-        TradingTypes.IncreasePositionWithTpSlRequest memory request
-    ) external returns (uint256 orderId);
+    // function createIncreaseOrderWithTpSl(
+    //     TradingTypes.IncreasePositionWithTpSlRequest memory request
+    // ) external returns (uint256 orderId);
 
-    function createIncreaseOrderWithoutTpSl(
-        TradingTypes.IncreasePositionRequest memory request
-    ) external returns (uint256 orderId);
+    // function createIncreaseOrder(
+    //     TradingTypes.IncreasePositionRequest memory request
+    // ) external returns (uint256 orderId);
 
-    function createDecreaseOrder(
-        TradingTypes.DecreasePositionRequest memory request
-    ) external returns (uint256);
+    // function createDecreaseOrder(
+    //     TradingTypes.DecreasePositionRequest memory request
+    // ) external returns (uint256);
 
-    function createDecreaseOrders(
-        TradingTypes.DecreasePositionRequest[] memory requests
-    ) external returns (uint256[] memory orderIds);
+    // function createDecreaseOrders(
+    //     TradingTypes.DecreasePositionRequest[] memory requests
+    // ) external returns (uint256[] memory orderIds);
 
-    function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
+    // function cancelOrder(
+    //     uint256 orderId,
+    //     TradingTypes.TradeType tradeType,
+    //     bool isIncrease
+    // ) external;
 
-    function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external;
+    // function cancelOrders(CancelOrderRequest[] memory requests) external;
 
-    function cancelOrders(CancelOrderRequest[] memory requests) external;
+    // function cancelPositionOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
 
-    function cancelPositionOrders(uint256 pairIndex, bool isLong, bool isIncrease) external;
-
-    function createTpSl(
-        TradingTypes.CreateTpSlRequest memory request
-    ) external returns (uint256 tpOrderId, uint256 slOrderId);
+    // function createTpSl(
+    //     TradingTypes.CreateTpSlRequest memory request
+    // ) external returns (uint256 tpOrderId, uint256 slOrderId);
 }
