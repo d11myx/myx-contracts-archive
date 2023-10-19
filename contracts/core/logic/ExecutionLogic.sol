@@ -188,23 +188,6 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
-        // get position
-        Position.Info memory position = positionManager.getPosition(
-            order.account,
-            order.pairIndex,
-            order.isLong
-        );
-        // check position and leverage
-        (uint256 afterPosition, ) = position.validLeverage(
-            executionPrice,
-            order.collateral,
-            executionSize,
-            true,
-            tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
-        );
-        require(afterPosition > 0, "zpa");
-
         int256 collateral;
         if (order.collateral > 0) {
             collateral = order.executedSize == 0 || order.tradeType == TradingTypes.TradeType.MARKET
@@ -216,6 +199,23 @@ contract ExecutionLogic is IExecutionLogic {
                 ? order.collateral
                 : int256(0);
         }
+        // get position
+        Position.Info memory position = positionManager.getPosition(
+            order.account,
+            order.pairIndex,
+            order.isLong
+        );
+        // check position and leverage
+        (uint256 afterPosition, ) = position.validLeverage(
+            executionPrice,
+            collateral,
+            executionSize,
+            true,
+            tradingConfig.maxLeverage,
+            tradingConfig.maxPositionAmount
+        );
+        require(afterPosition > 0, "zpa");
+
 
         // increase position
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
