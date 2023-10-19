@@ -49,7 +49,12 @@ We welcome contributions from the community to improve and enhance the myx proto
 
 ## License
 
-This protocol is licensed under the [MIT License](LICENSE). Please review the license for more details.
+The primary license for MYX is the Business Source License 1.1 (BUSL-1.1), see LICENSE. Minus the following exceptions:
+
+Some libraries have a GPL license
+Some have an MIT License
+Interfaces and types have an MIT license
+Each of these files states their license type.
 
 ## Contact
 
