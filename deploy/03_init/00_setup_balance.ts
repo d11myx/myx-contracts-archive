@@ -1,9 +1,8 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { COMMON_DEPLOY_PARAMS, getTokens, waitForTx } from '../../helpers';
-import { Faucet, Token } from '../../types';
+import { getTokens, waitForTx } from '../../helpers';
+import { Token } from '../../types';
 import { ethers } from 'hardhat';
-import { getSigners } from '@nomiclabs/hardhat-ethers/internal/helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const signers = await hre.ethers.getSigners();

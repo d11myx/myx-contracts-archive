@@ -16,7 +16,6 @@ import {
     getRiskReserve,
     getRouter,
     getToken,
-    getWETH,
     LIQUIDATION_LOGIC_ID,
     loadReserveConfig,
     MARKET_NAME,

@@ -51,26 +51,10 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         value: '0',
         signature: 'setAssetPriceIds(address[],bytes32[])',
         data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-        eta: Duration.days(1)
+        eta: Duration.seconds(20)
             .add(await latest())
             .toString(),
     });
-
-    // await hre.run('time-execution', {
-    //     target: addressesProvider.address,
-    //     value: 0,
-    //     signature: 'setPriceOracle(address)',
-    //     data: encodeParameters(['address'], [oraclePriceFeed.address]),
-    //     eta: Duration.days(1).add(await latest()),
-    // });
-    //
-    // await hre.run('time-execution', {
-    //     target: addressesProvider.address,
-    //     value: 0,
-    //     signature: 'setIndexPriceOracle(address)',
-    //     data: encodeParameters(['address'], [indexPriceFeed.address]),
-    //     eta: Duration.days(1).add(await latest()),
-    // });
 
     await waitForTx(
         await indexPriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenIndexPrices),

@@ -18,16 +18,22 @@ task(`time-execution`)
             timelock = await getTimelock();
         }
 
-        await timelock.queueTransaction(
-            taskArgs.target,
-            taskArgs.value,
-            taskArgs.signature,
-            taskArgs.data,
-            taskArgs.eta,
+        await waitForTx(
+            await timelock.queueTransaction(
+                taskArgs.target,
+                taskArgs.value,
+                taskArgs.signature,
+                taskArgs.data,
+                taskArgs.eta,
+            ),
         );
 
-        const duration = BigNumber.from(taskArgs.eta).sub(await latest());
-        await increase(duration);
+        if (hre.network.name == 'hardhat') {
+            const duration = BigNumber.from(taskArgs.eta).sub(await latest());
+            await increase(duration);
+        } else {
+            await new Promise((f) => setTimeout(f, 60 * 1000));
+        }
 
         await waitForTx(
             await timelock.executeTransaction(

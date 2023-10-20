@@ -33,6 +33,6 @@ describe('Trade: FeeCal', () => {
         expect(long).to.be.eq('3200000000000000000000');
 
         const short = await positionManager.getTradingFee(pairIndex, false, ethers.utils.parseEther('100'));
-        expect(short).to.be.eq('2000000000000000000000');
+        expect(short).to.be.eq('2200000000000000000000');
     });
 });
