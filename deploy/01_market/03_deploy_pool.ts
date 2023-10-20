@@ -7,7 +7,6 @@ import {
     PAIR_INFO_ID,
     POOL_TOKEN_FACTORY,
 } from '../../helpers';
-import { PoolTokenFactory } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
