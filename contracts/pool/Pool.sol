@@ -377,11 +377,10 @@ contract Pool is IPool, Upgradeable {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
-        return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity( recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function addLiquidityForAccount(
-        address _funder,
         address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
@@ -390,7 +389,7 @@ contract Pool is IPool, Upgradeable {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
-        return _addLiquidity(_funder, recipient, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity( recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function removeLiquidity(
@@ -659,7 +658,6 @@ contract Pool is IPool, Upgradeable {
     }
 
     function _addLiquidity(
-        address _account,
         address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
@@ -695,8 +693,8 @@ contract Pool is IPool, Upgradeable {
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
         emit AddLiquidity(
+            msg.sender,
             recipient,
-            _account,
             _pairIndex,
             _indexAmount,
             _stableAmount,
