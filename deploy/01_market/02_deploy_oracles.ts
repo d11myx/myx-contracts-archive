@@ -12,7 +12,7 @@ import {
     ORACLE_PRICE_FEED_ID,
     waitForTx,
 } from '../../helpers';
-import { FundingRate, IndexPriceFeed, MockPyth, PythOraclePriceFeed } from '../../types';
+import { MockPyth } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;

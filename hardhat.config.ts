@@ -28,6 +28,8 @@ function getEnvAccounts(accountStr: string) {
     return accounts.filter((value) => value.length > 0).map((value) => value.trim());
 }
 
+const MNEMONIC_PATH = "m/44'/60'/0'/0";
+
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const TASK_FOLDERS = ['./misc'];
 
@@ -65,25 +67,45 @@ const config: HardhatUserConfig = {
         },
         ethereum_goerli: {
             url: 'https://goerli.infura.io/v3/c0beb1509e87416b83e1d9e02203bef7',
-            accounts: getEnvAccounts(process.env.ACCOUNTS_ETHEREUM_GOERLI as string),
+            accounts: {
+                mnemonic: process.env.MNEMONIC_ETHEREUM_GOERLI || '',
+                path: MNEMONIC_PATH,
+                initialIndex: 0,
+                count: 10,
+            },
             live: false,
         },
         linea_goerli: {
             url: 'https://rpc.goerli.linea.build',
             chainId: 59140,
-            accounts: getEnvAccounts(process.env.ACCOUNTS_LINEA_GOERLI as string),
+            accounts: {
+                mnemonic: process.env.MNEMONIC_LINEA_GOERLI || '',
+                path: MNEMONIC_PATH,
+                initialIndex: 0,
+                count: 10,
+            },
             live: false,
         },
         linea_mainnet: {
             url: 'https://rpc.linea.build',
             chainId: 59144,
-            accounts: getEnvAccounts(process.env.ACCOUNTS_LINEA_MAINNET as string),
+            accounts: {
+                mnemonic: process.env.MNEMONIC_LINEA_MAINNET || '',
+                path: MNEMONIC_PATH,
+                initialIndex: 0,
+                count: 10,
+            },
             live: true,
         },
         scroll_sepolia: {
             url: 'https://scroll-sepolia.blockpi.network/v1/rpc/public',
             chainId: 534351,
-            accounts: getEnvAccounts(process.env.ACCOUNTS_SCROLL_SEPOLIA as string),
+            accounts: {
+                mnemonic: process.env.MNEMONIC_SCROLL_SEPOLIA || '',
+                path: MNEMONIC_PATH,
+                initialIndex: 0,
+                count: 10,
+            },
             live: false,
         },
     },
