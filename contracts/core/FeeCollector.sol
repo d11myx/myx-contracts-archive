@@ -34,7 +34,11 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
     address public addressPositionManager;
     IPool public pool;
 
-    function initialize(IAddressesProvider addressesProvider, IPool _pool, address _pledgeAddress) public initializer {
+    function initialize(
+        IAddressesProvider addressesProvider,
+        IPool _pool,
+        address _pledgeAddress
+    ) public initializer {
         ADDRESS_PROVIDER = addressesProvider;
         pool = _pool;
         pledgeAddress = _pledgeAddress;
@@ -96,7 +100,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         emit UpdateMaxReferralsRatio(oldRatio, newRatio);
     }
 
-    function claimStakingTradingFee() external override nonReentrant onlyStakingPool returns (uint256) {
+    function claimStakingTradingFee() external override onlyStakingPool returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee;
         if (claimableStakingTradingFee > 0) {
             pool.transferTokenTo(pledgeAddress, msg.sender, claimableStakingTradingFee);
@@ -106,7 +110,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return claimableStakingTradingFee;
     }
 
-    function claimTreasuryFee() external override nonReentrant onlyPoolAdmin returns (uint256) {
+    function claimTreasuryFee() external override onlyPoolAdmin returns (uint256) {
         uint256 claimableTreasuryFee = treasuryFee;
         if (claimableTreasuryFee > 0) {
             pool.transferTokenTo(pledgeAddress, msg.sender, claimableTreasuryFee);
@@ -132,7 +136,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         uint256 tradingFee,
         uint256 vipRate,
         uint256 referralRate
-    ) external onlyPositionManager override returns (uint256 lpAmount) {
+    ) external override onlyPositionManager returns (uint256 lpAmount) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
         uint256 vipAmount = tradingFee.mulPercentage(vipRate);
@@ -140,7 +144,9 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
 
         uint256 surplusFee = tradingFee - vipAmount;
 
-        uint256 referralsAmount = surplusFee.mulPercentage(Math.min(referralRate, maxReferralsRatio));
+        uint256 referralsAmount = surplusFee.mulPercentage(
+            Math.min(referralRate, maxReferralsRatio)
+        );
 
         lpAmount = surplusFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
         pool.setLPStableProfit(pair.pairIndex, int256(lpAmount));
@@ -152,10 +158,10 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         stakingTradingFee += stakingAmount;
 
         uint256 distributorAmount = surplusFee -
-                    referralsAmount -
-                    lpAmount -
-                    keeperAmount -
-                    stakingAmount;
+            referralsAmount -
+            lpAmount -
+            keeperAmount -
+            stakingAmount;
         treasuryFee += distributorAmount.add(referralsAmount);
 
         emit DistributeTradingFee(
@@ -176,8 +182,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
     function _claimUserTradingFee() internal returns (uint256) {
         uint256 claimableUserTradingFee = userTradingFee[msg.sender];
         if (claimableUserTradingFee > 0) {
-            pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
             userTradingFee[msg.sender] = 0;
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
         }
         emit ClaimedUserTradingFee(msg.sender, pledgeAddress, claimableUserTradingFee);
         return claimableUserTradingFee;
@@ -186,7 +192,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
     function _updateLevelDiscountRatio(uint8 level, LevelDiscount memory discount) internal {
         require(
             discount.makerDiscountRatio <= PrecisionUtils.percentage() &&
-            discount.takerDiscountRatio <= PrecisionUtils.percentage(),
+                discount.takerDiscountRatio <= PrecisionUtils.percentage(),
             "exceeds max ratio"
         );
 
