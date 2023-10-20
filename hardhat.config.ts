@@ -68,7 +68,7 @@ const config: HardhatUserConfig = {
         ethereum_goerli: {
             url: 'https://goerli.infura.io/v3/c0beb1509e87416b83e1d9e02203bef7',
             accounts: {
-                mnemonic: process.env.MNEMONIC_ETHEREUM_GOERLI,
+                mnemonic: process.env.MNEMONIC_ETHEREUM_GOERLI || '',
                 path: MNEMONIC_PATH,
                 initialIndex: 0,
                 count: 10,
@@ -79,7 +79,7 @@ const config: HardhatUserConfig = {
             url: 'https://rpc.goerli.linea.build',
             chainId: 59140,
             accounts: {
-                mnemonic: process.env.MNEMONIC_LINEA_GOERLI,
+                mnemonic: process.env.MNEMONIC_LINEA_GOERLI || '',
                 path: MNEMONIC_PATH,
                 initialIndex: 0,
                 count: 10,
@@ -90,7 +90,7 @@ const config: HardhatUserConfig = {
             url: 'https://rpc.linea.build',
             chainId: 59144,
             accounts: {
-                mnemonic: process.env.MNEMONIC_LINEA_MAINNET,
+                mnemonic: process.env.MNEMONIC_LINEA_MAINNET || '',
                 path: MNEMONIC_PATH,
                 initialIndex: 0,
                 count: 10,
@@ -101,7 +101,7 @@ const config: HardhatUserConfig = {
             url: 'https://scroll-sepolia.blockpi.network/v1/rpc/public',
             chainId: 534351,
             accounts: {
-                mnemonic: process.env.MNEMONIC_SCROLL_SEPOLIA,
+                mnemonic: process.env.MNEMONIC_SCROLL_SEPOLIA || '',
                 path: MNEMONIC_PATH,
                 initialIndex: 0,
                 count: 10,
