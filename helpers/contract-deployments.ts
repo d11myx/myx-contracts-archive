@@ -17,9 +17,9 @@ import {
     RoleManager,
     Router,
     TestCallBack,
-    Token,
-    WETH,
+    WETH9,
     Timelock,
+    ERC20DecimalsMock,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -34,12 +34,12 @@ import { encodeParameterArray } from './utilities';
 
 declare var hre: HardhatRuntimeEnvironment;
 
-export const deployMockToken = async (symbol: string): Promise<Token> => {
-    return await deployContract<Token>('Token', [symbol]);
+export const deployMockToken = async (name: string, symbol: string, decimals: number): Promise<ERC20DecimalsMock> => {
+    return await deployContract<ERC20DecimalsMock>('ERC20DecimalsMock', [name, symbol, decimals]);
 };
 
-export const deployWETH = async (): Promise<WETH> => {
-    return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
+export const deployWETH = async (): Promise<WETH9> => {
+    return await deployContract<WETH9>('WETH9', []);
 };
 
 const logFlag = false;
@@ -64,19 +64,21 @@ export async function deployLibraries() {
 export async function deployToken() {
     log(` - setup tokens`);
 
+    const reserveConfig = loadReserveConfig(MARKET_NAME);
+
     // basic token
-    const usdt = await deployMockToken(MARKET_NAME);
+    const usdt = await deployMockToken(MARKET_NAME, MARKET_NAME, reserveConfig.MarketTokenDecimals);
     log(`deployed USDT at ${usdt.address}`);
 
     const weth = await deployWETH();
     log(`deployed WETH at ${weth.address}`);
 
     // pairs token
-    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
+    const pairConfigs = reserveConfig?.PairsConfig;
 
-    const tokens: SymbolMap<Token> = {};
-    for (let pair of Object.keys(pairConfigs)) {
-        const token = await deployMockToken(pair);
+    const tokens: SymbolMap<ERC20DecimalsMock> = {};
+    for (let [pair, pairConfig] of Object.entries(pairConfigs)) {
+        const token = await deployMockToken(pair, pair, pairConfig.pairTokenDecimals);
         log(`deployed ${pair} at ${token.address}`);
 
         tokens[pair] = token;
@@ -89,7 +91,7 @@ export async function deployPrice(
     keeper: SignerWithAddress,
     timelock: Timelock,
     addressesProvider: AddressesProvider,
-    tokens: SymbolMap<Token>,
+    tokens: SymbolMap<ERC20DecimalsMock>,
 ) {
     log(` - setup price`);
 
@@ -158,7 +160,7 @@ export async function deployPair(
     addressProvider: AddressesProvider,
     vaultPriceFeed: PythOraclePriceFeed,
     deployer: SignerWithAddress,
-    weth: WETH,
+    weth: WETH9,
 ) {
     log(` - setup pairs`);
     const poolTokenFactory = (await deployContract('PoolTokenFactory', [addressProvider.address])) as PoolTokenFactory;
@@ -181,7 +183,7 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
-    pledge: Token,
+    pledge: ERC20DecimalsMock,
     validationHelper: Contract,
 ) {
     log(` - setup trading`);

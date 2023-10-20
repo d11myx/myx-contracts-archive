@@ -6,10 +6,10 @@ import {
     IndexPriceFeed,
     Pool,
     RoleManager,
-    Token,
+    ERC20DecimalsMock,
     PositionManager,
     PythOraclePriceFeed,
-    WETH,
+    WETH9,
     Router,
     Executor,
     OrderManager,
@@ -60,13 +60,13 @@ export interface TestEnv {
     poolAdmin: SignerWithAddress;
     keeper: SignerWithAddress;
     users: SignerWithAddress[];
-    weth: WETH;
-    btc: Token;
-    eth: Token;
-    usdt: Token;
+    weth: WETH9;
+    btc: ERC20DecimalsMock;
+    eth: ERC20DecimalsMock;
+    usdt: ERC20DecimalsMock;
     addressesProvider: AddressesProvider;
     roleManager: RoleManager;
-    pairTokens: SymbolMap<Token>;
+    pairTokens: SymbolMap<ERC20DecimalsMock>;
     pool: Pool;
     fundingRate: FundingRate;
     oraclePriceFeed: PythOraclePriceFeed;
@@ -86,13 +86,13 @@ export const testEnv: TestEnv = {
     poolAdmin: {} as SignerWithAddress,
     keeper: {} as SignerWithAddress,
     users: [] as SignerWithAddress[],
-    weth: {} as WETH,
-    btc: {} as Token,
-    eth: {} as Token,
-    usdt: {} as Token,
+    weth: {} as WETH9,
+    btc: {} as ERC20DecimalsMock,
+    eth: {} as ERC20DecimalsMock,
+    usdt: {} as ERC20DecimalsMock,
     addressesProvider: {} as AddressesProvider,
     roleManager: {} as RoleManager,
-    pairTokens: {} as SymbolMap<Token>,
+    pairTokens: {} as SymbolMap<ERC20DecimalsMock>,
     pool: {} as Pool,
     fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as PythOraclePriceFeed,
@@ -129,7 +129,7 @@ export async function setupTestEnv() {
     const allDeployments = await hre.deployments.all();
     const mockTokenKeys = Object.keys(allDeployments).filter((key) => key.includes(MOCK_TOKEN_PREFIX));
 
-    let pairTokens: SymbolMap<Token> = {};
+    let pairTokens: SymbolMap<ERC20DecimalsMock> = {};
     for (let [key, deployment] of Object.entries(allDeployments)) {
         if (mockTokenKeys.includes(key)) {
             pairTokens[key.replace(MOCK_TOKEN_PREFIX, '')] = await getToken(deployment.address);
@@ -210,7 +210,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         tokens,
     );
 
-    const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const {
         positionManager,

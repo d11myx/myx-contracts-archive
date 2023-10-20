@@ -12,7 +12,7 @@ describe('Pool: Edge cases', () => {
     before('addPair', async () => {
         const { poolAdmin, pool, usdt, fundingRate } = testEnv;
 
-        const token = await deployMockToken('Test');
+        const token = await deployMockToken('Test', 'Test', 18);
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
 
         const pair = btcPair.pair;

@@ -2,10 +2,12 @@
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/utils/math/Math.sol';
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import '../libraries/PrecisionUtils.sol';
 import '../libraries/Int256Utils.sol';
 import '../libraries/TradingTypes.sol';
 import '../libraries/PositionKey.sol';
+import "../interfaces/IPool.sol";
 
 library Position {
     using Int256Utils for int256;
@@ -69,13 +71,14 @@ library Position {
 
     function validLeverage(
         Info memory self,
+        IPool.Pair memory pair,
         uint256 price,
         int256 _collateral,
         uint256 _sizeAmount,
         bool _increase,
         uint256 maxLeverage,
         uint256 maxPositionAmount
-    ) internal pure returns (uint256, uint256) {
+    ) internal view returns (uint256, uint256) {
         // only increase collateral
         if (_sizeAmount == 0 && _collateral >= 0) {
             return (self.positionAmount, self.collateral);
@@ -115,7 +118,15 @@ library Position {
         require(availableCollateral >= 0, 'collateral not enough');
 
         if (_increase && _sizeAmount > 0) {
-            require(afterPosition <= (availableCollateral.abs() * maxLeverage).divPrice(price), 'exceeds max leverage');
+            uint256 collateralDec = uint256(IERC20Metadata(pair.stableToken).decimals());
+            uint256 tokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
+
+            uint256 tokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - tokenDec);
+            uint256 collateralWad = 10 ** (PrecisionUtils.maxTokenDecimals() - collateralDec);
+
+            uint256 afterPositionD = afterPosition * tokenWad;
+            uint256 availableD = (availableCollateral.abs() * maxLeverage * collateralWad).divPrice(price);
+            require(afterPositionD <= availableD, 'exceeds max leverage');
         }
 
         return (afterPosition, availableCollateral.abs());

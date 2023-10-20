@@ -207,6 +207,7 @@ contract ExecutionLogic is IExecutionLogic {
         );
         // check position and leverage
         (uint256 afterPosition, ) = position.validLeverage(
+            pair,
             executionPrice,
             collateral,
             executionSize,
@@ -215,7 +216,6 @@ contract ExecutionLogic is IExecutionLogic {
             tradingConfig.maxPositionAmount
         );
         require(afterPosition > 0, "zpa");
-
 
         // increase position
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
@@ -426,6 +426,7 @@ contract ExecutionLogic is IExecutionLogic {
 
         // check position and leverage
         position.validLeverage(
+            pair,
             executionPrice,
             order.collateral,
             executionSize,

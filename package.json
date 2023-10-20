@@ -27,7 +27,7 @@
         "test:lp:mlp": "npm run compile && npx hardhat test test/__setup.spec.ts test/lp-mlp.spec.ts",
         "test:position": "npm run compile && npx hardhat test test/__setup.spec.ts test/position.spec.ts",
         "test:risk:liquidation": "npm run compile && npx hardhat test test/__setup.spec.ts test/liquidation-risk-reserve.spec.ts",
-        "test:router:edge1": "npm run compile && npx hardhat test test/__setup.spec.ts test/router-edge1.spec.ts",
+        "test:router:edge": "npm run compile && npx hardhat test test/__setup.spec.ts test/router-edge.spec.ts",
         "test:cancelOrder": "npm run compile && npx hardhat test test/__setup.spec.ts test/cancelOrder.spec.ts",
         "deploy": "npx hardhat deploy",
         "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'",
