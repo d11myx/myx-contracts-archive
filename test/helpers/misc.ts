@@ -1,4 +1,4 @@
-import { IExecutionLogic, Token } from '../../types';
+import { ERC20DecimalsMock, IExecutionLogic } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import hre, { ethers } from 'hardhat';
@@ -25,7 +25,7 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
 
 export async function mintAndApprove(
     testEnv: TestEnv,
-    token: Token,
+    token: ERC20DecimalsMock,
     amount: BigNumber,
     account: SignerWithAddress,
     spender: string,

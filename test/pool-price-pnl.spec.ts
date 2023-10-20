@@ -3,10 +3,10 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { before } from 'mocha';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { deployMockCallback, getBlockTimestamp, TradeType, waitForTx } from '../helpers';
-import { TradingTypes } from '../types/contracts/interfaces/IRouter';
 import { PoolToken } from '../types';
 import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Modify LP Average Price', async () => {
     const pairIndex = 1;
@@ -30,7 +30,7 @@ describe('Modify LP Average Price', async () => {
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
         let pair = await pool.getPair(pairIndex);
 
-        let lpToken = (await getContract<PoolToken>('Token', pair[3])) as PoolToken;
+        let lpToken = (await getContract<PoolToken>('PoolToken', pair[3])) as PoolToken;
         let bal = await lpToken.balanceOf(depositor.address);
         expect(bal).to.be.eq('0');
         await router

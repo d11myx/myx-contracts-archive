@@ -16,6 +16,7 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IRiskReserve.sol";
 import "../interfaces/IFeeCollector.sol";
 import "../libraries/Upgradeable.sol";
+import "../helpers/TradingHelper.sol";
 
 contract PositionManager is IPositionManager, Upgradeable {
     using SafeERC20 for IERC20;
@@ -131,14 +132,16 @@ contract PositionManager is IPositionManager, Upgradeable {
             oraclePrice
         );
 
-        if (charge >= 0) {
-            position.collateral = position.collateral.add(charge.abs());
+        int256 totalSettlementAmount = charge;
+        int256 settleCollateral = TradingHelper.convertIndexAmountToStable(pair, totalSettlementAmount);
+        if (settleCollateral >= 0) {
+            position.collateral = position.collateral.add(settleCollateral.abs());
         } else {
-            if (position.collateral >= charge.abs()) {
-                position.collateral = position.collateral.sub(charge.abs());
+            if (position.collateral >= settleCollateral.abs()) {
+                position.collateral = position.collateral.sub(settleCollateral.abs());
             } else {
                 // adjust position averagePrice
-                uint256 lossPer = charge.abs().divPrice(position.positionAmount);
+                uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
                 position.isLong
                     ? position.averagePrice = position.averagePrice + lossPer
                     : position.averagePrice = position.averagePrice - lossPer;
@@ -206,25 +209,26 @@ contract PositionManager is IPositionManager, Upgradeable {
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount -= sizeAmount;
 
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+
         // settlement lp position
         _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
 
         int256 totalSettlementAmount = pnl + charge;
-        if (totalSettlementAmount >= 0) {
-            position.collateral = position.collateral.add(totalSettlementAmount.abs());
+        int256 settleCollateral = TradingHelper.convertIndexAmountToStable(pair, totalSettlementAmount);
+        if (settleCollateral >= 0) {
+            position.collateral = position.collateral.add(settleCollateral.abs());
         } else {
-            if (position.collateral >= totalSettlementAmount.abs()) {
-                position.collateral = position.collateral.sub(totalSettlementAmount.abs());
+            if (position.collateral >= settleCollateral.abs()) {
+                position.collateral = position.collateral.sub(settleCollateral.abs());
             } else {
                 if (position.positionAmount == 0) {
-                    uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
-                    IPool.Pair memory pair = pool.getPair(pairIndex);
+                    uint256 subsidy = settleCollateral.abs() - position.collateral;
                     riskReserve.decrease(pair.stableToken, subsidy);
-                    //                    pool.setLPStableProfit(pairIndex, -int256(subsidy));
                     position.collateral = position.collateral.sub(
-                        int256(totalSettlementAmount + int256(subsidy)).abs()
+                        int256(settleCollateral + int256(subsidy)).abs()
                     );
                 } else {
                     // adjust position averagePrice
@@ -240,7 +244,6 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         if (position.positionAmount == 0 && position.collateral > 0) {
             if (useRiskReserve) {
-                IPool.Pair memory pair = pool.getPair(pairIndex);
                 pool.setLPStableProfit(pairIndex, -int256(position.collateral));
                 riskReserve.increase(pair.stableToken, position.collateral);
             } else {
@@ -287,6 +290,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         position.validLeverage(
+            pair,
             price,
             collateral,
             0,

@@ -125,6 +125,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                 );
                 // check leverage
                 (uint256 afterPosition, ) = position.validLeverage(
+                    pair,
                     price,
                     request.collateral,
                     uint256(request.sizeAmount),
@@ -138,6 +139,7 @@ contract OrderManager is IOrderManager, Upgradeable {
             if (request.sizeAmount < 0) {
                 // check leverage
                 position.validLeverage(
+                    pair,
                     price,
                     request.collateral,
                     uint256(request.sizeAmount.abs()),
