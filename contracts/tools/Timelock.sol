@@ -126,7 +126,7 @@ contract Timelock {
         string memory signature,
         bytes memory data,
         uint256 eta
-    ) public returns (bytes memory) {
+    ) public payable returns (bytes memory) {
         require(msg.sender == admin, "Call must come from admin.");
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
