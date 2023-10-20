@@ -37,7 +37,7 @@ interface IPool {
 
     event AddLiquidity(
         address indexed funder,
-        address indexed account,
+        address indexed recipient,
         uint256 indexed pairIndex,
         uint256 indexAmount,
         uint256 stableAmount,
@@ -162,7 +162,6 @@ interface IPool {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
     function addLiquidityForAccount(
-        address _funder,
         address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
