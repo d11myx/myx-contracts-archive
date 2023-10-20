@@ -100,13 +100,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         emit UpdateMaxReferralsRatio(oldRatio, newRatio);
     }
 
-    function claimStakingTradingFee()
-        external
-        override
-        nonReentrant
-        onlyStakingPool
-        returns (uint256)
-    {
+    function claimStakingTradingFee() external override onlyStakingPool returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee;
         if (claimableStakingTradingFee > 0) {
             pool.transferTokenTo(pledgeAddress, msg.sender, claimableStakingTradingFee);
@@ -116,7 +110,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return claimableStakingTradingFee;
     }
 
-    function claimTreasuryFee() external override nonReentrant onlyPoolAdmin returns (uint256) {
+    function claimTreasuryFee() external override onlyPoolAdmin returns (uint256) {
         uint256 claimableTreasuryFee = treasuryFee;
         if (claimableTreasuryFee > 0) {
             pool.transferTokenTo(pledgeAddress, msg.sender, claimableTreasuryFee);
