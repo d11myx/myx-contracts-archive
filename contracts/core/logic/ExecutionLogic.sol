@@ -495,8 +495,10 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize
         );
 
+        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+
         // remove order
-        if (onlyOnce || order.executedSize >= order.sizeAmount) {
+        if (onlyOnce || order.executedSize >= order.sizeAmount || position.positionAmount == 0) {
             // remove decrease order
             orderManager.removeOrderFromPosition(
                 IOrderManager.PositionOrder(
@@ -520,7 +522,6 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
-        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
             // cancel all decrease order
             IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(
@@ -534,7 +535,7 @@ contract ExecutionLogic is IExecutionLogic {
                         positionOrder.orderId,
                         positionOrder.tradeType,
                         false,
-                        "! increase"
+                        "!increase"
                     );
                 }
             }
