@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPriceFeed.sol";
@@ -24,6 +25,19 @@ library TradingHelper {
 
         require(diffP <= tradingConfig.maxPriceDeviationP, "exceed max price deviation");
         return oraclePrice;
+    }
+
+    function convertIndexAmountToStable(
+        IPool.Pair memory pair,
+        int256 indexTokenAmount
+    ) internal view returns (int256 amount) {
+        uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
+        uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
+
+        uint256 indexTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - indexTokenDec);
+        uint256 stableTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - stableTokenDec);
+
+        amount = indexTokenAmount * int256(indexTokenWad) / int256(stableTokenWad);
     }
 
     function exposureAmountChecker(

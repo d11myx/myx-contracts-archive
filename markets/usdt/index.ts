@@ -11,6 +11,7 @@ import { btcPairInfo, ethPairInfo } from './pairs';
 export const USDTMarketConfig: ReserveConfiguration = {
     MarketTokenSymbol: 'USDT',
     MarketTokenName: 'Tether',
+    MarketTokenDecimals: 6,
     MarketTokenAddress: {
         [DevNetwork.local]: ZERO_ADDRESS,
         [EthereumNetwork.goerli]: ZERO_ADDRESS,
