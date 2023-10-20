@@ -23,7 +23,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await deploy(TIMELOCK_ID, {
         from: deployer,
         contract: 'Timelock',
-        args: ['43200'],
+        args: ['1'],
         ...COMMON_DEPLOY_PARAMS,
     });
     const timelock = await getTimelock();

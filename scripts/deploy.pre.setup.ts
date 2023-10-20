@@ -1,3 +1,4 @@
+// @ts-ignore
 import { ethers } from 'hardhat';
 import { waitForTx, getRoleManager, getOraclePriceFeed, getTokens } from '../helpers';
 
