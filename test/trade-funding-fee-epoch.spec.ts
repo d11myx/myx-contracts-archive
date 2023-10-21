@@ -30,8 +30,8 @@ describe('Trade: funding fee epoch', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('30000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('30000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -61,13 +61,14 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('300000', 18);
-            const size = ethers.utils.parseUnits('4', 18);
-            const size2 = ethers.utils.parseUnits('2', 18);
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('4', await btc.decimals());
+            const size2 = ethers.utils.parseUnits('2', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             // open long position
@@ -200,10 +201,12 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 positionManager,
+                usdt,
+                btc,
             } = testEnv;
 
-            const size = ethers.utils.parseUnits('4', 18);
-            const size2 = ethers.utils.parseUnits('2', 18);
+            const size = ethers.utils.parseUnits('4', await btc.decimals());
+            const size2 = ethers.utils.parseUnits('2', await btc.decimals());
             const averagePrice = ethers.utils.parseUnits('30000', 30);
             const openPrice = ethers.utils.parseUnits('35000', 30);
 
@@ -337,10 +340,12 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 positionManager,
+                usdt,
+                btc,
             } = testEnv;
 
-            const size = ethers.utils.parseUnits('4', 18);
-            const size2 = ethers.utils.parseUnits('2', 18);
+            const size = ethers.utils.parseUnits('4', await btc.decimals());
+            const size2 = ethers.utils.parseUnits('2', await btc.decimals());
             const averagePrice = ethers.utils.parseUnits('30000', 30);
             const openPrice = ethers.utils.parseUnits('25000', 30);
 
@@ -475,16 +480,17 @@ describe('Trade: funding fee epoch', () => {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 router,
                 usdt,
+                btc,
                 positionManager,
                 pool,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('0', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
             const openPrice = ethers.utils.parseUnits('22000', 30);
-            const longFirstSize = ethers.utils.parseUnits('21', 18);
-            const longSecondSize = ethers.utils.parseUnits('20', 18);
-            const shortFirstSize = ethers.utils.parseUnits('22', 18);
-            const shortSecondSize = ethers.utils.parseUnits('20', 18);
+            const longFirstSize = ethers.utils.parseUnits('21', await btc.decimals());
+            const longSecondSize = ethers.utils.parseUnits('20', await btc.decimals());
+            const shortFirstSize = ethers.utils.parseUnits('22', await btc.decimals());
+            const shortSecondSize = ethers.utils.parseUnits('20', await btc.decimals());
 
             // update btc price
             await updateBTCPrice(testEnv, '22000');
@@ -669,12 +675,13 @@ describe('Trade: funding fee epoch', () => {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 router,
                 usdt,
+                btc,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('0', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
-            const size = ethers.utils.parseUnits('2', 18);
+            const size = ethers.utils.parseUnits('2', await btc.decimals());
 
             const longFirstFundingFeeBefore = await positionManager.getFundingFee(longFirst.address, pairIndex, true);
             const longSecondFundingFeeBefore = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
@@ -832,8 +839,8 @@ describe('Trade: funding fee epoch', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('30000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('30000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -879,6 +886,7 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, short],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
@@ -891,10 +899,10 @@ describe('Trade: funding fee epoch', () => {
             // update btc price
             await updateBTCPrice(testEnv, '26000');
 
-            const collateral = ethers.utils.parseUnits('300000', 18);
-            const longFirstSize = ethers.utils.parseUnits('10', 18);
-            const longSecondSize = ethers.utils.parseUnits('15', 18);
-            const shortSize = ethers.utils.parseUnits('20', 18);
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const longFirstSize = ethers.utils.parseUnits('10', await btc.decimals());
+            const longSecondSize = ethers.utils.parseUnits('15', await btc.decimals());
+            const shortSize = ethers.utils.parseUnits('20', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('26000', 30);
 
             // open long position
@@ -1010,6 +1018,7 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, short],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
@@ -1017,9 +1026,9 @@ describe('Trade: funding fee epoch', () => {
             // update btc price
             await updateBTCPrice(testEnv, '26500');
 
-            const collateral = ethers.utils.parseUnits('300000', 18);
-            const longSize = ethers.utils.parseUnits('15', 18);
-            const shortSize = ethers.utils.parseUnits('20', 18);
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const longSize = ethers.utils.parseUnits('15', await btc.decimals());
+            const shortSize = ethers.utils.parseUnits('20', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('26500', 30);
 
             // open long position

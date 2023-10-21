@@ -1,9 +1,9 @@
-import {newTestEnv, TestEnv} from './helpers/make-suite';
-import {ethers} from 'hardhat';
-import {deployMockCallback, getPositionTradingFee, MAX_UINT_AMOUNT, TradeType, waitForTx} from '../helpers';
-import {expect} from './shared/expect';
-import {decreasePosition, increasePosition, mintAndApprove, updateBTCPrice} from './helpers/misc';
-import {TradingTypes} from '../types/contracts/core/Router';
+import { newTestEnv, TestEnv } from './helpers/make-suite';
+import { ethers } from 'hardhat';
+import { deployMockCallback, getPositionTradingFee, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { expect } from './shared/expect';
+import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 1;
@@ -45,12 +45,13 @@ describe('Router: Edge cases', () => {
             keeper,
             users: [trader],
             usdt,
+            btc,
             router,
             executionLogic,
             positionManager,
         } = testEnv;
 
-        const collateral = ethers.utils.parseUnits('30000', 18);
+        const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -63,11 +64,11 @@ describe('Router: Edge cases', () => {
             collateral: collateral,
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
-            sizeAmount: ethers.utils.parseUnits('10', 18),
+            sizeAmount: ethers.utils.parseUnits('10', await btc.decimals()),
             tpPrice: ethers.utils.parseUnits('31000', 30),
-            tp: ethers.utils.parseUnits('1', 18),
+            tp: ethers.utils.parseUnits('1', await btc.decimals()),
             slPrice: ethers.utils.parseUnits('29000', 30),
-            sl: ethers.utils.parseUnits('1', 18),
+            sl: ethers.utils.parseUnits('1', await btc.decimals()),
             maxSlippage: 0,
         };
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
@@ -78,7 +79,9 @@ describe('Router: Edge cases', () => {
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
 
         expect(traderBalanceAfter).to.be.eq(traderBalanceBefore.sub(collateral));
-        expect(positionAfter.positionAmount).to.be.eq(positionBefore.positionAmount.add(ethers.utils.parseUnits('10', 18)));
+        expect(positionAfter.positionAmount).to.be.eq(
+            positionBefore.positionAmount.add(ethers.utils.parseUnits('10', await btc.decimals())),
+        );
     });
 
     it('unchanged collateral, increase position', async () => {
@@ -88,12 +91,18 @@ describe('Router: Edge cases', () => {
             orderManager,
             positionManager,
             router,
+            btc,
             executionLogic,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const tradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
-        const positionTradingFeeBefore = await getPositionTradingFee(testEnv, pairIndex, positionBefore.positionAmount, true);
+        const positionTradingFeeBefore = await getPositionTradingFee(
+            testEnv,
+            pairIndex,
+            positionBefore.positionAmount,
+            true,
+        );
 
         expect(tradingFeeBefore).to.be.eq(positionTradingFeeBefore);
 
@@ -104,7 +113,7 @@ describe('Router: Edge cases', () => {
             collateral: 0,
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
-            sizeAmount: ethers.utils.parseUnits('8', 18),
+            sizeAmount: ethers.utils.parseUnits('8', await btc.decimals()),
             maxSlippage: 0,
         };
         const orderId = await orderManager.ordersIndex();
@@ -113,36 +122,64 @@ describe('Router: Edge cases', () => {
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const tradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
-        const positionTradingFeeAfter = await getPositionTradingFee(testEnv, pairIndex, positionAfter.positionAmount, true);
+        const positionTradingFeeAfter = await getPositionTradingFee(
+            testEnv,
+            pairIndex,
+            positionAfter.positionAmount,
+            true,
+        );
 
         const tradingFee = tradingFeeAfter.sub(tradingFeeBefore);
 
         expect(tradingFeeAfter).to.be.eq(positionTradingFeeAfter);
         expect(positionAfter.collateral).to.be.eq(positionBefore.collateral.sub(tradingFee));
-        expect(positionAfter.positionAmount).to.be.eq(positionBefore.positionAmount.add(ethers.utils.parseUnits('8', 18)));
+        expect(positionAfter.positionAmount).to.be.eq(
+            positionBefore.positionAmount.add(ethers.utils.parseUnits('8', await btc.decimals())),
+        );
     });
 
     it('unchanged collateral, decrease position', async () => {
         const {
             users: [trader],
-            positionManager
+            positionManager,
+            usdt,
+            btc,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const tradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
-        const positionTradingFeeBefore = await getPositionTradingFee(testEnv, pairIndex, positionBefore.positionAmount, true);
+        const positionTradingFeeBefore = await getPositionTradingFee(
+            testEnv,
+            pairIndex,
+            positionBefore.positionAmount,
+            true,
+        );
 
         expect(tradingFeeBefore).to.be.eq(positionTradingFeeBefore);
 
-        const collateral = ethers.utils.parseUnits('0', 18);
-        const decreaseAmount = ethers.utils.parseUnits('8', 18);
+        const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
+        const decreaseAmount = ethers.utils.parseUnits('8', await btc.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
 
-        await decreasePosition(testEnv, trader, pairIndex, collateral, decreaseAmount, TradeType.MARKET, true, openPrice);
+        await decreasePosition(
+            testEnv,
+            trader,
+            pairIndex,
+            collateral,
+            decreaseAmount,
+            TradeType.MARKET,
+            true,
+            openPrice,
+        );
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const tradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
-        const positionTradingFeeAfter = await getPositionTradingFee(testEnv, pairIndex, positionAfter.positionAmount, true);
+        const positionTradingFeeAfter = await getPositionTradingFee(
+            testEnv,
+            pairIndex,
+            positionAfter.positionAmount,
+            true,
+        );
 
         const tradingFee = tradingFeeAfter.sub(tradingFeeBefore).abs();
 
@@ -155,6 +192,7 @@ describe('Router: Edge cases', () => {
         const {
             users: [trader],
             usdt,
+            btc,
             positionManager,
             router,
         } = testEnv;
@@ -163,9 +201,9 @@ describe('Router: Edge cases', () => {
         const positionCollateralBefore = positionBefore.collateral;
         const traderBalance = await usdt.balanceOf(trader.address);
 
-        const collateral = ethers.utils.parseUnits('20000', 18);
+        const collateral = ethers.utils.parseUnits('20000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 18);
-        const sizeAmount = ethers.utils.parseUnits('0', 18);
+        const sizeAmount = ethers.utils.parseUnits('0', await btc.decimals());
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
@@ -184,17 +222,22 @@ describe('Router: Edge cases', () => {
         const {
             users: [trader],
             usdt,
+            btc,
             positionManager,
             router,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
+        const positionTradingFeeBefore = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionBefore.positionAmount,
+        );
         const traderBalance = await usdt.balanceOf(trader.address);
 
-        const collateral = ethers.utils.parseUnits('20000', 18);
+        const collateral = ethers.utils.parseUnits('20000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 18);
-        const sizeAmount = ethers.utils.parseUnits('10', 18);
+        const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
@@ -203,7 +246,11 @@ describe('Router: Edge cases', () => {
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
+        const positionTradingFeeAfter = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionAfter.positionAmount,
+        );
 
         const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
@@ -217,17 +264,22 @@ describe('Router: Edge cases', () => {
         const {
             users: [trader],
             usdt,
+            btc,
             positionManager,
             router,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
+        const positionTradingFeeBefore = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionBefore.positionAmount,
+        );
         const traderBalance = await usdt.balanceOf(trader.address);
 
-        const collateral = ethers.utils.parseUnits('20000', 18);
+        const collateral = ethers.utils.parseUnits('20000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 18);
-        const sizeAmount = ethers.utils.parseUnits('5', 18);
+        const sizeAmount = ethers.utils.parseUnits('5', await btc.decimals());
 
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
@@ -237,7 +289,11 @@ describe('Router: Edge cases', () => {
         await decreasePosition(testEnv, trader, pairIndex, collateral, sizeAmount, TradeType.MARKET, true, openPrice);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
+        const positionTradingFeeAfter = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionAfter.positionAmount,
+        );
         const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
 
@@ -250,13 +306,14 @@ describe('Router: Edge cases', () => {
         const {
             users: [trader],
             usdt,
-            positionManager
+            btc,
+            positionManager,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
 
-        const collateral = ethers.utils.parseUnits('-10000', 18);
+        const collateral = ethers.utils.parseUnits('-10000', await usdt.decimals());
         await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -270,20 +327,29 @@ describe('Router: Edge cases', () => {
         const {
             users: [trader],
             usdt,
-            positionManager
+            btc,
+            positionManager,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
+        const positionTradingFeeBefore = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionBefore.positionAmount,
+        );
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
 
-        const collateral = ethers.utils.parseUnits('-10000', 18);
-        const sizeAmount = ethers.utils.parseUnits('10', 18);
+        const collateral = ethers.utils.parseUnits('-10000', await usdt.decimals());
+        const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 18);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
+        const positionTradingFeeAfter = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionAfter.positionAmount,
+        );
         const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
 
@@ -296,27 +362,35 @@ describe('Router: Edge cases', () => {
         const {
             users: [trader],
             usdt,
-            positionManager
+            btc,
+            positionManager,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
+        const positionTradingFeeBefore = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionBefore.positionAmount,
+        );
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
 
-        const collateral = ethers.utils.parseUnits('-1000', 18);
-        const sizeAmount = ethers.utils.parseUnits('5', 18);
+        const collateral = ethers.utils.parseUnits('-1000', await usdt.decimals());
+        const sizeAmount = ethers.utils.parseUnits('5', await btc.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 18);
 
         await decreasePosition(testEnv, trader, pairIndex, collateral, sizeAmount, TradeType.MARKET, true, openPrice);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-        const positionTradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
-        const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs()
+        const positionTradingFeeAfter = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionAfter.positionAmount,
+        );
+        const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
 
         expect(traderBalanceAfter).to.be.eq(traderBalanceBefore.add(collateral.abs()));
         expect(positionAfter.collateral).to.be.eq(positionBefore.collateral.sub(collateral.abs()).sub(tradingFee));
         expect(positionAfter.positionAmount).to.be.eq(positionBefore.positionAmount.sub(sizeAmount));
     });
-
 });

@@ -30,13 +30,13 @@ describe('trading helper', () => {
         tradingHelperMock = (await TradingHelperMock.deploy(pool.address)) as TradingHelperMock;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('100', 18);
-        const stableAmount = ethers.utils.parseUnits('3000000', 18);
+        const indexAmount = ethers.utils.parseUnits('100', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
-        await pool.addPair(eth.address,usdt.address);
+        await pool.addPair(eth.address, usdt.address);
 
         await router
             .connect(depositor.signer)

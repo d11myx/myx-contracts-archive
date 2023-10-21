@@ -4,7 +4,7 @@ import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
 import { TradeType, getMockToken } from '../helpers';
 import { BigNumber } from 'ethers';
-import { TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Trade: slippage', () => {
     const pairIndex = 1;
@@ -23,8 +23,8 @@ describe('Trade: slippage', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -39,14 +39,15 @@ describe('Trade: slippage', () => {
                 users: [trader, trader2],
                 keeper,
                 usdt,
+                btc,
                 router,
                 positionManager,
                 orderManager,
                 executionLogic,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const sizeAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
             const maxSlippage = 5000000;
 
@@ -132,14 +133,15 @@ describe('Trade: slippage', () => {
                 users: [trader, trader2],
                 keeper,
                 usdt,
+                btc,
                 router,
                 positionManager,
                 orderManager,
                 executionLogic,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const sizeAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
             const maxSlippage = 10000;
 
@@ -235,8 +237,8 @@ describe('Trade: slippage', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -256,8 +258,8 @@ describe('Trade: slippage', () => {
                 pool,
             } = testEnv;
 
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -320,8 +322,8 @@ describe('Trade: slippage', () => {
                 pool,
             } = testEnv;
 
-            const indexAmount = ethers.utils.parseUnits('20000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -383,7 +385,7 @@ describe('Trade: slippage', () => {
                 pool,
             } = testEnv;
 
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -435,8 +437,8 @@ describe('Trade: slippage', () => {
                 pool,
             } = testEnv;
 
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
-            const stableAmount = ethers.utils.parseUnits('900000000', 18);
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('900000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -499,7 +501,7 @@ describe('Trade: slippage', () => {
                 pool,
             } = testEnv;
 
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),

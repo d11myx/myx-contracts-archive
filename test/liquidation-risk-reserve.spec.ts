@@ -40,6 +40,7 @@ describe('Liquidation: Risk Reserve', () => {
             router,
             positionManager,
             usdt,
+            btc,
             users: [trader],
             liquidationLogic,
             executionLogic,
@@ -50,9 +51,9 @@ describe('Liquidation: Risk Reserve', () => {
 
         const riskReserveAmountBefore = await riskReserve.getReservedAmount(usdt.address);
 
-        const collateral = await ethers.utils.parseUnits('1000', 18);
+        const collateral = await ethers.utils.parseUnits('1000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
-        const sizeAmount = ethers.utils.parseUnits('1', 18);
+        const sizeAmount = ethers.utils.parseUnits('1', await btc.decimals());
 
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
@@ -89,6 +90,7 @@ describe('Liquidation: Risk Reserve', () => {
             router,
             positionManager,
             usdt,
+            btc,
             users: [trader],
             liquidationLogic,
         } = testEnv;
@@ -97,9 +99,9 @@ describe('Liquidation: Risk Reserve', () => {
 
         const riskReserveAmountBefore = await riskReserve.getReservedAmount(usdt.address);
 
-        const collateral = await ethers.utils.parseUnits('1000', 18);
+        const collateral = await ethers.utils.parseUnits('1000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
-        const sizeAmount = ethers.utils.parseUnits('1', 18);
+        const sizeAmount = ethers.utils.parseUnits('1', await btc.decimals());
 
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
@@ -136,6 +138,7 @@ describe('Liquidation: Risk Reserve', () => {
             router,
             positionManager,
             usdt,
+            btc,
             users: [trader],
             liquidationLogic,
         } = testEnv;
@@ -144,9 +147,9 @@ describe('Liquidation: Risk Reserve', () => {
 
         const riskReserveAmountBefore = await riskReserve.getReservedAmount(usdt.address);
 
-        const collateral = await ethers.utils.parseUnits('1000', 18);
+        const collateral = await ethers.utils.parseUnits('1000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
-        const sizeAmount = ethers.utils.parseUnits('1', 18);
+        const sizeAmount = ethers.utils.parseUnits('1', await btc.decimals());
 
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
@@ -219,6 +222,9 @@ describe('Liquidation: Risk Reserve', () => {
     async function positionRisk(position: Position.InfoStructOutput) {
         const { positionManager, btc, oraclePriceFeed, pool } = testEnv;
 
+        const contractFactory = await ethers.getContractFactory('TradingHelperMock');
+        const tradingHelperMock = await contractFactory.deploy(pool.address);
+
         const price = await oraclePriceFeed.getPrice(btc.address);
 
         const fundingFee = await positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
@@ -236,20 +242,22 @@ describe('Liquidation: Risk Reserve', () => {
         }
 
         const netAsset = new Decimal(position.collateral.toString())
-            .add(pnl.toString())
-            .add(fundingFee.toString())
-            .sub(tradingFee.toString());
+            .add((await tradingHelperMock.convertIndexAmountToStable(pairIndex, pnl.toString())).toString())
+            .add((await tradingHelperMock.convertIndexAmountToStable(pairIndex, fundingFee.toString())).toString())
+            .sub((await tradingHelperMock.convertIndexAmountToStable(pairIndex, tradingFee.toString())).toString());
         if (netAsset.isNegative()) {
             return { needLiquidation: true, netAsset: netAsset };
         }
 
         const tradingConfig = await pool.getTradingConfig(pairIndex);
-        const maintainMargin = new Decimal(position.positionAmount.toString())
+        let maintainMargin = new Decimal(position.positionAmount.toString())
             .mul(position.averagePrice.toString())
             .mul(tradingConfig.maintainMarginRate.toString())
             .div(1e8)
             .div(1e30);
-
+        maintainMargin = new Decimal(
+            (await tradingHelperMock.convertIndexAmountToStable(pairIndex, maintainMargin.toString())).toString(),
+        );
         return { needLiquidation: maintainMargin.div(netAsset).gt(1), netAsset: netAsset };
     }
 });
