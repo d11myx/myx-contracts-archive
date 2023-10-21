@@ -4,10 +4,13 @@ import { MAX_UINT_AMOUNT, TradeType } from '../helpers';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from 'chai';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { TradingHelperMock } from '../types';
+import { pool } from '../types/contracts';
 
-describe('PositionManager: decrease position', () => {
+describe('trading helper', () => {
     const pairIndex = 1;
     let testEnv: TestEnv;
+    let tradingHelperMock: TradingHelperMock;
 
     before('add liquidity', async () => {
         testEnv = await newTestEnv();
@@ -21,6 +24,9 @@ describe('PositionManager: decrease position', () => {
 
         // update BTC Price
         await updateBTCPrice(testEnv, '30000');
+
+        const TradingHelperMock = await ethers.getContractFactory('TradingHelperMock');
+        tradingHelperMock = (await TradingHelperMock.deploy(pool.address)) as TradingHelperMock;
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('100', 18);
@@ -38,35 +44,26 @@ describe('PositionManager: decrease position', () => {
         await updateBTCPrice(testEnv, '30000');
     });
 
-    describe('Pre transaction check: Any check failure cancels the transaction', async () => {
-        before('before increase position', async () => {
-            const {
-                keeper,
-                users: [, trader],
-                usdt,
-                router,
-                positionManager,
-            } = testEnv;
+    it('convertIndexAmountToStable', async () => {
+        const {
+            users: [depositor],
+            usdt,
+            btc,
+            pool,
+            router,
+        } = testEnv;
+        let pair = await pool.getPair(pairIndex);
+        expect(pair.indexToken).to.be.eq(btc.address);
+        let stableAmount = await tradingHelperMock.convertIndexAmountToStable(
+            '1',
+            ethers.utils.parseUnits('1', await btc.decimals()),
+        );
+        expect(stableAmount).to.be.equal(ethers.utils.parseUnits('1', await usdt.decimals()));
 
-            const stableAmount = ethers.utils.parseUnits('100000', 18);
-            await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
-
-            const collateral = ethers.utils.parseUnits('100000', 18);
-            const increaseSize = ethers.utils.parseUnits('90', 18);
-            const openPrice = ethers.utils.parseUnits('30000', 30);
-
-            await increasePosition(
-                testEnv,
-                trader,
-                pairIndex,
-                collateral,
-                openPrice,
-                increaseSize,
-                TradeType.MARKET,
-                true,
-            );
-            const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(position.positionAmount).to.be.eq(increaseSize);
-        });
+        stableAmount = await tradingHelperMock.convertIndexAmountToStable(
+            '1',
+            ethers.utils.parseUnits('0.000001', await btc.decimals()),
+        );
+        expect(stableAmount).to.be.equal(ethers.utils.parseUnits('0.000001', await usdt.decimals()));
     });
 });
