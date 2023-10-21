@@ -21,10 +21,17 @@ import "../helpers/TradingHelper.sol";
 import "../helpers/TradingHelper.sol";
 
 contract TradingHelperMock {
+    IPool public pool;
+
+    constructor(address _pool) {
+        pool = IPool(_pool);
+    }
+
     function convertIndexAmountToStable(
-        IPool.Pair memory pair,
+        uint256 pairIndex,
         int256 indexTokenAmount
     ) external view returns (int256 amount) {
+        IPool.Pair memory pair = pool.getPair(pairIndex);
         return TradingHelper.convertIndexAmountToStable(pair, indexTokenAmount);
     }
 }
