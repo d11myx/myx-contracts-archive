@@ -18,6 +18,7 @@ describe('trading helper', () => {
             users: [depositor],
             usdt,
             btc,
+            eth,
             pool,
             router,
         } = testEnv;
@@ -34,6 +35,8 @@ describe('trading helper', () => {
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+        await pool.addPair(eth.address,usdt.address);
 
         await router
             .connect(depositor.signer)

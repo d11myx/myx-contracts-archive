@@ -22,8 +22,11 @@ describe('Pool: Edge cases', () => {
         const tradingFeeConfig = btcPair.tradingFeeConfig;
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
+        await expect(pool.connect(poolAdmin.signer).addPair(pair.stableToken, pair.indexToken)).to.be.revertedWith(
+            '!stable token',
+        );
         const countBefore = await pool.pairsIndex();
-        await pool.addStableToken(pair.stableToken);
+        await pool.addStableToken(usdt.address);
         await waitForTx(await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken));
 
         let pairIndex = await pool.getPairIndex(pair.indexToken, pair.stableToken);
