@@ -21,8 +21,8 @@ describe('LP: fair price', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);

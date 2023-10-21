@@ -1,6 +1,5 @@
 import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
-import { MockPriceFeed } from '../types';
 import { expect } from './shared/expect';
 import {
     deployMockCallback,
@@ -11,7 +10,7 @@ import {
     waitForTx,
 } from '../helpers';
 import { mintAndApprove } from './helpers/misc';
-import { TradingTypes } from '../types/contracts/trading/Router';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: increase position ar', () => {
     const pairIndex = 1;
@@ -25,8 +24,8 @@ describe('Router: increase position ar', () => {
             oraclePriceFeed,
         } = testEnv;
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
@@ -42,6 +41,7 @@ describe('Router: increase position ar', () => {
                 keeper,
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 executor,
                 executionLogic,
@@ -59,7 +59,7 @@ describe('Router: increase position ar', () => {
                 collateral: 0,
                 openPrice: ethers.utils.parseUnits('30000', 30),
                 isLong: true,
-                sizeAmount: ethers.utils.parseUnits('5', 18),
+                sizeAmount: ethers.utils.parseUnits('5', await btc.decimals()),
             };
 
             const orderId = await orderManager.ordersIndex();

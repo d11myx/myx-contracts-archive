@@ -23,8 +23,8 @@ describe('Trade: trading fee', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('30000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('30000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -47,13 +47,14 @@ describe('Trade: trading fee', () => {
                 users: [trader],
                 keeper,
                 usdt,
+                btc,
                 router,
                 positionManager,
                 feeCollector,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('30', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('30', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -102,6 +103,7 @@ describe('Trade: trading fee', () => {
             const {
                 users: [trader, trader2, trader3, trader4, trader5, trader6],
                 usdt,
+                btc,
                 router,
                 positionManager,
                 executionLogic,
@@ -116,8 +118,8 @@ describe('Trade: trading fee', () => {
             const vip3 = 3;
             const vip4 = 4;
             const vip5 = 5;
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const sizeAmount = ethers.utils.parseUnits('30', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('30', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             // vip = 0

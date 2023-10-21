@@ -7,6 +7,7 @@ import { PoolToken } from '../types';
 import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
 import { TradingTypes } from '../types/contracts/core/Router';
+import usdt from '../markets/usdt';
 
 describe('Modify LP Average Price', async () => {
     const pairIndex = 1;
@@ -23,8 +24,8 @@ describe('Modify LP Average Price', async () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('20000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
 
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -49,11 +50,12 @@ describe('Modify LP Average Price', async () => {
             const {
                 users: [trader],
                 usdt,
+                btc,
                 router,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('20000', 18);
-            const sizeAmount = ethers.utils.parseUnits('20', 18);
+            const collateral = ethers.utils.parseUnits('20000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('20', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -81,6 +83,8 @@ describe('Modify LP Average Price', async () => {
                 executionLogic,
                 positionManager,
                 orderManager,
+                usdt,
+                btc,
             } = testEnv;
 
             // update btc price
@@ -91,8 +95,8 @@ describe('Modify LP Average Price', async () => {
             const positionBefAmount = positionBef.positionAmount;
 
             // increase position
-            const collateral = ethers.utils.parseUnits('0', 18);
-            const sizeAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('32000', 30);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -124,6 +128,7 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 executionLogic,
                 positionManager,
@@ -138,10 +143,10 @@ describe('Modify LP Average Price', async () => {
             const positionBefAmount = positionBef.positionAmount;
 
             // increase position
-            const collateral = ethers.utils.parseUnits('100000', 18);
+            const collateral = ethers.utils.parseUnits('100000', await usdt.decimals());
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
-            const sizeAmount = ethers.utils.parseUnits('20', 18);
+            const sizeAmount = ethers.utils.parseUnits('20', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('29000', 30);
 
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -175,6 +180,8 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 router,
+                btc,
+                usdt,
                 executionLogic,
                 positionManager,
                 orderManager,
@@ -188,8 +195,8 @@ describe('Modify LP Average Price', async () => {
             const positionBefAmount = positionBef.positionAmount;
 
             // increase position
-            const collateral = ethers.utils.parseUnits('0', 18);
-            const sizeAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('40000', 30);
 
             const decreasePositionRequst: TradingTypes.DecreasePositionRequestStruct = {
@@ -246,8 +253,8 @@ describe('Modify LP Average Price', async () => {
             const positionBefAmount = positionBef.positionAmount;
 
             // increase position
-            const collateral = ethers.utils.parseUnits('0', 18);
-            const descreaseAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
+            const descreaseAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('29000', 30);
 
             const decreasePositionRequst: TradingTypes.DecreasePositionRequestStruct = {
@@ -293,8 +300,8 @@ describe('Modify LP Average Price', async () => {
                 orderManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('20000', 18);
-            const sizeAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('20000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -319,6 +326,7 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 executionLogic,
                 orderManager,
@@ -330,8 +338,8 @@ describe('Modify LP Average Price', async () => {
             // update btc price
             await updateBTCPrice(testEnv, '20000');
 
-            const collateral = ethers.utils.parseUnits('200000', 18);
-            const shortAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('200000', await usdt.decimals());
+            const shortAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('20000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -365,6 +373,7 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 executionLogic,
                 orderManager,
@@ -376,8 +385,8 @@ describe('Modify LP Average Price', async () => {
             // update btc price
             await updateBTCPrice(testEnv, '40000');
 
-            const collateral = ethers.utils.parseUnits('200000', 18);
-            const shortAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('200000', await usdt.decimals());
+            const shortAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('40000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -411,6 +420,7 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 executionLogic,
                 orderManager,
@@ -422,8 +432,8 @@ describe('Modify LP Average Price', async () => {
             // update btc price
             await updateBTCPrice(testEnv, '35000');
 
-            const collateral = ethers.utils.parseUnits('200000', 18);
-            const decreaseAmount = ethers.utils.parseUnits('20', 18);
+            const collateral = ethers.utils.parseUnits('200000', await usdt.decimals());
+            const decreaseAmount = ethers.utils.parseUnits('20', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('35000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -464,6 +474,7 @@ describe('Modify LP Average Price', async () => {
                 keeper,
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 executionLogic,
                 orderManager,
@@ -475,8 +486,8 @@ describe('Modify LP Average Price', async () => {
             // update btc price
             await updateBTCPrice(testEnv, '10000');
 
-            const collateral = ethers.utils.parseUnits('200000', 18);
-            const decreaseAmount = ethers.utils.parseUnits('5', 18);
+            const collateral = ethers.utils.parseUnits('200000', await usdt.decimals());
+            const decreaseAmount = ethers.utils.parseUnits('5', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('10000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);

@@ -3,10 +3,10 @@ import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { mintAndApprove, updateBTCPrice, increasePosition } from './helpers/misc';
 import { TradeType, getMockToken } from '../helpers';
-import { TradingTypes } from '../types/contracts/interfaces/IRouter';
-import { loadReserveConfig } from '../helpers/market-config-helper';
-import { MARKET_NAME } from '../helpers/env';
+import { loadReserveConfig } from '../helpers';
+import { MARKET_NAME } from '../helpers';
 import { constants, BigNumber } from 'ethers';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Position', () => {
     const pairIndex = 1;
@@ -25,8 +25,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -40,6 +40,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -49,8 +50,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -163,8 +164,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -178,6 +179,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -187,8 +189,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -270,8 +272,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -285,6 +287,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -293,8 +296,8 @@ describe('Position', () => {
                     keeper,
                     pool,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -400,8 +403,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -415,6 +418,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -424,8 +428,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -552,8 +556,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -567,6 +571,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -576,8 +581,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -704,8 +709,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('34', 18);
-                const stableAmount = ethers.utils.parseUnits('1000000', 18);
+                const indexAmount = ethers.utils.parseUnits('34', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('1000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -719,6 +724,7 @@ describe('Position', () => {
                 const {
                     users: [longTrader, shortTrader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -726,11 +732,11 @@ describe('Position', () => {
                     keeper,
                     pool,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const collateral2 = ethers.utils.parseUnits('27000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const collateral2 = ethers.utils.parseUnits('27000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
-                const size2 = ethers.utils.parseUnits('18.66', 18);
+                const size2 = ethers.utils.parseUnits('18.66', await btc.decimals());
 
                 /**
                  * open position trader take all indexToken

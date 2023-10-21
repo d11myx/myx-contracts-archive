@@ -3,6 +3,7 @@ import { waitForTx } from '../helpers';
 import { getToken, MAX_UINT_AMOUNT } from '../helpers';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
+import { parseUnits } from 'ethers/lib/utils';
 
 describe('Pool: Liquidity cases', () => {
     const pairIndex = 1;
@@ -31,8 +32,8 @@ describe('Pool: Liquidity cases', () => {
 
         const receivedLP = await pool.getMintLpAmount(
             pairIndex,
-            ethers.utils.parseEther('1000'),
-            ethers.utils.parseEther('30000000'),
+            ethers.utils.parseUnits('1000', await btc.decimals()),
+            ethers.utils.parseUnits('30000000', await usdt.decimals()),
         );
 
         await waitForTx(
@@ -41,8 +42,8 @@ describe('Pool: Liquidity cases', () => {
                 .addLiquidity(
                     pair.indexToken,
                     pair.stableToken,
-                    ethers.utils.parseEther('1000'),
-                    ethers.utils.parseEther('30000000'),
+                    ethers.utils.parseUnits('1000', await btc.decimals()),
+                    ethers.utils.parseUnits('30000000', await usdt.decimals()),
                 ),
         );
 
@@ -51,8 +52,8 @@ describe('Pool: Liquidity cases', () => {
         const depositorLpAft = await pairToken.balanceOf(depositor.address);
         const callbackLpAft = await pairToken.balanceOf(router.address);
 
-        expect(usdtBalanceAft).to.be.eq(usdtBalanceBef.sub(ethers.utils.parseEther('30000000')));
-        expect(btcBalanceAft).to.be.eq(btcBalanceBef.sub(ethers.utils.parseEther('1000')));
+        expect(usdtBalanceAft).to.be.eq(usdtBalanceBef.sub(ethers.utils.parseUnits('30000000', await usdt.decimals())));
+        expect(btcBalanceAft).to.be.eq(btcBalanceBef.sub(ethers.utils.parseUnits('1000', await btc.decimals())));
         expect(depositorLpAft).to.be.eq(depositorLpBef.add(receivedLP.mintAmount));
         expect(callbackLpAft).to.be.eq(callbackLpBef);
     });

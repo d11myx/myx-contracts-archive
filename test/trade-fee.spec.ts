@@ -27,12 +27,20 @@ describe('Trade: FeeCal', () => {
     // });
 
     it('calculate trading fee', async () => {
-        const { positionManager } = testEnv;
+        const { positionManager, btc } = testEnv;
 
-        const long = await positionManager.getTradingFee(pairIndex, true, ethers.utils.parseEther('100'));
+        const long = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            ethers.utils.parseUnits('100', await btc.decimals()),
+        );
         expect(long).to.be.eq('3200000000000000000000');
 
-        const short = await positionManager.getTradingFee(pairIndex, false, ethers.utils.parseEther('100'));
+        const short = await positionManager.getTradingFee(
+            pairIndex,
+            false,
+            ethers.utils.parseUnits('100', await btc.decimals()),
+        );
         expect(short).to.be.eq('2200000000000000000000');
     });
 });
