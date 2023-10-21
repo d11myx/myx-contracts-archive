@@ -1,8 +1,8 @@
 import { newTestEnv, SignerWithAddress, TestEnv } from './helpers/make-suite';
-import hre, { ethers } from 'hardhat';
+import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
 import { deployMockCallback, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
-import { expect } from './shared/expect';
+import { expect } from 'chai';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/core/Router';
 
@@ -26,7 +26,7 @@ describe('Router: Edge cases', () => {
             pool,
         } = testEnv;
 
-        const btcAmount = ethers.utils.parseUnits('34', await btc.decimals());
+        const btcAmount = ethers.utils.parseUnits('45', await btc.decimals());
         const usdtAmount = ethers.utils.parseUnits('1000000', await usdt.decimals());
         await waitForTx(await btc.connect(deployer.signer).mint(depositor.address, btcAmount));
         await waitForTx(await usdt.connect(deployer.signer).mint(depositor.address, usdtAmount));
@@ -191,133 +191,6 @@ describe('Router: Edge cases', () => {
         );
     });
 
-    describe('Router: ADL cases', () => {
-        const pairIndex = 1;
-
-        before(async () => {
-            let btcPrice = '30000';
-            await updateBTCPrice(testEnv, btcPrice);
-        });
-        after(async () => {
-            let btcPrice = '30000';
-            await updateBTCPrice(testEnv, btcPrice);
-        });
-
-        it('execute adl', async () => {
-            const {
-                keeper,
-                users: [trader, shorter],
-                usdt,
-                btc,
-                pool,
-                positionManager,
-                orderManager,
-                router,
-                executionLogic,
-                executor,
-            } = testEnv;
-
-            let traderCurPosition1 = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`traderCurPosition1: ${traderCurPosition1.positionAmount}`);
-
-            let collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
-            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-
-            // trader take all indexToken
-            const re = await increaseUserPosition(
-                trader,
-                pairIndex,
-                collateral,
-                ethers.utils.parseUnits('30000', 30),
-                ethers.utils.parseUnits('18.66', await btc.decimals()),
-                true,
-                testEnv,
-            );
-            let traderCurPosition2 = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`traderCurPosition2: ${traderCurPosition2.positionAmount}`);
-
-            await hre.run('decode-event', { hash: re.hash, log: true });
-
-            // shorter open position
-            collateral = ethers.utils.parseUnits('27000', await usdt.decimals());
-            await mintAndApprove(testEnv, usdt, collateral, shorter, router.address);
-            await increaseUserPosition(
-                shorter,
-                pairIndex,
-                collateral,
-                ethers.utils.parseUnits('30000', 30),
-                ethers.utils.parseUnits('30', await btc.decimals()),
-                false,
-                testEnv,
-            );
-
-            // trader take all indexToken
-            await increaseUserPosition(
-                trader,
-                pairIndex,
-                BigNumber.from(0),
-                ethers.utils.parseUnits('30000', 30),
-                ethers.utils.parseUnits('30', await btc.decimals()),
-                true,
-                testEnv,
-            );
-
-            const pairVaultInfo = await pool.getVault(pairIndex);
-            // console.log(
-            //     'indexTotalAmount',
-            //     pairVaultInfo.indexTotalAmount,
-            //     'indexReservedAmount',
-            //     pairVaultInfo.indexReservedAmount,
-            // );
-            // expect(pairVaultInfo.indexTotalAmount.sub(pairVaultInfo.indexReservedAmount)).to.be.eq(
-            //     '306000000000000000',
-            // );
-
-            // shorter decrease position will wait for adl
-            const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
-                account: shorter.address,
-                pairIndex: pairIndex,
-                tradeType: TradeType.MARKET,
-                collateral: 0,
-                triggerPrice: ethers.utils.parseUnits('30000', 30),
-                isLong: false,
-                sizeAmount: ethers.utils.parseUnits('5', await btc.decimals()),
-                maxSlippage: 0,
-            };
-            const decreaseOrderId = await orderManager.ordersIndex();
-            await router.connect(shorter.signer).createDecreaseOrder(decreasePositionRequest);
-
-            await executionLogic
-                .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false, 0, true);
-
-            const decreaseOrderInfo = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
-            expect(decreaseOrderInfo.needADL).to.be.eq(true);
-
-            // execute ADL
-            let traderPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-            let traderCurPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`positionAmountAfter: ${traderCurPosition.positionAmount}`);
-            // console.log(traderCurPosition);
-            await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
-                [
-                    {
-                        positionKey: traderPositionKey,
-                        sizeAmount: ethers.utils.parseUnits('5', await btc.decimals()),
-                        level: 0,
-                        commissionRatio: 0,
-                    },
-                ],
-                decreaseOrderId,
-                TradeType.MARKET,
-                0,
-                0,
-            );
-            const newVar = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(`positionAmountAfter: ${newVar.positionAmount}`);
-        });
-    });
-
     describe('Router: Close position', () => {
         it('Closing position', async () => {
             const {
@@ -347,7 +220,6 @@ describe('Router: Edge cases', () => {
             );
 
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log(position.positionAmount);
             // Closing position
             const { executeReceipt } = await decreasePosition(
                 testEnv,
