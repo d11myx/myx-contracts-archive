@@ -24,7 +24,7 @@ export async function initPairs(
         const tradingConfig = pairConfig.tradingConfig;
         const tradingFeeConfig = pairConfig.tradingFeeConfig;
         const fundingFeeConfig = pairConfig.fundingFeeConfig;
-        await pool.addStableToken(pair.stableToken);
+        await pool.addStableToken(usdt.address);
         await waitForTx(await pool.addPair(pair.indexToken, pair.stableToken));
 
         let pairIndex = await pool.getPairIndex(pair.indexToken, pair.stableToken);
