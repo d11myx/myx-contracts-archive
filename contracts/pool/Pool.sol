@@ -157,7 +157,7 @@ contract Pool is IPool, Upgradeable {
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != address(0) && _stableToken != address(0), "zero address");
-        require(!isStableToken[_indexToken], "!stable token");
+        require(isStableToken[_stableToken], "!stable token");
         require(getPairIndex[_indexToken][_stableToken] == 0, "exists");
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
