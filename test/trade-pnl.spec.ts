@@ -1,16 +1,40 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import { ethers } from 'hardhat';
+import { ethers, waffle } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { TradeType } from '../helpers';
+import { getWETH, TradeType } from '../helpers';
 
 import UniswapV3Factory from './mock/UniswapV3Factory.json';
-import UniswapV3Pool from './mock/UniswapV3Pool.json';
+import SwapRouter from './mock/SwapRouter.json';
 import V3NFTDescriptor from './mock/V3NFTDescriptor.json';
 import V3NonfungiblePositionManager from './mock/V3NonfungiblePositionManager.json';
 
 import Decimal from 'decimal.js';
+import { IUniswapV3Factory, IUniSwapV3Router } from '../types';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+
+const v3Core = async (wallet: SignerWithAddress): Promise<{ factory: IUniswapV3Factory; router: IUniSwapV3Router }> => {
+    const factory = (await waffle.deployContract(
+        wallet,
+        {
+            bytecode: UniswapV3Factory.bytecode,
+            abi: UniswapV3Factory.abi,
+        },
+        [],
+    )) as unknown as IUniswapV3Factory;
+
+    const weth9 = await getWETH();
+    const router = (await waffle.deployContract(
+        wallet,
+        {
+            bytecode: SwapRouter.bytecode,
+            abi: SwapRouter.abi,
+        },
+        [factory.address, weth9.address],
+    )) as unknown as IUniSwapV3Router;
+    return { factory, router };
+};
 
 describe('Trade: profit & Loss', () => {
     const pairIndex = 1;
