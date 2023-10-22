@@ -36,7 +36,7 @@ describe('trading helper', () => {
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
-        await pool.addPair(eth.address, usdt.address);
+        
 
         await router
             .connect(depositor.signer)
