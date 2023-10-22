@@ -39,7 +39,7 @@ contract Pool is IPool, Upgradeable {
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public poolTokenFactory;
-    address public router;
+    address public swapRouter;
     address public riskReserve;
     address public feeCollector;
     mapping(uint256 => mapping(address => bytes)) public tokenPath;
@@ -111,7 +111,7 @@ contract Pool is IPool, Upgradeable {
     }
 
     function setSwapRouter(address _router) external onlyPoolAdmin {
-        router = _router;
+        swapRouter = _router;
     }
 
     function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
@@ -458,8 +458,8 @@ contract Pool is IPool, Upgradeable {
         } else if (tokenIn == pair.stableToken) {
             amountInMaximum = (amountOut * price * 12) / 10;
         }
-        IERC20(pair.indexToken).approve(router, amountInMaximum);
-        IUniSwapV3Router(router).exactOutput(
+        IERC20(pair.indexToken).approve(swapRouter, amountInMaximum);
+        IUniSwapV3Router(swapRouter).exactOutput(
             IUniSwapV3Router.ExactOutputParams({
                 path: path,
                 recipient: address(this),
