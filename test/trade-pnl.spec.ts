@@ -4,6 +4,12 @@ import { ethers } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import { TradeType } from '../helpers';
+
+import UniswapV3Factory from './mock/UniswapV3Factory.json';
+import UniswapV3Pool from './mock/UniswapV3Pool.json';
+import V3NFTDescriptor from './mock/V3NFTDescriptor.json';
+import V3NonfungiblePositionManager from './mock/V3NonfungiblePositionManager.json';
+
 import Decimal from 'decimal.js';
 
 describe('Trade: profit & Loss', () => {
