@@ -13,8 +13,9 @@ import V3NonfungiblePositionManager from './mock/V3NonfungiblePositionManager.js
 import Decimal from 'decimal.js';
 import { IUniswapV3Factory, IUniSwapV3Router } from '../types';
 
-
-const v3Core = async (wallet: SignerWithAddress): Promise<{ factory: IUniswapV3Factory; swapRouter: IUniSwapV3Router }> => {
+const v3Core = async (
+    wallet: SignerWithAddress,
+): Promise<{ factory: IUniswapV3Factory; swapRouter: IUniSwapV3Router }> => {
     const factory = (await waffle.deployContract(
         wallet.signer,
         {
@@ -58,7 +59,8 @@ describe('Trade: profit & Loss', () => {
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
-        const {factory,swapRouter}=await v3Core(poolAdmin);
+        const { factory, swapRouter } = await v3Core(poolAdmin);
+        await pool.setSwapRouter(swapRouter.address);
 
         await router
             .connect(depositor.signer)
