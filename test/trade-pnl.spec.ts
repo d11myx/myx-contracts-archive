@@ -34,6 +34,46 @@ const v3Core = async (
         },
         [factory.address, weth9.address],
     )) as unknown as IUniSwapV3Router;
+    // const nftDescriptorLibrary = await nftDescriptorLibraryFixture(wallets, provider)
+
+    // const linkedBytecode = linkLibraries(
+    //   {
+    //     bytecode: NonfungibleTokenPositionDescriptor.bytecode,
+    //     linkReferences: {
+    //       'NFTDescriptor.sol': {
+    //         NFTDescriptor: [
+    //           {
+    //             length: 20,
+    //             start: 1261,
+    //           },
+    //         ],
+    //       },
+    //     },
+    //   },
+    //   {
+    //     NFTDescriptor: nftDescriptorLibrary.address,
+    //   }
+    // )
+
+    // const positionDescriptor = await waffle.deployContract(
+    //   wallets[0],
+    //   {
+    //     bytecode: linkedBytecode,
+    //     abi: NonfungibleTokenPositionDescriptor.abi,
+    //   },
+    //   [tokens[0].address]
+    // )
+
+    // const nftFactory = new ethers.ContractFactory(
+    //   NonfungiblePositionManagerJson.abi,
+    //   NonfungiblePositionManagerJson.bytecode,
+    //   wallets[0]
+    // )
+    // const nft = (await nftFactory.deploy(
+    //   factory.address,
+    //   weth9.address,
+    //   positionDescriptor.address
+    // )) as INonfungiblePositionManager
     return { factory, swapRouter };
 };
 
