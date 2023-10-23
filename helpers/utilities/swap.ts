@@ -98,3 +98,14 @@ export const linkLibraries = (
     });
     return bytecode;
 };
+
+export function sortedTokens(
+    a: { address: string; decimal: number },
+    b: { address: string; decimal: number },
+): [typeof a, typeof b] | [typeof b, typeof a] {
+    return compareToken(a, b) < 0 ? [a, b] : [b, a];
+}
+
+export function compareToken(a: { address: string }, b: { address: string }): -1 | 1 {
+    return a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1;
+}
