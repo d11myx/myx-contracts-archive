@@ -28,6 +28,7 @@ import {
     FeeCollector,
     Timelock,
     ERC20DecimalsMock,
+    SpotSwap,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -58,6 +59,7 @@ import {
     LIQUIDATION_LOGIC_ID,
     FEE_COLLECTOR_ID,
     TIMELOCK_ID,
+    SPOT_SWAP,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -122,6 +124,9 @@ export const getPool = async (address?: string): Promise<Pool> => {
     return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
 };
 
+export const getSpotSwap = async (address?: string): Promise<SpotSwap> => {
+    return getContract<SpotSwap>('SpotSwap', address || (await hre.deployments.get(SPOT_SWAP)).address);
+};
 export const getFundingRate = async (address?: string): Promise<FundingRate> => {
     return getContract<FundingRate>('FundingRate', address || (await hre.deployments.get(FUNDING_RATE)).address);
 };

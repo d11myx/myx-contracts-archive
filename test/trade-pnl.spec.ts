@@ -60,7 +60,7 @@ describe('Trade: profit & Loss', () => {
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
         const { factory, swapRouter } = await v3Core(poolAdmin);
-        await pool.setSwapRouter(swapRouter.address);
+        // await pool.setSwapRouter(swapRouter.address);
 
         await router
             .connect(depositor.signer)

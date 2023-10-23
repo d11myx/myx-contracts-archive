@@ -5,6 +5,7 @@ import {
     getFundingRate,
     getMockToken,
     getPool,
+    getSpotSwap,
     getToken,
     loadReserveConfig,
     MARKET_NAME,
@@ -54,28 +55,31 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     }
     console.log(`Configured all pairs 【(${Object.keys(pairConfigs)})/${MARKET_NAME}】`);
 
+    const spotSwap = await getSpotSwap();
+    await pool.connect(poolAdminSigner).setSpotSwap(spotSwap.address);
+
     // uniswap config
     const uniswapRouterAddress = reserveConfig.UniswapRouterAddress[network] as string;
     if (!uniswapRouterAddress || uniswapRouterAddress == ZERO_ADDRESS) {
         console.log(`[warring] Uniswap router address not provided`);
     } else {
-        await waitForTx(await pool.connect(poolAdminSigner).setSwapRouter(uniswapRouterAddress));
+        await waitForTx(await spotSwap.connect(poolAdminSigner).setSwapRouter(uniswapRouterAddress));
     }
 
     // uniswap token path
     for (let symbol of Object.keys(pairConfigs)) {
-        const pairToken = await getMockToken(symbol);
+        const indexToken = await getMockToken(symbol);
         const basicToken = await getToken();
 
         const tokenPathConfigs = reserveConfig?.UniswapTokenPathConfig[network] as SymbolMap<string>;
         if (!tokenPathConfigs || !tokenPathConfigs[symbol]) {
             console.log(`[warring] Uniswap TokenPath for【${symbol}/${MARKET_NAME}】not provided`);
         } else {
-            const pairIndex = await pool.getPairIndex(pairToken.address, basicToken.address);
+            const pairIndex = await pool.getPairIndex(indexToken.address, basicToken.address);
             await waitForTx(
-                await pool
+                await spotSwap
                     .connect(poolAdminSigner)
-                    .updateTokenPath(pairIndex, pairToken.address, tokenPathConfigs[symbol]),
+                    .updateTokenPath(indexToken.address, basicToken.address, tokenPathConfigs[symbol]),
             );
             console.log(`[deployment] Uniswap TokenPath for【${symbol}/${MARKET_NAME}】updated`);
         }
