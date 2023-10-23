@@ -2,9 +2,10 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import './IPeripheryImmutableState.sol';
+import "./IPeripheryImmutableState.sol";
+import "./IPoolInitializer.sol";
 
-interface INonfungiblePositionManager is IPeripheryImmutableState {
+interface INonfungiblePositionManager is IPeripheryImmutableState, IPoolInitializer {
     /// @notice Emitted when liquidity is increased for a position NFT
     /// @dev Also emitted when a token is minted
     /// @param tokenId The ID of the token for which liquidity was increased

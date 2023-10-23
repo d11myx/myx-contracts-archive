@@ -3,7 +3,7 @@ import { expect } from './shared/expect';
 import { ethers, waffle } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { encodePath, FeeAmount, getWETH, linkLibraries, TradeType } from '../helpers';
+import { encodePath, FeeAmount, getWETH, linkLibraries, sortedTokens, TradeType } from '../helpers';
 
 import UniswapV3Factory from './mock/UniswapV3Factory.json';
 import SwapRouter from './mock/SwapRouter.json';
@@ -100,7 +100,18 @@ describe('Trade: profit & Loss', () => {
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
         let tokenAddresses = [btc.address, usdt.address];
-        const { factory, swapRouter } = await v3Core(poolAdmin);
+        const { factory,positionManager, swapRouter } = await v3Core(poolAdmin);
+        const [token0, token1] = sortedTokens(
+            { address: poolTokens[0].address, decimal: await poolTokens[0].decimals() },
+            { address: poolTokens[1].address, decimal: await poolTokens[1].decimals() }
+        );
+
+        await positionManager.createAndInitializePoolIfNecessary(
+            token0.address,
+            token1.address,
+            params.fee,
+            encodePriceSqrt(1, 1)
+        );
         let fees = [FeeAmount.MEDIUM];
         await spotSwap.setSwapRouter(swapRouter.address);
         await spotSwap.updateTokenPath(btc.address, usdt.address, encodePath(tokenAddresses, fees));
