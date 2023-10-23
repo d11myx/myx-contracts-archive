@@ -62,6 +62,7 @@
         "web3": "^4.1.1"
     },
     "dependencies": {
+        "@uniswap/v3-periphery": "^1.0.1",
         "@chainlink/contracts": "^0.6.1",
         "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
         "@matterlabs/hardhat-zksync-solc": "^0.3.17",
