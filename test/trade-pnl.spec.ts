@@ -50,6 +50,7 @@ describe('Trade: profit & Loss', () => {
             btc,
             pool,
             router,
+            spotSwap,
         } = testEnv;
 
         // add liquidity
@@ -60,7 +61,7 @@ describe('Trade: profit & Loss', () => {
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
         const { factory, swapRouter } = await v3Core(poolAdmin);
-        // await pool.setSwapRouter(swapRouter.address);
+        await spotSwap.setSwapRouter(swapRouter.address);
 
         await router
             .connect(depositor.signer)

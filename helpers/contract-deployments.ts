@@ -20,6 +20,7 @@ import {
     WETH9,
     Timelock,
     ERC20DecimalsMock,
+    SpotSwap,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -169,12 +170,15 @@ export async function deployPair(
         poolTokenFactory.address,
     ])) as any as Pool;
     log(`deployed Pool at ${pool.address}`);
+    const spotSwap = (await deployUpgradeableContract('SpotSwap', [addressProvider.address])) as any as SpotSwap;
+    log(`deployed SpotSwap at ${spotSwap.address}`);
+    await pool.setSpotSwap(spotSwap.address);
 
     //TODO uniswap config
     // await pool.setRouter(ZERO_ADDRESS);
     // await pool.updateTokenPath();
 
-    return { poolTokenFactory, pool };
+    return { poolTokenFactory, pool, spotSwap };
 }
 
 export async function deployTrading(
