@@ -10,6 +10,7 @@ export const MOCK_PRICE_FEED_ID = `MockPriceFeed`;
 export const INDEX_PRICE_FEED_ID = `IndexPriceFeed`;
 export const FUNDING_RATE = `FundingRate`;
 export const PAIR_INFO_ID = `Pool`;
+export const SPOT_SWAP = `SpotSwap`;
 export const POOL_TOKEN_FACTORY = `PoolTokenFactory`;
 export const PAIR_LIQUIDITY_ID = `PoolLiquidity`;
 export const FEE_COLLECTOR_ID = `FeeCollector`;
