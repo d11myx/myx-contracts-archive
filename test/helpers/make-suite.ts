@@ -19,6 +19,7 @@ import {
     LiquidationLogic,
     FeeCollector,
     Timelock,
+    SpotSwap,
 } from '../../types';
 import {
     SymbolMap,
@@ -46,6 +47,7 @@ import {
     getRiskReserve,
     getLiquidationLogic,
     getFeeCollector,
+    getSpotSwap,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -68,6 +70,7 @@ export interface TestEnv {
     roleManager: RoleManager;
     pairTokens: SymbolMap<ERC20DecimalsMock>;
     pool: Pool;
+    spotSwap: SpotSwap;
     fundingRate: FundingRate;
     oraclePriceFeed: PythOraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
@@ -94,6 +97,7 @@ export const testEnv: TestEnv = {
     roleManager: {} as RoleManager,
     pairTokens: {} as SymbolMap<ERC20DecimalsMock>,
     pool: {} as Pool,
+    spotSwap: {} as SpotSwap,
     fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as PythOraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
@@ -153,6 +157,7 @@ export async function setupTestEnv() {
 
     // pair
     testEnv.pool = await getPool();
+    testEnv.spotSwap = await getSpotSwap();
 
     testEnv.fundingRate = await getFundingRate();
 
@@ -210,7 +215,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         tokens,
     );
 
-    const { pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { pool, spotSwap } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const {
         positionManager,
@@ -241,6 +246,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         roleManager: roleManager,
         pairTokens: tokens,
         pool: pool,
+        spotSwap: spotSwap,
         fundingRate: fundingRate,
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,
