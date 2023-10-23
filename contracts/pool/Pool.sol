@@ -14,6 +14,7 @@ import "../interfaces/IPool.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
 import "../interfaces/IPriceFeed.sol";
+import "../interfaces/ISpotSwap.sol";
 import "../token/interfaces/IBaseToken.sol";
 import "../interfaces/IWETH.sol";
 
@@ -39,10 +40,9 @@ contract Pool is IPool, Upgradeable {
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public poolTokenFactory;
-    address public swapRouter;
+
     address public riskReserve;
     address public feeCollector;
-    mapping(uint256 => mapping(address => bytes)) public tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
@@ -58,6 +58,7 @@ contract Pool is IPool, Upgradeable {
 
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
+    address public spotSwap;
 
     function initialize(
         IAddressesProvider addressProvider,
@@ -110,8 +111,8 @@ contract Pool is IPool, Upgradeable {
         require(success, "err-transfer-eth");
     }
 
-    function setSwapRouter(address _router) external onlyPoolAdmin {
-        swapRouter = _router;
+    function setSpotSwap(address _spotSwap) external onlyPoolAdmin {
+        spotSwap = _spotSwap;
     }
 
     function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
@@ -144,14 +145,6 @@ contract Pool is IPool, Upgradeable {
 
     function removeStableToken(address _token) external onlyPoolAdmin {
         delete isStableToken[_token];
-    }
-
-    function updateTokenPath(
-        uint256 pairIndex,
-        address tokenIn,
-        bytes memory path
-    ) external onlyPoolAdmin {
-        tokenPath[pairIndex][tokenIn] = path;
     }
 
     // Manage pairs
@@ -345,7 +338,7 @@ contract Pool is IPool, Upgradeable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             if (vault.stableTotalAmount < _profit.abs()) {
-                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -360,7 +353,7 @@ contract Pool is IPool, Upgradeable {
             vault.indexTotalAmount += _profit.abs();
         } else {
             if (vault.indexTotalAmount < _profit.abs()) {
-                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
             }
             vault.indexTotalAmount -= _profit.abs();
         }
@@ -377,7 +370,7 @@ contract Pool is IPool, Upgradeable {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
-        return _addLiquidity( recipient, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function addLiquidityForAccount(
@@ -389,7 +382,7 @@ contract Pool is IPool, Upgradeable {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
-        return _addLiquidity( recipient, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function removeLiquidity(
@@ -448,26 +441,22 @@ contract Pool is IPool, Upgradeable {
         }
     }
 
-    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) private {
+    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 expectAmountOut) private {
         Pair memory pair = pairs[_pairIndex];
         uint256 price = getPrice(pair.indexToken);
-        bytes memory path = tokenPath[_pairIndex][tokenIn];
         uint256 amountInMaximum;
+        address tokenOut;
         if (tokenIn == pair.indexToken) {
-            amountInMaximum = (amountOut * 12) / (price * 10);
+            tokenOut = pair.stableToken;
+            amountInMaximum = (expectAmountOut * 12) / (price * 10);
         } else if (tokenIn == pair.stableToken) {
-            amountInMaximum = (amountOut * price * 12) / 10;
+            tokenOut = pair.indexToken;
+            amountInMaximum = (expectAmountOut * price * 12) / 10;
         }
-        IERC20(pair.indexToken).approve(swapRouter, amountInMaximum);
-        IUniSwapV3Router(swapRouter).exactOutput(
-            IUniSwapV3Router.ExactOutputParams({
-                path: path,
-                recipient: address(this),
-                deadline: block.timestamp + 1000,
-                amountOut: amountOut,
-                amountInMaximum: amountInMaximum
-            })
-        );
+        if (IERC20(tokenIn).allowance(address(this), spotSwap) == 0) {
+            IERC20(tokenIn).safeApprove(spotSwap, type(uint256).max);
+        }
+        ISpotSwap(spotSwap).swap(tokenIn, tokenOut, amountInMaximum, expectAmountOut);
     }
 
     // calculate lp amount for add liquidity
