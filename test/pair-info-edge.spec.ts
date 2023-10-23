@@ -10,7 +10,7 @@ import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('Pool: Edge cases', () => {
     before('addPair', async () => {
-        const { poolAdmin, pool, usdt, fundingRate } = testEnv;
+        const { poolAdmin, pool, usdt, eth, fundingRate } = testEnv;
 
         const token = await deployMockToken('Test', 'Test', 18);
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
@@ -25,6 +25,8 @@ describe('Pool: Edge cases', () => {
         await expect(pool.connect(poolAdmin.signer).addPair(pair.stableToken, pair.indexToken)).to.be.revertedWith(
             '!stable token',
         );
+
+        await expect(pool.addPair(eth.address, usdt.address)).to.be.revertedWith('exists');
         const countBefore = await pool.pairsIndex();
         await pool.addStableToken(usdt.address);
         await waitForTx(await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken));

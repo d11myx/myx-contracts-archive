@@ -13,6 +13,7 @@ export * from './utilities/bn';
 export * from './utilities/index';
 export * from './utilities/block';
 export * from './utilities/calculator';
+export * from './utilities/swap';
 export * from '../tasks/misc/print-deployments';
 export * from '../tasks/misc/encode-event';
 export * from '../tasks/misc/decode-event';
