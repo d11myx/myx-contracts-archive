@@ -1,10 +1,81 @@
-import { newTestEnv, TestEnv } from './helpers/make-suite';
+import { newTestEnv, SignerWithAddress, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import { ethers } from 'hardhat';
+import { ethers, waffle } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { TradeType } from '../helpers';
+import { encodePath, FeeAmount, getWETH, linkLibraries, sortedTokens, TradeType } from '../helpers';
+
+import UniswapV3Factory from './mock/UniswapV3Factory.json';
+import SwapRouter from './mock/SwapRouter.json';
+import V3NFTDescriptor from './mock/V3NFTDescriptor.json';
+import V3NonfungiblePositionManager from './mock/V3NonfungiblePositionManager.json';
+import type { Contract, providers, Signer } from 'ethers';
 import Decimal from 'decimal.js';
+import { INonfungiblePositionManager, IUniswapV3Factory, IUniSwapV3Router } from '../types';
+import { deployContract } from 'ethereum-waffle';
+
+const v3Core = async (
+    wallet: SignerWithAddress,
+): Promise<{
+    factory: IUniswapV3Factory;
+    positionManager: INonfungiblePositionManager;
+    swapRouter: IUniSwapV3Router;
+}> => {
+    const factory = (await waffle.deployContract(
+        wallet.signer,
+        {
+            bytecode: UniswapV3Factory.bytecode,
+            abi: UniswapV3Factory.abi,
+        },
+        [],
+    )) as unknown as IUniswapV3Factory;
+
+    let uniswapV3FactoryArtifact = (await deployContract(
+        wallet.signer,
+        {
+            abi: UniswapV3Factory.abi,
+            bytecode: UniswapV3Factory.bytecode,
+        },
+        [],
+    )) as IUniswapV3Factory;
+
+    const uniswapV3Factory = (
+        (await ethers.getContractAt(UniswapV3Factory.abi, uniswapV3FactoryArtifact.address)) as Contract
+    ).connect(wallet.signer);
+
+    let NFTDescriptorArtifact = await deployContract(
+        wallet.signer,
+        {
+            abi: V3NFTDescriptor.abi,
+            bytecode: V3NFTDescriptor.bytecode,
+        },
+        [],
+    );
+
+    let weth = await getWETH();
+    let positionManagerArtifact = await deployContract(
+        wallet.signer,
+        {
+            abi: V3NonfungiblePositionManager.abi,
+            bytecode: V3NonfungiblePositionManager.bytecode,
+        },
+        [uniswapV3FactoryArtifact.address, weth.address, NFTDescriptorArtifact.address],
+    );
+
+    const positionManager = (
+        (await ethers.getContractAt(V3NonfungiblePositionManager.abi, positionManagerArtifact.address)) as Contract
+    ).connect(wallet.signer) as INonfungiblePositionManager;
+    const swapRouter = (await waffle.deployContract(
+        wallet.signer,
+        {
+            bytecode: SwapRouter.bytecode,
+            abi: SwapRouter.abi,
+        },
+        [factory.address, weth.address],
+    )) as unknown as IUniSwapV3Router;
+
+    return { factory, positionManager, swapRouter };
+};
 
 describe('Trade: profit & Loss', () => {
     const pairIndex = 1;
@@ -13,11 +84,13 @@ describe('Trade: profit & Loss', () => {
     before('add liquidity', async () => {
         testEnv = await newTestEnv();
         const {
+            poolAdmin,
             users: [depositor],
             usdt,
             btc,
             pool,
             router,
+            spotSwap,
         } = testEnv;
 
         // add liquidity
@@ -26,6 +99,22 @@ describe('Trade: profit & Loss', () => {
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+        let tokenAddresses = [btc.address, usdt.address];
+        const { factory,positionManager, swapRouter } = await v3Core(poolAdmin);
+        const [token0, token1] = sortedTokens(
+            { address: poolTokens[0].address, decimal: await poolTokens[0].decimals() },
+            { address: poolTokens[1].address, decimal: await poolTokens[1].decimals() }
+        );
+
+        await positionManager.createAndInitializePoolIfNecessary(
+            token0.address,
+            token1.address,
+            params.fee,
+            encodePriceSqrt(1, 1)
+        );
+        let fees = [FeeAmount.MEDIUM];
+        await spotSwap.setSwapRouter(swapRouter.address);
+        await spotSwap.updateTokenPath(btc.address, usdt.address, encodePath(tokenAddresses, fees));
 
         await router
             .connect(depositor.signer)
