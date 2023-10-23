@@ -3,19 +3,24 @@ import { expect } from './shared/expect';
 import { ethers, waffle } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { encodePath, FeeAmount, getWETH, TradeType } from '../helpers';
+import { encodePath, FeeAmount, getWETH, linkLibraries, TradeType } from '../helpers';
 
 import UniswapV3Factory from './mock/UniswapV3Factory.json';
 import SwapRouter from './mock/SwapRouter.json';
 import V3NFTDescriptor from './mock/V3NFTDescriptor.json';
 import V3NonfungiblePositionManager from './mock/V3NonfungiblePositionManager.json';
-
+import type { Contract, providers, Signer } from 'ethers';
 import Decimal from 'decimal.js';
-import { IUniswapV3Factory, IUniSwapV3Router } from '../types';
+import { INonfungiblePositionManager, IUniswapV3Factory, IUniSwapV3Router } from '../types';
+import { deployContract } from 'ethereum-waffle';
 
 const v3Core = async (
     wallet: SignerWithAddress,
-): Promise<{ factory: IUniswapV3Factory; swapRouter: IUniSwapV3Router }> => {
+): Promise<{
+    factory: IUniswapV3Factory;
+    positionManager: INonfungiblePositionManager;
+    swapRouter: IUniSwapV3Router;
+}> => {
     const factory = (await waffle.deployContract(
         wallet.signer,
         {
@@ -25,56 +30,51 @@ const v3Core = async (
         [],
     )) as unknown as IUniswapV3Factory;
 
-    const weth9 = await getWETH();
+    let uniswapV3FactoryArtifact = (await deployContract(
+        wallet.signer,
+        {
+            abi: UniswapV3Factory.abi,
+            bytecode: UniswapV3Factory.bytecode,
+        },
+        [],
+    )) as IUniswapV3Factory;
+
+    const uniswapV3Factory = (
+        (await ethers.getContractAt(UniswapV3Factory.abi, uniswapV3FactoryArtifact.address)) as Contract
+    ).connect(wallet.signer);
+
+    let NFTDescriptorArtifact = await deployContract(
+        wallet.signer,
+        {
+            abi: V3NFTDescriptor.abi,
+            bytecode: V3NFTDescriptor.bytecode,
+        },
+        [],
+    );
+
+    let weth = await getWETH();
+    let positionManagerArtifact = await deployContract(
+        wallet.signer,
+        {
+            abi: V3NonfungiblePositionManager.abi,
+            bytecode: V3NonfungiblePositionManager.bytecode,
+        },
+        [uniswapV3FactoryArtifact.address, weth.address, NFTDescriptorArtifact.address],
+    );
+
+    const positionManager = (
+        (await ethers.getContractAt(V3NonfungiblePositionManager.abi, positionManagerArtifact.address)) as Contract
+    ).connect(wallet.signer) as INonfungiblePositionManager;
     const swapRouter = (await waffle.deployContract(
         wallet.signer,
         {
             bytecode: SwapRouter.bytecode,
             abi: SwapRouter.abi,
         },
-        [factory.address, weth9.address],
+        [factory.address, weth.address],
     )) as unknown as IUniSwapV3Router;
-    // const nftDescriptorLibrary = await nftDescriptorLibraryFixture(wallets, provider)
 
-    // const linkedBytecode = linkLibraries(
-    //   {
-    //     bytecode: NonfungibleTokenPositionDescriptor.bytecode,
-    //     linkReferences: {
-    //       'NFTDescriptor.sol': {
-    //         NFTDescriptor: [
-    //           {
-    //             length: 20,
-    //             start: 1261,
-    //           },
-    //         ],
-    //       },
-    //     },
-    //   },
-    //   {
-    //     NFTDescriptor: nftDescriptorLibrary.address,
-    //   }
-    // )
-
-    // const positionDescriptor = await waffle.deployContract(
-    //   wallets[0],
-    //   {
-    //     bytecode: linkedBytecode,
-    //     abi: NonfungibleTokenPositionDescriptor.abi,
-    //   },
-    //   [tokens[0].address]
-    // )
-
-    // const nftFactory = new ethers.ContractFactory(
-    //   NonfungiblePositionManagerJson.abi,
-    //   NonfungiblePositionManagerJson.bytecode,
-    //   wallets[0]
-    // )
-    // const nft = (await nftFactory.deploy(
-    //   factory.address,
-    //   weth9.address,
-    //   positionDescriptor.address
-    // )) as INonfungiblePositionManager
-    return { factory, swapRouter };
+    return { factory, positionManager, swapRouter };
 };
 
 describe('Trade: profit & Loss', () => {
