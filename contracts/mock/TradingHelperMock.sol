@@ -16,9 +16,7 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IRiskReserve.sol";
 import "../interfaces/IFeeCollector.sol";
 import "../libraries/Upgradeable.sol";
-import "../helpers/TradingHelper.sol";
-
-import "../helpers/TradingHelper.sol";
+import "../helpers/TokenHelper.sol";
 
 contract TradingHelperMock {
     IPool public pool;
@@ -32,6 +30,6 @@ contract TradingHelperMock {
         int256 indexTokenAmount
     ) external view returns (int256 amount) {
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        return TradingHelper.convertIndexAmountToStable(pair, indexTokenAmount);
+        return TokenHelper.convertIndexAmountToStable(pair, indexTokenAmount);
     }
 }

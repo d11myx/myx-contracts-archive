@@ -27,19 +27,6 @@ library TradingHelper {
         return oraclePrice;
     }
 
-    function convertIndexAmountToStable(
-        IPool.Pair memory pair,
-        int256 indexTokenAmount
-    ) internal view returns (int256 amount) {
-        uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
-        uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
-
-        uint256 indexTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - indexTokenDec);
-        uint256 stableTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - stableTokenDec);
-
-        amount = indexTokenAmount * int256(indexTokenWad) / int256(stableTokenWad);
-    }
-
     function exposureAmountChecker(
         IPool.Vault memory lpVault,
         int256 exposedPositions,

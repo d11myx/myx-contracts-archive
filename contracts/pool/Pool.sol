@@ -28,6 +28,7 @@ import "../libraries/PrecisionUtils.sol";
 import "../interfaces/IPoolTokenFactory.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../helpers/ValidationHelper.sol";
+import "../helpers/TokenHelper.sol";
 
 contract Pool is IPool, Upgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -583,8 +584,14 @@ contract Pool is IPool, Upgradeable {
                 afterFeeStableAmount = afterFeeStableAmount - slipDelta;
             }
         }
-
-        uint256 mintDelta = indexDepositDelta + afterFeeStableAmount - slipDelta;
+        uint256 mintDelta;
+        if (slipToken == pair.indexToken) {
+            mintDelta = indexDepositDelta + uint256(TokenHelper.convertStableAmountToIndex(pair, int256(afterFeeStableAmount))) - slipDelta;
+        } else if (slipToken == pair.stableToken) {
+            mintDelta = indexDepositDelta + uint256(TokenHelper.convertStableAmountToIndex(pair, int256(afterFeeStableAmount - slipDelta)));
+        } else {
+            mintDelta = indexDepositDelta + uint256(TokenHelper.convertStableAmountToIndex(pair, int256(afterFeeStableAmount)));
+        }
 
         // mint with discount
         if (availableDiscountRate > 0) {
@@ -608,7 +615,8 @@ contract Pool is IPool, Upgradeable {
         }
 
         if (mintDelta > 0) {
-            mintAmount += AmountMath.getIndexAmount(mintDelta, lpFairPrice(_pairIndex));
+            uint8 indexDec = IERC20Metadata(pair.indexToken).decimals();
+            mintAmount += AmountMath.getIndexAmount(mintDelta * (10 ** (18 - indexDec)), lpFairPrice(_pairIndex));
         }
 
         return (
@@ -727,12 +735,20 @@ contract Pool is IPool, Upgradeable {
 
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
         uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
-        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+        uint256 availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
 
-        uint256 totalAvailable = availableIndexToken.mulPrice(price) + availableStableToken;
-        uint256 totalReceive = receiveIndexTokenAmount.mulPrice(price) + receiveStableTokenAmount;
+        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+        uint256 availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
+
+        uint256 receiveIndexTokenAmountWad = receiveIndexTokenAmount * (10 ** (18 - indexTokenDec));
+        uint256 receiveStableTokenAmountWad = receiveStableTokenAmount * (10 ** (18 - stableTokenDec));
+
+        uint256 totalAvailable = availableIndexTokenWad.mulPrice(price) + availableStableTokenWad;
+        uint256 totalReceive = receiveIndexTokenAmountWad.mulPrice(price) + receiveStableTokenAmountWad;
         require(totalReceive <= totalAvailable, "insufficient available balance");
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
@@ -778,9 +794,14 @@ contract Pool is IPool, Upgradeable {
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
 
-        uint256 lpFairDelta = AmountMath.getStableDelta(_getIndexTotalAmount(pair, vault), price) +
-            _getStableTotalAmount(pair, vault);
-        // return lpFairDelta;
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
+
+        uint256 indexTotalAmountWad = _getIndexTotalAmount(pair, vault) * (10 ** (18 - indexTokenDec));
+        uint256 stableTotalAmountWad = _getStableTotalAmount(pair, vault) * (10 ** (18 - stableTokenDec));
+
+        uint256 lpFairDelta = AmountMath.getStableDelta(indexTotalAmountWad, price) + stableTotalAmountWad;
+
         return
             lpFairDelta > 0 && IERC20(pair.pairToken).totalSupply() > 0
                 ? Math.mulDiv(
@@ -875,19 +896,25 @@ contract Pool is IPool, Upgradeable {
         uint256 price = getPrice(pair.indexToken);
         require(price > 0, "invalid price");
 
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
+
         uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
         uint256 stableReserveDelta = vault.stableTotalAmount;
         uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
 
         require(
-            indexReserveDelta + stableReserveDelta >= receiveDelta,
+            indexReserveDelta * (10 ** (18 - indexTokenDec)) +
+                stableReserveDelta * (10 ** (18 - stableTokenDec)) >= receiveDelta,
             "insufficient available balance"
         );
 
         // expect delta
-        uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
-        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-        uint256 expectStableDelta = totalDelta - expectIndexDelta;
+        uint256 totalDelta = indexReserveDelta * (10 ** (18 - indexTokenDec)) +
+            stableReserveDelta * (10 ** (18 - stableTokenDec)) - receiveDelta;
+        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP) / (10 ** (18 - indexTokenDec));
+
+        uint256 expectStableDelta = (totalDelta - expectIndexDelta) / (10 ** (18 - stableTokenDec));
 
         // received delta of indexToken and stableToken
         uint256 receiveIndexTokenDelta;
@@ -896,17 +923,17 @@ contract Pool is IPool, Upgradeable {
         if (indexReserveDelta > expectIndexDelta) {
             uint256 extraIndexReserveDelta = indexReserveDelta - expectIndexDelta;
             if (extraIndexReserveDelta >= receiveDelta) {
-                receiveIndexTokenDelta = receiveDelta;
+                receiveIndexTokenDelta = receiveDelta / (10 ** (18 - indexTokenDec));
             } else {
                 receiveIndexTokenDelta = extraIndexReserveDelta;
-                receiveStableTokenDelta = receiveDelta - extraIndexReserveDelta;
+                receiveStableTokenDelta = (receiveDelta - extraIndexReserveDelta * (10 ** (18 - indexTokenDec))) / (10 ** (18 - stableTokenDec));
             }
         } else {
             uint256 extraStableReserveDelta = stableReserveDelta - expectStableDelta;
             if (extraStableReserveDelta >= receiveDelta) {
-                receiveStableTokenDelta = receiveDelta;
+                receiveStableTokenDelta = receiveDelta / (10 ** (18 - stableTokenDec));
             } else {
-                receiveIndexTokenDelta = receiveDelta - extraStableReserveDelta;
+                receiveIndexTokenDelta = (receiveDelta - extraStableReserveDelta * (10 ** (18 - stableTokenDec))) / (10 ** (18 - indexTokenDec));
                 receiveStableTokenDelta = extraStableReserveDelta;
             }
         }
@@ -915,13 +942,16 @@ contract Pool is IPool, Upgradeable {
 
         feeIndexTokenAmount = receiveIndexTokenAmount.mulPercentage(pair.removeLpFeeP);
         feeStableTokenAmount = receiveStableTokenAmount.mulPercentage(pair.removeLpFeeP);
-        feeAmount = feeIndexTokenAmount.mulPrice(price) + feeStableTokenAmount;
+        feeAmount = feeIndexTokenAmount.mulPrice(price) * (10 ** (18 - indexTokenDec)) + feeStableTokenAmount * (10 ** (18 - stableTokenDec));
 
         receiveIndexTokenAmount -= feeIndexTokenAmount;
         receiveStableTokenAmount -= feeStableTokenAmount;
 
         uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
+        uint256 availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
+
         uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+        uint256 availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
 
         uint256 indexTokenAdd;
         uint256 stableTokenAdd;
