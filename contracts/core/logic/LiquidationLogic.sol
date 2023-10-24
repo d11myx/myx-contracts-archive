@@ -194,9 +194,10 @@ contract LiquidationLogic is ILiquidationLogic {
     function _needLiquidation(bytes32 positionKey, uint256 price) private view returns (bool) {
         Position.Info memory position =  positionManager.getPositionByKey(positionKey);
 
+        IPool.Pair memory pair = pool.getPair(position.pairIndex);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
 
-        int256 unrealizedPnl = position.getUnrealizedPnl(position.positionAmount, price);
+        int256 unrealizedPnl = position.getUnrealizedPnl(pair, position.positionAmount, price);
         uint256 tradingFee = positionManager.getTradingFee(
             position.pairIndex,
             position.isLong,

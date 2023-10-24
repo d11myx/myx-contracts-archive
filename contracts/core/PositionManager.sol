@@ -214,7 +214,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         // settlement lp position
         _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
-        pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
+        pnl = position.getUnrealizedPnl(pair, sizeAmount, oraclePrice);
 
         int256 totalSettlementAmount = pnl + charge;
         if (totalSettlementAmount >= 0) {
