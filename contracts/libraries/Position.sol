@@ -48,22 +48,43 @@ library Position {
         self.averagePrice = oraclePrice;
     }
 
-    function getUnrealizedPnl(Info memory self, uint256 _sizeAmount, uint256 price) internal pure returns (int256 pnl) {
+    function getUnrealizedPnl(
+        Info memory self,
+        IPool.Pair memory pair,
+        uint256 _sizeAmount,
+        uint256 price
+    ) internal view returns (int256 pnl) {
         if (price == self.averagePrice || self.averagePrice == 0 || _sizeAmount == 0) {
             return 0;
         }
 
         if (self.isLong) {
             if (price > self.averagePrice) {
-                pnl = int256(_sizeAmount.mulPrice(price - self.averagePrice));
+                pnl = TokenHelper.convertIndexAmountToStableWithPrice(
+                    pair,
+                    int256(_sizeAmount),
+                    price - self.averagePrice
+                );
             } else {
-                pnl = -int256(_sizeAmount.mulPrice(self.averagePrice - price));
+                pnl = TokenHelper.convertIndexAmountToStableWithPrice(
+                    pair,
+                    -int256(_sizeAmount),
+                    self.averagePrice - price
+                );
             }
         } else {
             if (self.averagePrice > price) {
-                pnl = int256(_sizeAmount.mulPrice(self.averagePrice - price));
+                pnl = TokenHelper.convertIndexAmountToStableWithPrice(
+                    pair,
+                    int256(_sizeAmount),
+                    self.averagePrice - price
+                );
             } else {
-                pnl = -int256(_sizeAmount.mulPrice(price - self.averagePrice));
+                pnl = TokenHelper.convertIndexAmountToStableWithPrice(
+                    pair,
+                    -int256(_sizeAmount),
+                    price - self.averagePrice
+                );
             }
         }
 
@@ -101,18 +122,12 @@ library Position {
         int256 availableCollateral = int256(self.collateral);
 
         // pnl
-        int256 pnl = TokenHelper.convertIndexAmountToStable(
-            pair,
-            getUnrealizedPnl(self, self.positionAmount, price));
+        int256 pnl = getUnrealizedPnl(self, pair, self.positionAmount, price);
         if (!_increase && _sizeAmount > 0) {
             if (pnl >= 0) {
-                availableCollateral += TokenHelper.convertIndexAmountToStable(
-                    pair,
-                    getUnrealizedPnl(self, self.positionAmount - _sizeAmount, price));
+                availableCollateral += getUnrealizedPnl(self, pair, self.positionAmount - _sizeAmount, price);
             } else {
-                availableCollateral += TokenHelper.convertIndexAmountToStable(
-                    pair,
-                    getUnrealizedPnl(self, _sizeAmount, price));
+                availableCollateral += getUnrealizedPnl(self, pair, _sizeAmount, price);
             }
         } else {
             availableCollateral += pnl;
