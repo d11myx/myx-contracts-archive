@@ -57,7 +57,6 @@ describe('Trade: FeeCal', () => {
             pairIndex,
             btc,
             usdt,
-
             ethers.utils.parseUnits('100', await btc.decimals()),
             false,
         );
