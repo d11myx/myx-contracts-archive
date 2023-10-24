@@ -92,6 +92,7 @@ describe('Router: Edge cases', () => {
             positionManager,
             router,
             btc,
+            usdt,
             executionLogic,
         } = testEnv;
 
@@ -100,6 +101,9 @@ describe('Router: Edge cases', () => {
         const positionTradingFeeBefore = await getPositionTradingFee(
             testEnv,
             pairIndex,
+            btc,
+            usdt,
+
             positionBefore.positionAmount,
             true,
         );
@@ -125,6 +129,8 @@ describe('Router: Edge cases', () => {
         const positionTradingFeeAfter = await getPositionTradingFee(
             testEnv,
             pairIndex,
+            btc,
+            usdt,
             positionAfter.positionAmount,
             true,
         );
@@ -151,6 +157,8 @@ describe('Router: Edge cases', () => {
         const positionTradingFeeBefore = await getPositionTradingFee(
             testEnv,
             pairIndex,
+            btc,
+            usdt,
             positionBefore.positionAmount,
             true,
         );
@@ -177,6 +185,8 @@ describe('Router: Edge cases', () => {
         const positionTradingFeeAfter = await getPositionTradingFee(
             testEnv,
             pairIndex,
+            btc,
+            usdt,
             positionAfter.positionAmount,
             true,
         );

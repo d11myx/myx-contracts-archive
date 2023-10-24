@@ -141,6 +141,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 true,
             );
@@ -224,6 +226,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 false,
             );
@@ -330,6 +334,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 true,
             );
@@ -402,6 +408,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 false,
             );

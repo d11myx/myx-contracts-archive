@@ -66,7 +66,14 @@ describe('Trade: trading fee', () => {
 
             // increase position trading fee
             let tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
-            let positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, userPosition.positionAmount, true);
+            let positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                userPosition.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
@@ -235,6 +242,8 @@ describe('Trade: trading fee', () => {
             let positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 traderPosition.positionAmount,
                 true,
             );
@@ -242,27 +251,62 @@ describe('Trade: trading fee', () => {
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader2Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader2Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader2Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader3Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader3Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader3Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader4Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader4Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader4Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader5Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader5Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader5Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader6Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader6Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader6Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
