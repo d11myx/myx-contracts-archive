@@ -3,7 +3,19 @@ import { expect } from './shared/expect';
 import { ethers, waffle } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { encodePath, FeeAmount, getWETH, linkLibraries, sortedTokens, TradeType } from '../helpers';
+import {
+    encodePath,
+    encodePriceSqrt,
+    FeeAmount,
+    getMaxTick,
+    getMinTick,
+    getWETH,
+    linkLibraries,
+    MAX_UINT_AMOUNT,
+    sortedTokens,
+    TICK_SPACINGS,
+    TradeType,
+} from '../helpers';
 
 import UniswapV3Factory from './mock/UniswapV3Factory.json';
 import SwapRouter from './mock/SwapRouter.json';
@@ -100,18 +112,35 @@ describe('Trade: profit & Loss', () => {
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
         let tokenAddresses = [btc.address, usdt.address];
-        const { factory,positionManager, swapRouter } = await v3Core(poolAdmin);
+        const { factory, positionManager, swapRouter } = await v3Core(poolAdmin);
         const [token0, token1] = sortedTokens(
-            { address: poolTokens[0].address, decimal: await poolTokens[0].decimals() },
-            { address: poolTokens[1].address, decimal: await poolTokens[1].decimals() }
+            { address: usdt.address, decimal: await usdt.decimals() },
+            { address: btc.address, decimal: await btc.decimals() },
         );
 
         await positionManager.createAndInitializePoolIfNecessary(
             token0.address,
             token1.address,
-            params.fee,
-            encodePriceSqrt(1, 1)
+            FeeAmount.MEDIUM,
+            encodePriceSqrt(1, 1),
         );
+        await usdt.mint(depositor.address, stableAmount);
+        await btc.mint(depositor.address, stableAmount);
+        await usdt.connect(depositor.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
+        await btc.connect(depositor.signer).approve(positionManager.address, MAX_UINT_AMOUNT);
+        await positionManager.connect(depositor.signer).mint({
+            token0: token0.address,
+            token1: token1.address,
+            tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+            tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+            fee: FeeAmount.MEDIUM,
+            recipient: depositor.address,
+            amount0Desired: 15,
+            amount1Desired: 15,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000000000,
+        });
         let fees = [FeeAmount.MEDIUM];
         await spotSwap.setSwapRouter(swapRouter.address);
         await spotSwap.updateTokenPath(btc.address, usdt.address, encodePath(tokenAddresses, fees));

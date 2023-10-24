@@ -7,6 +7,13 @@ export enum FeeAmount {
     HIGH = 10000,
 }
 
+
+export const TICK_SPACINGS: { [amount in FeeAmount]: number } = {
+    [FeeAmount.LOW]: 10,
+    [FeeAmount.MEDIUM]: 60,
+    [FeeAmount.HIGH]: 200,
+  }
+
 const ADDR_SIZE = 20;
 const FEE_SIZE = 3;
 const OFFSET = ADDR_SIZE + FEE_SIZE;
