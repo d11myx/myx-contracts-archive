@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers';
 import { deployMockCallback, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { expect } from './shared/expect';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { convertIndexAmountToStable } from '../helpers/token-decimals';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 1;
@@ -272,6 +273,7 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            btc,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -288,7 +290,11 @@ describe('Router: Edge cases', () => {
 
         let btcPriceUp = '28000';
         await updateBTCPrice(testEnv, btcPriceUp);
-        const userLoss = BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount);
+        const userLoss = await convertIndexAmountToStable(
+            btc,
+            usdt,
+            BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount),
+        );
         expect(userLoss.abs()).to.be.lt(positionBefore.collateral);
 
         await positionManager
@@ -307,6 +313,7 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            btc,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -325,7 +332,11 @@ describe('Router: Edge cases', () => {
 
         let btcPriceUp = '28000';
         await updateBTCPrice(testEnv, btcPriceUp);
-        const userLoss = BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount);
+        const userLoss = await convertIndexAmountToStable(
+            btc,
+            usdt,
+            BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount),
+        );
         expect(userLoss.abs()).to.be.lt(positionBefore.collateral);
 
         await expect(
