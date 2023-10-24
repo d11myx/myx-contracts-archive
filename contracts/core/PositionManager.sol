@@ -17,6 +17,7 @@ import "../interfaces/IRiskReserve.sol";
 import "../interfaces/IFeeCollector.sol";
 import "../libraries/Upgradeable.sol";
 import "../helpers/TokenHelper.sol";
+import "../helpers/TokenHelper.sol";
 
 contract PositionManager is IPositionManager, Upgradeable {
     using SafeERC20 for IERC20;
@@ -133,7 +134,10 @@ contract PositionManager is IPositionManager, Upgradeable {
         );
 
         int256 totalSettlementAmount = charge;
-        int256 settleCollateral = TokenHelper.convertIndexAmountToStable(pair, totalSettlementAmount);
+        int256 settleCollateral = TokenHelper.convertIndexAmountToStable(
+            pair,
+            totalSettlementAmount
+        );
         if (settleCollateral >= 0) {
             position.collateral = position.collateral.add(settleCollateral.abs());
         } else {
@@ -217,7 +221,10 @@ contract PositionManager is IPositionManager, Upgradeable {
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
 
         int256 totalSettlementAmount = pnl + charge;
-        int256 settleCollateral = TokenHelper.convertIndexAmountToStable(pair, totalSettlementAmount);
+        int256 settleCollateral = TokenHelper.convertIndexAmountToStable(
+            pair,
+            totalSettlementAmount
+        );
         if (settleCollateral >= 0) {
             position.collateral = position.collateral.add(settleCollateral.abs());
         } else {
@@ -643,7 +650,9 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
-        uint256 sizeDelta = _sizeAmount.mulPrice(price);
+        uint256 sizeDelta = uint256(
+            TokenHelper.convertIndexAmountToStable(pair, int256(_sizeAmount.mulPrice(price)))
+        );
 
         (tradingFee, ) = _tradingFee(_pairIndex, _isLong, sizeDelta);
         return tradingFee;

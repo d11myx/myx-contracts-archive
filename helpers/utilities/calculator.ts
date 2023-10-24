@@ -1,5 +1,7 @@
 import { TestEnv } from '../../test/helpers/make-suite';
 import { BigNumber, ethers } from 'ethers';
+import { ERC20DecimalsMock } from '../../types';
+import { convertIndexAmountToStable } from '../token-decimals';
 
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
@@ -163,6 +165,8 @@ export function getLpFundingFee(epochFundindFee: BigNumber, lpPosition: BigNumbe
 export async function getPositionTradingFee(
     testEnv: TestEnv,
     pairIndex: number,
+    indexToken: ERC20DecimalsMock,
+    stableToken: ERC20DecimalsMock,
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
@@ -172,17 +176,21 @@ export async function getPositionTradingFee(
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
     const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-    const positionPrice = positionAmount.mul(price).div(PRICE_PRECISION);
+    const positionStableAmount = await convertIndexAmountToStable(
+        indexToken,
+        stableToken,
+        positionAmount.mul(price).div(PRICE_PRECISION),
+    );
     let tradingFee;
 
     if (currentExposureAmountChecker.gte(0)) {
         tradingFee = isLong
-            ? positionPrice.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE)
-            : positionPrice.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+            ? positionStableAmount.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE)
+            : positionStableAmount.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
     } else {
         tradingFee = isLong
-            ? positionPrice.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE)
-            : positionPrice.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            ? positionStableAmount.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE)
+            : positionStableAmount.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
     }
 
     return tradingFee;
