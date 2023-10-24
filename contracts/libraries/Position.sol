@@ -8,6 +8,7 @@ import '../libraries/Int256Utils.sol';
 import '../libraries/TradingTypes.sol';
 import '../libraries/PositionKey.sol';
 import "../interfaces/IPool.sol";
+import "../helpers/TokenHelper.sol";
 
 library Position {
     using Int256Utils for int256;
@@ -100,12 +101,18 @@ library Position {
         int256 availableCollateral = int256(self.collateral);
 
         // pnl
-        int256 pnl = getUnrealizedPnl(self, self.positionAmount, price);
+        int256 pnl = TokenHelper.convertIndexAmountToStable(
+            pair,
+            getUnrealizedPnl(self, self.positionAmount, price));
         if (!_increase && _sizeAmount > 0) {
             if (pnl >= 0) {
-                availableCollateral += getUnrealizedPnl(self, self.positionAmount - _sizeAmount, price);
+                availableCollateral += TokenHelper.convertIndexAmountToStable(
+                    pair,
+                    getUnrealizedPnl(self, self.positionAmount - _sizeAmount, price));
             } else {
-                availableCollateral += getUnrealizedPnl(self, _sizeAmount, price);
+                availableCollateral += TokenHelper.convertIndexAmountToStable(
+                    pair,
+                    getUnrealizedPnl(self, _sizeAmount, price));
             }
         } else {
             availableCollateral += pnl;

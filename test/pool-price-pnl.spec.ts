@@ -170,8 +170,7 @@ describe('Modify LP Average Price', async () => {
                 positionBefAvgPrice
                     .mul(positionBefAmount)
                     .add(openPrice.mul(sizeAmount))
-                    .div(positionBefAmount.add(sizeAmount))
-                    .div(uintNum),
+                    .div(positionBefAmount.add(sizeAmount).div(uintNum)),
             );
         });
 

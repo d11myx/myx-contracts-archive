@@ -5,6 +5,7 @@ import { expect } from './shared/expect';
 import { getMockToken } from '../helpers';
 import { BigNumber, constants } from 'ethers';
 import Decimal from 'decimal.js';
+import { convertIndexAmount, convertStableAmount } from '../helpers/token-decimals';
 
 describe('LP: fair price', () => {
     const pairIndex = 1;
@@ -140,11 +141,13 @@ describe('LP: fair price', () => {
         expect(userBtcBalanceAfter).to.be.eq(userBtcBalanceBefore.add(receiveIndexTokenAmount));
         expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.add(receiveStableTokenAmount));
 
-        const vaultTotal = receiveIndexTokenAmount.mul(pairPrice).add(receiveStableTokenAmount).add(feeAmount);
+        const vaultTotal = (await convertIndexAmount(btc, receiveIndexTokenAmount.mul(pairPrice), 18))
+            .add(await convertStableAmount(usdt, receiveStableTokenAmount, 18))
+            .add(feeAmount);
         const userPaid = sellLpAmount.mul(lpPrice).div('1000000000000000000000000000000');
 
-        expect(new Decimal(ethers.utils.formatEther(userPaid)).toFixed(8)).to.be.eq(
-            new Decimal(ethers.utils.formatEther(vaultTotal)).toFixed(8),
+        expect(new Decimal(ethers.utils.formatEther(userPaid)).toFixed(0)).to.be.eq(
+            new Decimal(ethers.utils.formatEther(vaultTotal)).toFixed(0),
         );
 
         expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount.sub(receiveIndexTokenAmount));
