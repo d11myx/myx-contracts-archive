@@ -664,16 +664,19 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool _isLong
     ) public view override returns (int256 fundingFee) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
         int256 fundingFeeTracker = globalFundingFeeTracker[_pairIndex] - position.fundingFeeTracker;
         if ((_isLong && fundingFeeTracker > 0) || (!_isLong && fundingFeeTracker < 0)) {
             fundingFee = -1;
         } else {
             fundingFee = 1;
         }
-        fundingFee *= int256(
-            (position.positionAmount * fundingFeeTracker.abs()) /
-                PrecisionUtils.fundingRatePrecision()
-        );
+        fundingFee *=
+            TokenHelper.convertIndexAmountToStable(
+                pair,
+                int256(position.positionAmount * fundingFeeTracker.abs())
+            ) /
+            int256(PrecisionUtils.fundingRatePrecision());
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {

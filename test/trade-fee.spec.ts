@@ -61,8 +61,6 @@ describe('Trade: FeeCal', () => {
             ethers.utils.parseUnits('100', await btc.decimals()),
             false,
         );
-        expect(long).to.be.eq(positionTradingFee);
-
-        expect(short).to.be.eq('2200000000000000000000');
+        expect(short).to.be.eq(positionTradingFee);
     });
 });

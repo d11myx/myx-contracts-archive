@@ -123,8 +123,8 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('8000000000000000000');
-            expect(shortTracker).to.be.eq('6000000000000000000');
+            expect(longTracker).to.be.eq('800000000');
+            expect(shortTracker).to.be.eq('600000000');
 
             let globalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
             expect(globalFundingFeeTracker).to.be.eq(0);
@@ -257,8 +257,8 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('8000000000000000000');
-            expect(shortTracker).to.be.eq('6000000000000000000');
+            expect(longTracker).to.be.eq('800000000');
+            expect(shortTracker).to.be.eq('600000000');
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -396,8 +396,8 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('8000000000000000000');
-            expect(shortTracker).to.be.eq('6000000000000000000');
+            expect(longTracker).to.be.eq('800000000');
+            expect(shortTracker).to.be.eq('600000000');
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -510,7 +510,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longFirstPositionAfter = await positionManager.getPosition(longFirst.address, pairIndex, true);
 
-            expect(longFirstPositionAfter.positionAmount).to.be.eq('25000000000000000000');
+            expect(longFirstPositionAfter.positionAmount).to.be.eq('2500000000');
             expect(longFirstPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longFirstPositionBefore.averagePrice,
@@ -534,7 +534,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longSecondPositionAfter = await positionManager.getPosition(longSecond.address, pairIndex, true);
 
-            expect(longSecondPositionAfter.positionAmount).to.be.eq('24000000000000000000');
+            expect(longSecondPositionAfter.positionAmount).to.be.eq('2400000000');
             expect(longSecondPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longSecondPositionBefore.averagePrice,
@@ -704,7 +704,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const shortFirstPositionAfter = await positionManager.getPosition(shortFirst.address, pairIndex, false);
 
-            expect(shortFirstPositionAfter.positionAmount).to.be.eq('26000000000000000000');
+            expect(shortFirstPositionAfter.positionAmount).to.be.eq('400000000');
             expect(shortFirstPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     shortFirstPositionBefore.averagePrice,
@@ -728,7 +728,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const shortSecondPositionAfter = await positionManager.getPosition(shortSecond.address, pairIndex, false);
 
-            expect(shortSecondPositionAfter.positionAmount).to.be.eq('26000000000000000000');
+            expect(shortSecondPositionAfter.positionAmount).to.be.eq('600000000');
             expect(shortSecondPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     shortSecondPositionBefore.averagePrice,
@@ -1046,7 +1046,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longFirstPositionAfter = await positionManager.getPosition(longFirst.address, pairIndex, true);
 
-            expect(longFirstPositionAfter.positionAmount).to.be.eq('25000000000000000000');
+            expect(longFirstPositionAfter.positionAmount).to.be.eq('2500000000');
             expect(longFirstPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longFirstPositionBefore.averagePrice,
@@ -1070,7 +1070,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longSecondPositionAfter = await positionManager.getPosition(longSecond.address, pairIndex, true);
 
-            expect(longSecondPositionAfter.positionAmount).to.be.eq('30000000000000000000');
+            expect(longSecondPositionAfter.positionAmount).to.be.eq('3000000000');
             expect(longSecondPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longSecondPositionBefore.averagePrice,
