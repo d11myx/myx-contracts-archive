@@ -4,6 +4,12 @@ import { ethers } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove } from './helpers/misc';
 import { BigNumber, constants } from 'ethers';
 import { getMockToken, TradeType } from '../helpers';
+import {
+    convertIndexAmount,
+    convertIndexAmountToStable,
+    convertStableAmount,
+    convertStableAmountToIndex,
+} from '../helpers/token-decimals';
 
 describe('LP: Pool cases', () => {
     const pairIndex = 1;
@@ -61,7 +67,9 @@ describe('LP: Pool cases', () => {
             expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
 
             // 50: 50
-            expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultAfter.stableTotalAmount);
+            expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(
+                await convertStableAmountToIndex(btc, usdt, vaultAfter.stableTotalAmount),
+            );
 
             // userPaid = actual vaultTotal + totalFee
             const totalFee = expectAddLiquidity.indexFeeAmount.mul(pairPrice).add(expectAddLiquidity.stableFeeAmount);
@@ -122,17 +130,27 @@ describe('LP: Pool cases', () => {
             );
 
             // userPaid = actual vaultTotal
-            const vaultTotal = expectRemoveLiquidity.receiveIndexTokenAmount
-                .mul(pairPrice)
+            const vaultTotal = (
+                await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    expectRemoveLiquidity.receiveIndexTokenAmount
+                        .add(expectRemoveLiquidity.feeIndexTokenAmount)
+                        .mul(pairPrice),
+                )
+            )
                 .add(expectRemoveLiquidity.receiveStableTokenAmount)
-                .add(expectRemoveLiquidity.feeAmount);
+                .add(expectRemoveLiquidity.feeStableTokenAmount);
             const userPaid = lpAmount.mul(lpPrice);
-            expect(userPaid).to.be.eq(vaultTotal);
+            expect(userPaid).to.be.eq(await convertStableAmount(usdt, vaultTotal, 18));
 
-            expect(vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount)).to.be.eq(
-                vaultBefore.indexTotalAmount
-                    .mul(pairPrice)
-                    .add(vaultBefore.stableTotalAmount)
+            expect(
+                (await convertIndexAmount(btc, vaultAfter.indexTotalAmount.mul(pairPrice), 18)).add(
+                    await convertIndexAmount(usdt, vaultAfter.stableTotalAmount, 18),
+                ),
+            ).to.be.eq(
+                (await convertIndexAmount(btc, vaultBefore.indexTotalAmount.mul(pairPrice), 18))
+                    .add(await convertIndexAmount(usdt, vaultBefore.stableTotalAmount, 18))
                     .sub(lpAmount)
                     .add(expectRemoveLiquidity.feeAmount),
             );
@@ -776,7 +794,9 @@ describe('LP: Pool cases', () => {
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
                 expect(availableShortAfter).to.be.eq(
-                    availableShortBefore.sub(pairPrice.mul(ethers.utils.parseEther('10'))).add(lpFeeAmount),
+                    availableShortBefore
+                        .sub(pairPrice.mul(ethers.utils.parseUnits('10', await btc.decimals())))
+                        .add(lpFeeAmount),
                 );
 
                 expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount);
@@ -787,7 +807,9 @@ describe('LP: Pool cases', () => {
 
                 expect(vaultAfter.stableTotalAmount).to.be.eq(vaultBefore.stableTotalAmount.add(lpFeeAmount));
                 expect(vaultAfter.stableReservedAmount).to.be.eq(
-                    vaultBefore.stableReservedAmount.add(pairPrice.mul(ethers.utils.parseEther('10'))),
+                    vaultBefore.stableReservedAmount.add(
+                        pairPrice.mul(ethers.utils.parseUnits('10', await btc.decimals())),
+                    ),
                 );
 
                 // console.log('===================1111');
@@ -849,12 +871,12 @@ describe('LP: Pool cases', () => {
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
                 expect(availableLongAfter).to.be.eq(
-                    availableLongBefore.sub(pairPrice.mul(ethers.utils.parseEther('10'))),
+                    availableLongBefore.sub(pairPrice.mul(ethers.utils.parseUnits('10', await btc.decimals()))),
                 );
 
                 expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount);
                 expect(vaultAfter.indexReservedAmount).to.be.eq(
-                    vaultBefore.indexReservedAmount.add(ethers.utils.parseEther('10')),
+                    vaultBefore.indexReservedAmount.add(ethers.utils.parseUnits('10', await btc.decimals())),
                 );
 
                 expect(vaultAfter.stableTotalAmount).to.be.eq(vaultBefore.stableTotalAmount.add(lpFeeAmount));
