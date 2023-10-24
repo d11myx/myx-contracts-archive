@@ -81,7 +81,7 @@ describe('Trade: funding fee', () => {
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
 
-            const userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
+            let userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const userUsdtBefore = await usdt.balanceOf(trader.address);
 
             expect(userPosition.positionAmount).to.be.eq(size);
@@ -154,8 +154,8 @@ describe('Trade: funding fee', () => {
             expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // longer user will be paid fundingFee
-            // todo
-            // expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
+            userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
+            expect(userPosition.collateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
         });
 
         it('shorter user closed position, should be received fundingFee', async () => {

@@ -331,7 +331,9 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 _price
     ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 sizeDeltaStable = uint256(TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), _price));
+        uint256 sizeDeltaStable = uint256(
+            TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), _price)
+        );
 
         bool isTaker;
         (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDeltaStable);
@@ -662,9 +664,15 @@ contract PositionManager is IPositionManager, Upgradeable {
         } else {
             fundingFee = 1;
         }
-        fundingFee *= TokenHelper.convertIndexAmountToStable(
+        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        fundingFee *= TokenHelper.convertIndexAmountToStableWithPrice(
             pair,
-            int256((position.positionAmount * fundingFeeTracker.abs()) / PrecisionUtils.fundingRatePrecision()));
+            int256(
+                (position.positionAmount * fundingFeeTracker.abs()) /
+                    PrecisionUtils.fundingRatePrecision()
+            ),
+            price
+        );
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
