@@ -8,6 +8,7 @@ import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
 import { TradingTypes } from '../types/contracts/core/Router';
 import usdt from '../markets/usdt';
+import Decimal from 'decimal.js';
 
 describe('Modify LP Average Price', async () => {
     const pairIndex = 1;
@@ -165,12 +166,14 @@ describe('Modify LP Average Price', async () => {
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
-            const uintNum = ethers.utils.parseUnits('1', 18);
-            expect(positionAft.averagePrice.div(uintNum)).to.be.eq(
-                positionBefAvgPrice
-                    .mul(positionBefAmount)
-                    .add(openPrice.mul(sizeAmount))
-                    .div(positionBefAmount.add(sizeAmount).div(uintNum)),
+            const uintNum = ethers.utils.parseUnits('1', 30);
+            expect(new Decimal(positionAft.averagePrice.toString()).div(uintNum.toString()).toFixed(6)).to.be.eq(
+                new Decimal(positionBefAvgPrice.toString())
+                    .mul(positionBefAmount.toString())
+                    .add(openPrice.mul(sizeAmount).toString())
+                    .div(positionBefAmount.add(sizeAmount).toString())
+                    .div(uintNum.toString())
+                    .toFixed(6),
             );
         });
 

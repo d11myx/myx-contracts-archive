@@ -102,7 +102,7 @@ describe('PositionManager: decrease position', () => {
             // console.log(`---poolVaultBefore: `, poolVaultBefore);
 
             // remove Liquidity
-            const removeAmount = ethers.utils.parseUnits('300000', await btc.decimals());
+            const removeAmount = ethers.utils.parseUnits('300000', 18);
             const pair = await pool.getPair(pairIndex);
             const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
 

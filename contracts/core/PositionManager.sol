@@ -134,15 +134,11 @@ contract PositionManager is IPositionManager, Upgradeable {
         );
 
         int256 totalSettlementAmount = charge;
-        int256 settleCollateral = TokenHelper.convertIndexAmountToStable(
-            pair,
-            totalSettlementAmount
-        );
-        if (settleCollateral >= 0) {
-            position.collateral = position.collateral.add(settleCollateral.abs());
+        if (totalSettlementAmount >= 0) {
+            position.collateral = position.collateral.add(totalSettlementAmount.abs());
         } else {
-            if (position.collateral >= settleCollateral.abs()) {
-                position.collateral = position.collateral.sub(settleCollateral.abs());
+            if (position.collateral >= totalSettlementAmount.abs()) {
+                position.collateral = position.collateral.sub(totalSettlementAmount.abs());
             } else {
                 // adjust position averagePrice
                 uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
@@ -221,21 +217,17 @@ contract PositionManager is IPositionManager, Upgradeable {
         pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
 
         int256 totalSettlementAmount = pnl + charge;
-        int256 settleCollateral = TokenHelper.convertIndexAmountToStable(
-            pair,
-            totalSettlementAmount
-        );
-        if (settleCollateral >= 0) {
-            position.collateral = position.collateral.add(settleCollateral.abs());
+        if (totalSettlementAmount >= 0) {
+            position.collateral = position.collateral.add(totalSettlementAmount.abs());
         } else {
-            if (position.collateral >= settleCollateral.abs()) {
-                position.collateral = position.collateral.sub(settleCollateral.abs());
+            if (position.collateral >= totalSettlementAmount.abs()) {
+                position.collateral = position.collateral.sub(totalSettlementAmount.abs());
             } else {
                 if (position.positionAmount == 0) {
-                    uint256 subsidy = settleCollateral.abs() - position.collateral;
+                    uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
                     riskReserve.decrease(pair.stableToken, subsidy);
                     position.collateral = position.collateral.sub(
-                        int256(settleCollateral + int256(subsidy)).abs()
+                        int256(totalSettlementAmount + int256(subsidy)).abs()
                     );
                 } else {
                     // adjust position averagePrice
@@ -339,19 +331,17 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 _price
     ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 sizeDelta = uint256(
-            TokenHelper.convertIndexAmountToStable(pair, int256(_sizeAmount.mulPrice(_price)))
-        );
+        uint256 sizeDeltaStable = uint256(TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), _price));
 
         bool isTaker;
-        (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDelta);
+        (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDeltaStable);
         charge -= int256(tradingFee);
 
         uint256 lpAmount = feeCollector.distributeTradingFee(
             pair,
             _account,
             _keeper,
-            sizeDelta,
+            sizeDeltaStable,
             tradingFee,
             isTaker ? discount.takerDiscountRatio : discount.makerDiscountRatio,
             referralRate
@@ -362,7 +352,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         emit TakeFundingFeeAddTraderFee(
             _account,
             _pairIndex,
-            sizeDelta,
+            sizeDeltaStable,
             tradingFee,
             fundingFee,
             lpAmount
@@ -540,20 +530,20 @@ contract PositionManager is IPositionManager, Upgradeable {
     function _tradingFee(
         uint256 _pairIndex,
         bool _isLong,
-        uint256 sizeDelta
+        uint256 sizeDeltaStable
     ) internal view returns (uint256 tradingFee, bool isTaker) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
             // fee
             tradingFee = _isLong
-                ? sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP)
-                : sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP);
+                ? sizeDeltaStable.mulPercentage(tradingFeeConfig.takerFeeP)
+                : sizeDeltaStable.mulPercentage(tradingFeeConfig.makerFeeP);
             isTaker = _isLong;
         } else {
             tradingFee = _isLong
-                ? sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP)
-                : sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP);
+                ? sizeDeltaStable.mulPercentage(tradingFeeConfig.makerFeeP)
+                : sizeDeltaStable.mulPercentage(tradingFeeConfig.takerFeeP);
             isTaker = !_isLong;
         }
         return (tradingFee, isTaker);
@@ -651,11 +641,11 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
-        uint256 sizeDelta = uint256(
-            TokenHelper.convertIndexAmountToStable(pair, int256(_sizeAmount.mulPrice(price)))
+        uint256 sizeDeltaStable = uint256(
+            TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), price)
         );
 
-        (tradingFee, ) = _tradingFee(_pairIndex, _isLong, sizeDelta);
+        (tradingFee, ) = _tradingFee(_pairIndex, _isLong, sizeDeltaStable);
         return tradingFee;
     }
 
@@ -666,19 +656,15 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) public view override returns (int256 fundingFee) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         int256 fundingFeeTracker = globalFundingFeeTracker[_pairIndex] - position.fundingFeeTracker;
         if ((_isLong && fundingFeeTracker > 0) || (!_isLong && fundingFeeTracker < 0)) {
             fundingFee = -1;
         } else {
             fundingFee = 1;
         }
-        fundingFee *=
-            TokenHelper.convertIndexAmountToStable(
-                pair,
-                int256(position.positionAmount.mulPrice(price) * fundingFeeTracker.abs())
-            ) /
-            int256(PrecisionUtils.fundingRatePrecision());
+        fundingFee *= TokenHelper.convertIndexAmountToStable(
+            pair,
+            int256((position.positionAmount * fundingFeeTracker.abs()) / PrecisionUtils.fundingRatePrecision()));
     }
 
     function getCurrentFundingRate(uint256 _pairIndex) external view override returns (int256) {
