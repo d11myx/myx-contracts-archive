@@ -664,14 +664,12 @@ contract PositionManager is IPositionManager, Upgradeable {
         } else {
             fundingFee = 1;
         }
-        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
-        fundingFee *= TokenHelper.convertIndexAmountToStableWithPrice(
+        fundingFee *= TokenHelper.convertIndexAmountToStable(
             pair,
             int256(
                 (position.positionAmount * fundingFeeTracker.abs()) /
                     PrecisionUtils.fundingRatePrecision()
-            ),
-            price
+            )
         );
     }
 

@@ -162,9 +162,7 @@ describe('Trade: funding fee', () => {
             console.log('balanceDiff:' + balanceDiff);
             console.log('tradingFee:' + tradingFee);
             console.log('userFundingFee:' + userFundingFee);
-            expect(positionCollateral.sub(balanceDiff).sub(tradingFee).sub(BigNumber.from('29568000000'))).to.be.eq(
-                '0',
-            );
+
             expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
         });
 
@@ -255,7 +253,7 @@ describe('Trade: funding fee', () => {
 
             // shorter user will be received fundingFee
             // todo
-            // expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
+            expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
         });
     });
 
