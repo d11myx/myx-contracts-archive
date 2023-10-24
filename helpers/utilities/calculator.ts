@@ -139,18 +139,14 @@ export async function getPositionFundingFee(
     const pair = await pool.getPair(pairIndex);
 
     let fundingFee;
-    const price = await oraclePriceFeed.getPrice(pair.indexToken);
+    // const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const diffFundingFeeTracker = globalFundingFeeTracker.sub(positionFundingFeeTracker);
     if ((isLong && diffFundingFeeTracker.gt(0)) || (!isLong && diffFundingFeeTracker.lt(0))) {
         fundingFee = -1;
     } else {
         fundingFee = 1;
     }
-    let positionStableAmount = await convertIndexAmountToStable(
-        indexToken,
-        stableToken,
-        positionAmount.mul(price).div(PRICE_PRECISION),
-    );
+    let positionStableAmount = await convertIndexAmountToStable(indexToken, stableToken, positionAmount);
 
     return positionStableAmount.mul(diffFundingFeeTracker.abs()).div(PERCENTAGE).mul(fundingFee);
 }
