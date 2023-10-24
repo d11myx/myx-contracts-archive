@@ -115,7 +115,10 @@ describe('Trade: funding fee', () => {
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
 
-            console.log('usdt decimals' + (await usdt.decimals()));
+            console.log('usdt decimals:' + (await usdt.decimals()));
+            console.log('fundingFeeTrackerAfter:' + fundingFeeTrackerAfter);
+            console.log('userPosition.fundingFeeTracker:' + userPosition.fundingFeeTracker);
+            console.log('userPosition.positionAmount:' + userPosition.positionAmount);
             const expectFundinFee = await getPositionFundingFee(
                 testEnv,
                 pairIndex,
@@ -155,7 +158,14 @@ describe('Trade: funding fee', () => {
 
             // longer user will be paid fundingFee
             userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(userPosition.collateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
+            console.log('positionCollateral:' + positionCollateral);
+            console.log('balanceDiff:' + balanceDiff);
+            console.log('tradingFee:' + tradingFee);
+            console.log('userFundingFee:' + userFundingFee);
+            expect(positionCollateral.sub(balanceDiff).sub(tradingFee).sub(BigNumber.from('29568000000'))).to.be.eq(
+                '0',
+            );
+            expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
         });
 
         it('shorter user closed position, should be received fundingFee', async () => {
