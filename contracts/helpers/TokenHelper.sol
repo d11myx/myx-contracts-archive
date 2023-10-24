@@ -23,22 +23,19 @@ library TokenHelper {
         amount = (indexTokenAmount * int256(indexTokenWad)) / int256(stableTokenWad);
     }
 
-    // function convertIndexAmountToStableWithPrice(
-    //     IPool.Pair memory pair,
-    //     int256 indexTokenAmount,
-    //     uint256 price
-    // ) internal view returns (int256 amount) {
-    //     uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
-    //     uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
+     function convertIndexAmountToStableWithPrice(
+         IPool.Pair memory pair,
+         int256 indexTokenAmount,
+         uint256 price
+     ) internal view returns (int256 amount) {
+         uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
+         uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
 
-    //     uint256 indexTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - indexTokenDec);
-    //     uint256 stableTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - stableTokenDec);
+         uint256 indexTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - indexTokenDec);
+         uint256 stableTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - stableTokenDec);
 
-    //     amount =
-    //         ((indexTokenAmount * int256(price) * int256(indexTokenWad)) /
-    //             int256(PrecisionUtils.PRICE_PRECISION)) *
-    //         int256(stableTokenWad);
-    // }
+         amount = indexTokenAmount * int256(indexTokenWad) * int256(price) / int256(stableTokenWad) / int256(PrecisionUtils.PRICE_PRECISION);
+     }
 
     function convertStableAmountToIndex(
         IPool.Pair memory pair,
