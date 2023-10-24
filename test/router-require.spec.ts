@@ -47,7 +47,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
             const amount = ethers.utils.parseUnits('10000', await btc.decimals());
             const collateral = ethers.utils.parseUnits('10000', await usdt.decimals());
-            const size = ethers.utils.parseUnits('10', 18);
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
 
             await waitForTx(await usdt.connect(deployer.signer).mint(user1.address, collateral));
             await usdt.connect(user1.signer).approve(router.address, MAX_UINT_AMOUNT);
