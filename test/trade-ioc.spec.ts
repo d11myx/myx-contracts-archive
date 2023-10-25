@@ -278,7 +278,6 @@ describe('Trade: ioc', () => {
             const collateral = ethers.utils.parseUnits('30000000', 18);
             const sizeAmount = ethers.utils.parseUnits('6000', 18);
             const openPrice = ethers.utils.parseUnits('30000', 30);
-            const removeAmount = ethers.utils.parseEther('239000000');
 
             /* increase long position */
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -316,11 +315,6 @@ describe('Trade: ioc', () => {
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(positionAfter.positionAmount).to.be.eq(sizeAmount.add(positionBefore.positionAmount));
-
-            const pair = await pool.getPair(pairIndex);
-            const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
-            await poolToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
 
             /* decrease long position, should partial transaction */
             const decreaseLongPositionRequest: TradingTypes.DecreasePositionRequestStruct = {
@@ -386,7 +380,6 @@ describe('Trade: ioc', () => {
             const collateral = ethers.utils.parseUnits('30000000', 18);
             const sizeAmount = ethers.utils.parseUnits('6000', 18);
             const openPrice = ethers.utils.parseUnits('30000', 30);
-            const removeAmount = ethers.utils.parseEther('239000000');
 
             /* increase long position */
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -425,11 +418,6 @@ describe('Trade: ioc', () => {
 
             expect(positionAfter.positionAmount).to.be.eq(sizeAmount.add(positionBefore.positionAmount));
 
-            const pair = await pool.getPair(pairIndex);
-            const poolToken = await ethers.getContractAt('PoolToken', pair.pairToken);
-            await poolToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
-
             /* decrease long position, should partial transaction */
             const decreaseLongPositionRequest: TradingTypes.DecreasePositionRequestStruct = {
                 account: trader.address,
@@ -458,7 +446,6 @@ describe('Trade: ioc', () => {
                 positionAfter.positionAmount.sub(decreasePositionAfter.positionAmount),
             );
 
-            // execute ADL
             await executionLogic
                 .connect(keeper.signer)
                 .executeDecreaseOrder(decreaseOrderId, TradeType.LIMIT, 0, 0, false, 0, false);
