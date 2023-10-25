@@ -86,7 +86,7 @@ describe('Router: increase position ar', () => {
                 orderManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('10000', 18);
+            const collateral = ethers.utils.parseUnits('10000', await usdt.decimals());
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
             await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
