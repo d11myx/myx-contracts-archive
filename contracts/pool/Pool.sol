@@ -918,69 +918,76 @@ contract Pool is IPool, Upgradeable {
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
-        uint256 stableReserveDelta = vault.stableTotalAmount;
-        uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
+        uint256 indexReserveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken,
+            int256(vault.indexTotalAmount),
+            18,
+            price));
+        uint256 stableReserveDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken,
+            int256(vault.stableTotalAmount),
+            18));
+        uint256 receiveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.pairToken,
+            int256(_lpAmount),
+            18,
+            lpFairPrice(_pairIndex)));
 
-        require(
-            indexReserveDelta * (10 ** (18 - indexTokenDec)) +
-                stableReserveDelta * (10 ** (18 - stableTokenDec)) >= receiveDelta,
-            "insufficient available balance"
-        );
+        require(indexReserveDeltaWad + stableReserveDeltaWad >= receiveDeltaWad, "insufficient available balance");
 
         // expect delta
-        uint256 totalDelta = indexReserveDelta * (10 ** (18 - indexTokenDec)) +
-            stableReserveDelta * (10 ** (18 - stableTokenDec)) - receiveDelta;
-        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP) / (10 ** (18 - indexTokenDec));
-
-        uint256 expectStableDelta = (totalDelta - expectIndexDelta) / (10 ** (18 - stableTokenDec));
+        uint256 totalDeltaWad = indexReserveDeltaWad + stableReserveDeltaWad - receiveDeltaWad;
+        uint256 expectIndexDeltaWad = totalDeltaWad.mulPercentage(pair.expectIndexTokenP);
+        uint256 expectStableDeltaWad = totalDeltaWad - expectIndexDeltaWad;
 
         // received delta of indexToken and stableToken
-        uint256 receiveIndexTokenDelta;
-        uint256 receiveStableTokenDelta;
-
-        if (indexReserveDelta > expectIndexDelta) {
-            uint256 extraIndexReserveDelta = indexReserveDelta - expectIndexDelta;
-            if (extraIndexReserveDelta >= receiveDelta) {
-                receiveIndexTokenDelta = receiveDelta / (10 ** (18 - indexTokenDec));
+        uint256 receiveIndexTokenDeltaWad;
+        uint256 receiveStableTokenDeltaWad;
+        if (indexReserveDeltaWad > expectIndexDeltaWad) {
+            uint256 extraIndexReserveDelta = indexReserveDeltaWad - expectIndexDeltaWad;
+            if (extraIndexReserveDelta >= receiveDeltaWad) {
+                receiveIndexTokenDeltaWad = receiveDeltaWad;
             } else {
-                receiveIndexTokenDelta = extraIndexReserveDelta;
-                receiveStableTokenDelta = (receiveDelta - extraIndexReserveDelta * (10 ** (18 - indexTokenDec))) / (10 ** (18 - stableTokenDec));
+                receiveIndexTokenDeltaWad = extraIndexReserveDelta;
+                receiveStableTokenDeltaWad = receiveDeltaWad - extraIndexReserveDelta;
             }
         } else {
-            uint256 extraStableReserveDelta = stableReserveDelta - expectStableDelta;
-            if (extraStableReserveDelta >= receiveDelta) {
-                receiveStableTokenDelta = receiveDelta / (10 ** (18 - stableTokenDec));
+            uint256 extraStableReserveDelta = stableReserveDeltaWad - expectStableDeltaWad;
+            if (extraStableReserveDelta >= receiveDeltaWad) {
+                receiveStableTokenDeltaWad = receiveDeltaWad;
             } else {
-                receiveIndexTokenDelta = (receiveDelta - extraStableReserveDelta * (10 ** (18 - stableTokenDec))) / (10 ** (18 - indexTokenDec));
-                receiveStableTokenDelta = extraStableReserveDelta;
+                receiveIndexTokenDeltaWad = receiveDeltaWad - extraStableReserveDelta;
+                receiveStableTokenDeltaWad = extraStableReserveDelta;
             }
         }
-        receiveIndexTokenAmount = AmountMath.getIndexAmount(receiveIndexTokenDelta, price);
-        receiveStableTokenAmount = receiveStableTokenDelta;
+        receiveIndexTokenAmount = AmountMath.getIndexAmount(receiveIndexTokenDeltaWad, price) / (10 ** (18 - indexTokenDec));
+        receiveStableTokenAmount = receiveStableTokenDeltaWad / (10 ** (18 - stableTokenDec));
 
         feeIndexTokenAmount = receiveIndexTokenAmount.mulPercentage(pair.removeLpFeeP);
         feeStableTokenAmount = receiveStableTokenAmount.mulPercentage(pair.removeLpFeeP);
-        feeAmount = feeIndexTokenAmount.mulPrice(price) * (10 ** (18 - indexTokenDec)) + feeStableTokenAmount * (10 ** (18 - stableTokenDec));
+        feeAmount = uint256(TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(feeIndexTokenAmount), price)) + feeStableTokenAmount;
 
         receiveIndexTokenAmount -= feeIndexTokenAmount;
         receiveStableTokenAmount -= feeStableTokenAmount;
 
         uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
-        uint256 availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
-
         uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
-        uint256 availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
 
         uint256 indexTokenAdd;
         uint256 stableTokenAdd;
         if (availableIndexToken < receiveIndexTokenAmount) {
-            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
+            stableTokenAdd = uint256(TokenHelper.convertIndexAmountToStableWithPrice(
+                pair,
+                int256(receiveIndexTokenAmount - availableIndexToken),
+                price));
             receiveIndexTokenAmount = availableIndexToken;
         }
 
         if (availableStableToken < receiveStableTokenAmount) {
-            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
+            indexTokenAdd = uint256(TokenHelper.convertStableAmountToIndex(
+                pair,
+                int256(receiveStableTokenAmount - availableStableToken)
+            )).divPrice(price);
             receiveStableTokenAmount = availableStableToken;
         }
         receiveIndexTokenAmount += indexTokenAdd;

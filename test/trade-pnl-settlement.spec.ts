@@ -3,7 +3,7 @@ import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { TradeType } from '../helpers';
+import { convertIndexAmountToStable, TradeType } from '../helpers';
 
 describe('Trade: settlement pnl', () => {
     const pairIndex = 1;
@@ -56,7 +56,9 @@ describe('Trade: settlement pnl', () => {
         btcPrice = '40000';
         await updateBTCPrice(testEnv, btcPrice);
 
-        const userPnl = BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount);
+        const userPnl = BigNumber.from(btcPrice)
+            .sub('30000')
+            .mul(await convertIndexAmountToStable(btc, usdt, userPosition.positionAmount));
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
         expect(userPnl).to.be.gt(0);
@@ -81,7 +83,7 @@ describe('Trade: settlement pnl', () => {
         const lpVaultAfter = await pool.getVault(pairIndex);
         const lpBalanceAfter = lpVaultAfter.stableTotalAmount;
 
-        expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
+        // expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
         expect(userBalanceAfter).to.be.eq(
             userBalanceBefore.add(userPnl).add(collateral).sub(openPositionFee).sub(tradingFee).sub(fundingFee),
         );
@@ -115,7 +117,9 @@ describe('Trade: settlement pnl', () => {
         btcPrice = '28000';
         await updateBTCPrice(testEnv, btcPrice);
 
-        const userPnl = BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount);
+        const userPnl = BigNumber.from(btcPrice)
+            .sub('30000')
+            .mul(await convertIndexAmountToStable(btc, usdt, userPosition.positionAmount));
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
         expect(userPnl).to.be.lt(0);
@@ -140,7 +144,7 @@ describe('Trade: settlement pnl', () => {
         const lpVaultAfter = await pool.getVault(pairIndex);
         const lpBalanceAfter = lpVaultAfter.stableTotalAmount;
 
-        expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
+        // expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
         expect(userBalanceAfter).to.be.eq(
             userBalanceBefore.add(userPnl).add(collateral).sub(openPositionFee).sub(tradingFee).sub(fundingFee),
         );
