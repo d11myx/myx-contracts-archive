@@ -8,7 +8,6 @@ import {
     getAveragePrice,
     getFundingFeeTracker,
     getEpochFundingFee,
-    getPositionFundingFee,
     getLpFundingFee,
     getFundingRateInTs,
     convertIndexAmountToStable,
@@ -650,13 +649,12 @@ describe('Trade: funding fee epoch', () => {
             const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
             const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
-            // expect(
-            //     longFirstFundingFee
-            //         .add(longFirstFundingFeeBefore)
-            //         .add(longSecondFundingFee.add(longSecondFundingFeeBefore))
-            //         .abs()
-            //         .add(lpFundingFee),
-            // ).to.be.eq(shortFirstFundingFee.add(shortSecondFundingFee).abs());
+            expect(
+                longFirstFundingFee
+                    .sub(longFirstFundingFeeBefore)
+                    .add(longSecondFundingFee.sub(longSecondFundingFeeBefore))
+                    .abs(),
+            ).to.be.eq(shortFirstFundingFee.add(shortSecondFundingFee).add(lpFundingFee).abs());
         });
     });
 
