@@ -202,7 +202,7 @@ describe('Trade: ioc', () => {
             );
 
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(positionAfter.positionAmount).to.be.eq('2000000000000000000000');
+            expect(positionAfter.positionAmount).to.be.eq('200000000000');
 
             const marketOrder = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
             expect(marketOrder.sizeAmount).to.be.eq('0');

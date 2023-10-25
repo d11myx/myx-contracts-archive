@@ -7,6 +7,7 @@ import { loadReserveConfig } from '../helpers';
 import { MARKET_NAME } from '../helpers';
 import { constants, BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { convertIndexAmountToStable, convertStableAmount } from '../helpers/token-decimals';
 
 describe('Position', () => {
     const pairIndex = 1;
@@ -136,12 +137,18 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.add(tradingFee);
 
@@ -243,12 +250,18 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.add(tradingFee);
 
@@ -515,24 +528,32 @@ describe('Position', () => {
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.abs().add(tradingFee);
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
-                const riskRate = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice)
-                    .div('1000000000000000000000000000000')
-                    .mul(tradingConfig.maintainMarginRate)
-                    .div('100000000')
-                    .mul('100000000')
-                    .div(exposureAsset);
+                const margin = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice)
+                        .div('1000000000000000000000000000000')
+                        .mul(tradingConfig.maintainMarginRate),
+                );
+                const riskRate = margin.div(exposureAsset);
 
                 expect(riskRate.div('1000000')).to.be.eq('105');
                 expect(balance).to.be.eq(entrustOrderBefore.collateral);
@@ -668,24 +689,32 @@ describe('Position', () => {
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.abs().add(tradingFee);
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
-                const riskRate = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice)
-                    .div('1000000000000000000000000000000')
-                    .mul(tradingConfig.maintainMarginRate)
-                    .div('100000000')
-                    .mul('100000000')
-                    .div(exposureAsset);
+                const margin = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice)
+                        .div('1000000000000000000000000000000')
+                        .mul(tradingConfig.maintainMarginRate),
+                );
+                const riskRate = margin.div(exposureAsset);
 
                 expect(riskRate.div('1000000')).to.be.eq('200');
                 expect(balance).to.be.eq(entrustOrderBefore.collateral);

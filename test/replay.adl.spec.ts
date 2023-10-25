@@ -1,6 +1,6 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { adlPosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import { TradeType } from '../helpers';
@@ -118,7 +118,7 @@ describe('Replay: ADL', () => {
             const adlPositions: IExecutionLogic.ExecutePositionStruct[] = [
                 { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
             ];
-            const { executeReceipt } = await adlPosition(
+            await adlPosition(
                 testEnv,
                 trader,
                 pairIndex,
@@ -129,9 +129,9 @@ describe('Replay: ADL', () => {
                 true,
                 adlPositions,
             );
-            // await hre.run('decode-event', { hash: executeReceipt.transactionHash, log: false });
+            // await hre.run('decode-event', { hash: ret.executeReceipt.transactionHash, log: true });
             const userLongPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-            const userShortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
+            // const userShortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
             expect(userLongPositionAfter.positionAmount).to.be.eq(0);
         });
     });
@@ -166,9 +166,7 @@ describe('Replay: ADL', () => {
         it('long tracker > short tracker, close long position', async () => {
             const {
                 usdt,
-                btc,
                 router,
-                pool,
                 positionManager,
                 users: [, trader],
             } = testEnv;
@@ -237,7 +235,7 @@ describe('Replay: ADL', () => {
             const adlPositions: IExecutionLogic.ExecutePositionStruct[] = [
                 { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
             ];
-            const { executeReceipt } = await adlPosition(
+            await adlPosition(
                 testEnv,
                 trader,
                 pairIndex,

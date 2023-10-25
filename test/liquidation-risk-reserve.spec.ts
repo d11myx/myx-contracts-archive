@@ -5,6 +5,8 @@ import { TradeType } from '../helpers';
 import { Position } from '../types/contracts/core/PositionManager';
 import Decimal from 'decimal.js';
 import { expect } from './shared/expect';
+import { convertIndexAmountToStable } from '../helpers/token-decimals';
+import { BigNumber } from 'ethers';
 
 describe('Liquidation: Risk Reserve', () => {
     const pairIndex = 1;
@@ -73,14 +75,14 @@ describe('Liquidation: Risk Reserve', () => {
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
         await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey);
-        // const positionAfter = await positionManager.getPositionByKey(positionKey);
-        // expect(positionAfter.positionAmount).to.be.eq(0);
+        const positionAfter = await positionManager.getPositionByKey(positionKey);
+        expect(positionAfter.positionAmount).to.be.eq(0);
 
-        // const userBalanceAfter = await usdt.balanceOf(trader.address);
-        // expect(userBalanceBefore).to.be.eq(userBalanceAfter);
+        const userBalanceAfter = await usdt.balanceOf(trader.address);
+        expect(userBalanceBefore).to.be.eq(userBalanceAfter);
 
-        // const riskReserveAmountAfter = await riskReserve.getReservedAmount(usdt.address);
-        // expect(riskReserveAmountAfter).to.be.eq(riskReserveAmountBefore.add(riskAfter.netAsset.toString()));
+        const riskReserveAmountAfter = await riskReserve.getReservedAmount(usdt.address);
+        expect(riskReserveAmountAfter).to.be.eq(riskReserveAmountBefore.add(riskAfter.netAsset.toString()));
     });
 
     it('user loss > position collateral, risk reserve should be decreased', async () => {
@@ -220,10 +222,7 @@ describe('Liquidation: Risk Reserve', () => {
     });
 
     async function positionRisk(position: Position.InfoStructOutput) {
-        const { positionManager, btc, oraclePriceFeed, pool } = testEnv;
-
-        const contractFactory = await ethers.getContractFactory('TradingHelperMock');
-        const tradingHelperMock = await contractFactory.deploy(pool.address);
+        const { positionManager, btc, usdt, oraclePriceFeed, pool } = testEnv;
 
         const price = await oraclePriceFeed.getPrice(btc.address);
 
@@ -233,18 +232,21 @@ describe('Liquidation: Risk Reserve', () => {
             position.isLong,
             position.positionAmount,
         );
-
-        let pnl = new Decimal(position.averagePrice.sub(price).toString())
+        let _pnl = new Decimal(position.averagePrice.sub(price).toString())
             .mul(position.positionAmount.toString())
             .div(1e30);
         if (position.isLong) {
-            pnl = pnl.mul(-1);
+            _pnl = _pnl.mul(-1);
         }
 
+        let pnl = BigNumber.from(_pnl.toString());
+        if (!_pnl.eq(0)) {
+            pnl = await convertIndexAmountToStable(btc, usdt, BigNumber.from(_pnl.toString()));
+        }
         const netAsset = new Decimal(position.collateral.toString())
-            .add((await tradingHelperMock.convertIndexAmountToStable(pairIndex, pnl.toString())).toString())
-            .add((await tradingHelperMock.convertIndexAmountToStable(pairIndex, fundingFee.toString())).toString())
-            .sub((await tradingHelperMock.convertIndexAmountToStable(pairIndex, tradingFee.toString())).toString());
+            .add(pnl.toString())
+            .add(fundingFee.toString())
+            .sub(tradingFee.toString());
         if (netAsset.isNegative()) {
             return { needLiquidation: true, netAsset: netAsset };
         }
@@ -256,7 +258,7 @@ describe('Liquidation: Risk Reserve', () => {
             .div(1e8)
             .div(1e30);
         maintainMargin = new Decimal(
-            (await tradingHelperMock.convertIndexAmountToStable(pairIndex, maintainMargin.toString())).toString(),
+            (await convertIndexAmountToStable(btc, usdt, BigNumber.from(maintainMargin.toString()))).toString(),
         );
         return { needLiquidation: maintainMargin.div(netAsset).gt(1), netAsset: netAsset };
     }

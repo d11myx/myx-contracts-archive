@@ -178,6 +178,7 @@ contract ExecutionLogic is IExecutionLogic {
         if (orderSize > 0) {
             (executionSize) = TradingHelper.exposureAmountChecker(
                 lpVault,
+                pair,
                 exposureAmount,
                 order.isLong,
                 orderSize,
