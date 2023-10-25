@@ -310,6 +310,9 @@ contract Pool is IPool, Upgradeable {
         uint256 _stableAmount
     ) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
+        require(vault.indexReservedAmount >= _indexAmount, "exceeds index amount");
+        require(vault.stableReservedAmount >= _stableAmount, "exceeds stable amount");
+
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
         emit UpdateReserveAmount(
@@ -827,37 +830,53 @@ contract Pool is IPool, Upgradeable {
         uint256 price = getPrice(pair.indexToken);
         require(price > 0, "invalid price");
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
-        uint256 stableReserveDelta = vault.stableTotalAmount;
-        uint256 depositDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
+        uint256 indexReserveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken,
+            int256(vault.indexTotalAmount),
+            18,
+            price
+        ));
+        uint256 stableReserveDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken,
+            int256(vault.stableTotalAmount),
+            18
+        ));
+        uint256 depositDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.pairToken,
+            int256(_lpAmount),
+            18,
+            lpFairPrice(_pairIndex)
+        ));
 
         // expect delta
-        uint256 totalDelta = (indexReserveDelta + stableReserveDelta + depositDelta);
+        uint256 totalDelta = (indexReserveDeltaWad + stableReserveDeltaWad + depositDeltaWad);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
         uint256 expectStableDelta = totalDelta - expectIndexDelta;
 
         uint256 depositIndexTokenDelta;
         uint256 depositStableTokenDelta;
-
-        if (expectIndexDelta >= indexReserveDelta) {
-            uint256 extraIndexReserveDelta = expectIndexDelta - indexReserveDelta;
-            if (extraIndexReserveDelta >= depositDelta) {
-                depositIndexTokenDelta = depositDelta;
+        if (expectIndexDelta >= indexReserveDeltaWad) {
+            uint256 extraIndexReserveDelta = expectIndexDelta - indexReserveDeltaWad;
+            if (extraIndexReserveDelta >= depositDeltaWad) {
+                depositIndexTokenDelta = depositDeltaWad;
             } else {
                 depositIndexTokenDelta = extraIndexReserveDelta;
-                depositStableTokenDelta = depositDelta - extraIndexReserveDelta;
+                depositStableTokenDelta = depositDeltaWad - extraIndexReserveDelta;
             }
         } else {
-            uint256 extraStableReserveDelta = expectStableDelta - stableReserveDelta;
-            if (extraStableReserveDelta >= depositDelta) {
-                depositStableTokenDelta = depositDelta;
+            uint256 extraStableReserveDelta = expectStableDelta - stableReserveDeltaWad;
+            if (extraStableReserveDelta >= depositDeltaWad) {
+                depositStableTokenDelta = depositDeltaWad;
             } else {
-                depositIndexTokenDelta = depositDelta - extraStableReserveDelta;
+                depositIndexTokenDelta = depositDeltaWad - extraStableReserveDelta;
                 depositStableTokenDelta = extraStableReserveDelta;
             }
         }
-        depositIndexAmount = AmountMath.getIndexAmount(depositIndexTokenDelta, price);
-        depositStableAmount = depositStableTokenDelta;
+        uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
+        uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
+
+        depositIndexAmount = depositIndexTokenDelta * PrecisionUtils.pricePrecision() / price / (10 ** (18 - indexTokenDec));
+        depositStableAmount = depositStableTokenDelta / (10 ** (18 - stableTokenDec));
 
         // add fee
         depositIndexAmount = depositIndexAmount.divPercentage(

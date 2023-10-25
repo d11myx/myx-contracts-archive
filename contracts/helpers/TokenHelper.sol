@@ -14,39 +14,50 @@ library TokenHelper {
         IPool.Pair memory pair,
         int256 indexTokenAmount
     ) internal view returns (int256 amount) {
-        uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
-        uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
-
-        uint256 indexTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - indexTokenDec);
-        uint256 stableTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - stableTokenDec);
-
-        amount = (indexTokenAmount * int256(indexTokenWad)) / int256(stableTokenWad);
+        uint8 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
+        return convertTokenAmountTo(pair.indexToken, indexTokenAmount, stableTokenDec);
     }
 
-     function convertIndexAmountToStableWithPrice(
-         IPool.Pair memory pair,
-         int256 indexTokenAmount,
-         uint256 price
-     ) internal view returns (int256 amount) {
-         uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
-         uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
+    function convertIndexAmountToStableWithPrice(
+        IPool.Pair memory pair,
+        int256 indexTokenAmount,
+        uint256 price
+    ) internal view returns (int256 amount) {
+        uint8 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
+        return convertTokenAmountWithPrice(pair.indexToken, indexTokenAmount, stableTokenDec, price);
+    }
 
-         uint256 indexTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - indexTokenDec);
-         uint256 stableTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - stableTokenDec);
+    function convertTokenAmountWithPrice(
+        address token,
+        int256 tokenAmount,
+        uint8 targetDecimals,
+        uint256 price
+    ) internal view returns (int256 amount) {
+        uint256 tokenDec = uint256(IERC20Metadata(token).decimals());
 
-         amount = indexTokenAmount * int256(indexTokenWad) * int256(price) / int256(stableTokenWad) / int256(PrecisionUtils.PRICE_PRECISION);
-     }
+        uint256 tokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - tokenDec);
+        uint256 targetTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - targetDecimals);
+
+        amount = (tokenAmount * int256(tokenWad)) * int256(price) / int256(targetTokenWad) / int256(PrecisionUtils.PRICE_PRECISION);
+    }
 
     function convertStableAmountToIndex(
         IPool.Pair memory pair,
         int256 stableTokenAmount
     ) internal view returns (int256 amount) {
-        uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
-        uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
+        uint8 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        return convertTokenAmountTo(pair.stableToken, stableTokenAmount, indexTokenDec);
+    }
 
-        uint256 indexTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - indexTokenDec);
-        uint256 stableTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - stableTokenDec);
+    function convertTokenAmountTo(
+        address token,
+        int256 tokenAmount,
+        uint8 targetDecimals
+    ) internal view returns (int256 amount) {
+        uint256 tokenDec = uint256(IERC20Metadata(token).decimals());
 
-        amount = (stableTokenAmount * int256(stableTokenWad)) / int256(indexTokenWad);
+        uint256 tokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - tokenDec);
+        uint256 targetTokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - targetDecimals);
+        amount = (tokenAmount * int256(tokenWad)) / int256(targetTokenWad);
     }
 }
