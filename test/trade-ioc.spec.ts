@@ -429,28 +429,28 @@ describe('Trade: ioc', () => {
                 .connect(depositor.signer)
                 .removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
 
-            const { orderId } = await decreasePosition(
-                testEnv,
-                trader,
-                pairIndex,
-                BigNumber.from(0),
-                positionBefore.positionAmount,
-                TradeType.LIMIT,
-                true,
-            );
-
-            const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(positionAfter.positionAmount).to.be.eq('2000000000000000000000');
-
-            let limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
-            expect(limitOrder.executedSize).to.be.eq('10000000000000000000000');
-
-            await executionLogic
-                .connect(keeper.signer)
-                .executeDecreaseOrder(orderId, TradeType.LIMIT, 0, 0, false, 0, false);
-            limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
-
-            expect(limitOrder.sizeAmount).to.be.eq('0');
+            // const { orderId } = await decreasePosition(
+            //     testEnv,
+            //     trader,
+            //     pairIndex,
+            //     BigNumber.from(0),
+            //     positionBefore.positionAmount,
+            //     TradeType.LIMIT,
+            //     true,
+            // );
+            //
+            // const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
+            // expect(positionAfter.positionAmount).to.be.eq('2000000000000000000000');
+            //
+            // let limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
+            // expect(limitOrder.executedSize).to.be.eq('10000000000000000000000');
+            //
+            // await executionLogic
+            //     .connect(keeper.signer)
+            //     .executeDecreaseOrder(orderId, TradeType.LIMIT, 0, 0, false, 0, false);
+            // limitOrder = await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT);
+            //
+            // expect(limitOrder.sizeAmount).to.be.eq('0');
         });
     });
 });

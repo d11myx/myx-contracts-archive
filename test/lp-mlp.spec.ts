@@ -143,7 +143,7 @@ describe('LP: fair price', () => {
 
         const vaultTotal = (await convertIndexAmount(btc, receiveIndexTokenAmount.mul(pairPrice), 18))
             .add(await convertStableAmount(usdt, receiveStableTokenAmount, 18))
-            .add(feeAmount);
+            .add(await convertStableAmount(usdt, feeAmount, 18));
         const userPaid = sellLpAmount.mul(lpPrice).div('1000000000000000000000000000000');
 
         expect(new Decimal(ethers.utils.formatEther(userPaid)).toFixed(0)).to.be.eq(

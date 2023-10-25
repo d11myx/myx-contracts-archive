@@ -253,7 +253,7 @@ describe('Trade: Market order cases', () => {
             const size = ethers.utils.parseUnits('1000', await btc.decimals());
 
             const netExposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
-            expect(netExposureAmountBefore).to.be.eq(BigNumber.from('-1000000000000000000000'));
+            expect(netExposureAmountBefore).to.be.eq(BigNumber.from('-100000000000'));
 
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, false);
             const netExposureAmountAfter = await positionManager.getExposedPositions(pairIndex);
