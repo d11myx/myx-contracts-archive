@@ -146,6 +146,7 @@ describe('Trade: slippage', () => {
             const maxSlippage = 10000;
 
             // buy low
+            const traderPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
             await updateBTCPrice(testEnv, '29997');
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -161,9 +162,9 @@ describe('Trade: slippage', () => {
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
-            let position = await positionManager.getPosition(trader.address, pairIndex, true);
+            const traderPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
-            expect(position.positionAmount).to.be.eq('20000000000000000000');
+            expect(traderPositionAfter.positionAmount).to.be.eq(traderPositionBefore.positionAmount.add(sizeAmount));
 
             await updateBTCPrice(testEnv, '29996');
             const increase2PositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -184,6 +185,7 @@ describe('Trade: slippage', () => {
             ).to.be.revertedWith('exceeds max slippage');
 
             // buy high
+            const trader2PositionBefore = await positionManager.getPosition(trader2.address, pairIndex, true);
             await updateBTCPrice(testEnv, '30003');
             await mintAndApprove(testEnv, usdt, collateral, trader2, router.address);
             const increase3PositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -199,9 +201,9 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
-            position = await positionManager.getPosition(trader2.address, pairIndex, true);
+            const trader2PositionAfter = await positionManager.getPosition(trader2.address, pairIndex, true);
 
-            expect(position.positionAmount).to.be.eq('20000000000000000000');
+            expect(trader2PositionAfter.positionAmount).to.be.eq(trader2PositionBefore.positionAmount.add(sizeAmount));
 
             await updateBTCPrice(testEnv, '30004');
             const increase4PositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -238,7 +240,7 @@ describe('Trade: slippage', () => {
 
             // add liquidity
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -259,17 +261,19 @@ describe('Trade: slippage', () => {
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
             );
             const vaultBefore = await pool.getVault(pairIndex);
+
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
             const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
             const totoalApplyBefore = await lpToken.totalSupply();
 
+            // expect(convertStableAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
             expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
             expect(totoalApplyBefore).to.be.eq(expectAddLiquidity.mintAmount);
 
@@ -323,7 +327,7 @@ describe('Trade: slippage', () => {
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -438,7 +442,7 @@ describe('Trade: slippage', () => {
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('900000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('90000000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -501,7 +505,7 @@ describe('Trade: slippage', () => {
                 pool,
             } = testEnv;
 
-            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
