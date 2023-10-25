@@ -21,6 +21,7 @@ export * from '../tasks/misc/encode-event';
 export * from '../tasks/misc/decode-event';
 export * from '../tasks/misc/update-evm-time';
 export * from '../tasks/timelock/timelock-execution';
+export * from './token-decimals';
 
 import { loadTasks } from './hardhat-config-helpers';
 
