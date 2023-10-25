@@ -4,6 +4,7 @@ import { ethers, waffle } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import {
+    convertIndexAmountToStable,
     encodePath,
     encodePriceSqrt,
     FeeAmount,
@@ -275,14 +276,18 @@ describe('Trade: profit & Loss', () => {
             btcPrice = '28000';
             await updateBTCPrice(testEnv, btcPrice);
 
-            const userPnlBef = BigNumber.from(btcPrice).sub('30000').mul(userPositionBefore.positionAmount);
+            const userPnlBef = await convertIndexAmountToStable(
+                btc,
+                usdt,
+                BigNumber.from(btcPrice).sub('30000').mul(userPositionBefore.positionAmount),
+            );
             expect(userPnlBef).to.be.lt(0);
 
-            const riskBefore = new Decimal(9)
-                .mul(new Decimal(30000))
-                .mul(1)
-                .div(100)
-                .div(new Decimal(30000).add(new Decimal(userPnlBef.toString()).div(1e18)));
+            const a = new Decimal((await convertIndexAmountToStable(btc, usdt, size)).toString())
+                .mul(openPrice.toString())
+                .div((1e30).toString());
+            const b = new Decimal(collateral.toString()).add(new Decimal(userPnlBef.toString()));
+            const riskBefore = a.div(b).div(100);
             expect(riskBefore.toString()).to.be.eq('0.225');
 
             let decreasingCollateral = BigNumber.from(0).sub(userPositionBefore.collateral.mul(99).div(100));
@@ -326,18 +331,18 @@ describe('Trade: profit & Loss', () => {
                 userPositionBefore.collateral.add(pnl).sub(tradingFee).add(fundingFee).sub(decreasingCollateral.abs()),
             );
 
-            const sizeAfter = new Decimal(userPositionAfter.positionAmount.toString()).div(1e18);
             const avgPriceAfter = new Decimal(userPositionAfter.averagePrice.toString()).div(1e30);
-            const collateralAfter = new Decimal(userPositionAfter.collateral.toString()).div(1e18);
             const userPnlAft = BigNumber.from(btcPrice)
                 .sub(avgPriceAfter.toString())
-                .mul(userPositionAfter.positionAmount);
+                .mul(await convertIndexAmountToStable(btc, usdt, userPositionAfter.positionAmount));
 
-            const riskAfter = new Decimal(sizeAfter)
-                .mul(new Decimal(avgPriceAfter))
-                .mul(1)
-                .div(100)
-                .div(new Decimal(collateralAfter).add(new Decimal(userPnlAft.toString()).div(1e18)));
+            const a1 = new Decimal(
+                (await convertIndexAmountToStable(btc, usdt, userPositionAfter.positionAmount)).toString(),
+            )
+                .mul(userPositionAfter.averagePrice.toString())
+                .div((1e30).toString());
+            const b1 = new Decimal(userPositionAfter.collateral.toString()).add(new Decimal(userPnlAft.toString()));
+            const riskAfter = a1.div(b1).div(100);
             expect(riskAfter.toFixed(2)).to.be.eq('0.23');
         });
     });
