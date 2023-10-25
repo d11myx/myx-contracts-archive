@@ -107,7 +107,7 @@ describe('Trade: profit & Loss', () => {
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
-        const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+        const stableAmount = ethers.utils.parseUnits('3000000000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
