@@ -2,7 +2,7 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { mintAndApprove } from './helpers/misc';
 import { expect } from './shared/expect';
-import { getMockToken } from '../helpers';
+import { getMockToken, ZERO_ADDRESS } from '../helpers';
 import { BigNumber, constants } from 'ethers';
 import Decimal from 'decimal.js';
 import { convertIndexAmount, convertStableAmount } from '../helpers/token-decimals';
@@ -46,7 +46,7 @@ describe('LP: fair price', () => {
         const pair = await pool.getPair(pairIndex);
         const pairPrice = await pool.lpFairPrice(pairIndex);
 
-        expect(pairPrice).to.be.eq(ethers.utils.parseUnits('1000000000000'));
+        expect(pairPrice).to.be.eq(ethers.utils.parseUnits('1', 30));
 
         const buyLpAmount = ethers.utils.parseUnits('1000000', 18);
         const { depositIndexAmount, depositStableAmount } = await pool.getDepositAmount(pairIndex, buyLpAmount);
@@ -92,11 +92,25 @@ describe('LP: fair price', () => {
         const userPaid = depositIndexAmount.mul(pairPrice).add(depositStableAmount);
         const indexFeeAmount = depositIndexAmount.mul(pair.addLpFeeP).div(1e8);
         const stableFeeAmount = depositStableAmount.mul(pair.addLpFeeP).div(1e8);
-        const totalFeeAmount = indexFeeAmount.add(stableFeeAmount);
-
+        const totalFeeAmount = (await convertIndexAmount(btc, indexFeeAmount, 18)).add(
+            await convertStableAmount(usdt, stableFeeAmount, 18),
+        );
+        let slipAmount = BigNumber.from(0);
+        if (expectAddLiquidity.slipToken == pair.indexToken) {
+            slipAmount = await convertIndexAmount(btc, expectAddLiquidity.slipAmount, 18);
+        } else if (expectAddLiquidity.slipToken == pair.stableToken) {
+            slipAmount = await convertStableAmount(usdt, expectAddLiquidity.slipAmount, 18);
+        }
         expect(
-            expectAddLiquidity.afterFeeIndexAmount.add(expectAddLiquidity.afterFeeStableAmount).add(totalFeeAmount),
-        ).to.be.eq(depositIndexAmount.add(depositStableAmount).sub(expectAddLiquidity.slipAmount));
+            (await convertIndexAmount(btc, expectAddLiquidity.afterFeeIndexAmount, 18))
+                .add(await convertStableAmount(usdt, expectAddLiquidity.afterFeeStableAmount, 18))
+                .add(totalFeeAmount)
+                .add(slipAmount),
+        ).to.be.eq(
+            (await convertIndexAmount(btc, depositIndexAmount, 18)).add(
+                await convertStableAmount(usdt, depositStableAmount, 18),
+            ),
+        );
         expect(userPaid.add(vaultTotalBefore)).to.be.eq(vaultTotalAfter.add(totalFee));
     });
 
