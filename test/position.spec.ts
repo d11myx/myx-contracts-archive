@@ -2,11 +2,11 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { mintAndApprove, updateBTCPrice, increasePosition } from './helpers/misc';
-import { TradeType, getMockToken } from '../helpers';
-import { TradingTypes } from '../types/contracts/interfaces/IRouter';
+import { TradeType } from '../helpers';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 import { MARKET_NAME } from '../helpers/env';
-import { constants, BigNumber } from 'ethers';
+import { BigNumber } from 'ethers';
+import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Position', () => {
     const pairIndex = 1;
@@ -123,7 +123,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -231,7 +233,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
@@ -363,7 +367,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '20000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -499,7 +505,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '35700');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
@@ -651,7 +659,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '37710');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
