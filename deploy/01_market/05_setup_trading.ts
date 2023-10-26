@@ -147,16 +147,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await deploy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
-        args: [],
-        proxy: {
-            owner: deployer,
-            proxyContract: 'UUPS',
-            proxyArgs: [],
-            execute: {
-                methodName: 'initialize',
-                args: [addressProvider.address, executionLogic.address, liquidationLogic.address],
-            },
-        },
+        args: [addressProvider.address, executionLogic.address, liquidationLogic.address],
+
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = await getExecutor();
