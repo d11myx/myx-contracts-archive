@@ -701,6 +701,7 @@ contract ExecutionLogic is IExecutionLogic {
             tradingConfig
         );
 
+        uint256[] memory adlOrderIds = new uint256[](adlPositions.length);
         for (uint256 i = 0; i < adlPositions.length; i++) {
             ExecutePositionInfo memory adlPosition = adlPositions[i];
             if (adlPosition.executionSize > 0) {
@@ -726,6 +727,7 @@ contract ExecutionLogic is IExecutionLogic {
                     0,
                     true
                 );
+                adlOrderIds[i] = orderId;
             }
         }
         this.executeDecreaseOrder(
@@ -737,5 +739,7 @@ contract ExecutionLogic is IExecutionLogic {
             0,
             false
         );
+
+        emit ExecuteAdl(order.account, order.pairIndex, order.isLong, order.orderId, adlOrderIds);
     }
 }
