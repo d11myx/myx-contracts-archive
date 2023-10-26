@@ -40,5 +40,13 @@ interface IExecutionEvent {
         int256 fundingFee
     );
 
+    event ExecuteAdl(
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        uint256 orderId,
+        uint256[] adlOrderIds
+    );
+
     event ExecuteOrderError(uint256 orderId, string errorMessage);
 }
