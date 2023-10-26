@@ -19,8 +19,8 @@ describe('Trade: Market order cases', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
@@ -36,7 +36,7 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [trader],
                 usdt,
-
+                btc,
                 router,
                 positionManager,
             } = testEnv;
@@ -44,8 +44,8 @@ describe('Trade: Market order cases', () => {
             const netExposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
             expect(netExposureAmountBefore).to.be.eq(0);
 
-            const collateral = ethers.utils.parseUnits('3000000', 18);
-            const size = ethers.utils.parseUnits('1000', 18);
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('1000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -60,6 +60,7 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 usdt,
+                btc,
                 positionManager,
                 router,
             } = testEnv;
@@ -67,8 +68,8 @@ describe('Trade: Market order cases', () => {
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
             expect(positionBef.positionAmount).to.be.eq(0);
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -82,6 +83,7 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 usdt,
+                btc,
                 positionManager,
                 router,
             } = testEnv;
@@ -89,8 +91,8 @@ describe('Trade: Market order cases', () => {
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, false);
             expect(positionBef.positionAmount).to.be.eq(0);
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -104,12 +106,13 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 positionManager,
+                btc,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('10', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('10', await btc.decimals()));
 
-            const size = ethers.utils.parseUnits('5', 18);
+            const size = ethers.utils.parseUnits('5', await btc.decimals());
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, true);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -120,12 +123,13 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 positionManager,
+                btc,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, false);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('10', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('10', await btc.decimals()));
 
-            const size = ethers.utils.parseUnits('5', 18);
+            const size = ethers.utils.parseUnits('5', await btc.decimals());
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, false);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -138,15 +142,16 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [trader],
                 usdt,
+                btc,
                 positionManager,
                 router,
             } = testEnv;
 
             const netExposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
-            expect(netExposureAmountBefore).to.be.eq(ethers.utils.parseUnits('1000', 18));
+            expect(netExposureAmountBefore).to.be.eq(ethers.utils.parseUnits('1000', await btc.decimals()));
 
-            const collateral = ethers.utils.parseUnits('3000000', 18);
-            const size = ethers.utils.parseUnits('2000', 18);
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('2000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -161,15 +166,16 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 usdt,
+                btc,
                 positionManager,
                 router,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', await btc.decimals()));
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -183,15 +189,16 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 usdt,
+                btc,
                 positionManager,
                 router,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, false);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', await btc.decimals()));
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -205,12 +212,13 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 positionManager,
+                btc,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', await btc.decimals()));
 
-            const size = ethers.utils.parseUnits('10', 18);
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, true);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -221,12 +229,13 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 positionManager,
+                btc,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, false);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', await btc.decimals()));
 
-            const size = ethers.utils.parseUnits('10', 18);
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, false);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -239,11 +248,12 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [trader],
                 positionManager,
+                btc,
             } = testEnv;
-            const size = ethers.utils.parseUnits('1000', 18);
+            const size = ethers.utils.parseUnits('1000', await btc.decimals());
 
             const netExposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
-            expect(netExposureAmountBefore).to.be.eq(BigNumber.from('-1000000000000000000000'));
+            expect(netExposureAmountBefore).to.be.eq(BigNumber.from('-100000000000'));
 
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, false);
             const netExposureAmountAfter = await positionManager.getExposedPositions(pairIndex);
@@ -257,13 +267,14 @@ describe('Trade: Market order cases', () => {
                 usdt,
                 positionManager,
                 router,
+                btc,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', await btc.decimals()));
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -277,15 +288,16 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 usdt,
+                btc,
                 positionManager,
                 router,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, false);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('5', await btc.decimals()));
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -299,12 +311,13 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 positionManager,
+                btc,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', await btc.decimals()));
 
-            const size = ethers.utils.parseUnits('5', 18);
+            const size = ethers.utils.parseUnits('5', await btc.decimals());
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, true);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -315,12 +328,13 @@ describe('Trade: Market order cases', () => {
             const {
                 users: [, trader],
                 positionManager,
+                btc,
             } = testEnv;
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, false);
-            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', 18));
+            expect(positionBef.positionAmount).to.be.eq(ethers.utils.parseUnits('15', await btc.decimals()));
 
-            const size = ethers.utils.parseUnits('5', 18);
+            const size = ethers.utils.parseUnits('5', await btc.decimals());
             await decreasePosition(testEnv, trader, pairIndex, BigNumber.from(0), size, TradeType.MARKET, false);
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);

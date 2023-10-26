@@ -1,7 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getTokens, waitForTx } from '../../helpers';
-import { Token } from '../../types';
+import { ERC20DecimalsMock } from '../../types';
 import { ethers } from 'hardhat';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
@@ -10,7 +10,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     console.log(`- setup balance`);
     const { usdt, btc, eth } = await getTokens();
 
-    const tokens: Token[] = [];
+    const tokens: ERC20DecimalsMock[] = [];
     tokens.push(usdt);
     tokens.push(btc);
     tokens.push(eth);

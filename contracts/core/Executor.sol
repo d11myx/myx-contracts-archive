@@ -1,29 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IExecutionLogic.sol";
-import "../libraries/Upgradeable.sol";
+import "../libraries/Roleable.sol";
 import "../interfaces/ILiquidationLogic.sol";
 
-contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
-    IExecutionLogic public executionLogic;
-    ILiquidationLogic public liquidationLogic;
-
-    function initialize(
-        IAddressesProvider addressProvider,
-        IExecutionLogic _executionLogic,
-        ILiquidationLogic _liquidationLogic
-    ) public initializer {
-        ADDRESS_PROVIDER = addressProvider;
-        executionLogic = _executionLogic;
-        liquidationLogic = _liquidationLogic;
-    }
+contract Executor is IExecutor, Roleable, Pausable {
+    constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
 
     modifier onlyPositionKeeper() {
         require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), "opk");
@@ -48,7 +37,9 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeIncreaseMarketOrders(increaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
+            increaseOrders
+        );
     }
 
     function setPricesAndExecuteDecreaseMarketOrders(
@@ -61,7 +52,9 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeDecreaseMarketOrders(decreaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
+            decreaseOrders
+        );
     }
 
     function setPricesAndExecuteIncreaseLimitOrders(
@@ -74,7 +67,9 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeIncreaseLimitOrders(increaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
+            increaseOrders
+        );
     }
 
     function setPricesAndExecuteDecreaseLimitOrders(
@@ -87,7 +82,9 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeDecreaseLimitOrders(decreaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
+            decreaseOrders
+        );
     }
 
     function setPricesAndExecuteADL(
@@ -104,7 +101,7 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeADLAndDecreaseOrder(
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrder(
             executePositions,
             orderId,
             tradeType,
@@ -123,7 +120,7 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
 
         _setPrices(tokens, prices, timestamp);
 
-        liquidationLogic.liquidatePositions(executePositions);
+        ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidatePositions(executePositions);
     }
 
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256) internal {
@@ -136,6 +133,12 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
         uint256 executionSize,
         uint256 executionPrice
     ) external view returns (bool) {
-        return executionLogic.needADL(pairIndex, isLong, executionSize, executionPrice);
+        return
+            IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).needADL(
+                pairIndex,
+                isLong,
+                executionSize,
+                executionPrice
+            );
     }
 }

@@ -23,8 +23,8 @@ describe('PositionManager: decrease position', () => {
         await updateBTCPrice(testEnv, '30000');
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('100', 18);
-        const stableAmount = ethers.utils.parseUnits('3000000', 18);
+        const indexAmount = ethers.utils.parseUnits('100', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -44,15 +44,16 @@ describe('PositionManager: decrease position', () => {
                 keeper,
                 users: [, trader],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const stableAmount = ethers.utils.parseUnits('100000', 18);
+            const stableAmount = ethers.utils.parseUnits('100000', await usdt.decimals());
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
 
-            const collateral = ethers.utils.parseUnits('100000', 18);
-            const increaseSize = ethers.utils.parseUnits('90', 18);
+            const collateral = ethers.utils.parseUnits('100000', await usdt.decimals());
+            const increaseSize = ethers.utils.parseUnits('90', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await increasePosition(
@@ -87,6 +88,7 @@ describe('PositionManager: decrease position', () => {
                 keeper,
                 users: [depositor, trader],
                 usdt,
+                btc,
                 router,
                 executionLogic,
                 positionManager,
@@ -116,7 +118,7 @@ describe('PositionManager: decrease position', () => {
             // console.log(`---poolVaultAft: `, poolVaultAft);
 
             // trader decrease position
-            const collateral = ethers.utils.parseUnits('0', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
             const openPrice = ethers.utils.parseUnits('70000', 30);
 
             const decreasePositionRequestStruct: TradingTypes.DecreasePositionRequestStruct = {
