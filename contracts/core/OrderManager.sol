@@ -45,8 +45,8 @@ contract OrderManager is IOrderManager, Upgradeable {
 
     IPool public pool;
     IPositionManager public positionManager;
-    address public executionLogic;
-    address public liquidationLogic;
+    // address public executionLogic;
+    // address public liquidationLogic;
     address public router;
 
     function initialize(
@@ -65,24 +65,22 @@ contract OrderManager is IOrderManager, Upgradeable {
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == executionLogic || msg.sender == liquidationLogic, "onlyExecutor");
+        require(
+            msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+                msg.sender == ADDRESS_PROVIDER.liquidationLogic(),
+            "onlyExecutor"
+        );
         _;
     }
 
     modifier onlyExecutorAndRouter() {
         require(
-            msg.sender == router || msg.sender == executionLogic || msg.sender == liquidationLogic,
+            msg.sender == router ||
+                msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+                msg.sender == ADDRESS_PROVIDER.liquidationLogic(),
             "no access"
         );
         _;
-    }
-
-    function setExecutionLogic(address _addressExecutionLogic) external onlyPoolAdmin {
-        executionLogic = _addressExecutionLogic;
-    }
-
-    function setLiquidationLogic(address _addressLiquidationLogic) external onlyPoolAdmin {
-        liquidationLogic = _addressLiquidationLogic;
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
@@ -93,7 +91,9 @@ contract OrderManager is IOrderManager, Upgradeable {
         TradingTypes.CreateOrderRequest calldata request
     ) public returns (uint256 orderId) {
         require(
-            msg.sender == executionLogic || msg.sender == liquidationLogic || msg.sender == router,
+            msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+                msg.sender == ADDRESS_PROVIDER.liquidationLogic() ||
+                msg.sender == router,
             "onlyExecutor&Router"
         );
         address account = request.account;
