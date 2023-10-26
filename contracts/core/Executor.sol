@@ -94,7 +94,7 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        IExecutionLogic.ExecutePosition[] memory executePositions,
+        IExecution.ExecutePosition[] memory executePositions,
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         uint8 level,
@@ -117,13 +117,13 @@ contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        bytes32[] memory positionKeys
+        IExecution.ExecutePosition[] memory executePositions
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         _setPrices(tokens, prices, timestamp);
 
-        liquidationLogic.liquidatePositions(positionKeys);
+        liquidationLogic.liquidatePositions(executePositions);
     }
 
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256) internal {

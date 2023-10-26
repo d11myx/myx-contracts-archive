@@ -138,7 +138,13 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await deploy(`${LIQUIDATION_LOGIC_ID}`, {
         from: deployer,
         contract: 'LiquidationLogic',
-        args: [addressProvider.address, pool.address, orderManager.address, positionManager.address],
+        args: [
+            addressProvider.address,
+            pool.address,
+            orderManager.address,
+            positionManager.address,
+            feeCollector.address,
+        ],
         ...COMMON_DEPLOY_PARAMS,
     });
     const liquidationLogic = await getLiquidationLogic();
