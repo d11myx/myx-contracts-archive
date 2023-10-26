@@ -6,32 +6,26 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IUniSwapV3Router.sol";
 import "../interfaces/IPool.sol";
-import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
+import "../interfaces/IPoolTokenFactory.sol";
+import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/ISpotSwap.sol";
-import "../token/interfaces/IBaseToken.sol";
+import "../interfaces/ILiquidityCallback.sol";
 import "../interfaces/IWETH.sol";
-
 import "../libraries/AmountMath.sol";
-import "../libraries/PrecisionUtils.sol";
 import "../libraries/Upgradeable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
-
-import "../interfaces/IPoolTokenFactory.sol";
-import "../interfaces/ILiquidityCallback.sol";
+import "../token/interfaces/IBaseToken.sol";
 import "../helpers/ValidationHelper.sol";
 import "../helpers/TokenHelper.sol";
 
 contract Pool is IPool, Upgradeable {
-    using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
@@ -54,8 +48,8 @@ contract Pool is IPool, Upgradeable {
     uint256 public pairsIndex;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
-    EnumerableSet.AddressSet private positionManagers;
-    EnumerableSet.AddressSet private orderManagers;
+    address private positionManager;
+    address private orderManager;
 
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
@@ -72,8 +66,8 @@ contract Pool is IPool, Upgradeable {
 
     modifier transferAllowed() {
         require(
-            positionManagers.contains(msg.sender) ||
-                orderManagers.contains(msg.sender) ||
+            positionManager == msg.sender ||
+                orderManager == msg.sender ||
                 riskReserve == msg.sender ||
                 feeCollector == msg.sender,
             "pd"
@@ -86,13 +80,13 @@ contract Pool is IPool, Upgradeable {
     }
 
     modifier onlyPositionManager() {
-        require(positionManagers.contains(msg.sender), "opm");
+        require(positionManager == msg.sender, "opm");
         _;
     }
 
     modifier onlyPositionManagerOrFeeCollector() {
         require(
-            positionManagers.contains(msg.sender) || msg.sender == feeCollector,
+            positionManager == msg.sender || msg.sender == feeCollector,
             "opmof"
         );
         _;
@@ -124,20 +118,12 @@ contract Pool is IPool, Upgradeable {
         feeCollector = _feeCollector;
     }
 
-    function addPositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManagers.add(_positionManager);
+    function setPositionManager(address _positionManager) external onlyPoolAdmin {
+        positionManager = _positionManager;
     }
 
-    function removePositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManagers.remove(_positionManager);
-    }
-
-    function addOrderManager(address _orderManager) external onlyPoolAdmin {
-        orderManagers.add(_orderManager);
-    }
-
-    function removeOrderManager(address _orderManager) external onlyPoolAdmin {
-        orderManagers.remove(_orderManager);
+    function setOrderManager(address _orderManager) external onlyPoolAdmin {
+        orderManager = _orderManager;
     }
 
     function addStableToken(address _token) external onlyPoolAdmin {
@@ -1018,10 +1004,7 @@ contract Pool is IPool, Upgradeable {
     }
 
     function getProfit(uint pairIndex, address token) public view returns (int256 profit) {
-        for (uint256 i = 0; i < positionManagersLength(); i++) {
-            profit = profit + IPositionManager(positionManagers.at(i)).lpProfit(pairIndex, token);
-        }
-        return profit;
+        return IPositionManager(positionManager).lpProfit(pairIndex, token);
     }
 
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
@@ -1046,21 +1029,5 @@ contract Pool is IPool, Upgradeable {
         uint256 _pairIndex
     ) external view override returns (TradingFeeConfig memory) {
         return tradingFeeConfigs[_pairIndex];
-    }
-
-    // function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
-    //     return fundingFeeConfigs[_pairIndex];
-    // }
-
-    function positionManagersAt(uint256 index) external view returns (address) {
-        return positionManagers.at(index);
-    }
-
-    function positionManagersLength() public view returns (uint256) {
-        return positionManagers.length();
-    }
-
-    function orderManagersLength() public view returns (uint256) {
-        return orderManagers.length();
     }
 }
