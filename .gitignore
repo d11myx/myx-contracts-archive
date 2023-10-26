@@ -38,3 +38,6 @@ deployments/localhost
 deployments/**/*
 
 .history
+
+contracts/hardhat-dependency-compiler/*.**
+

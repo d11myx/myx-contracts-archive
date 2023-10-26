@@ -9,7 +9,10 @@ import {
     getExecutionLogic,
     getExecutor,
     getFeeCollector,
+    getFundingRate,
+    getIndexPriceFeed,
     getLiquidationLogic,
+    getOraclePriceFeed,
     getOrderManager,
     getPool,
     getPositionManager,
@@ -30,6 +33,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const { deploy } = deployments;
     const { deployer, poolAdmin, dao } = await getNamedAccounts();
     const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
+    const deployerSigner = await hre.ethers.getSigner(deployer);
 
     const reserveConfig = loadReserveConfig(MARKET_NAME);
 
@@ -149,28 +153,35 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const liquidationLogic = await getLiquidationLogic();
 
+    let oraclePriceFeed = await getOraclePriceFeed();
+    let indexPriceFeed = await getIndexPriceFeed();
+    let fundingRate = await getFundingRate();
+    await waitForTx(
+        await addressProvider
+            .connect(deployerSigner)
+            .initialize(
+                oraclePriceFeed.address,
+                indexPriceFeed.address,
+                fundingRate.address,
+                executionLogic.address,
+                liquidationLogic.address,
+            ),
+    );
+
     // Executor
     await deploy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
-        args: [],
-        proxy: {
-            owner: deployer,
-            proxyContract: 'UUPS',
-            proxyArgs: [],
-            execute: {
-                methodName: 'initialize',
-                args: [addressProvider.address, executionLogic.address, liquidationLogic.address],
-            },
-        },
+        args: [addressProvider.address],
+
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = await getExecutor();
 
     await waitForTx(await pool.connect(poolAdminSigner).setRiskReserve(riskReserve.address));
     await waitForTx(await pool.connect(poolAdminSigner).setFeeCollector(feeCollector.address));
-    await waitForTx(await pool.connect(poolAdminSigner).addPositionManager(positionManager.address));
-    await waitForTx(await pool.connect(poolAdminSigner).addOrderManager(orderManager.address));
+    await waitForTx(await pool.connect(poolAdminSigner).setPositionManager(positionManager.address));
+    await waitForTx(await pool.connect(poolAdminSigner).setOrderManager(orderManager.address));
 
     await waitForTx(await feeCollector.connect(poolAdminSigner).updatePositionManagerAddress(positionManager.address));
 
@@ -178,12 +189,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await riskReserve.connect(poolAdminSigner).updatePoolAddress(pool.address));
 
     await waitForTx(await orderManager.connect(poolAdminSigner).setRouter(router.address));
-    await waitForTx(await orderManager.connect(poolAdminSigner).setExecutionLogic(executionLogic.address));
-    await waitForTx(await orderManager.connect(poolAdminSigner).setLiquidationLogic(liquidationLogic.address));
-
-    await waitForTx(await positionManager.connect(poolAdminSigner).updateExecutionLogic(executionLogic.address));
-    await waitForTx(await positionManager.connect(poolAdminSigner).updateLiquidationLogic(liquidationLogic.address));
-
     await waitForTx(await executionLogic.connect(poolAdminSigner).updateExecutor(executor.address));
     await waitForTx(await liquidationLogic.connect(poolAdminSigner).updateExecutor(executor.address));
 };
