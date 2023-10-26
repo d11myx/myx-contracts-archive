@@ -163,8 +163,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     await waitForTx(await pool.connect(poolAdminSigner).setRiskReserve(riskReserve.address));
     await waitForTx(await pool.connect(poolAdminSigner).setFeeCollector(feeCollector.address));
-    await waitForTx(await pool.connect(poolAdminSigner).addPositionManager(positionManager.address));
-    await waitForTx(await pool.connect(poolAdminSigner).addOrderManager(orderManager.address));
+    await waitForTx(await pool.connect(poolAdminSigner).setPositionManager(positionManager.address));
+    await waitForTx(await pool.connect(poolAdminSigner).setOrderManager(orderManager.address));
 
     await waitForTx(await feeCollector.connect(poolAdminSigner).updatePositionManagerAddress(positionManager.address));
 
