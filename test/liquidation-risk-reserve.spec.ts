@@ -47,9 +47,10 @@ describe('Liquidation: Risk Reserve', () => {
             liquidationLogic,
             executionLogic,
             orderManager,
+            addressesProvider
         } = testEnv;
-        expect(await orderManager.executionLogic()).to.be.eq(executionLogic.address);
-        expect(await orderManager.liquidationLogic()).to.be.eq(liquidationLogic.address);
+        expect(await addressesProvider.executionLogic()).to.be.eq(executionLogic.address);
+        expect(await addressesProvider.liquidationLogic()).to.be.eq(liquidationLogic.address);
 
         const riskReserveAmountBefore = await riskReserve.getReservedAmount(usdt.address);
 
