@@ -97,7 +97,8 @@ contract LiquidationLogic is ILiquidationLogic {
             position.isLong,
             position.collateral,
             position.positionAmount,
-            price
+            price,
+            orderId
         );
     }
 

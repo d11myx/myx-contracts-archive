@@ -12,7 +12,8 @@ interface ILiquidationLogic is IExecutionEvent {
         bool isLong,
         uint256 collateral,
         uint256 sizeAmount,
-        uint256 price
+        uint256 price,
+        uint256 orderId
     );
 
     function updateExecutor(address _executor) external;
