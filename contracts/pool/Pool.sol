@@ -500,51 +500,40 @@ contract Pool is IPool, Upgradeable {
         uint256 price = getPrice(pair.indexToken);
         require(price > 0, "invalid price");
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(
-            _getIndexTotalAmount(pair, vault),
-            price
-        );
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
-        // usdt value of deposit
-        uint256 indexDepositDelta = AmountMath.getStableDelta(afterFeeIndexAmount, price);
+        uint256 indexTotalDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken, int256(_getIndexTotalAmount(pair, vault)), 18, price));
+        uint256 stableTotalDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken, int256(_getStableTotalAmount(pair, vault)), 18));
 
-        // calculate deposit usdt value without slippage
-        uint256 slipDelta;
-        uint256 stableTotalAmount = _getStableTotalAmount(pair, vault);
-        uint256 availableDiscountRate;
-        uint256 availableDiscountAmount;
-        if (indexReserveDelta + stableTotalAmount > 0) {
+        uint256 indexDepositDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken, int256(afterFeeIndexAmount), 18, price));
+        uint256 stableDepositDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken, int256(afterFeeStableAmount), 18));
+
+        uint256 slipDeltaWad;
+        uint256 discountRate;
+        uint256 discountAmount;
+        if (indexTotalDeltaWad + stableTotalDeltaWad > 0) {
             // after deposit
-            uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
-            uint256 stableTotalDelta = stableTotalAmount + afterFeeStableAmount;
+            uint256 totalIndexTotalDeltaWad = indexTotalDeltaWad + indexDepositDeltaWad;
+            uint256 totalStableTotalDeltaWad = stableTotalDeltaWad + stableDepositDeltaWad;
 
             // expect delta
-            uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
-            uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-            uint256 expectStableDelta = totalDelta - expectIndexDelta;
+            uint256 totalDelta = totalIndexTotalDeltaWad + totalStableTotalDeltaWad;
+            uint256 expectIndexDeltaWad = totalDelta.mulPercentage(pair.expectIndexTokenP);
+            uint256 expectStableDeltaWad = totalDelta - expectIndexDeltaWad;
 
             if (_indexAmount > 0 && _stableAmount == 0) {
-                uint256 currentIndexRatio = indexTotalDelta.divPercentage(totalDelta);
-                int256 indexUnbalanced = int256(
-                    currentIndexRatio.divPercentage(pair.expectIndexTokenP)
-                ) - int256(PrecisionUtils.percentage());
-                if (indexUnbalanced < 0 && indexUnbalanced.abs() > pair.maxUnbalancedP) {
-                    availableDiscountRate = pair.unbalancedDiscountRate;
-                    availableDiscountAmount = expectIndexDelta.sub(indexTotalDelta);
-                }
+                (discountRate, discountAmount) =
+                    _getDiscount(pair, true, totalIndexTotalDeltaWad, expectIndexDeltaWad, totalDelta);
             }
 
             if (_stableAmount > 0 && _indexAmount == 0) {
-                uint256 currentStableRatio = stableTotalDelta.divPercentage(totalDelta);
-                int256 stableUnbalanced = int256(
-                    currentStableRatio.divPercentage(
-                        PrecisionUtils.percentage().sub(pair.expectIndexTokenP)
-                    )
-                ) - int256(PrecisionUtils.percentage());
-                if (stableUnbalanced < 0 && stableUnbalanced.abs() > pair.maxUnbalancedP) {
-                    availableDiscountRate = pair.unbalancedDiscountRate;
-                    availableDiscountAmount = expectStableDelta.sub(stableTotalDelta);
-                }
+                (discountRate, discountAmount) =
+                    _getDiscount(pair, false, totalStableTotalDeltaWad, expectStableDeltaWad, totalDelta);
             }
 
             (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(
@@ -552,74 +541,61 @@ contract Pool is IPool, Upgradeable {
                 price,
                 AmountMath.PRICE_PRECISION
             );
-            if (indexTotalDelta > expectIndexDelta) {
-                uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
-                uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
-                    ? (indexDepositDelta - needSwapIndexDelta)
-                    : indexDepositDelta;
+            if (totalIndexTotalDeltaWad > expectIndexDeltaWad) {
+                uint256 needSwapIndexDeltaWad = totalIndexTotalDeltaWad - expectIndexDeltaWad;
+                uint256 swapIndexDeltaWad = Math.min(indexDepositDeltaWad, needSwapIndexDeltaWad);
 
-                slipDelta =
-                    swapIndexDelta -
-                    AMMUtils.getAmountOut(
-                        AmountMath.getIndexAmount(swapIndexDelta, price),
+                slipDeltaWad = swapIndexDeltaWad
+                    - AMMUtils.getAmountOut(
+                        AmountMath.getIndexAmount(swapIndexDeltaWad, price),
                         reserveA,
                         reserveB
                     );
-                slipToken = pair.indexToken;
-                slipAmount = AmountMath.getIndexAmount(slipDelta, price);
+                slipAmount = AmountMath.getIndexAmount(slipDeltaWad, price) / (10 ** (18 - indexTokenDec));
+                if (slipAmount > 0) {
+                    slipToken = pair.indexToken;
+                }
 
-                afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-            } else if (stableTotalDelta > expectStableDelta) {
-                uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
-                uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
-                    ? (afterFeeStableAmount - needSwapStableDelta)
-                    : afterFeeStableAmount;
+                afterFeeIndexAmount -= slipAmount;
+            } else if (totalStableTotalDeltaWad > expectStableDeltaWad) {
+                uint256 needSwapStableDeltaWad = totalStableTotalDeltaWad - expectStableDeltaWad;
+                uint256 swapStableDeltaWad = Math.min(stableDepositDeltaWad, needSwapStableDeltaWad);
 
-                slipDelta =
-                    swapStableDelta -
-                    AmountMath.getStableDelta(
-                        AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA),
-                        price
-                    );
-                slipToken = pair.stableToken;
-                slipAmount = slipDelta;
-
-                afterFeeStableAmount = afterFeeStableAmount - slipDelta;
+                slipDeltaWad = swapStableDeltaWad - AMMUtils.getAmountOut(swapStableDeltaWad, reserveB, reserveA);
+                slipAmount = slipDeltaWad / (10 ** (18 - stableTokenDec));
+                if (slipAmount > 0) {
+                    slipToken = pair.stableToken;
+                }
+                afterFeeStableAmount -= slipAmount;
             }
         }
-        uint256 mintDelta;
-        if (slipToken == pair.indexToken) {
-            mintDelta = indexDepositDelta + uint256(TokenHelper.convertStableAmountToIndex(pair, int256(afterFeeStableAmount))) - slipDelta;
-        } else if (slipToken == pair.stableToken) {
-            mintDelta = indexDepositDelta + uint256(TokenHelper.convertStableAmountToIndex(pair, int256(afterFeeStableAmount - slipDelta)));
-        } else {
-            mintDelta = indexDepositDelta + uint256(TokenHelper.convertStableAmountToIndex(pair, int256(afterFeeStableAmount)));
-        }
+
+        uint256 mintDeltaWad = indexDepositDeltaWad + stableDepositDeltaWad - slipDeltaWad;
 
         // mint with discount
-        if (availableDiscountRate > 0) {
-            if (mintDelta > availableDiscountAmount) {
+        if (discountRate > 0) {
+            if (mintDeltaWad > discountAmount) {
                 mintAmount += AmountMath.getIndexAmount(
-                    availableDiscountAmount,
+                    discountAmount,
                     lpFairPrice(_pairIndex).mulPercentage(
-                        PrecisionUtils.percentage() - availableDiscountRate
+                        PrecisionUtils.percentage() - discountRate
                     )
                 );
-                mintDelta -= availableDiscountAmount;
+                mintDeltaWad -= discountAmount;
             } else {
                 mintAmount += AmountMath.getIndexAmount(
-                    mintDelta,
+                    mintDeltaWad,
                     lpFairPrice(_pairIndex).mulPercentage(
-                        PrecisionUtils.percentage() - availableDiscountRate
+                        PrecisionUtils.percentage() - discountRate
                     )
                 );
-                mintDelta -= mintDelta;
+                mintDeltaWad = 0;
             }
         }
 
-        if (mintDelta > 0) {
-            uint8 indexDec = IERC20Metadata(pair.indexToken).decimals();
-            mintAmount += AmountMath.getIndexAmount(mintDelta * (10 ** (18 - indexDec)), lpFairPrice(_pairIndex));
+        if (mintDeltaWad > 0) {
+            uint8 pairTokenDec = IERC20Metadata(pair.pairToken).decimals();
+            mintAmount += AmountMath.getIndexAmount(mintDeltaWad, lpFairPrice(_pairIndex)) / (10 ** (18 - pairTokenDec));
         }
 
         return (
@@ -631,6 +607,24 @@ contract Pool is IPool, Upgradeable {
             afterFeeIndexAmount,
             afterFeeStableAmount
         );
+    }
+
+    function _getDiscount(
+        IPool.Pair memory pair,
+        bool isIndex,
+        uint256 delta,
+        uint256 expectDelta,
+        uint256 totalDelta
+    ) internal view returns (uint256 rate, uint256 amount) {
+        uint256 ratio = delta.divPercentage(totalDelta);
+        uint256 expectP = isIndex ? pair.expectIndexTokenP : PrecisionUtils.percentage().sub(pair.expectIndexTokenP);
+
+        int256 unbalancedP = int256(ratio.divPercentage(expectP)) - int256(PrecisionUtils.percentage());
+        if (unbalancedP < 0 && unbalancedP.abs() > pair.maxUnbalancedP) {
+            rate = pair.unbalancedDiscountRate;
+            amount = expectDelta.sub(delta);
+        }
+        return (rate, amount);
     }
 
     function _getStableTotalAmount(

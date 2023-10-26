@@ -2,9 +2,16 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
-import { TradeType, getMockToken } from '../helpers';
-import { BigNumber } from 'ethers';
+import {
+    TradeType,
+    getMockToken,
+    convertStableAmountToIndex,
+    convertIndexAmount,
+    convertStableAmount,
+} from '../helpers';
+import { BigNumber, constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import usdt from '../markets/usdt';
 
 describe('Trade: slippage', () => {
     const pairIndex = 1;
@@ -240,7 +247,7 @@ describe('Trade: slippage', () => {
 
             // add liquidity
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -261,7 +268,7 @@ describe('Trade: slippage', () => {
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -274,7 +281,9 @@ describe('Trade: slippage', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
 
             // expect(convertStableAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
-            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
+            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.eq(
+                await convertStableAmountToIndex(btc, usdt, vaultBefore.stableTotalAmount),
+            );
             expect(totoalApplyBefore).to.be.eq(expectAddLiquidity.mintAmount);
 
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
@@ -327,7 +336,7 @@ describe('Trade: slippage', () => {
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
 
             const pairPrice = BigNumber.from(
                 ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
@@ -344,7 +353,9 @@ describe('Trade: slippage', () => {
             const userBtcBalanceBefore = await btc.balanceOf(trader.address);
             const userUsdtBalanceBefore = await usdt.balanceOf(trader.address);
 
-            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
+            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.eq(
+                await convertStableAmountToIndex(btc, usdt, vaultBefore.stableTotalAmount),
+            );
             expect(userBtcBalanceBefore).to.be.eq(indexAmount);
             expect(userUsdtBalanceBefore).to.be.eq(stableAmount);
 
@@ -363,27 +374,46 @@ describe('Trade: slippage', () => {
             expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
 
             const vaultAfter = await pool.getVault(pairIndex);
-            const totalFee = expectAddLiquidity.indexFeeAmount
-                .mul(pairPrice)
-                .add(expectAddLiquidity.stableFeeAmount)
-                .add(expectAddLiquidity.slipAmount.mul(pairPrice));
-            const vaultTotalAfter = vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount);
-            const vaultTotalBefore = vaultBefore.indexTotalAmount.mul(pairPrice).add(vaultBefore.stableTotalAmount);
-            const userPaid = indexAmount.mul(pairPrice).add(stableAmount);
-            const indexFeeAmount = indexAmount.mul(pair.addLpFeeP).div(1e8);
-            const stableFeeAmount = stableAmount.mul(pair.addLpFeeP).div(1e8);
+            let totalFee = (await convertIndexAmount(btc, expectAddLiquidity.indexFeeAmount.mul(pairPrice), 18)).add(
+                await convertStableAmount(usdt, expectAddLiquidity.stableFeeAmount, 18),
+            );
+            const vaultTotalAfter = (await convertIndexAmount(btc, vaultAfter.indexTotalAmount.mul(pairPrice), 18)).add(
+                await convertStableAmount(usdt, vaultAfter.stableTotalAmount, 18),
+            );
+            const vaultTotalBefore = (
+                await convertIndexAmount(btc, vaultBefore.indexTotalAmount.mul(pairPrice), 18)
+            ).add(await convertStableAmount(usdt, vaultBefore.stableTotalAmount, 18));
+            const userPaid = (await convertIndexAmount(btc, indexAmount.mul(pairPrice), 18)).add(
+                await convertStableAmount(usdt, stableAmount, 18),
+            );
+            const indexFeeAmount = (await convertIndexAmount(btc, indexAmount.mul(pair.addLpFeeP), 18)).div(1e8);
+            const stableFeeAmount = (await convertStableAmount(usdt, stableAmount.mul(pair.addLpFeeP), 18)).div(1e8);
             const totalFeeAmount = indexFeeAmount.add(stableFeeAmount);
 
+            let slipAmount = BigNumber.from(0);
+            if (expectAddLiquidity.slipToken == pair.indexToken) {
+                slipAmount = await convertIndexAmount(btc, expectAddLiquidity.slipAmount, 18);
+            } else if (expectAddLiquidity.slipToken == pair.stableToken) {
+                slipAmount = await convertStableAmount(usdt, expectAddLiquidity.slipAmount, 18);
+            }
+            totalFee = totalFee.add(slipAmount);
+
             expect(
-                expectAddLiquidity.afterFeeIndexAmount.add(expectAddLiquidity.afterFeeStableAmount).add(totalFeeAmount),
-            ).to.be.eq(indexAmount.add(stableAmount).sub(expectAddLiquidity.slipAmount));
-            expect(userPaid.add(vaultTotalBefore)).to.be.eq(vaultTotalAfter.add(totalFee));
+                (await convertIndexAmount(btc, expectAddLiquidity.afterFeeIndexAmount, 18))
+                    .add(await convertStableAmount(usdt, expectAddLiquidity.afterFeeStableAmount, 18))
+                    .add(totalFeeAmount),
+            ).to.be.eq(
+                (await convertIndexAmount(btc, indexAmount, 18))
+                    .add(await convertStableAmount(usdt, stableAmount, 18))
+                    .sub(slipAmount),
+            );
         });
 
         it('btc > usdt and usdt == 0, there are slippage fees and handling fees', async () => {
             const {
                 users: [trader],
                 btc,
+                usdt,
                 router,
                 oraclePriceFeed,
                 pool,
@@ -404,7 +434,9 @@ describe('Trade: slippage', () => {
             const userLpBalanceBefore = await lpToken.balanceOf(trader.address);
             const userBtcBalanceBefore = await btc.balanceOf(trader.address);
 
-            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.gt(vaultBefore.stableTotalAmount);
+            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.gt(
+                await convertStableAmountToIndex(btc, usdt, vaultBefore.stableTotalAmount),
+            );
             expect(userBtcBalanceBefore).to.be.eq(indexAmount);
 
             await router.connect(trader.signer).addLiquidity(pair.indexToken, pair.stableToken, indexAmount, 0);
@@ -460,7 +492,9 @@ describe('Trade: slippage', () => {
             const userBtcBalanceBefore = await btc.balanceOf(trader.address);
             const userUsdtBalanceBefore = await usdt.balanceOf(trader.address);
 
-            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.gt(vaultBefore.stableTotalAmount);
+            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.gt(
+                await convertStableAmountToIndex(btc, usdt, vaultBefore.stableTotalAmount),
+            );
             expect(userBtcBalanceBefore).to.be.eq(indexAmount);
             expect(userUsdtBalanceBefore).to.be.eq(stableAmount);
 
