@@ -1,26 +1,25 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPriceOracle.sol";
 import "../interfaces/IExecutionLogic.sol";
-import "../libraries/Upgradeable.sol";
+import "../libraries/Roleable.sol";
 import "../interfaces/ILiquidationLogic.sol";
 
-contract Executor is IExecutor, Upgradeable, PausableUpgradeable {
+contract Executor is IExecutor, Roleable, Pausable {
     IExecutionLogic public executionLogic;
     ILiquidationLogic public liquidationLogic;
 
-    function initialize(
+    constructor(
         IAddressesProvider addressProvider,
         IExecutionLogic _executionLogic,
         ILiquidationLogic _liquidationLogic
-    ) public initializer {
-        ADDRESS_PROVIDER = addressProvider;
+    ) Roleable(addressProvider) {
         executionLogic = _executionLogic;
         liquidationLogic = _liquidationLogic;
     }

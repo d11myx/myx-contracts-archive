@@ -247,7 +247,7 @@ export async function deployTrading(
     ])) as any as ExecutionLogic;
     log(`deployed ExecutionLogic at ${executionLogic.address}`);
 
-    let executor = (await deployUpgradeableContract('Executor', [
+    let executor = (await deployContract('Executor', [
         addressProvider.address,
         executionLogic.address,
         liquidationLogic.address,
