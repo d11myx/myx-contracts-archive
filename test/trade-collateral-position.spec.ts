@@ -219,13 +219,18 @@ describe('Router: Edge cases', () => {
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
         expect(traderBalanceBefore).to.be.eq(traderBalance.add(collateral));
 
+        let fundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
+        let tradeFee = await positionManager.getTradingFee(pairIndex, true, sizeAmount);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
 
         expect(traderBalanceAfter).to.be.eq(traderBalanceBefore.sub(collateral));
-        expect(positionAfter.collateral).to.be.eq(positionCollateralBefore.add(collateral));
+
+        expect(positionAfter.collateral).to.be.eq(
+            positionCollateralBefore.add(collateral.add(fundingFee).add(tradeFee)),
+        );
     });
 
     it('adding collateral with increase position', async () => {
