@@ -76,24 +76,24 @@ contract Pool is IPool, Upgradeable {
                 orderManagers.contains(msg.sender) ||
                 riskReserve == msg.sender ||
                 feeCollector == msg.sender,
-            "permission denied"
+            "pd"
         );
         _;
     }
 
     receive() external payable {
-        require(msg.sender == ADDRESS_PROVIDER.WETH(), "Not WETH");
+        require(msg.sender == ADDRESS_PROVIDER.WETH(), "nw");
     }
 
     modifier onlyPositionManager() {
-        require(positionManagers.contains(msg.sender), "onlyPositionManager");
+        require(positionManagers.contains(msg.sender), "opm");
         _;
     }
 
     modifier onlyPositionManagerOrFeeCollector() {
         require(
             positionManagers.contains(msg.sender) || msg.sender == feeCollector,
-            "onlyPositionManagerOrFeeCollector"
+            "opmof"
         );
         _;
     }
@@ -101,7 +101,7 @@ contract Pool is IPool, Upgradeable {
     modifier onlyTreasury() {
         require(
             IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender),
-            "onlyTreasury"
+            "ot"
         );
         _;
     }
@@ -109,7 +109,7 @@ contract Pool is IPool, Upgradeable {
     function _unwrapWETH(uint256 amount, address payable to) private {
         IWETH(ADDRESS_PROVIDER.WETH()).withdraw(amount);
         (bool success, ) = to.call{value: amount}(new bytes(0));
-        require(success, "err-transfer-eth");
+        require(success, "err-eth");
     }
 
     function setSpotSwap(address _spotSwap) external onlyPoolAdmin {
@@ -150,9 +150,9 @@ contract Pool is IPool, Upgradeable {
 
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
-        require(_indexToken != address(0) && _stableToken != address(0), "zero address");
-        require(isStableToken[_stableToken], "!stable token");
-        require(getPairIndex[_indexToken][_stableToken] == 0, "exists");
+        require(_indexToken != address(0) && _stableToken != address(0), "!0");
+        require(isStableToken[_stableToken], "!st");
+        require(getPairIndex[_indexToken][_stableToken] == 0, "ex");
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
@@ -174,12 +174,12 @@ contract Pool is IPool, Upgradeable {
         Pair storage pair = pairs[_pairIndex];
         require(
             pair.indexToken != address(0) && pair.stableToken != address(0),
-            "pair not existed"
+            "nex"
         );
         require(
             _pair.expectIndexTokenP <= PrecisionUtils.percentage() &&
                 _pair.addLpFeeP <= PrecisionUtils.percentage(),
-            "exceed 100%"
+            "ex"
         );
 
         pair.enable = _pair.enable;
@@ -198,13 +198,13 @@ contract Pool is IPool, Upgradeable {
         Pair storage pair = pairs[_pairIndex];
         require(
             pair.indexToken != address(0) && pair.stableToken != address(0),
-            "pair not existed"
+            "pnt"
         );
         require(
             _tradingConfig.maintainMarginRate <= PrecisionUtils.percentage() &&
                 _tradingConfig.priceSlipP <= PrecisionUtils.percentage() &&
                 _tradingConfig.maxPriceDeviationP <= PrecisionUtils.percentage(),
-            "exceed 100%"
+            "ex"
         );
         tradingConfigs[_pairIndex] = _tradingConfig;
     }
@@ -216,18 +216,18 @@ contract Pool is IPool, Upgradeable {
         Pair storage pair = pairs[_pairIndex];
         require(
             pair.indexToken != address(0) && pair.stableToken != address(0),
-            "pair not existed"
+            "pne"
         );
         require(
             _tradingFeeConfig.takerFeeP <= MAX_FEE && _tradingFeeConfig.makerFeeP <= MAX_FEE,
-            "trading fee exceed 1%"
+            "ex"
         );
         require(
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
                 _tradingFeeConfig.stakingFeeDistributeP <=
                 PrecisionUtils.percentage(),
-            "distribute exceed 1%"
+            "ex"
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
@@ -290,10 +290,10 @@ contract Pool is IPool, Upgradeable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
-        require(vault.indexTotalAmount >= vault.indexReservedAmount, "insufficient index amount");
+        require(vault.indexTotalAmount >= vault.indexReservedAmount, "iia");
         require(
             vault.stableTotalAmount >= vault.stableReservedAmount,
-            "insufficient stable amount"
+            "ist"
         );
         emit UpdateReserveAmount(
             _pairIndex,
@@ -310,8 +310,8 @@ contract Pool is IPool, Upgradeable {
         uint256 _stableAmount
     ) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
-        require(vault.indexReservedAmount >= _indexAmount, "exceeds index amount");
-        require(vault.stableReservedAmount >= _stableAmount, "exceeds stable amount");
+        require(vault.indexReservedAmount >= _indexAmount, "ex");
+        require(vault.stableReservedAmount >= _stableAmount, "ex");
 
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
@@ -485,7 +485,7 @@ contract Pool is IPool, Upgradeable {
         if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
@@ -498,7 +498,7 @@ contract Pool is IPool, Upgradeable {
 
         // usdt value of reserve
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "invalid price");
+        require(price > 0, "ip");
 
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
@@ -615,7 +615,7 @@ contract Pool is IPool, Upgradeable {
         uint256 delta,
         uint256 expectDelta,
         uint256 totalDelta
-    ) internal view returns (uint256 rate, uint256 amount) {
+    ) internal pure returns (uint256 rate, uint256 amount) {
         uint256 ratio = delta.divPercentage(totalDelta);
         uint256 expectP = isIndex ? pair.expectIndexTokenP : PrecisionUtils.percentage().sub(pair.expectIndexTokenP);
 
@@ -658,10 +658,10 @@ contract Pool is IPool, Upgradeable {
         uint256 _stableAmount,
         bytes calldata data
     ) private returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
-        require(_indexAmount > 0 || _stableAmount > 0, "invalid amount");
+        require(_indexAmount > 0 || _stableAmount > 0, "ia");
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         uint256 indexFeeAmount;
         uint256 stableFeeAmount;
@@ -716,9 +716,9 @@ contract Pool is IPool, Upgradeable {
             uint256 feeAmount
         )
     {
-        require(_amount > 0, "invalid amount");
+        require(_amount > 0, "ia");
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         uint256 feeIndexTokenAmount;
         uint256 feeStableTokenAmount;
@@ -746,7 +746,7 @@ contract Pool is IPool, Upgradeable {
 
         uint256 totalAvailable = availableIndexTokenWad.mulPrice(price) + availableStableTokenWad;
         uint256 totalReceive = receiveIndexTokenAmountWad.mulPrice(price) + receiveStableTokenAmountWad;
-        require(totalReceive <= totalAvailable, "insufficient available balance");
+        require(totalReceive <= totalAvailable, "iab");
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
@@ -778,7 +778,7 @@ contract Pool is IPool, Upgradeable {
     }
 
     function claimFee(address token, uint256 amount) external onlyTreasury {
-        require(feeTokenAmounts[token] >= amount, "exceeded");
+        require(feeTokenAmounts[token] >= amount, "ex");
 
         feeTokenAmounts[token] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
@@ -817,12 +817,12 @@ contract Pool is IPool, Upgradeable {
         if (_lpAmount == 0) return (0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "invalid price");
+        require(price > 0, "ipr");
 
         uint256 indexReserveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
             pair.indexToken,
@@ -901,13 +901,13 @@ contract Pool is IPool, Upgradeable {
         if (_lpAmount == 0) return (0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
         // usdt value of reserve
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "invalid price");
+        require(price > 0, "ipr");
 
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
@@ -927,7 +927,7 @@ contract Pool is IPool, Upgradeable {
             18,
             lpFairPrice(_pairIndex)));
 
-        require(indexReserveDeltaWad + stableReserveDeltaWad >= receiveDeltaWad, "insufficient available balance");
+        require(indexReserveDeltaWad + stableReserveDeltaWad >= receiveDeltaWad, "iab");
 
         // expect delta
         uint256 totalDeltaWad = indexReserveDeltaWad + stableReserveDeltaWad - receiveDeltaWad;
