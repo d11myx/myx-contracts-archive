@@ -122,7 +122,7 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey);
+        await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey, 0, 0);
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -172,7 +172,7 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey);
+        await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey, 0, 0);
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 

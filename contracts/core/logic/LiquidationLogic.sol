@@ -22,18 +22,21 @@ contract LiquidationLogic is ILiquidationLogic {
     IPool public immutable pool;
     IOrderManager public immutable orderManager;
     IPositionManager public immutable positionManager;
+    IFeeCollector public immutable feeCollector;
     address public executor;
 
     constructor(
         IAddressesProvider addressProvider,
         IPool _pool,
         IOrderManager _orderManager,
-        IPositionManager _positionManager
+        IPositionManager _positionManager,
+        IFeeCollector _feeCollector
     ) {
         ADDRESS_PROVIDER = addressProvider;
         pool = _pool;
         orderManager = _orderManager;
         positionManager = _positionManager;
+        feeCollector = _feeCollector;
     }
 
     modifier onlyPoolAdmin() {
@@ -50,13 +53,14 @@ contract LiquidationLogic is ILiquidationLogic {
         executor = _executor;
     }
 
-    function liquidatePositions(bytes32[] memory positionKeys) external override onlyExecutorOrKeeper {
-        for (uint256 i = 0; i < positionKeys.length; i++) {
-            this.liquidationPosition(positionKeys[i]);
+    function liquidatePositions(ExecutePosition[] memory executePositions) external override onlyExecutorOrKeeper {
+        for (uint256 i = 0; i < executePositions.length; i++) {
+            ExecutePosition memory execute = executePositions[i];
+            this.liquidationPosition(execute.positionKey, execute.level, execute.commissionRatio);
         }
     }
 
-    function liquidationPosition(bytes32 positionKey) external override onlyExecutorOrKeeper {
+    function liquidationPosition(bytes32 positionKey, uint8 level, uint256 commissionRatio) external override onlyExecutorOrKeeper {
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
             return;
@@ -88,7 +92,7 @@ contract LiquidationLogic is ILiquidationLogic {
             })
         );
 
-        _executeLiquidationOrder(orderId);
+        _executeLiquidationOrder(orderId, level, commissionRatio);
 
         emit ExecuteLiquidation(
             positionKey,
@@ -103,7 +107,9 @@ contract LiquidationLogic is ILiquidationLogic {
     }
 
     function _executeLiquidationOrder(
-        uint256 orderId
+        uint256 orderId,
+        uint8 level,
+        uint256 commissionRatio
     ) private {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
         if (order.account == address(0)) {
@@ -157,11 +163,8 @@ contract LiquidationLogic is ILiquidationLogic {
             executionSize,
             order.isLong,
             0,
-            IFeeCollector.LevelDiscount({
-                makerDiscountRatio: 0,
-                takerDiscountRatio: 0
-            }),
-            0,
+            feeCollector.getLevelDiscounts(level),
+            commissionRatio,
             executionPrice,
             true
         );
