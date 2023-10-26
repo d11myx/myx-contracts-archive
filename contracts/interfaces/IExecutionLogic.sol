@@ -5,18 +5,11 @@ import '../libraries/TradingTypes.sol';
 import '../libraries/Position.sol';
 import "./IExecutionEvent.sol";
 
-interface IExecutionLogic is IExecutionEvent {
+interface IExecutionLogic is IExecution {
     event UpdateMaxTimeDelay(uint256 oldDelay, uint256 newDelay);
 
     struct ExecuteOrder {
         uint256 orderId;
-        uint8 level;
-        uint256 commissionRatio;
-    }
-
-    struct ExecutePosition {
-        bytes32 positionKey;
-        uint256 sizeAmount;
         uint8 level;
         uint256 commissionRatio;
     }

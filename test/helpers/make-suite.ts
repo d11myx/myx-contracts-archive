@@ -228,8 +228,8 @@ export async function newTestEnv(): Promise<TestEnv> {
         feeCollector,
     } = await deployTrading(deployer, deployer, addressesProvider, roleManager, pool, usdt, validationHelper);
 
-    await pool.addPositionManager(positionManager.address);
-    await pool.addOrderManager(orderManager.address);
+    await pool.setPositionManager(positionManager.address);
+    await pool.setOrderManager(orderManager.address);
     await initPairs(deployer, tokens, usdt, pool, fundingRate);
 
     await roleManager.addKeeper(executor.address);

@@ -234,6 +234,7 @@ export async function deployTrading(
         pool.address,
         orderManager.address,
         positionManager.address,
+        feeCollector.address,
     ])) as any as LiquidationLogic;
     log(`deployed LiquidationLogic at ${liquidationLogic.address}`);
 
