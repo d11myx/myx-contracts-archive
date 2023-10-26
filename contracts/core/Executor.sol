@@ -12,17 +12,7 @@ import "../libraries/Roleable.sol";
 import "../interfaces/ILiquidationLogic.sol";
 
 contract Executor is IExecutor, Roleable, Pausable {
-    IExecutionLogic public executionLogic;
-    ILiquidationLogic public liquidationLogic;
-
-    constructor(
-        IAddressesProvider addressProvider,
-        IExecutionLogic _executionLogic,
-        ILiquidationLogic _liquidationLogic
-    ) Roleable(addressProvider) {
-        executionLogic = _executionLogic;
-        liquidationLogic = _liquidationLogic;
-    }
+    constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
 
     modifier onlyPositionKeeper() {
         require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), "opk");
@@ -47,7 +37,9 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeIncreaseMarketOrders(increaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
+            increaseOrders
+        );
     }
 
     function setPricesAndExecuteDecreaseMarketOrders(
@@ -60,7 +52,9 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeDecreaseMarketOrders(decreaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
+            decreaseOrders
+        );
     }
 
     function setPricesAndExecuteIncreaseLimitOrders(
@@ -73,7 +67,9 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeIncreaseLimitOrders(increaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
+            increaseOrders
+        );
     }
 
     function setPricesAndExecuteDecreaseLimitOrders(
@@ -86,7 +82,9 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeDecreaseLimitOrders(decreaseOrders);
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
+            decreaseOrders
+        );
     }
 
     function setPricesAndExecuteADL(
@@ -103,7 +101,7 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         _setPrices(tokens, prices, timestamp);
 
-        executionLogic.executeADLAndDecreaseOrder(
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrder(
             executePositions,
             orderId,
             tradeType,
@@ -122,7 +120,7 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         _setPrices(tokens, prices, timestamp);
 
-        liquidationLogic.liquidatePositions(executePositions);
+        ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidatePositions(executePositions);
     }
 
     function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256) internal {
@@ -135,6 +133,12 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256 executionSize,
         uint256 executionPrice
     ) external view returns (bool) {
-        return executionLogic.needADL(pairIndex, isLong, executionSize, executionPrice);
+        return
+            IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).needADL(
+                pairIndex,
+                isLong,
+                executionSize,
+                executionPrice
+            );
     }
 }
