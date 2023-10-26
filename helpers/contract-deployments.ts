@@ -151,9 +151,7 @@ export async function deployPrice(
     ])) as any as FundingRate;
     log(`deployed FundingRate at ${fundingRate.address}`);
 
-    await addressesProvider
-        .connect(deployer.signer)
-        .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address);
+   
     return { oraclePriceFeed, indexPriceFeed, fundingRate };
 }
 
@@ -249,12 +247,10 @@ export async function deployTrading(
     log(`deployed ExecutionLogic at ${executionLogic.address}`);
 
     let executor = (await deployContract('Executor', [
-        addressProvider.address,
-        executionLogic.address,
-        liquidationLogic.address,
+        addressProvider.address
     ])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
-    log(`executionLogic pool : ${await executor.executionLogic()}`);
+    // log(`executionLogic pool : ${await executor.executionLogic()}`);
 
     await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
 

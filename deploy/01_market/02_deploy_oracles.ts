@@ -62,11 +62,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const fundingRate = await getFundingRate();
 
-    await waitForTx(
-        await addressesProvider
-            .connect(deployerSigner)
-            .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address),
-    );
+    
 };
 
 func.id = `Oracles`;

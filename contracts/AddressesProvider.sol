@@ -58,7 +58,9 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
     function initialize(
         address newPriceOracle,
         address newIndexPriceOracle,
-        address newFundingRateAddress
+        address newFundingRateAddress,
+        address newExecutionLogic,
+        address newLiquidationLogic
     ) external onlyOwner initializer {
         require(
             newPriceOracle != address(0) &&
@@ -69,6 +71,8 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
         priceOracle = newPriceOracle;
         fundingRate = newFundingRateAddress;
         indexPriceOracle = newIndexPriceOracle;
+        executionLogic = newExecutionLogic;
+        newLiquidationLogic = newLiquidationLogic;
 
         emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
         emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);

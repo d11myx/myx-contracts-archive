@@ -228,6 +228,15 @@ export async function newTestEnv(): Promise<TestEnv> {
         feeCollector,
     } = await deployTrading(deployer, deployer, addressesProvider, roleManager, pool, usdt, validationHelper);
 
+    await addressesProvider
+        .connect(deployer.signer)
+        .initialize(
+            oraclePriceFeed.address,
+            indexPriceFeed.address,
+            fundingRate.address,
+            executionLogic.address,
+            liquidationLogic.address,
+        );
     await pool.setPositionManager(positionManager.address);
     await pool.setOrderManager(orderManager.address);
     await initPairs(deployer, tokens, usdt, pool, fundingRate);

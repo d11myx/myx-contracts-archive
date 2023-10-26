@@ -9,7 +9,10 @@ import {
     getExecutionLogic,
     getExecutor,
     getFeeCollector,
+    getFundingRate,
+    getIndexPriceFeed,
     getLiquidationLogic,
+    getOraclePriceFeed,
     getOrderManager,
     getPool,
     getPositionManager,
@@ -30,6 +33,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const { deploy } = deployments;
     const { deployer, poolAdmin, dao } = await getNamedAccounts();
     const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
+    const deployerSigner = await hre.ethers.getSigner(deployer);
 
     const reserveConfig = loadReserveConfig(MARKET_NAME);
 
@@ -149,11 +153,26 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const liquidationLogic = await getLiquidationLogic();
 
+    let oraclePriceFeed = await getOraclePriceFeed();
+    let indexPriceFeed = await getIndexPriceFeed();
+    let fundingRate = await getFundingRate();
+    await waitForTx(
+        await addressProvider
+            .connect(deployerSigner)
+            .initialize(
+                oraclePriceFeed.address,
+                indexPriceFeed.address,
+                fundingRate.address,
+                executionLogic.address,
+                liquidationLogic.address,
+            ),
+    );
+
     // Executor
     await deploy(`${EXECUTOR_ID}`, {
         from: deployer,
         contract: 'Executor',
-        args: [addressProvider.address, executionLogic.address, liquidationLogic.address],
+        args: [addressProvider.address],
 
         ...COMMON_DEPLOY_PARAMS,
     });
