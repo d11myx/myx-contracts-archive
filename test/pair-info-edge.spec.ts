@@ -26,7 +26,7 @@ describe('Pool: Edge cases', () => {
             '!st',
         );
 
-        await expect(pool.addPair(eth.address, usdt.address)).to.be.revertedWith('exists');
+        await expect(pool.addPair(eth.address, usdt.address)).to.be.revertedWith('ex');
         const countBefore = await pool.pairsIndex();
         await pool.addStableToken(usdt.address);
         await waitForTx(await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken));
