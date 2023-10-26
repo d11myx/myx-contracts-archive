@@ -23,7 +23,7 @@ describe('Pool: Edge cases', () => {
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
         await expect(pool.connect(poolAdmin.signer).addPair(pair.stableToken, pair.indexToken)).to.be.revertedWith(
-            '!stable token',
+            '!st',
         );
 
         await expect(pool.addPair(eth.address, usdt.address)).to.be.revertedWith('exists');
