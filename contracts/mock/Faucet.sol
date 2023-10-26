@@ -19,14 +19,14 @@ contract Faucet {
         amounts = _amounts;
     }
 
-    function getAssetList() external view returns (IERC20Metadata[] memory assets, uint256[] memory amounts) {
-        assets = new IERC20Metadata[](assets.length);
-        amounts = new uint256[](assets.length);
+    function getAssetList() external view returns (IERC20Metadata[] memory assetList, uint256[] memory amountList) {
+        assetList = new IERC20Metadata[](assets.length);
+        amountList = new uint256[](assets.length);
         for (uint256 i = 0; i < assets.length; i++) {
-            assets[i] = IERC20Metadata(assets[i]);
-            amounts[i] = amounts[i];
+            assetList[i] = IERC20Metadata(assets[i]);
+            amountList[i] = amounts[i];
         }
-        return (assets, amounts);
+        return (assetList, amountList);
     }
 
     function getAsset() external {
