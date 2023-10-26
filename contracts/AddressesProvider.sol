@@ -72,11 +72,13 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
         fundingRate = newFundingRateAddress;
         indexPriceOracle = newIndexPriceOracle;
         executionLogic = newExecutionLogic;
-        newLiquidationLogic = newLiquidationLogic;
+        liquidationLogic = newLiquidationLogic;
 
         emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
         emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);
         emit AddressSet(PRICE_ORACLE, address(0), newPriceOracle);
+        emit AddressSet(EXCUTION_LOGIC, address(0), newExecutionLogic);
+        emit AddressSet(LIQUIDATION_LOGIC, address(0), newLiquidationLogic);
     }
 
     function setPriceOracle(address newPriceOracle) external onlyTimelock {

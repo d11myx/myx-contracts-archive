@@ -189,12 +189,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await riskReserve.connect(poolAdminSigner).updatePoolAddress(pool.address));
 
     await waitForTx(await orderManager.connect(poolAdminSigner).setRouter(router.address));
-    await waitForTx(await orderManager.connect(poolAdminSigner).setExecutionLogic(executionLogic.address));
-    await waitForTx(await orderManager.connect(poolAdminSigner).setLiquidationLogic(liquidationLogic.address));
-
-    await waitForTx(await positionManager.connect(poolAdminSigner).updateExecutionLogic(executionLogic.address));
-    await waitForTx(await positionManager.connect(poolAdminSigner).updateLiquidationLogic(liquidationLogic.address));
-
     await waitForTx(await executionLogic.connect(poolAdminSigner).updateExecutor(executor.address));
     await waitForTx(await liquidationLogic.connect(poolAdminSigner).updateExecutor(executor.address));
 };
