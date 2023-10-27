@@ -35,10 +35,11 @@
         "comment-out": "ts-node scripts/commentOutConsole.ts"
     },
     "devDependencies": {
+        "@nomicfoundation/hardhat-verify": "^2.0.0",
         "@nomiclabs/hardhat-ethers": "^2.2.3",
         "@nomiclabs/hardhat-web3": "^2.0.0",
-        "@pythnetwork/pyth-sdk-solidity": "^2.2.1",
         "@pythnetwork/pyth-evm-js": "1.29.0",
+        "@pythnetwork/pyth-sdk-solidity": "^2.2.1",
         "@types/mocha": "^10.0.1",
         "@types/sinon-chai": "^3.2.9",
         "@typescript-eslint/eslint-plugin": "4.29.2",

@@ -5,7 +5,7 @@ import { bufferToHex } from '@nomicfoundation/ethereumjs-util';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
-    // let mnemonic: string = 'crane simple raise squeeze myself old hurry virtual heart panel finish unfold';
+    // let mnemonic: string = '';
     // let hdpath: string = "m/44'/60'/0'/0";
     // let initialIndex: number = 0;
     // let count: number = 20;
