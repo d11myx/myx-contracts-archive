@@ -1,16 +1,16 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/security/Pausable.sol';
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-import '../token/interfaces/IBaseToken.sol';
-import './interfaces/IRewardDistributor.sol';
-import '../interfaces/IPositionManager.sol';
+import "../token/interfaces/IBaseToken.sol";
+import "./interfaces/IRewardDistributor.sol";
+import "../interfaces/IPositionManager.sol";
 
 // distribute reward myx for staking
 contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownable {
@@ -47,7 +47,7 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
     }
 
     modifier onlyHandler() {
-        require(isHandler[msg.sender], 'RewardDistributor: handler forbidden');
+        require(isHandler[msg.sender], "RewardDistributor: handler forbidden");
         _;
     }
 
@@ -61,9 +61,13 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
 
     // update root by handler
     // amount: total reward
-    function updateRoot(bytes32 _merkleRoot, uint256 transferInAmount, uint256 _amount) external override onlyHandler {
-        require(!merkleRootUsed[_merkleRoot], 'RewardDistributor: root already used');
-        require(totalReward + transferInAmount >= _amount, 'RewardDistributor: reward not enough');
+    function updateRoot(
+        bytes32 _merkleRoot,
+        uint256 transferInAmount,
+        uint256 _amount
+    ) external override onlyHandler {
+        require(!merkleRootUsed[_merkleRoot], "RewardDistributor: root already used");
+        require(totalReward + transferInAmount >= _amount, "RewardDistributor: reward not enough");
         IERC20(rewardToken).safeTransferFrom(msg.sender, address(this), transferInAmount);
 
         round++;
@@ -73,8 +77,11 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
     }
 
     // claim reward by user
-    function claim(uint256 _amount, bytes32[] calldata _merkleProof) external whenNotPaused nonReentrant {
-        _claim(msg.sender, msg.sender, _amount, _merkleProof);
+    function claim(
+        uint256 _amount,
+        bytes32[] calldata _merkleProof
+    ) external whenNotPaused nonReentrant {
+        _claim(msg.sender, msg.sender, _amount, round, _merkleProof);
     }
 
     // claim reward by handler
@@ -84,33 +91,37 @@ contract FeeDistributor is IRewardDistributor, Pausable, ReentrancyGuard, Ownabl
         uint256 _amount,
         bytes32[] calldata _merkleProof
     ) external override onlyHandler whenNotPaused nonReentrant {
-        _claim(account, receiver, _amount, _merkleProof);
+        _claim(account, receiver, _amount, round, _merkleProof);
     }
 
     function _claim(
         address account,
         address receiver,
         uint256 _amount,
+        uint256 _round,
         bytes32[] calldata _merkleProof
     ) private returns (uint256) {
-        require(!userClaimed[round][account], 'RewardDistributor: already claimed');
+        require(!userClaimed[_round][account], "RewardDistributor: already claimed");
 
         (bool canClaim, uint256 adjustedAmount) = _canClaim(account, _amount, _merkleProof);
 
-        require(canClaim, 'RewardDistributor: cannot claim');
+        require(canClaim, "RewardDistributor: cannot claim");
 
-        userClaimed[round][account] = true;
+        userClaimed[_round][account] = true;
 
         userClaimedAmount[account] += adjustedAmount;
         totalClaimed += adjustedAmount;
 
         IBaseToken(rewardToken).mint(receiver, adjustedAmount);
 
-        emit Claim(account, round, adjustedAmount);
+        emit Claim(account, _round, adjustedAmount);
         return adjustedAmount;
     }
 
-    function canClaim(uint256 _amount, bytes32[] calldata _merkleProof) external view returns (bool, uint256) {
+    function canClaim(
+        uint256 _amount,
+        bytes32[] calldata _merkleProof
+    ) external view returns (bool, uint256) {
         return _canClaim(msg.sender, _amount, _merkleProof);
     }
 

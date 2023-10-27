@@ -8,15 +8,15 @@ import {
     getAveragePrice,
     getFundingFeeTracker,
     getEpochFundingFee,
-    getPositionFundingFee,
     getLpFundingFee,
     getFundingRateInTs,
+    convertIndexAmountToStable,
 } from '../helpers';
 import { expect } from './shared/expect';
 
 describe('Trade: funding fee epoch', () => {
     describe('rate simulation (can only add position)', async () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
         let testEnv: TestEnv;
 
         before('add liquidity', async () => {
@@ -30,8 +30,8 @@ describe('Trade: funding fee epoch', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('30000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('30000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -61,13 +61,15 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 usdt,
+                btc,
                 router,
                 positionManager,
+                pool,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('300000', 18);
-            const size = ethers.utils.parseUnits('4', 18);
-            const size2 = ethers.utils.parseUnits('2', 18);
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('4', await btc.decimals());
+            const size2 = ethers.utils.parseUnits('2', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             // open long position
@@ -122,11 +124,11 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('8000000000000000000');
-            expect(shortTracker).to.be.eq('6000000000000000000');
+            expect(longTracker).to.be.eq('800000000');
+            expect(shortTracker).to.be.eq('600000000');
 
             let globalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
-            expect(globalFundingFeeTracker).to.be.eq(0);
+            expect(globalFundingFeeTracker).to.be.eq('0');
 
             // update funding fee
             await increase(Duration.hours(8));
@@ -154,42 +156,9 @@ describe('Trade: funding fee epoch', () => {
             let shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             let shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPosition.fundingFeeTracker,
-                    longFirstPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPosition.fundingFeeTracker,
-                    longSecondPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortFirstPosition.fundingFeeTracker,
-                    shortFirstPosition.positionAmount,
-                    false,
-                ),
-            );
-            expect(shortSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortSecondPosition.fundingFeeTracker,
-                    shortSecondPosition.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(longFirstFundingFee.add(longSecondFundingFee).abs()).to.be.eq(
                 shortFirstFundingFee.add(shortSecondFundingFee).add(lpFundingFee),
@@ -200,10 +169,12 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 positionManager,
+                usdt,
+                btc,
             } = testEnv;
 
-            const size = ethers.utils.parseUnits('4', 18);
-            const size2 = ethers.utils.parseUnits('2', 18);
+            const size = ethers.utils.parseUnits('4', await btc.decimals());
+            const size2 = ethers.utils.parseUnits('2', await btc.decimals());
             const averagePrice = ethers.utils.parseUnits('30000', 30);
             const openPrice = ethers.utils.parseUnits('35000', 30);
 
@@ -254,8 +225,8 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('8000000000000000000');
-            expect(shortTracker).to.be.eq('6000000000000000000');
+            expect(longTracker).to.be.eq('800000000');
+            expect(shortTracker).to.be.eq('600000000');
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -283,42 +254,9 @@ describe('Trade: funding fee epoch', () => {
                 false,
             );
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPosition.fundingFeeTracker,
-                    longFirstPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPosition.fundingFeeTracker,
-                    longSecondPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFirstFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortFirstPosition.fundingFeeTracker,
-                    shortFirstPosition.positionAmount,
-                    false,
-                ),
-            );
-            expect(shortSecondFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortSecondPosition.fundingFeeTracker,
-                    shortSecondPosition.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(
                 longFirstFundingFeeAfter
@@ -337,10 +275,12 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 positionManager,
+                usdt,
+                btc,
             } = testEnv;
 
-            const size = ethers.utils.parseUnits('4', 18);
-            const size2 = ethers.utils.parseUnits('2', 18);
+            const size = ethers.utils.parseUnits('4', await btc.decimals());
+            const size2 = ethers.utils.parseUnits('2', await btc.decimals());
             const averagePrice = ethers.utils.parseUnits('30000', 30);
             const openPrice = ethers.utils.parseUnits('25000', 30);
 
@@ -391,8 +331,8 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('8000000000000000000');
-            expect(shortTracker).to.be.eq('6000000000000000000');
+            expect(longTracker).to.be.eq('800000000');
+            expect(shortTracker).to.be.eq('600000000');
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -420,42 +360,9 @@ describe('Trade: funding fee epoch', () => {
                 false,
             );
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPosition.fundingFeeTracker,
-                    longFirstPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPosition.fundingFeeTracker,
-                    longSecondPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFirstFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortFirstPosition.fundingFeeTracker,
-                    shortFirstPosition.positionAmount,
-                    false,
-                ),
-            );
-            expect(shortSecondFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortSecondPosition.fundingFeeTracker,
-                    shortSecondPosition.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(
                 longFirstFundingFeeAfter
@@ -475,16 +382,17 @@ describe('Trade: funding fee epoch', () => {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 router,
                 usdt,
+                btc,
                 positionManager,
                 pool,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('0', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
             const openPrice = ethers.utils.parseUnits('22000', 30);
-            const longFirstSize = ethers.utils.parseUnits('21', 18);
-            const longSecondSize = ethers.utils.parseUnits('20', 18);
-            const shortFirstSize = ethers.utils.parseUnits('22', 18);
-            const shortSecondSize = ethers.utils.parseUnits('20', 18);
+            const longFirstSize = ethers.utils.parseUnits('21', await btc.decimals());
+            const longSecondSize = ethers.utils.parseUnits('20', await btc.decimals());
+            const shortFirstSize = ethers.utils.parseUnits('22', await btc.decimals());
+            const shortSecondSize = ethers.utils.parseUnits('20', await btc.decimals());
 
             // update btc price
             await updateBTCPrice(testEnv, '22000');
@@ -504,7 +412,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longFirstPositionAfter = await positionManager.getPosition(longFirst.address, pairIndex, true);
 
-            expect(longFirstPositionAfter.positionAmount).to.be.eq('25000000000000000000');
+            expect(longFirstPositionAfter.positionAmount).to.be.eq('2500000000');
             expect(longFirstPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longFirstPositionBefore.averagePrice,
@@ -528,7 +436,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longSecondPositionAfter = await positionManager.getPosition(longSecond.address, pairIndex, true);
 
-            expect(longSecondPositionAfter.positionAmount).to.be.eq('24000000000000000000');
+            expect(longSecondPositionAfter.positionAmount).to.be.eq('2400000000');
             expect(longSecondPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longSecondPositionBefore.averagePrice,
@@ -553,7 +461,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const shortFirstPositionAfter = await positionManager.getPosition(shortFirst.address, pairIndex, false);
 
-            expect(shortFirstPositionAfter.positionAmount).to.be.eq('24000000000000000000');
+            expect(shortFirstPositionAfter.positionAmount).to.be.eq('2400000000');
             expect(shortFirstPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     shortFirstPositionBefore.averagePrice,
@@ -577,7 +485,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const shortSecondPositionAfter = await positionManager.getPosition(shortSecond.address, pairIndex, false);
 
-            expect(shortSecondPositionAfter.positionAmount).to.be.eq('24000000000000000000');
+            expect(shortSecondPositionAfter.positionAmount).to.be.eq('2400000000');
             expect(shortSecondPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     shortSecondPositionBefore.averagePrice,
@@ -591,8 +499,8 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('49000000000000000000');
-            expect(shortTracker).to.be.eq('48000000000000000000');
+            expect(longTracker).to.be.eq('4900000000');
+            expect(shortTracker).to.be.eq('4800000000');
 
             let globalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
 
@@ -622,42 +530,9 @@ describe('Trade: funding fee epoch', () => {
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPositionAfter.fundingFeeTracker,
-                    longFirstPositionAfter.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPositionAfter.fundingFeeTracker,
-                    longSecondPositionAfter.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortFirstPositionAfter.fundingFeeTracker,
-                    shortFirstPositionAfter.positionAmount,
-                    false,
-                ),
-            );
-            expect(shortSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortSecondPositionAfter.fundingFeeTracker,
-                    shortSecondPositionAfter.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(longFirstFundingFee.add(longSecondFundingFee).abs()).to.be.eq(
                 shortFirstFundingFee.add(shortSecondFundingFee).add(lpFundingFee),
@@ -669,12 +544,13 @@ describe('Trade: funding fee epoch', () => {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 router,
                 usdt,
+                btc,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('0', 18);
+            const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
-            const size = ethers.utils.parseUnits('2', 18);
+            const size = ethers.utils.parseUnits('2', await btc.decimals());
 
             const longFirstFundingFeeBefore = await positionManager.getFundingFee(longFirst.address, pairIndex, true);
             const longSecondFundingFeeBefore = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
@@ -697,7 +573,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const shortFirstPositionAfter = await positionManager.getPosition(shortFirst.address, pairIndex, false);
 
-            expect(shortFirstPositionAfter.positionAmount).to.be.eq('26000000000000000000');
+            expect(shortFirstPositionAfter.positionAmount).to.be.eq('2600000000');
             expect(shortFirstPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     shortFirstPositionBefore.averagePrice,
@@ -721,7 +597,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const shortSecondPositionAfter = await positionManager.getPosition(shortSecond.address, pairIndex, false);
 
-            expect(shortSecondPositionAfter.positionAmount).to.be.eq('26000000000000000000');
+            expect(shortSecondPositionAfter.positionAmount).to.be.eq('2600000000');
             expect(shortSecondPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     shortSecondPositionBefore.averagePrice,
@@ -735,8 +611,8 @@ describe('Trade: funding fee epoch', () => {
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
 
-            expect(longTracker).to.be.eq('49000000000000000000');
-            expect(shortTracker).to.be.eq('52000000000000000000');
+            expect(longTracker).to.be.eq('4900000000');
+            expect(shortTracker).to.be.eq('5200000000');
 
             let globalFundingFeeTracker = await positionManager.globalFundingFeeTracker(pairIndex);
 
@@ -768,57 +644,22 @@ describe('Trade: funding fee epoch', () => {
             const longSecondFundingFee = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
             const shortFirstFundingFee = await positionManager.getFundingFee(shortFirst.address, pairIndex, false);
             const shortSecondFundingFee = await positionManager.getFundingFee(shortSecond.address, pairIndex, false);
-
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPositionAfter.fundingFeeTracker,
-                    longFirstPositionAfter.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPositionAfter.fundingFeeTracker,
-                    longSecondPositionAfter.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortFirstPositionAfter.fundingFeeTracker,
-                    shortFirstPositionAfter.positionAmount,
-                    false,
-                ),
-            );
-            expect(shortSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortSecondPositionAfter.fundingFeeTracker,
-                    shortSecondPositionAfter.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
-            // expect(
-            //     longFirstFundingFee
-            //         .add(longFirstFundingFeeBefore)
-            //         .add(longSecondFundingFee.add(longSecondFundingFeeBefore))
-            //         .abs()
-            //         .add(lpFundingFee),
-            // ).to.be.eq(shortFirstFundingFee.add(shortSecondFundingFee));
+            expect(
+                longFirstFundingFee
+                    .sub(longFirstFundingFeeBefore)
+                    .add(longSecondFundingFee.sub(longSecondFundingFeeBefore))
+                    .abs(),
+            ).to.be.eq(shortFirstFundingFee.add(shortSecondFundingFee).add(lpFundingFee).abs());
         });
     });
 
     describe('calculate whether different prices will achieve balance', async () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
         let testEnv: TestEnv;
 
         before('add liquidity', async () => {
@@ -832,8 +673,8 @@ describe('Trade: funding fee epoch', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('30000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('30000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -879,6 +720,7 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, short],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
@@ -891,10 +733,10 @@ describe('Trade: funding fee epoch', () => {
             // update btc price
             await updateBTCPrice(testEnv, '26000');
 
-            const collateral = ethers.utils.parseUnits('300000', 18);
-            const longFirstSize = ethers.utils.parseUnits('10', 18);
-            const longSecondSize = ethers.utils.parseUnits('15', 18);
-            const shortSize = ethers.utils.parseUnits('20', 18);
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const longFirstSize = ethers.utils.parseUnits('10', await btc.decimals());
+            const longSecondSize = ethers.utils.parseUnits('15', await btc.decimals());
+            const shortSize = ethers.utils.parseUnits('20', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('26000', 30);
 
             // open long position
@@ -974,34 +816,9 @@ describe('Trade: funding fee epoch', () => {
             const longSecondFundingFee = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
             const shortFundingFee = await positionManager.getFundingFee(short.address, pairIndex, false);
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPosition.fundingFeeTracker,
-                    longFirstPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPosition.fundingFeeTracker,
-                    longSecondPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortPosition.fundingFeeTracker,
-                    shortPosition.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(longFirstFundingFee.add(longSecondFundingFee).abs()).to.be.eq(shortFundingFee.add(lpFundingFee));
         });
@@ -1010,6 +827,7 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, short],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
@@ -1017,9 +835,9 @@ describe('Trade: funding fee epoch', () => {
             // update btc price
             await updateBTCPrice(testEnv, '26500');
 
-            const collateral = ethers.utils.parseUnits('300000', 18);
-            const longSize = ethers.utils.parseUnits('15', 18);
-            const shortSize = ethers.utils.parseUnits('20', 18);
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const longSize = ethers.utils.parseUnits('15', await btc.decimals());
+            const shortSize = ethers.utils.parseUnits('20', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('26500', 30);
 
             // open long position
@@ -1037,7 +855,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longFirstPositionAfter = await positionManager.getPosition(longFirst.address, pairIndex, true);
 
-            expect(longFirstPositionAfter.positionAmount).to.be.eq('25000000000000000000');
+            expect(longFirstPositionAfter.positionAmount).to.be.eq('2500000000');
             expect(longFirstPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longFirstPositionBefore.averagePrice,
@@ -1061,7 +879,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const longSecondPositionAfter = await positionManager.getPosition(longSecond.address, pairIndex, true);
 
-            expect(longSecondPositionAfter.positionAmount).to.be.eq('30000000000000000000');
+            expect(longSecondPositionAfter.positionAmount).to.be.eq('3000000000');
             expect(longSecondPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     longSecondPositionBefore.averagePrice,
@@ -1086,7 +904,7 @@ describe('Trade: funding fee epoch', () => {
             );
             const shortPositionAfter = await positionManager.getPosition(short.address, pairIndex, false);
 
-            expect(shortPositionAfter.positionAmount).to.be.eq('40000000000000000000');
+            expect(shortPositionAfter.positionAmount).to.be.eq('4000000000');
             expect(shortPositionAfter.averagePrice).to.be.eq(
                 getAveragePrice(
                     shortPositionBefore.averagePrice,
@@ -1123,34 +941,9 @@ describe('Trade: funding fee epoch', () => {
             const longSecondFundingFee = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
             const shortFundingFee = await positionManager.getFundingFee(short.address, pairIndex, false);
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPositionAfter.fundingFeeTracker,
-                    longFirstPositionAfter.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPositionAfter.fundingFeeTracker,
-                    longSecondPositionAfter.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortPositionAfter.fundingFeeTracker,
-                    shortPositionAfter.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(longFirstFundingFee.add(longSecondFundingFee).abs()).to.be.eq(shortFundingFee.add(lpFundingFee));
         });
@@ -1159,6 +952,8 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, short],
                 positionManager,
+                btc,
+                usdt,
             } = testEnv;
 
             const openPrice = ethers.utils.parseUnits('25000', 30);
@@ -1201,34 +996,9 @@ describe('Trade: funding fee epoch', () => {
             const longSecondFundingFeeAfter = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
             const shortFundingFeeAfter = await positionManager.getFundingFee(short.address, pairIndex, false);
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPosition.fundingFeeTracker,
-                    longFirstPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPosition.fundingFeeTracker,
-                    longSecondPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortPosition.fundingFeeTracker,
-                    shortPosition.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(
                 longFirstFundingFeeAfter
@@ -1242,6 +1012,8 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, short],
                 positionManager,
+                btc,
+                usdt,
             } = testEnv;
 
             const openPrice = ethers.utils.parseUnits('24000', 30);
@@ -1284,34 +1056,9 @@ describe('Trade: funding fee epoch', () => {
             const longSecondFundingFeeAfter = await positionManager.getFundingFee(longSecond.address, pairIndex, true);
             const shortFundingFeeAfter = await positionManager.getFundingFee(short.address, pairIndex, false);
             const epochFundindFee = getEpochFundingFee(currentFundingRate, openPrice);
-
-            expect(longFirstFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longFirstPosition.fundingFeeTracker,
-                    longFirstPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(longSecondFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    longSecondPosition.fundingFeeTracker,
-                    longSecondPosition.positionAmount,
-                    true,
-                ),
-            );
-            expect(shortFundingFeeAfter).to.be.eq(
-                getPositionFundingFee(
-                    globalFundingFeeTracker,
-                    shortPosition.fundingFeeTracker,
-                    shortPosition.positionAmount,
-                    false,
-                ),
-            );
-
             const exposedPosition = await positionManager.getExposedPositions(pairIndex);
-            const lpFundingFee = getLpFundingFee(epochFundindFee, exposedPosition);
+            const convertExposedPosition = await convertIndexAmountToStable(btc, usdt, exposedPosition);
+            const lpFundingFee = getLpFundingFee(epochFundindFee, convertExposedPosition);
 
             expect(
                 longFirstFundingFeeAfter

@@ -1,8 +1,10 @@
-import { ethers } from 'ethers';
+// @ts-ignore
+import { ethers } from 'hardhat';
 import { derivePrivateKeys } from 'hardhat/internal/core/providers/util';
 import { bufferToHex } from '@nomicfoundation/ethereumjs-util';
 
 async function main() {
+    const [deployer] = await ethers.getSigners();
     // let mnemonic: string = 'crane simple raise squeeze myself old hurry virtual heart panel finish unfold';
     // let hdpath: string = "m/44'/60'/0'/0";
     // let initialIndex: number = 0;
@@ -23,10 +25,33 @@ async function main() {
     // // privateKeysAsHex.for
     // // console.log(privateKeysAsHex);
 
-    for (let i = 0; i < 5; i++) {
-        const wallet = ethers.Wallet.createRandom();
-        console.log(wallet.privateKey + '----' + wallet.address);
-    }
+    // console.log(ethers.Wallet.createRandom().mnemonic);
+
+    // for (let i = 0; i < 5; i++) {
+    //     const wallet = ethers.Wallet.createRandom();
+    //     console.log(wallet.privateKey + '----' + wallet.address);
+    // }
+
+    // let mnemonic: string = process.env.MNEMONIC_SCROLL_SEPOLIA as string;
+    // let hdpath: string = "m/44'/60'/0'/0";
+    // let initialIndex: number = 0;
+    // let count: number = 10;
+    // let passphrase: string = '';
+    //
+    // const privateKeys = derivePrivateKeys(mnemonic.trim(), hdpath, initialIndex, count, passphrase);
+    // const { bufferToHex } = require('@nomicfoundation/ethereumjs-util');
+    // for (let privateKey of privateKeys) {
+    //     const wallet = new ethers.Wallet(bufferToHex(privateKey));
+    //     console.log((await wallet.getAddress()) + '_' + wallet.privateKey);
+    // }
+
+    const wallet = new ethers.Wallet(
+        '0x2f218d6f236015060f30827825d5d24711d01d502d0a5bd3ec85043ff45c2ae2',
+        deployer.provider,
+    );
+    console.log(`address:`, wallet.address);
+    console.log(`balance:`, ethers.utils.formatEther(await wallet.getBalance()));
+    console.log();
 }
 // 0xB7ba707A62D73C5823879FdC2B1D1CDfb484B48A---0xa4501553c73809a92e1dbe2249bb33610ce183b2cfa73f540eb58787a5046f8e
 // 0x97f00086093674dde1B4e6B1c1866aE6fDEeF19E---0xad9195891340da29c84c53b4c2aaf34f378346836f050595a7f570dd909dc07d

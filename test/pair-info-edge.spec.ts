@@ -10,9 +10,9 @@ import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('Pool: Edge cases', () => {
     before('addPair', async () => {
-        const { poolAdmin, pool, usdt, fundingRate } = testEnv;
+        const { poolAdmin, pool, usdt, eth, fundingRate } = testEnv;
 
-        const token = await deployMockToken('Test');
+        const token = await deployMockToken('Test', 'Test', 18);
         const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
 
         const pair = btcPair.pair;
@@ -22,8 +22,13 @@ describe('Pool: Edge cases', () => {
         const tradingFeeConfig = btcPair.tradingFeeConfig;
         const fundingFeeConfig = btcPair.fundingFeeConfig;
 
-        const countBefore = await pool.pairsCount();
-        await pool.addStableToken(pair.stableToken);
+        await expect(pool.connect(poolAdmin.signer).addPair(pair.stableToken, pair.indexToken)).to.be.revertedWith(
+            '!st',
+        );
+
+        await expect(pool.addPair(eth.address, usdt.address)).to.be.revertedWith('ex');
+        const countBefore = await pool.pairsIndex();
+        await pool.addStableToken(usdt.address);
         await waitForTx(await pool.connect(poolAdmin.signer).addPair(pair.indexToken, pair.stableToken));
 
         let pairIndex = await pool.getPairIndex(pair.indexToken, pair.stableToken);
@@ -34,14 +39,14 @@ describe('Pool: Edge cases', () => {
             await fundingRate.connect(poolAdmin.signer).updateFundingFeeConfig(pairIndex, fundingFeeConfig),
         );
 
-        const countAfter = await pool.pairsCount();
+        const countAfter = await pool.pairsIndex();
         expect(countAfter).to.be.eq(countBefore.add(1));
     });
 
     it('check pair info', async () => {
         const { pool, fundingRate, btc, usdt } = testEnv;
 
-        const pairIndex = 0;
+        const pairIndex = 1;
 
         expect(await pool.pairs(pairIndex)).deep.be.eq(await pool.getPair(pairIndex));
         expect(await pool.tradingConfigs(pairIndex)).deep.be.eq(await pool.getTradingConfig(pairIndex));
@@ -64,7 +69,7 @@ describe('Pool: Edge cases', () => {
                 users: [unHandler],
             } = testEnv;
 
-            const pairIndex = 0;
+            const pairIndex = 1;
             const pair = await pool.getPair(pairIndex);
             await expect(pool.connect(unHandler.signer).updatePair(pairIndex, pair)).to.be.revertedWith(
                 'onlyPoolAdmin',
@@ -74,7 +79,7 @@ describe('Pool: Edge cases', () => {
         it('check update pair', async () => {
             const { deployer, pool } = testEnv;
 
-            const pairIndex = 0;
+            const pairIndex = 1;
             const pairBefore = await pool.getPair(pairIndex);
 
             // updatePair

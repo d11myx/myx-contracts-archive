@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
 import "../../libraries/Position.sol";
 import "../../interfaces/IExecutionLogic.sol";
@@ -178,6 +178,7 @@ contract ExecutionLogic is IExecutionLogic {
         if (orderSize > 0) {
             (executionSize) = TradingHelper.exposureAmountChecker(
                 lpVault,
+                pair,
                 exposureAmount,
                 order.isLong,
                 orderSize,
@@ -187,23 +188,6 @@ contract ExecutionLogic is IExecutionLogic {
                 return;
             }
         }
-
-        // get position
-        Position.Info memory position = positionManager.getPosition(
-            order.account,
-            order.pairIndex,
-            order.isLong
-        );
-        // check position and leverage
-        (uint256 afterPosition, ) = position.validLeverage(
-            executionPrice,
-            order.collateral,
-            executionSize,
-            true,
-            tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
-        );
-        require(afterPosition > 0, "zpa");
 
         int256 collateral;
         if (order.collateral > 0) {
@@ -216,6 +200,23 @@ contract ExecutionLogic is IExecutionLogic {
                 ? order.collateral
                 : int256(0);
         }
+        // get position
+        Position.Info memory position = positionManager.getPosition(
+            order.account,
+            order.pairIndex,
+            order.isLong
+        );
+        // check position and leverage
+        (uint256 afterPosition, ) = position.validLeverage(
+            pair,
+            executionPrice,
+            collateral,
+            executionSize,
+            true,
+            tradingConfig.maxLeverage,
+            tradingConfig.maxPositionAmount
+        );
+        require(afterPosition > 0, "zpa");
 
         // increase position
         (uint256 tradingFee, int256 fundingFee) = positionManager.increasePosition(
@@ -426,6 +427,7 @@ contract ExecutionLogic is IExecutionLogic {
 
         // check position and leverage
         position.validLeverage(
+            pair,
             executionPrice,
             order.collateral,
             executionSize,
@@ -495,8 +497,10 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize
         );
 
+        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+
         // remove order
-        if (onlyOnce || order.executedSize >= order.sizeAmount) {
+        if (onlyOnce || order.executedSize >= order.sizeAmount || position.positionAmount == 0) {
             // remove decrease order
             orderManager.removeOrderFromPosition(
                 IOrderManager.PositionOrder(
@@ -520,7 +524,6 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
 
-        position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
         if (position.positionAmount == 0) {
             // cancel all decrease order
             IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(
@@ -534,7 +537,7 @@ contract ExecutionLogic is IExecutionLogic {
                         positionOrder.orderId,
                         positionOrder.tradeType,
                         false,
-                        "! increase"
+                        "!increase"
                     );
                 }
             }
@@ -698,6 +701,7 @@ contract ExecutionLogic is IExecutionLogic {
             tradingConfig
         );
 
+        uint256[] memory adlOrderIds = new uint256[](adlPositions.length);
         for (uint256 i = 0; i < adlPositions.length; i++) {
             ExecutePositionInfo memory adlPosition = adlPositions[i];
             if (adlPosition.executionSize > 0) {
@@ -723,6 +727,7 @@ contract ExecutionLogic is IExecutionLogic {
                     0,
                     true
                 );
+                adlOrderIds[i] = orderId;
             }
         }
         this.executeDecreaseOrder(
@@ -734,5 +739,7 @@ contract ExecutionLogic is IExecutionLogic {
             0,
             false
         );
+
+        emit ExecuteAdl(order.account, order.pairIndex, order.isLong, order.orderId, adlOrderIds);
     }
 }

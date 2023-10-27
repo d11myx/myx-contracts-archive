@@ -2,15 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     Duration,
-
     encodeParameterArray,
-
     getIndexPriceFeed,
     getMockToken,
     getOraclePriceFeed,
-    getTimelock,
     getToken,
-    increase,
     latest,
     loadReserveConfig,
     MARKET_NAME,
@@ -19,7 +15,6 @@ import {
     waitForTx,
 } from '../../helpers';
 import { ethers } from 'ethers';
-
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { poolAdmin } = await getNamedAccounts();
@@ -45,56 +40,21 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         pairTokenIndexPrices.push(MOCK_INDEX_PRICES[pair]);
         pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
     }
-    let timelock = await getTimelock();
 
-    let timestamp = await latest();
-    let eta = Duration.days(1);
-    // await timelock.queueTransaction(
-    //     indexPriceFeed.address,
-    //     '0',
-    //     'updatePrice(address[],uint256[])',
-    //     encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-    //     eta.add(timestamp),
-    // );
     const mockPyth = await hre.ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
 
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = await mockPyth.getUpdateFee(updateData);
-    await timelock.queueTransaction(
-        oraclePriceFeed.address,
-        0,
-        'setAssetPriceIds(address[],bytes32[])',
-        encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-        eta.add(timestamp),
-    );
-    // await timelock.queueTransaction(
-    //     oraclePriceFeed.address,
-    //     fee,
-    //     'updatePrice(address[],uint256[])',
-    //     encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-    //     eta.add(timestamp),
-    // );
-    await increase(Duration.days(1));
-    //  getTimelock();
-    // await waitForTx(
-    //     await timelock.executeTransaction(
-    //         indexPriceFeed.address,
-    //         '0',
-    //         'updatePrice(address[],uint256[])',
-    //         encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-    //         eta.add(timestamp),
-    //     ),
-    // );
 
-    await waitForTx(
-        await timelock.executeTransaction(
-            oraclePriceFeed.address,
-            0,
-            'setAssetPriceIds(address[],bytes32[])',
-            encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-            eta.add(timestamp),
-        ),
-    );
+    await hre.run('time-execution', {
+        target: oraclePriceFeed.address,
+        value: '0',
+        signature: 'setAssetPriceIds(address[],bytes32[])',
+        data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+        eta: Duration.seconds(20)
+            .add(await latest())
+            .toString(),
+    });
 
     await waitForTx(
         await indexPriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenIndexPrices),
@@ -102,16 +62,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(
         await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee }),
     );
-
-    // await waitForTx(
-    //     await timelock.executeTransaction(
-    //         oraclePriceFeed.address,
-    //         fee,
-    //         'updatePrice(address[],uint256[])',
-    //         encodeParameterArray(['address[]', 'uint256[]'], [pairTokenAddresses, pairTokenPrices]),
-    //         eta.add(timestamp),
-    //     ),
-    // );
 };
 func.id = `InitOracles`;
 func.tags = ['market', 'init-oracles'];

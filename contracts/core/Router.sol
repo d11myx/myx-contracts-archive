@@ -1,8 +1,10 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "../libraries/PositionKey.sol";
 import "../libraries/Upgradeable.sol";
@@ -18,7 +20,14 @@ import "../interfaces/IWETH.sol";
 import "../interfaces/IOrderCallback.sol";
 import "../libraries/TradingTypes.sol";
 
-contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
+contract Router is
+    Multicall,
+    IRouter,
+    ILiquidityCallback,
+    IOrderCallback,
+    ReentrancyGuard,
+    Pausable
+{
     using SafeERC20 for IERC20;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -49,9 +58,28 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         _;
     }
 
-    function createIncreaseOrder(
+
+
+    function salvageToken(address token, uint amount) external onlyPoolAdmin {
+        IERC20(token).transfer(msg.sender, amount);
+    }
+
+    function setPaused() external onlyPoolAdmin {
+        _pause();
+    }
+
+    function setUnPaused() external onlyPoolAdmin {
+        _unpause();
+    }
+
+    function wrapWETH() external payable {
+        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
+        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
+    }
+
+    function createIncreaseOrderWithTpSl(
         TradingTypes.IncreasePositionWithTpSlRequest memory request
-    ) external returns (uint256 orderId) {
+    ) external whenNotPaused nonReentrant returns (uint256 orderId) {
         request.account = msg.sender;
 
         require(
@@ -89,9 +117,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         return orderId;
     }
 
-    function createIncreaseOrderWithoutTpSl(
+    function createIncreaseOrder(
         TradingTypes.IncreasePositionRequest memory request
-    ) external returns (uint256 orderId) {
+    ) external whenNotPaused nonReentrant returns (uint256 orderId) {
         request.account = msg.sender;
 
         require(
@@ -118,7 +146,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
 
     function createDecreaseOrder(
         TradingTypes.DecreasePositionRequest memory request
-    ) external returns (uint256) {
+    ) external whenNotPaused nonReentrant returns (uint256) {
         request.account = msg.sender;
 
         return
@@ -139,7 +167,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
 
     function createDecreaseOrders(
         TradingTypes.DecreasePositionRequest[] memory requests
-    ) external returns (uint256[] memory orderIds) {
+    ) external whenNotPaused nonReentrant returns (uint256[] memory orderIds) {
         orderIds = new uint256[](requests.length);
         for (uint256 i = 0; i < requests.length; i++) {
             TradingTypes.DecreasePositionRequest memory request = requests[i];
@@ -161,28 +189,42 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         return orderIds;
     }
 
-    function cancelIncreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
-        TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
-            orderId,
-            tradeType
-        );
-        require(order.account == msg.sender, "onlyAccount");
-
-        orderManager.cancelOrder(orderId, tradeType, true, "cancelIncreaseOrder");
+    function _checkOrderAccount(
+        uint256 orderId,
+        TradingTypes.TradeType tradeType,
+        bool isIncrease
+    ) private view {
+        if (isIncrease) {
+            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+                orderId,
+                tradeType
+            );
+            require(order.account == msg.sender, "onlyAccount");
+        } else {
+            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+                orderId,
+                tradeType
+            );
+            require(order.account == msg.sender, "onlyAccount");
+        }
     }
 
-    function cancelDecreaseOrder(uint256 orderId, TradingTypes.TradeType tradeType) external {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
-            orderId,
-            tradeType
+    function cancelOrder(CancelOrderRequest memory request) external whenNotPaused nonReentrant {
+        _checkOrderAccount(request.orderId, request.tradeType, request.isIncrease);
+        orderManager.cancelOrder(
+            request.orderId,
+            request.tradeType,
+            request.isIncrease,
+            "cancelOrder"
         );
-        require(order.account == msg.sender, "onlyAccount");
-        orderManager.cancelOrder(orderId, tradeType, false, "cancelDecreaseOrder");
     }
 
-    function cancelOrders(CancelOrderRequest[] memory requests) external {
+    function cancelOrders(
+        CancelOrderRequest[] memory requests
+    ) external whenNotPaused nonReentrant {
         for (uint256 i = 0; i < requests.length; i++) {
             CancelOrderRequest memory request = requests[i];
+            _checkOrderAccount(request.orderId, request.tradeType, request.isIncrease);
             orderManager.cancelOrder(
                 request.orderId,
                 request.tradeType,
@@ -192,12 +234,17 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         }
     }
 
-    function cancelPositionOrders(uint256 pairIndex, bool isLong, bool isIncrease) external {
+    function cancelPositionOrders(
+        uint256 pairIndex,
+        bool isLong,
+        bool isIncrease
+    ) external whenNotPaused nonReentrant {
         bytes32 key = PositionKey.getPositionKey(msg.sender, pairIndex, isLong);
         IOrderManager.PositionOrder[] memory orders = orderManager.getPositionOrders(key);
 
         for (uint256 i = 0; i < orders.length; i++) {
             IOrderManager.PositionOrder memory positionOrder = orders[i];
+            require(positionOrder.account == msg.sender, "onlyAccount");
             if (isIncrease && positionOrder.isIncrease) {
                 orderManager.cancelOrder(
                     positionOrder.orderId,
@@ -216,9 +263,9 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         }
     }
 
-    function createOrderTpSl(
-        CreateOrderTpSlRequest memory request
-    ) external returns (uint256 tpOrderId, uint256 slOrderId) {
+    function addOrderTpSl(
+        AddOrderTpSlRequest memory request
+    ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
         uint256 orderAmount;
         if (request.isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
@@ -253,7 +300,7 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
 
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
-    ) external returns (uint256 tpOrderId, uint256 slOrderId) {
+    ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
         if (request.tp > 0) {
             tpOrderId = orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -287,17 +334,17 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         return (tpOrderId, slOrderId);
     }
 
-    function wrapWETH() external payable {
-        IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
-        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
-    }
-
     function addLiquidity(
         address indexToken,
         address stableToken,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
+    )
+        external
+        whenNotPaused
+        nonReentrant
+        returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
+    {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).addLiquidity(
@@ -315,15 +362,21 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         address receiver,
         uint256 indexAmount,
         uint256 stableAmount
-    ) external {
+    )
+        external
+        whenNotPaused
+        nonReentrant
+        returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
+    {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
-        IPool(pool).addLiquidity(
-            receiver,
-            pairIndex,
-            indexAmount,
-            stableAmount,
-            abi.encode(msg.sender)
-        );
+        return
+            IPool(pool).addLiquidity(
+                receiver,
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                abi.encode(msg.sender)
+            );
     }
 
     function removeLiquidity(
@@ -333,6 +386,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         bool useETH
     )
         external
+        whenNotPaused
+        nonReentrant
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
@@ -354,6 +409,8 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         bool useETH
     )
         external
+        whenNotPaused
+        nonReentrant
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
@@ -365,6 +422,15 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
                 useETH,
                 abi.encode(msg.sender)
             );
+    }
+
+    function removeLiquidityCallback(
+        address pairToken,
+        uint256 amount,
+        bytes calldata data
+    ) external override onlyPool {
+        address sender = abi.decode(data, (address));
+        IERC20(pairToken).safeTransferFrom(sender, msg.sender, amount);
     }
 
     function createOrderCallback(
@@ -395,18 +461,5 @@ contract Router is Multicall, IRouter, ILiquidityCallback, IOrderCallback {
         if (amountStable > 0) {
             IERC20(stableToken).safeTransferFrom(sender, msg.sender, uint256(amountStable));
         }
-    }
-
-    function removeLiquidityCallback(
-        address pairToken,
-        uint256 amount,
-        bytes calldata data
-    ) external override onlyPool {
-        address sender = abi.decode(data, (address));
-        IERC20(pairToken).safeTransferFrom(sender, msg.sender, amount);
-    }
-
-    function salvageToken(address token, uint amount) external onlyPoolAdmin {
-        IERC20(token).transfer(msg.sender, amount);
     }
 }

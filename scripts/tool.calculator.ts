@@ -1,6 +1,7 @@
+// @ts-ignore
 import { ethers } from 'hardhat';
-import { getPositionManager, getPriceOracle, getTokens } from '../helpers';
-import { PositionManager, PriceOracle, Token } from '../types';
+import { getOraclePriceFeed, getPositionManager, getTokens } from '../helpers';
+import { PositionManager, ERC20DecimalsMock, PythOraclePriceFeed } from '../types';
 import Decimal from 'decimal.js';
 import { parseUnits } from 'ethers/lib/utils';
 
@@ -10,7 +11,7 @@ async function main() {
     console.log(`deployer balance:`, (await deployer.getBalance()) / 1e18);
     console.log();
     const positionManager = await getPositionManager();
-    const priceOracle = await getPriceOracle();
+    const priceOracle = await getOraclePriceFeed();
 
     const { btc } = await getTokens();
 
@@ -19,13 +20,13 @@ async function main() {
     console.log(`btcPrice:`, btcPrice);
 
     const account = '0x2068f8e9C9e61A330F2F713C998D372C04e3C9Cc';
-    const pairIndex = 0;
+    const pairIndex = 1;
     const isLong = false;
     await calculateMaxDecreaseMargin(positionManager, account, pairIndex, isLong, btcPrice);
 }
 
-async function getTokenPrice(priceOracle: PriceOracle, token: Token) {
-    const price = await priceOracle.getOraclePrice(token.address);
+async function getTokenPrice(priceOracle: PythOraclePriceFeed, token: ERC20DecimalsMock) {
+    const price = await priceOracle.getPrice(token.address);
     return new Decimal(price.toString()).div(1e30);
 }
 
@@ -44,7 +45,7 @@ async function calculateMaxDecreaseMargin(
     const fundingFee = await positionManager.getFundingFee(account, pairIndex, isLong);
     const fundingFeeFormatted = new Decimal(fundingFee.toString()).div(1e18);
 
-    const tradingFee = await positionManager.getTradingFee(0, isLong, parseUnits(size.toString(), 18));
+    const tradingFee = await positionManager.getTradingFee(pairIndex, isLong, parseUnits(size.toString(), 18));
     const tradingFeeFormatted = new Decimal(tradingFee.toString()).div(1e18);
 
     let pnl = averagePrice.sub(price).mul(size);

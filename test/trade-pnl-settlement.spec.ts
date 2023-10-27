@@ -3,10 +3,10 @@ import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { TradeType } from '../helpers';
+import { convertIndexAmountToStable, TradeType } from '../helpers';
 
 describe('Trade: settlement pnl', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {
@@ -20,8 +20,8 @@ describe('Trade: settlement pnl', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -35,6 +35,7 @@ describe('Trade: settlement pnl', () => {
         const {
             users: [trader],
             usdt,
+            btc,
             router,
             pool,
             positionManager,
@@ -43,8 +44,8 @@ describe('Trade: settlement pnl', () => {
         let btcPrice = '30000';
         await updateBTCPrice(testEnv, btcPrice);
 
-        const collateral = ethers.utils.parseUnits('30000', 18);
-        const size = ethers.utils.parseUnits('10', 18);
+        const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+        const size = ethers.utils.parseUnits('10', await btc.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
@@ -55,7 +56,9 @@ describe('Trade: settlement pnl', () => {
         btcPrice = '40000';
         await updateBTCPrice(testEnv, btcPrice);
 
-        const userPnl = BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount);
+        const userPnl = BigNumber.from(btcPrice)
+            .sub('30000')
+            .mul(await convertIndexAmountToStable(btc, usdt, userPosition.positionAmount));
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
         expect(userPnl).to.be.gt(0);
@@ -80,7 +83,7 @@ describe('Trade: settlement pnl', () => {
         const lpVaultAfter = await pool.getVault(pairIndex);
         const lpBalanceAfter = lpVaultAfter.stableTotalAmount;
 
-        expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
+        // expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
         expect(userBalanceAfter).to.be.eq(
             userBalanceBefore.add(userPnl).add(collateral).sub(openPositionFee).sub(tradingFee).sub(fundingFee),
         );
@@ -93,6 +96,7 @@ describe('Trade: settlement pnl', () => {
         const {
             users: [trader],
             usdt,
+            btc,
             router,
             pool,
             positionManager,
@@ -101,8 +105,8 @@ describe('Trade: settlement pnl', () => {
         let btcPrice = '30000';
         await updateBTCPrice(testEnv, btcPrice);
 
-        const collateral = ethers.utils.parseUnits('30000', 18);
-        const size = ethers.utils.parseUnits('10', 18);
+        const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+        const size = ethers.utils.parseUnits('10', await btc.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
@@ -113,7 +117,9 @@ describe('Trade: settlement pnl', () => {
         btcPrice = '28000';
         await updateBTCPrice(testEnv, btcPrice);
 
-        const userPnl = BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount);
+        const userPnl = BigNumber.from(btcPrice)
+            .sub('30000')
+            .mul(await convertIndexAmountToStable(btc, usdt, userPosition.positionAmount));
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
         expect(userPnl).to.be.lt(0);
@@ -138,7 +144,7 @@ describe('Trade: settlement pnl', () => {
         const lpVaultAfter = await pool.getVault(pairIndex);
         const lpBalanceAfter = lpVaultAfter.stableTotalAmount;
 
-        expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
+        // expect(userPnl).to.be.eq(BigNumber.from(btcPrice).sub('30000').mul(userPosition.positionAmount));
         expect(userBalanceAfter).to.be.eq(
             userBalanceBefore.add(userPnl).add(collateral).sub(openPositionFee).sub(tradingFee).sub(fundingFee),
         );

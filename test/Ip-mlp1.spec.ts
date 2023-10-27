@@ -6,7 +6,7 @@ import { BigNumber, constants } from 'ethers';
 import { getMockToken, TradeType } from '../helpers';
 
 describe('LP: Pool cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
@@ -30,8 +30,8 @@ describe('LP: Pool cases', () => {
             );
 
             // add liquidity   增加流动性
-            const indexAmount = ethers.utils.parseUnits('20000', 18); //单价3w
-            const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
+            const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals()); //单价3w
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals()); //单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -43,16 +43,16 @@ describe('LP: Pool cases', () => {
             expect(vaultBefore.stableTotalAmount).to.be.eq(0);
 
             const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
-           // expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
+            // expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
             await router
                 .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 
             const lpToken = await getMockToken('', pair.pairToken);
             const totoalApply = await lpToken.totalSupply();
             //expect(totoalApply).to.be.eq(ethers.utils.parseUnits('599400000'));
             const userLpBalanceBefore = await lpToken.balanceOf(depositor.address);
-           // expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
+            // expect(userLpBalanceBefore).to.be.eq(ethers.utils.parseUnits('599400000'));
             const vaultAfter = await pool.getVault(pairIndex);
             const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
             const userUsdtBalanceAfter = await usdt.balanceOf(depositor.address);
@@ -72,8 +72,5 @@ describe('LP: Pool cases', () => {
             // console.log('===================');
             // console.log(await positionManager.getNextFundingRate(pairIndex));
         });
-
-
-
     });
 });

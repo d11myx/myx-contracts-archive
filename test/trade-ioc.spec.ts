@@ -2,14 +2,14 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
-import { TradeType } from '../helpers';
-import { BigNumber, constants } from 'ethers';
+import { TradeType, convertIndexAmountToStable, convertStableAmountToIndex } from '../helpers';
+import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { MARKET_NAME } from '../helpers/env';
 import { loadReserveConfig } from '../helpers/market-config-helper';
 
 describe('Trade: ioc', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     describe('increase market position', () => {
@@ -24,8 +24,8 @@ describe('Trade: ioc', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', 18);
-            const stableAmount = ethers.utils.parseUnits('30000000', 18);
+            const indexAmount = ethers.utils.parseUnits('100', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -40,17 +40,17 @@ describe('Trade: ioc', () => {
                 users: [trader],
                 keeper,
                 usdt,
+                btc,
                 router,
                 positionManager,
                 pool,
                 orderManager,
                 executionLogic,
                 oraclePriceFeed,
-                btc,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('3000000', 18);
-            const sizeAmount = ethers.utils.parseUnits('3000', 18);
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             const pairPrice = BigNumber.from(
@@ -58,7 +58,8 @@ describe('Trade: ioc', () => {
             );
             const vaultBefore = await pool.getVault(pairIndex);
             // 50:50
-            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
+            const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, vaultBefore.indexTotalAmount);
+            expect(indexToStableAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
 
             /* increase long position */
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -76,7 +77,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const longOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(longPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.MARKET, 0, 0);
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const longOrder = await orderManager.getIncreaseOrder(longOrderId, TradeType.MARKET);
@@ -101,16 +102,17 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const shortOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(shortPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.MARKET);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const availableStable = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
+            const stableToIndexAmount = await convertStableAmountToIndex(btc, usdt, availableStable);
 
             // partial transaction
             expect(shortPosition.positionAmount).to.be.eq(
                 vaultAfter.indexReservedAmount.add(
-                    availableStable.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
+                    stableToIndexAmount.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
                 ),
             );
             expect(shortOrder.sizeAmount).to.be.eq('0');
@@ -129,8 +131,8 @@ describe('Trade: ioc', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', 18);
-            const stableAmount = ethers.utils.parseUnits('30000000', 18);
+            const indexAmount = ethers.utils.parseUnits('100', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -145,17 +147,17 @@ describe('Trade: ioc', () => {
                 users: [trader],
                 keeper,
                 usdt,
+                btc,
                 router,
                 positionManager,
                 pool,
                 orderManager,
                 executionLogic,
                 oraclePriceFeed,
-                btc,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('3000000', 18);
-            const sizeAmount = ethers.utils.parseUnits('3000', 18);
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             const pairPrice = BigNumber.from(
@@ -163,7 +165,8 @@ describe('Trade: ioc', () => {
             );
             const vaultBefore = await pool.getVault(pairIndex);
             // 50:50
-            expect(vaultBefore.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
+            const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, vaultBefore.indexTotalAmount);
+            expect(indexToStableAmount.mul(pairPrice)).to.be.eq(vaultBefore.stableTotalAmount);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             const balance = await usdt.balanceOf(trader.address);
@@ -181,7 +184,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const longOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(longPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const longOrderBefor = await orderManager.getIncreaseOrder(longOrderId, TradeType.LIMIT);
@@ -206,16 +209,17 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const shortOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(shortPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0);
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const availableStable = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
+            const stableToIndexAmount = await convertStableAmountToIndex(btc, usdt, availableStable);
 
             // partial transaction
             expect(shortPosition.positionAmount).to.be.eq(
                 vaultAfter.indexReservedAmount.add(
-                    availableStable.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
+                    stableToIndexAmount.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
                 ),
             );
             expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
@@ -253,8 +257,8 @@ describe('Trade: ioc', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('20000', 18);
-            const stableAmount = ethers.utils.parseUnits('3000000', 18);
+            const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -267,16 +271,18 @@ describe('Trade: ioc', () => {
         it('size exceed max config, should partial transaction and delete order', async () => {
             const {
                 users: [trader],
+                usdt,
+                btc,
                 router,
                 positionManager,
                 orderManager,
                 keeper,
                 executionLogic,
-                usdt,
                 pool,
             } = testEnv;
-            const collateral = ethers.utils.parseUnits('30000000', 18);
-            const sizeAmount = ethers.utils.parseUnits('6000', 18);
+
+            const collateral = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('6000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             /* increase long position */
@@ -292,7 +298,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             let increaseOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(longPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
             const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -310,7 +316,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             increaseOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(long2PositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -355,8 +361,8 @@ describe('Trade: ioc', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('20000', 18);
-            const stableAmount = ethers.utils.parseUnits('3000000', 18);
+            const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -368,7 +374,8 @@ describe('Trade: ioc', () => {
 
         it('size exceed max config, should partial transaction and reserve order', async () => {
             const {
-                users: [trader],
+                users: [, trader],
+                btc,
                 router,
                 positionManager,
                 orderManager,
@@ -377,8 +384,9 @@ describe('Trade: ioc', () => {
                 usdt,
                 pool,
             } = testEnv;
-            const collateral = ethers.utils.parseUnits('30000000', 18);
-            const sizeAmount = ethers.utils.parseUnits('6000', 18);
+
+            const collateral = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('6000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             /* increase long position */
@@ -394,7 +402,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             let increaseOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(longPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.LIMIT, 0, 0);
             const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -412,7 +420,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             increaseOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(long2PositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.LIMIT, 0, 0);
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -466,9 +474,8 @@ describe('Trade: ioc', () => {
                 router,
             } = testEnv;
 
-            // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', 18);
-            const stableAmount = ethers.utils.parseUnits('30000000', 18);
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -488,9 +495,11 @@ describe('Trade: ioc', () => {
                 executionLogic,
                 usdt,
                 pool,
+                btc,
             } = testEnv;
-            const collateral = ethers.utils.parseUnits('3000000', 18);
-            const sizeAmount = ethers.utils.parseUnits('1000', 18);
+
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('1000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             /* increase long position */
@@ -507,7 +516,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const longOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(longPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.MARKET, 0, 0);
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -528,7 +537,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const shortOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(shortPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
 
@@ -594,8 +603,8 @@ describe('Trade: ioc', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', 18);
-            const stableAmount = ethers.utils.parseUnits('30000000', 18);
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -615,9 +624,11 @@ describe('Trade: ioc', () => {
                 executionLogic,
                 usdt,
                 pool,
+                btc,
             } = testEnv;
-            const collateral = ethers.utils.parseUnits('3000000', 18);
-            const sizeAmount = ethers.utils.parseUnits('1000', 18);
+
+            const collateral = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('1000', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             /* increase long position */
@@ -634,7 +645,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const longOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(longPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -655,7 +666,7 @@ describe('Trade: ioc', () => {
                 maxSlippage: 0,
             };
             const shortOrderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(shortPositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
 
@@ -721,8 +732,8 @@ describe('Trade: ioc', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -744,9 +755,10 @@ describe('Trade: ioc', () => {
                 keeper,
                 pool,
                 riskReserve,
+                btc,
             } = testEnv;
-            const collateral = ethers.utils.parseUnits('300000', 18);
-            const size = ethers.utils.parseUnits('30', 18);
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('30', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('300000', 30);
 
             /**
@@ -768,7 +780,7 @@ describe('Trade: ioc', () => {
             };
 
             const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
             const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
             balance = await usdt.balanceOf(trader.address);
@@ -789,7 +801,9 @@ describe('Trade: ioc', () => {
             // update price and liquidatePositions
             await updateBTCPrice(testEnv, '36000');
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-            await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+            await liquidationLogic
+                .connect(keeper.signer)
+                .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
             balance = await usdt.balanceOf(trader.address);
             const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
@@ -799,12 +813,11 @@ describe('Trade: ioc', () => {
             const pair = await pool.getPair(pairIndex);
             const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
             const oraclePrice = await pool.getPrice(pair.indexToken);
-            const pnl = shortPositionBefore.positionAmount
+            const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPositionBefore.positionAmount);
+            const pnl = indexToStableAmount
                 .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                 .div('1000000000000000000000000000000');
-            const sizeDelta = shortPositionBefore.positionAmount
-                .mul(oraclePrice)
-                .div('1000000000000000000000000000000');
+            const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
             const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
             const totalSettlementAmount = pnl.add(tradingFee);
 

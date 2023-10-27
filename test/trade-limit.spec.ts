@@ -1,13 +1,10 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
-import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { deployMockCallback, TradeType } from '../helpers';
-import { TradingTypes } from '../types/contracts/interfaces/IRouter';
-import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('Trade: Limit order cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
@@ -20,8 +17,8 @@ describe('Trade: Limit order cases', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
 
@@ -39,6 +36,7 @@ describe('Trade: Limit order cases', () => {
                 keeper,
                 users: [, trader],
                 usdt,
+                btc,
                 positionManager,
                 orderManager,
                 router,
@@ -48,8 +46,8 @@ describe('Trade: Limit order cases', () => {
             // update BTC price
             await updateBTCPrice(testEnv, '32000');
 
-            const collateral = ethers.utils.parseUnits('20000', 18);
-            const increaseAmount = ethers.utils.parseUnits('10', 18);
+            const collateral = ethers.utils.parseUnits('20000', await usdt.decimals());
+            const increaseAmount = ethers.utils.parseUnits('10', await btc.decimals());
             const triggerPrice = ethers.utils.parseUnits('32000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);

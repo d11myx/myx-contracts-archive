@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import '../libraries/TradingTypes.sol';
 import '../libraries/Position.sol';
 
-interface IExecutionEvent {
+interface IExecution {
 
     event ExecuteIncreaseOrder(
         address account,
@@ -40,5 +40,20 @@ interface IExecutionEvent {
         int256 fundingFee
     );
 
+    event ExecuteAdl(
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        uint256 orderId,
+        uint256[] adlOrderIds
+    );
+
     event ExecuteOrderError(uint256 orderId, string errorMessage);
+
+    struct ExecutePosition {
+        bytes32 positionKey;
+        uint256 sizeAmount;
+        uint8 level;
+        uint256 commissionRatio;
+    }
 }
