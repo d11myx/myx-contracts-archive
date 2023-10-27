@@ -30,7 +30,7 @@ interface IPool {
         uint256 indexed pairIndex,
         address token,
         int256 profit,
-        uint256 stableTotalAmount
+        uint256 totalAmount
     );
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
