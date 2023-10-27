@@ -1,13 +1,15 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { COMMON_DEPLOY_PARAMS, getTokens, waitForTx } from '../../helpers';
+import { COMMON_DEPLOY_PARAMS, getTokens, isTestNetwork, waitForTx } from '../../helpers';
 import { Faucet } from '../../types';
 import { ethers } from 'hardhat';
 
-const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
-    const { deploy } = deployments;
-    const { deployer } = await getNamedAccounts();
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+    const { deploy } = hre.deployments;
+    const { deployer } = await hre.getNamedAccounts();
 
+    if (isTestNetwork(hre)) {
+    }
     const { usdt, btc, eth } = await getTokens();
 
     const faucetArtifact = await deploy(`Faucet`, {

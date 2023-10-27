@@ -1,35 +1,31 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IUniSwapV3Router.sol";
 import "../interfaces/IPool.sol";
-import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPoolToken.sol";
+import "../interfaces/IPoolTokenFactory.sol";
+import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPriceFeed.sol";
-import "../token/interfaces/IBaseToken.sol";
+import "../interfaces/ISpotSwap.sol";
+import "../interfaces/ILiquidityCallback.sol";
 import "../interfaces/IWETH.sol";
-
 import "../libraries/AmountMath.sol";
-import "../libraries/PrecisionUtils.sol";
 import "../libraries/Upgradeable.sol";
 import "../libraries/Int256Utils.sol";
 import "../libraries/AMMUtils.sol";
 import "../libraries/PrecisionUtils.sol";
-
-import "../interfaces/IPoolTokenFactory.sol";
-import "../interfaces/ILiquidityCallback.sol";
+import "../token/interfaces/IBaseToken.sol";
 import "../helpers/ValidationHelper.sol";
+import "../helpers/TokenHelper.sol";
 
 contract Pool is IPool, Upgradeable {
-    using EnumerableSet for EnumerableSet.AddressSet;
     using PrecisionUtils for uint256;
     using SafeERC20 for IERC20;
     using Int256Utils for int256;
@@ -39,25 +35,25 @@ contract Pool is IPool, Upgradeable {
     uint256 private constant MAX_FEE = 1e6;
 
     IPoolTokenFactory public poolTokenFactory;
-    address public router;
+
     address public riskReserve;
     address public feeCollector;
-    mapping(uint256 => mapping(address => bytes)) public tokenPath;
 
     mapping(uint256 => TradingConfig) public tradingConfigs;
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
 
     mapping(address => mapping(address => uint256)) public override getPairIndex;
-    mapping(address => mapping(address => address)) public getPairToken;
+    // mapping(address => mapping(address => address)) public getPairToken;
 
-    uint256 public pairsCount;
+    uint256 public pairsIndex;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
-    EnumerableSet.AddressSet private positionManagers;
-    EnumerableSet.AddressSet private orderManagers;
+    address private positionManager;
+    address private orderManager;
 
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
+    address public spotSwap;
 
     function initialize(
         IAddressesProvider addressProvider,
@@ -65,32 +61,33 @@ contract Pool is IPool, Upgradeable {
     ) public initializer {
         ADDRESS_PROVIDER = addressProvider;
         poolTokenFactory = _poolTokenFactory;
+        pairsIndex = 1;
     }
 
     modifier transferAllowed() {
         require(
-            positionManagers.contains(msg.sender) ||
-                orderManagers.contains(msg.sender) ||
+            positionManager == msg.sender ||
+                orderManager == msg.sender ||
                 riskReserve == msg.sender ||
                 feeCollector == msg.sender,
-            "permission denied"
+            "pd"
         );
         _;
     }
 
     receive() external payable {
-        require(msg.sender == ADDRESS_PROVIDER.WETH(), "Not WETH");
+        require(msg.sender == ADDRESS_PROVIDER.WETH(), "nw");
     }
 
     modifier onlyPositionManager() {
-        require(positionManagers.contains(msg.sender), "onlyPositionManager");
+        require(positionManager == msg.sender, "opm");
         _;
     }
 
     modifier onlyPositionManagerOrFeeCollector() {
         require(
-            positionManagers.contains(msg.sender) || msg.sender == feeCollector,
-            "onlyPositionManagerOrFeeCollector"
+            positionManager == msg.sender || msg.sender == feeCollector,
+            "opmof"
         );
         _;
     }
@@ -98,7 +95,7 @@ contract Pool is IPool, Upgradeable {
     modifier onlyTreasury() {
         require(
             IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender),
-            "onlyTreasury"
+            "ot"
         );
         _;
     }
@@ -106,11 +103,11 @@ contract Pool is IPool, Upgradeable {
     function _unwrapWETH(uint256 amount, address payable to) private {
         IWETH(ADDRESS_PROVIDER.WETH()).withdraw(amount);
         (bool success, ) = to.call{value: amount}(new bytes(0));
-        require(success, "err-transfer-eth");
+        require(success, "err-eth");
     }
 
-    function setSwapRouter(address _router) external onlyPoolAdmin {
-        router = _router;
+    function setSpotSwap(address _spotSwap) external onlyPoolAdmin {
+        spotSwap = _spotSwap;
     }
 
     function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
@@ -121,20 +118,12 @@ contract Pool is IPool, Upgradeable {
         feeCollector = _feeCollector;
     }
 
-    function addPositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManagers.add(_positionManager);
+    function setPositionManager(address _positionManager) external onlyPoolAdmin {
+        positionManager = _positionManager;
     }
 
-    function removePositionManager(address _positionManager) external onlyPoolAdmin {
-        positionManagers.remove(_positionManager);
-    }
-
-    function addOrderManager(address _orderManager) external onlyPoolAdmin {
-        orderManagers.add(_orderManager);
-    }
-
-    function removeOrderManager(address _orderManager) external onlyPoolAdmin {
-        orderManagers.remove(_orderManager);
+    function setOrderManager(address _orderManager) external onlyPoolAdmin {
+        orderManager = _orderManager;
     }
 
     function addStableToken(address _token) external onlyPoolAdmin {
@@ -145,45 +134,38 @@ contract Pool is IPool, Upgradeable {
         delete isStableToken[_token];
     }
 
-    function updateTokenPath(
-        uint256 pairIndex,
-        address tokenIn,
-        bytes memory path
-    ) external onlyPoolAdmin {
-        tokenPath[pairIndex][tokenIn] = path;
-    }
-
     // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
-        require(_indexToken != address(0) && _stableToken != address(0), "zero address");
-        require(!isStableToken[_indexToken], "!stable token");
-        require(getPairToken[_indexToken][_stableToken] == address(0), "exists");
+        require(_indexToken != address(0) && _stableToken != address(0), "!0");
+        require(isStableToken[_stableToken], "!st");
+        require(getPairIndex[_indexToken][_stableToken] == 0, "ex");
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
-        getPairToken[_indexToken][_stableToken] = pairToken;
-        getPairIndex[_indexToken][_stableToken] = pairsCount;
+        // getPairToken[_indexToken][_stableToken] = pairToken;
+        getPairIndex[_indexToken][_stableToken] = pairsIndex;
+        getPairIndex[_stableToken][_indexToken] = pairsIndex;
 
-        Pair storage pair = pairs[pairsCount];
-        pair.pairIndex = pairsCount;
+        Pair storage pair = pairs[pairsIndex];
+        pair.pairIndex = pairsIndex;
         pair.indexToken = _indexToken;
 
         pair.stableToken = _stableToken;
         pair.pairToken = pairToken;
 
-        emit PairAdded(_indexToken, _stableToken, pairToken, pairsCount++);
+        emit PairAdded(_indexToken, _stableToken, pairToken, pairsIndex++);
     }
 
     function updatePair(uint256 _pairIndex, Pair calldata _pair) external onlyPoolAdmin {
         Pair storage pair = pairs[_pairIndex];
         require(
             pair.indexToken != address(0) && pair.stableToken != address(0),
-            "pair not existed"
+            "nex"
         );
         require(
             _pair.expectIndexTokenP <= PrecisionUtils.percentage() &&
                 _pair.addLpFeeP <= PrecisionUtils.percentage(),
-            "exceed 100%"
+            "ex"
         );
 
         pair.enable = _pair.enable;
@@ -199,11 +181,16 @@ contract Pool is IPool, Upgradeable {
         uint256 _pairIndex,
         TradingConfig calldata _tradingConfig
     ) external onlyPoolAdmin {
+        Pair storage pair = pairs[_pairIndex];
+        require(
+            pair.indexToken != address(0) && pair.stableToken != address(0),
+            "pnt"
+        );
         require(
             _tradingConfig.maintainMarginRate <= PrecisionUtils.percentage() &&
                 _tradingConfig.priceSlipP <= PrecisionUtils.percentage() &&
                 _tradingConfig.maxPriceDeviationP <= PrecisionUtils.percentage(),
-            "exceed 100%"
+            "ex"
         );
         tradingConfigs[_pairIndex] = _tradingConfig;
     }
@@ -212,16 +199,21 @@ contract Pool is IPool, Upgradeable {
         uint256 _pairIndex,
         TradingFeeConfig calldata _tradingFeeConfig
     ) external onlyPoolAdmin {
+        Pair storage pair = pairs[_pairIndex];
+        require(
+            pair.indexToken != address(0) && pair.stableToken != address(0),
+            "pne"
+        );
         require(
             _tradingFeeConfig.takerFeeP <= MAX_FEE && _tradingFeeConfig.makerFeeP <= MAX_FEE,
-            "trading fee exceed 1%"
+            "ex"
         );
         require(
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
                 _tradingFeeConfig.stakingFeeDistributeP <=
                 PrecisionUtils.percentage(),
-            "distribute exceed 1%"
+            "ex"
         );
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
@@ -284,10 +276,10 @@ contract Pool is IPool, Upgradeable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
-        require(vault.indexTotalAmount >= vault.indexReservedAmount, "insufficient index amount");
+        require(vault.indexTotalAmount >= vault.indexReservedAmount, "iia");
         require(
             vault.stableTotalAmount >= vault.stableReservedAmount,
-            "insufficient stable amount"
+            "ist"
         );
         emit UpdateReserveAmount(
             _pairIndex,
@@ -304,6 +296,9 @@ contract Pool is IPool, Upgradeable {
         uint256 _stableAmount
     ) external onlyPositionManager {
         Vault storage vault = vaults[_pairIndex];
+        require(vault.indexReservedAmount >= _indexAmount, "ex");
+        require(vault.stableReservedAmount >= _stableAmount, "ex");
+
         vault.indexReservedAmount = vault.indexReservedAmount - _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount - _stableAmount;
         emit UpdateReserveAmount(
@@ -333,7 +328,7 @@ contract Pool is IPool, Upgradeable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             if (vault.stableTotalAmount < _profit.abs()) {
-                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -348,9 +343,9 @@ contract Pool is IPool, Upgradeable {
             vault.indexTotalAmount += _profit.abs();
         } else {
             if (vault.indexTotalAmount < _profit.abs()) {
-                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
             }
-            vault.stableTotalAmount -= _profit.abs();
+            vault.indexTotalAmount -= _profit.abs();
         }
 
         emit UpdateLPProfit(_pairIndex, pair.indexToken, _profit, vault.indexTotalAmount);
@@ -365,12 +360,11 @@ contract Pool is IPool, Upgradeable {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
-        return _addLiquidity(msg.sender, recipient, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function addLiquidityForAccount(
-        address _funder,
-        address  recipient,
+        address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
@@ -378,7 +372,7 @@ contract Pool is IPool, Upgradeable {
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
-        return _addLiquidity(_funder, recipient, _pairIndex, _indexAmount, _stableAmount, data);
+        return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
     function removeLiquidity(
@@ -437,26 +431,22 @@ contract Pool is IPool, Upgradeable {
         }
     }
 
-    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 amountOut) private {
+    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 expectAmountOut) private {
         Pair memory pair = pairs[_pairIndex];
         uint256 price = getPrice(pair.indexToken);
-        bytes memory path = tokenPath[_pairIndex][tokenIn];
         uint256 amountInMaximum;
+        address tokenOut;
         if (tokenIn == pair.indexToken) {
-            amountInMaximum = (amountOut * 12) / (price * 10);
+            tokenOut = pair.stableToken;
+            amountInMaximum = (expectAmountOut * 12) / (price * 10);
         } else if (tokenIn == pair.stableToken) {
-            amountInMaximum = (amountOut * price * 12) / 10;
+            tokenOut = pair.indexToken;
+            amountInMaximum = (expectAmountOut * price * 12) / 10;
         }
-        IERC20(pair.indexToken).approve(router, amountInMaximum);
-        IUniSwapV3Router(router).exactOutput(
-            IUniSwapV3Router.ExactOutputParams({
-                path: path,
-                recipient: address(this),
-                deadline: block.timestamp + 1000,
-                amountOut: amountOut,
-                amountInMaximum: amountInMaximum
-            })
-        );
+        if (IERC20(tokenIn).allowance(address(this), spotSwap) == 0) {
+            IERC20(tokenIn).safeApprove(spotSwap, type(uint256).max);
+        }
+        ISpotSwap(spotSwap).swap(tokenIn, tokenOut, amountInMaximum, expectAmountOut);
     }
 
     // calculate lp amount for add liquidity
@@ -481,7 +471,7 @@ contract Pool is IPool, Upgradeable {
         if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
@@ -494,53 +484,42 @@ contract Pool is IPool, Upgradeable {
 
         // usdt value of reserve
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "invalid price");
+        require(price > 0, "ip");
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(
-            _getIndexTotalAmount(pair, vault),
-            price
-        );
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
-        // usdt value of deposit
-        uint256 indexDepositDelta = AmountMath.getStableDelta(afterFeeIndexAmount, price);
+        uint256 indexTotalDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken, int256(_getIndexTotalAmount(pair, vault)), 18, price));
+        uint256 stableTotalDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken, int256(_getStableTotalAmount(pair, vault)), 18));
 
-        // calculate deposit usdt value without slippage
-        uint256 slipDelta;
-        uint256 stableTotalAmount = _getStableTotalAmount(pair, vault);
-        uint256 availableDiscountRate;
-        uint256 availableDiscountAmount;
-        if (indexReserveDelta + stableTotalAmount > 0) {
+        uint256 indexDepositDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken, int256(afterFeeIndexAmount), 18, price));
+        uint256 stableDepositDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken, int256(afterFeeStableAmount), 18));
+
+        uint256 slipDeltaWad;
+        uint256 discountRate;
+        uint256 discountAmount;
+        if (indexTotalDeltaWad + stableTotalDeltaWad > 0) {
             // after deposit
-            uint256 indexTotalDelta = indexReserveDelta + indexDepositDelta;
-            uint256 stableTotalDelta = stableTotalAmount + afterFeeStableAmount;
+            uint256 totalIndexTotalDeltaWad = indexTotalDeltaWad + indexDepositDeltaWad;
+            uint256 totalStableTotalDeltaWad = stableTotalDeltaWad + stableDepositDeltaWad;
 
             // expect delta
-            uint256 totalDelta = (indexTotalDelta + stableTotalDelta);
-            uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-            uint256 expectStableDelta = totalDelta - expectIndexDelta;
+            uint256 totalDelta = totalIndexTotalDeltaWad + totalStableTotalDeltaWad;
+            uint256 expectIndexDeltaWad = totalDelta.mulPercentage(pair.expectIndexTokenP);
+            uint256 expectStableDeltaWad = totalDelta - expectIndexDeltaWad;
 
             if (_indexAmount > 0 && _stableAmount == 0) {
-                uint256 currentIndexRatio = indexTotalDelta.divPercentage(totalDelta);
-                int256 indexUnbalanced = int256(
-                    currentIndexRatio.divPercentage(pair.expectIndexTokenP)
-                ) - int256(PrecisionUtils.percentage());
-                if (indexUnbalanced < 0 && indexUnbalanced.abs() > pair.maxUnbalancedP) {
-                    availableDiscountRate = pair.unbalancedDiscountRate;
-                    availableDiscountAmount = expectIndexDelta.sub(indexTotalDelta);
-                }
+                (discountRate, discountAmount) =
+                    _getDiscount(pair, true, totalIndexTotalDeltaWad, expectIndexDeltaWad, totalDelta);
             }
 
             if (_stableAmount > 0 && _indexAmount == 0) {
-                uint256 currentStableRatio = stableTotalDelta.divPercentage(totalDelta);
-                int256 stableUnbalanced = int256(
-                    currentStableRatio.divPercentage(
-                        PrecisionUtils.percentage().sub(pair.expectIndexTokenP)
-                    )
-                ) - int256(PrecisionUtils.percentage());
-                if (stableUnbalanced < 0 && stableUnbalanced.abs() > pair.maxUnbalancedP) {
-                    availableDiscountRate = pair.unbalancedDiscountRate;
-                    availableDiscountAmount = expectStableDelta.sub(stableTotalDelta);
-                }
+                (discountRate, discountAmount) =
+                    _getDiscount(pair, false, totalStableTotalDeltaWad, expectStableDeltaWad, totalDelta);
             }
 
             (uint256 reserveA, uint256 reserveB) = AMMUtils.getReserve(
@@ -548,67 +527,61 @@ contract Pool is IPool, Upgradeable {
                 price,
                 AmountMath.PRICE_PRECISION
             );
-            if (indexTotalDelta > expectIndexDelta) {
-                uint256 needSwapIndexDelta = indexTotalDelta - expectIndexDelta;
-                uint256 swapIndexDelta = indexDepositDelta > needSwapIndexDelta
-                    ? (indexDepositDelta - needSwapIndexDelta)
-                    : indexDepositDelta;
+            if (totalIndexTotalDeltaWad > expectIndexDeltaWad) {
+                uint256 needSwapIndexDeltaWad = totalIndexTotalDeltaWad - expectIndexDeltaWad;
+                uint256 swapIndexDeltaWad = Math.min(indexDepositDeltaWad, needSwapIndexDeltaWad);
 
-                slipDelta =
-                    swapIndexDelta -
-                    AMMUtils.getAmountOut(
-                        AmountMath.getIndexAmount(swapIndexDelta, price),
+                slipDeltaWad = swapIndexDeltaWad
+                    - AMMUtils.getAmountOut(
+                        AmountMath.getIndexAmount(swapIndexDeltaWad, price),
                         reserveA,
                         reserveB
                     );
-                slipToken = pair.indexToken;
-                slipAmount = AmountMath.getIndexAmount(slipDelta, price);
+                slipAmount = AmountMath.getIndexAmount(slipDeltaWad, price) / (10 ** (18 - indexTokenDec));
+                if (slipAmount > 0) {
+                    slipToken = pair.indexToken;
+                }
 
-                afterFeeIndexAmount = afterFeeIndexAmount - slipAmount;
-            } else if (stableTotalDelta > expectStableDelta) {
-                uint256 needSwapStableDelta = stableTotalDelta - expectStableDelta;
-                uint256 swapStableDelta = afterFeeStableAmount > needSwapStableDelta
-                    ? (afterFeeStableAmount - needSwapStableDelta)
-                    : afterFeeStableAmount;
+                afterFeeIndexAmount -= slipAmount;
+            } else if (totalStableTotalDeltaWad > expectStableDeltaWad) {
+                uint256 needSwapStableDeltaWad = totalStableTotalDeltaWad - expectStableDeltaWad;
+                uint256 swapStableDeltaWad = Math.min(stableDepositDeltaWad, needSwapStableDeltaWad);
 
-                slipDelta =
-                    swapStableDelta -
-                    AmountMath.getStableDelta(
-                        AMMUtils.getAmountOut(swapStableDelta, reserveB, reserveA),
-                        price
-                    );
-                slipToken = pair.stableToken;
-                slipAmount = slipDelta;
-
-                afterFeeStableAmount = afterFeeStableAmount - slipDelta;
+                slipDeltaWad = swapStableDeltaWad - AMMUtils.getAmountOut(swapStableDeltaWad, reserveB, reserveA);
+                slipAmount = slipDeltaWad / (10 ** (18 - stableTokenDec));
+                if (slipAmount > 0) {
+                    slipToken = pair.stableToken;
+                }
+                afterFeeStableAmount -= slipAmount;
             }
         }
 
-        uint256 mintDelta = indexDepositDelta + afterFeeStableAmount - slipDelta;
+        uint256 mintDeltaWad = indexDepositDeltaWad + stableDepositDeltaWad - slipDeltaWad;
 
         // mint with discount
-        if (availableDiscountRate > 0) {
-            if (mintDelta > availableDiscountAmount) {
+        if (discountRate > 0) {
+            if (mintDeltaWad > discountAmount) {
                 mintAmount += AmountMath.getIndexAmount(
-                    availableDiscountAmount,
+                    discountAmount,
                     lpFairPrice(_pairIndex).mulPercentage(
-                        PrecisionUtils.percentage() - availableDiscountRate
+                        PrecisionUtils.percentage() - discountRate
                     )
                 );
-                mintDelta -= availableDiscountAmount;
+                mintDeltaWad -= discountAmount;
             } else {
                 mintAmount += AmountMath.getIndexAmount(
-                    mintDelta,
+                    mintDeltaWad,
                     lpFairPrice(_pairIndex).mulPercentage(
-                        PrecisionUtils.percentage() - availableDiscountRate
+                        PrecisionUtils.percentage() - discountRate
                     )
                 );
-                mintDelta -= mintDelta;
+                mintDeltaWad = 0;
             }
         }
 
-        if (mintDelta > 0) {
-            mintAmount += AmountMath.getIndexAmount(mintDelta, lpFairPrice(_pairIndex));
+        if (mintDeltaWad > 0) {
+            uint8 pairTokenDec = IERC20Metadata(pair.pairToken).decimals();
+            mintAmount += AmountMath.getIndexAmount(mintDeltaWad, lpFairPrice(_pairIndex)) / (10 ** (18 - pairTokenDec));
         }
 
         return (
@@ -620,6 +593,24 @@ contract Pool is IPool, Upgradeable {
             afterFeeIndexAmount,
             afterFeeStableAmount
         );
+    }
+
+    function _getDiscount(
+        IPool.Pair memory pair,
+        bool isIndex,
+        uint256 delta,
+        uint256 expectDelta,
+        uint256 totalDelta
+    ) internal pure returns (uint256 rate, uint256 amount) {
+        uint256 ratio = delta.divPercentage(totalDelta);
+        uint256 expectP = isIndex ? pair.expectIndexTokenP : PrecisionUtils.percentage().sub(pair.expectIndexTokenP);
+
+        int256 unbalancedP = int256(ratio.divPercentage(expectP)) - int256(PrecisionUtils.percentage());
+        if (unbalancedP < 0 && unbalancedP.abs() > pair.maxUnbalancedP) {
+            rate = pair.unbalancedDiscountRate;
+            amount = expectDelta.sub(delta);
+        }
+        return (rate, amount);
     }
 
     function _getStableTotalAmount(
@@ -647,17 +638,16 @@ contract Pool is IPool, Upgradeable {
     }
 
     function _addLiquidity(
-        address _account,
         address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
     ) private returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
-        require(_indexAmount > 0 || _stableAmount > 0, "invalid amount");
+        require(_indexAmount > 0 || _stableAmount > 0, "ia");
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         uint256 indexFeeAmount;
         uint256 stableFeeAmount;
@@ -683,8 +673,8 @@ contract Pool is IPool, Upgradeable {
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
         emit AddLiquidity(
+            msg.sender,
             recipient,
-            _account,
             _pairIndex,
             _indexAmount,
             _stableAmount,
@@ -712,9 +702,9 @@ contract Pool is IPool, Upgradeable {
             uint256 feeAmount
         )
     {
-        require(_amount > 0, "invalid amount");
+        require(_amount > 0, "ia");
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         uint256 feeIndexTokenAmount;
         uint256 feeStableTokenAmount;
@@ -728,13 +718,21 @@ contract Pool is IPool, Upgradeable {
 
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
         uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
-        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+        uint256 availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
 
-        uint256 totalAvailable = availableIndexToken.mulPrice(price) + availableStableToken;
-        uint256 totalReceive = receiveIndexTokenAmount.mulPrice(price) + receiveStableTokenAmount;
-        require(totalReceive <= totalAvailable, "insufficient available balance");
+        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+        uint256 availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
+
+        uint256 receiveIndexTokenAmountWad = receiveIndexTokenAmount * (10 ** (18 - indexTokenDec));
+        uint256 receiveStableTokenAmountWad = receiveStableTokenAmount * (10 ** (18 - stableTokenDec));
+
+        uint256 totalAvailable = availableIndexTokenWad.mulPrice(price) + availableStableTokenWad;
+        uint256 totalReceive = receiveIndexTokenAmountWad.mulPrice(price) + receiveStableTokenAmountWad;
+        require(totalReceive <= totalAvailable, "iab");
 
         _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
 
@@ -766,7 +764,7 @@ contract Pool is IPool, Upgradeable {
     }
 
     function claimFee(address token, uint256 amount) external onlyTreasury {
-        require(feeTokenAmounts[token] >= amount, "exceeded");
+        require(feeTokenAmounts[token] >= amount, "ex");
 
         feeTokenAmounts[token] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
@@ -779,9 +777,14 @@ contract Pool is IPool, Upgradeable {
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 price = getPrice(pair.indexToken);
 
-        uint256 lpFairDelta = AmountMath.getStableDelta(_getIndexTotalAmount(pair, vault), price) +
-            _getStableTotalAmount(pair, vault);
-        // return lpFairDelta;
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
+
+        uint256 indexTotalAmountWad = _getIndexTotalAmount(pair, vault) * (10 ** (18 - indexTokenDec));
+        uint256 stableTotalAmountWad = _getStableTotalAmount(pair, vault) * (10 ** (18 - stableTokenDec));
+
+        uint256 lpFairDelta = AmountMath.getStableDelta(indexTotalAmountWad, price) + stableTotalAmountWad;
+
         return
             lpFairDelta > 0 && IERC20(pair.pairToken).totalSupply() > 0
                 ? Math.mulDiv(
@@ -800,44 +803,60 @@ contract Pool is IPool, Upgradeable {
         if (_lpAmount == 0) return (0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "invalid price");
+        require(price > 0, "ipr");
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
-        uint256 stableReserveDelta = vault.stableTotalAmount;
-        uint256 depositDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
+        uint256 indexReserveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken,
+            int256(vault.indexTotalAmount),
+            18,
+            price
+        ));
+        uint256 stableReserveDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken,
+            int256(vault.stableTotalAmount),
+            18
+        ));
+        uint256 depositDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.pairToken,
+            int256(_lpAmount),
+            18,
+            lpFairPrice(_pairIndex)
+        ));
 
         // expect delta
-        uint256 totalDelta = (indexReserveDelta + stableReserveDelta + depositDelta);
+        uint256 totalDelta = (indexReserveDeltaWad + stableReserveDeltaWad + depositDeltaWad);
         uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
         uint256 expectStableDelta = totalDelta - expectIndexDelta;
 
         uint256 depositIndexTokenDelta;
         uint256 depositStableTokenDelta;
-
-        if (expectIndexDelta >= indexReserveDelta) {
-            uint256 extraIndexReserveDelta = expectIndexDelta - indexReserveDelta;
-            if (extraIndexReserveDelta >= depositDelta) {
-                depositIndexTokenDelta = depositDelta;
+        if (expectIndexDelta >= indexReserveDeltaWad) {
+            uint256 extraIndexReserveDelta = expectIndexDelta - indexReserveDeltaWad;
+            if (extraIndexReserveDelta >= depositDeltaWad) {
+                depositIndexTokenDelta = depositDeltaWad;
             } else {
                 depositIndexTokenDelta = extraIndexReserveDelta;
-                depositStableTokenDelta = depositDelta - extraIndexReserveDelta;
+                depositStableTokenDelta = depositDeltaWad - extraIndexReserveDelta;
             }
         } else {
-            uint256 extraStableReserveDelta = expectStableDelta - stableReserveDelta;
-            if (extraStableReserveDelta >= depositDelta) {
-                depositStableTokenDelta = depositDelta;
+            uint256 extraStableReserveDelta = expectStableDelta - stableReserveDeltaWad;
+            if (extraStableReserveDelta >= depositDeltaWad) {
+                depositStableTokenDelta = depositDeltaWad;
             } else {
-                depositIndexTokenDelta = depositDelta - extraStableReserveDelta;
+                depositIndexTokenDelta = depositDeltaWad - extraStableReserveDelta;
                 depositStableTokenDelta = extraStableReserveDelta;
             }
         }
-        depositIndexAmount = AmountMath.getIndexAmount(depositIndexTokenDelta, price);
-        depositStableAmount = depositStableTokenDelta;
+        uint256 indexTokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
+        uint256 stableTokenDec = uint256(IERC20Metadata(pair.stableToken).decimals());
+
+        depositIndexAmount = depositIndexTokenDelta * PrecisionUtils.pricePrecision() / price / (10 ** (18 - indexTokenDec));
+        depositStableAmount = depositStableTokenDelta / (10 ** (18 - stableTokenDec));
 
         // add fee
         depositIndexAmount = depositIndexAmount.divPercentage(
@@ -868,55 +887,65 @@ contract Pool is IPool, Upgradeable {
         if (_lpAmount == 0) return (0, 0, 0, 0, 0);
 
         IPool.Pair memory pair = getPair(_pairIndex);
-        require(pair.pairToken != address(0), "invalid pair");
+        require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
 
         // usdt value of reserve
         uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "invalid price");
+        require(price > 0, "ipr");
 
-        uint256 indexReserveDelta = AmountMath.getStableDelta(vault.indexTotalAmount, price);
-        uint256 stableReserveDelta = vault.stableTotalAmount;
-        uint256 receiveDelta = AmountMath.getStableDelta(_lpAmount, lpFairPrice(_pairIndex));
+        uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
+        uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
-        require(
-            indexReserveDelta + stableReserveDelta >= receiveDelta,
-            "insufficient available balance"
-        );
+        uint256 indexReserveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.indexToken,
+            int256(vault.indexTotalAmount),
+            18,
+            price));
+        uint256 stableReserveDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
+            pair.stableToken,
+            int256(vault.stableTotalAmount),
+            18));
+        uint256 receiveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+            pair.pairToken,
+            int256(_lpAmount),
+            18,
+            lpFairPrice(_pairIndex)));
+
+        require(indexReserveDeltaWad + stableReserveDeltaWad >= receiveDeltaWad, "iab");
 
         // expect delta
-        uint256 totalDelta = (indexReserveDelta + stableReserveDelta - receiveDelta);
-        uint256 expectIndexDelta = totalDelta.mulPercentage(pair.expectIndexTokenP);
-        uint256 expectStableDelta = totalDelta - expectIndexDelta;
+        uint256 totalDeltaWad = indexReserveDeltaWad + stableReserveDeltaWad - receiveDeltaWad;
+        uint256 expectIndexDeltaWad = totalDeltaWad.mulPercentage(pair.expectIndexTokenP);
+        uint256 expectStableDeltaWad = totalDeltaWad - expectIndexDeltaWad;
 
         // received delta of indexToken and stableToken
-        uint256 receiveIndexTokenDelta;
-        uint256 receiveStableTokenDelta;
-
-        if (indexReserveDelta > expectIndexDelta) {
-            uint256 extraIndexReserveDelta = indexReserveDelta - expectIndexDelta;
-            if (extraIndexReserveDelta >= receiveDelta) {
-                receiveIndexTokenDelta = receiveDelta;
+        uint256 receiveIndexTokenDeltaWad;
+        uint256 receiveStableTokenDeltaWad;
+        if (indexReserveDeltaWad > expectIndexDeltaWad) {
+            uint256 extraIndexReserveDelta = indexReserveDeltaWad - expectIndexDeltaWad;
+            if (extraIndexReserveDelta >= receiveDeltaWad) {
+                receiveIndexTokenDeltaWad = receiveDeltaWad;
             } else {
-                receiveIndexTokenDelta = extraIndexReserveDelta;
-                receiveStableTokenDelta = receiveDelta - extraIndexReserveDelta;
+                receiveIndexTokenDeltaWad = extraIndexReserveDelta;
+                receiveStableTokenDeltaWad = receiveDeltaWad - extraIndexReserveDelta;
             }
         } else {
-            uint256 extraStableReserveDelta = stableReserveDelta - expectStableDelta;
-            if (extraStableReserveDelta >= receiveDelta) {
-                receiveStableTokenDelta = receiveDelta;
+            uint256 extraStableReserveDelta = stableReserveDeltaWad - expectStableDeltaWad;
+            if (extraStableReserveDelta >= receiveDeltaWad) {
+                receiveStableTokenDeltaWad = receiveDeltaWad;
             } else {
-                receiveIndexTokenDelta = receiveDelta - extraStableReserveDelta;
-                receiveStableTokenDelta = extraStableReserveDelta;
+                receiveIndexTokenDeltaWad = receiveDeltaWad - extraStableReserveDelta;
+                receiveStableTokenDeltaWad = extraStableReserveDelta;
             }
         }
-        receiveIndexTokenAmount = AmountMath.getIndexAmount(receiveIndexTokenDelta, price);
-        receiveStableTokenAmount = receiveStableTokenDelta;
+        receiveIndexTokenAmount = AmountMath.getIndexAmount(receiveIndexTokenDeltaWad, price) / (10 ** (18 - indexTokenDec));
+        receiveStableTokenAmount = receiveStableTokenDeltaWad / (10 ** (18 - stableTokenDec));
 
         feeIndexTokenAmount = receiveIndexTokenAmount.mulPercentage(pair.removeLpFeeP);
         feeStableTokenAmount = receiveStableTokenAmount.mulPercentage(pair.removeLpFeeP);
-        feeAmount = feeIndexTokenAmount.mulPrice(price) + feeStableTokenAmount;
+        feeAmount = uint256(TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(feeIndexTokenAmount), price)) + feeStableTokenAmount;
 
         receiveIndexTokenAmount -= feeIndexTokenAmount;
         receiveStableTokenAmount -= feeStableTokenAmount;
@@ -927,12 +956,18 @@ contract Pool is IPool, Upgradeable {
         uint256 indexTokenAdd;
         uint256 stableTokenAdd;
         if (availableIndexToken < receiveIndexTokenAmount) {
-            stableTokenAdd = (receiveIndexTokenAmount - availableIndexToken).mulPrice(price);
+            stableTokenAdd = uint256(TokenHelper.convertIndexAmountToStableWithPrice(
+                pair,
+                int256(receiveIndexTokenAmount - availableIndexToken),
+                price));
             receiveIndexTokenAmount = availableIndexToken;
         }
 
         if (availableStableToken < receiveStableTokenAmount) {
-            indexTokenAdd = (receiveStableTokenAmount - availableStableToken).divPrice(price);
+            indexTokenAdd = uint256(TokenHelper.convertStableAmountToIndex(
+                pair,
+                int256(receiveStableTokenAmount - availableStableToken)
+            )).divPrice(price);
             receiveStableTokenAmount = availableStableToken;
         }
         receiveIndexTokenAmount += indexTokenAdd;
@@ -969,10 +1004,7 @@ contract Pool is IPool, Upgradeable {
     }
 
     function getProfit(uint pairIndex, address token) public view returns (int256 profit) {
-        for (uint256 i = 0; i < positionManagersLength(); i++) {
-            profit = profit + IPositionManager(positionManagers.at(i)).lpProfit(pairIndex, token);
-        }
-        return profit;
+        return IPositionManager(positionManager).lpProfit(pairIndex, token);
     }
 
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
@@ -997,21 +1029,5 @@ contract Pool is IPool, Upgradeable {
         uint256 _pairIndex
     ) external view override returns (TradingFeeConfig memory) {
         return tradingFeeConfigs[_pairIndex];
-    }
-
-    // function getFundingFeeConfig(uint256 _pairIndex) external view override returns (FundingFeeConfig memory) {
-    //     return fundingFeeConfigs[_pairIndex];
-    // }
-
-    function positionManagersAt(uint256 index) external view returns (address) {
-        return positionManagers.at(index);
-    }
-
-    function positionManagersLength() public view returns (uint256) {
-        return positionManagers.length();
-    }
-
-    function orderManagersLength() public view returns (uint256) {
-        return orderManagers.length();
     }
 }

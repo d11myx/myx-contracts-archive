@@ -4,9 +4,15 @@ import { ethers } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove } from './helpers/misc';
 import { BigNumber, constants } from 'ethers';
 import { getMockToken, TradeType } from '../helpers';
+import {
+    convertIndexAmount,
+    convertIndexAmountToStable,
+    convertStableAmount,
+    convertStableAmountToIndex,
+} from '../helpers/token-decimals';
 
 describe('LP: Pool cases', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
@@ -30,8 +36,8 @@ describe('LP: Pool cases', () => {
             );
 
             // add liquidity  增加流动性
-            const indexAmount = ethers.utils.parseUnits('10000', 18); //单价3w·
-            const stableAmount = ethers.utils.parseUnits('300000000', 18); //单价1
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals()); //单价3w·
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals()); //单价1
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -46,7 +52,7 @@ describe('LP: Pool cases', () => {
             expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
             await router
                 .connect(depositor.signer)
-                .addLiquidity(depositor.address, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 
             const lpToken = await getMockToken('', pair.pairToken);
             const totoalApply = await lpToken.totalSupply();
@@ -61,7 +67,9 @@ describe('LP: Pool cases', () => {
             expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.sub(stableAmount));
 
             // 50: 50
-            expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(vaultAfter.stableTotalAmount);
+            expect(vaultAfter.indexTotalAmount.mul(pairPrice)).to.be.eq(
+                await convertStableAmountToIndex(btc, usdt, vaultAfter.stableTotalAmount),
+            );
 
             // userPaid = actual vaultTotal + totalFee
             const totalFee = expectAddLiquidity.indexFeeAmount.mul(pairPrice).add(expectAddLiquidity.stableFeeAmount);
@@ -72,8 +80,6 @@ describe('LP: Pool cases', () => {
             // console.log('===================');
             // console.log(await positionManager.getNextFundingRate(pairIndex));
         });
-
-
 
         it('should decreased correct liquidity', async () => {
             const {
@@ -107,7 +113,7 @@ describe('LP: Pool cases', () => {
             const lpAmount = ethers.utils.parseEther('30000');
             const expectRemoveLiquidity = await pool.getReceivedAmount(pairIndex, lpAmount);
             await lpToken.connect(depositor.signer).approve(router.address, constants.MaxUint256);
-            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, lpAmount,false);
+            await router.connect(depositor.signer).removeLiquidity(pair.indexToken, pair.stableToken, lpAmount, false);
 
             const vaultAfter = await pool.getVault(pairIndex);
             const userBtcBalanceAfter = await btc.balanceOf(depositor.address);
@@ -124,19 +130,29 @@ describe('LP: Pool cases', () => {
             );
 
             // userPaid = actual vaultTotal
-            const vaultTotal = expectRemoveLiquidity.receiveIndexTokenAmount
-                .mul(pairPrice)
+            const vaultTotal = (
+                await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    expectRemoveLiquidity.receiveIndexTokenAmount
+                        .add(expectRemoveLiquidity.feeIndexTokenAmount)
+                        .mul(pairPrice),
+                )
+            )
                 .add(expectRemoveLiquidity.receiveStableTokenAmount)
-                .add(expectRemoveLiquidity.feeAmount);
+                .add(expectRemoveLiquidity.feeStableTokenAmount);
             const userPaid = lpAmount.mul(lpPrice);
-            expect(userPaid).to.be.eq(vaultTotal);
+            expect(userPaid).to.be.eq(await convertStableAmount(usdt, vaultTotal, 18));
 
-            expect(vaultAfter.indexTotalAmount.mul(pairPrice).add(vaultAfter.stableTotalAmount)).to.be.eq(
-                vaultBefore.indexTotalAmount
-                    .mul(pairPrice)
-                    .add(vaultBefore.stableTotalAmount)
+            expect(
+                (await convertIndexAmount(btc, vaultAfter.indexTotalAmount.mul(pairPrice), 18)).add(
+                    await convertIndexAmount(usdt, vaultAfter.stableTotalAmount, 18),
+                ),
+            ).to.be.eq(
+                (await convertIndexAmount(btc, vaultBefore.indexTotalAmount.mul(pairPrice), 18))
+                    .add(await convertIndexAmount(usdt, vaultBefore.stableTotalAmount, 18))
                     .sub(lpAmount)
-                    .add(expectRemoveLiquidity.feeAmount),
+                    .add(await convertIndexAmount(usdt, expectRemoveLiquidity.feeAmount, 18)),
             );
         });
     });
@@ -151,8 +167,8 @@ describe('LP: Pool cases', () => {
                 router,
             } = testEnv;
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('10000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -167,13 +183,14 @@ describe('LP: Pool cases', () => {
                 const {
                     users: [depositor],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                 } = testEnv;
 
                 // open position
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('100', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('100', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, depositor, router.address);
                 await increasePosition(
@@ -215,8 +232,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await increasePosition(
@@ -269,8 +286,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await decreasePosition(
                     testEnv,
@@ -324,8 +341,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await increasePosition(
@@ -382,8 +399,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await decreasePosition(
                     testEnv,
@@ -422,13 +439,14 @@ describe('LP: Pool cases', () => {
                 const {
                     users: [depositor],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                 } = testEnv;
 
                 // open position
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('200', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('200', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, depositor, router.address);
                 await increasePosition(
@@ -471,8 +489,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await increasePosition(
@@ -498,10 +516,12 @@ describe('LP: Pool cases', () => {
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
                 expect(availableLongAfter).to.be.eq(availableLongBefore);
-                expect(availableShortAfter).to.be.eq(availableShortBefore.add(size.mul(pairPrice)).add(lpFeeAmount));
+
+                const parsedStableAmount = await convertIndexAmountToStable(btc, usdt, size.mul(pairPrice));
+                expect(availableShortAfter).to.be.eq(availableShortBefore.add(parsedStableAmount).add(lpFeeAmount));
 
                 expect(vaultAfter.stableReservedAmount).to.be.eq(
-                    vaultBefore.stableReservedAmount.sub(size.mul(pairPrice)),
+                    vaultBefore.stableReservedAmount.sub(parsedStableAmount),
                 );
 
                 // console.log('===================1111');
@@ -530,8 +550,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await decreasePosition(
                     testEnv,
@@ -555,10 +575,11 @@ describe('LP: Pool cases', () => {
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
                 expect(availableLongAfter).to.be.eq(availableLongBefore);
-                expect(availableShortAfter).to.be.eq(availableShortBefore.sub(size.mul(pairPrice)).add(lpFeeAmount));
+                const parsedStableAmount = await convertIndexAmountToStable(btc, usdt, size.mul(pairPrice));
+                expect(availableShortAfter).to.be.eq(availableShortBefore.sub(parsedStableAmount).add(lpFeeAmount));
 
                 expect(vaultAfter.stableReservedAmount).to.be.eq(
-                    vaultBefore.stableReservedAmount.add(size.mul(pairPrice)),
+                    vaultBefore.stableReservedAmount.add(parsedStableAmount),
                 );
 
                 // console.log('===================1111');
@@ -587,8 +608,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await increasePosition(
@@ -613,11 +634,13 @@ describe('LP: Pool cases', () => {
                     .mul(pairPrice);
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
-                const delta = size.mul(pairPrice);
+                const parsedStableAmount = await convertIndexAmountToStable(btc, usdt, size.mul(pairPrice));
                 expect(availableLongAfter).to.be.eq(availableLongBefore);
-                expect(availableShortAfter).to.be.eq(availableShortBefore.sub(delta).add(lpFeeAmount));
+                expect(availableShortAfter).to.be.eq(availableShortBefore.sub(parsedStableAmount).add(lpFeeAmount));
 
-                expect(vaultAfter.stableReservedAmount).to.be.eq(vaultBefore.stableReservedAmount.add(delta));
+                expect(vaultAfter.stableReservedAmount).to.be.eq(
+                    vaultBefore.stableReservedAmount.add(parsedStableAmount),
+                );
 
                 // console.log('===================1111');
                 // console.log(await positionManager.getNextFundingRate(pairIndex));
@@ -645,8 +668,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await decreasePosition(
                     testEnv,
@@ -669,11 +692,14 @@ describe('LP: Pool cases', () => {
                     .mul(pairPrice);
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
-                const delta = size.mul(pairPrice);
-                expect(availableLongAfter).to.be.eq(availableLongBefore);
-                expect(availableShortAfter).to.be.eq(availableShortBefore.add(delta).add(lpFeeAmount));
+                const parsedStableAmount = await convertIndexAmountToStable(btc, usdt, size.mul(pairPrice));
 
-                expect(vaultAfter.stableReservedAmount).to.be.eq(vaultBefore.stableReservedAmount.sub(delta));
+                expect(availableLongAfter).to.be.eq(availableLongBefore);
+                expect(availableShortAfter).to.be.eq(availableShortBefore.add(parsedStableAmount).add(lpFeeAmount));
+
+                expect(vaultAfter.stableReservedAmount).to.be.eq(
+                    vaultBefore.stableReservedAmount.sub(parsedStableAmount),
+                );
 
                 // console.log('===================1111');
                 // console.log(await positionManager.getNextFundingRate(pairIndex));
@@ -685,13 +711,14 @@ describe('LP: Pool cases', () => {
                 const {
                     users: [depositor],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                 } = testEnv;
 
                 // open position
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('100', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('100', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, depositor, router.address);
                 await increasePosition(
@@ -724,9 +751,9 @@ describe('LP: Pool cases', () => {
                     testEnv,
                     depositor,
                     pairIndex,
-                    ethers.utils.parseUnits('30000', 18),
+                    ethers.utils.parseUnits('30000', await usdt.decimals()),
                     ethers.utils.parseUnits('30000', 30),
-                    ethers.utils.parseUnits('10', 18),
+                    ethers.utils.parseUnits('10', await btc.decimals()),
                     TradeType.MARKET,
                     true,
                 );
@@ -745,8 +772,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('20', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('20', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await increasePosition(
@@ -774,9 +801,13 @@ describe('LP: Pool cases', () => {
                     .mul(pairPrice);
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
-                expect(availableShortAfter).to.be.eq(
-                    availableShortBefore.sub(pairPrice.mul(ethers.utils.parseEther('10'))).add(lpFeeAmount),
+                const parsedStableAmount = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    pairPrice.mul(ethers.utils.parseUnits('10', await btc.decimals())),
                 );
+
+                expect(availableShortAfter).to.be.eq(availableShortBefore.sub(parsedStableAmount).add(lpFeeAmount));
 
                 expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount);
                 expect(vaultAfter.indexReservedAmount).to.be.eq(
@@ -786,7 +817,7 @@ describe('LP: Pool cases', () => {
 
                 expect(vaultAfter.stableTotalAmount).to.be.eq(vaultBefore.stableTotalAmount.add(lpFeeAmount));
                 expect(vaultAfter.stableReservedAmount).to.be.eq(
-                    vaultBefore.stableReservedAmount.add(pairPrice.mul(ethers.utils.parseEther('10'))),
+                    vaultBefore.stableReservedAmount.add(parsedStableAmount),
                 );
 
                 // console.log('===================1111');
@@ -818,8 +849,8 @@ describe('LP: Pool cases', () => {
                 const availableShortBefore = vaultBefore.stableTotalAmount.sub(vaultBefore.stableReservedAmount);
 
                 // open position
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('20', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('20', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
                 await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
                 const { executeReceipt } = await increasePosition(
@@ -848,12 +879,12 @@ describe('LP: Pool cases', () => {
                 const availableShortAfter = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
 
                 expect(availableLongAfter).to.be.eq(
-                    availableLongBefore.sub(pairPrice.mul(ethers.utils.parseEther('10'))),
+                    availableLongBefore.sub(pairPrice.mul(ethers.utils.parseUnits('10', await btc.decimals()))),
                 );
 
                 expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount);
                 expect(vaultAfter.indexReservedAmount).to.be.eq(
-                    vaultBefore.indexReservedAmount.add(ethers.utils.parseEther('10')),
+                    vaultBefore.indexReservedAmount.add(ethers.utils.parseUnits('10', await btc.decimals())),
                 );
 
                 expect(vaultAfter.stableTotalAmount).to.be.eq(vaultBefore.stableTotalAmount.add(lpFeeAmount));

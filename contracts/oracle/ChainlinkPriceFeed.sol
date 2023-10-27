@@ -12,12 +12,12 @@ import "../interfaces/AggregatorV3Interface.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.19;
 
 contract ChainlinkPriceFeed is IPriceFeed, Roleable {
     using SafeMath for uint256;
 
-    event FeedUpdate(address asset, address  feed);
+    event FeedUpdate(address asset, address feed);
 
     uint256 public immutable PRICE_DECIMALS = 30;
     uint256 public constant BASIS_POINTS_DIVISOR = 10000;
@@ -33,12 +33,15 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
 
     mapping(address => address) public priceFeeds;
 
-    constructor(IAddressesProvider _addressProvider, address[] memory _assets,address[] memory _feeds) {
-        ADDRESS_PROVIDER = _addressProvider;
-        _setAssetPrices(_assets,_feeds);
+    constructor(
+        IAddressesProvider _addressProvider,
+        address[] memory _assets,
+        address[] memory _feeds
+    ) Roleable(_addressProvider) {
+        _setAssetPrices(_assets, _feeds);
     }
 
-     modifier onlyTimelock() {
+    modifier onlyTimelock() {
         require(msg.sender == ADDRESS_PROVIDER.timelock(), "only timelock");
         _;
     }
@@ -51,16 +54,14 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
         chainlinkFlags = _chainlinkFlags;
     }
 
-    function setTokenConfig(
-      address[] memory assets, address[] memory feeds
-    ) external onlyTimelock {
-       _setAssetPrices(assets,feeds);
+    function setTokenConfig(address[] memory assets, address[] memory feeds) external onlyTimelock {
+        _setAssetPrices(assets, feeds);
     }
 
-     function _setAssetPrices(address[] memory assets, address[] memory feeds) private {
+    function _setAssetPrices(address[] memory assets, address[] memory feeds) private {
         require(assets.length == feeds.length, "inconsistent params length");
         for (uint256 i = 0; i < assets.length; i++) {
-            require(assets[i] != address(0),"!0");
+            require(assets[i] != address(0), "!0");
             priceFeeds[assets[i]] = feeds[i];
             emit FeedUpdate(assets[i], feeds[i]);
         }
@@ -94,6 +95,6 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
         require(price > 0, "could not fetch price");
 
         // uint256 _priceDecimals = priceDecimals[_token];
-        return price*(10 ** (PRICE_DECIMALS - 8));
+        return price * (10 ** (PRICE_DECIMALS - 8));
     }
 }

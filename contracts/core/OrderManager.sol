@@ -1,9 +1,6 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -48,8 +45,8 @@ contract OrderManager is IOrderManager, Upgradeable {
 
     IPool public pool;
     IPositionManager public positionManager;
-    address public executionLogic;
-    address public liquidationLogic;
+    // address public executionLogic;
+    // address public liquidationLogic;
     address public router;
 
     function initialize(
@@ -68,24 +65,22 @@ contract OrderManager is IOrderManager, Upgradeable {
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == executionLogic || msg.sender == liquidationLogic, "onlyExecutor");
+        require(
+            msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+                msg.sender == ADDRESS_PROVIDER.liquidationLogic(),
+            "onlyExecutor"
+        );
         _;
     }
 
     modifier onlyExecutorAndRouter() {
         require(
-            msg.sender == router || msg.sender == executionLogic || msg.sender == liquidationLogic,
+            msg.sender == router ||
+                msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+                msg.sender == ADDRESS_PROVIDER.liquidationLogic(),
             "no access"
         );
         _;
-    }
-
-    function setExecutionLogic(address _addressExecutionLogic) external onlyPoolAdmin {
-        executionLogic = _addressExecutionLogic;
-    }
-
-    function setLiquidationLogic(address _addressLiquidationLogic) external onlyPoolAdmin {
-        liquidationLogic = _addressLiquidationLogic;
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
@@ -96,7 +91,9 @@ contract OrderManager is IOrderManager, Upgradeable {
         TradingTypes.CreateOrderRequest calldata request
     ) public returns (uint256 orderId) {
         require(
-            msg.sender == executionLogic || msg.sender == liquidationLogic || msg.sender == router,
+            msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+                msg.sender == ADDRESS_PROVIDER.liquidationLogic() ||
+                msg.sender == router,
             "onlyExecutor&Router"
         );
         address account = request.account;
@@ -128,6 +125,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                 );
                 // check leverage
                 (uint256 afterPosition, ) = position.validLeverage(
+                    pair,
                     price,
                     request.collateral,
                     uint256(request.sizeAmount),
@@ -141,6 +139,7 @@ contract OrderManager is IOrderManager, Upgradeable {
             if (request.sizeAmount < 0) {
                 // check leverage
                 position.validLeverage(
+                    pair,
                     price,
                     request.collateral,
                     uint256(request.sizeAmount.abs()),

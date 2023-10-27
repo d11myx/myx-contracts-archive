@@ -3,23 +3,15 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
     CONVERTOR_ID,
-    EXECUTOR_ID,
     FEE_DISTRIBUTOR_ID,
-    getAddressesProvider,
-    getIndexPriceFeed,
-    getOraclePriceFeed,
     getPool,
     getPositionManager,
     getRoleManager,
     getToken,
-    getWETH,
     LP_STAKING_POOL_ID,
     MYX_ID,
-    ORDER_MANAGER_ID,
-    POSITION_MANAGER_ID,
     RAMYX_ID,
     REWARD_DISTRIBUTOR_ID,
-    ROUTER_ID,
     STAKING_POOL_ID,
     STMYX_ID,
     VESTER_ID,
@@ -41,7 +33,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const { deploy } = deployments;
     const {
         deployer,
-        poolAdmin,
         teamAndAdvisor,
         privatePlacement,
         community,
@@ -51,7 +42,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         developmentReserve,
     } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
-    const poolAdminSigner = await hre.ethers.getSigner(poolAdmin);
 
     let usdt = await getToken();
     let pool = await getPool();
@@ -104,9 +94,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const vester = (await hre.ethers.getContractAt(vesterArtifact.abi, vesterArtifact.address)) as Vester;
 
     await waitForTx(await myx.initialize(vester.address, '1000000000000000000000000000'));
-    console.log(
-        `myx balance of ${vester.address} : ${hre.ethers.utils.formatEther(await myx.balanceOf(vester.address))}`,
-    );
+    // console.log(
+    //     `myx balance of ${vester.address} : ${hre.ethers.utils.formatEther(await myx.balanceOf(vester.address))}`,
+    // );
 
     // stakingPool
     const stakingPoolArtifact = await deploy(`${STAKING_POOL_ID}`, {

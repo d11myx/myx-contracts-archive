@@ -17,29 +17,30 @@ import {
     RoleManager,
     Router,
     TestCallBack,
-    Token,
-    WETH,
+    WETH9,
     Timelock,
+    ERC20DecimalsMock,
+    SpotSwap,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
-import { Duration, deployContract, deployUpgradeableContract, encodeParameterArray, increase, latest, waitForTx } from './utilities/tx';
+import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
 import { MOCK_INDEX_PRICES, MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
 import { getWETH } from './contract-getters';
-import { POSITION_MANAGER_ID } from './deploy-ids';
-import usdt from '../markets/usdt';
+import { Duration, latest } from './utilities/block';
+import { encodeParameterArray } from './utilities';
 
 declare var hre: HardhatRuntimeEnvironment;
 
-export const deployMockToken = async (symbol: string): Promise<Token> => {
-    return await deployContract<Token>('Token', [symbol]);
+export const deployMockToken = async (name: string, symbol: string, decimals: number): Promise<ERC20DecimalsMock> => {
+    return await deployContract<ERC20DecimalsMock>('ERC20DecimalsMock', [name, symbol, decimals]);
 };
 
-export const deployWETH = async (): Promise<WETH> => {
-    return await deployContract<WETH>('WETH', ['WETH', 'WETH', '18']);
+export const deployWETH = async (): Promise<WETH9> => {
+    return await deployContract<WETH9>('WETH9', []);
 };
 
 const logFlag = false;
@@ -64,19 +65,21 @@ export async function deployLibraries() {
 export async function deployToken() {
     log(` - setup tokens`);
 
+    const reserveConfig = loadReserveConfig(MARKET_NAME);
+
     // basic token
-    const usdt = await deployMockToken(MARKET_NAME);
+    const usdt = await deployMockToken(MARKET_NAME, MARKET_NAME, reserveConfig.MarketTokenDecimals);
     log(`deployed USDT at ${usdt.address}`);
 
     const weth = await deployWETH();
     log(`deployed WETH at ${weth.address}`);
 
     // pairs token
-    const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
+    const pairConfigs = reserveConfig?.PairsConfig;
 
-    const tokens: SymbolMap<Token> = {};
-    for (let pair of Object.keys(pairConfigs)) {
-        const token = await deployMockToken(pair);
+    const tokens: SymbolMap<ERC20DecimalsMock> = {};
+    for (let [pair, pairConfig] of Object.entries(pairConfigs)) {
+        const token = await deployMockToken(pair, pair, pairConfig.pairTokenDecimals);
         log(`deployed ${pair} at ${token.address}`);
 
         tokens[pair] = token;
@@ -89,7 +92,7 @@ export async function deployPrice(
     keeper: SignerWithAddress,
     timelock: Timelock,
     addressesProvider: AddressesProvider,
-    tokens: SymbolMap<Token>,
+    tokens: SymbolMap<ERC20DecimalsMock>,
 ) {
     log(` - setup price`);
 
@@ -128,25 +131,17 @@ export async function deployPrice(
 
     await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenIndexPrices);
 
-    let timestamp = await latest();
-    let eta = Duration.days(1);
-    await timelock.queueTransaction(
-        oraclePriceFeed.address,
-        0,
-        'setAssetPriceIds(address[],bytes32[])',
-        encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-        eta.add(timestamp),
-    );
-    await increase(Duration.days(1));
-    await waitForTx(
-        await timelock.executeTransaction(
-            oraclePriceFeed.address,
-            0,
-            'setAssetPriceIds(address[],bytes32[])',
-            encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-            eta.add(timestamp),
-        ),
-    );
+    await hre.run('time-execution', {
+        target: oraclePriceFeed.address,
+        value: '0',
+        signature: 'setAssetPriceIds(address[],bytes32[])',
+        data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+        eta: Duration.days(1)
+            .add(await latest())
+            .toString(),
+        timelockAddress: timelock.address,
+    });
+
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = mockPyth.getUpdateFee(updateData);
     await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
@@ -156,9 +151,6 @@ export async function deployPrice(
     ])) as any as FundingRate;
     log(`deployed FundingRate at ${fundingRate.address}`);
 
-    await addressesProvider
-        .connect(deployer.signer)
-        .initialize(oraclePriceFeed.address, indexPriceFeed.address, fundingRate.address);
     return { oraclePriceFeed, indexPriceFeed, fundingRate };
 }
 
@@ -166,7 +158,7 @@ export async function deployPair(
     addressProvider: AddressesProvider,
     vaultPriceFeed: PythOraclePriceFeed,
     deployer: SignerWithAddress,
-    weth: WETH,
+    weth: WETH9,
 ) {
     log(` - setup pairs`);
     const poolTokenFactory = (await deployContract('PoolTokenFactory', [addressProvider.address])) as PoolTokenFactory;
@@ -175,12 +167,15 @@ export async function deployPair(
         poolTokenFactory.address,
     ])) as any as Pool;
     log(`deployed Pool at ${pool.address}`);
+    const spotSwap = (await deployUpgradeableContract('SpotSwap', [addressProvider.address])) as any as SpotSwap;
+    log(`deployed SpotSwap at ${spotSwap.address}`);
+    await pool.setSpotSwap(spotSwap.address);
 
     //TODO uniswap config
     // await pool.setRouter(ZERO_ADDRESS);
     // await pool.updateTokenPath();
 
-    return { poolTokenFactory, pool };
+    return { poolTokenFactory, pool, spotSwap };
 }
 
 export async function deployTrading(
@@ -189,7 +184,7 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
-    pledge: Token,
+    pledge: ERC20DecimalsMock,
     validationHelper: Contract,
 ) {
     log(` - setup trading`);
@@ -224,7 +219,6 @@ export async function deployTrading(
     log(`deployed OrderManager at ${orderManager.address}`);
 
     let router = (await deployContract('Router', [
-
         addressProvider.address,
         orderManager.address,
         pool.address,
@@ -237,6 +231,7 @@ export async function deployTrading(
         pool.address,
         orderManager.address,
         positionManager.address,
+        feeCollector.address,
     ])) as any as LiquidationLogic;
     log(`deployed LiquidationLogic at ${liquidationLogic.address}`);
 
@@ -250,13 +245,9 @@ export async function deployTrading(
     ])) as any as ExecutionLogic;
     log(`deployed ExecutionLogic at ${executionLogic.address}`);
 
-    let executor = (await deployUpgradeableContract('Executor', [
-        addressProvider.address,
-        executionLogic.address,
-        liquidationLogic.address,
-    ])) as any as Executor;
+    let executor = (await deployContract('Executor', [addressProvider.address])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
-    log(`executionLogic pool : ${await executor.executionLogic()}`);
+
 
     await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
 
@@ -268,12 +259,6 @@ export async function deployTrading(
 
     await waitForTx(await executionLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
     await waitForTx(await liquidationLogic.connect(poolAdmin.signer).updateExecutor(executor.address));
-
-    await positionManager.updateExecutionLogic(executionLogic.address);
-    await positionManager.updateLiquidationLogic(liquidationLogic.address);
-    // await positionManager.addLogic(orderManager.address);
-    await orderManager.setExecutionLogic(executionLogic.address);
-    await orderManager.setLiquidationLogic(liquidationLogic.address);
 
     return {
         positionManager,

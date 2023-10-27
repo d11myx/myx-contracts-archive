@@ -1,3 +1,4 @@
+// @ts-ignore
 import { ethers } from 'hardhat';
 import { getIndexPriceFeed, getOraclePriceFeed, getRoleManager, getTokens, waitForTx } from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';

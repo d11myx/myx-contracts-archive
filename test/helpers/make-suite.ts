@@ -6,10 +6,10 @@ import {
     IndexPriceFeed,
     Pool,
     RoleManager,
-    Token,
+    ERC20DecimalsMock,
     PositionManager,
     PythOraclePriceFeed,
-    WETH,
+    WETH9,
     Router,
     Executor,
     OrderManager,
@@ -19,6 +19,7 @@ import {
     LiquidationLogic,
     FeeCollector,
     Timelock,
+    SpotSwap,
 } from '../../types';
 import {
     SymbolMap,
@@ -46,6 +47,7 @@ import {
     getRiskReserve,
     getLiquidationLogic,
     getFeeCollector,
+    getSpotSwap,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -60,14 +62,15 @@ export interface TestEnv {
     poolAdmin: SignerWithAddress;
     keeper: SignerWithAddress;
     users: SignerWithAddress[];
-    weth: WETH;
-    btc: Token;
-    eth: Token;
-    usdt: Token;
+    weth: WETH9;
+    btc: ERC20DecimalsMock;
+    eth: ERC20DecimalsMock;
+    usdt: ERC20DecimalsMock;
     addressesProvider: AddressesProvider;
     roleManager: RoleManager;
-    pairTokens: SymbolMap<Token>;
+    pairTokens: SymbolMap<ERC20DecimalsMock>;
     pool: Pool;
+    spotSwap: SpotSwap;
     fundingRate: FundingRate;
     oraclePriceFeed: PythOraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
@@ -86,14 +89,15 @@ export const testEnv: TestEnv = {
     poolAdmin: {} as SignerWithAddress,
     keeper: {} as SignerWithAddress,
     users: [] as SignerWithAddress[],
-    weth: {} as WETH,
-    btc: {} as Token,
-    eth: {} as Token,
-    usdt: {} as Token,
+    weth: {} as WETH9,
+    btc: {} as ERC20DecimalsMock,
+    eth: {} as ERC20DecimalsMock,
+    usdt: {} as ERC20DecimalsMock,
     addressesProvider: {} as AddressesProvider,
     roleManager: {} as RoleManager,
-    pairTokens: {} as SymbolMap<Token>,
+    pairTokens: {} as SymbolMap<ERC20DecimalsMock>,
     pool: {} as Pool,
+    spotSwap: {} as SpotSwap,
     fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as PythOraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
@@ -129,7 +133,7 @@ export async function setupTestEnv() {
     const allDeployments = await hre.deployments.all();
     const mockTokenKeys = Object.keys(allDeployments).filter((key) => key.includes(MOCK_TOKEN_PREFIX));
 
-    let pairTokens: SymbolMap<Token> = {};
+    let pairTokens: SymbolMap<ERC20DecimalsMock> = {};
     for (let [key, deployment] of Object.entries(allDeployments)) {
         if (mockTokenKeys.includes(key)) {
             pairTokens[key.replace(MOCK_TOKEN_PREFIX, '')] = await getToken(deployment.address);
@@ -153,6 +157,7 @@ export async function setupTestEnv() {
 
     // pair
     testEnv.pool = await getPool();
+    testEnv.spotSwap = await getSpotSwap();
 
     testEnv.fundingRate = await getFundingRate();
 
@@ -210,7 +215,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         tokens,
     );
 
-    const { poolTokenFactory, pool } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { pool, spotSwap } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const {
         positionManager,
@@ -223,8 +228,17 @@ export async function newTestEnv(): Promise<TestEnv> {
         feeCollector,
     } = await deployTrading(deployer, deployer, addressesProvider, roleManager, pool, usdt, validationHelper);
 
-    await pool.addPositionManager(positionManager.address);
-    await pool.addOrderManager(orderManager.address);
+    await addressesProvider
+        .connect(deployer.signer)
+        .initialize(
+            oraclePriceFeed.address,
+            indexPriceFeed.address,
+            fundingRate.address,
+            executionLogic.address,
+            liquidationLogic.address,
+        );
+    await pool.setPositionManager(positionManager.address);
+    await pool.setOrderManager(orderManager.address);
     await initPairs(deployer, tokens, usdt, pool, fundingRate);
 
     await roleManager.addKeeper(executor.address);
@@ -241,6 +255,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         roleManager: roleManager,
         pairTokens: tokens,
         pool: pool,
+        spotSwap: spotSwap,
         fundingRate: fundingRate,
         oraclePriceFeed: oraclePriceFeed,
         indexPriceFeed: indexPriceFeed,

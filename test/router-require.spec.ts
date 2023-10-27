@@ -7,7 +7,7 @@ import { expect } from './shared/expect';
 import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Router: check require condition, trigger errors', async () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before(async () => {
@@ -20,8 +20,8 @@ describe('Router: check require condition, trigger errors', async () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('20000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         let testCallBack = await deployMockCallback();
         var pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
@@ -32,21 +32,22 @@ describe('Router: check require condition, trigger errors', async () => {
     });
     after(async () => {});
 
-    describe('createIncreaseOrder permission check', async () => {
+    describe('createIncreaseOrderWithTpSl permission check', async () => {
         it('check msg.sender whith request.account', async () => {
             const {
                 keeper,
                 deployer,
                 users: [user1, user2],
                 usdt,
+                btc,
                 router,
                 executionLogic,
                 orderManager,
             } = testEnv;
 
-            const amount = ethers.utils.parseUnits('10000', 18);
-            const collateral = ethers.utils.parseUnits('10000', 18);
-            const size = ethers.utils.parseUnits('10', 18);
+            const amount = ethers.utils.parseUnits('10000', await btc.decimals());
+            const collateral = ethers.utils.parseUnits('10000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('10', await btc.decimals());
 
             await waitForTx(await usdt.connect(deployer.signer).mint(user1.address, collateral));
             await usdt.connect(user1.signer).approve(router.address, MAX_UINT_AMOUNT);
@@ -72,9 +73,9 @@ describe('Router: check require condition, trigger errors', async () => {
 
             // setting createIncreateOrder: msg.sender = user
             const orderId = await orderManager.ordersIndex();
-            await router.connect(user2.signer).createIncreaseOrder(increasePositionRequest);
+            await router.connect(user2.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
-            // await expect(router.connect(user2.signer).createIncreaseOrder(increasePositionRequest)).to.be.revertedWith('not order sender or handler');
+            // await expect(router.connect(user2.signer).createIncreaseOrderWithTpSl(increasePositionRequest)).to.be.revertedWith('not order sender or handler');
         });
 
         // TODO: Function to be implemented
@@ -115,7 +116,7 @@ describe('Router: check require condition, trigger errors', async () => {
         //     const isFrozen = tradingVault.isFrozen(user1.address);
 
         //     const orderId = await tradingRouter.ordersIndex();
-        //     await expect(router.connect(user1.signer).createIncreaseOrder(increasePositionRequest)).to.be.reverted;
+        //     await expect(router.connect(user1.signer).createIncreaseOrderWithTpSl(increasePositionRequest)).to.be.reverted;
         // });
 
         describe('disable pair', async () => {
@@ -147,6 +148,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     deployer,
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     pool,
                     orderManager,
@@ -174,8 +176,8 @@ describe('Router: check require condition, trigger errors', async () => {
                 const pairAft = await pool.getPair(pairIndex);
                 // console.log(`pairAft: `, pairAft);
 
-                const collateral = ethers.utils.parseUnits('10000', 18);
-                const size = ethers.utils.parseUnits('10', 18);
+                const collateral = ethers.utils.parseUnits('10000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('10', await btc.decimals());
 
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
@@ -197,7 +199,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await expect(
-                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                    router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
                 ).to.be.revertedWith('trade pair not supported');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
@@ -210,6 +212,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     deployer,
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     pool,
                     orderManager,
@@ -222,8 +225,8 @@ describe('Router: check require condition, trigger errors', async () => {
                 // console.log(`--minTradeAmount: `, minTradeAmount);
                 // console.log(`--maxTradeAmount: `, maxTradeAmount);
 
-                const collateral = ethers.utils.parseUnits('10000', 18);
-                const sizeAmount = ethers.utils.parseUnits('5', 15);
+                const collateral = ethers.utils.parseUnits('10000', await usdt.decimals());
+                const sizeAmount = ethers.utils.parseUnits('0.0005', await btc.decimals());
 
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
                 await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
@@ -245,7 +248,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await expect(
-                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                    router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
                 ).to.be.revertedWith('invalid trade size');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
@@ -256,6 +259,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     deployer,
                     users: [trader],
                     usdt,
+                    btc,
                     pool,
                     router,
                     orderManager,
@@ -268,8 +272,8 @@ describe('Router: check require condition, trigger errors', async () => {
                 // console.log(`minTradeAmount: `, minTradeAmount);
                 // console.log(`maxTradeAmount: `, maxTradeAmount);
 
-                const amount = ethers.utils.parseUnits('30000', 18);
-                const collateral = ethers.utils.parseUnits('1000', 18);
+                const amount = ethers.utils.parseUnits('30000', await btc.decimals());
+                const collateral = ethers.utils.parseUnits('1000', await usdt.decimals());
                 const sizeAmount = ethers.utils.parseUnits('100001', 18);
 
                 await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
@@ -292,7 +296,7 @@ describe('Router: check require condition, trigger errors', async () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await expect(
-                    router.connect(trader.signer).createIncreaseOrder(increasePositionRequest),
+                    router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
                 ).to.be.revertedWith('invalid trade size');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });

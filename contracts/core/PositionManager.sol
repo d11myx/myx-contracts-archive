@@ -1,10 +1,8 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.20;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {PositionStatus, IPositionManager} from "../interfaces/IPositionManager.sol";
 import "../libraries/Position.sol";
 import "../libraries/PositionKey.sol";
@@ -18,6 +16,7 @@ import "../interfaces/IRoleManager.sol";
 import "../interfaces/IRiskReserve.sol";
 import "../interfaces/IFeeCollector.sol";
 import "../libraries/Upgradeable.sol";
+import "../helpers/TokenHelper.sol";
 
 contract PositionManager is IPositionManager, Upgradeable {
     using SafeERC20 for IERC20;
@@ -48,9 +47,6 @@ contract PositionManager is IPositionManager, Upgradeable {
     IFeeCollector public feeCollector;
     address public pledgeAddress;
 
-    address public executionLogic;
-    address public liquidationLogic;
-
     // constructor() FeeManager() Pausable() {}
     function initialize(
         IAddressesProvider addressProvider,
@@ -67,20 +63,12 @@ contract PositionManager is IPositionManager, Upgradeable {
     }
 
     modifier onlyExecutor() {
-        require(msg.sender == executionLogic || msg.sender == liquidationLogic, "onlyExecutor");
+        require(
+            msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+                msg.sender == ADDRESS_PROVIDER.liquidationLogic(),
+            "onlyExecutor"
+        );
         _;
-    }
-
-    function updateExecutionLogic(address _executionLogic) external onlyPoolAdmin {
-        address oldAddress = executionLogic;
-        executionLogic = _executionLogic;
-        emit UpdatedExecutionLogic(msg.sender, oldAddress, executionLogic);
-    }
-
-    function updateLiquidationLogic(address _liquidationLogic) external onlyPoolAdmin {
-        address oldAddress = liquidationLogic;
-        liquidationLogic = _liquidationLogic;
-        emit UpdatedLiquidationLogic(msg.sender, oldAddress, liquidationLogic);
     }
 
     function increasePosition(
@@ -208,10 +196,12 @@ contract PositionManager is IPositionManager, Upgradeable {
         position.fundingFeeTracker = globalFundingFeeTracker[pairIndex];
         position.positionAmount -= sizeAmount;
 
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+
         // settlement lp position
         _settleLPPosition(pairIndex, sizeAmount, isLong, false, oraclePrice);
 
-        pnl = position.getUnrealizedPnl(sizeAmount, oraclePrice);
+        pnl = position.getUnrealizedPnl(pair, sizeAmount, oraclePrice);
 
         int256 totalSettlementAmount = pnl + charge;
         if (totalSettlementAmount >= 0) {
@@ -222,9 +212,7 @@ contract PositionManager is IPositionManager, Upgradeable {
             } else {
                 if (position.positionAmount == 0) {
                     uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
-                    IPool.Pair memory pair = pool.getPair(pairIndex);
                     riskReserve.decrease(pair.stableToken, subsidy);
-                    //                    pool.setLPStableProfit(pairIndex, -int256(subsidy));
                     position.collateral = position.collateral.sub(
                         int256(totalSettlementAmount + int256(subsidy)).abs()
                     );
@@ -242,7 +230,6 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         if (position.positionAmount == 0 && position.collateral > 0) {
             if (useRiskReserve) {
-                IPool.Pair memory pair = pool.getPair(pairIndex);
                 pool.setLPStableProfit(pairIndex, -int256(position.collateral));
                 riskReserve.increase(pair.stableToken, position.collateral);
             } else {
@@ -289,6 +276,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         position.validLeverage(
+            pair,
             price,
             collateral,
             0,
@@ -330,18 +318,19 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 _price
     ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-
-        uint256 sizeDelta = _sizeAmount.mulPrice(_price);
+        uint256 sizeDeltaStable = uint256(
+            TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), _price)
+        );
 
         bool isTaker;
-        (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDelta);
+        (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDeltaStable);
         charge -= int256(tradingFee);
 
         uint256 lpAmount = feeCollector.distributeTradingFee(
             pair,
             _account,
             _keeper,
-            sizeDelta,
+            sizeDeltaStable,
             tradingFee,
             isTaker ? discount.takerDiscountRatio : discount.makerDiscountRatio,
             referralRate
@@ -352,7 +341,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         emit TakeFundingFeeAddTraderFee(
             _account,
             _pairIndex,
-            sizeDelta,
+            sizeDeltaStable,
             tradingFee,
             fundingFee,
             lpAmount
@@ -425,12 +414,16 @@ contract PositionManager is IPositionManager, Upgradeable {
                 nextExposureAmountChecker < currentExposureAmountChecker);
 
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
 
         if (currentPositionStatus == PositionStatus.Balance) {
             if (nextExposureAmountChecker > 0) {
                 pool.increaseReserveAmount(_pairIndex, _sizeAmount, 0);
             } else {
-                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                uint256 sizeDeltaStable = uint256(
+                    TokenHelper.convertIndexAmountToStable(pair, int256(sizeDelta))
+                );
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDeltaStable);
             }
             pool.updateAveragePrice(_pairIndex, _price);
             return;
@@ -448,26 +441,36 @@ contract PositionManager is IPositionManager, Upgradeable {
             } else {
                 uint256 decreaseLong;
                 uint256 increaseShort;
-
                 if (nextPositionStatus != PositionStatus.NetShort) {
                     decreaseLong = _sizeAmount;
                 } else {
                     decreaseLong = uint256(currentExposureAmountChecker);
                     increaseShort = _sizeAmount - decreaseLong;
                 }
-
                 pool.decreaseReserveAmount(_pairIndex, decreaseLong, 0);
-                _calLpProfit(_pairIndex, false, decreaseLong);
-
-                // increase reserve
                 if (increaseShort > 0) {
-                    pool.increaseReserveAmount(_pairIndex, 0, increaseShort.mulPrice(_price));
+                    pool.increaseReserveAmount(
+                        _pairIndex,
+                        0,
+                        uint256(
+                            TokenHelper.convertIndexAmountToStableWithPrice(
+                                pair,
+                                int256(increaseShort),
+                                _price
+                            )
+                        )
+                    );
                     pool.updateAveragePrice(_pairIndex, _price);
                 }
+
+                _calLpProfit(pair, false, decreaseLong);
             }
         } else if (currentPositionStatus == PositionStatus.NetShort) {
             if (isAddPosition) {
-                pool.increaseReserveAmount(_pairIndex, 0, sizeDelta);
+                uint256 sizeDeltaStable = uint256(
+                    TokenHelper.convertIndexAmountToStable(pair, int256(sizeDelta))
+                );
+                pool.increaseReserveAmount(_pairIndex, 0, sizeDeltaStable);
 
                 uint256 averagePrice = (uint256(-currentExposureAmountChecker).mulPrice(
                     lpVault.averagePrice
@@ -476,27 +479,32 @@ contract PositionManager is IPositionManager, Upgradeable {
             } else {
                 uint256 decreaseShort;
                 uint256 increaseLong;
-
                 if (nextExposureAmountChecker <= 0) {
                     decreaseShort = _sizeAmount;
                 } else {
                     decreaseShort = uint256(-currentExposureAmountChecker);
                     increaseLong = _sizeAmount - decreaseShort;
                 }
-                // decrease reserve & pnl
+
                 pool.decreaseReserveAmount(
                     _pairIndex,
                     0,
                     nextExposureAmountChecker >= 0
                         ? lpVault.stableReservedAmount
-                        : decreaseShort.mulPrice(lpVault.averagePrice)
+                        : uint256(
+                            TokenHelper.convertIndexAmountToStableWithPrice(
+                                pair,
+                                int256(decreaseShort),
+                                lpVault.averagePrice
+                            )
+                        )
                 );
-                _calLpProfit(_pairIndex, true, decreaseShort);
-                // increase reserve
                 if (increaseLong > 0) {
                     pool.increaseReserveAmount(_pairIndex, increaseLong, 0);
                     pool.updateAveragePrice(_pairIndex, _price);
                 }
+
+                _calLpProfit(pair, true, decreaseShort);
             }
         }
         // zero exposure
@@ -505,9 +513,12 @@ contract PositionManager is IPositionManager, Upgradeable {
         }
     }
 
-    function _calLpProfit(uint256 _pairIndex, bool lpIsLong, uint amount) internal {
-        int256 profit = _currentLpProfit(_pairIndex, lpIsLong, amount);
-        pool.setLPStableProfit(_pairIndex, profit);
+    function _calLpProfit(IPool.Pair memory pair, bool lpIsLong, uint amount) internal {
+        int256 profit = _currentLpProfit(pair.pairIndex, lpIsLong, amount);
+        pool.setLPStableProfit(
+            pair.pairIndex,
+            TokenHelper.convertIndexAmountToStable(pair, profit)
+        );
     }
 
     function _handleCollateral(
@@ -530,20 +541,20 @@ contract PositionManager is IPositionManager, Upgradeable {
     function _tradingFee(
         uint256 _pairIndex,
         bool _isLong,
-        uint256 sizeDelta
+        uint256 sizeDeltaStable
     ) internal view returns (uint256 tradingFee, bool isTaker) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
             // fee
             tradingFee = _isLong
-                ? sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP)
-                : sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP);
+                ? sizeDeltaStable.mulPercentage(tradingFeeConfig.takerFeeP)
+                : sizeDeltaStable.mulPercentage(tradingFeeConfig.makerFeeP);
             isTaker = _isLong;
         } else {
             tradingFee = _isLong
-                ? sizeDelta.mulPercentage(tradingFeeConfig.makerFeeP)
-                : sizeDelta.mulPercentage(tradingFeeConfig.takerFeeP);
+                ? sizeDeltaStable.mulPercentage(tradingFeeConfig.makerFeeP)
+                : sizeDeltaStable.mulPercentage(tradingFeeConfig.takerFeeP);
             isTaker = !_isLong;
         }
         return (tradingFee, isTaker);
@@ -631,7 +642,14 @@ contract PositionManager is IPositionManager, Upgradeable {
             currentExposureAmountChecker > 0,
             currentExposureAmountChecker.abs()
         );
-        return profit;
+
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        return
+            TokenHelper.convertTokenAmountTo(
+                pair.indexToken,
+                profit,
+                IERC20Metadata(token).decimals()
+            );
     }
 
     function getTradingFee(
@@ -641,9 +659,11 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
-        uint256 sizeDelta = _sizeAmount.mulPrice(price);
+        uint256 sizeDeltaStable = uint256(
+            TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), price)
+        );
 
-        (tradingFee, ) = _tradingFee(_pairIndex, _isLong, sizeDelta);
+        (tradingFee, ) = _tradingFee(_pairIndex, _isLong, sizeDeltaStable);
         return tradingFee;
     }
 
@@ -653,15 +673,19 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool _isLong
     ) public view override returns (int256 fundingFee) {
         Position.Info memory position = positions.get(_account, _pairIndex, _isLong);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
         int256 fundingFeeTracker = globalFundingFeeTracker[_pairIndex] - position.fundingFeeTracker;
         if ((_isLong && fundingFeeTracker > 0) || (!_isLong && fundingFeeTracker < 0)) {
             fundingFee = -1;
         } else {
             fundingFee = 1;
         }
-        fundingFee *= int256(
-            (position.positionAmount * fundingFeeTracker.abs()) /
-                PrecisionUtils.fundingRatePrecision()
+        fundingFee *= TokenHelper.convertIndexAmountToStable(
+            pair,
+            int256(
+                (position.positionAmount * fundingFeeTracker.abs()) /
+                    PrecisionUtils.fundingRatePrecision()
+            )
         );
     }
 
@@ -690,13 +714,18 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 executionPrice
     ) external view returns (bool need, uint256 needADLAmount) {
         IPool.Vault memory vault = pool.getVault(pairIndex);
+        IPool.Pair memory pair = pool.getPair(pairIndex);
         int256 exposedPositions = this.getExposedPositions(pairIndex);
 
         int256 available;
         if (isLong) {
+            int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(
+                pair,
+                int256(vault.stableTotalAmount)
+            );
             available =
-                (int256(vault.stableTotalAmount) * int256(PrecisionUtils.pricePrecision())) /
-                int256(executionPrice) +
+                ((stableToIndexAmount * int256(PrecisionUtils.pricePrecision())) /
+                    int256(executionPrice)) +
                 exposedPositions;
         } else {
             available = int256(vault.indexTotalAmount) - exposedPositions;
