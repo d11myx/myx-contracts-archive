@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./IExecutionEvent.sol";
 
-interface ILiquidationLogic is IExecutionEvent {
+interface ILiquidationLogic is IExecution {
 
     event ExecuteLiquidation(
         bytes32 positionKey,
@@ -12,12 +12,13 @@ interface ILiquidationLogic is IExecutionEvent {
         bool isLong,
         uint256 collateral,
         uint256 sizeAmount,
-        uint256 price
+        uint256 price,
+        uint256 orderId
     );
 
     function updateExecutor(address _executor) external;
 
-    function liquidatePositions(bytes32[] memory positionKeys) external;
+    function liquidatePositions(ExecutePosition[] memory executePositions) external;
 
-    function liquidationPosition(bytes32 positionKey) external;
+    function liquidationPosition(bytes32 positionKey, uint8 level, uint256 commissionRatio) external;
 }

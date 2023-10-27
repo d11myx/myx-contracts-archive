@@ -1,10 +1,12 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
+import "../libraries/PrecisionUtils.sol";
+import "../libraries/TradingTypes.sol";
 
 library ValidationHelper {
     using PrecisionUtils for uint256;

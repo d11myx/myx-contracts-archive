@@ -7,53 +7,44 @@ import {
     TIMELOCK_ID,
     getWETH,
     waitForTx,
+    getTimelock,
+    getAddressesProvider,
+    getRoleManager,
 } from '../../helpers';
-import { AddressesProvider, RoleManager } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
     const { deployer, poolAdmin, operator, treasurer, keeper } = await getNamedAccounts();
     const deployerSigner = await hre.ethers.getSigner(deployer);
 
-    // AddressesProvider
-    const timelockArtifact = await deploy(TIMELOCK_ID, {
+    const weth = await getWETH();
+
+    // Timelock
+    await deploy(TIMELOCK_ID, {
         from: deployer,
         contract: 'Timelock',
-        args: ['43200'],
+        args: ['1'],
         ...COMMON_DEPLOY_PARAMS,
     });
+    const timelock = await getTimelock();
 
-    const timelock = (await hre.ethers.getContractAt(
-        timelockArtifact.abi,
-        timelockArtifact.address,
-    )) as AddressesProvider;
-
-    const weth = await getWETH();
     // AddressesProvider
-    const addressesProviderArtifact = await deploy(ADDRESSES_PROVIDER_ID, {
+    await deploy(ADDRESSES_PROVIDER_ID, {
         from: deployer,
         contract: 'AddressesProvider',
         args: [weth.address, timelock.address],
         ...COMMON_DEPLOY_PARAMS,
     });
-
-    const addressesProvider = (await hre.ethers.getContractAt(
-        addressesProviderArtifact.abi,
-        addressesProviderArtifact.address,
-    )) as AddressesProvider;
+    const addressesProvider = await getAddressesProvider();
 
     // RoleManager
-    const roleManagerArtifact = await deploy(ROLE_MANAGER_ID, {
+    await deploy(ROLE_MANAGER_ID, {
         from: deployer,
         contract: 'RoleManager',
         args: [],
         ...COMMON_DEPLOY_PARAMS,
     });
-
-    const roleManager = (await hre.ethers.getContractAt(
-        roleManagerArtifact.abi,
-        roleManagerArtifact.address,
-    )) as RoleManager;
+    const roleManager = await getRoleManager();
 
     // Setup RoleManager at AddressesProvider
     await waitForTx(await addressesProvider.setRolManager(roleManager.address));

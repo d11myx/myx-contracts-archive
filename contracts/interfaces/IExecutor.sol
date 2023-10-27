@@ -38,7 +38,7 @@ interface IExecutor {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        IExecutionLogic.ExecutePosition[] memory executePositions,
+        IExecution.ExecutePosition[] memory executePositions,
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         uint8 level,
@@ -49,7 +49,7 @@ interface IExecutor {
         address[] memory tokens,
         uint256[] memory prices,
         uint256 timestamp,
-        bytes32[] memory positionKeys
+        IExecution.ExecutePosition[] memory executePositions
     ) external payable;
 
     function needADL(

@@ -19,9 +19,20 @@ contract Faucet {
         amounts = _amounts;
     }
 
+    function getAssetList() external view returns (IERC20Metadata[] memory assetList, uint256[] memory amountList) {
+        assetList = new IERC20Metadata[](assets.length);
+        amountList = new uint256[](assets.length);
+        for (uint256 i = 0; i < assets.length; i++) {
+            assetList[i] = IERC20Metadata(assets[i]);
+            amountList[i] = amounts[i];
+        }
+        return (assetList, amountList);
+    }
+
     function getAsset() external {
         require(interval[msg.sender] + 86400 <= block.timestamp, "next interval");
 
+        bool received;
         for (uint256 i = 0; i < assets.length; i++) {
             IERC20Metadata token = IERC20Metadata(assets[i]);
 
@@ -29,9 +40,13 @@ contract Faucet {
 
             if (token.balanceOf(address(this)) >= amount) {
                 token.transfer(msg.sender, amount);
+                received = true;
             }
         }
-        interval[msg.sender] = block.timestamp;
+
+        if (received) {
+            interval[msg.sender] = block.timestamp;
+        }
     }
 
     function adminTransfer(address asset, address recipient) external {

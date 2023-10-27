@@ -3,13 +3,14 @@ import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { mintAndApprove, updateBTCPrice, increasePosition } from './helpers/misc';
 import { TradeType, getMockToken } from '../helpers';
-import { TradingTypes } from '../types/contracts/interfaces/IRouter';
-import { loadReserveConfig } from '../helpers/market-config-helper';
-import { MARKET_NAME } from '../helpers/env';
+import { loadReserveConfig } from '../helpers';
+import { MARKET_NAME } from '../helpers';
 import { constants, BigNumber } from 'ethers';
+import { TradingTypes } from '../types/contracts/core/Router';
+import { convertIndexAmountToStable, convertStableAmount } from '../helpers/token-decimals';
 
 describe('Position', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     describe('Position: liquidate positions', () => {
@@ -25,8 +26,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -40,6 +41,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -49,8 +51,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -75,7 +77,7 @@ describe('Position', () => {
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseEntrustPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseEntrustPositionRequest);
                 const entrustOrderBefore = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -103,7 +105,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -123,7 +125,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -135,12 +139,18 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.add(tradingFee);
 
@@ -163,8 +173,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -178,6 +188,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -187,8 +198,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -210,7 +221,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -231,7 +242,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '36000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
@@ -241,12 +254,18 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.add(tradingFee);
 
@@ -270,8 +289,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -285,6 +304,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -293,8 +313,8 @@ describe('Position', () => {
                     keeper,
                     pool,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -316,7 +336,7 @@ describe('Position', () => {
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseShortPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseShortPositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -343,7 +363,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseLongPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseLongPositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 const longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
                 balance = await usdt.balanceOf(trader.address);
@@ -363,7 +383,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '20000');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -400,8 +422,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -415,6 +437,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -424,8 +447,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -450,7 +473,7 @@ describe('Position', () => {
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseEntrustPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseEntrustPositionRequest);
                 const entrustOrderBefore = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -478,7 +501,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -499,7 +522,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '35700');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
@@ -511,24 +536,32 @@ describe('Position', () => {
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.abs().add(tradingFee);
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
-                const riskRate = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice)
-                    .div('1000000000000000000000000000000')
-                    .mul(tradingConfig.maintainMarginRate)
-                    .div('100000000')
-                    .mul('100000000')
-                    .div(exposureAsset);
+                const margin = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice)
+                        .div('1000000000000000000000000000000')
+                        .mul(tradingConfig.maintainMarginRate),
+                );
+                const riskRate = margin.div(exposureAsset);
 
                 expect(riskRate.div('1000000')).to.be.eq('105');
                 expect(balance).to.be.eq(entrustOrderBefore.collateral);
@@ -552,8 +585,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('10000', 18);
-                const stableAmount = ethers.utils.parseUnits('300000000', 18);
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -567,6 +600,7 @@ describe('Position', () => {
                 const {
                     users: [trader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -576,8 +610,8 @@ describe('Position', () => {
                     pool,
                     riskReserve,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('300000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('300000', 30);
 
                 /**
@@ -602,7 +636,7 @@ describe('Position', () => {
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increseEntrustPositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(increseEntrustPositionRequest);
                 const entrustOrderBefore = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -630,7 +664,7 @@ describe('Position', () => {
                 };
 
                 const orderId = await orderManager.ordersIndex();
-                await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(incresePositionRequest);
+                await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
                 await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
@@ -651,7 +685,9 @@ describe('Position', () => {
                 // update price and liquidatePositions
                 await updateBTCPrice(testEnv, '37710');
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await liquidationLogic.connect(keeper.signer).liquidatePositions([positionKey]);
+                await liquidationLogic
+                    .connect(keeper.signer)
+                    .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
@@ -663,24 +699,32 @@ describe('Position', () => {
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await pool.getPrice(pair.indexToken);
-                const pnl = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
-                    .div('1000000000000000000000000000000');
-                const sizeDelta = shortPositionBefore.positionAmount
-                    .mul(oraclePrice)
-                    .div('1000000000000000000000000000000');
+                const pnl = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice.sub(oraclePrice))
+                        .div('1000000000000000000000000000000'),
+                );
+                const sizeDelta = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount.mul(oraclePrice).div('1000000000000000000000000000000'),
+                );
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
                 const totalSettlementAmount = pnl.abs().add(tradingFee);
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
-                const riskRate = shortPositionBefore.positionAmount
-                    .mul(shortPositionBefore.averagePrice)
-                    .div('1000000000000000000000000000000')
-                    .mul(tradingConfig.maintainMarginRate)
-                    .div('100000000')
-                    .mul('100000000')
-                    .div(exposureAsset);
+                const margin = await convertIndexAmountToStable(
+                    btc,
+                    usdt,
+                    shortPositionBefore.positionAmount
+                        .mul(shortPositionBefore.averagePrice)
+                        .div('1000000000000000000000000000000')
+                        .mul(tradingConfig.maintainMarginRate),
+                );
+                const riskRate = margin.div(exposureAsset);
 
                 expect(riskRate.div('1000000')).to.be.eq('200');
                 expect(balance).to.be.eq(entrustOrderBefore.collateral);
@@ -704,8 +748,8 @@ describe('Position', () => {
                 } = testEnv;
 
                 // add liquidity
-                const indexAmount = ethers.utils.parseUnits('34', 18);
-                const stableAmount = ethers.utils.parseUnits('1000000', 18);
+                const indexAmount = ethers.utils.parseUnits('34', await btc.decimals());
+                const stableAmount = ethers.utils.parseUnits('1000000', await usdt.decimals());
                 const pair = await pool.getPair(pairIndex);
                 await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
                 await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -719,6 +763,7 @@ describe('Position', () => {
                 const {
                     users: [longTrader, shortTrader],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                     orderManager,
@@ -726,11 +771,11 @@ describe('Position', () => {
                     keeper,
                     pool,
                 } = testEnv;
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const collateral2 = ethers.utils.parseUnits('27000', 18);
-                const size = ethers.utils.parseUnits('30', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const collateral2 = ethers.utils.parseUnits('27000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('30', await btc.decimals());
                 const openPrice = ethers.utils.parseUnits('30000', 30);
-                const size2 = ethers.utils.parseUnits('18.66', 18);
+                const size2 = ethers.utils.parseUnits('18.66', await btc.decimals());
 
                 /**
                  * open position trader take all indexToken

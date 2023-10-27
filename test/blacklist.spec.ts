@@ -129,11 +129,11 @@ describe('Blacklist cases', () => {
             maxSlippage: 0,
         };
 
-        await expect(router.connect(blackUser.signer).createIncreaseOrder(increase)).to.be.revertedWith(
+        await expect(router.connect(blackUser.signer).createIncreaseOrderWithTpSl(increase)).to.be.revertedWith(
             'blacklist account',
         );
 
-        await expect(router.connect(blackUser.signer).createIncreaseOrderWithoutTpSl(increase)).to.be.revertedWith(
+        await expect(router.connect(blackUser.signer).createIncreaseOrder(increase)).to.be.revertedWith(
             'blacklist account',
         );
 

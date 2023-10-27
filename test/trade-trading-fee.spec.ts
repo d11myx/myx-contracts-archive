@@ -8,7 +8,7 @@ import { TradingTypes } from '../types/contracts/core/Router';
 
 describe('Trade: trading fee', () => {
     describe('user paid trading fee, platform should be received trading fee and it will be distributed', () => {
-        const pairIndex = 0;
+        const pairIndex = 1;
         let testEnv: TestEnv;
 
         before('add liquidity', async () => {
@@ -23,8 +23,8 @@ describe('Trade: trading fee', () => {
             } = testEnv;
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('30000', 18);
-            const stableAmount = ethers.utils.parseUnits('300000000', 18);
+            const indexAmount = ethers.utils.parseUnits('30000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
             const pair = await pool.getPair(pairIndex);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -47,13 +47,14 @@ describe('Trade: trading fee', () => {
                 users: [trader],
                 keeper,
                 usdt,
+                btc,
                 router,
                 positionManager,
                 feeCollector,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('30', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('30', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -65,7 +66,14 @@ describe('Trade: trading fee', () => {
 
             // increase position trading fee
             let tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
-            let positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, userPosition.positionAmount, true);
+            let positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                userPosition.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
@@ -102,6 +110,7 @@ describe('Trade: trading fee', () => {
             const {
                 users: [trader, trader2, trader3, trader4, trader5, trader6],
                 usdt,
+                btc,
                 router,
                 positionManager,
                 executionLogic,
@@ -116,8 +125,8 @@ describe('Trade: trading fee', () => {
             const vip3 = 3;
             const vip4 = 4;
             const vip5 = 5;
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const sizeAmount = ethers.utils.parseUnits('30', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('30', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             // vip = 0
@@ -134,7 +143,7 @@ describe('Trade: trading fee', () => {
             };
 
             let orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest);
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, normal, 0);
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -152,7 +161,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader2.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest2);
+            await router.connect(trader2.signer).createIncreaseOrder(increasePositionRequest2);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip1, 0);
             const trader2Position = await positionManager.getPosition(trader2.address, pairIndex, true);
 
@@ -170,7 +179,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader3.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest3);
+            await router.connect(trader3.signer).createIncreaseOrder(increasePositionRequest3);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip2, 0);
             const trader3Position = await positionManager.getPosition(trader3.address, pairIndex, true);
 
@@ -188,7 +197,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader4.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest4);
+            await router.connect(trader4.signer).createIncreaseOrder(increasePositionRequest4);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip3, 0);
             const trader4Position = await positionManager.getPosition(trader4.address, pairIndex, true);
 
@@ -206,7 +215,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader5.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest5);
+            await router.connect(trader5.signer).createIncreaseOrder(increasePositionRequest5);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip4, 0);
             const trader5Position = await positionManager.getPosition(trader5.address, pairIndex, true);
 
@@ -224,7 +233,7 @@ describe('Trade: trading fee', () => {
             };
 
             orderId = await orderManager.ordersIndex();
-            await router.connect(trader6.signer).createIncreaseOrderWithoutTpSl(increasePositionRequest6);
+            await router.connect(trader6.signer).createIncreaseOrder(increasePositionRequest6);
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip5, 0);
             const trader6Position = await positionManager.getPosition(trader6.address, pairIndex, true);
 
@@ -233,6 +242,8 @@ describe('Trade: trading fee', () => {
             let positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 traderPosition.positionAmount,
                 true,
             );
@@ -240,27 +251,62 @@ describe('Trade: trading fee', () => {
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader2Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader2Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader2Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader3Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader3Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader3Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader4Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader4Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader4Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader5Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader5Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader5Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
             tradingFee = await positionManager.getTradingFee(pairIndex, true, trader6Position.positionAmount);
-            positionTradingFee = await getPositionTradingFee(testEnv, pairIndex, trader6Position.positionAmount, true);
+            positionTradingFee = await getPositionTradingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                trader6Position.positionAmount,
+                true,
+            );
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 

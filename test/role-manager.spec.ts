@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { constants } from 'ethers';
-import { AddressesProvider, RoleManager, Timelock, WETH } from '../types';
+import { AddressesProvider, RoleManager, Timelock, WETH9 } from '../types';
 import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { deployContract } from '../helpers/utilities/tx';
@@ -14,8 +14,8 @@ describe('Access Control List Manager', () => {
     beforeEach(async () => {
         const { deployer, keeper } = testEnv;
         const timelock = (await deployContract('Timelock', ['43200'])) as Timelock;
-        const WETHMock = await ethers.getContractFactory('WETH');
-        const weth = (await WETHMock.deploy('WETH', 'WETH', '18')) as WETH;
+        const WETHMock = await ethers.getContractFactory('WETH9');
+        const weth = (await WETHMock.deploy()) as WETH9;
         const addressesProvider = (await deployContract('AddressesProvider', [
             weth.address,
             timelock.address,

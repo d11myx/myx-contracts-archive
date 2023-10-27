@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
 import "../libraries/PrecisionUtils.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IPool.sol";
+import "../helpers/TokenHelper.sol";
 
 library TradingHelper {
     using PrecisionUtils for uint256;
@@ -28,11 +29,12 @@ library TradingHelper {
 
     function exposureAmountChecker(
         IPool.Vault memory lpVault,
+        IPool.Pair memory pair,
         int256 exposedPositions,
         bool isLong,
         uint256 orderSize,
         uint256 executionPrice
-    ) internal pure returns (uint256 executionSize) {
+    ) internal view returns (uint256 executionSize) {
         executionSize = orderSize;
 
         if (exposedPositions >= 0) {
@@ -43,13 +45,12 @@ library TradingHelper {
                 }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                if (
-                    executionSize >
-                    uint256(exposedPositions) + availableStable.divPrice(executionPrice)
-                ) {
-                    executionSize =
-                        uint256(exposedPositions) +
-                        availableStable.divPrice(executionPrice);
+                uint256 stableToIndexAmount = uint256(TokenHelper.convertStableAmountToIndex(
+                    pair,
+                    int256(availableStable)
+                ));
+                if (executionSize > uint256(exposedPositions) + stableToIndexAmount.divPrice(executionPrice)) {
+                    executionSize = uint256(exposedPositions) + stableToIndexAmount.divPrice(executionPrice);
                 }
             }
         } else {
@@ -67,32 +68,4 @@ library TradingHelper {
         }
         return executionSize;
     }
-
-    //    function needADL(
-    //        IPool.Vault memory lpVault,
-    //        int256 exposedPositions,
-    //        bool isLong,
-    //        uint256 executionSize,
-    //        uint256 executionPrice
-    //    ) internal pure returns (bool) {
-    //        bool needADL;
-    //        if (exposedPositions >= 0) {
-    //            if (!isLong) {
-    //                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-    //                needADL = executionSize > availableIndex;
-    //            } else {
-    //                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-    //                needADL = executionSize > uint256(exposedPositions) + availableStable.divPrice(executionPrice);
-    //            }
-    //        } else {
-    //            if (!isLong) {
-    //                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-    //                needADL = executionSize > uint256(- exposedPositions) + availableIndex;
-    //            } else {
-    //                uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-    //                needADL = executionSize > availableStable.divPrice(executionPrice);
-    //            }
-    //        }
-    //        return needADL;
-    //    }
 }

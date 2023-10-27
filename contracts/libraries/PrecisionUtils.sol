@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/utils/math/Math.sol';
@@ -6,6 +6,7 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 library PrecisionUtils {
     uint256 public constant PERCENTAGE = 1e8;
     uint256 public constant PRICE_PRECISION = 1e30;
+    uint256 public constant MAX_TOKEN_DECIMALS = 18;
 
     function mulPrice(uint256 amount, uint256 price) internal pure returns (uint256) {
         return Math.mulDiv(amount, price, PRICE_PRECISION);
@@ -41,5 +42,9 @@ library PrecisionUtils {
 
     function pricePrecision() internal pure returns (uint256) {
         return PRICE_PRECISION;
+    }
+
+    function maxTokenDecimals() internal pure returns (uint256) {
+        return MAX_TOKEN_DECIMALS;
     }
 }

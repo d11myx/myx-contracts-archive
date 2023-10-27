@@ -5,14 +5,23 @@ export const ONE_ETHER = ethers.utils.parseEther('1');
 export const MAX_UINT_AMOUNT = ethers.constants.MaxUint256;
 export const ZERO_ADDRESS = ethers.constants.AddressZero;
 
-export enum eEthereumNetwork {
-    main = 'mainnet',
-    goerli = 'goerli',
+export enum DevNetwork {
+    local = 'dev_local',
 }
 
-export enum eBscNetwork {
-    main = 'mainnet',
-    test = 'testnet',
+export enum EthereumNetwork {
+    main = 'ethereum_mainnet',
+    goerli = 'ethereum_goerli',
+}
+
+export enum LineaNetwork {
+    main = 'linea_mainnet',
+    goerli = 'linea_goerli',
+}
+
+export enum ScrollNetwork {
+    main = 'scroll_mainnet',
+    sepolia = 'scroll_sepolia',
 }
 
 export enum TradeType {
@@ -22,25 +31,19 @@ export enum TradeType {
     SL = 3,
 }
 
-export type eNetwork = eEthereumNetwork | eBscNetwork;
-//
-// export const Market = 'USDT';
-//
-// export function getMarketSymbol(): string {
-//     return Market;
-// }
+export type eNetwork = DevNetwork | EthereumNetwork | LineaNetwork | ScrollNetwork;
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {
     USDT: parseUnits('1', 8),
     BTC: parseUnits('30000', 8),
     ETH: parseUnits('2000', 8),
 };
-
 export const MOCK_INDEX_PRICES: { [key: string]: BigNumber } = {
     USDT: parseUnits('1', 30),
     BTC: parseUnits('30000', 30),
     ETH: parseUnits('2000', 30),
 };
+
 export const DEFAULT_NAMED_ACCOUNTS = {
     deployer: {
         default: 0,

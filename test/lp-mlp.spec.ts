@@ -2,12 +2,13 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { mintAndApprove } from './helpers/misc';
 import { expect } from './shared/expect';
-import { getMockToken } from '../helpers';
+import { getMockToken, ZERO_ADDRESS } from '../helpers';
 import { BigNumber, constants } from 'ethers';
 import Decimal from 'decimal.js';
+import { convertIndexAmount, convertStableAmount } from '../helpers/token-decimals';
 
 describe('LP: fair price', () => {
-    const pairIndex = 0;
+    const pairIndex = 1;
     let testEnv: TestEnv;
 
     before('add liquidity', async () => {
@@ -21,8 +22,8 @@ describe('LP: fair price', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -45,7 +46,7 @@ describe('LP: fair price', () => {
         const pair = await pool.getPair(pairIndex);
         const pairPrice = await pool.lpFairPrice(pairIndex);
 
-        expect(pairPrice).to.be.eq(ethers.utils.parseUnits('1000000000000'));
+        expect(pairPrice).to.be.eq(ethers.utils.parseUnits('1', 30));
 
         const buyLpAmount = ethers.utils.parseUnits('1000000', 18);
         const { depositIndexAmount, depositStableAmount } = await pool.getDepositAmount(pairIndex, buyLpAmount);
@@ -91,11 +92,25 @@ describe('LP: fair price', () => {
         const userPaid = depositIndexAmount.mul(pairPrice).add(depositStableAmount);
         const indexFeeAmount = depositIndexAmount.mul(pair.addLpFeeP).div(1e8);
         const stableFeeAmount = depositStableAmount.mul(pair.addLpFeeP).div(1e8);
-        const totalFeeAmount = indexFeeAmount.add(stableFeeAmount);
-
+        const totalFeeAmount = (await convertIndexAmount(btc, indexFeeAmount, 18)).add(
+            await convertStableAmount(usdt, stableFeeAmount, 18),
+        );
+        let slipAmount = BigNumber.from(0);
+        if (expectAddLiquidity.slipToken == pair.indexToken) {
+            slipAmount = await convertIndexAmount(btc, expectAddLiquidity.slipAmount, 18);
+        } else if (expectAddLiquidity.slipToken == pair.stableToken) {
+            slipAmount = await convertStableAmount(usdt, expectAddLiquidity.slipAmount, 18);
+        }
         expect(
-            expectAddLiquidity.afterFeeIndexAmount.add(expectAddLiquidity.afterFeeStableAmount).add(totalFeeAmount),
-        ).to.be.eq(depositIndexAmount.add(depositStableAmount).sub(expectAddLiquidity.slipAmount));
+            (await convertIndexAmount(btc, expectAddLiquidity.afterFeeIndexAmount, 18))
+                .add(await convertStableAmount(usdt, expectAddLiquidity.afterFeeStableAmount, 18))
+                .add(totalFeeAmount)
+                .add(slipAmount),
+        ).to.be.eq(
+            (await convertIndexAmount(btc, depositIndexAmount, 18)).add(
+                await convertStableAmount(usdt, depositStableAmount, 18),
+            ),
+        );
         expect(userPaid.add(vaultTotalBefore)).to.be.eq(vaultTotalAfter.add(totalFee));
     });
 
@@ -140,11 +155,13 @@ describe('LP: fair price', () => {
         expect(userBtcBalanceAfter).to.be.eq(userBtcBalanceBefore.add(receiveIndexTokenAmount));
         expect(userUsdtBalanceAfter).to.be.eq(userUsdtBalanceBefore.add(receiveStableTokenAmount));
 
-        const vaultTotal = receiveIndexTokenAmount.mul(pairPrice).add(receiveStableTokenAmount).add(feeAmount);
+        const vaultTotal = (await convertIndexAmount(btc, receiveIndexTokenAmount.mul(pairPrice), 18))
+            .add(await convertStableAmount(usdt, receiveStableTokenAmount, 18))
+            .add(await convertStableAmount(usdt, feeAmount, 18));
         const userPaid = sellLpAmount.mul(lpPrice).div('1000000000000000000000000000000');
 
-        expect(new Decimal(ethers.utils.formatEther(userPaid)).toFixed(8)).to.be.eq(
-            new Decimal(ethers.utils.formatEther(vaultTotal)).toFixed(8),
+        expect(new Decimal(ethers.utils.formatEther(userPaid)).toFixed(0)).to.be.eq(
+            new Decimal(ethers.utils.formatEther(vaultTotal)).toFixed(0),
         );
 
         expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount.sub(receiveIndexTokenAmount));

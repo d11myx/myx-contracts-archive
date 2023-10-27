@@ -1,8 +1,10 @@
 import { testEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
+import { getPositionTradingFee } from '../helpers';
 
 describe('Trade: FeeCal', () => {
+    const pairIndex = 1;
     // before('add liquidity', async () => {
     //     testEnv = await newTestEnv();
     //     const {
@@ -26,12 +28,38 @@ describe('Trade: FeeCal', () => {
     // });
 
     it('calculate trading fee', async () => {
-        const { positionManager } = testEnv;
+        const { positionManager, btc, usdt } = testEnv;
 
-        const long = await positionManager.getTradingFee(0, true, ethers.utils.parseEther('100'));
-        expect(long).to.be.eq('3200000000000000000000');
+        const long = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            ethers.utils.parseUnits('100', await btc.decimals()),
+        );
 
-        const short = await positionManager.getTradingFee(0, false, ethers.utils.parseEther('100'));
-        expect(short).to.be.eq('2000000000000000000000');
+        let positionTradingFee = await getPositionTradingFee(
+            testEnv,
+            pairIndex,
+            btc,
+            usdt,
+
+            ethers.utils.parseUnits('100', await btc.decimals()),
+            true,
+        );
+        expect(long).to.be.eq(positionTradingFee);
+
+        const short = await positionManager.getTradingFee(
+            pairIndex,
+            false,
+            ethers.utils.parseUnits('100', await btc.decimals()),
+        );
+        positionTradingFee = await getPositionTradingFee(
+            testEnv,
+            pairIndex,
+            btc,
+            usdt,
+            ethers.utils.parseUnits('100', await btc.decimals()),
+            false,
+        );
+        expect(short).to.be.eq(positionTradingFee);
     });
 });
