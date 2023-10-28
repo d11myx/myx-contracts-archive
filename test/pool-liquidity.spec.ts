@@ -1,13 +1,16 @@
-import { testEnv } from './helpers/make-suite';
+import { newTestEnv, TestEnv, testEnv } from './helpers/make-suite';
 import { waitForTx } from '../helpers';
 import { getToken, MAX_UINT_AMOUNT } from '../helpers';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
+import { mintAndApprove } from './helpers/misc';
 
 describe('Pool: Liquidity cases', () => {
     const pairIndex = 1;
+    // let testEnv: TestEnv;
 
     it('user added liquidity, should be received lp', async () => {
+        // testEnv = await newTestEnv();
         const {
             pool,
             btc,
@@ -21,8 +24,10 @@ describe('Pool: Liquidity cases', () => {
         const pairTokenAddress = pair.pairToken;
         const pairToken = await getToken(pairTokenAddress);
 
-        await waitForTx(await usdt.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
-        await waitForTx(await btc.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
+        // await waitForTx(await usdt.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
+        // await waitForTx(await btc.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
+        await mintAndApprove(testEnv, btc, ethers.utils.parseEther('1000'), depositor, router.address);
+        await mintAndApprove(testEnv, usdt, ethers.utils.parseEther('30000000'), depositor, router.address);
 
         const usdtBalanceBef = await usdt.balanceOf(depositor.address);
         const btcBalanceBef = await btc.balanceOf(depositor.address);
