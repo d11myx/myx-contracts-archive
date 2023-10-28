@@ -1,9 +1,9 @@
 // @ts-ignore
-import hre, { ethers, deployments } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { Etherscan } from '@nomicfoundation/hardhat-verify/etherscan';
 import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
-import { ZERO_ADDRESS } from '../helpers';
-import { utils } from 'ethers';
+
+import ERC1967Proxy from 'hardhat-deploy/extendedArtifacts/ERC1967Proxy.json';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -26,10 +26,12 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    await verifyContract(lineaGoerli, '0x7f47ca4C5D30848514648936c9b87756BCEa2d64', [
-        [ZERO_ADDRESS],
-        [utils.parseEther('1')],
-    ]);
+    // await verifyContract(lineaGoerli, '0xf1cF76a6ADdf9bf98868D80ce06e6A3C7caE40C7', [60, 1]);
+
+    // await verifyProxyContract(lineaGoerli, '0x934B2325c32419c64433eff92CD37933916c1a79', [
+    //     '0x68d46485dd36824E1910aEA4BAB5Ba686BF9cAe7',
+    //     '0xc0c53b8b000000000000000000000000d299a898f3ff37c131362fb52319a9a9ec7e5a030000000000000000000000004ec5f327c11719af6c3020cda84ffb1e2cfcb942000000000000000000000000cc3720e14650492eef8871c8f579ff23fef7b73c',
+    // ]);
 }
 
 async function verifyContract(instance: Etherscan, contractAddress: string, args: any[]) {
@@ -49,6 +51,29 @@ async function verifyContract(instance: Etherscan, contractAddress: string, args
         const contractURL = instance.getContractUrl(contractAddress);
         console.log(`Successfully verified contract on Etherscan: ${contractURL}`);
     }
+}
+
+async function verifyProxyContract(instance: Etherscan, proxyAddress: string, args: any[]) {
+    const { message: guid } = await instance.verify(
+        proxyAddress,
+        ERC1967Proxy.solcInput,
+        'solc_0.8/openzeppelin/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy',
+        'v0.8.10+commit.fc410830',
+        await encodeArgs(args),
+    );
+
+    await sleep(1000);
+    const verificationStatus = await instance.getVerificationStatus(guid);
+    if (verificationStatus.isSuccess()) {
+        const contractURL = instance.getContractUrl(proxyAddress);
+        console.log(`Successfully verified contract on Etherscan: ${contractURL}`);
+    }
+}
+
+async function encodeArgs(args: any[]) {
+    const { Interface } = await import('@ethersproject/abi');
+    const contractInterface = new Interface(ERC1967Proxy.abi);
+    return contractInterface.encodeDeploy(args).replace('0x', '');
 }
 
 main().catch((error) => {
