@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 
 export const btcPairInfo: PairInfoConfig = {
     pair: {
-        pairIndex: 0,
+        pairIndex: 1,
         indexToken: ZERO_ADDRESS,
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
@@ -38,13 +38,13 @@ export const btcPairInfo: PairInfoConfig = {
         growthRate: 2000000, //0.02
         baseRate: 20000, //0.0002
         maxRate: 10000000, //0.1
-        fundingInterval: 60 * 60,
+        fundingInterval: 8 * 60 * 60,
     },
 };
 
 export const ethPairInfo: PairInfoConfig = {
     pair: {
-        pairIndex: 1,
+        pairIndex: 2,
         indexToken: ZERO_ADDRESS,
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
@@ -78,6 +78,6 @@ export const ethPairInfo: PairInfoConfig = {
         growthRate: 2000000, //0.02
         baseRate: 20000, //0.0002
         maxRate: 10000000, //0.1
-        fundingInterval: 60 * 60,
+        fundingInterval: 8 * 60 * 60,
     },
 };
