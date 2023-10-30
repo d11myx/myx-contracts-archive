@@ -798,8 +798,34 @@ describe('Trade: ioc', () => {
 
             expect(tradingConfigAfter.maintainMarginRate).to.be.eq(tradingConfigBefore.maintainMarginRate);
 
-            // update price and liquidatePositions
+            // update price
             await updateBTCPrice(testEnv, '36000');
+
+            // calculate pnl、tradingFee
+            const pair = await pool.getPair(pairIndex);
+            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingConfig = await pool.getTradingConfig(pairIndex);
+            const oraclePrice = await pool.getPrice(pair.indexToken);
+            const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPositionBefore.positionAmount);
+            const pnl = indexToStableAmount
+                .mul(-1)
+                .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
+                .div('1000000000000000000000000000000');
+            const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+
+            // calculate riskRate
+            const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
+            const margin = shortPositionBefore.positionAmount
+                .mul(shortPositionBefore.averagePrice)
+                .div('1000000000000000000000000000000')
+                .mul(tradingConfig.maintainMarginRate)
+                .div('100000000');
+            const riskRate = margin.mul('100000000').div(exposureAsset);
+
+            // riskRate >= 100%
+            expect(riskRate).to.be.gte('100000000');
+
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
             await liquidationLogic
                 .connect(keeper.signer)
@@ -810,20 +836,11 @@ describe('Trade: ioc', () => {
             const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
 
             // calculate totalSettlementAmount
-            const pair = await pool.getPair(pairIndex);
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-            const oraclePrice = await pool.getPrice(pair.indexToken);
-            const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPositionBefore.positionAmount);
-            const pnl = indexToStableAmount
-                .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
-                .div('1000000000000000000000000000000');
-            const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
-            const totalSettlementAmount = pnl.add(tradingFee);
+            const totalSettlementAmount = pnl.sub(tradingFee);
 
             expect(balance).to.be.eq(0);
             expect(reserveBalanceAft).to.be.eq(
-                reserveBalanceBef.add(shortPositionBefore.collateral.sub(totalSettlementAmount)),
+                reserveBalanceBef.add(shortPositionBefore.collateral.sub(totalSettlementAmount.abs())),
             );
             expect(shortPositionAfter.positionAmount).to.be.eq('0');
         });
