@@ -1258,4 +1258,383 @@ describe('Trade: adl', () => {
             );
         });
     });
+
+    describe('oracle price > keeper price 0.5%, exceed max price deviation', () => {
+        before('add liquidity', async () => {
+            testEnv = await newTestEnv();
+            const {
+                users: [depositor],
+                usdt,
+                btc,
+                pool,
+                router,
+            } = testEnv;
+
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const pair = await pool.getPair(pairIndex);
+            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+            await router
+                .connect(depositor.signer)
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+        });
+
+        it('should cancel adl', async () => {
+            const {
+                users: [longTrader, shortTrader],
+                router,
+                positionManager,
+                orderManager,
+                keeper,
+                executionLogic,
+                usdt,
+                pool,
+                liquidationLogic,
+                btc,
+                oraclePriceFeed,
+                indexPriceFeed,
+            } = testEnv;
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('200', await btc.decimals());
+            const sizeAmount2 = ethers.utils.parseUnits('800', await btc.decimals());
+            const openPrice = ethers.utils.parseUnits('30000', 30);
+
+            const exposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
+            expect(exposureAmountBefore).to.be.eq(0);
+
+            /* increase long position */
+            await mintAndApprove(testEnv, usdt, collateral, longTrader, router.address);
+            const longPositionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: longTrader.address,
+                pairIndex,
+                tradeType: TradeType.MARKET,
+                collateral,
+                openPrice,
+                isLong: true,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+            const longOrderId = await orderManager.ordersIndex();
+            await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.MARKET, 0, 0);
+            const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
+
+            expect(longPosition.positionAmount).to.be.eq(sizeAmount);
+
+            /* increase short position */
+            await mintAndApprove(testEnv, usdt, collateral, shortTrader, router.address);
+            const shortPositionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: shortTrader.address,
+                pairIndex,
+                tradeType: TradeType.MARKET,
+                collateral,
+                openPrice,
+                isLong: false,
+                sizeAmount: sizeAmount2,
+                maxSlippage: 0,
+            };
+            const shortOrderId = await orderManager.ordersIndex();
+            await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
+            const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
+
+            expect(shortPosition.positionAmount).to.be.eq(sizeAmount2);
+
+            // remove liquidity
+            const lpAmount = ethers.utils.parseEther('40000000');
+            const { receiveStableTokenAmount } = await pool.getReceivedAmount(pairIndex, lpAmount);
+            const pair = await pool.getPair(pairIndex);
+            const lpToken = await getMockToken('', pair.pairToken);
+            await lpToken.connect(longTrader.signer).approve(router.address, constants.MaxUint256);
+            await router.connect(longTrader.signer).removeLiquidity(pair.indexToken, pair.stableToken, lpAmount, false);
+
+            const vault = await pool.getVault(pairIndex);
+            const exposureAmountAfter = await positionManager.getExposedPositions(pairIndex);
+            const available = vault.indexTotalAmount.sub(exposureAmountAfter);
+
+            // exposure short
+            expect(exposureAmountAfter).to.be.lt(0);
+            // decrease position amount > available
+            expect(shortPosition.positionAmount).to.be.gt(available);
+
+            // update price
+            await updateBTCPrice(testEnv, '32000');
+
+            // calculate pnl、tradingFee
+            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingConfig = await pool.getTradingConfig(pairIndex);
+            const poolPrice = await pool.getPrice(pair.indexToken);
+            const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPosition.positionAmount);
+            const pnl = indexToStableAmount
+                .mul(-1)
+                .mul(poolPrice.sub(shortPosition.averagePrice))
+                .div('1000000000000000000000000000000');
+            const sizeDelta = indexToStableAmount.mul(poolPrice).div('1000000000000000000000000000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+
+            // calculate riskRate
+            const exposureAsset = shortPosition.collateral.add(pnl).sub(tradingFee);
+            const margin = shortPosition.positionAmount
+                .mul(shortPosition.averagePrice)
+                .div('1000000000000000000000000000000')
+                .mul(tradingConfig.maintainMarginRate)
+                .div('100000000');
+            const riskRate = margin.mul('100000000').div(exposureAsset);
+
+            // riskRate >= 100%
+            expect(riskRate).to.be.gte('100000000');
+
+            // liquidate positions will wait for adl
+            const positionKey = await positionManager.getPositionKey(shortTrader.address, pairIndex, false);
+            await liquidationLogic
+                .connect(keeper.signer)
+                .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
+            const orders = await orderManager.getPositionOrders(positionKey);
+            const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
+
+            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+
+            // update oracle price
+            const latestOraclePrice = ethers.utils.parseUnits('32180', 8);
+            const updateData = await oraclePriceFeed.getUpdateData([btc.address], [latestOraclePrice]);
+            const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
+            const fee = mockPyth.getUpdateFee(updateData);
+            await oraclePriceFeed
+                .connect(keeper.signer)
+                .updatePrice([btc.address], [latestOraclePrice], { value: fee });
+            const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
+            const indexPrice = await indexPriceFeed.getPrice(btc.address);
+
+            // oraclePrice > indexPrice 0.5%
+            expect(oraclePrice.sub(indexPrice).mul('100000000').div(oraclePrice)).to.be.gte(
+                tradingConfig.maxPriceDeviationP,
+            );
+
+            // execute ADL
+            // await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
+            //     [
+            //         {
+            //             positionKey,
+            //             sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+            //             level: 0,
+            //             commissionRatio: 0,
+            //         },
+            //     ],
+            //     decreaseOrderAdlBefore.orderId,
+            //     TradeType.MARKET,
+            //     0,
+            //     0,
+            // );
+
+            // const decreasePositionAdlAfter = await positionManager.getPosition(shortTrader.address, pairIndex, false);
+            // const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
+            // const longBalanceAfter = await usdt.balanceOf(longTrader.address);
+
+            // expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
+            // expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
+            //     decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+            // );
+
+            await expect(
+                executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
+                    [
+                        {
+                            positionKey,
+                            sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                            level: 0,
+                            commissionRatio: 0,
+                        },
+                    ],
+                    decreaseOrderAdlBefore.orderId,
+                    TradeType.MARKET,
+                    0,
+                    0,
+                ),
+            ).to.be.revertedWith('exceed max price deviation');
+        });
+    });
+
+    describe('oracle price < keeper price 0.5%', () => {
+        before('add liquidity', async () => {
+            testEnv = await newTestEnv();
+            const {
+                users: [depositor],
+                usdt,
+                btc,
+                pool,
+                router,
+            } = testEnv;
+
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const pair = await pool.getPair(pairIndex);
+            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+            await router
+                .connect(depositor.signer)
+                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+        });
+
+        it('should adl', async () => {
+            const {
+                users: [longTrader, shortTrader],
+                router,
+                positionManager,
+                orderManager,
+                keeper,
+                executionLogic,
+                usdt,
+                pool,
+                liquidationLogic,
+                btc,
+                oraclePriceFeed,
+                indexPriceFeed,
+            } = testEnv;
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('200', await btc.decimals());
+            const sizeAmount2 = ethers.utils.parseUnits('800', await btc.decimals());
+            const openPrice = ethers.utils.parseUnits('30000', 30);
+
+            const exposureAmountBefore = await positionManager.getExposedPositions(pairIndex);
+            expect(exposureAmountBefore).to.be.eq(0);
+
+            /* increase long position */
+            await mintAndApprove(testEnv, usdt, collateral, longTrader, router.address);
+            const longPositionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: longTrader.address,
+                pairIndex,
+                tradeType: TradeType.MARKET,
+                collateral,
+                openPrice,
+                isLong: true,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+            const longOrderId = await orderManager.ordersIndex();
+            await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.MARKET, 0, 0);
+            const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
+
+            expect(longPosition.positionAmount).to.be.eq(sizeAmount);
+
+            /* increase short position */
+            await mintAndApprove(testEnv, usdt, collateral, shortTrader, router.address);
+            const shortPositionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: shortTrader.address,
+                pairIndex,
+                tradeType: TradeType.MARKET,
+                collateral,
+                openPrice,
+                isLong: false,
+                sizeAmount: sizeAmount2,
+                maxSlippage: 0,
+            };
+            const shortOrderId = await orderManager.ordersIndex();
+            await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
+            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
+            const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
+
+            expect(shortPosition.positionAmount).to.be.eq(sizeAmount2);
+
+            // remove liquidity
+            const lpAmount = ethers.utils.parseEther('40000000');
+            const { receiveStableTokenAmount } = await pool.getReceivedAmount(pairIndex, lpAmount);
+            const pair = await pool.getPair(pairIndex);
+            const lpToken = await getMockToken('', pair.pairToken);
+            await lpToken.connect(longTrader.signer).approve(router.address, constants.MaxUint256);
+            await router.connect(longTrader.signer).removeLiquidity(pair.indexToken, pair.stableToken, lpAmount, false);
+
+            const vault = await pool.getVault(pairIndex);
+            const exposureAmountAfter = await positionManager.getExposedPositions(pairIndex);
+            const available = vault.indexTotalAmount.sub(exposureAmountAfter);
+
+            // exposure short
+            expect(exposureAmountAfter).to.be.lt(0);
+            // decrease position amount > available
+            expect(shortPosition.positionAmount).to.be.gt(available);
+
+            // update price
+            await updateBTCPrice(testEnv, '32000');
+
+            // calculate pnl、tradingFee
+            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingConfig = await pool.getTradingConfig(pairIndex);
+            const poolPrice = await pool.getPrice(pair.indexToken);
+            const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPosition.positionAmount);
+            const pnl = indexToStableAmount
+                .mul(-1)
+                .mul(poolPrice.sub(shortPosition.averagePrice))
+                .div('1000000000000000000000000000000');
+            const sizeDelta = indexToStableAmount.mul(poolPrice).div('1000000000000000000000000000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+
+            // calculate riskRate
+            const exposureAsset = shortPosition.collateral.add(pnl).sub(tradingFee);
+            const margin = shortPosition.positionAmount
+                .mul(shortPosition.averagePrice)
+                .div('1000000000000000000000000000000')
+                .mul(tradingConfig.maintainMarginRate)
+                .div('100000000');
+            const riskRate = margin.mul('100000000').div(exposureAsset);
+
+            // riskRate >= 100%
+            expect(riskRate).to.be.gte('100000000');
+
+            // liquidate positions will wait for adl
+            const positionKey = await positionManager.getPositionKey(shortTrader.address, pairIndex, false);
+            await liquidationLogic
+                .connect(keeper.signer)
+                .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
+            const orders = await orderManager.getPositionOrders(positionKey);
+            const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
+
+            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+
+            // update oracle price
+            const latestOraclePrice = ethers.utils.parseUnits('32080', 8);
+            const updateData = await oraclePriceFeed.getUpdateData([btc.address], [latestOraclePrice]);
+            const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
+            const fee = mockPyth.getUpdateFee(updateData);
+            await oraclePriceFeed
+                .connect(keeper.signer)
+                .updatePrice([btc.address], [latestOraclePrice], { value: fee });
+            const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
+            const indexPrice = await indexPriceFeed.getPrice(btc.address);
+
+            // oraclePrice < indexPrice 0.5%
+            expect(indexPrice.sub(oraclePrice).mul('100000000').div(oraclePrice)).to.be.lt(
+                tradingConfig.maxPriceDeviationP,
+            );
+
+            // execute ADL
+            await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
+                [
+                    {
+                        positionKey,
+                        sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                        level: 0,
+                        commissionRatio: 0,
+                    },
+                ],
+                decreaseOrderAdlBefore.orderId,
+                TradeType.MARKET,
+                0,
+                0,
+            );
+
+            const decreasePositionAdlAfter = await positionManager.getPosition(shortTrader.address, pairIndex, false);
+            const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
+            const longBalanceAfter = await usdt.balanceOf(longTrader.address);
+
+            expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
+            expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
+                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+            );
+        });
+    });
 });
