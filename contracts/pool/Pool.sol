@@ -693,7 +693,7 @@ contract Pool is IPool, Upgradeable {
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
         emit AddLiquidity(
-            msg.sender,
+            tx.origin,
             recipient,
             _pairIndex,
             _indexAmount,
