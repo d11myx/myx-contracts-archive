@@ -1413,31 +1413,6 @@ describe('Trade: adl', () => {
                 tradingConfig.maxPriceDeviationP,
             );
 
-            // execute ADL
-            // await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
-            //     [
-            //         {
-            //             positionKey,
-            //             sizeAmount: decreaseOrderAdlBefore.sizeAmount,
-            //             level: 0,
-            //             commissionRatio: 0,
-            //         },
-            //     ],
-            //     decreaseOrderAdlBefore.orderId,
-            //     TradeType.MARKET,
-            //     0,
-            //     0,
-            // );
-
-            // const decreasePositionAdlAfter = await positionManager.getPosition(shortTrader.address, pairIndex, false);
-            // const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
-            // const longBalanceAfter = await usdt.balanceOf(longTrader.address);
-
-            // expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
-            // expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-            //     decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
-            // );
-
             await expect(
                 executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
                     [
