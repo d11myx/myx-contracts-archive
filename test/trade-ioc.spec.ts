@@ -2,7 +2,7 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
-import { TradeType, convertIndexAmountToStable, convertStableAmountToIndex } from '../helpers';
+import { TradeType, convertIndexAmountToStable, convertStableAmountToIndex, getMockToken } from '../helpers';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { MARKET_NAME } from '../helpers/env';
@@ -225,14 +225,20 @@ describe('Trade: ioc', () => {
             expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
 
             // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', 18);
-            const stableAmount = ethers.utils.parseUnits('30000000', 18);
             const pair = await pool.getPair(pairIndex);
+            const lpToken = await getMockToken('', pair.pairToken);
+            const totoalApplyBefore = await lpToken.totalSupply();
+            const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
             await router
                 .connect(trader.signer)
                 .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            const totoalApplyAfter = await lpToken.totalSupply();
+
+            expect(totoalApplyAfter.sub(totoalApplyBefore)).to.be.eq(expectAddLiquidity.mintAmount);
 
             // keeper execute order
             await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
