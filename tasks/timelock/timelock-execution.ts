@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { getTimelock, increase, latest, waitForTx } from '../../helpers';
+import { DevNetwork, getTimelock, increase, latest, waitForTx } from '../../helpers';
 import { BigNumber } from 'ethers';
 import { Timelock } from '../../types';
 
@@ -28,7 +28,7 @@ task(`time-execution`)
             ),
         );
 
-        if (hre.network.name == 'hardhat') {
+        if (hre.network.name == 'hardhat' || hre.network.name == DevNetwork.local) {
             const duration = BigNumber.from(taskArgs.eta).sub(await latest());
             await increase(duration);
         } else {
