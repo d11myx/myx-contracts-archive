@@ -3,6 +3,8 @@ import { ZERO_ADDRESS } from '../../helpers';
 import { ethers } from 'ethers';
 
 export const btcPairInfo: PairInfoConfig = {
+    pairTokenDecimals: 8,
+    useWrappedNativeToken: false,
     pair: {
         pairIndex: 1,
         indexToken: ZERO_ADDRESS,
@@ -20,9 +22,9 @@ export const btcPairInfo: PairInfoConfig = {
     tradingConfig: {
         minLeverage: 3,
         maxLeverage: 50,
-        minTradeAmount: '10000000000000000', //0.01
-        maxTradeAmount: '10000000000000000000000', //10000
-        maxPositionAmount: '1000000000000000000000000', //1000000
+        minTradeAmount: '1000000', //0.01
+        maxTradeAmount: '1000000000000', //10000
+        maxPositionAmount: '100000000000000', //1000000
         maintainMarginRate: 1000000, //1%
         priceSlipP: 100000, //0.1%
         maxPriceDeviationP: 500000, //0.5%
@@ -43,6 +45,8 @@ export const btcPairInfo: PairInfoConfig = {
 };
 
 export const ethPairInfo: PairInfoConfig = {
+    pairTokenDecimals: 18,
+    useWrappedNativeToken: true,
     pair: {
         pairIndex: 2,
         indexToken: ZERO_ADDRESS,

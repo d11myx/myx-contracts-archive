@@ -56,13 +56,14 @@ describe('Router: Edge cases 1', () => {
             keeper,
             users: [trader, trader1],
             usdt,
+            btc,
             router,
             executionLogic,
             positionManager,
             orderManager,
         } = testEnv;
 
-        const amount = ethers.utils.parseUnits('330000', 18);
+        const amount = ethers.utils.parseUnits('330000', await usdt.decimals());
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
         await waitForTx(await usdt.connect(deployer.signer).mint(trader1.address, amount));
 
@@ -76,11 +77,11 @@ describe('Router: Edge cases 1', () => {
             collateral: amount,
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
-            sizeAmount: ethers.utils.parseUnits('10', 18),
+            sizeAmount: ethers.utils.parseUnits('10', await btc.decimals()),
             tpPrice: ethers.utils.parseUnits('31000', 30),
-            tp: ethers.utils.parseUnits('1', 18),
+            tp: ethers.utils.parseUnits('1', await btc.decimals()),
             slPrice: ethers.utils.parseUnits('29000', 30),
-            sl: ethers.utils.parseUnits('1', 18),
+            sl: ethers.utils.parseUnits('1', await btc.decimals()),
             maxSlippage: 0,
         };
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
@@ -100,12 +101,13 @@ describe('Router: Edge cases 1', () => {
 
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
         // console.log(`position:`, position);
-        expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('10', 18));
+        expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('10', await btc.decimals()));
     });
 
     it('increase position without adding collateral', async () => {
         const {
             usdt,
+            btc,
             deployer,
             keeper,
             users: [trader, trader1],
@@ -117,19 +119,19 @@ describe('Router: Edge cases 1', () => {
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionAmountBefore = positionBefore.positionAmount;
-        expect(positionAmountBefore).to.be.eq(ethers.utils.parseUnits('10', 18));
+        expect(positionAmountBefore).to.be.eq(ethers.utils.parseUnits('10', await btc.decimals()));
 
         const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
             account: trader.address,
             pairIndex: pairIndex,
             tradeType: TradeType.MARKET,
-            collateral: ethers.utils.parseUnits('30000', 18),
+            collateral: ethers.utils.parseUnits('30000', await usdt.decimals()),
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
-            sizeAmount: ethers.utils.parseUnits('8', 18),
+            sizeAmount: ethers.utils.parseUnits('8', await btc.decimals()),
             maxSlippage: 0,
         };
-        const amount = ethers.utils.parseUnits('3300000', 18);
+        const amount = ethers.utils.parseUnits('3300000', await btc.decimals());
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
         await waitForTx(await usdt.connect(deployer.signer).mint(trader1.address, amount));
 
@@ -149,13 +151,16 @@ describe('Router: Edge cases 1', () => {
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionAmountAfter = positionAfter.positionAmount;
-        expect(positionAmountAfter).to.be.eq(positionAmountBefore.add(ethers.utils.parseUnits('8', 18)));
+        expect(positionAmountAfter).to.be.eq(
+            positionAmountBefore.add(ethers.utils.parseUnits('8', await btc.decimals())),
+        );
     });
 
     it('adding collateral without increase position', async () => {
         const {
             users: [trader],
             usdt,
+            btc,
             positionManager,
             router,
         } = testEnv;
@@ -163,9 +168,9 @@ describe('Router: Edge cases 1', () => {
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionCollateralBefore = positionBefore.collateral;
 
-        const collateral = await ethers.utils.parseUnits('10000', 18);
+        const collateral = await ethers.utils.parseUnits('10000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
-        const sizeAmount = ethers.utils.parseUnits('8', 18);
+        const sizeAmount = ethers.utils.parseUnits('8', await btc.decimals());
 
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
@@ -180,6 +185,8 @@ describe('Router: Edge cases 1', () => {
     it('decrease position', async () => {
         const {
             users: [trader],
+            usdt,
+            btc,
             positionManager,
         } = testEnv;
 
@@ -187,8 +194,8 @@ describe('Router: Edge cases 1', () => {
         const positionAmountBefore = positionBefore.positionAmount;
 
         // Decrease position
-        const decreaseAmount = ethers.utils.parseUnits('3', 18);
-        const collateral = ethers.utils.parseUnits('0', 18);
+        const decreaseAmount = ethers.utils.parseUnits('3', await btc.decimals());
+        const collateral = ethers.utils.parseUnits('0', await usdt.decimals());
         const triggerPrice = ethers.utils.parseUnits('30000', 30);
 
         await decreasePosition(
@@ -205,7 +212,9 @@ describe('Router: Edge cases 1', () => {
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionAmountAfter = positionAfter.positionAmount;
 
-        expect(positionAmountAfter).to.be.eq(positionAmountBefore.sub(ethers.utils.parseUnits('3', 18)));
+        expect(positionAmountAfter).to.be.eq(
+            positionAmountBefore.sub(ethers.utils.parseUnits('3', await btc.decimals())),
+        );
     });
 
     describe('Router: ADL cases', () => {
@@ -335,14 +344,15 @@ describe('Router: Edge cases 1', () => {
             const {
                 users: [trader],
                 usdt,
+                btc,
                 positionManager,
                 router,
             } = testEnv;
 
             await updateBTCPrice(testEnv, '30000');
 
-            const collateral = ethers.utils.parseUnits('30000', 30);
-            const increaseAmount = ethers.utils.parseUnits('15', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const increaseAmount = ethers.utils.parseUnits('15', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -398,7 +408,7 @@ describe('Router: Edge cases 1', () => {
                 orderManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('1000', 18);
+            const collateral = ethers.utils.parseUnits('1000', await usdt.decimals());
             await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
             await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
             await usdt.connect(trader1.signer).approve(router.address, MAX_UINT_AMOUNT);

@@ -8,6 +8,7 @@ import {
     RoleManager,
     Timelock,
     WETH,
+    WETH9,
 } from '../types';
 import { testEnv } from './helpers/make-suite';
 import {
@@ -42,8 +43,8 @@ describe('Oracle: oracle cases', () => {
         eth = (await ERC20DecimalsMock.deploy('token1', 'token1', 18)) as ERC20DecimalsMock;
         btc = (await ERC20DecimalsMock.deploy('token2', 'token2', 8)) as ERC20DecimalsMock;
         token3 = (await ERC20DecimalsMock.deploy('token3', 'token3', 18)) as ERC20DecimalsMock;
-        const WETHMock = await ethers.getContractFactory('WETH');
-        const weth = (await WETHMock.deploy('WETH', 'WETH', '18')) as WETH;
+        const WETHMock = await ethers.getContractFactory('WETH9');
+        const weth = (await WETHMock.deploy()) as WETH9;
         [owner, dev, spender, other, user1, user2] = await ethers.getSigners();
         const mockPythFactory = await ethers.getContractFactory('MockPyth');
         mockPyth = await mockPythFactory.deploy(100, 60);
