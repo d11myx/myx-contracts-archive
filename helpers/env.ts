@@ -18,7 +18,7 @@ export const COMMON_DEPLOY_PARAMS = {
 export function isLocalNetwork(hre: HardhatRuntimeEnvironment) {
     const network = hre.network.name as eNetwork;
 
-    return hre.network.live && network == DevNetwork.local;
+    return !hre.network.live && network == DevNetwork.local;
 }
 
 export function isProdNetwork(hre: HardhatRuntimeEnvironment) {
@@ -26,5 +26,5 @@ export function isProdNetwork(hre: HardhatRuntimeEnvironment) {
 }
 
 export function isTestNetwork(hre: HardhatRuntimeEnvironment) {
-    return !isProdNetwork(hre) && isLocalNetwork(hre);
+    return !isProdNetwork(hre) && !isLocalNetwork(hre);
 }

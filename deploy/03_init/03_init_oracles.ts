@@ -51,7 +51,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         value: '0',
         signature: 'setAssetPriceIds(address[],bytes32[])',
         data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-        eta: Duration.seconds(20)
+        eta: Duration.seconds(30)
             .add(await latest())
             .toString(),
     });
