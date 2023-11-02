@@ -29,8 +29,8 @@ describe('Trade: funding fee', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
@@ -40,15 +40,15 @@ describe('Trade: funding fee', () => {
             .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
 
         // make positions
-        const collateral = ethers.utils.parseUnits('3000000', 18);
-        const size = ethers.utils.parseUnits('90', 18);
+        const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+        const size = ethers.utils.parseUnits('90', await btc.decimals());
         let openPrice = ethers.utils.parseUnits('30000', 30);
 
         await mintAndApprove(testEnv, usdt, collateral, maker, router.address);
         await increasePosition(testEnv, maker, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
 
-        const collateral2 = ethers.utils.parseUnits('3000000', 18);
-        const size2 = ethers.utils.parseUnits('30', 18);
+        const collateral2 = ethers.utils.parseUnits('3000000', await usdt.decimals());
+        const size2 = ethers.utils.parseUnits('30', await btc.decimals());
         let openPrice2 = ethers.utils.parseUnits('30000', 30);
 
         await mintAndApprove(testEnv, usdt, collateral2, maker, router.address);
@@ -69,18 +69,19 @@ describe('Trade: funding fee', () => {
             const {
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('9', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('9', await btc.decimals());
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
             await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
 
-            const userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
+            let userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const userUsdtBefore = await usdt.balanceOf(trader.address);
 
             expect(userPosition.positionAmount).to.be.eq(size);
@@ -114,14 +115,21 @@ describe('Trade: funding fee', () => {
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
 
-            expect(userFundingFee).to.be.eq(
-                getPositionFundingFee(
-                    fundingFeeTrackerAfter,
-                    userPosition.fundingFeeTracker,
-                    userPosition.positionAmount,
-                    true,
-                ),
+            console.log('usdt decimals:' + (await usdt.decimals()));
+            console.log('fundingFeeTrackerAfter:' + fundingFeeTrackerAfter);
+            console.log('userPosition.fundingFeeTracker:' + userPosition.fundingFeeTracker);
+            console.log('userPosition.positionAmount:' + userPosition.positionAmount);
+            const expectFundinFee = await getPositionFundingFee(
+                testEnv,
+                pairIndex,
+                btc,
+                usdt,
+                fundingFeeTrackerAfter,
+                userPosition.fundingFeeTracker,
+                userPosition.positionAmount,
+                true,
             );
+            expect(userFundingFee).to.be.eq(expectFundinFee);
 
             await decreasePosition(
                 testEnv,
@@ -140,6 +148,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 true,
             );
@@ -147,6 +157,12 @@ describe('Trade: funding fee', () => {
             expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // longer user will be paid fundingFee
+            userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
+            console.log('positionCollateral:' + positionCollateral);
+            console.log('balanceDiff:' + balanceDiff);
+            console.log('tradingFee:' + tradingFee);
+            console.log('userFundingFee:' + userFundingFee);
+
             expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
         });
 
@@ -154,12 +170,13 @@ describe('Trade: funding fee', () => {
             const {
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('9', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('9', await btc.decimals());
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -196,7 +213,11 @@ describe('Trade: funding fee', () => {
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
 
             expect(userFundingFee).to.be.eq(
-                getPositionFundingFee(
+                await getPositionFundingFee(
+                    testEnv,
+                    pairIndex,
+                    btc,
+                    usdt,
                     fundingFeeTrackerAfter,
                     userPosition.fundingFeeTracker,
                     userPosition.positionAmount,
@@ -222,6 +243,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 false,
             );
@@ -229,6 +252,7 @@ describe('Trade: funding fee', () => {
             expect(tradingFee).to.be.eq(currentPositionTradingFee);
 
             // shorter user will be received fundingFee
+            // todo
             expect(balanceDiff.sub(positionCollateral).add(tradingFee)).to.be.eq(userFundingFee);
         });
     });
@@ -238,13 +262,14 @@ describe('Trade: funding fee', () => {
             const {
                 users: [, maker],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
             // make positions
-            const collateral = ethers.utils.parseUnits('3000000', 18);
-            const size = ethers.utils.parseUnits('90', 18);
+            const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('90', await btc.decimals());
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, maker, router.address);
@@ -260,12 +285,13 @@ describe('Trade: funding fee', () => {
             const {
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('9', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('9', await btc.decimals());
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
@@ -301,7 +327,11 @@ describe('Trade: funding fee', () => {
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
 
             expect(userFundingFee).to.be.eq(
-                getPositionFundingFee(
+                await getPositionFundingFee(
+                    testEnv,
+                    pairIndex,
+                    btc,
+                    usdt,
                     fundingFeeTrackerAfter,
                     userPosition.fundingFeeTracker,
                     userPosition.positionAmount,
@@ -326,6 +356,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 true,
             );
@@ -340,12 +372,13 @@ describe('Trade: funding fee', () => {
             const {
                 users: [trader],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('1', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('1', await btc.decimals());
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
@@ -397,6 +430,8 @@ describe('Trade: funding fee', () => {
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
+                btc,
+                usdt,
                 userPosition.positionAmount,
                 false,
             );
@@ -415,12 +450,13 @@ describe('Trade: funding fee', () => {
             const {
                 users: [trader, user1],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('9', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('9', await btc.decimals());
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, user1, router.address);
@@ -430,7 +466,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 collateral,
                 openPrice,
-                ethers.utils.parseUnits('30', 18),
+                ethers.utils.parseUnits('30', await btc.decimals()),
                 TradeType.MARKET,
                 true,
             );
@@ -460,12 +496,13 @@ describe('Trade: funding fee', () => {
             const {
                 users: [trader, user1],
                 usdt,
+                btc,
                 router,
                 positionManager,
             } = testEnv;
 
-            const collateral = ethers.utils.parseUnits('30000', 18);
-            const size = ethers.utils.parseUnits('9', 18);
+            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+            const size = ethers.utils.parseUnits('9', await btc.decimals());
             let openPrice = ethers.utils.parseUnits('30000', 30);
 
             await mintAndApprove(testEnv, usdt, collateral, user1, router.address);
@@ -475,7 +512,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 collateral,
                 openPrice,
-                ethers.utils.parseUnits('30', 18),
+                ethers.utils.parseUnits('30', await btc.decimals()),
                 TradeType.MARKET,
                 true,
             );
@@ -506,13 +543,14 @@ describe('Trade: funding fee', () => {
                 const {
                     users: [trader, user1],
                     usdt,
+                    btc,
                     router,
                     positionManager,
                 } = testEnv;
                 console.log(await positionManager.getExposedPositions(pairIndex));
 
-                const collateral = ethers.utils.parseUnits('30000', 18);
-                const size = ethers.utils.parseUnits('9', 18);
+                const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+                const size = ethers.utils.parseUnits('9', await btc.decimals());
                 let openPrice = ethers.utils.parseUnits('30000', 30);
 
                 await mintAndApprove(testEnv, usdt, collateral, user1, router.address);
@@ -522,7 +560,7 @@ describe('Trade: funding fee', () => {
                     pairIndex,
                     collateral,
                     openPrice,
-                    ethers.utils.parseUnits('30', 18),
+                    ethers.utils.parseUnits('30', await btc.decimals()),
                     TradeType.MARKET,
                     false,
                 );

@@ -1,6 +1,6 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { adlPosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import { TradeType } from '../helpers';
@@ -40,12 +40,19 @@ describe('Replay: ADL', () => {
         it('long tracker > short tracker, close long position', async () => {
             const {
                 usdt,
+                btc,
                 router,
                 positionManager,
                 users: [trader],
             } = testEnv;
 
-            await mintAndApprove(testEnv, usdt, ethers.utils.parseEther('100000000'), trader, router.address);
+            await mintAndApprove(
+                testEnv,
+                usdt,
+                ethers.utils.parseUnits('100000000', await usdt.decimals()),
+                trader,
+                router.address,
+            );
 
             // at btc price of 26975.71, open long 9.2282
             await updateBTCPrice(testEnv, '26975.71');
@@ -53,9 +60,9 @@ describe('Replay: ADL', () => {
                 testEnv,
                 trader,
                 pairIndex,
-                ethers.utils.parseEther('1000000'),
+                ethers.utils.parseUnits('1000000', await usdt.decimals()),
                 ethers.utils.parseUnits('26982.4', 30),
-                ethers.utils.parseEther('9.2282'),
+                ethers.utils.parseUnits('9.2282', await btc.decimals()),
                 TradeType.MARKET,
                 true,
             );
@@ -66,9 +73,9 @@ describe('Replay: ADL', () => {
                 testEnv,
                 trader,
                 pairIndex,
-                ethers.utils.parseEther('1000000'),
+                ethers.utils.parseUnits('1000000', await usdt.decimals()),
                 ethers.utils.parseUnits('26975.97', 30),
-                ethers.utils.parseEther('18.1643'),
+                ethers.utils.parseUnits('18.1643', await btc.decimals()),
                 TradeType.MARKET,
                 false,
             );
@@ -81,7 +88,7 @@ describe('Replay: ADL', () => {
                 pairIndex,
                 BigNumber.from(0),
                 ethers.utils.parseUnits('26987.56', 30),
-                ethers.utils.parseEther('18.1565'),
+                ethers.utils.parseUnits('18.1565', await btc.decimals()),
                 TradeType.MARKET,
                 true,
             );
@@ -91,14 +98,16 @@ describe('Replay: ADL', () => {
             const userShortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
             // console.log(userShortPositionBefore);
             expect(userLongPositionBefore.positionAmount).to.be.eq(
-                ethers.utils.parseEther(new Decimal('9.2282').add('18.1565').toString()),
+                ethers.utils.parseUnits(new Decimal('9.2282').add('18.1565').toString(), await btc.decimals()),
             );
-            expect(userShortPositionBefore.positionAmount).to.be.eq(ethers.utils.parseEther('18.1643'));
+            expect(userShortPositionBefore.positionAmount).to.be.eq(
+                ethers.utils.parseUnits('18.1643', await btc.decimals()),
+            );
 
             const needADL = await positionManager.needADL(
                 pairIndex,
                 true,
-                ethers.utils.parseEther('27.3847'),
+                ethers.utils.parseUnits('27.3847', await btc.decimals()),
                 ethers.utils.parseUnits('26981.38', 30),
             );
             expect(needADL.need).to.be.true;
@@ -109,20 +118,20 @@ describe('Replay: ADL', () => {
             const adlPositions: IExecutionLogic.ExecutePositionStruct[] = [
                 { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
             ];
-            const { executeReceipt } = await adlPosition(
+            await adlPosition(
                 testEnv,
                 trader,
                 pairIndex,
                 BigNumber.from(0),
-                ethers.utils.parseEther('27.3847'),
+                ethers.utils.parseUnits('27.3847', await btc.decimals()),
                 ethers.utils.parseUnits('26981.38', 30),
                 TradeType.MARKET,
                 true,
                 adlPositions,
             );
-            // await hre.run('decode-event', { hash: executeReceipt.transactionHash, log: false });
+            // await hre.run('decode-event', { hash: ret.executeReceipt.transactionHash, log: true });
             const userLongPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-            const userShortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
+            // const userShortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
             expect(userLongPositionAfter.positionAmount).to.be.eq(0);
         });
     });
@@ -158,12 +167,17 @@ describe('Replay: ADL', () => {
             const {
                 usdt,
                 router,
-                pool,
                 positionManager,
                 users: [, trader],
             } = testEnv;
 
-            await mintAndApprove(testEnv, usdt, ethers.utils.parseEther('100000000'), trader, router.address);
+            await mintAndApprove(
+                testEnv,
+                usdt,
+                ethers.utils.parseUnits('100000000', await usdt.decimals()),
+                trader,
+                router.address,
+            );
 
             // at btc price of 27603.32, open short
             await updateBTCPrice(testEnv, '27603.32');
@@ -171,7 +185,7 @@ describe('Replay: ADL', () => {
                 testEnv,
                 trader,
                 pairIndex,
-                ethers.utils.parseEther('1000000'),
+                ethers.utils.parseUnits('1000000', await usdt.decimals()),
                 ethers.utils.parseUnits('27601.91', 30),
                 await calculateOpenSize(testEnv, false),
                 TradeType.MARKET,
@@ -184,7 +198,7 @@ describe('Replay: ADL', () => {
                 testEnv,
                 trader,
                 pairIndex,
-                ethers.utils.parseEther('1000000'),
+                ethers.utils.parseUnits('1000000', await usdt.decimals()),
                 ethers.utils.parseUnits('27603.13', 30),
                 await calculateOpenSize(testEnv, true),
                 TradeType.MARKET,
@@ -221,7 +235,7 @@ describe('Replay: ADL', () => {
             const adlPositions: IExecutionLogic.ExecutePositionStruct[] = [
                 { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
             ];
-            const { executeReceipt } = await adlPosition(
+            await adlPosition(
                 testEnv,
                 trader,
                 pairIndex,

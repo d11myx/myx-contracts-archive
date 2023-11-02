@@ -6,6 +6,7 @@ import {
     getPoolTokenFactory,
     PAIR_INFO_ID,
     POOL_TOKEN_FACTORY,
+    SPOT_SWAP,
 } from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
@@ -22,6 +23,23 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const poolTokenFactory = await getPoolTokenFactory();
+    //spot swap
+
+    await deploy(`${SPOT_SWAP}`, {
+        from: deployer,
+        contract: 'SpotSwap',
+        args: [],
+        proxy: {
+            owner: deployer,
+            proxyContract: 'UUPS',
+            proxyArgs: [],
+            execute: {
+                methodName: 'initialize',
+                args: [addressProvider.address],
+            },
+        },
+        ...COMMON_DEPLOY_PARAMS,
+    });
 
     // Pool
     await deploy(`${PAIR_INFO_ID}`, {
