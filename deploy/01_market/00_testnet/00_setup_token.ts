@@ -12,7 +12,7 @@ import {
     SymbolMap,
     ZERO_ADDRESS,
 } from '../../../helpers';
-import { Token, WETH } from '../../../types';
+import { ERC20DecimalsMock, WETH9 } from '../../../types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy, save } = hre.deployments;
@@ -31,15 +31,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     if (!basicTokenAddress || basicTokenAddress == ZERO_ADDRESS) {
         const basicTokenArtifact = await deploy(`${MARKET_NAME}`, {
             from: deployer,
-            contract: 'Token',
-            args: [MARKET_NAME],
+            contract: 'ERC20DecimalsMock',
+            args: [MARKET_NAME, MARKET_NAME, reserveConfig?.MarketTokenDecimals],
             ...COMMON_DEPLOY_PARAMS,
         });
-        basicToken = (await getToken(basicTokenArtifact.address)) as Token;
+        basicToken = (await getToken(basicTokenArtifact.address)) as ERC20DecimalsMock;
     } else {
-        basicToken = (await getToken(basicTokenAddress)) as Token;
+        basicToken = (await getToken(basicTokenAddress)) as ERC20DecimalsMock;
 
-        const artifact = await hre.deployments.getArtifact('Token');
+        const artifact = await hre.deployments.getArtifact('ERC20DecimalsMock');
         await save(`${MARKET_NAME}`, {
             ...artifact,
             address: basicToken.address,
@@ -53,13 +53,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     if (!wrapperTokenAddress || wrapperTokenAddress == ZERO_ADDRESS) {
         const wrapperTokenArtifact = await deploy(`WETH`, {
             from: deployer,
-            contract: 'WETH',
-            args: ['WETH', 'WETH', '18'],
+            contract: 'WETH9',
+            args: [],
             ...COMMON_DEPLOY_PARAMS,
         });
-        wrapperToken = (await getWETH(wrapperTokenArtifact.address)) as WETH;
+        wrapperToken = (await getWETH(wrapperTokenArtifact.address)) as WETH9;
     } else {
-        wrapperToken = (await getWETH(wrapperTokenAddress)) as WETH;
+        wrapperToken = (await getWETH(wrapperTokenAddress)) as WETH9;
 
         const artifact = await hre.deployments.getArtifact('WETH');
         await save(`WETH`, {
@@ -70,26 +70,27 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`[deployment] deployed wrapper token【WETH】at ${wrapperToken.address}`);
 
     // pairs index token
-    for (let pair of Object.keys(reserveConfig?.PairsConfig)) {
+    for (let [pair, pairInfo] of Object.entries(reserveConfig?.PairsConfig)) {
         const pairAssets = reserveConfig?.PairAssets[network] as SymbolMap<string>;
         let pairToken;
         if (pairAssets && pairAssets[pair] && pairAssets[pair] != ZERO_ADDRESS) {
             const pairTokenAddress = pairAssets[pair];
-            pairToken = (await getToken(pairTokenAddress)) as Token;
+            pairToken = (await getToken(pairTokenAddress)) as ERC20DecimalsMock;
 
-            const artifact = await hre.deployments.getArtifact('Token');
+            const artifact = await hre.deployments.getArtifact('ERC20DecimalsMock');
             await save(`${MOCK_TOKEN_PREFIX}${pair}`, {
                 ...artifact,
                 address: pairToken.address,
             });
         } else {
+            //TODO pairInfo.useWrappedNativeToken
             const pairTokenArtifact = await deploy(`${MOCK_TOKEN_PREFIX}${pair}`, {
                 from: deployer,
-                contract: 'Token',
-                args: [pair],
+                contract: 'ERC20DecimalsMock',
+                args: [pair, pair, pairInfo.pairTokenDecimals],
                 ...COMMON_DEPLOY_PARAMS,
             });
-            pairToken = (await getToken(pairTokenArtifact.address)) as Token;
+            pairToken = (await getToken(pairTokenArtifact.address)) as ERC20DecimalsMock;
         }
         console.log(`[deployment] deployed index tokens【${pair}】at ${pairToken.address}`);
     }

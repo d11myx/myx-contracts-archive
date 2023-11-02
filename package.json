@@ -27,8 +27,9 @@
         "test:lp:mlp": "npm run compile && npx hardhat test test/__setup.spec.ts test/lp-mlp.spec.ts",
         "test:position": "npm run compile && npx hardhat test test/__setup.spec.ts test/position.spec.ts",
         "test:risk:liquidation": "npm run compile && npx hardhat test test/__setup.spec.ts test/liquidation-risk-reserve.spec.ts",
-        "test:router:edge1": "npm run compile && npx hardhat test test/__setup.spec.ts test/router-edge1.spec.ts",
-        "test:cancelOrder": "npm run compile && npx hardhat test test/__setup.spec.ts test/cancelOrder.spec.ts",
+        "test:router:edge": "npm run compile && npx hardhat test test/__setup.spec.ts test/router-edge.spec.ts",
+        "test:cancel:order": "npm run compile && npx hardhat test test/__setup.spec.ts test/cancel-order.spec.ts",
+        "test:trade:adl": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-adl.spec.ts",
         "deploy": "npx hardhat deploy",
         "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'",
         "sizer": "hardhat size-contracts",
@@ -63,10 +64,8 @@
         "web3": "^4.1.1"
     },
     "dependencies": {
+        "@uniswap/v3-periphery": "^1.0.1",
         "@chainlink/contracts": "^0.6.1",
-        "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
-        "@matterlabs/hardhat-zksync-solc": "^0.3.17",
-        "@matterlabs/hardhat-zksync-verify": "^0.1.7",
         "@nomiclabs/hardhat-etherscan": "^3.1.7",
         "@nomiclabs/hardhat-waffle": "^2.0.6",
         "@openzeppelin/contracts": "4.9.2",

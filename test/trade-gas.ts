@@ -47,8 +47,8 @@ describe('Router: increase position ar', () => {
         } = localTestEnv;
         let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
-        const indexAmount = ethers.utils.parseUnits('10000', 18);
-        const stableAmount = ethers.utils.parseUnits('300000000', 18);
+        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
         await mintAndApprove(localTestEnv, btc, indexAmount, depositor, testCallBack.address);
         await mintAndApprove(localTestEnv, usdt, stableAmount, depositor, testCallBack.address);
 
@@ -70,14 +70,14 @@ describe('Router: increase position ar', () => {
             executor,
             orderManager,
         } = localTestEnv;
-        const amount = ethers.utils.parseUnits('30000', 18);
+        const amount = ethers.utils.parseUnits('30000', await btc.decimals());
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
 
         // View user's position
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
         // console.log("user's position", traderPosition);
 
-        const collateral = ethers.utils.parseUnits('10000', 18);
+        const collateral = ethers.utils.parseUnits('10000', await usdt.decimals());
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, collateral));
         await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);
 
@@ -88,7 +88,7 @@ describe('Router: increase position ar', () => {
             collateral: collateral,
             openPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
-            sizeAmount: ethers.utils.parseUnits('5', 18),
+            sizeAmount: ethers.utils.parseUnits('5', await btc.decimals()),
             maxSlippage: 0,
         };
 
@@ -131,7 +131,7 @@ describe('Router: increase position ar', () => {
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
         // console.log(`position:`, position);
 
-        expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('5', 18));
+        expect(position.positionAmount).to.be.eq(ethers.utils.parseUnits('5', await btc.decimals()));
 
         const decreasePositionRequest: TradingTypes.DecreasePositionRequestStruct = {
             account: trader.address,
@@ -140,7 +140,7 @@ describe('Router: increase position ar', () => {
             collateral: 0,
             triggerPrice: ethers.utils.parseUnits('30000', 30),
             isLong: true,
-            sizeAmount: ethers.utils.parseUnits('5', 18),
+            sizeAmount: ethers.utils.parseUnits('5', await btc.decimals()),
             maxSlippage: 0,
         };
         orderId = await orderManager.ordersIndex();
