@@ -1,13 +1,17 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { getTokens, waitForTx } from '../../helpers';
+import { getTokens, isLocalNetwork, waitForTx } from '../../helpers';
 import { ERC20DecimalsMock } from '../../types';
 import { ethers } from 'hardhat';
 
-const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const signers = await hre.ethers.getSigners();
 
     console.log(`- setup balance`);
+    if (!isLocalNetwork(hre)) {
+        console.log('[warring] Skipping balance setup');
+        return;
+    }
     const { usdt, btc, eth } = await getTokens();
 
     const tokens: ERC20DecimalsMock[] = [];

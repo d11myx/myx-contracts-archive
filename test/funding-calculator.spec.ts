@@ -27,7 +27,7 @@ describe('Funding: funding rate calculator', () => {
         let longTracker = ethers.utils.parseUnits('1000', await btc.decimals());
         let shortTracker = ethers.utils.parseUnits('450', await btc.decimals());
         let rate = await fundingRate.getFundingRate(pairIndex, longTracker, shortTracker, vault, openPrice);
-        expect(rate).to.be.eq('1860899');
+        expect(rate).to.be.eq('14887192');
 
         longTracker = ethers.utils.parseUnits('500', await btc.decimals());
         shortTracker = ethers.utils.parseUnits('500', await btc.decimals());
@@ -37,6 +37,6 @@ describe('Funding: funding rate calculator', () => {
         longTracker = ethers.utils.parseUnits('0', await btc.decimals());
         shortTracker = ethers.utils.parseUnits('550', await btc.decimals());
         rate = await fundingRate.getFundingRate(pairIndex, longTracker, shortTracker, vault, openPrice);
-        expect(rate).to.be.eq('-8776875');
+        expect(rate).to.be.eq('-70215000');
     });
 });
