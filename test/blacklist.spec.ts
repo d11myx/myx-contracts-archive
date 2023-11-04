@@ -101,6 +101,8 @@ describe('Blacklist cases', () => {
             users: [blackUser, user],
             router,
             pool,
+            btc,
+            oraclePriceFeed,
         } = testEnv;
         const { operator } = await getNamedAccounts();
         const operatorSigner = await ethers.getSigner(operator);
@@ -111,13 +113,42 @@ describe('Blacklist cases', () => {
         let pair = await pool.getPair(0);
 
         await expect(
-            router.connect(blackUser.signer).removeLiquidity(pair.indexToken, pair.stableToken, 0, false),
+            router
+                .connect(blackUser.signer)
+                .removeLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    0,
+                    false,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('blacklist account');
 
         await expect(
             router
                 .connect(user.signer)
-                .removeLiquidityForAccount(pair.indexToken, pair.stableToken, blackUser.address, 0, false),
+                .removeLiquidityForAccount(
+                    pair.indexToken,
+                    pair.stableToken,
+                    blackUser.address,
+                    0,
+                    false,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('blacklist account');
     });
 

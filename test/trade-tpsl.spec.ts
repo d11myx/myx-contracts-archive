@@ -17,6 +17,7 @@ describe('Trade: TP & SL', () => {
             btc,
             pool,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         // add liquidity
@@ -28,7 +29,20 @@ describe('Trade: TP & SL', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
     after(async () => {
         const {

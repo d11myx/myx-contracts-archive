@@ -28,12 +28,13 @@ describe('Trade: FeeCal', () => {
     // });
 
     it('calculate trading fee', async () => {
-        const { positionManager, btc, usdt } = testEnv;
+        const { positionManager, btc, usdt, oraclePriceFeed } = testEnv;
 
         const long = await positionManager.getTradingFee(
             pairIndex,
             true,
             ethers.utils.parseUnits('100', await btc.decimals()),
+            await oraclePriceFeed.getPrice(btc.address),
         );
 
         let positionTradingFee = await getPositionTradingFee(
@@ -51,6 +52,7 @@ describe('Trade: FeeCal', () => {
             pairIndex,
             false,
             ethers.utils.parseUnits('100', await btc.decimals()),
+            await oraclePriceFeed.getPrice(btc.address),
         );
         positionTradingFee = await getPositionTradingFee(
             testEnv,

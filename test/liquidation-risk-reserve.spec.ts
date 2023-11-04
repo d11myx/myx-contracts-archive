@@ -240,6 +240,7 @@ describe('Liquidation: Risk Reserve', () => {
             position.pairIndex,
             position.isLong,
             position.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         let _pnl = new Decimal(position.averagePrice.sub(price).toString())
             .mul(position.positionAmount.toString())

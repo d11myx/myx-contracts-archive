@@ -20,6 +20,7 @@ describe('Trade: slippage', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -31,7 +32,20 @@ describe('Trade: slippage', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('transaction at market price, maxSlippage = 5%', async () => {
@@ -236,6 +250,7 @@ describe('Trade: slippage', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -247,7 +262,20 @@ describe('Trade: slippage', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('btc = usdt, no slippage fees, only handling fees', async () => {
@@ -270,7 +298,12 @@ describe('Trade: slippage', () => {
 
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const totoalApplyBefore = await lpToken.totalSupply();
 
             // 50:50
@@ -292,7 +325,20 @@ describe('Trade: slippage', () => {
             // add liquidity
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userBtcBalanceAfter = await btc.balanceOf(trader.address);
@@ -338,7 +384,12 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const totoalApplyBefore = await lpToken.totalSupply();
 
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
@@ -357,7 +408,20 @@ describe('Trade: slippage', () => {
             // add liquidity
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userBtcBalanceAfter = await btc.balanceOf(trader.address);
@@ -402,7 +466,12 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, 0);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                0,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const totoalApplyBefore = await lpToken.totalSupply();
 
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
@@ -415,7 +484,22 @@ describe('Trade: slippage', () => {
             expect(userBtcBalanceBefore).to.be.eq(indexAmount);
 
             // add liquidity
-            await router.connect(trader.signer).addLiquidity(pair.indexToken, pair.stableToken, indexAmount, 0);
+            await router
+                .connect(trader.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    0,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userBtcBalanceAfter = await btc.balanceOf(trader.address);
@@ -460,7 +544,12 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const totoalApplyBefore = await lpToken.totalSupply();
 
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
@@ -478,7 +567,20 @@ describe('Trade: slippage', () => {
             // add liquidity
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userBtcBalanceAfter = await btc.balanceOf(trader.address);
@@ -526,7 +628,12 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, 0, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                0,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const totoalApplyBefore = await lpToken.totalSupply();
 
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
@@ -537,7 +644,22 @@ describe('Trade: slippage', () => {
             expect(userUsdtBalanceBefore).to.be.eq(stableAmount);
 
             // add liquidity
-            await router.connect(trader.signer).addLiquidity(pair.indexToken, pair.stableToken, 0, stableAmount);
+            await router
+                .connect(trader.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    0,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
             const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
             const userUsdtBalanceAfter = await usdt.balanceOf(trader.address);

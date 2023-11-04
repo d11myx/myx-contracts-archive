@@ -44,7 +44,7 @@ describe('LP: fair price', () => {
     it('buy mlp', async () => {
         const {
             users: [, trader],
-
+            oraclePriceFeed,
             usdt,
             btc,
             router,
@@ -52,14 +52,23 @@ describe('LP: fair price', () => {
         } = testEnv;
 
         const pair = await pool.getPair(pairIndex);
-        const pairPrice = await pool.lpFairPrice(pairIndex);
+        const pairPrice = await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
 
         expect(pairPrice).to.be.eq(ethers.utils.parseUnits('1', 30));
 
         const buyLpAmount = ethers.utils.parseUnits('1000000', 18);
-        const { depositIndexAmount, depositStableAmount } = await pool.getDepositAmount(pairIndex, buyLpAmount);
+        const { depositIndexAmount, depositStableAmount } = await pool.getDepositAmount(
+            pairIndex,
+            buyLpAmount,
+            await oraclePriceFeed.getPrice(btc.address),
+        );
 
-        const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, depositIndexAmount, depositStableAmount);
+        const expectAddLiquidity = await pool.getMintLpAmount(
+            pairIndex,
+            depositIndexAmount,
+            depositStableAmount,
+            await oraclePriceFeed.getPrice(btc.address),
+        );
         const lpToken = await getMockToken('', pair.pairToken);
         const totoalApplyBefore = await lpToken.totalSupply();
 
@@ -140,7 +149,7 @@ describe('LP: fair price', () => {
             oraclePriceFeed,
         } = testEnv;
 
-        const lpPrice = await pool.lpFairPrice(pairIndex);
+        const lpPrice = await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
         const pairPrice = BigNumber.from(
             ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
         );
@@ -158,10 +167,24 @@ describe('LP: fair price', () => {
             feeAmount,
             feeIndexTokenAmount,
             feeStableTokenAmount,
-        } = await pool.getReceivedAmount(pairIndex, sellLpAmount);
+        } = await pool.getReceivedAmount(pairIndex, sellLpAmount, await oraclePriceFeed.getPrice(btc.address));
 
         await lpToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
-        await router.connect(trader.signer).removeLiquidity(pair.indexToken, pair.stableToken, sellLpAmount, false);
+        await router
+            .connect(trader.signer)
+            .removeLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                sellLpAmount,
+                false,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+            );
         const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
         const userBtcBalanceAfter = await btc.balanceOf(trader.address);
         const userUsdtBalanceAfter = await usdt.balanceOf(trader.address);

@@ -94,10 +94,16 @@ describe('Router: Edge cases', () => {
             btc,
             usdt,
             executionLogic,
+            oraclePriceFeed,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        const tradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
+        const tradingFeeBefore = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionBefore.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
+        );
         const positionTradingFeeBefore = await getPositionTradingFee(
             testEnv,
             pairIndex,
@@ -125,7 +131,12 @@ describe('Router: Edge cases', () => {
         await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-        const tradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
+        const tradingFeeAfter = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionAfter.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
+        );
         const positionTradingFeeAfter = await getPositionTradingFee(
             testEnv,
             pairIndex,
@@ -150,10 +161,16 @@ describe('Router: Edge cases', () => {
             positionManager,
             usdt,
             btc,
+            oraclePriceFeed,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
-        const tradingFeeBefore = await positionManager.getTradingFee(pairIndex, true, positionBefore.positionAmount);
+        const tradingFeeBefore = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionBefore.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
+        );
         const positionTradingFeeBefore = await getPositionTradingFee(
             testEnv,
             pairIndex,
@@ -181,7 +198,12 @@ describe('Router: Edge cases', () => {
         );
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
-        const tradingFeeAfter = await positionManager.getTradingFee(pairIndex, true, positionAfter.positionAmount);
+        const tradingFeeAfter = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            positionAfter.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
+        );
         const positionTradingFeeAfter = await getPositionTradingFee(
             testEnv,
             pairIndex,
@@ -205,6 +227,7 @@ describe('Router: Edge cases', () => {
             btc,
             positionManager,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -220,7 +243,12 @@ describe('Router: Edge cases', () => {
         expect(traderBalanceBefore).to.be.eq(traderBalance.add(collateral));
 
         let fundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
-        let tradeFee = await positionManager.getTradingFee(pairIndex, true, sizeAmount);
+        let tradeFee = await positionManager.getTradingFee(
+            pairIndex,
+            true,
+            sizeAmount,
+            await oraclePriceFeed.getPrice(btc.address),
+        );
         await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, sizeAmount, TradeType.MARKET, true);
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -240,6 +268,7 @@ describe('Router: Edge cases', () => {
             btc,
             positionManager,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -247,6 +276,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionBefore.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         const traderBalance = await usdt.balanceOf(trader.address);
 
@@ -265,6 +295,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionAfter.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
 
         const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
@@ -282,6 +313,7 @@ describe('Router: Edge cases', () => {
             btc,
             positionManager,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -289,6 +321,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionBefore.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         const traderBalance = await usdt.balanceOf(trader.address);
 
@@ -308,6 +341,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionAfter.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
@@ -344,6 +378,7 @@ describe('Router: Edge cases', () => {
             usdt,
             btc,
             positionManager,
+            oraclePriceFeed,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -351,6 +386,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionBefore.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
 
@@ -364,6 +400,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionAfter.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
@@ -378,6 +415,7 @@ describe('Router: Edge cases', () => {
             users: [trader],
             usdt,
             btc,
+            oraclePriceFeed,
             positionManager,
         } = testEnv;
 
@@ -386,6 +424,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionBefore.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
 
@@ -400,6 +439,7 @@ describe('Router: Edge cases', () => {
             pairIndex,
             true,
             positionAfter.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         const tradingFee = positionTradingFeeAfter.sub(positionTradingFeeBefore).abs();
         const traderBalanceAfter = await usdt.balanceOf(trader.address);
