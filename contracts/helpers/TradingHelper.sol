@@ -15,7 +15,7 @@ library TradingHelper {
         address token,
         IPool.TradingConfig memory tradingConfig
     ) internal view returns (uint256) {
-        uint256 oraclePrice = IPriceFeed(addressesProvider.priceOracle()).getPrice(token);
+        uint256 oraclePrice = IPriceFeed(addressesProvider.priceOracle()).getPriceSafely(token);
         uint256 indexPrice = IPriceFeed(addressesProvider.indexPriceOracle()).getPrice(token);
 
         uint256 diffP = oraclePrice > indexPrice

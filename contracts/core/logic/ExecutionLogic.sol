@@ -7,7 +7,6 @@ import "../../interfaces/IAddressesProvider.sol";
 import "../../interfaces/IRoleManager.sol";
 import "../../interfaces/IOrderManager.sol";
 import "../../interfaces/IPositionManager.sol";
-import "../../interfaces/IPriceOracle.sol";
 import "../../interfaces/IPool.sol";
 import "../../helpers/ValidationHelper.sol";
 import "../../helpers/TradingHelper.sol";

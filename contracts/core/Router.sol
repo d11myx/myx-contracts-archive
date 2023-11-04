@@ -13,11 +13,13 @@ import "../interfaces/IRouter.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IOrderManager.sol";
+import "../interfaces/IPositionManager.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../interfaces/ISwapCallback.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IWETH.sol";
 import "../interfaces/IOrderCallback.sol";
+import "../interfaces/IPythOraclePriceFeed.sol";
 import "../libraries/TradingTypes.sol";
 
 contract Router is
@@ -32,11 +34,18 @@ contract Router is
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
+    IPositionManager public immutable positionManager;
     IPool public immutable pool;
 
-    constructor(IAddressesProvider addressProvider, IOrderManager _orderManager, IPool _pool) {
+    constructor(
+        IAddressesProvider addressProvider,
+        IOrderManager _orderManager,
+        IPositionManager _positionManager,
+        IPool _pool)
+    {
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
+        positionManager = _positionManager;
         pool = _pool;
     }
 
@@ -58,8 +67,6 @@ contract Router is
         _;
     }
 
-
-
     function salvageToken(address token, uint amount) external onlyPoolAdmin {
         IERC20(token).transfer(msg.sender, amount);
     }
@@ -75,6 +82,28 @@ contract Router is
     function wrapWETH() external payable {
         IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
         IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
+    }
+
+    function setPriceAndAdjustCollateral(
+        uint256 pairIndex,
+        bool isLong,
+        int256 collateral,
+        address[] calldata tokens,
+        bytes[] calldata updateData
+    ) external payable {
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+
+        positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
+    }
+
+    function setPriceAndUpdateFundingRate(
+        uint256 pairIndex,
+        address[] calldata tokens,
+        bytes[] calldata updateData
+    ) external payable {
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+
+        positionManager.updateFundingRate(pairIndex);
     }
 
     function createIncreaseOrderWithTpSl(
@@ -338,13 +367,18 @@ contract Router is
         address indexToken,
         address stableToken,
         uint256 indexAmount,
-        uint256 stableAmount
+        uint256 stableAmount,
+        address[] calldata tokens,
+        bytes[] calldata updateData
     )
         external
+        payable
         whenNotPaused
         nonReentrant
         returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
     {
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).addLiquidity(
@@ -361,13 +395,17 @@ contract Router is
         address stableToken,
         address receiver,
         uint256 indexAmount,
-        uint256 stableAmount
+        uint256 stableAmount,
+        address[] calldata tokens,
+        bytes[] calldata updateData
     )
         external
+        payable
         whenNotPaused
         nonReentrant
         returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
     {
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).addLiquidity(
@@ -383,13 +421,17 @@ contract Router is
         address indexToken,
         address stableToken,
         uint256 amount,
-        bool useETH
+        bool useETH,
+        address[] calldata tokens,
+        bytes[] calldata updateData
     )
         external
+        payable
         whenNotPaused
         nonReentrant
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).removeLiquidity(
@@ -406,13 +448,17 @@ contract Router is
         address stableToken,
         address receiver,
         uint256 amount,
-        bool useETH
+        bool useETH,
+        address[] calldata tokens,
+        bytes[] calldata updateData
     )
         external
+        payable
         whenNotPaused
         nonReentrant
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         return
             IPool(pool).removeLiquidity(

@@ -29,7 +29,7 @@
         "test:risk:liquidation": "npm run compile && npx hardhat test test/__setup.spec.ts test/liquidation-risk-reserve.spec.ts",
         "test:router:edge": "npm run compile && npx hardhat test test/__setup.spec.ts test/router-edge.spec.ts",
         "test:cancel:order": "npm run compile && npx hardhat test test/__setup.spec.ts test/cancel-order.spec.ts",
-        "test:trade:adl": "npm run compile && npx hardhat test test/__setup.spec.ts test/trade-adl.spec.ts",
+        "test:a": "npm run compile && npx hardhat test test/__setup.spec.ts test/lp-pool.spec.ts",
         "deploy": "npx hardhat deploy",
         "coverage": "npx hardhat coverage --testfiles 'test/*.spec.ts'",
         "sizer": "hardhat size-contracts",

@@ -13,6 +13,7 @@ import {
     convertIndexAmountToStable,
 } from '../helpers';
 import { expect } from './shared/expect';
+import { oracle } from '../types/contracts';
 
 describe('Trade: funding fee epoch', () => {
     describe('rate simulation (can only add position)', async () => {
@@ -42,7 +43,7 @@ describe('Trade: funding fee epoch', () => {
         });
 
         it('epoch 0, init', async () => {
-            const { positionManager } = testEnv;
+            const { positionManager, router, btc } = testEnv;
 
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -54,7 +55,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
         });
 
         it('epoch 1, 30000 price open position', async () => {
@@ -132,7 +138,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -169,6 +180,7 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 positionManager,
+                router,
                 usdt,
                 btc,
             } = testEnv;
@@ -198,7 +210,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('35000', 8)])],
+                { value: 1 },
+            );
 
             // user position size and price
             const longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
@@ -275,6 +292,7 @@ describe('Trade: funding fee epoch', () => {
             const {
                 users: [longFirst, longSecond, shortFirst, shortSecond],
                 positionManager,
+                router,
                 usdt,
                 btc,
             } = testEnv;
@@ -304,7 +322,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25000', 8)])],
+                { value: 1 },
+            );
 
             // user position size and price
             const longFirstPosition = await positionManager.getPosition(longFirst.address, pairIndex, true);
@@ -506,7 +529,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('22000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -621,7 +649,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -685,7 +718,7 @@ describe('Trade: funding fee epoch', () => {
         });
 
         it('epoch 0, init', async () => {
-            const { positionManager } = testEnv;
+            const { positionManager, router, btc } = testEnv;
 
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -697,11 +730,16 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25000', 8)])],
+                { value: 1 },
+            );
         });
 
         it('epoch 1, 25500 price', async () => {
-            const { positionManager } = testEnv;
+            const { positionManager, router, btc } = testEnv;
 
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -713,7 +751,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25500', 8)])],
+                { value: 1 },
+            );
         });
 
         it('epoch 2, 26000 price open position', async () => {
@@ -793,7 +836,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('26000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -918,7 +966,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('26500', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -954,6 +1007,7 @@ describe('Trade: funding fee epoch', () => {
                 positionManager,
                 btc,
                 usdt,
+                router,
             } = testEnv;
 
             const openPrice = ethers.utils.parseUnits('25000', 30);
@@ -973,7 +1027,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -1014,6 +1073,7 @@ describe('Trade: funding fee epoch', () => {
                 positionManager,
                 btc,
                 usdt,
+                router,
             } = testEnv;
 
             const openPrice = ethers.utils.parseUnits('24000', 30);
@@ -1033,7 +1093,12 @@ describe('Trade: funding fee epoch', () => {
 
             // update funding fee
             await increase(Duration.hours(8));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('24000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);

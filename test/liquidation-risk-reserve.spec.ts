@@ -32,7 +32,15 @@ describe('Liquidation: Risk Reserve', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
     });
 
     it('user loss < position collateral, risk reserve should be increased', async () => {
@@ -47,7 +55,7 @@ describe('Liquidation: Risk Reserve', () => {
             liquidationLogic,
             executionLogic,
             orderManager,
-            addressesProvider
+            addressesProvider,
         } = testEnv;
         expect(await addressesProvider.executionLogic()).to.be.eq(executionLogic.address);
         expect(await addressesProvider.liquidationLogic()).to.be.eq(liquidationLogic.address);

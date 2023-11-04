@@ -205,7 +205,8 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 tradingFee = positionManager.getTradingFee(
             position.pairIndex,
             position.isLong,
-            position.positionAmount
+            position.positionAmount,
+            price
         );
         int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
         int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + fundingFee;
