@@ -23,9 +23,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     });
     const faucet = (await hre.ethers.getContractAt(faucetArtifact.abi, faucetArtifact.address)) as Faucet;
 
-    await waitForTx(await btc.mint(faucet.address, ethers.utils.parseEther('200000000')));
-    await waitForTx(await eth.mint(faucet.address, ethers.utils.parseEther('2000000000')));
-    await waitForTx(await usdt.mint(faucet.address, ethers.utils.parseEther('10000000000000')));
+    await waitForTx(await btc.mint(faucet.address, ethers.utils.parseUnits('200000000', await btc.decimals())));
+    await waitForTx(await eth.mint(faucet.address, ethers.utils.parseUnits('2000000000', await eth.decimals())));
+    await waitForTx(await usdt.mint(faucet.address, ethers.utils.parseUnits('10000000000000', await usdt.decimals())));
 };
 
 func.id = `Oracles`;

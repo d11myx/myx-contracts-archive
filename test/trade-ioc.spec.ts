@@ -981,7 +981,9 @@ describe('Trade: ioc', () => {
             const fee = mockPyth.getUpdateFee(updateData);
             await oraclePriceFeed
                 .connect(keeper.signer)
-                .updatePrice([btc.address], [latestOraclePrice], { value: fee });
+                .updatePrice([btc.address], [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])], {
+                    value: fee,
+                });
             const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
@@ -1130,7 +1132,9 @@ describe('Trade: ioc', () => {
             const fee = mockPyth.getUpdateFee(updateData);
             await oraclePriceFeed
                 .connect(keeper.signer)
-                .updatePrice([btc.address], [latestOraclePrice], { value: fee });
+                .updatePrice([btc.address], [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])], {
+                    value: fee,
+                });
             const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
             const tradingConfig = await pool.getTradingConfig(pairIndex);

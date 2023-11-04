@@ -20,6 +20,7 @@ import {
     FeeCollector,
     Timelock,
     SpotSwap,
+    MockPythOraclePriceFeed,
 } from '../../types';
 import {
     SymbolMap,
@@ -72,7 +73,7 @@ export interface TestEnv {
     pool: Pool;
     spotSwap: SpotSwap;
     fundingRate: FundingRate;
-    oraclePriceFeed: PythOraclePriceFeed;
+    oraclePriceFeed: MockPythOraclePriceFeed;
     indexPriceFeed: IndexPriceFeed;
     router: Router;
     executionLogic: ExecutionLogic;
@@ -99,7 +100,7 @@ export const testEnv: TestEnv = {
     pool: {} as Pool,
     spotSwap: {} as SpotSwap,
     fundingRate: {} as FundingRate,
-    oraclePriceFeed: {} as PythOraclePriceFeed,
+    oraclePriceFeed: {} as MockPythOraclePriceFeed,
     indexPriceFeed: {} as IndexPriceFeed,
     router: {} as Router,
     executionLogic: {} as ExecutionLogic,

@@ -37,7 +37,15 @@ describe('Modify LP Average Price', async () => {
         expect(bal).to.be.eq('0');
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
         bal = await lpToken.balanceOf(depositor.address);
         expect(bal).to.be.eq('899100000000000000000000000');
         let blaPool = await lpToken.balanceOf(pool.address);

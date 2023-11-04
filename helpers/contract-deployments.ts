@@ -21,6 +21,7 @@ import {
     Timelock,
     ERC20DecimalsMock,
     SpotSwap,
+    MockPythOraclePriceFeed,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -98,12 +99,12 @@ export async function deployPrice(
 
     const mockPyth = (await deployContract('MockPyth', [60, 1])) as any as MockPyth;
 
-    const oraclePriceFeed = (await deployContract('PythOraclePriceFeed', [
+    const oraclePriceFeed = (await deployContract('MockPythOraclePriceFeed', [
         addressesProvider.address,
         mockPyth.address,
         [],
         [],
-    ])) as any as PythOraclePriceFeed;
+    ])) as any as MockPythOraclePriceFeed;
     log(`deployed PythOraclePriceFeed at ${oraclePriceFeed.address}`);
 
     const pairTokenAddresses = [];
@@ -134,7 +135,7 @@ export async function deployPrice(
     await hre.run('time-execution', {
         target: oraclePriceFeed.address,
         value: '0',
-        signature: 'setAssetPriceIds(address[],bytes32[])',
+        signature: 'setTokenPriceIds(address[],bytes32[])',
         data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
         eta: Duration.days(1)
             .add(await latest())
@@ -144,7 +145,12 @@ export async function deployPrice(
 
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = mockPyth.getUpdateFee(updateData);
-    await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
+    const abiCoder = new ethers.utils.AbiCoder();
+    const pairTokenPricesBytes = pairTokenPrices.map((value) => {
+        return abiCoder.encode(['uint256'], [value]);
+    });
+
+    await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPricesBytes, { value: fee });
 
     const fundingRate = (await deployUpgradeableContract('FundingRate', [
         addressesProvider.address,
@@ -221,6 +227,7 @@ export async function deployTrading(
     let router = (await deployContract('Router', [
         addressProvider.address,
         orderManager.address,
+        positionManager.address,
         pool.address,
     ])) as Router;
     log(`deployed Router at ${router.address}`);
@@ -247,7 +254,6 @@ export async function deployTrading(
 
     let executor = (await deployContract('Executor', [addressProvider.address])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
-
 
     await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
 

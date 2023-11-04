@@ -49,6 +49,9 @@ describe('Pool: Liquidity cases', () => {
                     pair.stableToken,
                     ethers.utils.parseUnits('1000', await btc.decimals()),
                     ethers.utils.parseUnits('30000000', await usdt.decimals()),
+                    [btc.address],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    { value: 1 },
                 ),
         );
 

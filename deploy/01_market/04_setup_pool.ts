@@ -28,6 +28,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     // setup pairs
     console.log(`- setup pairs`);
     for (let symbol of Object.keys(pairConfigs)) {
+        //TODO pairInfo.useWrappedNativeToken
         const pairToken = await getMockToken(symbol);
         const basicToken = await getToken();
 
