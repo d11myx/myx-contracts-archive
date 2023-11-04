@@ -49,7 +49,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await hre.run('time-execution', {
         target: oraclePriceFeed.address,
         value: '0',
-        signature: 'setAssetPriceIds(address[],bytes32[])',
+        signature: 'setTokenPriceIds(address[],bytes32[])',
         data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
         eta: Duration.seconds(30)
             .add(await latest())
@@ -59,8 +59,18 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(
         await indexPriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenIndexPrices),
     );
+    const abiCoder = new ethers.utils.AbiCoder();
+
+    let pairTokenPricesBytes: string[] = [];
+    for (let pairTokenPrice of pairTokenPrices) {
+        const items = abiCoder.encode(['uint256'], [pairTokenPrice]);
+        pairTokenPricesBytes.push(items);
+    }
+
     await waitForTx(
-        await oraclePriceFeed.connect(poolAdminSigner).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee }),
+        await oraclePriceFeed
+            .connect(poolAdminSigner)
+            .updatePrice(pairTokenAddresses, pairTokenPricesBytes, { value: fee }),
     );
 };
 func.id = `InitOracles`;

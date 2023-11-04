@@ -30,7 +30,15 @@ describe('LP: fair price', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
     });
 
     it('buy mlp', async () => {
@@ -68,7 +76,15 @@ describe('LP: fair price', () => {
 
         await router
             .connect(trader.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, depositIndexAmount, depositStableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                depositIndexAmount,
+                depositStableAmount,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
         const totoalApplyAfter = await lpToken.totalSupply();
 
         expect(totoalApplyAfter).to.be.eq(totoalApplyBefore.add(expectAddLiquidity.mintAmount));

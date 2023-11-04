@@ -5,6 +5,8 @@ interface IPriceFeed {
 
     function getPrice(address token) external view returns (uint256);
 
+    function getPriceSafely(address token) external view returns (uint256);
+
     function decimals() external pure returns (uint256);
 
 }

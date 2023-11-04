@@ -22,7 +22,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     for (let signer of signers) {
         for (let token of tokens) {
             console.log(` mint for ${signer.address} 100000000${await token.symbol()}`);
-            await waitForTx(await token.mint(signer.address, ethers.utils.parseEther('100000000')));
+            await waitForTx(
+                await token.mint(signer.address, ethers.utils.parseUnits('100000000', await token.decimals())),
+            );
         }
     }
 };

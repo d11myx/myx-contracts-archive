@@ -29,6 +29,7 @@ import {
     Timelock,
     ERC20DecimalsMock,
     SpotSwap,
+    MockPythOraclePriceFeed,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -99,9 +100,9 @@ export const getRoleManager = async (address?: string): Promise<RoleManager> => 
     return getContract<RoleManager>('RoleManager', address || (await hre.deployments.get(ROLE_MANAGER_ID)).address);
 };
 
-export const getOraclePriceFeed = async (address?: string): Promise<PythOraclePriceFeed> => {
-    return getContract<PythOraclePriceFeed>(
-        'PythOraclePriceFeed',
+export const getOraclePriceFeed = async (address?: string): Promise<MockPythOraclePriceFeed> => {
+    return getContract<MockPythOraclePriceFeed>(
+        'MockPythOraclePriceFeed',
         address || (await hre.deployments.get(ORACLE_PRICE_FEED_ID)).address,
     );
 };

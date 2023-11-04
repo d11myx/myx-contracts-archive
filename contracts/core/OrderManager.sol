@@ -115,7 +115,7 @@ contract OrderManager is IOrderManager, Upgradeable {
             request.tradeType == TradingTypes.TradeType.LIMIT
         ) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+//            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 require(
                     request.sizeAmount == 0 ||
@@ -124,31 +124,31 @@ contract OrderManager is IOrderManager, Upgradeable {
                     "invalid trade size"
                 );
                 // check leverage
-                (uint256 afterPosition, ) = position.validLeverage(
-                    pair,
-                    price,
-                    request.collateral,
-                    uint256(request.sizeAmount),
-                    true,
-                    // tradingConfig.minLeverage,
-                    tradingConfig.maxLeverage,
-                    tradingConfig.maxPositionAmount
-                );
-                require(afterPosition > 0, "zero position amount");
+//                (uint256 afterPosition, ) = position.validLeverage(
+//                    pair,
+//                    price,
+//                    request.collateral,
+//                    uint256(request.sizeAmount),
+//                    true,
+//                    // tradingConfig.minLeverage,
+//                    tradingConfig.maxLeverage,
+//                    tradingConfig.maxPositionAmount
+//                );
+//                require(afterPosition > 0, "zero position amount");
             }
-            if (request.sizeAmount < 0) {
-                // check leverage
-                position.validLeverage(
-                    pair,
-                    price,
-                    request.collateral,
-                    uint256(request.sizeAmount.abs()),
-                    false,
-                    // tradingConfig.minLeverage,
-                    tradingConfig.maxLeverage,
-                    tradingConfig.maxPositionAmount
-                );
-            }
+//            if (request.sizeAmount < 0) {
+//                // check leverage
+//                position.validLeverage(
+//                    pair,
+//                    price,
+//                    request.collateral,
+//                    uint256(request.sizeAmount.abs()),
+//                    false,
+//                    // tradingConfig.minLeverage,
+//                    tradingConfig.maxLeverage,
+//                    tradingConfig.maxPositionAmount
+//                );
+//            }
         }
 
         if (
