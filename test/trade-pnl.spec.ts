@@ -104,6 +104,7 @@ describe('Trade: profit & Loss', () => {
             pool,
             router,
             spotSwap,
+            oraclePriceFeed,
         } = testEnv;
 
         // add liquidity
@@ -148,7 +149,19 @@ describe('Trade: profit & Loss', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+            );
     });
 
     describe('user profit > 0', () => {
@@ -259,6 +272,7 @@ describe('Trade: profit & Loss', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             let btcPrice = '30000';
@@ -308,7 +322,14 @@ describe('Trade: profit & Loss', () => {
             decreasingSize = userPositionBefore.positionAmount.mul(99).div(100);
             const availableCollateral = userPositionBefore.collateral
                 .add(userPnlBef)
-                .sub(await positionManager.getTradingFee(pairIndex, true, decreasingSize.abs()));
+                .sub(
+                    await positionManager.getTradingFee(
+                        pairIndex,
+                        true,
+                        decreasingSize.abs(),
+                        await oraclePriceFeed.getPrice(btc.address),
+                    ),
+                );
             decreasingCollateral = BigNumber.from(0).sub(availableCollateral.mul(99).div(100));
             const { executeReceipt } = await decreasePosition(
                 testEnv,

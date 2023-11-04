@@ -28,6 +28,7 @@ describe('Trade: funding fee epoch', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -39,7 +40,20 @@ describe('Trade: funding fee epoch', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('epoch 0, init', async () => {
@@ -703,6 +717,7 @@ describe('Trade: funding fee epoch', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -714,7 +729,20 @@ describe('Trade: funding fee epoch', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('epoch 0, init', async () => {

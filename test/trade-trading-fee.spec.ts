@@ -20,6 +20,7 @@ describe('Trade: trading fee', () => {
                 pool,
                 router,
                 feeCollector,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -31,7 +32,20 @@ describe('Trade: trading fee', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
 
             // config levels
             await feeCollector.updateLevelDiscountRatio(1, { takerDiscountRatio: 1e6, makerDiscountRatio: 1e6 });
@@ -51,6 +65,7 @@ describe('Trade: trading fee', () => {
                 router,
                 positionManager,
                 feeCollector,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -65,7 +80,12 @@ describe('Trade: trading fee', () => {
             const userUsdtBefore = await usdt.balanceOf(trader.address);
 
             // increase position trading fee
-            let tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
+            let tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             let positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -116,6 +136,7 @@ describe('Trade: trading fee', () => {
                 executionLogic,
                 orderManager,
                 feeCollector,
+                oraclePriceFeed,
                 keeper,
             } = testEnv;
 
@@ -238,7 +259,12 @@ describe('Trade: trading fee', () => {
             const trader6Position = await positionManager.getPosition(trader6.address, pairIndex, true);
 
             // trading fee
-            let tradingFee = await positionManager.getTradingFee(pairIndex, true, traderPosition.positionAmount);
+            let tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                traderPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             let positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -250,7 +276,12 @@ describe('Trade: trading fee', () => {
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
-            tradingFee = await positionManager.getTradingFee(pairIndex, true, trader2Position.positionAmount);
+            tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                trader2Position.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -262,7 +293,12 @@ describe('Trade: trading fee', () => {
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
-            tradingFee = await positionManager.getTradingFee(pairIndex, true, trader3Position.positionAmount);
+            tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                trader3Position.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -274,7 +310,12 @@ describe('Trade: trading fee', () => {
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
-            tradingFee = await positionManager.getTradingFee(pairIndex, true, trader4Position.positionAmount);
+            tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                trader4Position.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -286,7 +327,12 @@ describe('Trade: trading fee', () => {
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
-            tradingFee = await positionManager.getTradingFee(pairIndex, true, trader5Position.positionAmount);
+            tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                trader5Position.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -298,7 +344,12 @@ describe('Trade: trading fee', () => {
 
             expect(tradingFee).to.be.eq(positionTradingFee);
 
-            tradingFee = await positionManager.getTradingFee(pairIndex, true, trader6Position.positionAmount);
+            tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                trader6Position.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             positionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,

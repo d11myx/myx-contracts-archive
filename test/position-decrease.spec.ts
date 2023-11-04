@@ -101,6 +101,7 @@ describe('PositionManager: decrease position', () => {
                 executionLogic,
                 positionManager,
                 orderManager,
+                oraclePriceFeed,
                 pool,
             } = testEnv;
 
@@ -120,7 +121,20 @@ describe('PositionManager: decrease position', () => {
             await poolToken.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT);
             await router
                 .connect(depositor.signer)
-                .removeLiquidity(pair.indexToken, pair.stableToken, removeAmount, false);
+                .removeLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    removeAmount,
+                    false,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
 
             // const poolVaultAft = await pool.getVault(pairIndex);
             // console.log(`---poolVaultAft: `, poolVaultAft);
