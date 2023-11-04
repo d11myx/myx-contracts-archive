@@ -17,6 +17,7 @@ describe('Pool: Liquidity cases', () => {
             btc,
             usdt,
             router,
+            oraclePriceFeed,
             users: [, depositor],
         } = testEnv;
 
@@ -39,6 +40,7 @@ describe('Pool: Liquidity cases', () => {
             pairIndex,
             ethers.utils.parseUnits('1000', await btc.decimals()),
             ethers.utils.parseUnits('30000000', await usdt.decimals()),
+            await oraclePriceFeed.getPrice(btc.address),
         );
 
         await waitForTx(

@@ -414,6 +414,7 @@ describe('Position', () => {
                     liquidationLogic,
                     keeper,
                     pool,
+                    oraclePriceFeed,
                     riskReserve,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
@@ -463,7 +464,7 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
-                const oraclePrice = await pool.getPrice(pair.indexToken);
+                const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
                     btc,
                     usdt,
@@ -554,6 +555,7 @@ describe('Position', () => {
                     orderManager,
                     executionLogic,
                     liquidationLogic,
+                    oraclePriceFeed,
                     keeper,
                     pool,
                     riskReserve,
@@ -632,7 +634,7 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
-                const oraclePrice = await pool.getPrice(pair.indexToken);
+                const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
                     btc,
                     usdt,
@@ -725,6 +727,7 @@ describe('Position', () => {
                     orderManager,
                     executionLogic,
                     liquidationLogic,
+                    oraclePriceFeed,
                     keeper,
                     pool,
                     riskReserve,
@@ -803,7 +806,7 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
-                const oraclePrice = await pool.getPrice(pair.indexToken);
+                const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
                     btc,
                     usdt,
@@ -898,6 +901,7 @@ describe('Position', () => {
                     keeper,
                     pool,
                     riskReserve,
+                    oraclePriceFeed,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -977,7 +981,7 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
-                const oraclePrice = await pool.getPrice(pair.indexToken);
+                const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
                     btc,
                     usdt,
@@ -1023,6 +1027,7 @@ describe('Position', () => {
                     btc,
                     pool,
                     router,
+                    oraclePriceFeed,
                 } = testEnv;
 
                 // add liquidity
@@ -1034,7 +1039,19 @@ describe('Position', () => {
 
                 await router
                     .connect(depositor.signer)
-                    .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                    .addLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        indexAmount,
+                        stableAmount,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                    );
             });
 
             it('should liquidate position', async () => {
@@ -1185,6 +1202,7 @@ describe('Position', () => {
                     btc,
                     pool,
                     router,
+                    oraclePriceFeed,
                 } = testEnv;
 
                 // add liquidity
@@ -1196,7 +1214,19 @@ describe('Position', () => {
 
                 await router
                     .connect(depositor.signer)
-                    .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                    .addLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        indexAmount,
+                        stableAmount,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                    );
             });
 
             it('should liquidate position', async () => {
@@ -1347,6 +1377,7 @@ describe('Position', () => {
                     btc,
                     pool,
                     router,
+                    oraclePriceFeed,
                 } = testEnv;
 
                 // add liquidity
@@ -1358,7 +1389,19 @@ describe('Position', () => {
 
                 await router
                     .connect(depositor.signer)
-                    .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                    .addLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        indexAmount,
+                        stableAmount,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                    );
             });
 
             it('should margin call liquidation', async () => {
@@ -1509,6 +1552,7 @@ describe('Position', () => {
                     btc,
                     pool,
                     router,
+                    oraclePriceFeed,
                 } = testEnv;
 
                 // add liquidity
@@ -1520,7 +1564,19 @@ describe('Position', () => {
 
                 await router
                     .connect(depositor.signer)
-                    .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                    .addLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        indexAmount,
+                        stableAmount,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                    );
             });
 
             it('short decrease position will wait for adl', async () => {
@@ -1626,12 +1682,28 @@ describe('Position', () => {
 
                 // remove liquidity
                 const lpAmount = ethers.utils.parseEther('300000');
-                const { receiveStableTokenAmount } = await pool.getReceivedAmount(pairIndex, lpAmount);
+                const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+                    pairIndex,
+                    lpAmount,
+                    await oraclePriceFeed.getPrice(btc.address),
+                );
                 const lpToken = await getMockToken('', pair.pairToken);
                 await lpToken.connect(longTrader.signer).approve(router.address, constants.MaxUint256);
                 await router
                     .connect(longTrader.signer)
-                    .removeLiquidity(pair.indexToken, pair.stableToken, lpAmount, false);
+                    .removeLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        lpAmount,
+                        false,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                    );
                 longTraderBalance = await usdt.balanceOf(longTrader.address);
 
                 expect(longTraderBalance).to.be.eq(receiveStableTokenAmount);
@@ -1694,6 +1766,7 @@ describe('Position', () => {
                     btc,
                     pool,
                     router,
+                    oraclePriceFeed,
                 } = testEnv;
 
                 // add liquidity
@@ -1705,7 +1778,19 @@ describe('Position', () => {
 
                 await router
                     .connect(depositor.signer)
-                    .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                    .addLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        indexAmount,
+                        stableAmount,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                    );
             });
 
             it('should cancel liquidate position', async () => {
@@ -1868,6 +1953,7 @@ describe('Position', () => {
                     btc,
                     pool,
                     router,
+                    oraclePriceFeed,
                 } = testEnv;
 
                 // add liquidity
@@ -1879,7 +1965,19 @@ describe('Position', () => {
 
                 await router
                     .connect(depositor.signer)
-                    .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                    .addLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        indexAmount,
+                        stableAmount,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                    );
             });
 
             it('should liquidate position', async () => {
@@ -1976,7 +2074,7 @@ describe('Position', () => {
                 const pair = await pool.getPair(pairIndex);
                 const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
-                const poolPrice = await pool.getPrice(pair.indexToken);
+                const poolPrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
                     btc,
                     usdt,
@@ -2033,7 +2131,7 @@ describe('Position', () => {
                 const entrustOrderAfter = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
 
                 // calculate totalSettlementAmount
-                const poolPriceAfter = await pool.getPrice(pair.indexToken);
+                const poolPriceAfter = await oraclePriceFeed.getPrice(pair.indexToken);
                 const pnlAfter = indexToStableAmount
                     .mul(-1)
                     .mul(poolPriceAfter.sub(shortPositionBefore.averagePrice))

@@ -80,6 +80,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -162,7 +163,12 @@ describe('Trade: funding fee', () => {
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -191,6 +197,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -262,7 +269,12 @@ describe('Trade: funding fee', () => {
 
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                false,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -311,6 +323,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -380,7 +393,12 @@ describe('Trade: funding fee', () => {
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -403,6 +421,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -459,7 +478,12 @@ describe('Trade: funding fee', () => {
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                false,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,

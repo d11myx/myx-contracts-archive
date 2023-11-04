@@ -21,6 +21,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -32,7 +33,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('illiquidity, should partial transaction and delete order', async () => {
@@ -128,6 +142,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -139,7 +154,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('illiquidity, should partial transaction and reserve order', async () => {
@@ -230,12 +258,30 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
 
             expect(totoalApplyAfter.sub(totoalApplyBefore)).to.be.eq(expectAddLiquidity.mintAmount);
@@ -260,6 +306,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -271,7 +318,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('size exceed max config, should partial transaction and delete order', async () => {
@@ -364,6 +424,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -375,7 +436,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('size exceed max config, should partial transaction and reserve order', async () => {
@@ -478,6 +552,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
@@ -488,7 +563,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should partial transaction and reserve ADL order', async () => {
@@ -606,6 +694,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -617,7 +706,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should partial transaction and reserve ADL order', async () => {
@@ -735,6 +837,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -746,7 +849,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should no partial transaction', async () => {
@@ -761,6 +877,7 @@ describe('Trade: ioc', () => {
                 keeper,
                 pool,
                 riskReserve,
+                oraclePriceFeed,
                 btc,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
@@ -811,7 +928,7 @@ describe('Trade: ioc', () => {
             const pair = await pool.getPair(pairIndex);
             const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
-            const oraclePrice = await pool.getPrice(pair.indexToken);
+            const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPositionBefore.positionAmount);
             const pnl = indexToStableAmount
                 .mul(-1)
@@ -861,6 +978,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -872,7 +990,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should cancel transaction', async () => {
@@ -964,12 +1095,30 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
 
             expect(totoalApplyAfter.sub(totoalApplyBefore)).to.be.eq(expectAddLiquidity.mintAmount);
@@ -1012,6 +1161,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -1023,7 +1173,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should cancel transaction', async () => {
@@ -1115,12 +1278,30 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
 
             expect(totoalApplyAfter.sub(totoalApplyBefore)).to.be.eq(expectAddLiquidity.mintAmount);
