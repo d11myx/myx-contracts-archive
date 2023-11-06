@@ -193,7 +193,7 @@ export async function adlPosition(
     isLong: boolean,
     adlPositions: IExecution.ExecutePositionStruct[],
 ) {
-    const { keeper, router, executionLogic, orderManager } = testEnv;
+    const { keeper, router, executor, btc, indexPriceFeed, oraclePriceFeed, orderManager } = testEnv;
 
     const request: TradingTypes.DecreasePositionRequestStruct = {
         account: user.address,
@@ -209,9 +209,24 @@ export async function adlPosition(
     // create increase order
     const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
-    const tx = await executionLogic
+    const tx = await executor
         .connect(keeper.signer)
-        .executeADLAndDecreaseOrder(adlPositions, orderId, tradeType, 0, 0);
+        .setPricesAndExecuteADL(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            adlPositions,
+            orderId,
+            tradeType,
+            0,
+            0,
+            { value: 1 },
+        );
     const receipt = await tx.wait();
 
     return { orderId: orderId, executeReceipt: receipt };
