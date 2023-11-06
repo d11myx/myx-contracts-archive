@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { before } from 'mocha';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { deployMockCallback, getBlockTimestamp, TradeType, waitForTx } from '../helpers';
+import { getBlockTimestamp, TradeType, waitForTx } from '../helpers';
 import { PoolToken } from '../types';
 import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
@@ -222,7 +222,9 @@ describe('Modify LP Average Price', async () => {
                 router,
                 btc,
                 usdt,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
                 positionManager,
                 orderManager,
             } = testEnv;
@@ -252,9 +254,20 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
+                .setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -277,7 +290,7 @@ describe('Modify LP Average Price', async () => {
                 btc,
                 usdt,
                 router,
-                executionLogic,
+                executor,
                 positionManager,
                 orderManager,
                 oraclePriceFeed,
@@ -310,9 +323,20 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
+                .setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -492,7 +516,9 @@ describe('Modify LP Average Price', async () => {
                 usdt,
                 btc,
                 router,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
                 orderManager,
                 positionManager,
             } = testEnv;
@@ -521,9 +547,20 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
+                .setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 
@@ -546,7 +583,9 @@ describe('Modify LP Average Price', async () => {
                 usdt,
                 btc,
                 router,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
                 orderManager,
                 positionManager,
             } = testEnv;
@@ -575,9 +614,20 @@ describe('Modify LP Average Price', async () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
+                .setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 

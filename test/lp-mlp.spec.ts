@@ -184,6 +184,7 @@ describe('LP: fair price', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                { value: 1 },
             );
         const userLpBalanceAfter = await lpToken.balanceOf(trader.address);
         const userBtcBalanceAfter = await btc.balanceOf(trader.address);
