@@ -126,8 +126,6 @@ export function getEpochFundingFee(fundingRate: BigNumber, openPrice: BigNumber)
  * @returns current position funding fee
  */
 export async function getPositionFundingFee(
-    testEnv: TestEnv,
-    pairIndex: number,
     indexToken: ERC20DecimalsMock,
     stableToken: ERC20DecimalsMock,
     globalFundingFeeTracker: BigNumber,
@@ -135,11 +133,7 @@ export async function getPositionFundingFee(
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
-    const { positionManager, pool, oraclePriceFeed } = testEnv;
-    const pair = await pool.getPair(pairIndex);
-
     let fundingFee;
-    // const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const diffFundingFeeTracker = globalFundingFeeTracker.sub(positionFundingFeeTracker);
     if ((isLong && diffFundingFeeTracker.gt(0)) || (!isLong && diffFundingFeeTracker.lt(0))) {
         fundingFee = -1;
