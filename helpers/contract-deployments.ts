@@ -277,6 +277,3 @@ export async function deployTrading(
         feeCollector,
     };
 }
-export async function deployMockCallback() {
-    return (await deployContract('TestCallBack', [])) as TestCallBack;
-}

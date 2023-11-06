@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
-import { deployMockCallback, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { expect } from './shared/expect';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { convertIndexAmountToStable } from '../helpers/token-decimals';
@@ -25,22 +25,35 @@ describe('Router: Edge cases', () => {
             btc,
             usdt,
             users: [depositor],
-
+            router,
             pool,
+            oraclePriceFeed,
         } = testEnv;
 
         const btcAmount = ethers.utils.parseUnits('34', await btc.decimals());
         const usdtAmount = ethers.utils.parseUnits('1000000', await usdt.decimals());
         await waitForTx(await btc.connect(deployer.signer).mint(depositor.address, btcAmount));
         await waitForTx(await usdt.connect(deployer.signer).mint(depositor.address, usdtAmount));
-        let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
 
-        await btc.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT);
-        await usdt.connect(depositor.signer).approve(testCallBack.address, MAX_UINT_AMOUNT);
-        await testCallBack
+        await btc.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT);
+        await usdt.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT);
+        await router
             .connect(depositor.signer)
-            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, btcAmount, usdtAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                btcAmount,
+                usdtAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
 
         const pairVaultInfo = await pool.getVault(pairIndex);
         // console.log(

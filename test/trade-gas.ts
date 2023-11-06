@@ -1,7 +1,7 @@
 import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
-import { deployMockCallback, MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { BigNumber } from 'ethers';
@@ -41,20 +41,30 @@ describe('Router: increase position ar', () => {
             btc,
             usdt,
             pool,
-            positionManager,
-            executor,
-            orderManager,
+            oraclePriceFeed,
         } = localTestEnv;
-        let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
         const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
         const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
-        await mintAndApprove(localTestEnv, btc, indexAmount, depositor, testCallBack.address);
-        await mintAndApprove(localTestEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await mintAndApprove(localTestEnv, btc, indexAmount, depositor, router.address);
+        await mintAndApprove(localTestEnv, usdt, stableAmount, depositor, router.address);
 
-        await testCallBack
+        await router
             .connect(depositor.signer)
-            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
 
     it('createIncreaseOrder cast', async () => {
@@ -108,11 +118,25 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executionLogic,
-            orderManager,
+            executor,
+            indexPriceFeed,
+            oraclePriceFeed,
         } = localTestEnv;
         await snapshotGasCost(
-            executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
+            executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                ),
         );
     });
     it('createDecreaseOrder cast', async () => {

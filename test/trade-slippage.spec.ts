@@ -57,7 +57,9 @@ describe('Trade: slippage', () => {
                 router,
                 positionManager,
                 orderManager,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -80,7 +82,20 @@ describe('Trade: slippage', () => {
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             let position = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(position.positionAmount).to.be.eq(sizeAmount);
@@ -100,7 +115,20 @@ describe('Trade: slippage', () => {
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
             await expect(
-                executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
+                executor
+                    .connect(keeper.signer)
+                    .setPricesAndExecuteIncreaseMarketOrders(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        { value: 1 },
+                    ),
             ).to.be.revertedWith('exceeds max slippage');
 
             // buy high
@@ -118,7 +146,20 @@ describe('Trade: slippage', () => {
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             position = await positionManager.getPosition(trader2.address, pairIndex, true);
 
             expect(position.positionAmount).to.be.eq(sizeAmount);
@@ -138,7 +179,20 @@ describe('Trade: slippage', () => {
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
             await expect(
-                executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
+                executor
+                    .connect(keeper.signer)
+                    .setPricesAndExecuteIncreaseMarketOrders(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        { value: 1 },
+                    ),
             ).to.be.revertedWith('exceeds max slippage');
         });
 
@@ -151,7 +205,9 @@ describe('Trade: slippage', () => {
                 router,
                 positionManager,
                 orderManager,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -175,7 +231,20 @@ describe('Trade: slippage', () => {
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const traderPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(traderPositionAfter.positionAmount).to.be.eq(traderPositionBefore.positionAmount.add(sizeAmount));
@@ -195,7 +264,20 @@ describe('Trade: slippage', () => {
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
             await expect(
-                executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
+                executor
+                    .connect(keeper.signer)
+                    .setPricesAndExecuteIncreaseMarketOrders(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        { value: 1 },
+                    ),
             ).to.be.revertedWith('exceeds max slippage');
 
             // buy high
@@ -214,7 +296,20 @@ describe('Trade: slippage', () => {
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const trader2PositionAfter = await positionManager.getPosition(trader2.address, pairIndex, true);
 
             expect(trader2PositionAfter.positionAmount).to.be.eq(trader2PositionBefore.positionAmount.add(sizeAmount));
@@ -234,7 +329,20 @@ describe('Trade: slippage', () => {
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
             await expect(
-                executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0),
+                executor
+                    .connect(keeper.signer)
+                    .setPricesAndExecuteIncreaseMarketOrders(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        { value: 1 },
+                    ),
             ).to.be.revertedWith('exceeds max slippage');
         });
     });
