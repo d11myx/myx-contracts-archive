@@ -400,13 +400,29 @@ describe('Router: Edge cases', () => {
             usdt,
             btc,
             positionManager,
+            router,
+            oraclePriceFeed,
         } = testEnv;
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
 
         const collateral = ethers.utils.parseUnits('-10000', await usdt.decimals());
-        await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
+        await router
+            .connect(trader.signer)
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                collateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const traderBalanceAfter = await usdt.balanceOf(trader.address);

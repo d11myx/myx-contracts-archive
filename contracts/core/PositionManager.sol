@@ -282,7 +282,8 @@ contract PositionManager is IPositionManager, Upgradeable {
             0,
             true,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
 
         if (collateral > 0) {

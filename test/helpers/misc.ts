@@ -7,6 +7,7 @@ import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { TradingTypes } from '../../types/contracts/core/Router';
 import { IExecution } from '../../types/contracts/core/Executor';
 import { eth } from 'web3';
+import * as events from 'events';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
@@ -233,8 +234,8 @@ export async function adlPosition(
 }
 
 export async function extraHash(hash: string, eventName: string, key: string): Promise<any> {
-    const events = (await hre.run('decode-event', { hash: hash })) as any;
+    const logs = (await hre.run('decode-event', { hash: hash })) as any;
 
-    const DistributeTradingFeeEvent = events.find((val: any) => val.name === eventName);
-    return DistributeTradingFeeEvent?.events.find((val: any) => val.name === key)?.value as any;
+    const event = logs.find((val: any) => val.name === eventName);
+    return event?.events.find((val: any) => val.name === key)?.value as any;
 }

@@ -213,7 +213,8 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             true,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
         require(afterPosition > 0, "zpa");
 
@@ -432,7 +433,8 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             false,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
 
         (bool _needADL, ) = positionManager.needADL(

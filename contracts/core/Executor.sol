@@ -128,7 +128,9 @@ contract Executor is IExecutor, Roleable, Pausable {
         address[] memory _tokens,
         uint256[] memory _prices,
         bytes[] memory updateData
-    ) external payable whenNotPaused onlyPositionKeeper {
+    ) external payable whenNotPaused {
+        require(msg.sender == address(this), "internal");
+
         IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
 
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(_tokens, updateData);

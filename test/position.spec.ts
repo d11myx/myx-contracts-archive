@@ -1215,6 +1215,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        { value: 1 },
                     );
             });
 
@@ -1415,6 +1416,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        { value: 1 },
                     );
             });
 
@@ -1615,6 +1617,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        { value: 1 },
                     );
             });
 
@@ -1815,6 +1818,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        { value: 1 },
                     );
             });
 
@@ -1969,6 +1973,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        { value: 1 },
                     );
                 longTraderBalance = await usdt.balanceOf(longTrader.address);
 
@@ -2076,6 +2081,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        { value: 1 },
                     );
             });
 
@@ -2285,6 +2291,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        { value: 1 },
                     );
             });
 

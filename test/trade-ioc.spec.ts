@@ -1,6 +1,6 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
-import { ethers } from 'hardhat';
-import { mintAndApprove, updateBTCPrice } from './helpers/misc';
+import hre, { ethers } from 'hardhat';
+import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
 import { TradeType, convertIndexAmountToStable, convertStableAmountToIndex, getMockToken } from '../helpers';
 import { BigNumber } from 'ethers';
@@ -1474,38 +1474,39 @@ describe('Trade: ioc', () => {
                     [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
-            await expect(
-                executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseLimitOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    ),
-            ).to.be.revertedWith('exceed max price deviation');
-            await expect(
-                executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseLimitOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    ),
-            ).to.be.revertedWith('exceed max price deviation');
+            const tx_long = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            let reason = await extraHash(tx_long.hash, 'ExecuteOrderError', 'errorMessage');
+            expect(reason).to.be.eq('exceed max price deviation');
+
+            const tx_short = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            reason = await extraHash(tx_short.hash, 'ExecuteOrderError', 'errorMessage');
+            expect(reason).to.be.eq('exceed max price deviation');
         });
     });
 
