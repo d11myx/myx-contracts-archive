@@ -124,31 +124,33 @@ contract OrderManager is IOrderManager, Upgradeable {
                     "invalid trade size"
                 );
                 // check leverage
-//                (uint256 afterPosition, ) = position.validLeverage(
-//                    pair,
-//                    price,
-//                    request.collateral,
-//                    uint256(request.sizeAmount),
-//                    true,
-//                    // tradingConfig.minLeverage,
-//                    tradingConfig.maxLeverage,
-//                    tradingConfig.maxPositionAmount
-//                );
-//                require(afterPosition > 0, "zero position amount");
+                (uint256 afterPosition, ) = position.validLeverage(
+                    pair,
+                    0,
+                    request.collateral,
+                    uint256(request.sizeAmount),
+                    true,
+                    // tradingConfig.minLeverage,
+                    tradingConfig.maxLeverage,
+                    tradingConfig.maxPositionAmount,
+                    true
+                );
+                require(afterPosition > 0, "zero position amount");
             }
-//            if (request.sizeAmount < 0) {
-//                // check leverage
-//                position.validLeverage(
-//                    pair,
-//                    price,
-//                    request.collateral,
-//                    uint256(request.sizeAmount.abs()),
-//                    false,
-//                    // tradingConfig.minLeverage,
-//                    tradingConfig.maxLeverage,
-//                    tradingConfig.maxPositionAmount
-//                );
-//            }
+            if (request.sizeAmount < 0) {
+                // check leverage
+                position.validLeverage(
+                    pair,
+                    0,
+                    request.collateral,
+                    uint256(request.sizeAmount.abs()),
+                    false,
+                    // tradingConfig.minLeverage,
+                    tradingConfig.maxLeverage,
+                    tradingConfig.maxPositionAmount,
+                    true
+                );
+            }
         }
 
         if (

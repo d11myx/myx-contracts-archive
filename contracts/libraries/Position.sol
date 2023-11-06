@@ -99,7 +99,8 @@ library Position {
         uint256 _sizeAmount,
         bool _increase,
         uint256 maxLeverage,
-        uint256 maxPositionAmount
+        uint256 maxPositionAmount,
+        bool simpleVerify
     ) internal view returns (uint256, uint256) {
         // only increase collateral
         if (_sizeAmount == 0 && _collateral >= 0) {
@@ -122,15 +123,17 @@ library Position {
         int256 availableCollateral = int256(self.collateral);
 
         // pnl
-        int256 pnl = getUnrealizedPnl(self, pair, self.positionAmount, price);
-        if (!_increase && _sizeAmount > 0) {
-            if (pnl >= 0) {
-                availableCollateral += getUnrealizedPnl(self, pair, self.positionAmount - _sizeAmount, price);
+        if (!simpleVerify) {
+            int256 pnl = getUnrealizedPnl(self, pair, self.positionAmount, price);
+            if (!_increase && _sizeAmount > 0) {
+                if (pnl >= 0) {
+                    availableCollateral += getUnrealizedPnl(self, pair, self.positionAmount - _sizeAmount, price);
+                } else {
+                    availableCollateral += getUnrealizedPnl(self, pair, _sizeAmount, price);
+                }
             } else {
-                availableCollateral += getUnrealizedPnl(self, pair, _sizeAmount, price);
+                availableCollateral += pnl;
             }
-        } else {
-            availableCollateral += pnl;
         }
 
         // adjust collateral
@@ -139,7 +142,7 @@ library Position {
         }
         require(availableCollateral >= 0, 'collateral not enough');
 
-        if (_increase && _sizeAmount > 0) {
+        if (!simpleVerify && _increase && _sizeAmount > 0) {
             uint256 collateralDec = uint256(IERC20Metadata(pair.stableToken).decimals());
             uint256 tokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
 
