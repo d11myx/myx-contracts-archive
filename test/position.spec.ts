@@ -141,7 +141,7 @@ describe('Position', () => {
                 expect(longPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -342,7 +342,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -512,7 +512,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -720,7 +720,7 @@ describe('Position', () => {
                 expect(longPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -930,7 +930,7 @@ describe('Position', () => {
                 expect(longPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -1130,7 +1130,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -1311,7 +1311,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -1512,7 +1512,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -1713,7 +1713,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -2176,7 +2176,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -2387,7 +2387,7 @@ describe('Position', () => {
                 expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
                 // update maintainMarginRate
-                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+                const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
                 const tradingConfigBefore = btcPair.tradingConfig;
                 tradingConfigBefore.maintainMarginRate = 15000000;
                 await pool.updateTradingConfig(pairIndex, tradingConfigBefore);

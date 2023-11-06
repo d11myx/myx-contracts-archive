@@ -6,9 +6,8 @@ import {
     IndexPriceFeed,
     Pool,
     RoleManager,
-    ERC20DecimalsMock,
+    MockERC20Token,
     PositionManager,
-    PythOraclePriceFeed,
     WETH9,
     Router,
     Executor,
@@ -49,6 +48,7 @@ import {
     getLiquidationLogic,
     getFeeCollector,
     getSpotSwap,
+    getMockToken,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -64,12 +64,12 @@ export interface TestEnv {
     keeper: SignerWithAddress;
     users: SignerWithAddress[];
     weth: WETH9;
-    btc: ERC20DecimalsMock;
-    eth: ERC20DecimalsMock;
-    usdt: ERC20DecimalsMock;
+    btc: MockERC20Token;
+    eth: MockERC20Token;
+    usdt: MockERC20Token;
     addressesProvider: AddressesProvider;
     roleManager: RoleManager;
-    pairTokens: SymbolMap<ERC20DecimalsMock>;
+    pairTokens: SymbolMap<MockERC20Token>;
     pool: Pool;
     spotSwap: SpotSwap;
     fundingRate: FundingRate;
@@ -91,12 +91,12 @@ export const testEnv: TestEnv = {
     keeper: {} as SignerWithAddress,
     users: [] as SignerWithAddress[],
     weth: {} as WETH9,
-    btc: {} as ERC20DecimalsMock,
-    eth: {} as ERC20DecimalsMock,
-    usdt: {} as ERC20DecimalsMock,
+    btc: {} as MockERC20Token,
+    eth: {} as MockERC20Token,
+    usdt: {} as MockERC20Token,
     addressesProvider: {} as AddressesProvider,
     roleManager: {} as RoleManager,
-    pairTokens: {} as SymbolMap<ERC20DecimalsMock>,
+    pairTokens: {} as SymbolMap<MockERC20Token>,
     pool: {} as Pool,
     spotSwap: {} as SpotSwap,
     fundingRate: {} as FundingRate,
@@ -134,7 +134,7 @@ export async function setupTestEnv() {
     const allDeployments = await hre.deployments.all();
     const mockTokenKeys = Object.keys(allDeployments).filter((key) => key.includes(MOCK_TOKEN_PREFIX));
 
-    let pairTokens: SymbolMap<ERC20DecimalsMock> = {};
+    let pairTokens: SymbolMap<MockERC20Token> = {};
     for (let [key, deployment] of Object.entries(allDeployments)) {
         if (mockTokenKeys.includes(key)) {
             pairTokens[key.replace(MOCK_TOKEN_PREFIX, '')] = await getToken(deployment.address);
@@ -145,8 +145,8 @@ export async function setupTestEnv() {
     testEnv.weth = await getWETH();
     testEnv.usdt = await getToken();
     testEnv.pairTokens = pairTokens;
-    testEnv.btc = pairTokens['BTC'];
-    testEnv.eth = pairTokens['ETH'];
+    testEnv.btc = pairTokens['WBTC'];
+    testEnv.eth = pairTokens['WETH'] || (await getMockToken('', (await getWETH()).address));
 
     // provider
     testEnv.addressesProvider = await getAddressesProvider();
@@ -249,8 +249,8 @@ export async function newTestEnv(): Promise<TestEnv> {
         keeper: keeper,
         users: users,
         weth: weth,
-        btc: tokens['BTC'],
-        eth: tokens['ETH'],
+        btc: tokens['WBTC'],
+        eth: tokens['WETH'],
         usdt: usdt,
         addressesProvider: addressesProvider,
         roleManager: roleManager,

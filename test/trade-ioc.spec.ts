@@ -1193,7 +1193,7 @@ describe('Trade: ioc', () => {
             expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
             // update maintainMarginRate
-            const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+            const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
             const tradingConfigBefore = btcPair.tradingConfig;
             tradingConfigBefore.maintainMarginRate = 15000000;
             await pool.updateTradingConfig(pairIndex, tradingConfigBefore);

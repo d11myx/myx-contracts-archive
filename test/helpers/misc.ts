@@ -1,13 +1,11 @@
-import { ERC20DecimalsMock } from '../../types';
+import { MockERC20Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import hre, { ethers } from 'hardhat';
-import { getBlockTimestamp, TradeType, waitForTx } from '../../helpers';
+import { abiCoder, TradeType, waitForTx } from '../../helpers';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { TradingTypes } from '../../types/contracts/core/Router';
 import { IExecution } from '../../types/contracts/core/Executor';
-import { eth } from 'web3';
-import * as events from 'events';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
@@ -16,7 +14,6 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
     const fee = mockPyth.getUpdateFee(updateData);
 
-    const abiCoder = new ethers.utils.AbiCoder();
     await waitForTx(
         await oraclePriceFeed
             .connect(keeper.signer)
@@ -32,7 +29,7 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
 
 export async function mintAndApprove(
     testEnv: TestEnv,
-    token: ERC20DecimalsMock,
+    token: MockERC20Token,
     amount: BigNumber,
     account: SignerWithAddress,
     spender: string,

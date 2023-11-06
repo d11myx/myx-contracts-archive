@@ -63,7 +63,7 @@ describe('Blacklist cases', () => {
         await roleManager.connect(operatorSigner).addAccountBlackList(blackUser.address);
         expect(await roleManager.isBlackList(blackUser.address)).to.be.eq(true);
 
-        let pair = await pool.getPair(0);
+        let pair = await pool.getPair(1);
 
         await expect(
             router
@@ -110,7 +110,7 @@ describe('Blacklist cases', () => {
         await roleManager.connect(operatorSigner).addAccountBlackList(blackUser.address);
         expect(await roleManager.isBlackList(blackUser.address)).to.be.eq(true);
 
-        let pair = await pool.getPair(0);
+        let pair = await pool.getPair(1);
 
         await expect(
             router

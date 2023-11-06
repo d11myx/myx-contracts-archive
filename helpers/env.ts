@@ -9,7 +9,7 @@ export let { MARKET_NAME }: { MARKET_NAME: ConfigNames } = process.env as any;
 MARKET_NAME = MARKET_NAME ? MARKET_NAME : ConfigNames.USDT;
 
 export const COMMON_DEPLOY_PARAMS = {
-    log: true,
+    log: false,
     autoMine: true,
     skipIfAlreadyDeployed: true,
     waitConfirmations: 1,
@@ -18,7 +18,7 @@ export const COMMON_DEPLOY_PARAMS = {
 export function isLocalNetwork(hre: HardhatRuntimeEnvironment) {
     const network = hre.network.name as eNetwork;
 
-    return !hre.network.live && network == DevNetwork.local;
+    return (!hre.network.live && network == DevNetwork.local) || network.toString() == 'hardhat';
 }
 
 export function isProdNetwork(hre: HardhatRuntimeEnvironment) {

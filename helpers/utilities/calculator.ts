@@ -1,6 +1,6 @@
 import { TestEnv } from '../../test/helpers/make-suite';
 import { BigNumber, ethers } from 'ethers';
-import { ERC20DecimalsMock } from '../../types';
+import { MockERC20Token } from '../../types';
 import { convertIndexAmountToStable } from '../token-decimals';
 
 const PRICE_PRECISION = '1000000000000000000000000000000';
@@ -128,8 +128,8 @@ export function getEpochFundingFee(fundingRate: BigNumber, openPrice: BigNumber)
 export async function getPositionFundingFee(
     testEnv: TestEnv,
     pairIndex: number,
-    indexToken: ERC20DecimalsMock,
-    stableToken: ERC20DecimalsMock,
+    indexToken: MockERC20Token,
+    stableToken: MockERC20Token,
     globalFundingFeeTracker: BigNumber,
     positionFundingFeeTracker: BigNumber,
     positionAmount: BigNumber,
@@ -174,8 +174,8 @@ export function getLpFundingFee(epochFundindFee: BigNumber, lpPosition: BigNumbe
 export async function getPositionTradingFee(
     testEnv: TestEnv,
     pairIndex: number,
-    indexToken: ERC20DecimalsMock,
-    stableToken: ERC20DecimalsMock,
+    indexToken: MockERC20Token,
+    stableToken: MockERC20Token,
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
@@ -270,7 +270,7 @@ export async function getMintLpAmount(
     const pairPrice = BigNumber.from(
         ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
     );
-    const lpFairPrice = await pool.lpFairPrice(pairIndex);
+    const lpFairPrice = await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
     const indexFeeAmount = indexAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
     const stableFeeAmount = stableAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
     const indexDepositDelta = indexAmount.sub(indexFeeAmount).mul(pairPrice);
@@ -287,13 +287,13 @@ export async function getLpSlippageDelta(
     indexAmount: BigNumber,
     stableAmount: BigNumber,
 ) {
-    const { pool } = testEnv;
+    const { pool, oraclePriceFeed, btc } = testEnv;
 
     let slipDelta;
     const pair = await pool.getPair(pairIndex);
-    const profit = await pool.getProfit(pair.pairIndex, pair.indexToken);
+    const profit = await pool.getProfit(pair.pairIndex, pair.indexToken, await oraclePriceFeed.getPrice(btc.address));
     const vault = await pool.getVault(pairIndex);
-    const price = await pool.getPrice(pair.indexToken);
+    const price = await oraclePriceFeed.getPrice(pair.indexToken);
 
     // index
     const indexTotalAmount = getTotalAmount(vault.indexTotalAmount, profit);
