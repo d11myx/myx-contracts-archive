@@ -180,11 +180,25 @@ describe('Router: increase position ar', () => {
             usdt,
             pool,
             positionManager,
-            executionLogic,
-            orderManager,
+            executor,
+            indexPriceFeed,
+            oraclePriceFeed,
         } = localTestEnv;
         await snapshotGasCost(
-            executionLogic.connect(keeper.signer).executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true),
+            executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                ),
         );
 
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
