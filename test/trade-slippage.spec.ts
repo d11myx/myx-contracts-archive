@@ -1,6 +1,6 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
-import { ethers } from 'hardhat';
-import { mintAndApprove, updateBTCPrice } from './helpers/misc';
+import hre, { ethers } from 'hardhat';
+import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
 import { TradeType, getMockToken, convertStableAmountToIndex } from '../helpers';
 import { BigNumber } from 'ethers';
@@ -114,22 +114,22 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
-            await expect(
-                executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    ),
-            ).to.be.revertedWith('exceeds max slippage');
+            const tx = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
+            expect(reason).to.be.eq('exceeds max slippage');
 
             // buy high
             await updateBTCPrice(testEnv, '31500');
@@ -178,22 +178,22 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
-            await expect(
-                executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    ),
-            ).to.be.revertedWith('exceeds max slippage');
+            const tx1 = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');
+            expect(reason).to.be.eq('exceeds max slippage');
         });
 
         it('transaction at market price, maxSlippage = 0.01%', async () => {
@@ -263,22 +263,22 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
-            await expect(
-                executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    ),
-            ).to.be.revertedWith('exceeds max slippage');
+            const tx = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
+            expect(reason).to.be.eq('exceeds max slippage');
 
             // buy high
             const trader2PositionBefore = await positionManager.getPosition(trader2.address, pairIndex, true);
@@ -328,22 +328,22 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
-            await expect(
-                executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    ),
-            ).to.be.revertedWith('exceeds max slippage');
+            const tx1 = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');
+            expect(reason).to.be.eq('exceeds max slippage');
         });
     });
 

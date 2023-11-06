@@ -93,6 +93,7 @@ describe('Router: Edge cases', () => {
             usdt,
             btc,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -112,9 +113,21 @@ describe('Router: Edge cases', () => {
         const userProfit = BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount);
         expect(userProfit).to.be.gt(userPositionValue);
 
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral);
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
         const userBalance = await usdt.balanceOf(trader.address);
@@ -123,9 +136,21 @@ describe('Router: Edge cases', () => {
         expect(positionBefore.collateral.sub(withdrawCollateral.abs())).to.be.eq(positionAfter.collateral);
 
         await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral.abs(),
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
 
     it('userProfit < positionValue, withdraw of partial collateral', async () => {
@@ -133,7 +158,9 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            btc,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -153,9 +180,21 @@ describe('Router: Edge cases', () => {
         const userProfit = BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount);
         expect(userProfit).to.be.lt(userPositionValue);
 
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral);
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
         const userBalanceAfter = await usdt.balanceOf(trader.address);
@@ -164,9 +203,21 @@ describe('Router: Edge cases', () => {
         expect(positionAfter.collateral).to.be.eq(positionBefore.collateral.sub(withdrawCollateral.abs()));
 
         await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral.abs(),
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
 
     it('userProfit > positionValue, withdraw of all collateral', async () => {
@@ -174,6 +225,8 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            btc,
+            oraclePriceFeed,
             router,
         } = testEnv;
 
@@ -194,9 +247,21 @@ describe('Router: Edge cases', () => {
         const userProfit = BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount);
         expect(userProfit).to.be.gt(userPositionValue);
 
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral);
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
         const userBalanceAfter = await usdt.balanceOf(trader.address);
@@ -205,9 +270,21 @@ describe('Router: Edge cases', () => {
         expect(userBalanceAfter).to.be.eq(userBalanceBefore.add(withdrawCollateral.abs()));
 
         await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral.abs(),
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
 
     it('userProfit < positionValue, withdraw of all collateral', async () => {
@@ -215,6 +292,8 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            btc,
+            oraclePriceFeed,
             router,
         } = testEnv;
 
@@ -234,9 +313,21 @@ describe('Router: Edge cases', () => {
         const userProfit = BigNumber.from(btcPriceUp).sub('30000').mul(positionBefore.positionAmount);
         expect(userProfit).to.be.lt(userPositionValue);
 
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral);
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
         const userBalanceAfter = await usdt.balanceOf(trader.address);
@@ -245,9 +336,21 @@ describe('Router: Edge cases', () => {
         expect(userBalanceAfter).to.be.eq(userBalanceBefore.add(withdrawCollateral.abs()));
 
         await mintAndApprove(testEnv, usdt, withdrawCollateral.abs(), trader, positionManager.address);
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral.abs());
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral.abs(),
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
 
     it('userLoss > collateral , Unable to withdraw deposit collateral', async () => {
@@ -255,6 +358,9 @@ describe('Router: Edge cases', () => {
             users: [trader],
             positionManager,
             usdt,
+            btc,
+            oraclePriceFeed,
+            router,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -262,7 +368,21 @@ describe('Router: Edge cases', () => {
 
         const collateral = ethers.utils.parseUnits('200000', await usdt.decimals());
         await mintAndApprove(testEnv, usdt, collateral.abs(), trader, positionManager.address);
-        await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
+        await router
+            .connect(trader.signer)
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                collateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -275,9 +395,21 @@ describe('Router: Edge cases', () => {
         expect(userLoss.abs()).to.be.gt(positionBefore.collateral);
 
         await expect(
-            positionManager
+            router
                 .connect(trader.signer)
-                .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral),
+                .setPriceAndAdjustCollateral(
+                    pairIndex,
+                    true,
+                    withdrawCollateral,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('collateral not enough');
     });
 
@@ -287,6 +419,8 @@ describe('Router: Edge cases', () => {
             positionManager,
             usdt,
             btc,
+            router,
+            oraclePriceFeed,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -294,7 +428,21 @@ describe('Router: Edge cases', () => {
 
         const collateral = ethers.utils.parseUnits('200000', await usdt.decimals());
         await mintAndApprove(testEnv, usdt, collateral.abs(), trader, positionManager.address);
-        await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
+        await router
+            .connect(trader.signer)
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                collateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -310,9 +458,21 @@ describe('Router: Edge cases', () => {
         );
         expect(userLoss.abs()).to.be.lt(positionBefore.collateral);
 
-        await positionManager
+        await router
             .connect(trader.signer)
-            .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral);
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                withdrawCollateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
 
         const userBalanceAfter = await usdt.balanceOf(trader.address);
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -327,6 +487,8 @@ describe('Router: Edge cases', () => {
             positionManager,
             usdt,
             btc,
+            router,
+            oraclePriceFeed,
         } = testEnv;
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
@@ -334,7 +496,21 @@ describe('Router: Edge cases', () => {
 
         const collateral = ethers.utils.parseUnits('200000', await usdt.decimals());
         await mintAndApprove(testEnv, usdt, collateral.abs(), trader, positionManager.address);
-        await positionManager.connect(trader.signer).adjustCollateral(pairIndex, trader.address, true, collateral);
+        await router
+            .connect(trader.signer)
+            .setPriceAndAdjustCollateral(
+                pairIndex,
+                true,
+                collateral,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -353,9 +529,21 @@ describe('Router: Edge cases', () => {
         expect(userLoss.abs()).to.be.lt(positionBefore.collateral);
 
         await expect(
-            positionManager
+            router
                 .connect(trader.signer)
-                .adjustCollateral(pairIndex, trader.address, true, withdrawCollateral),
+                .setPriceAndAdjustCollateral(
+                    pairIndex,
+                    true,
+                    withdrawCollateral,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('collateral not enough');
 
         await updateBTCPrice(testEnv, '30000');

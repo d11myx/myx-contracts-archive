@@ -1,6 +1,6 @@
 import { newTestEnv, SignerWithAddress, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import { ethers, waffle } from 'hardhat';
+import hre, { ethers, waffle } from 'hardhat';
 import { decreasePosition, extraHash, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import {
@@ -307,18 +307,18 @@ describe('Trade: profit & Loss', () => {
 
             let decreasingCollateral = BigNumber.from(0).sub(userPositionBefore.collateral.mul(99).div(100));
             let decreasingSize = userPositionBefore.positionAmount.mul(99).div(100);
-            await expect(
-                decreasePosition(
-                    testEnv,
-                    trader,
-                    pairIndex,
-                    decreasingCollateral,
-                    decreasingSize, // decrease 99%
-                    TradeType.MARKET,
-                    true,
-                    ethers.utils.parseUnits(btcPrice, 30),
-                ),
-            ).to.be.revertedWith('collateral not enough');
+            const tx = await decreasePosition(
+                testEnv,
+                trader,
+                pairIndex,
+                decreasingCollateral,
+                decreasingSize, // decrease 99%
+                TradeType.MARKET,
+                true,
+                ethers.utils.parseUnits(btcPrice, 30),
+            );
+            const reason = await extraHash(tx.executeReceipt.transactionHash, 'CancelOrder', 'reason');
+            expect(reason).to.be.eq('collateral not enough');
 
             decreasingSize = userPositionBefore.positionAmount.mul(99).div(100);
             const availableCollateral = userPositionBefore.collateral
