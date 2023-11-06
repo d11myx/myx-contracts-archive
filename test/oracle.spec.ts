@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import {
     AddressesProvider,
-    ERC20DecimalsMock,
+    MockERC20Token,
     IndexPriceFeed,
     MockPyth,
     MockPythOraclePriceFeed,
@@ -32,15 +32,15 @@ describe('Oracle: oracle cases', () => {
         other: SignerWithAddress,
         user1: SignerWithAddress,
         user2: SignerWithAddress;
-    let eth!: ERC20DecimalsMock;
-    let btc!: ERC20DecimalsMock;
-    let token3!: ERC20DecimalsMock;
+    let eth!: MockERC20Token;
+    let btc!: MockERC20Token;
+    let token3!: MockERC20Token;
 
     beforeEach(async () => {
-        const ERC20DecimalsMock = await ethers.getContractFactory('ERC20DecimalsMock');
-        eth = (await ERC20DecimalsMock.deploy('token1', 'token1', 18)) as ERC20DecimalsMock;
-        btc = (await ERC20DecimalsMock.deploy('token2', 'token2', 8)) as ERC20DecimalsMock;
-        token3 = (await ERC20DecimalsMock.deploy('token3', 'token3', 18)) as ERC20DecimalsMock;
+        const MockERC20Token = await ethers.getContractFactory('MockERC20Token');
+        eth = (await MockERC20Token.deploy('token1', 'token1', 18)) as MockERC20Token;
+        btc = (await MockERC20Token.deploy('token2', 'token2', 8)) as MockERC20Token;
+        token3 = (await MockERC20Token.deploy('token3', 'token3', 18)) as MockERC20Token;
         const WETHMock = await ethers.getContractFactory('WETH9');
         const weth = (await WETHMock.deploy()) as WETH9;
         [owner, dev, spender, other, user1, user2] = await ethers.getSigners();
@@ -157,7 +157,7 @@ describe('Oracle: oracle cases', () => {
             .updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])], { value: fee });
         await indexPriceFeed.connect(user1).updatePrice([btc.address], [price]);
 
-        console.log('btc:' + btc.address);
+        // console.log('btc:' + btc.address);
         expect(await pythOraclePriceFeed.getPrice(btc.address)).to.be.eq(toFullBNStr(price, 22));
         expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(price);
     });

@@ -134,10 +134,10 @@ describe('Trade: funding fee', () => {
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
 
-            console.log('usdt decimals:' + (await usdt.decimals()));
-            console.log('fundingFeeTrackerAfter:' + fundingFeeTrackerAfter);
-            console.log('userPosition.fundingFeeTracker:' + userPosition.fundingFeeTracker);
-            console.log('userPosition.positionAmount:' + userPosition.positionAmount);
+            // console.log('usdt decimals:' + (await usdt.decimals()));
+            // console.log('fundingFeeTrackerAfter:' + fundingFeeTrackerAfter);
+            // console.log('userPosition.fundingFeeTracker:' + userPosition.fundingFeeTracker);
+            // console.log('userPosition.positionAmount:' + userPosition.positionAmount);
             const expectFundinFee = await getPositionFundingFee(
                 testEnv,
                 pairIndex,
@@ -182,10 +182,10 @@ describe('Trade: funding fee', () => {
 
             // longer user will be paid fundingFee
             userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('positionCollateral:' + positionCollateral);
-            console.log('balanceDiff:' + balanceDiff);
-            console.log('tradingFee:' + tradingFee);
-            console.log('userFundingFee:' + userFundingFee);
+            // console.log('positionCollateral:' + positionCollateral);
+            // console.log('balanceDiff:' + balanceDiff);
+            // console.log('tradingFee:' + tradingFee);
+            // console.log('userFundingFee:' + userFundingFee);
 
             expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
         });
@@ -614,7 +614,7 @@ describe('Trade: funding fee', () => {
                     router,
                     positionManager,
                 } = testEnv;
-                console.log(await positionManager.getExposedPositions(pairIndex));
+                // console.log(await positionManager.getExposedPositions(pairIndex));
 
                 const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('9', await btc.decimals());

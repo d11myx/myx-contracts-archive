@@ -5,23 +5,18 @@ import {
     eNetwork,
     getToken,
     getWETH,
-    isProdNetwork,
     loadReserveConfig,
     MARKET_NAME,
     MOCK_TOKEN_PREFIX,
     SymbolMap,
     ZERO_ADDRESS,
 } from '../../../helpers';
-import { ERC20DecimalsMock, WETH9 } from '../../../types';
+import { MockERC20Token, WETH9 } from '../../../types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy, save } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
 
-    if (isProdNetwork(hre)) {
-        console.log('[warring] Skipping testnet token setup');
-        return;
-    }
     const network = hre.network.name as eNetwork;
     const reserveConfig = loadReserveConfig(MARKET_NAME);
 
@@ -31,15 +26,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     if (!basicTokenAddress || basicTokenAddress == ZERO_ADDRESS) {
         const basicTokenArtifact = await deploy(`${MARKET_NAME}`, {
             from: deployer,
-            contract: 'ERC20DecimalsMock',
+            contract: 'MockERC20Token',
             args: [MARKET_NAME, MARKET_NAME, reserveConfig?.MarketTokenDecimals],
             ...COMMON_DEPLOY_PARAMS,
         });
-        basicToken = (await getToken(basicTokenArtifact.address)) as ERC20DecimalsMock;
+        basicToken = (await getToken(basicTokenArtifact.address)) as MockERC20Token;
     } else {
-        basicToken = (await getToken(basicTokenAddress)) as ERC20DecimalsMock;
+        basicToken = (await getToken(basicTokenAddress)) as MockERC20Token;
 
-        const artifact = await hre.deployments.getArtifact('ERC20DecimalsMock');
+        const artifact = await hre.deployments.getArtifact('MockERC20Token');
         await save(`${MARKET_NAME}`, {
             ...artifact,
             address: basicToken.address,
@@ -75,22 +70,26 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         let pairToken;
         if (pairAssets && pairAssets[pair] && pairAssets[pair] != ZERO_ADDRESS) {
             const pairTokenAddress = pairAssets[pair];
-            pairToken = (await getToken(pairTokenAddress)) as ERC20DecimalsMock;
+            pairToken = (await getToken(pairTokenAddress)) as MockERC20Token;
 
-            const artifact = await hre.deployments.getArtifact('ERC20DecimalsMock');
+            const artifact = await hre.deployments.getArtifact('MockERC20Token');
             await save(`${MOCK_TOKEN_PREFIX}${pair}`, {
                 ...artifact,
                 address: pairToken.address,
             });
         } else {
-            //TODO pairInfo.useWrappedNativeToken
-            const pairTokenArtifact = await deploy(`${MOCK_TOKEN_PREFIX}${pair}`, {
-                from: deployer,
-                contract: 'ERC20DecimalsMock',
-                args: [pair, pair, pairInfo.pairTokenDecimals],
-                ...COMMON_DEPLOY_PARAMS,
-            });
-            pairToken = (await getToken(pairTokenArtifact.address)) as ERC20DecimalsMock;
+            let pairTokenArtifact;
+            if (pairInfo.useWrappedNativeToken) {
+                pairTokenArtifact = await hre.deployments.get('WETH');
+            } else {
+                pairTokenArtifact = await deploy(`${MOCK_TOKEN_PREFIX}${pair}`, {
+                    from: deployer,
+                    contract: 'MockERC20Token',
+                    args: [pair, pair, pairInfo.pairTokenDecimals],
+                    ...COMMON_DEPLOY_PARAMS,
+                });
+            }
+            pairToken = (await getToken(pairTokenArtifact.address)) as MockERC20Token;
         }
         console.log(`[deployment] deployed index tokens【${pair}】at ${pairToken.address}`);
     }
