@@ -1,12 +1,10 @@
-
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ERC20DecimalsMock is ERC20, Ownable {
+contract MockERC20Token is ERC20, Ownable {
     uint8 private immutable _decimals;
 
     constructor(

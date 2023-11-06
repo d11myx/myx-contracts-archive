@@ -33,7 +33,7 @@ describe('LP: Pool cases', () => {
             const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals()); //单价3w
             const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals()); //单价1
             const pair = await pool.getPair(pairIndex);
-            console.log(`pair:`, pair);
+            // console.log(`pair:`, pair);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
             expect(await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address))).to.be.eq(

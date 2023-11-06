@@ -23,8 +23,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const poolTokenFactory = await getPoolTokenFactory();
-    //spot swap
 
+    // spot swap
     await deploy(`${SPOT_SWAP}`, {
         from: deployer,
         contract: 'SpotSwap',

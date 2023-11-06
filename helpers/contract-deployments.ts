@@ -16,10 +16,9 @@ import {
     RiskReserve,
     RoleManager,
     Router,
-    TestCallBack,
     WETH9,
     Timelock,
-    ERC20DecimalsMock,
+    MockERC20Token,
     SpotSwap,
     MockPythOraclePriceFeed,
 } from '../types';
@@ -36,8 +35,8 @@ import { encodeParameterArray } from './utilities';
 
 declare var hre: HardhatRuntimeEnvironment;
 
-export const deployMockToken = async (name: string, symbol: string, decimals: number): Promise<ERC20DecimalsMock> => {
-    return await deployContract<ERC20DecimalsMock>('ERC20DecimalsMock', [name, symbol, decimals]);
+export const deployMockToken = async (name: string, symbol: string, decimals: number): Promise<MockERC20Token> => {
+    return await deployContract<MockERC20Token>('MockERC20Token', [name, symbol, decimals]);
 };
 
 export const deployWETH = async (): Promise<WETH9> => {
@@ -78,7 +77,7 @@ export async function deployToken() {
     // pairs token
     const pairConfigs = reserveConfig?.PairsConfig;
 
-    const tokens: SymbolMap<ERC20DecimalsMock> = {};
+    const tokens: SymbolMap<MockERC20Token> = {};
     for (let [pair, pairConfig] of Object.entries(pairConfigs)) {
         const token = await deployMockToken(pair, pair, pairConfig.pairTokenDecimals);
         log(`deployed ${pair} at ${token.address}`);
@@ -93,7 +92,7 @@ export async function deployPrice(
     keeper: SignerWithAddress,
     timelock: Timelock,
     addressesProvider: AddressesProvider,
-    tokens: SymbolMap<ERC20DecimalsMock>,
+    tokens: SymbolMap<MockERC20Token>,
 ) {
     log(` - setup price`);
 
@@ -190,7 +189,7 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
-    pledge: ERC20DecimalsMock,
+    pledge: MockERC20Token,
     validationHelper: Contract,
 ) {
     log(` - setup trading`);

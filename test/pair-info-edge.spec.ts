@@ -1,19 +1,14 @@
 import { testEnv } from './helpers/make-suite';
-import { waitForTx } from '../helpers/utilities/tx';
-import { loadReserveConfig } from '../helpers/market-config-helper';
-import { expect } from './shared/expect';
+import { waitForTx, loadReserveConfig, deployMockToken, MARKET_NAME } from '../helpers';
+import { expect } from 'chai';
 import { IPool } from '../types';
 import { BigNumber } from 'ethers';
-import { deployMockToken } from '../helpers/contract-deployments';
-import { MARKET_NAME } from '../helpers/env';
-import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('Pool: Edge cases', () => {
     before('addPair', async () => {
         const { poolAdmin, pool, usdt, eth, fundingRate } = testEnv;
-
         const token = await deployMockToken('Test', 'Test', 18);
-        const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+        const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
 
         const pair = btcPair.pair;
         pair.indexToken = token.address;
@@ -55,7 +50,7 @@ describe('Pool: Edge cases', () => {
             await fundingRate.fundingFeeConfigs(pairIndex),
         );
 
-        const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+        const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
         const pair = await pool.getPair(pairIndex);
         expect(pair.indexToken).to.be.eq(btc.address);
         expect(pair.stableToken).to.be.eq(usdt.address);
@@ -92,12 +87,6 @@ describe('Pool: Edge cases', () => {
             const pairAfterObj = await pool.getPair(pairIndex);
             let pairAfter: IPool.PairStructOutput = { ...pairAfterObj };
 
-            // console.log(pairAfter);
-            // console.log(pairToUpdate);
-            //TODO Fix:updatePair unSuccessful
-
-            // expect(pairAfter).deep.be.eq(pairToUpdate);
-
             expect(pairAfter.enable).to.be.eq(pairToUpdate.enable);
             expect(pairAfter.kOfSwap).to.be.eq(pairToUpdate.kOfSwap);
             pairToUpdate.expectIndexTokenP = BigNumber.from(5000);
@@ -105,11 +94,5 @@ describe('Pool: Edge cases', () => {
             pairToUpdate.enable = true;
             await waitForTx(await pool.connect(deployer.signer).updatePair(pairIndex, pairToUpdate));
         });
-    });
-    it('gas cost setPositionManager', async () => {
-        const { poolAdmin, pool, usdt } = testEnv;
-        const ethPair = loadReserveConfig(MARKET_NAME).PairsConfig['ETH'];
-        let pair = ethPair.pair;
-        // await snapshotGasCost(pool.connect(poolAdmin.signer).setPositionManager(poolAdmin.address));
     });
 });

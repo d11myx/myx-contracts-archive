@@ -29,6 +29,7 @@ export interface ReserveConfiguration {
     PairAssets: ParamsPerNetwork<SymbolMap<string>>;
     ExecuteOrderTimeDelay: number;
     OraclePriceFeedAddress: ParamsPerNetwork<string>;
+    OraclePriceId: ParamsPerNetwork<SymbolMap<string>>;
     UniswapRouterAddress: ParamsPerNetwork<string>;
     UniswapTokenPathConfig: ParamsPerNetwork<SymbolMap<string>>;
 }

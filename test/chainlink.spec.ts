@@ -6,7 +6,7 @@ import { ethers, waffle } from 'hardhat';
 import {
     MockChainLink,
     ChainlinkPriceFeed,
-    ERC20DecimalsMock,
+    MockERC20Token,
     Timelock,
     AddressesProvider,
     RoleManager,
@@ -32,9 +32,9 @@ describe('ChainlinkpriceOracle Spec', () => {
     let chainlinkMockETH!: MockChainLink;
     let chainlinkMockBTC!: MockChainLink;
     let chainlinkMock3!: MockChainLink;
-    let eth!: ERC20DecimalsMock;
-    let btc!: ERC20DecimalsMock;
-    let token3!: ERC20DecimalsMock;
+    let eth!: MockERC20Token;
+    let btc!: MockERC20Token;
+    let token3!: MockERC20Token;
     let owner: SignerWithAddress,
         dev: SignerWithAddress,
         spender: SignerWithAddress,
@@ -42,20 +42,20 @@ describe('ChainlinkpriceOracle Spec', () => {
         user1: SignerWithAddress,
         user2: SignerWithAddress;
     const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000';
-    let usdc: ERC20DecimalsMock;
+    let usdc: MockERC20Token;
     let timelock: Timelock;
 
     beforeEach(async () => {
         [owner, dev, spender, other, user1, user2] = await ethers.getSigners();
-        const ERC20DecimalsMock = await ethers.getContractFactory('ERC20DecimalsMock');
+        const MockERC20Token = await ethers.getContractFactory('MockERC20Token');
         const WETHMock = await ethers.getContractFactory('WETH9');
         const ChainlinkPriceFeed = await ethers.getContractFactory('ChainlinkPriceFeed');
         const MockChainLink = await ethers.getContractFactory('MockChainLink');
         const weth = (await WETHMock.deploy()) as WETH9;
-        eth = (await ERC20DecimalsMock.deploy('token1', 'token1', 18)) as ERC20DecimalsMock;
-        btc = (await ERC20DecimalsMock.deploy('token2', 'token2', 8)) as ERC20DecimalsMock;
-        token3 = (await ERC20DecimalsMock.deploy('token3', 'token3', 18)) as ERC20DecimalsMock;
-        usdc = (await ERC20DecimalsMock.deploy('usdc', 'usdc', 6)) as ERC20DecimalsMock;
+        eth = (await MockERC20Token.deploy('token1', 'token1', 18)) as MockERC20Token;
+        btc = (await MockERC20Token.deploy('token2', 'token2', 8)) as MockERC20Token;
+        token3 = (await MockERC20Token.deploy('token3', 'token3', 18)) as MockERC20Token;
+        usdc = (await MockERC20Token.deploy('usdc', 'usdc', 6)) as MockERC20Token;
         chainlinkMockETH = (await MockChainLink.deploy()) as MockChainLink;
         chainlinkMockBTC = (await MockChainLink.deploy()) as MockChainLink;
         chainlinkMock3 = (await MockChainLink.deploy()) as MockChainLink;

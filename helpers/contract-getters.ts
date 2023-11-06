@@ -3,7 +3,6 @@ import {
     AddressesProvider,
     Executor,
     IndexPriceFeed,
-    PythOraclePriceFeed,
     Pool,
     OrderManager,
     RoleManager,
@@ -11,23 +10,13 @@ import {
     PositionManager,
     WETH9,
     PoolTokenFactory,
-    MYX,
-    RaMYX,
-    StMYX,
-    Vester,
-    RewardDistributor,
-    StakingPool,
-    Convertor,
-    LPStakingPool,
-    FeeDistributor,
-    TestCallBack,
     FundingRate,
     ExecutionLogic,
     RiskReserve,
     LiquidationLogic,
     FeeCollector,
     Timelock,
-    ERC20DecimalsMock,
+    MockERC20Token,
     SpotSwap,
     MockPythOraclePriceFeed,
 } from '../types';
@@ -44,16 +33,6 @@ import {
     ORDER_MANAGER_ID,
     POSITION_MANAGER_ID,
     POOL_TOKEN_FACTORY,
-    MYX_ID,
-    RAMYX_ID,
-    STMYX_ID,
-    VESTER_ID,
-    REWARD_DISTRIBUTOR_ID,
-    STAKING_POOL_ID,
-    CONVERTOR_ID,
-    LP_STAKING_POOL_ID,
-    FEE_DISTRIBUTOR_ID,
-    TEST_CALLBACK_ID,
     FUNDING_RATE,
     EXECUTION_LOGIC_ID,
     RISK_RESERVE_ID,
@@ -67,18 +46,15 @@ import { SymbolMap } from './types';
 
 declare var hre: HardhatRuntimeEnvironment;
 
-export const getMockToken = async (pair: string, address?: string): Promise<ERC20DecimalsMock> => {
-    return getContract<ERC20DecimalsMock>(
-        'ERC20DecimalsMock',
+export const getMockToken = async (pair: string, address?: string): Promise<MockERC20Token> => {
+    return getContract<MockERC20Token>(
+        'MockERC20Token',
         address || (await hre.deployments.get(MOCK_TOKEN_PREFIX + pair)).address,
     );
 };
 
-export const getToken = async (address?: string): Promise<ERC20DecimalsMock> => {
-    return getContract<ERC20DecimalsMock>(
-        'ERC20DecimalsMock',
-        address || (await hre.deployments.get(MARKET_NAME)).address,
-    );
+export const getToken = async (address?: string): Promise<MockERC20Token> => {
+    return getContract<MockERC20Token>('MockERC20Token', address || (await hre.deployments.get(MARKET_NAME)).address);
 };
 
 export const getWETH = async (address?: string): Promise<WETH9> => {
@@ -173,60 +149,11 @@ export const getFeeCollector = async (address?: string): Promise<FeeCollector> =
     return getContract<FeeCollector>('FeeCollector', address || (await hre.deployments.get(FEE_COLLECTOR_ID)).address);
 };
 
-export const getMYX = async (address?: string): Promise<MYX> => {
-    return getContract<MYX>('MYX', address || (await hre.deployments.get(MYX_ID)).address);
-};
-
-export const getRaMYX = async (address?: string): Promise<RaMYX> => {
-    return getContract<RaMYX>('RaMYX', address || (await hre.deployments.get(RAMYX_ID)).address);
-};
-
-export const getStMYX = async (address?: string): Promise<StMYX> => {
-    return getContract<StMYX>('StMYX', address || (await hre.deployments.get(STMYX_ID)).address);
-};
-
-export const getVester = async (address?: string): Promise<Vester> => {
-    return getContract<Vester>('Vester', address || (await hre.deployments.get(VESTER_ID)).address);
-};
-
-export const getRewardDistributor = async (address?: string): Promise<RewardDistributor> => {
-    return getContract<RewardDistributor>(
-        'RewardDistributor',
-        address || (await hre.deployments.get(REWARD_DISTRIBUTOR_ID)).address,
-    );
-};
-
-export const getFeeDistributor = async (address?: string): Promise<FeeDistributor> => {
-    return getContract<FeeDistributor>(
-        'FeeDistributor',
-        address || (await hre.deployments.get(FEE_DISTRIBUTOR_ID)).address,
-    );
-};
-
-export const getStakingPool = async (address?: string): Promise<StakingPool> => {
-    return getContract<StakingPool>('StakingPool', address || (await hre.deployments.get(STAKING_POOL_ID)).address);
-};
-
-export const getLPStakingPool = async (address?: string): Promise<LPStakingPool> => {
-    return getContract<LPStakingPool>(
-        'LPStakingPool',
-        address || (await hre.deployments.get(LP_STAKING_POOL_ID)).address,
-    );
-};
-
-export const getConvertor = async (address?: string): Promise<Convertor> => {
-    return getContract<Convertor>('Convertor', address || (await hre.deployments.get(CONVERTOR_ID)).address);
-};
-
-export const getTestCallBack = async (address?: string): Promise<TestCallBack> => {
-    return getContract<TestCallBack>('TestCallBack', address || (await hre.deployments.get(TEST_CALLBACK_ID)).address);
-};
-
 export async function getTokens() {
     const allDeployments = await hre.deployments.all();
     const mockTokenKeys = Object.keys(allDeployments).filter((key) => key.includes(MOCK_TOKEN_PREFIX));
 
-    let pairTokens: SymbolMap<ERC20DecimalsMock> = {};
+    let pairTokens: SymbolMap<MockERC20Token> = {};
     for (let [key, deployment] of Object.entries(allDeployments)) {
         if (mockTokenKeys.includes(key)) {
             pairTokens[key.replace(MOCK_TOKEN_PREFIX, '')] = await getToken(deployment.address);
@@ -234,8 +161,10 @@ export async function getTokens() {
     }
     // tokens
     const usdt = await getToken();
-    const btc = pairTokens['BTC'];
-    const eth = pairTokens['ETH'];
-
+    const btc = pairTokens['WBTC'];
+    let eth = pairTokens['WETH'];
+    if (!eth) {
+        eth = await getMockToken('', (await getWETH()).address);
+    }
     return { usdt, btc, eth };
 }
