@@ -37,7 +37,15 @@ describe('Trade: funding fee', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
         // make positions
         const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
@@ -72,6 +80,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -86,7 +95,12 @@ describe('Trade: funding fee', () => {
 
             expect(userPosition.positionAmount).to.be.eq(size);
 
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             const fundingFeeTrackerBefore = await positionManager.globalFundingFeeTracker(pairIndex);
 
@@ -94,7 +108,12 @@ describe('Trade: funding fee', () => {
 
             // update funding fee
             await increase(Duration.hours(10));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -115,10 +134,10 @@ describe('Trade: funding fee', () => {
             // user position funding fee
             const userFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
 
-            console.log('usdt decimals:' + (await usdt.decimals()));
-            console.log('fundingFeeTrackerAfter:' + fundingFeeTrackerAfter);
-            console.log('userPosition.fundingFeeTracker:' + userPosition.fundingFeeTracker);
-            console.log('userPosition.positionAmount:' + userPosition.positionAmount);
+            // console.log('usdt decimals:' + (await usdt.decimals()));
+            // console.log('fundingFeeTrackerAfter:' + fundingFeeTrackerAfter);
+            // console.log('userPosition.fundingFeeTracker:' + userPosition.fundingFeeTracker);
+            // console.log('userPosition.positionAmount:' + userPosition.positionAmount);
             const expectFundinFee = await getPositionFundingFee(
                 testEnv,
                 pairIndex,
@@ -144,7 +163,12 @@ describe('Trade: funding fee', () => {
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -158,10 +182,10 @@ describe('Trade: funding fee', () => {
 
             // longer user will be paid fundingFee
             userPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('positionCollateral:' + positionCollateral);
-            console.log('balanceDiff:' + balanceDiff);
-            console.log('tradingFee:' + tradingFee);
-            console.log('userFundingFee:' + userFundingFee);
+            // console.log('positionCollateral:' + positionCollateral);
+            // console.log('balanceDiff:' + balanceDiff);
+            // console.log('tradingFee:' + tradingFee);
+            // console.log('userFundingFee:' + userFundingFee);
 
             expect(positionCollateral.sub(balanceDiff).sub(tradingFee)).to.be.eq(userFundingFee.abs());
         });
@@ -173,6 +197,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -191,7 +216,12 @@ describe('Trade: funding fee', () => {
 
             // update funding fee
             await increase(Duration.hours(10));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -239,7 +269,12 @@ describe('Trade: funding fee', () => {
 
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                false,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -288,6 +323,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -305,7 +341,12 @@ describe('Trade: funding fee', () => {
 
             // update funding fee
             await increase(Duration.hours(10));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -352,7 +393,12 @@ describe('Trade: funding fee', () => {
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, true, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                true,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -375,6 +421,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -392,7 +439,12 @@ describe('Trade: funding fee', () => {
 
             // update funding fee
             await increase(Duration.hours(10));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             // funding rate
             const currentFundingRate = await positionManager.getCurrentFundingRate(pairIndex);
@@ -426,7 +478,12 @@ describe('Trade: funding fee', () => {
             const userUsdtAfter = await usdt.balanceOf(trader.address);
             const balanceDiff = userUsdtAfter.sub(userUsdtBefore);
             const positionCollateral = userPosition.collateral;
-            const tradingFee = await positionManager.getTradingFee(pairIndex, false, userPosition.positionAmount);
+            const tradingFee = await positionManager.getTradingFee(
+                pairIndex,
+                false,
+                userPosition.positionAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const currentPositionTradingFee = await getPositionTradingFee(
                 testEnv,
                 pairIndex,
@@ -481,7 +538,12 @@ describe('Trade: funding fee', () => {
 
             // update funding fee
             await increase(Duration.hours(10));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             const longFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
             const shortFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
@@ -527,7 +589,12 @@ describe('Trade: funding fee', () => {
 
             // update funding fee
             await increase(Duration.hours(10));
-            await positionManager.updateFundingRate(pairIndex);
+            await router.setPriceAndUpdateFundingRate(
+                pairIndex,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
 
             const longFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
             const shortFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);
@@ -547,7 +614,7 @@ describe('Trade: funding fee', () => {
                     router,
                     positionManager,
                 } = testEnv;
-                console.log(await positionManager.getExposedPositions(pairIndex));
+                // console.log(await positionManager.getExposedPositions(pairIndex));
 
                 const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('9', await btc.decimals());
@@ -584,7 +651,12 @@ describe('Trade: funding fee', () => {
 
                 // update funding fee
                 await increase(Duration.hours(10));
-                await positionManager.updateFundingRate(pairIndex);
+                await router.setPriceAndUpdateFundingRate(
+                    pairIndex,
+                    [btc.address],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    { value: 1 },
+                );
 
                 const longFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, true);
                 const shortFundingFee = await positionManager.getFundingFee(trader.address, pairIndex, false);

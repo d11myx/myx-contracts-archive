@@ -5,7 +5,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     console.log('=== Post deployment hook ===');
 
     await hre.run('print-deployments');
-
     console.log('=== Deploy Completed ===');
 };
 

@@ -6,7 +6,8 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
-import "../interfaces/IPriceOracle.sol";
+import "../interfaces/IIndexPriceFeed.sol";
+import "../interfaces/IPythOraclePriceFeed.sol";
 import "../interfaces/IExecutionLogic.sol";
 import "../libraries/Roleable.sol";
 import "../interfaces/ILiquidationLogic.sol";
@@ -30,12 +31,12 @@ contract Executor is IExecutor, Roleable, Pausable {
     function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        _setPrices(tokens, prices, timestamp);
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
             increaseOrders
@@ -45,12 +46,12 @@ contract Executor is IExecutor, Roleable, Pausable {
     function setPricesAndExecuteDecreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        _setPrices(tokens, prices, timestamp);
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
             decreaseOrders
@@ -60,12 +61,12 @@ contract Executor is IExecutor, Roleable, Pausable {
     function setPricesAndExecuteIncreaseLimitOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        _setPrices(tokens, prices, timestamp);
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
             increaseOrders
@@ -75,12 +76,12 @@ contract Executor is IExecutor, Roleable, Pausable {
     function setPricesAndExecuteDecreaseLimitOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        _setPrices(tokens, prices, timestamp);
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
             decreaseOrders
@@ -90,7 +91,7 @@ contract Executor is IExecutor, Roleable, Pausable {
     function setPricesAndExecuteADL(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecution.ExecutePosition[] memory executePositions,
         uint256 orderId,
         TradingTypes.TradeType tradeType,
@@ -99,7 +100,7 @@ contract Executor is IExecutor, Roleable, Pausable {
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        _setPrices(tokens, prices, timestamp);
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrder(
             executePositions,
@@ -113,18 +114,26 @@ contract Executor is IExecutor, Roleable, Pausable {
     function setPricesAndLiquidatePositions(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecution.ExecutePosition[] memory executePositions
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        _setPrices(tokens, prices, timestamp);
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidatePositions(executePositions);
     }
 
-    function _setPrices(address[] memory _tokens, uint256[] memory _prices, uint256) internal {
-        IPriceOracle(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
+    function setPrices(
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        bytes[] memory updateData
+    ) external payable whenNotPaused {
+        require(msg.sender == address(this), "internal");
+
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
+
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(_tokens, updateData);
     }
 
     function needADL(

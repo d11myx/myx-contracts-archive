@@ -33,20 +33,36 @@ describe('LP: Pool cases', () => {
             const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals()); //单价3w
             const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals()); //单价1
             const pair = await pool.getPair(pairIndex);
+            // console.log(`pair:`, pair);
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-            expect(await pool.lpFairPrice(pairIndex)).to.be.eq(ethers.utils.parseUnits('1000000000000'));
+            expect(await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address))).to.be.eq(
+                ethers.utils.parseUnits('1000000000000'),
+            );
             const vaultBefore = await pool.getVault(pairIndex);
             const userBtcBalanceBefore = await btc.balanceOf(depositor.address);
             const userUsdtBalanceBefore = await usdt.balanceOf(depositor.address);
             expect(vaultBefore.indexTotalAmount).to.be.eq(0);
             expect(vaultBefore.stableTotalAmount).to.be.eq(0);
 
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             // expect(expectAddLiquidity.mintAmount).to.be.eq(ethers.utils.parseUnits('599400000'));
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    { value: 1 },
+                );
 
             const lpToken = await getMockToken('', pair.pairToken);
             const totoalApply = await lpToken.totalSupply();

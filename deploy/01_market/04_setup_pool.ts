@@ -7,6 +7,7 @@ import {
     getPool,
     getSpotSwap,
     getToken,
+    getWETH,
     loadReserveConfig,
     MARKET_NAME,
     SymbolMap,
@@ -28,10 +29,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     // setup pairs
     console.log(`- setup pairs`);
     for (let symbol of Object.keys(pairConfigs)) {
-        const pairToken = await getMockToken(symbol);
-        const basicToken = await getToken();
-
         const pairConfig = pairConfigs[symbol];
+
+        const basicToken = await getToken();
+        let pairToken;
+        if (pairConfig.useWrappedNativeToken) {
+            pairToken = await getWETH();
+        } else {
+            pairToken = await getMockToken(symbol);
+        }
+
         const pair = pairConfig.pair;
         pair.indexToken = pairToken.address;
         pair.stableToken = basicToken.address;
@@ -68,7 +75,14 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     // uniswap token path
     for (let symbol of Object.keys(pairConfigs)) {
-        const indexToken = await getMockToken(symbol);
+        const pairConfig = pairConfigs[symbol];
+
+        let indexToken;
+        if (pairConfig.useWrappedNativeToken) {
+            indexToken = await getWETH();
+        } else {
+            indexToken = await getMockToken(symbol);
+        }
         const basicToken = await getToken();
 
         const tokenPathConfigs = reserveConfig?.UniswapTokenPathConfig[network] as SymbolMap<string>;

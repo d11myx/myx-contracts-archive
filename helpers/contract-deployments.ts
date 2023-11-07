@@ -16,11 +16,11 @@ import {
     RiskReserve,
     RoleManager,
     Router,
-    TestCallBack,
     WETH9,
     Timelock,
-    ERC20DecimalsMock,
+    MockERC20Token,
     SpotSwap,
+    MockPythOraclePriceFeed,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -35,8 +35,8 @@ import { encodeParameterArray } from './utilities';
 
 declare var hre: HardhatRuntimeEnvironment;
 
-export const deployMockToken = async (name: string, symbol: string, decimals: number): Promise<ERC20DecimalsMock> => {
-    return await deployContract<ERC20DecimalsMock>('ERC20DecimalsMock', [name, symbol, decimals]);
+export const deployMockToken = async (name: string, symbol: string, decimals: number): Promise<MockERC20Token> => {
+    return await deployContract<MockERC20Token>('MockERC20Token', [name, symbol, decimals]);
 };
 
 export const deployWETH = async (): Promise<WETH9> => {
@@ -77,7 +77,7 @@ export async function deployToken() {
     // pairs token
     const pairConfigs = reserveConfig?.PairsConfig;
 
-    const tokens: SymbolMap<ERC20DecimalsMock> = {};
+    const tokens: SymbolMap<MockERC20Token> = {};
     for (let [pair, pairConfig] of Object.entries(pairConfigs)) {
         const token = await deployMockToken(pair, pair, pairConfig.pairTokenDecimals);
         log(`deployed ${pair} at ${token.address}`);
@@ -92,18 +92,18 @@ export async function deployPrice(
     keeper: SignerWithAddress,
     timelock: Timelock,
     addressesProvider: AddressesProvider,
-    tokens: SymbolMap<ERC20DecimalsMock>,
+    tokens: SymbolMap<MockERC20Token>,
 ) {
     log(` - setup price`);
 
     const mockPyth = (await deployContract('MockPyth', [60, 1])) as any as MockPyth;
 
-    const oraclePriceFeed = (await deployContract('PythOraclePriceFeed', [
+    const oraclePriceFeed = (await deployContract('MockPythOraclePriceFeed', [
         addressesProvider.address,
         mockPyth.address,
         [],
         [],
-    ])) as any as PythOraclePriceFeed;
+    ])) as any as MockPythOraclePriceFeed;
     log(`deployed PythOraclePriceFeed at ${oraclePriceFeed.address}`);
 
     const pairTokenAddresses = [];
@@ -134,7 +134,7 @@ export async function deployPrice(
     await hre.run('time-execution', {
         target: oraclePriceFeed.address,
         value: '0',
-        signature: 'setAssetPriceIds(address[],bytes32[])',
+        signature: 'setTokenPriceIds(address[],bytes32[])',
         data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
         eta: Duration.days(1)
             .add(await latest())
@@ -144,7 +144,12 @@ export async function deployPrice(
 
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = mockPyth.getUpdateFee(updateData);
-    await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPrices, { value: fee });
+    const abiCoder = new ethers.utils.AbiCoder();
+    const pairTokenPricesBytes = pairTokenPrices.map((value) => {
+        return abiCoder.encode(['uint256'], [value]);
+    });
+
+    await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPricesBytes, { value: fee });
 
     const fundingRate = (await deployUpgradeableContract('FundingRate', [
         addressesProvider.address,
@@ -184,7 +189,7 @@ export async function deployTrading(
     addressProvider: AddressesProvider,
     roleManager: RoleManager,
     pool: Pool,
-    pledge: ERC20DecimalsMock,
+    pledge: MockERC20Token,
     validationHelper: Contract,
 ) {
     log(` - setup trading`);
@@ -221,6 +226,7 @@ export async function deployTrading(
     let router = (await deployContract('Router', [
         addressProvider.address,
         orderManager.address,
+        positionManager.address,
         pool.address,
     ])) as Router;
     log(`deployed Router at ${router.address}`);
@@ -248,7 +254,6 @@ export async function deployTrading(
     let executor = (await deployContract('Executor', [addressProvider.address])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
 
-
     await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
 
     await waitForTx(await pool.connect(poolAdmin.signer).setRiskReserve(riskReserve.address));
@@ -270,7 +275,4 @@ export async function deployTrading(
         riskReserve,
         feeCollector,
     };
-}
-export async function deployMockCallback() {
-    return (await deployContract('TestCallBack', [])) as TestCallBack;
 }

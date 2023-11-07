@@ -1,10 +1,10 @@
 import { BigNumber } from 'ethers';
-import { ERC20DecimalsMock } from '../types';
+import { MockERC20Token } from '../types';
 import Decimal from 'decimal.js';
 
 export async function convertIndexAmountToStable(
-    indexToken: ERC20DecimalsMock,
-    stableToken: ERC20DecimalsMock,
+    indexToken: MockERC20Token,
+    stableToken: MockERC20Token,
     indexAmount: BigNumber,
 ): Promise<BigNumber> {
     const indexDec = await indexToken.decimals();
@@ -18,8 +18,8 @@ export async function convertIndexAmountToStable(
 }
 
 export async function convertStableAmountToIndex(
-    indexToken: ERC20DecimalsMock,
-    stableToken: ERC20DecimalsMock,
+    indexToken: MockERC20Token,
+    stableToken: MockERC20Token,
     stableAmount: BigNumber,
 ): Promise<BigNumber> {
     const indexDec = await indexToken.decimals();
@@ -33,7 +33,7 @@ export async function convertStableAmountToIndex(
 }
 
 export async function convertStableAmount(
-    stableToken: ERC20DecimalsMock,
+    stableToken: MockERC20Token,
     stableAmount: BigNumber,
     decimals: number,
 ): Promise<BigNumber> {
@@ -47,7 +47,7 @@ export async function convertStableAmount(
 }
 
 export async function convertIndexAmount(
-    indexToken: ERC20DecimalsMock,
+    indexToken: MockERC20Token,
     indexAmount: BigNumber,
     decimals: number,
 ): Promise<BigNumber> {
