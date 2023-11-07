@@ -29,10 +29,6 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         require(msg.sender == ADDRESS_PROVIDER.timelock(), "only timelock");
         _;
     }
-//    modifier onlyKeeper() {
-//        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(tx.origin), "opk");
-//        _;
-//    }
 
     function updatePythAddress(IPyth _pyth) external override onlyTimelock {
         address oldAddress = address(pyth);
@@ -79,7 +75,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         } catch {
             revert("get price failed");
         }
-//        PythStructs.Price memory pythPrice = pyth.getPrice(priceId);
+        //        PythStructs.Price memory pythPrice = pyth.getPrice(priceId);
         return _returnPriceWithDecimals(pythPrice);
     }
 
@@ -91,7 +87,9 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         return priceId;
     }
 
-    function _returnPriceWithDecimals(PythStructs.Price memory pythPrice) internal view returns (uint256) {
+    function _returnPriceWithDecimals(
+        PythStructs.Price memory pythPrice
+    ) internal view returns (uint256) {
         if (pythPrice.price < 0) {
             return 0;
         }

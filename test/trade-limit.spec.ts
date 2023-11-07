@@ -54,7 +54,9 @@ describe('Trade: Limit order cases', () => {
                 positionManager,
                 orderManager,
                 router,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             // update BTC price
@@ -79,9 +81,20 @@ describe('Trade: Limit order cases', () => {
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             // console.log(`---positionAft: `, positionAft);
 
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeIncreaseLimitOrders([{ orderId: orderId, level: 0, commissionRatio: 0 }]);
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             // expect(positionAft.positionAmount).to.be.eq(size);
         });
 

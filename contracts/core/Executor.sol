@@ -39,6 +39,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
+            msg.sender,
             increaseOrders
         );
     }
@@ -54,6 +55,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
+            msg.sender,
             decreaseOrders
         );
     }
@@ -69,6 +71,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
+            msg.sender,
             increaseOrders
         );
     }
@@ -84,6 +87,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
+            msg.sender,
             decreaseOrders
         );
     }
@@ -103,6 +107,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrder(
+            msg.sender,
             executePositions,
             orderId,
             tradeType,
@@ -121,7 +126,10 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
-        ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidatePositions(executePositions);
+        ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidatePositions(
+            msg.sender,
+            executePositions
+        );
     }
 
     function setPrices(
@@ -133,7 +141,10 @@ contract Executor is IExecutor, Roleable, Pausable {
 
         IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
 
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(_tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(
+            _tokens,
+            updateData
+        );
     }
 
     function needADL(
