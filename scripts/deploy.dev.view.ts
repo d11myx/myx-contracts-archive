@@ -40,11 +40,26 @@ async function main() {
     console.log(`btc price:`, btcIndexPrice);
     console.log(`eth price:`, ethIndexPrice);
 
-    console.log(await orderManager.getIncreaseOrder(128, TradeType.LIMIT));
-
-    console.log(await pool.getVault(1));
-
-    console.log(await pool.getMintLpAmount(1, ethers.utils.parseUnits('10000', 8), ethers.utils.parseUnits('1'), 1));
+    console.log(
+        await pool.getDepositAmount(1, ethers.utils.parseEther('1000'), await oraclePriceFeed.getPrice(btc.address)),
+    );
+    console.log(
+        await pool.getMintLpAmount(
+            1,
+            ethers.utils.parseUnits('1000', 8),
+            0,
+            await oraclePriceFeed.getPrice(btc.address),
+        ),
+    );
+    console.log(
+        await pool.getMintLpAmount(
+            1,
+            0,
+            ethers.utils.parseUnits('1000', 6),
+            await oraclePriceFeed.getPrice(btc.address),
+        ),
+    );
+    // console.log(await pool.getMintLpAmount(1, ethers.utils.parseUnits('10000', 8), ethers.utils.parseUnits('1'), 1));
 
     // console.log(await pool.getDepositAmount(1, ethers.utils.parseEther('1000')));
     //

@@ -634,9 +634,10 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 _price
     ) internal view returns (int256 fundingRate) {
         IPool.Vault memory vault = pool.getVault(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
 
         fundingRate = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingRate(
-            _pairIndex,
+            pair,
             longTracker[_pairIndex],
             shortTracker[_pairIndex],
             vault,
