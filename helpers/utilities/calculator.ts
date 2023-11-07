@@ -1,7 +1,7 @@
 import { TestEnv } from '../../test/helpers/make-suite';
 import { BigNumber, ethers } from 'ethers';
 import { MockERC20Token } from '../../types';
-import { convertIndexAmountToStable } from '../token-decimals';
+import { convertIndexAmountToStable, convertStableAmountToIndex } from '../token-decimals';
 
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
@@ -14,7 +14,7 @@ const PERCENTAGE = '100000000';
  * @returns funding rate
  */
 export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
-    const { positionManager, pool, fundingRate, oraclePriceFeed } = testEnv;
+    const { positionManager, pool, fundingRate, oraclePriceFeed, btc, usdt } = testEnv;
     const { indexTotalAmount, stableTotalAmount } = await pool.getVault(pairIndex);
 
     const pair = await pool.getPair(pairIndex);
@@ -25,7 +25,9 @@ export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
 
     const u = longTracker;
     const v = shortTracker;
-    const l = indexTotalAmount.add(stableTotalAmount.mul(PRICE_PRECISION).div(price));
+    const l = indexTotalAmount.add(
+        (await convertStableAmountToIndex(btc, usdt, stableTotalAmount)).mul(PRICE_PRECISION).div(price),
+    );
     const k = fundingFeeConfig.growthRate;
     const r = fundingFeeConfig.baseRate;
     const maxRate = fundingFeeConfig.maxRate;
