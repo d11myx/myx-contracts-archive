@@ -5,6 +5,7 @@ import {
     ReserveConfiguration,
     ScrollNetwork,
     ZERO_ADDRESS,
+    ZERO_HASH,
 } from '../../helpers';
 import { btcPairInfo, ethPairInfo } from './pairs';
 
@@ -15,46 +16,46 @@ export const USDTMarketConfig: ReserveConfiguration = {
     MarketTokenAddress: {
         [DevNetwork.local]: ZERO_ADDRESS,
         [EthereumNetwork.goerli]: ZERO_ADDRESS,
-        [EthereumNetwork.main]: ZERO_ADDRESS,
+        [EthereumNetwork.main]: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
         [LineaNetwork.goerli]: ZERO_ADDRESS,
-        [LineaNetwork.main]: ZERO_ADDRESS,
+        [LineaNetwork.main]: '0xa219439258ca9da29e9cc4ce5596924745e12b93',
         [ScrollNetwork.sepolia]: ZERO_ADDRESS,
         [ScrollNetwork.main]: ZERO_ADDRESS,
     },
     WrapperTokenAddress: {
         [DevNetwork.local]: ZERO_ADDRESS,
         [EthereumNetwork.goerli]: ZERO_ADDRESS,
-        [EthereumNetwork.main]: ZERO_ADDRESS,
+        [EthereumNetwork.main]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
         [LineaNetwork.goerli]: ZERO_ADDRESS,
-        [LineaNetwork.main]: ZERO_ADDRESS,
+        [LineaNetwork.main]: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
         [ScrollNetwork.sepolia]: ZERO_ADDRESS,
         [ScrollNetwork.main]: ZERO_ADDRESS,
     },
 
     PairsConfig: {
-        BTC: btcPairInfo,
-        ETH: ethPairInfo,
+        WBTC: btcPairInfo,
+        WETH: ethPairInfo,
     },
     PairAssets: {
         [DevNetwork.local]: {
-            BTC: ZERO_ADDRESS,
-            ETH: ZERO_ADDRESS,
+            WBTC: ZERO_ADDRESS,
+            WETH: ZERO_ADDRESS,
         },
         [LineaNetwork.goerli]: {
-            BTC: ZERO_ADDRESS,
-            ETH: ZERO_ADDRESS,
+            WBTC: ZERO_ADDRESS,
+            WETH: ZERO_ADDRESS,
         },
         [LineaNetwork.main]: {
-            BTC: ZERO_ADDRESS,
-            ETH: ZERO_ADDRESS,
+            WBTC: ZERO_ADDRESS,
+            WETH: ZERO_ADDRESS,
         },
         [ScrollNetwork.sepolia]: {
-            BTC: ZERO_ADDRESS,
-            ETH: ZERO_ADDRESS,
+            WBTC: ZERO_ADDRESS,
+            WETH: ZERO_ADDRESS,
         },
         [ScrollNetwork.main]: {
-            BTC: ZERO_ADDRESS,
-            ETH: ZERO_ADDRESS,
+            WBTC: ZERO_ADDRESS,
+            WETH: ZERO_ADDRESS,
         },
     },
     ExecuteOrderTimeDelay: 60 * 5,
@@ -67,6 +68,28 @@ export const USDTMarketConfig: ReserveConfiguration = {
         [ScrollNetwork.sepolia]: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
         [ScrollNetwork.main]: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
     },
+    OraclePriceId: {
+        [DevNetwork.local]: {
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
+        },
+        [LineaNetwork.goerli]: {
+            WBTC: '0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b',
+            WETH: '0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6',
+        },
+        [LineaNetwork.main]: {
+            WBTC: '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43',
+            WETH: '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
+        },
+        [ScrollNetwork.sepolia]: {
+            WBTC: '0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b',
+            WETH: '0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6',
+        },
+        [ScrollNetwork.main]: {
+            WBTC: '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43',
+            WETH: '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
+        },
+    },
     UniswapRouterAddress: {
         [DevNetwork.local]: ZERO_ADDRESS,
         [EthereumNetwork.goerli]: ZERO_ADDRESS,
@@ -78,24 +101,24 @@ export const USDTMarketConfig: ReserveConfiguration = {
     },
     UniswapTokenPathConfig: {
         [DevNetwork.local]: {
-            BTC: '0x',
-            ETH: '0x',
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
         },
         [LineaNetwork.goerli]: {
-            BTC: '0x',
-            ETH: '0x',
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
         },
         [LineaNetwork.main]: {
-            BTC: '0x',
-            ETH: '0x',
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
         },
         [ScrollNetwork.sepolia]: {
-            BTC: '0x',
-            ETH: '0x',
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
         },
         [ScrollNetwork.main]: {
-            BTC: '0x',
-            ETH: '0x',
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
         },
     },
 };

@@ -1,12 +1,14 @@
 import { task } from 'hardhat/config';
-import { getWalletBalances } from '../../helpers';
+import { getWalletBalances, MARKET_NAME } from '../../helpers';
 import { getPool } from '../../helpers';
+import { address } from 'hardhat/internal/core/config/config-validation';
 
 task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, ...hre }) => {
     const allDeployments = await deployments.all();
 
     let formattedDeployments: { [k: string]: { address: string } } = {};
     let mockedTokens: { [k: string]: { address: string } } = {};
+    let LPs: { [k: string]: { address: string } } = {};
 
     console.log('');
     console.log('Accounts after deployment');
@@ -25,7 +27,7 @@ task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, .
     console.table(formattedDeployments);
 
     Object.keys(allDeployments).forEach((key) => {
-        if (key.includes('MockToken')) {
+        if (key.includes('MockToken') || key == MARKET_NAME || key == 'WETH') {
             mockedTokens[key] = {
                 address: allDeployments[key].address,
             };
@@ -35,9 +37,13 @@ task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, .
     console.log('MockedTokens');
     console.table(mockedTokens);
 
-    console.log('');
     const pool = await getPool();
-    console.log(`BTC-USDT LP: ${(await pool.pairs(1)).pairToken}`);
-    console.log(`ETH-USDT LP: ${(await pool.pairs(2)).pairToken}`);
+    LPs['WBTC-USDT-LP'] = { address: (await pool.pairs(1)).pairToken };
+    LPs['WETH-USDT-LP'] = { address: (await pool.pairs(2)).pairToken };
+
+    console.log('');
+    console.log('LPs');
+    console.table(LPs);
+
     console.log('');
 });

@@ -7,7 +7,6 @@ import "../../interfaces/IAddressesProvider.sol";
 import "../../interfaces/IRoleManager.sol";
 import "../../interfaces/IOrderManager.sol";
 import "../../interfaces/IPositionManager.sol";
-import "../../interfaces/IPriceOracle.sol";
 import "../../interfaces/IPool.sol";
 import "../../helpers/ValidationHelper.sol";
 import "../../helpers/TradingHelper.sol";
@@ -214,7 +213,8 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             true,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
         require(afterPosition > 0, "zpa");
 
@@ -433,7 +433,8 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             false,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
 
         (bool _needADL, ) = positionManager.needADL(

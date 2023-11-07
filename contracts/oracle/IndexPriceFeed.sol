@@ -40,6 +40,10 @@ contract IndexPriceFeed is IIndexPriceFeed {
         return assetPrices[token];
     }
 
+    function getPriceSafely(address token) external view override returns (uint256) {
+        return assetPrices[token];
+    }
+
     function _setAssetPrices(address[] memory assets, uint256[] memory prices) private {
         require(assets.length == prices.length, "inconsistent params length");
         for (uint256 i = 0; i < assets.length; i++) {

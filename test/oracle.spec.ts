@@ -1,16 +1,15 @@
 import { ethers } from 'hardhat';
 import {
     AddressesProvider,
-    ERC20DecimalsMock,
+    MockERC20Token,
     IndexPriceFeed,
     MockPyth,
+    MockPythOraclePriceFeed,
     PythOraclePriceFeed,
     RoleManager,
     Timelock,
-    WETH,
     WETH9,
 } from '../types';
-import { testEnv } from './helpers/make-suite';
 import {
     Duration,
     encodeParameterArray,
@@ -18,7 +17,6 @@ import {
     getBlockTimestamp,
     increase,
     latest,
-    toFullBN,
     toFullBNStr,
     waitForTx,
 } from '../helpers';
@@ -26,7 +24,7 @@ import { expect } from './shared/expect';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 describe('Oracle: oracle cases', () => {
-    let mockPyth: MockPyth, pythOraclePriceFeed: PythOraclePriceFeed, indexPriceFeed: IndexPriceFeed;
+    let mockPyth: MockPyth, pythOraclePriceFeed: MockPythOraclePriceFeed, indexPriceFeed: IndexPriceFeed;
     let timelock: Timelock;
     let owner: SignerWithAddress,
         dev: SignerWithAddress,
@@ -34,15 +32,15 @@ describe('Oracle: oracle cases', () => {
         other: SignerWithAddress,
         user1: SignerWithAddress,
         user2: SignerWithAddress;
-    let eth!: ERC20DecimalsMock;
-    let btc!: ERC20DecimalsMock;
-    let token3!: ERC20DecimalsMock;
+    let eth!: MockERC20Token;
+    let btc!: MockERC20Token;
+    let token3!: MockERC20Token;
 
     beforeEach(async () => {
-        const ERC20DecimalsMock = await ethers.getContractFactory('ERC20DecimalsMock');
-        eth = (await ERC20DecimalsMock.deploy('token1', 'token1', 18)) as ERC20DecimalsMock;
-        btc = (await ERC20DecimalsMock.deploy('token2', 'token2', 8)) as ERC20DecimalsMock;
-        token3 = (await ERC20DecimalsMock.deploy('token3', 'token3', 18)) as ERC20DecimalsMock;
+        const MockERC20Token = await ethers.getContractFactory('MockERC20Token');
+        eth = (await MockERC20Token.deploy('token1', 'token1', 18)) as MockERC20Token;
+        btc = (await MockERC20Token.deploy('token2', 'token2', 8)) as MockERC20Token;
+        token3 = (await MockERC20Token.deploy('token3', 'token3', 18)) as MockERC20Token;
         const WETHMock = await ethers.getContractFactory('WETH9');
         const weth = (await WETHMock.deploy()) as WETH9;
         [owner, dev, spender, other, user1, user2] = await ethers.getSigners();
@@ -58,7 +56,7 @@ describe('Oracle: oracle cases', () => {
             weth.address,
             timelock.address,
         )) as AddressesProvider;
-        const PythOraclePriceFeedFactory = await ethers.getContractFactory('PythOraclePriceFeed');
+        const PythOraclePriceFeedFactory = await ethers.getContractFactory('MockPythOraclePriceFeed');
 
         const rolemanagerFactory = await ethers.getContractFactory('RoleManager');
         let roleManager = (await rolemanagerFactory.deploy()) as RoleManager;
@@ -70,7 +68,7 @@ describe('Oracle: oracle cases', () => {
             mockPyth.address,
             [],
             [],
-        )) as PythOraclePriceFeed;
+        )) as MockPythOraclePriceFeed;
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
         indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
         await roleManager.addKeeper(user1.address);
@@ -117,14 +115,14 @@ describe('Oracle: oracle cases', () => {
             emaConf,
             publishTime,
         );
-        await expect(pythOraclePriceFeed.setAssetPriceIds([btc.address], [id])).to.be.revertedWith('only timelock');
-        expect(await pythOraclePriceFeed.assetIds(btc.address)).to.be.eq(ethers.utils.formatBytes32String(''));
+        await expect(pythOraclePriceFeed.setTokenPriceIds([btc.address], [id])).to.be.revertedWith('only timelock');
+        expect(await pythOraclePriceFeed.tokenPriceIds(btc.address)).to.be.eq(ethers.utils.formatBytes32String(''));
         let timestamp = await latest();
         let eta = Duration.days(1);
         await timelock.queueTransaction(
             pythOraclePriceFeed.address,
             0,
-            'setAssetPriceIds(address[],bytes32[])',
+            'setTokenPriceIds(address[],bytes32[])',
             encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
             eta.add(timestamp),
         );
@@ -134,21 +132,32 @@ describe('Oracle: oracle cases', () => {
             await timelock.executeTransaction(
                 pythOraclePriceFeed.address,
                 0,
-                'setAssetPriceIds(address[],bytes32[])',
+                'setTokenPriceIds(address[],bytes32[])',
                 encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
                 eta.add(timestamp),
             ),
         );
-        expect(await pythOraclePriceFeed.assetIds(btc.address)).to.be.eq(id);
+        expect(await pythOraclePriceFeed.tokenPriceIds(btc.address)).to.be.eq(id);
         //todo test
 
-        const fee = await pythOraclePriceFeed.getUpdateFee([btc.address], [price]);
-        await expect(pythOraclePriceFeed.updatePrice([btc.address], [price], { value: fee })).to.be.revertedWith('opk');
-        await expect(indexPriceFeed.updatePrice([btc.address], [price])).to.be.revertedWith('opk');
-        await pythOraclePriceFeed.connect(user1).updatePrice([btc.address], [price], { value: fee });
+        const abiCoder = new ethers.utils.AbiCoder();
+        const fee = await mockPyth.getUpdateFee([btc.address]);
+        // await expect(
+        //     pythOraclePriceFeed.updatePrice(
+        //         [btc.address],
+        //         [abiCoder.encode(['uint256'], [abiCoder.encode(['uint256'], [price])])],
+        //         { value: fee },
+        //     ),
+        // ).to.be.revertedWith('opk');
+        await expect(
+            indexPriceFeed.updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])]),
+        ).to.be.revertedWith('opk');
+        await pythOraclePriceFeed
+            .connect(user1)
+            .updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])], { value: fee });
         await indexPriceFeed.connect(user1).updatePrice([btc.address], [price]);
 
-        console.log('btc:' + btc.address);
+        // console.log('btc:' + btc.address);
         expect(await pythOraclePriceFeed.getPrice(btc.address)).to.be.eq(toFullBNStr(price, 22));
         expect(await indexPriceFeed.getPrice(btc.address)).to.be.eq(price);
     });

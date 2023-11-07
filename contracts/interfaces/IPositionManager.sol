@@ -61,7 +61,8 @@ interface IPositionManager {
     function getTradingFee(
         uint256 _pairIndex,
         bool _isLong,
-        uint256 _sizeAmount
+        uint256 _sizeAmount,
+        uint256 price
     ) external view returns (uint256 tradingFee);
 
     function getFundingFee(
@@ -72,7 +73,7 @@ interface IPositionManager {
 
     function getCurrentFundingRate(uint256 _pairIndex) external view returns (int256);
 
-    function getNextFundingRate(uint256 _pairIndex) external view returns (int256);
+    function getNextFundingRate(uint256 _pairIndex, uint256 price) external view returns (int256);
 
     function getNextFundingRateUpdateTime(uint256 _pairIndex) external view returns (uint256);
 
@@ -126,5 +127,5 @@ interface IPositionManager {
 
     function updateFundingRate(uint256 _pairIndex) external;
 
-    function lpProfit(uint pairIndex, address token) external view returns (int256 profit);
+    function lpProfit(uint pairIndex, address token, uint256 price) external view returns (int256 profit);
 }

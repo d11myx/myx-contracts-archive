@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { TestEnv, newTestEnv } from './helpers/make-suite';
 import { mintAndApprove } from './helpers/misc';
-import { MAX_UINT_AMOUNT, TradeType, deployMockCallback, waitForTx } from '../helpers';
+import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
 import { IPool, IRouter, Router } from '../types';
 import { expect } from './shared/expect';
 import { TradingTypes } from '../types/contracts/core/Router';
@@ -17,18 +17,32 @@ describe('Router: check require condition, trigger errors', async () => {
             usdt,
             btc,
             pool,
+            router,
+            oraclePriceFeed,
         } = testEnv;
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
         const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
-        let testCallBack = await deployMockCallback();
         var pair = await pool.getPair(pairIndex);
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
-        await testCallBack
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+        await router
             .connect(depositor.signer)
-            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
     after(async () => {});
 
@@ -41,7 +55,9 @@ describe('Router: check require condition, trigger errors', async () => {
                 usdt,
                 btc,
                 router,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
                 orderManager,
             } = testEnv;
 
@@ -74,7 +90,20 @@ describe('Router: check require condition, trigger errors', async () => {
             // setting createIncreateOrder: msg.sender = user
             const orderId = await orderManager.ordersIndex();
             await router.connect(user2.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             // await expect(router.connect(user2.signer).createIncreaseOrderWithTpSl(increasePositionRequest)).to.be.revertedWith('not order sender or handler');
         });
 

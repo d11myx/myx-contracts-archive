@@ -1,7 +1,7 @@
 // @ts-ignore
 import { ethers } from 'hardhat';
 import { getOraclePriceFeed, getPositionManager, getTokens } from '../helpers';
-import { PositionManager, ERC20DecimalsMock, PythOraclePriceFeed } from '../types';
+import { PositionManager, MockERC20Token, PythOraclePriceFeed } from '../types';
 import Decimal from 'decimal.js';
 import { parseUnits } from 'ethers/lib/utils';
 
@@ -25,7 +25,7 @@ async function main() {
     await calculateMaxDecreaseMargin(positionManager, account, pairIndex, isLong, btcPrice);
 }
 
-async function getTokenPrice(priceOracle: PythOraclePriceFeed, token: ERC20DecimalsMock) {
+async function getTokenPrice(priceOracle: PythOraclePriceFeed, token: MockERC20Token) {
     const price = await priceOracle.getPrice(token.address);
     return new Decimal(price.toString()).div(1e30);
 }
