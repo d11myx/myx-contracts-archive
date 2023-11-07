@@ -46,8 +46,8 @@ export const USDTMarketConfig: ReserveConfiguration = {
             WETH: ZERO_ADDRESS,
         },
         [LineaNetwork.main]: {
-            WBTC: ZERO_ADDRESS,
-            WETH: ZERO_ADDRESS,
+            WBTC: '0x3aAB2285ddcDdaD8edf438C1bAB47e1a9D05a9b4',
+            WETH: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
         },
         [ScrollNetwork.sepolia]: {
             WBTC: ZERO_ADDRESS,
