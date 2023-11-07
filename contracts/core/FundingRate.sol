@@ -8,6 +8,7 @@ import "../interfaces/IPool.sol";
 import "../libraries/PrecisionUtils.sol";
 import "../libraries/Upgradeable.sol";
 import "../libraries/Int256Utils.sol";
+import "../helpers/TokenHelper.sol";
 
 contract FundingRate is IFundingRate, Upgradeable {
     using PrecisionUtils for uint256;
@@ -41,13 +42,13 @@ contract FundingRate is IFundingRate, Upgradeable {
     }
 
     function getFundingRate(
-        uint256 pairIndex,
+        IPool.Pair memory pair,
         uint256 longTracker,
         uint256 shortTracker,
         IPool.Vault memory vault,
         uint256 price
     ) public view override returns (int256 fundingRate) {
-        FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[pairIndex];
+        FundingFeeConfig memory fundingFeeConfig = fundingFeeConfigs[pair.pairIndex];
 
         uint256 baseRate = fundingFeeConfig.baseRate;
         uint256 maxRate = fundingFeeConfig.maxRate;
@@ -55,7 +56,10 @@ contract FundingRate is IFundingRate, Upgradeable {
 
         uint256 u = longTracker;
         uint256 v = shortTracker;
-        uint256 l = vault.indexTotalAmount + vault.stableTotalAmount.divPrice(price);
+        uint256 l = vault.indexTotalAmount
+            + uint256(TokenHelper.convertStableAmountToIndex(
+                pair, int256(vault.stableTotalAmount))
+            ).divPrice(price);
 
         // A = (U/U+V - 0.5) * MAX(U,V)/L * 100
         int256 a = u == v
