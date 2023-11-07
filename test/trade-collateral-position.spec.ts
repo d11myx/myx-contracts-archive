@@ -404,6 +404,7 @@ describe('Router: Edge cases', () => {
             oraclePriceFeed,
         } = testEnv;
 
+        expect(await positionManager.router()).to.be.eq(router.address);
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
         const traderBalanceBefore = await usdt.balanceOf(trader.address);
 
