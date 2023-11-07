@@ -10,7 +10,6 @@ import '../../interfaces/IPositionManager.sol';
 import '../../interfaces/IPool.sol';
 import '../../helpers/TradingHelper.sol';
 import '../../interfaces/IFeeCollector.sol';
-import "hardhat/console.sol";
 
 contract LiquidationLogic is ILiquidationLogic {
     using PrecisionUtils for uint256;
