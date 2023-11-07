@@ -14,7 +14,7 @@ interface IFundingRate {
     function getFundingInterval(uint256 _pairIndex) external view returns (uint256);
 
     function getFundingRate(
-        uint256 pairIndex,
+        IPool.Pair memory pair,
         uint256 longTracker,
         uint256 shortTracker,
         IPool.Vault memory vault,
