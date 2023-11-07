@@ -28,14 +28,11 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
         require(msg.sender == ADDRESS_PROVIDER.timelock(), "only timelock");
         _;
     }
-//    modifier onlyKeeper() {
-//        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(tx.origin), "opk");
-//        _;
-//    }
 
     function updatePythAddress(IPyth _pyth) external onlyTimelock {
         address oldAddress = address(pyth);
         pyth = _pyth;
+        emit PythAddressUpdated(oldAddress, address(_pyth));
     }
 
     function setTokenPriceIds(
@@ -95,7 +92,9 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
         return priceId;
     }
 
-    function _returnPriceWithDecimals(PythStructs.Price memory pythPrice) internal view returns (uint256) {
+    function _returnPriceWithDecimals(
+        PythStructs.Price memory pythPrice
+    ) internal view returns (uint256) {
         if (pythPrice.price < 0) {
             return 0;
         }

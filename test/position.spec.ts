@@ -2,7 +2,14 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { TradeType, getMockToken, loadReserveConfig, MARKET_NAME } from '../helpers';
+import {
+    TradeType,
+    getMockToken,
+    loadReserveConfig,
+    MARKET_NAME,
+    convertIndexAmount,
+    convertStableAmount,
+} from '../helpers';
 import { constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { convertIndexAmountToStable } from '../helpers/token-decimals';
@@ -57,7 +64,6 @@ describe('Position', () => {
                     router,
                     positionManager,
                     orderManager,
-                    executionLogic,
                     executor,
                     indexPriceFeed,
                     oraclePriceFeed,
@@ -150,7 +156,7 @@ describe('Position', () => {
                 expect(tradingConfigAfter.maintainMarginRate).to.be.eq(tradingConfigBefore.maintainMarginRate);
 
                 // update price
-                await updateBTCPrice(testEnv, '29000');
+                await updateBTCPrice(testEnv, '24000');
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
@@ -169,15 +175,15 @@ describe('Position', () => {
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
-
                 // calculate riskRate
                 const exposureAsset = longPositionBefore.collateral.add(pnl).sub(tradingFee);
                 const margin = longPositionBefore.positionAmount
                     .mul(longPositionBefore.averagePrice)
                     .div('1000000000000000000000000000000')
-                    .mul(tradingConfig.maintainMarginRate)
-                    .div('100000000');
-                const riskRate = margin.mul('100000000').div(exposureAsset);
+                    .mul(tradingConfig.maintainMarginRate);
+                const riskRate = (await convertIndexAmount(btc, margin, 18)).div(
+                    await convertStableAmount(usdt, exposureAsset, 18),
+                );
 
                 // riskRate >= 100%
                 expect(riskRate).to.be.gte('100000000');
@@ -258,7 +264,6 @@ describe('Position', () => {
                     router,
                     positionManager,
                     orderManager,
-                    executionLogic,
                     executor,
                     indexPriceFeed,
                     oraclePriceFeed,
@@ -351,7 +356,7 @@ describe('Position', () => {
                 expect(tradingConfigAfter.maintainMarginRate).to.be.eq(tradingConfigBefore.maintainMarginRate);
 
                 // update price
-                await updateBTCPrice(testEnv, '31000');
+                await updateBTCPrice(testEnv, '36000');
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
@@ -459,7 +464,6 @@ describe('Position', () => {
                     router,
                     positionManager,
                     orderManager,
-                    executionLogic,
                     executor,
                     keeper,
                     pool,
@@ -521,7 +525,7 @@ describe('Position', () => {
                 expect(tradingConfigAfter.maintainMarginRate).to.be.eq(tradingConfigBefore.maintainMarginRate);
 
                 // update price
-                await updateBTCPrice(testEnv, '31000');
+                await updateBTCPrice(testEnv, '36000');
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
@@ -627,7 +631,6 @@ describe('Position', () => {
                     router,
                     positionManager,
                     orderManager,
-                    executionLogic,
                     executor,
                     indexPriceFeed,
                     oraclePriceFeed,
@@ -729,7 +732,7 @@ describe('Position', () => {
                 expect(tradingConfigAfter.maintainMarginRate).to.be.eq(tradingConfigBefore.maintainMarginRate);
 
                 // update price
-                await updateBTCPrice(testEnv, '29000');
+                await updateBTCPrice(testEnv, '24000');
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
@@ -837,7 +840,6 @@ describe('Position', () => {
                     router,
                     positionManager,
                     orderManager,
-                    executionLogic,
                     executor,
                     indexPriceFeed,
                     oraclePriceFeed,
@@ -939,7 +941,7 @@ describe('Position', () => {
                 expect(tradingConfigAfter.maintainMarginRate).to.be.eq(tradingConfigBefore.maintainMarginRate);
 
                 // update price
-                await updateBTCPrice(testEnv, '31000');
+                await updateBTCPrice(testEnv, '36000');
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
