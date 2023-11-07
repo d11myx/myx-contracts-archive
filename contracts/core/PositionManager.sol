@@ -46,6 +46,7 @@ contract PositionManager is IPositionManager, Upgradeable {
     IPool public pool;
     IFeeCollector public feeCollector;
     address public pledgeAddress;
+    address public router;
 
     // constructor() FeeManager() Pausable() {}
     function initialize(
@@ -69,6 +70,10 @@ contract PositionManager is IPositionManager, Upgradeable {
             "onlyExecutor"
         );
         _;
+    }
+
+    function setRouter(address _router) external onlyPoolAdmin {
+        router = _router;
     }
 
     function increasePosition(
@@ -266,7 +271,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool isLong,
         int256 collateral
     ) external override {
-        require(account == tx.origin, "forbidden");
+        require(account == msg.sender || msg.sender == router, "forbidden");
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[
@@ -357,7 +362,7 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) internal view returns (int256) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-//        uint256 _price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
+        //        uint256 _price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         if (lpIsLong) {
             if (_price > lpVault.averagePrice) {
                 return int256(amount.mulPrice(_price - lpVault.averagePrice));
@@ -515,7 +520,12 @@ contract PositionManager is IPositionManager, Upgradeable {
         }
     }
 
-    function _calLpProfit(IPool.Pair memory pair, bool lpIsLong, uint amount, uint256 price) internal {
+    function _calLpProfit(
+        IPool.Pair memory pair,
+        bool lpIsLong,
+        uint amount,
+        uint256 price
+    ) internal {
         int256 profit = _currentLpProfit(pair.pairIndex, lpIsLong, amount, price);
         pool.setLPStableProfit(
             pair.pairIndex,
@@ -634,7 +644,11 @@ contract PositionManager is IPositionManager, Upgradeable {
         );
     }
 
-    function lpProfit(uint pairIndex, address token, uint256 price) external view override returns (int256) {
+    function lpProfit(
+        uint pairIndex,
+        address token,
+        uint256 price
+    ) external view override returns (int256) {
         if (token != pledgeAddress) {
             return 0;
         }
@@ -696,7 +710,10 @@ contract PositionManager is IPositionManager, Upgradeable {
         return currentFundingRate[_pairIndex];
     }
 
-    function getNextFundingRate(uint256 _pairIndex, uint256 price) external view override returns (int256) {
+    function getNextFundingRate(
+        uint256 _pairIndex,
+        uint256 price
+    ) external view override returns (int256) {
         return _nextFundingRate(_pairIndex, price);
     }
 

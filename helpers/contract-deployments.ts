@@ -231,6 +231,7 @@ export async function deployTrading(
     ])) as Router;
     log(`deployed Router at ${router.address}`);
     await waitForTx(await orderManager.setRouter(router.address));
+    await waitForTx(await positionManager.setRouter(router.address));
 
     let liquidationLogic = (await deployContract('LiquidationLogic', [
         addressProvider.address,
