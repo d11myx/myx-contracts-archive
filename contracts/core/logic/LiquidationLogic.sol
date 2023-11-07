@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "../../libraries/Position.sol";
-import "../../interfaces/ILiquidationLogic.sol";
-import "../../interfaces/IAddressesProvider.sol";
-import "../../interfaces/IRoleManager.sol";
-import "../../interfaces/IOrderManager.sol";
-import "../../interfaces/IPositionManager.sol";
-import "../../interfaces/IPool.sol";
-import "../../helpers/TradingHelper.sol";
-import "../../interfaces/IFeeCollector.sol";
+import '../../libraries/Position.sol';
+import '../../interfaces/ILiquidationLogic.sol';
+import '../../interfaces/IAddressesProvider.sol';
+import '../../interfaces/IRoleManager.sol';
+import '../../interfaces/IOrderManager.sol';
+import '../../interfaces/IPositionManager.sol';
+import '../../interfaces/IPool.sol';
+import '../../helpers/TradingHelper.sol';
+import '../../interfaces/IFeeCollector.sol';
 import "hardhat/console.sol";
 
 contract LiquidationLogic is ILiquidationLogic {
