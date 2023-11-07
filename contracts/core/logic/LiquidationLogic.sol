@@ -10,6 +10,7 @@ import '../../interfaces/IPositionManager.sol';
 import '../../interfaces/IPool.sol';
 import '../../helpers/TradingHelper.sol';
 import '../../interfaces/IFeeCollector.sol';
+import "hardhat/console.sol";
 
 contract LiquidationLogic is ILiquidationLogic {
     using PrecisionUtils for uint256;
@@ -215,11 +216,15 @@ contract LiquidationLogic is ILiquidationLogic {
         if (exposureAsset <= 0) {
             need = true;
         } else {
-            uint256 riskRate = position
-                .positionAmount
-                .mulPrice(position.averagePrice)
-                .mulPercentage(tradingConfig.maintainMarginRate)
-                .calculatePercentage(uint256(exposureAsset));
+            uint256 maintainMarginWad = uint256(TokenHelper.convertTokenAmountWithPrice(
+                pair.indexToken,
+                int256(position.positionAmount),
+                18,
+                position.averagePrice
+            )) * tradingConfig.maintainMarginRate;
+            uint256 netAssetWad = uint256(TokenHelper.convertTokenAmountTo(pair.stableToken, exposureAsset, 18));
+
+            uint256 riskRate = maintainMarginWad / netAssetWad;
             need = riskRate >= PrecisionUtils.percentage();
         }
         return need;
