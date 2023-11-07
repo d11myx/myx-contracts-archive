@@ -21,6 +21,7 @@ describe('trading helper', () => {
             eth,
             pool,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         // update BTC Price
@@ -36,11 +37,22 @@ describe('trading helper', () => {
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
-        
-
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
 
     after(async () => {

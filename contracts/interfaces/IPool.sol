@@ -182,7 +182,8 @@ interface IPool {
     function getMintLpAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
-        uint256 _stableAmount
+        uint256 _stableAmount,
+        uint256 price
     )
         external
         view
@@ -198,5 +199,5 @@ interface IPool {
 
     function claimFee(address token, uint256 amount) external;
 
-    function lpFairPrice(uint256 _pairIndex) external view returns (uint256);
+    function lpFairPrice(uint256 _pairIndex, uint256 price) external view returns (uint256);
 }

@@ -117,7 +117,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await deploy(`${ROUTER_ID}`, {
         from: deployer,
         contract: 'Router',
-        args: [addressProvider.address, orderManager.address, pool.address],
+        args: [addressProvider.address, orderManager.address, positionManager.address, pool.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = await getRouter();

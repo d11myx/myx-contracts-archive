@@ -5,7 +5,7 @@ import { Duration, encodeParameters, getTimelock, latest } from '../../helpers';
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const timelock = await getTimelock();
 
-    console.log(await timelock.delay());
+    const before = await timelock.delay();
 
     await hre.run('time-execution', {
         target: timelock.address,
@@ -16,7 +16,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             .add(await latest())
             .toString(),
     });
-    console.log(await timelock.delay());
+    console.log(`[deployment] update timelock delay ${before} to ${await timelock.delay()}`);
 };
 func.id = `SetupTimelock`;
 func.tags = ['post', 'setup-timelock'];
