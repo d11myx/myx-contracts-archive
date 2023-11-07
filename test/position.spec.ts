@@ -2,7 +2,14 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { TradeType, getMockToken, loadReserveConfig, MARKET_NAME } from '../helpers';
+import {
+    TradeType,
+    getMockToken,
+    loadReserveConfig,
+    MARKET_NAME,
+    convertIndexAmount,
+    convertStableAmount,
+} from '../helpers';
 import { constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { convertIndexAmountToStable } from '../helpers/token-decimals';
@@ -169,18 +176,19 @@ describe('Position', () => {
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
                 const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
-
                 // calculate riskRate
                 const exposureAsset = longPositionBefore.collateral.add(pnl).sub(tradingFee);
                 const margin = longPositionBefore.positionAmount
                     .mul(longPositionBefore.averagePrice)
                     .div('1000000000000000000000000000000')
-                    .mul(tradingConfig.maintainMarginRate)
-                    .div('100000000');
-                const riskRate = margin.mul('100000000').div(exposureAsset);
+                    .mul(tradingConfig.maintainMarginRate);
+                const riskRate = (await convertIndexAmount(btc, margin, 18)).div(
+                    await convertStableAmount(usdt, exposureAsset, 18),
+                );
 
                 // riskRate >= 100%
                 expect(riskRate).to.be.gte('100000000');
+                console.log(`riskRate:` + riskRate);
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
