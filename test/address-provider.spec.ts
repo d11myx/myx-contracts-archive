@@ -22,17 +22,24 @@ describe('LP: fair price', () => {
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
-        const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
-        const pair = await pool.getPair(pairIndex);
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+        // const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+        // const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
+        // const pair = await pool.getPair(pairIndex);
+        // await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+        // await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
-        await router
-            .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+        // await router
+        //     .connect(depositor.signer)
+        //     .addLiquidity(
+        //         pair.indexToken,
+        //         pair.stableToken,
+        //         0,
+        //         0,
+        //         [pair.indexToken],
+        //         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+        //         { value: 1 },
+        //     );
     });
-
 
     it('Checks the addresses provider is added to the registry', async () => {
         const { addressesProvider } = testEnv;
@@ -45,6 +52,4 @@ describe('LP: fair price', () => {
         //     'Invalid addresses provider added to the list'
         // );
     });
-
-
 });
