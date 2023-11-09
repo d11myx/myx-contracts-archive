@@ -6,8 +6,8 @@ import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 
 interface IPythOraclePriceFeed is IPriceFeed {
 
-    event AssetPriceIdUpdated(
-        address asset,
+    event TokenPriceIdUpdated(
+        address token,
         bytes32 priceId
     );
 
@@ -15,17 +15,8 @@ interface IPythOraclePriceFeed is IPriceFeed {
 
     function updatePythAddress(IPyth _pyth) external;
 
-    function setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) external;
+    function setTokenPriceIds(address[] memory tokens, bytes32[] memory priceIds) external;
 
-    function updatePrice(address[] calldata tokens, uint256[] calldata prices) external payable;
+    function updatePrice(address[] calldata tokens, bytes[] calldata updateData) external payable;
 
-    function getUpdateData(
-        address[] calldata tokens,
-        uint256[] calldata prices
-    ) external view returns (bytes[] memory updateData);
-
-    function getUpdateFee(
-        address[] calldata tokens,
-        uint256[] calldata prices
-    ) external view returns (uint);
 }

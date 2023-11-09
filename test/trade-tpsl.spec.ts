@@ -17,6 +17,7 @@ describe('Trade: TP & SL', () => {
             btc,
             pool,
             router,
+            oraclePriceFeed,
         } = testEnv;
 
         // add liquidity
@@ -28,7 +29,20 @@ describe('Trade: TP & SL', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
     after(async () => {
         const {
@@ -50,7 +64,9 @@ describe('Trade: TP & SL', () => {
             usdt,
             btc,
             router,
-            executionLogic,
+            executor,
+            indexPriceFeed,
+            oraclePriceFeed,
             orderManager,
             positionManager,
         } = testEnv;
@@ -77,7 +93,20 @@ describe('Trade: TP & SL', () => {
 
         let orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(request);
-        await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+        await executor
+            .connect(keeper.signer)
+            .setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
 
         const positionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
         let positionOrders = await orderManager.getPositionOrders(positionKey);
@@ -102,7 +131,20 @@ describe('Trade: TP & SL', () => {
 
         orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(request1);
-        await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+        await executor
+            .connect(keeper.signer)
+            .setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
 
         positionOrders = await orderManager.getPositionOrders(positionKey);
 

@@ -1,4 +1,4 @@
-import { ERC20DecimalsMock, FundingRate, Pool } from '../types';
+import { MockERC20Token, FundingRate, Pool } from '../types';
 import { loadReserveConfig } from './market-config-helper';
 import { MARKET_NAME } from './env';
 import { SignerWithAddress } from '../test/helpers/make-suite';
@@ -8,8 +8,8 @@ import { log } from './contract-deployments';
 
 export async function initPairs(
     deployer: SignerWithAddress,
-    pairTokens: SymbolMap<ERC20DecimalsMock>,
-    usdt: ERC20DecimalsMock,
+    pairTokens: SymbolMap<MockERC20Token>,
+    usdt: MockERC20Token,
     pool: Pool,
     fundingRate: FundingRate,
 ) {

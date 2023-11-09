@@ -28,7 +28,15 @@ describe('Executor: require check', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
     });
 
     describe('permission check', async () => {
@@ -69,7 +77,9 @@ describe('Executor: require check', () => {
                     keeper,
                     users: [trader, user1],
                     router,
-                    executionLogic,
+                    executor,
+                    indexPriceFeed,
+                    oraclePriceFeed,
                     orderManager,
                     positionManager,
                 } = testEnv;
@@ -95,13 +105,35 @@ describe('Executor: require check', () => {
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createDecreaseOrder(request);
                 await expect(
-                    executionLogic
-                        .connect(user1.signer)
-                        .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true),
+                    executor
+                        .connect(keeper.signer)
+                        .setPricesAndExecuteDecreaseMarketOrders(
+                            [btc.address],
+                            [await indexPriceFeed.getPrice(btc.address)],
+                            [
+                                new ethers.utils.AbiCoder().encode(
+                                    ['uint256'],
+                                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                                ),
+                            ],
+                            [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                            { value: 1 },
+                        ),
                 ).to.be.revertedWith('opk');
-                await executionLogic
+                await executor
                     .connect(keeper.signer)
-                    .executeDecreaseOrder(orderId, TradeType.MARKET, 0, 0, false, 0, true);
+                    .setPricesAndExecuteDecreaseMarketOrders(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        { value: 1 },
+                    );
             });
         });
     });

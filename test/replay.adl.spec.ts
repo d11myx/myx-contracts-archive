@@ -6,6 +6,7 @@ import { BigNumber } from 'ethers';
 import { TradeType } from '../helpers';
 import Decimal from 'decimal.js';
 import { IExecutionLogic } from '../types';
+import { IExecution } from '../types/contracts/core/Executor';
 
 describe('Replay: ADL', () => {
     const pairIndex = 1;
@@ -21,12 +22,17 @@ describe('Replay: ADL', () => {
                 pool,
                 router,
                 users: [depositor],
+                oraclePriceFeed,
             } = testEnv;
 
             await updateBTCPrice(testEnv, '27000');
 
             // add liquidity
-            const depositAmount = await pool.getDepositAmount(pairIndex, ethers.utils.parseEther('500000'));
+            const depositAmount = await pool.getDepositAmount(
+                pairIndex,
+                ethers.utils.parseEther('500000'),
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const indexAmount = depositAmount.depositIndexAmount;
             const stableAmount = depositAmount.depositStableAmount;
             const pair = await pool.getPair(pairIndex);
@@ -34,7 +40,20 @@ describe('Replay: ADL', () => {
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('long tracker > short tracker, close long position', async () => {
@@ -115,7 +134,7 @@ describe('Replay: ADL', () => {
             // at btc price of 26981.38, close long 27.022
             await updateBTCPrice(testEnv, '26981.38');
             const adlPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-            const adlPositions: IExecutionLogic.ExecutePositionStruct[] = [
+            const adlPositions: IExecution.ExecutePositionStruct[] = [
                 { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
             ];
             await adlPosition(
@@ -147,12 +166,17 @@ describe('Replay: ADL', () => {
                 pool,
                 router,
                 users: [depositor],
+                oraclePriceFeed,
             } = testEnv;
 
             await updateBTCPrice(testEnv, '27000');
 
             // add liquidity
-            const depositAmount = await pool.getDepositAmount(pairIndex, ethers.utils.parseEther('500000'));
+            const depositAmount = await pool.getDepositAmount(
+                pairIndex,
+                ethers.utils.parseEther('500000'),
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             const indexAmount = depositAmount.depositIndexAmount;
             const stableAmount = depositAmount.depositStableAmount;
             const pair = await pool.getPair(pairIndex);
@@ -160,7 +184,20 @@ describe('Replay: ADL', () => {
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('long tracker > short tracker, close long position', async () => {
@@ -232,7 +269,7 @@ describe('Replay: ADL', () => {
             // at btc price of 26981.38, close short
             await updateBTCPrice(testEnv, '26981.38');
             const adlPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-            const adlPositions: IExecutionLogic.ExecutePositionStruct[] = [
+            const adlPositions: IExecution.ExecutePositionStruct[] = [
                 { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
             ];
             await adlPosition(

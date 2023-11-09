@@ -115,7 +115,7 @@ contract OrderManager is IOrderManager, Upgradeable {
             request.tradeType == TradingTypes.TradeType.LIMIT
         ) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+//            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 require(
                     request.sizeAmount == 0 ||
@@ -126,13 +126,14 @@ contract OrderManager is IOrderManager, Upgradeable {
                 // check leverage
                 (uint256 afterPosition, ) = position.validLeverage(
                     pair,
-                    price,
+                    0,
                     request.collateral,
                     uint256(request.sizeAmount),
                     true,
                     // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
-                    tradingConfig.maxPositionAmount
+                    tradingConfig.maxPositionAmount,
+                    true
                 );
                 require(afterPosition > 0, "zero position amount");
             }
@@ -140,13 +141,14 @@ contract OrderManager is IOrderManager, Upgradeable {
                 // check leverage
                 position.validLeverage(
                     pair,
-                    price,
+                    0,
                     request.collateral,
                     uint256(request.sizeAmount.abs()),
                     false,
                     // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
-                    tradingConfig.maxPositionAmount
+                    tradingConfig.maxPositionAmount,
+                    true
                 );
             }
         }

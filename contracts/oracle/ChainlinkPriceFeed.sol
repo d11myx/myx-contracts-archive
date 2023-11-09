@@ -73,6 +73,10 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
         return price;
     }
 
+    function getPriceSafely(address token) external view override returns (uint256) {
+        return getPrice(token);
+    }
+
     function getPrimaryPrice(address _token) public view returns (uint256) {
         address priceFeedAddress = priceFeeds[_token];
         require(priceFeedAddress != address(0), "invalid price feed");

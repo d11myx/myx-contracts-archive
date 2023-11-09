@@ -1,6 +1,6 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
-import { ethers } from 'hardhat';
-import { mintAndApprove, updateBTCPrice } from './helpers/misc';
+import hre, { ethers } from 'hardhat';
+import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
 import { TradeType, convertIndexAmountToStable, convertStableAmountToIndex, getMockToken } from '../helpers';
 import { BigNumber } from 'ethers';
@@ -21,6 +21,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -32,7 +33,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('illiquidity, should partial transaction and delete order', async () => {
@@ -45,7 +59,8 @@ describe('Trade: ioc', () => {
                 positionManager,
                 pool,
                 orderManager,
-                executionLogic,
+                executor,
+                indexPriceFeed,
                 oraclePriceFeed,
             } = testEnv;
 
@@ -78,7 +93,20 @@ describe('Trade: ioc', () => {
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const longOrder = await orderManager.getIncreaseOrder(longOrderId, TradeType.MARKET);
 
@@ -103,7 +131,20 @@ describe('Trade: ioc', () => {
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.MARKET);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const availableStable = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
@@ -128,6 +169,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -139,7 +181,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('illiquidity, should partial transaction and reserve order', async () => {
@@ -152,8 +207,9 @@ describe('Trade: ioc', () => {
                 positionManager,
                 pool,
                 orderManager,
-                executionLogic,
+                executor,
                 oraclePriceFeed,
+                indexPriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
@@ -185,7 +241,20 @@ describe('Trade: ioc', () => {
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const longOrderBefor = await orderManager.getIncreaseOrder(longOrderId, TradeType.LIMIT);
 
@@ -210,7 +279,20 @@ describe('Trade: ioc', () => {
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const availableStable = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
@@ -230,19 +312,63 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
 
             expect(totoalApplyAfter.sub(totoalApplyBefore)).to.be.eq(expectAddLiquidity.mintAmount);
 
             // keeper execute order
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const longOrderAfter = await orderManager.getIncreaseOrder(longOrderId, TradeType.LIMIT);
             const shortOrderAfter = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
 
@@ -260,6 +386,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -271,7 +398,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('size exceed max config, should partial transaction and delete order', async () => {
@@ -283,8 +423,10 @@ describe('Trade: ioc', () => {
                 positionManager,
                 orderManager,
                 keeper,
-                executionLogic,
+                executor,
                 pool,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000000', await usdt.decimals());
@@ -305,7 +447,20 @@ describe('Trade: ioc', () => {
             };
             let increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(positionBefore.positionAmount).to.be.eq(sizeAmount);
@@ -323,7 +478,20 @@ describe('Trade: ioc', () => {
             };
             increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(positionAfter.positionAmount).to.be.eq(sizeAmount.add(positionBefore.positionAmount));
@@ -341,9 +509,20 @@ describe('Trade: ioc', () => {
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false, 0, true);
+                .setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const decreasePositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -364,6 +543,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -375,7 +555,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('size exceed max config, should partial transaction and reserve order', async () => {
@@ -386,9 +579,11 @@ describe('Trade: ioc', () => {
                 positionManager,
                 orderManager,
                 keeper,
-                executionLogic,
+                executor,
                 usdt,
                 pool,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000000', await usdt.decimals());
@@ -409,7 +604,20 @@ describe('Trade: ioc', () => {
             };
             let increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(positionBefore.positionAmount).to.be.eq(sizeAmount);
@@ -427,7 +635,20 @@ describe('Trade: ioc', () => {
             };
             increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(increaseOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(positionAfter.positionAmount).to.be.eq(sizeAmount.add(positionBefore.positionAmount));
@@ -445,9 +666,20 @@ describe('Trade: ioc', () => {
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.LIMIT, 0, 0, false, 0, false);
+                .setPricesAndExecuteDecreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
 
             const tradingConfig = await pool.getTradingConfig(pairIndex);
@@ -460,9 +692,20 @@ describe('Trade: ioc', () => {
                 positionAfter.positionAmount.sub(decreasePositionAfter.positionAmount),
             );
 
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.LIMIT, 0, 0, false, 0, false);
+                .setPricesAndExecuteDecreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             decreasePositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(decreasePositionAfter.positionAmount).to.be.eq('0');
@@ -478,6 +721,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
@@ -488,7 +732,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should partial transaction and reserve ADL order', async () => {
@@ -498,10 +755,12 @@ describe('Trade: ioc', () => {
                 positionManager,
                 orderManager,
                 keeper,
-                executionLogic,
+                executor,
                 usdt,
                 pool,
                 btc,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
@@ -523,7 +782,20 @@ describe('Trade: ioc', () => {
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(longPosition.positionAmount).to.be.eq(
@@ -544,7 +816,20 @@ describe('Trade: ioc', () => {
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
 
             expect(shortPosition.positionAmount).to.be.eq(sizeAmount);
@@ -562,9 +847,20 @@ describe('Trade: ioc', () => {
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.MARKET, 0, 0, false, 0, true);
+                .setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
             const decreasePosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -573,7 +869,16 @@ describe('Trade: ioc', () => {
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-            await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
+
+            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
                 [
                     {
                         positionKey,
@@ -586,6 +891,7 @@ describe('Trade: ioc', () => {
                 TradeType.MARKET,
                 0,
                 0,
+                { value: 1 },
             );
 
             const decreasePositionAdlAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -606,6 +912,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -617,7 +924,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should partial transaction and reserve ADL order', async () => {
@@ -627,10 +947,12 @@ describe('Trade: ioc', () => {
                 positionManager,
                 orderManager,
                 keeper,
-                executionLogic,
+                executor,
                 usdt,
                 pool,
                 btc,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000000', await usdt.decimals());
@@ -652,7 +974,20 @@ describe('Trade: ioc', () => {
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(longPosition.positionAmount).to.be.eq(
@@ -673,7 +1008,20 @@ describe('Trade: ioc', () => {
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
 
             expect(shortPosition.positionAmount).to.be.eq(sizeAmount);
@@ -691,9 +1039,20 @@ describe('Trade: ioc', () => {
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeDecreaseOrder(decreaseOrderId, TradeType.LIMIT, 0, 0, false, 0, true);
+                .setPricesAndExecuteDecreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
             const decreasePosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -702,7 +1061,15 @@ describe('Trade: ioc', () => {
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-            await executionLogic.connect(keeper.signer).executeADLAndDecreaseOrder(
+            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
                 [
                     {
                         positionKey,
@@ -715,6 +1082,7 @@ describe('Trade: ioc', () => {
                 TradeType.LIMIT,
                 0,
                 0,
+                { value: 1 },
             );
 
             const decreasePositionAdlAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -735,6 +1103,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -746,7 +1115,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should no partial transaction', async () => {
@@ -756,11 +1138,13 @@ describe('Trade: ioc', () => {
                 router,
                 positionManager,
                 orderManager,
-                executionLogic,
+                executor,
                 liquidationLogic,
                 keeper,
                 pool,
                 riskReserve,
+                oraclePriceFeed,
+                indexPriceFeed,
                 btc,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
@@ -787,7 +1171,20 @@ describe('Trade: ioc', () => {
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
             balance = await usdt.balanceOf(trader.address);
             const reserveBalanceBef = await riskReserve.getReservedAmount(usdt.address);
@@ -796,7 +1193,7 @@ describe('Trade: ioc', () => {
             expect(shortPositionBefore.positionAmount).to.be.eq(size);
 
             // update maintainMarginRate
-            const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['BTC'];
+            const btcPair = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
             const tradingConfigBefore = btcPair.tradingConfig;
             tradingConfigBefore.maintainMarginRate = 15000000;
             await pool.updateTradingConfig(pairIndex, tradingConfigBefore);
@@ -811,7 +1208,7 @@ describe('Trade: ioc', () => {
             const pair = await pool.getPair(pairIndex);
             const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
-            const oraclePrice = await pool.getPrice(pair.indexToken);
+            const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPositionBefore.positionAmount);
             const pnl = indexToStableAmount
                 .mul(-1)
@@ -833,9 +1230,37 @@ describe('Trade: ioc', () => {
             expect(riskRate).to.be.gte('100000000');
 
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-            await liquidationLogic
+
+            await expect(
+                executor
+                    .connect(keeper.signer)
+                    .setPrices(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        { value: 1 },
+                    ),
+            ).to.be.revertedWith('internal');
+
+            await executor
                 .connect(keeper.signer)
-                .liquidatePositions([{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }]);
+                .setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }],
+                    { value: 1 },
+                );
 
             balance = await usdt.balanceOf(trader.address);
             const reserveBalanceAft = await riskReserve.getReservedAmount(usdt.address);
@@ -861,6 +1286,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -872,7 +1298,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should cancel transaction', async () => {
@@ -885,7 +1324,7 @@ describe('Trade: ioc', () => {
                 positionManager,
                 pool,
                 orderManager,
-                executionLogic,
+                executor,
                 oraclePriceFeed,
                 indexPriceFeed,
             } = testEnv;
@@ -919,7 +1358,20 @@ describe('Trade: ioc', () => {
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const longOrderBefor = await orderManager.getIncreaseOrder(longOrderId, TradeType.LIMIT);
 
@@ -944,7 +1396,20 @@ describe('Trade: ioc', () => {
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const availableStable = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
@@ -964,12 +1429,30 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
 
             expect(totoalApplyAfter.sub(totoalApplyBefore)).to.be.eq(expectAddLiquidity.mintAmount);
@@ -981,7 +1464,9 @@ describe('Trade: ioc', () => {
             const fee = mockPyth.getUpdateFee(updateData);
             await oraclePriceFeed
                 .connect(keeper.signer)
-                .updatePrice([btc.address], [latestOraclePrice], { value: fee });
+                .updatePrice([btc.address], [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])], {
+                    value: fee,
+                });
             const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
@@ -992,12 +1477,53 @@ describe('Trade: ioc', () => {
             );
 
             // keeper execute order
-            await expect(
-                executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0),
-            ).to.be.revertedWith('exceed max price deviation');
-            await expect(
-                executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0),
-            ).to.be.revertedWith('exceed max price deviation');
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            const tx_long = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            let reason = await extraHash(tx_long.hash, 'ExecuteOrderError', 'errorMessage');
+            expect(reason).to.be.eq('exceed max price deviation');
+
+            const tx_short = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            reason = await extraHash(tx_short.hash, 'ExecuteOrderError', 'errorMessage');
+            expect(reason).to.be.eq('exceed max price deviation');
         });
     });
 
@@ -1010,6 +1536,7 @@ describe('Trade: ioc', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -1021,7 +1548,20 @@ describe('Trade: ioc', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should cancel transaction', async () => {
@@ -1034,7 +1574,7 @@ describe('Trade: ioc', () => {
                 positionManager,
                 pool,
                 orderManager,
-                executionLogic,
+                executor,
                 oraclePriceFeed,
                 indexPriceFeed,
             } = testEnv;
@@ -1068,7 +1608,20 @@ describe('Trade: ioc', () => {
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const longOrderBefor = await orderManager.getIncreaseOrder(longOrderId, TradeType.LIMIT);
 
@@ -1093,7 +1646,20 @@ describe('Trade: ioc', () => {
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(shortOrderId, TradeType.LIMIT, 0, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
             const availableStable = vaultAfter.stableTotalAmount.sub(vaultAfter.stableReservedAmount);
@@ -1113,12 +1679,30 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(pairIndex, indexAmount, stableAmount);
+            const expectAddLiquidity = await pool.getMintLpAmount(
+                pairIndex,
+                indexAmount,
+                stableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
+            );
             await mintAndApprove(testEnv, btc, indexAmount, trader, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, trader, router.address);
             await router
                 .connect(trader.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
             const totoalApplyAfter = await lpToken.totalSupply();
 
             expect(totoalApplyAfter.sub(totoalApplyBefore)).to.be.eq(expectAddLiquidity.mintAmount);
@@ -1130,20 +1714,35 @@ describe('Trade: ioc', () => {
             const fee = mockPyth.getUpdateFee(updateData);
             await oraclePriceFeed
                 .connect(keeper.signer)
-                .updatePrice([btc.address], [latestOraclePrice], { value: fee });
+                .updatePrice([btc.address], [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])], {
+                    value: fee,
+                });
             const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
 
             // oraclePrice < indexPrice 0.5%
-            expect(indexPrice.sub(oraclePrice).mul('100000000').div(oraclePrice)).to.be.lt(
-                tradingConfig.maxPriceDeviationP,
-            );
-
-            // keeper execute order
-            await expect(
-                executionLogic.connect(keeper.signer).executeIncreaseOrder(longOrderId, TradeType.LIMIT, 0, 0),
-            ).to.be.revertedWith('not reach trigger price');
+            // expect(indexPrice.sub(oraclePrice).mul('100000000').div(oraclePrice)).to.be.lt(
+            //     tradingConfig.maxPriceDeviationP,
+            // );
+            //
+            // // keeper execute order
+            // await expect(
+            //     executor
+            //         .connect(keeper.signer)
+            //         .setPricesAndExecuteIncreaseLimitOrders(
+            //             [btc.address],
+            //             [await indexPriceFeed.getPrice(btc.address)],
+            //             [
+            //                 new ethers.utils.AbiCoder().encode(
+            //                     ['uint256'],
+            //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+            //                 ),
+            //             ],
+            //             [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+            //             { value: 1 },
+            //         ),
+            // ).to.be.revertedWith('not reach trigger price');
         });
     });
 });

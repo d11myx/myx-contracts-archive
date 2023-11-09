@@ -7,7 +7,6 @@ import "../../interfaces/IAddressesProvider.sol";
 import "../../interfaces/IRoleManager.sol";
 import "../../interfaces/IOrderManager.sol";
 import "../../interfaces/IPositionManager.sol";
-import "../../interfaces/IPriceOracle.sol";
 import "../../interfaces/IPool.sol";
 import "../../helpers/ValidationHelper.sol";
 import "../../helpers/TradingHelper.sol";
@@ -73,6 +72,7 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function executeIncreaseMarketOrders(
+        address keeper,
         ExecuteOrder[] memory orders
     ) external override onlyExecutorOrKeeper {
         for (uint256 i = 0; i < orders.length; i++) {
@@ -80,6 +80,7 @@ contract ExecutionLogic is IExecutionLogic {
 
             try
                 this.executeIncreaseOrder(
+                    keeper,
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
                     order.level,
@@ -97,12 +98,14 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function executeIncreaseLimitOrders(
+        address keeper,
         ExecuteOrder[] memory orders
     ) external override onlyExecutorOrKeeper {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
                 this.executeIncreaseOrder(
+                    keeper,
                     order.orderId,
                     TradingTypes.TradeType.LIMIT,
                     order.level,
@@ -115,6 +118,7 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function executeIncreaseOrder(
+        address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
@@ -214,7 +218,8 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             true,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
         require(afterPosition > 0, "zpa");
 
@@ -223,7 +228,7 @@ contract ExecutionLogic is IExecutionLogic {
             pairIndex,
             order.orderId,
             order.account,
-            tx.origin,
+            keeper,
             executionSize,
             order.isLong,
             collateral,
@@ -282,12 +287,14 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function executeDecreaseMarketOrders(
+        address keeper,
         ExecuteOrder[] memory orders
     ) external override onlyExecutorOrKeeper {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
                 this.executeDecreaseOrder(
+                    keeper,
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
                     order.level,
@@ -308,12 +315,14 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function executeDecreaseLimitOrders(
+        address keeper,
         ExecuteOrder[] memory orders
     ) external override onlyExecutorOrKeeper {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
                 this.executeDecreaseOrder(
+                    keeper,
                     order.orderId,
                     TradingTypes.TradeType.LIMIT,
                     order.level,
@@ -329,6 +338,7 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function executeDecreaseOrder(
+        address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
@@ -338,6 +348,7 @@ contract ExecutionLogic is IExecutionLogic {
         bool onlyOnce
     ) external override onlyExecutorOrKeeper {
         _executeDecreaseOrder(
+            keeper,
             _orderId,
             _tradeType,
             level,
@@ -349,6 +360,7 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function _executeDecreaseOrder(
+        address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
@@ -433,7 +445,8 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             false,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
 
         (bool _needADL, ) = positionManager.needADL(
@@ -478,7 +491,7 @@ contract ExecutionLogic is IExecutionLogic {
             pairIndex,
             order.orderId,
             order.account,
-            tx.origin,
+            keeper,
             executionSize,
             order.isLong,
             collateral,
@@ -609,6 +622,7 @@ contract ExecutionLogic is IExecutionLogic {
     }
 
     function executeADLAndDecreaseOrder(
+        address keeper,
         ExecutePosition[] memory executePositions,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
@@ -647,6 +661,7 @@ contract ExecutionLogic is IExecutionLogic {
         );
         if (!_needADL) {
             this.executeDecreaseOrder(
+                keeper,
                 order.orderId,
                 order.tradeType,
                 _level,
@@ -659,6 +674,7 @@ contract ExecutionLogic is IExecutionLogic {
         }
 
         this.executeDecreaseOrder(
+            keeper,
             order.orderId,
             order.tradeType,
             _level,
@@ -719,6 +735,7 @@ contract ExecutionLogic is IExecutionLogic {
                     })
                 );
                 this.executeDecreaseOrder(
+                    keeper,
                     orderId,
                     TradingTypes.TradeType.MARKET,
                     adlPosition.level,
@@ -731,6 +748,7 @@ contract ExecutionLogic is IExecutionLogic {
             }
         }
         this.executeDecreaseOrder(
+            keeper,
             order.orderId,
             order.tradeType,
             _level,

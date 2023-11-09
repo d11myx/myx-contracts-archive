@@ -1,6 +1,7 @@
 // @ts-ignore
 import { ethers } from 'hardhat';
-import { waitForTx, getRoleManager, getOraclePriceFeed, getTokens } from '../helpers';
+import { waitForTx, getRoleManager, getOraclePriceFeed, getTokens, getFundingRate } from '../helpers';
+import { IFundingRate } from '../types/contracts/core/FundingRate';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -9,6 +10,7 @@ async function main() {
 
     const priceOracle = await getOraclePriceFeed();
     const roleManager = await getRoleManager();
+    const fundingRate = await getFundingRate();
 
     const { btc, eth } = await getTokens();
     console.log(`btc price:`, ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30));
@@ -24,11 +26,27 @@ async function main() {
     ];
 
     for (let keeper of keepers) {
-        await deployer.sendTransaction({ to: keeper, value: ethers.utils.parseEther('100') });
+        // await deployer.sendTransaction({ to: keeper, value: ethers.utils.parseEther('100') });
 
         await waitForTx(await roleManager.addKeeper(keeper));
         await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
+
+    const btcFundingFeeConfig: IFundingRate.FundingFeeConfigStruct = {
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
+        fundingInterval: 1 * 60 * 60,
+    };
+
+    const ethFundingFeeConfig: IFundingRate.FundingFeeConfigStruct = {
+        growthRate: 2000000, //0.02
+        baseRate: 20000, //0.0002
+        maxRate: 10000000, //0.1
+        fundingInterval: 1 * 60 * 60,
+    };
+    await fundingRate.updateFundingFeeConfig(1, btcFundingFeeConfig);
+    await fundingRate.updateFundingFeeConfig(2, ethFundingFeeConfig);
 }
 
 main().catch((error) => {

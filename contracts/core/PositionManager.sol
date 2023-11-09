@@ -46,6 +46,7 @@ contract PositionManager is IPositionManager, Upgradeable {
     IPool public pool;
     IFeeCollector public feeCollector;
     address public pledgeAddress;
+    address public router;
 
     // constructor() FeeManager() Pausable() {}
     function initialize(
@@ -69,6 +70,10 @@ contract PositionManager is IPositionManager, Upgradeable {
             "onlyExecutor"
         );
         _;
+    }
+
+    function setRouter(address _router) external onlyPoolAdmin {
+        router = _router;
     }
 
     function increasePosition(
@@ -266,14 +271,14 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool isLong,
         int256 collateral
     ) external override {
-        require(account == msg.sender, "forbidden");
+        require(account == msg.sender || msg.sender == router, "forbidden");
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[
             PositionKey.getPositionKey(account, pairIndex, isLong)
         ];
 
-        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         position.validLeverage(
             pair,
@@ -282,7 +287,8 @@ contract PositionManager is IPositionManager, Upgradeable {
             0,
             true,
             tradingConfig.maxLeverage,
-            tradingConfig.maxPositionAmount
+            tradingConfig.maxPositionAmount,
+            false
         );
 
         if (collateral > 0) {
@@ -303,7 +309,7 @@ contract PositionManager is IPositionManager, Upgradeable {
 
     function updateFundingRate(uint256 _pairIndex) external {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         _updateFundingRate(_pairIndex, price);
     }
 
@@ -351,11 +357,12 @@ contract PositionManager is IPositionManager, Upgradeable {
     function _currentLpProfit(
         uint256 _pairIndex,
         bool lpIsLong,
-        uint amount
+        uint amount,
+        uint256 _price
     ) internal view returns (int256) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
+       // IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        uint256 _price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+        //        uint256 _price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         if (lpIsLong) {
             if (_price > lpVault.averagePrice) {
                 return int256(amount.mulPrice(_price - lpVault.averagePrice));
@@ -463,7 +470,7 @@ contract PositionManager is IPositionManager, Upgradeable {
                     pool.updateAveragePrice(_pairIndex, _price);
                 }
 
-                _calLpProfit(pair, false, decreaseLong);
+                _calLpProfit(pair, false, decreaseLong, _price);
             }
         } else if (currentPositionStatus == PositionStatus.NetShort) {
             if (isAddPosition) {
@@ -504,7 +511,7 @@ contract PositionManager is IPositionManager, Upgradeable {
                     pool.updateAveragePrice(_pairIndex, _price);
                 }
 
-                _calLpProfit(pair, true, decreaseShort);
+                _calLpProfit(pair, true, decreaseShort, _price);
             }
         }
         // zero exposure
@@ -513,8 +520,13 @@ contract PositionManager is IPositionManager, Upgradeable {
         }
     }
 
-    function _calLpProfit(IPool.Pair memory pair, bool lpIsLong, uint amount) internal {
-        int256 profit = _currentLpProfit(pair.pairIndex, lpIsLong, amount);
+    function _calLpProfit(
+        IPool.Pair memory pair,
+        bool lpIsLong,
+        uint amount,
+        uint256 price
+    ) internal {
+        int256 profit = _currentLpProfit(pair.pairIndex, lpIsLong, amount, price);
         pool.setLPStableProfit(
             pair.pairIndex,
             TokenHelper.convertIndexAmountToStable(pair, profit)
@@ -622,9 +634,10 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 _price
     ) internal view returns (int256 fundingRate) {
         IPool.Vault memory vault = pool.getVault(_pairIndex);
+        IPool.Pair memory pair = pool.getPair(_pairIndex);
 
         fundingRate = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingRate(
-            _pairIndex,
+            pair,
             longTracker[_pairIndex],
             shortTracker[_pairIndex],
             vault,
@@ -632,7 +645,11 @@ contract PositionManager is IPositionManager, Upgradeable {
         );
     }
 
-    function lpProfit(uint pairIndex, address token) external view override returns (int256) {
+    function lpProfit(
+        uint pairIndex,
+        address token,
+        uint256 price
+    ) external view override returns (int256) {
         if (token != pledgeAddress) {
             return 0;
         }
@@ -640,7 +657,8 @@ contract PositionManager is IPositionManager, Upgradeable {
         int256 profit = _currentLpProfit(
             pairIndex,
             currentExposureAmountChecker > 0,
-            currentExposureAmountChecker.abs()
+            currentExposureAmountChecker.abs(),
+            price
         );
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
@@ -655,10 +673,10 @@ contract PositionManager is IPositionManager, Upgradeable {
     function getTradingFee(
         uint256 _pairIndex,
         bool _isLong,
-        uint256 _sizeAmount
+        uint256 _sizeAmount,
+        uint256 price
     ) external view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         uint256 sizeDeltaStable = uint256(
             TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), price)
         );
@@ -693,9 +711,10 @@ contract PositionManager is IPositionManager, Upgradeable {
         return currentFundingRate[_pairIndex];
     }
 
-    function getNextFundingRate(uint256 _pairIndex) external view override returns (int256) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
-        uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
+    function getNextFundingRate(
+        uint256 _pairIndex,
+        uint256 price
+    ) external view override returns (int256) {
         return _nextFundingRate(_pairIndex, price);
     }
 
