@@ -236,7 +236,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const btcDecimals = await btc.decimals();
@@ -334,8 +334,8 @@ describe('Trade: funding fee', () => {
                 usdt,
                 shortPosition.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
+            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.makerFee).div(PERCENTAGE);
             const shortBalanceAfter = await usdt.balanceOf(shortTrader.address);
 
             // shorter user will be received funding fee
@@ -348,7 +348,7 @@ describe('Trade: funding fee', () => {
                 usdt,
                 btc,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const openPrice = ethers.utils.parseUnits('30000', 30);
@@ -388,8 +388,8 @@ describe('Trade: funding fee', () => {
                 usdt,
                 longPosition.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
+            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
             const longBalanceAfter = await usdt.balanceOf(longTrader.address);
 
             // longer user will be paid funding fee
@@ -441,7 +441,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const btcDecimals = await btc.decimals();
@@ -542,8 +542,8 @@ describe('Trade: funding fee', () => {
                 usdt,
                 longPosition.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
+            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.makerFee).div(PERCENTAGE);
             const longBalanceAfter = await usdt.balanceOf(longTrader.address);
 
             // longer user will be received funding fee
@@ -556,7 +556,7 @@ describe('Trade: funding fee', () => {
                 usdt,
                 btc,
                 positionManager,
-                pool,
+                feeCollector,
                 fundingRate,
             } = testEnv;
 
@@ -600,8 +600,8 @@ describe('Trade: funding fee', () => {
                 usdt,
                 shortPosition.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
+            const tradingFee = indexDeltaToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
             const shortBalanceAfter = await usdt.balanceOf(shortTrader.address);
 
             // shorter user will be paid funding fee
@@ -653,7 +653,7 @@ describe('Trade: funding fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const btcDecimals = await btc.decimals();
@@ -749,13 +749,13 @@ describe('Trade: funding fee', () => {
             );
 
             // exposure position = 0, calculation trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const longIndexDeltaToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 longPosition.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const longTradingFee = longIndexDeltaToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const longTradingFee = longIndexDeltaToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
             const longBalanceAfter = await usdt.balanceOf(longTrader.address);
 
             // decrease short position
@@ -775,7 +775,7 @@ describe('Trade: funding fee', () => {
                 usdt,
                 shortPosition.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const shortTradingFee = shortIndexDeltaToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const shortTradingFee = shortIndexDeltaToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
             const shortBalanceAfter = await usdt.balanceOf(shortTrader.address);
 
             // longer user paid fundind fee to shorter user
