@@ -34,7 +34,13 @@ async function main() {
     console.log(`btc price:`, btcIndexPrice);
     console.log(`eth price:`, ethIndexPrice);
 
-    console.log(await positionManager.getPosition('0x7109E9b1197fa3c051e06Ef55A871bc463F64024', 1, true));
+    // const key = await positionManager.getPositionKey('0x180D310656bc630295Ef5Fd30bB94EE59f3e2905', 1, true);
+    // console.log(await orderManager.getPositionOrders(key));
+
+    console.log(await pool.getVault(2));
+    const poolToken = await ethers.getContractAt('PoolToken', '0xb76d66C2fe6b4ed0694AD71B99c5466db2dA4C79');
+    console.log(await poolToken.totalSupply());
+    console.log(await pool.lpFairPrice(2, await oraclePriceFeed.getPrice(eth.address)));
 
     // console.log(await pool.getMintLpAmount(1, ethers.utils.parseUnits('10000', 8), ethers.utils.parseUnits('1'), 1));
 
