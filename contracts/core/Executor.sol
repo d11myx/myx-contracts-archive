@@ -136,7 +136,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         address[] memory _tokens,
         uint256[] memory _prices,
         bytes[] memory updateData
-    ) external payable whenNotPaused {
+    ) external payable {
         require(msg.sender == address(this), "internal");
 
         IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
