@@ -38,6 +38,7 @@ interface IPositionManager {
     event TakeFundingFeeAddTraderFee(
         address account,
         uint256 pairIndex,
+        uint256 orderId,
         uint256 sizeDelta,
         uint256 tradingFee,
         int256 fundingFee,
@@ -94,8 +95,6 @@ interface IPositionManager {
     function getPositionByKey(bytes32 key) external view returns (Position.Info memory);
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
-
-    // function updateFundingInterval(uint256 newInterval) external;
 
     function increasePosition(
         uint256 _pairIndex,
