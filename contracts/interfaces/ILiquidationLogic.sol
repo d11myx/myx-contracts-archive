@@ -20,5 +20,5 @@ interface ILiquidationLogic is IExecution {
 
     function liquidatePositions(address keeper,ExecutePosition[] memory executePositions) external;
 
-    function liquidationPosition(address keeper,bytes32 positionKey, uint8 level, uint256 commissionRatio) external;
+    function liquidationPosition(address keeper,bytes32 positionKey, uint8 tier, uint256 commissionRatio) external;
 }
