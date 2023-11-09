@@ -135,7 +135,7 @@ describe('Replay: ADL', () => {
             await updateBTCPrice(testEnv, '26981.38');
             const adlPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
             const adlPositions: IExecution.ExecutePositionStruct[] = [
-                { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
+                { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, tier: 0, commissionRatio: 0 },
             ];
             await adlPosition(
                 testEnv,
@@ -270,7 +270,7 @@ describe('Replay: ADL', () => {
             await updateBTCPrice(testEnv, '26981.38');
             const adlPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
             const adlPositions: IExecution.ExecutePositionStruct[] = [
-                { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, level: 0, commissionRatio: 0 },
+                { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, tier: 0, commissionRatio: 0 },
             ];
             await adlPosition(
                 testEnv,

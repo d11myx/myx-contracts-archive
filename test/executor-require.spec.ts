@@ -116,7 +116,7 @@ describe('Executor: require check', () => {
                                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                                 ),
                             ],
-                            [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                            [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                             { value: 1 },
                         ),
                 ).to.be.revertedWith('opk');
@@ -131,7 +131,7 @@ describe('Executor: require check', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
             });

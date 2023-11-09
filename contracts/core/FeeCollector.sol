@@ -16,8 +16,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
     using SafeMath for uint256;
     using PrecisionUtils for uint256;
 
-    // Discount ratio of every level (level => LevelDiscount)
-    mapping(uint8 => LevelDiscount) public levelDiscounts;
+    // Trading fee of each tier (pairIndex => tier => fee)
+    mapping(uint256 => mapping(uint8 => TradingFeeTier)) public tradingFeeTiers;
 
     // Maximum of referrals ratio
     uint256 public override maxReferralsRatio;
@@ -42,7 +42,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         ADDRESS_PROVIDER = addressesProvider;
         pool = _pool;
         pledgeAddress = _pledgeAddress;
-        maxReferralsRatio = 1e7;
+        maxReferralsRatio = 0.5e8;
     }
 
     modifier onlyPositionManager() {
@@ -55,8 +55,12 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         _;
     }
 
-    function getLevelDiscounts(uint8 level) external view override returns (LevelDiscount memory) {
-        return levelDiscounts[level];
+    function getTradingFeeTier(uint256 pairIndex, uint8 tier) external view override returns (TradingFeeTier memory) {
+        return tradingFeeTiers[pairIndex][tier];
+    }
+
+    function getRegularTradingFeeTier(uint256 pairIndex) external view override returns (TradingFeeTier memory) {
+        return tradingFeeTiers[pairIndex][0];
     }
 
     function updatePositionManagerAddress(address newAddress) external onlyPoolAdmin {
@@ -73,22 +77,24 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         emit UpdatedStakingPoolAddress(msg.sender, oldAddress, newAddress);
     }
 
-    function updateLevelDiscountRatios(
-        uint8[] memory levels,
-        LevelDiscount[] memory discounts
-    ) external override onlyPoolAdmin {
-        require(levels.length == discounts.length, "inconsistent params length");
+    function updateTradingFeeTiers(
+        uint256 pairIndex,
+        uint8[] memory tiers,
+        TradingFeeTier[] memory tierFees
+    ) external onlyPoolAdmin {
+        require(tiers.length == tierFees.length, "inconsistent params length");
 
-        for (uint256 i = 0; i < levels.length; i++) {
-            _updateLevelDiscountRatio(levels[i], discounts[i]);
+        for (uint256 i = 0; i < tiers.length; i++) {
+            _updateTradingFeeTier(pairIndex, tiers[i], tierFees[i]);
         }
     }
 
-    function updateLevelDiscountRatio(
-        uint8 level,
-        LevelDiscount memory discount
-    ) external override onlyPoolAdmin {
-        _updateLevelDiscountRatio(level, discount);
+    function updateTradingFeeTier(
+        uint256 pairIndex,
+        uint8 tier,
+        TradingFeeTier memory tierFee
+    ) external onlyPoolAdmin {
+        _updateTradingFeeTier(pairIndex, tier, tierFee);
     }
 
     function updateMaxReferralsRatio(uint256 newRatio) external override onlyPoolAdmin {
@@ -134,15 +140,16 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         address keeper,
         uint256 sizeDelta,
         uint256 tradingFee,
-        uint256 vipRate,
+        uint256 vipFeeRate,
         uint256 referralRate
-    ) external override onlyPositionManager returns (uint256 lpAmount) {
+    ) external override onlyPositionManager returns (uint256 lpAmount, uint256 vipDiscountAmount) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
-        uint256 vipAmount = tradingFee.mulPercentage(vipRate);
-        userTradingFee[account] += vipAmount;
+        uint256 vipTradingFee = sizeDelta.mulPercentage(vipFeeRate);
+        vipDiscountAmount = tradingFee - vipTradingFee;
+        userTradingFee[account] += vipDiscountAmount;
 
-        uint256 surplusFee = tradingFee - vipAmount;
+        uint256 surplusFee = tradingFee - vipDiscountAmount;
 
         uint256 referralsAmount = surplusFee.mulPercentage(
             Math.min(referralRate, maxReferralsRatio)
@@ -169,8 +176,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
             pair.pairIndex,
             sizeDelta,
             tradingFee,
-            vipAmount,
-            vipRate,
+            vipDiscountAmount,
+            vipFeeRate,
             referralsAmount,
             lpAmount,
             keeperAmount,
@@ -189,22 +196,27 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return claimableUserTradingFee;
     }
 
-    function _updateLevelDiscountRatio(uint8 level, LevelDiscount memory discount) internal {
-        require(
-            discount.makerDiscountRatio <= PrecisionUtils.percentage() &&
-                discount.takerDiscountRatio <= PrecisionUtils.percentage(),
+    function _updateTradingFeeTier(
+        uint256 pairIndex,
+        uint8 tier,
+        TradingFeeTier memory tierFee
+    ) internal {
+        TradingFeeTier memory regularTierFee = tradingFeeTiers[pairIndex][0];
+        require(tier == 0
+            || (tierFee.takerFee <= regularTierFee.takerFee && tierFee.makerFee <= regularTierFee.makerFee),
             "exceeds max ratio"
         );
 
-        LevelDiscount memory oldDiscount = levelDiscounts[level];
-        levelDiscounts[level] = discount;
+        TradingFeeTier memory oldTierFee = tradingFeeTiers[pairIndex][tier];
+        tradingFeeTiers[pairIndex][tier] = tierFee;
 
-        emit UpdateLevelDiscountRatio(
-            level,
-            oldDiscount.makerDiscountRatio,
-            oldDiscount.takerDiscountRatio,
-            levelDiscounts[level].makerDiscountRatio,
-            levelDiscounts[level].takerDiscountRatio
+        emit updatedTradingFeeTier(
+            msg.sender,
+            tier,
+            oldTierFee.takerFee,
+            oldTierFee.makerFee,
+            tradingFeeTiers[pairIndex][tier].takerFee,
+            tradingFeeTiers[pairIndex][tier].makerFee
         );
     }
 }
