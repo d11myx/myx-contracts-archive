@@ -108,8 +108,6 @@ interface IPool {
 
     function getTradingFeeConfig(uint256) external view returns (TradingFeeConfig memory);
 
-    // function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
-
     function getVault(uint256 _pairIndex) external view returns (Vault memory vault);
 
     function transferTokenTo(address token, address to, uint256 amount) external;
