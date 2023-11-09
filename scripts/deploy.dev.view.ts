@@ -1,19 +1,13 @@
 // @ts-ignore
 import hre, { ethers } from 'hardhat';
 import {
-    Duration,
-    encodeParameterArray,
-    encodeParameters,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getOrderManager,
     getPool,
+    getPositionManager,
     getTokens,
-    latest,
-    TradeType,
 } from '../helpers';
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/src/signers';
-import { address } from 'hardhat/internal/core/config/config-validation';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -22,7 +16,7 @@ async function main() {
 
     // const router = await getRouter();
     const orderManager = await getOrderManager();
-    // const positionManager = await getPositionManager();
+    const positionManager = await getPositionManager();
     // const executor = await getExecutor();
     // const executionLogic = await getExecutionLogic();
     const oraclePriceFeed = await getOraclePriceFeed();
@@ -40,25 +34,8 @@ async function main() {
     console.log(`btc price:`, btcIndexPrice);
     console.log(`eth price:`, ethIndexPrice);
 
-    console.log(
-        await pool.getDepositAmount(1, ethers.utils.parseEther('1000'), await oraclePriceFeed.getPrice(btc.address)),
-    );
-    console.log(
-        await pool.getMintLpAmount(
-            1,
-            ethers.utils.parseUnits('1000', 8),
-            0,
-            await oraclePriceFeed.getPrice(btc.address),
-        ),
-    );
-    console.log(
-        await pool.getMintLpAmount(
-            1,
-            0,
-            ethers.utils.parseUnits('1000', 6),
-            await oraclePriceFeed.getPrice(btc.address),
-        ),
-    );
+    console.log(await positionManager.getPosition('0x7109E9b1197fa3c051e06Ef55A871bc463F64024', 1, true));
+
     // console.log(await pool.getMintLpAmount(1, ethers.utils.parseUnits('10000', 8), ethers.utils.parseUnits('1'), 1));
 
     // console.log(await pool.getDepositAmount(1, ethers.utils.parseEther('1000')));

@@ -36,14 +36,14 @@ async function main() {
         growthRate: 2000000, //0.02
         baseRate: 20000, //0.0002
         maxRate: 10000000, //0.1
-        fundingInterval: 1 * 60 * 60,
+        fundingInterval: 10 * 60,
     };
 
     const ethFundingFeeConfig: IFundingRate.FundingFeeConfigStruct = {
         growthRate: 2000000, //0.02
         baseRate: 20000, //0.0002
         maxRate: 10000000, //0.1
-        fundingInterval: 1 * 60 * 60,
+        fundingInterval: 10 * 60,
     };
     await fundingRate.updateFundingFeeConfig(1, btcFundingFeeConfig);
     await fundingRate.updateFundingFeeConfig(2, ethFundingFeeConfig);

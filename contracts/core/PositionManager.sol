@@ -84,7 +84,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 sizeAmount,
         bool isLong,
         int256 collateral,
-        IFeeCollector.LevelDiscount memory discount,
+        IFeeCollector.TradingFeeTier memory tradingFeeTier,
         uint256 referralRate,
         uint256 oraclePrice
     ) external onlyExecutor returns (uint256 tradingFee, int256 fundingFee) {
@@ -119,9 +119,10 @@ contract PositionManager is IPositionManager, Upgradeable {
             pairIndex,
             account,
             keeper,
+            orderId,
             sizeAmount,
             isLong,
-            discount,
+            tradingFeeTier,
             referralRate,
             oraclePrice
         );
@@ -170,7 +171,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 sizeAmount,
         bool isLong,
         int256 collateral,
-        IFeeCollector.LevelDiscount memory discount,
+        IFeeCollector.TradingFeeTier memory tradingFeeTier,
         uint256 referralRate,
         uint256 oraclePrice,
         bool useRiskReserve
@@ -191,9 +192,10 @@ contract PositionManager is IPositionManager, Upgradeable {
             pairIndex,
             account,
             keeper,
+            orderId,
             sizeAmount,
             isLong,
-            discount,
+            tradingFeeTier,
             referralRate,
             oraclePrice
         );
@@ -317,9 +319,10 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 _pairIndex,
         address _account,
         address _keeper,
+        uint256 _orderId,
         uint256 _sizeAmount,
         bool _isLong,
-        IFeeCollector.LevelDiscount memory discount,
+        IFeeCollector.TradingFeeTier memory tradingFeeTier,
         uint256 referralRate,
         uint256 _price
     ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
@@ -332,13 +335,13 @@ contract PositionManager is IPositionManager, Upgradeable {
         (tradingFee, isTaker) = _tradingFee(_pairIndex, _isLong, sizeDeltaStable);
         charge -= int256(tradingFee);
 
-        uint256 lpAmount = feeCollector.distributeTradingFee(
+        (uint256 lpAmount, uint256 vipDiscountAmount) = feeCollector.distributeTradingFee(
             pair,
             _account,
             _keeper,
             sizeDeltaStable,
             tradingFee,
-            isTaker ? discount.takerDiscountRatio : discount.makerDiscountRatio,
+            isTaker ? tradingFeeTier.takerFee : tradingFeeTier.makerFee,
             referralRate
         );
 
@@ -347,10 +350,12 @@ contract PositionManager is IPositionManager, Upgradeable {
         emit TakeFundingFeeAddTraderFee(
             _account,
             _pairIndex,
+            _orderId,
             sizeDeltaStable,
             tradingFee,
             fundingFee,
-            lpAmount
+            lpAmount,
+            vipDiscountAmount
         );
     }
 
@@ -557,16 +562,16 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) internal view returns (uint256 tradingFee, bool isTaker) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
         int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
+        IFeeCollector.TradingFeeTier memory regularTradingFeeTier = feeCollector.getRegularTradingFeeTier(_pairIndex);
         if (currentExposureAmountChecker >= 0) {
-            // fee
             tradingFee = _isLong
-                ? sizeDeltaStable.mulPercentage(tradingFeeConfig.takerFeeP)
-                : sizeDeltaStable.mulPercentage(tradingFeeConfig.makerFeeP);
+                ? sizeDeltaStable.mulPercentage(regularTradingFeeTier.takerFee)
+                : sizeDeltaStable.mulPercentage(regularTradingFeeTier.makerFee);
             isTaker = _isLong;
         } else {
             tradingFee = _isLong
-                ? sizeDeltaStable.mulPercentage(tradingFeeConfig.makerFeeP)
-                : sizeDeltaStable.mulPercentage(tradingFeeConfig.takerFeeP);
+                ? sizeDeltaStable.mulPercentage(regularTradingFeeTier.makerFee)
+                : sizeDeltaStable.mulPercentage(regularTradingFeeTier.takerFee);
             isTaker = !_isLong;
         }
         return (tradingFee, isTaker);
