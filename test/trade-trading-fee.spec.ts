@@ -54,7 +54,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -74,13 +74,13 @@ describe('Trade: trading fee', () => {
             expect(position.positionAmount).to.be.eq(size);
 
             // trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(position.collateral).to.be.eq(balanceBefore.sub(tradingFee));
         });
@@ -91,20 +91,20 @@ describe('Trade: trading fee', () => {
                 usdt,
                 btc,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const openPrice = ethers.utils.parseUnits('30000', 30);
             const position = await positionManager.getPosition(trader.address, pairIndex, true);
 
             // trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             await decreasePosition(
                 testEnv,
@@ -129,6 +129,7 @@ describe('Trade: trading fee', () => {
                 positionManager,
                 pool,
                 oraclePriceFeed,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -148,13 +149,13 @@ describe('Trade: trading fee', () => {
             expect(positionBefore.positionAmount).to.be.eq(size);
 
             // trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDeltaBefore = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 positionBefore.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFeeBefore = indexToStableDeltaBefore.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFeeBefore = indexToStableDeltaBefore.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(positionBefore.collateral).to.be.eq(balanceBefore.sub(tradingFeeBefore));
 
@@ -187,7 +188,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 decreaseAmount.mul(oraclePrice).div(PRICE_PRECISION),
             );
-            const tradingFeeAfter = indexToStableDeltaAfter.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFeeAfter = indexToStableDeltaAfter.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             // totalSettlementAmount
             const totalSettlementAmount = pnl.sub(tradingFeeAfter);
@@ -202,7 +203,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -222,13 +223,13 @@ describe('Trade: trading fee', () => {
             expect(positionBefore.positionAmount).to.be.eq(size);
 
             // trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDeltaBefore = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 positionBefore.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFeeBefore = indexToStableDeltaBefore.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFeeBefore = indexToStableDeltaBefore.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(positionBefore.collateral).to.be.eq(balanceBefore.sub(tradingFeeBefore));
 
@@ -248,7 +249,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 decreaseAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFeeAfter = indexToStableDeltaAfter.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFeeAfter = indexToStableDeltaAfter.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(positionAfter.collateral).to.be.eq(positionBefore.collateral.sub(tradingFeeAfter));
         });
@@ -298,7 +299,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -329,13 +330,13 @@ describe('Trade: trading fee', () => {
             expect(position.positionAmount).to.be.eq(size);
 
             // taker trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(position.collateral).to.be.eq(balanceBefore.sub(tradingFee));
         });
@@ -347,7 +348,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -374,13 +375,13 @@ describe('Trade: trading fee', () => {
             expect(position.positionAmount).to.be.eq(size);
 
             // maker trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDeltaBefore = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFee = indexToStableDeltaBefore.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+            const tradingFee = indexToStableDeltaBefore.mul(tradingFeeConfig.makerFee).div(PERCENTAGE);
 
             expect(position.collateral).to.be.eq(balanceBefore.sub(tradingFee));
         });
@@ -392,7 +393,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -419,13 +420,13 @@ describe('Trade: trading fee', () => {
             expect(position.positionAmount).to.be.eq(size);
 
             // taker trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(position.collateral).to.be.eq(balanceBefore.sub(tradingFee));
         });
@@ -437,7 +438,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
-                pool,
+                feeCollector,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -464,13 +465,13 @@ describe('Trade: trading fee', () => {
             expect(position.positionAmount).to.be.eq(size);
 
             // taker trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.makerFee).div(PERCENTAGE);
 
             expect(position.collateral).to.be.eq(balanceBefore.sub(tradingFee));
         });
@@ -520,6 +521,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
+                feeCollector,
                 pool,
             } = testEnv;
 
@@ -541,26 +543,27 @@ describe('Trade: trading fee', () => {
             expect(position.positionAmount).to.be.eq(size);
 
             // taker trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const regularTradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const indexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const tradingFee = indexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const tradingFee = indexToStableDelta.mul(regularTradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(position.collateral).to.be.eq(balanceBefore.sub(tradingFee));
 
-            // vip fee
-            const vipLevel = 0;
-            const vipFee = tradingFee.mul(vipLevel).div(PERCENTAGE);
+            // tier fee
+            const tierLevel = 0;
+            const tierFee = tradingFee.mul(tierLevel).div(PERCENTAGE);
 
             // referral fee
             const referenceRate = 0;
-            const surplusFee = tradingFee.sub(vipFee);
+            const surplusFee = tradingFee.sub(tierFee);
             const referralsFee = surplusFee.mul(referenceRate).div(PERCENTAGE);
 
             // keeper fee
+            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
             const keeperFee = surplusFee.mul(tradingFeeConfig.keeperFeeDistributeP).div(PERCENTAGE);
 
             // lp fee
@@ -574,12 +577,12 @@ describe('Trade: trading fee', () => {
             const treasuryFee = distributorAmount.add(referralsFee);
 
             expect(tradingFee).to.be.eq(
-                vipFee.add(referralsFee).add(keeperFee).add(lpFee).add(stakingFee).add(treasuryFee),
+                tierFee.add(referralsFee).add(keeperFee).add(lpFee).add(stakingFee).add(treasuryFee),
             );
         });
     });
 
-    describe('vip trading fee', () => {
+    describe('tier trading fee', () => {
         before('add liquidity', async () => {
             testEnv = await newTestEnv();
             const {
@@ -626,7 +629,7 @@ describe('Trade: trading fee', () => {
             await feeCollector.updateTradingFeeTier(pairIndex, 6, { takerFee: 30000, makerFee: 30000 });
         });
 
-        it('should received vip trading fee', async () => {
+        it('should received tier trading fee', async () => {
             const {
                 users: [trader, trader2, trader3, trader4, trader5, trader6],
                 usdt,
@@ -642,56 +645,17 @@ describe('Trade: trading fee', () => {
                 oraclePriceFeed,
             } = testEnv;
 
-            const normal = 0;
-            const vip1 = 1;
-            const vip2 = 2;
-            const vip3 = 3;
-            const vip4 = 4;
-            const vip5 = 5;
+            const tier6 = 0;
+            const tier1 = 1;
+            const tier2 = 2;
+            const tier3 = 3;
+            const tier4 = 4;
+            const tier5 = 5;
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
             const sizeAmount = ethers.utils.parseUnits('30', await btc.decimals());
             const openPrice = ethers.utils.parseUnits('30000', 30);
 
-            // vip = 0
-            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-            const traderBalanceBefore = await usdt.balanceOf(trader.address);
-
-            expect(traderBalanceBefore).to.be.eq(collateral);
-
-            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
-                account: trader.address,
-                pairIndex,
-                tradeType: TradeType.MARKET,
-                collateral,
-                openPrice,
-                isLong: true,
-                sizeAmount,
-                maxSlippage: 0,
-            };
-
-            let orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [{ orderId: orderId, tier: normal, commissionRatio: 0 }],
-                    { value: 1 },
-                );
-            const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
-            const traderBalanceAfter = await usdt.balanceOf(trader.address);
-
-            expect(traderBalanceAfter).to.be.eq('0');
-            expect(traderPosition.positionAmount).to.be.eq(sizeAmount);
-
-            // vip = 1
+            // tier = 1
             await mintAndApprove(testEnv, usdt, collateral, trader2, router.address);
             const trader2BalanceBefore = await usdt.balanceOf(trader2.address);
 
@@ -708,7 +672,7 @@ describe('Trade: trading fee', () => {
                 maxSlippage: 0,
             };
 
-            orderId = await orderManager.ordersIndex();
+            let orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increasePositionRequest2);
             await executor
                 .connect(keeper.signer)
@@ -721,7 +685,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: vip1, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: tier1, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader2Position = await positionManager.getPosition(trader2.address, pairIndex, true);
@@ -730,7 +694,7 @@ describe('Trade: trading fee', () => {
             expect(trader2BalanceAfter).to.be.eq('0');
             expect(trader2Position.positionAmount).to.be.eq(sizeAmount);
 
-            // vip = 2
+            // tier = 2
             await mintAndApprove(testEnv, usdt, collateral, trader3, router.address);
             const trader3BalanceBefore = await usdt.balanceOf(trader3.address);
 
@@ -760,7 +724,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: vip2, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: tier2, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader3Position = await positionManager.getPosition(trader3.address, pairIndex, true);
@@ -769,7 +733,7 @@ describe('Trade: trading fee', () => {
             expect(trader3BalanceAfter).to.be.eq('0');
             expect(trader3Position.positionAmount).to.be.eq(sizeAmount);
 
-            // vip = 3
+            // tier = 3
             await mintAndApprove(testEnv, usdt, collateral, trader4, router.address);
             const trader4BalanceBefore = await usdt.balanceOf(trader4.address);
 
@@ -799,7 +763,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: vip3, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: tier3, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader4Position = await positionManager.getPosition(trader4.address, pairIndex, true);
@@ -808,7 +772,7 @@ describe('Trade: trading fee', () => {
             expect(trader4BalanceAfter).to.be.eq('0');
             expect(trader4Position.positionAmount).to.be.eq(sizeAmount);
 
-            // vip = 4
+            // tier = 4
             await mintAndApprove(testEnv, usdt, collateral, trader5, router.address);
             const trader5BalanceBefore = await usdt.balanceOf(trader5.address);
 
@@ -838,7 +802,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: vip4, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: tier4, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader5Position = await positionManager.getPosition(trader5.address, pairIndex, true);
@@ -847,7 +811,7 @@ describe('Trade: trading fee', () => {
             expect(trader5BalanceAfter).to.be.eq('0');
             expect(trader5Position.positionAmount).to.be.eq(sizeAmount);
 
-            // vip = 5
+            // tier = 5
             await mintAndApprove(testEnv, usdt, collateral, trader6, router.address);
             const trader6BalanceBefore = await usdt.balanceOf(trader6.address);
 
@@ -877,7 +841,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: vip5, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: tier5, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader6Position = await positionManager.getPosition(trader6.address, pairIndex, true);
@@ -886,6 +850,45 @@ describe('Trade: trading fee', () => {
             expect(trader6BalanceAfter).to.be.eq('0');
             expect(trader6Position.positionAmount).to.be.eq(sizeAmount);
 
+            // tier = 6
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const traderBalanceBefore = await usdt.balanceOf(trader.address);
+
+            expect(traderBalanceBefore).to.be.eq(collateral);
+
+            const increasePositionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: trader.address,
+                pairIndex,
+                tradeType: TradeType.MARKET,
+                collateral,
+                openPrice,
+                isLong: true,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+
+            orderId = await orderManager.ordersIndex();
+            await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, tier: tier6, commissionRatio: 0 }],
+                    { value: 1 },
+                );
+            const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
+            const traderBalanceAfter = await usdt.balanceOf(trader.address);
+
+            expect(traderBalanceAfter).to.be.eq('0');
+            expect(traderPosition.positionAmount).to.be.eq(sizeAmount);
+
             // long > short
             const longTracker = await positionManager.longTracker(pairIndex);
             const shortTracker = await positionManager.shortTracker(pairIndex);
@@ -893,13 +896,13 @@ describe('Trade: trading fee', () => {
             expect(longTracker).to.be.gt(shortTracker);
 
             // trader trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const traderIndexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 traderPosition.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const traderTradingFee = traderIndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const traderTradingFee = traderIndexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(traderPosition.collateral).to.be.eq(traderBalanceBefore.sub(traderTradingFee));
 
@@ -909,7 +912,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader2Position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const trader2TradingFee = trader2IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader2TradingFee = trader2IndexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(trader2Position.collateral).to.be.eq(trader2BalanceBefore.sub(trader2TradingFee));
 
@@ -919,7 +922,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader3Position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const trader3TradingFee = trader3IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader3TradingFee = trader3IndexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(trader3Position.collateral).to.be.eq(trader3BalanceBefore.sub(trader3TradingFee));
 
@@ -929,7 +932,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader4Position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const trader4TradingFee = trader4IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader4TradingFee = trader4IndexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(trader4Position.collateral).to.be.eq(trader4BalanceBefore.sub(trader4TradingFee));
 
@@ -939,7 +942,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader5Position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const trader5TradingFee = trader5IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader5TradingFee = trader5IndexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(trader5Position.collateral).to.be.eq(trader5BalanceBefore.sub(trader5TradingFee));
 
@@ -949,47 +952,59 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader6Position.positionAmount.mul(openPrice).div(PRICE_PRECISION),
             );
-            const trader6TradingFee = trader6IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader6TradingFee = trader6IndexToStableDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             expect(trader6Position.collateral).to.be.eq(trader6BalanceBefore.sub(trader6TradingFee));
 
-            // trader vip fee
-            let levelDiscountRatios = await feeCollector.levelDiscounts(normal);
-            const normalVipFee = traderTradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier1 fee
+            let tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier1);
+            const tier1Fee = trader2TradingFee.sub(
+                trader2IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip1 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip1);
-            const vip1Fee = trader2TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier2 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier2);
+            const tier2Fee = trader3TradingFee.sub(
+                trader3IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip2 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip2);
-            const vip2Fee = trader3TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier3 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier3);
+            const tier3Fee = trader4TradingFee.sub(
+                trader4IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip3 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip3);
-            const vip3Fee = trader4TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier4 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier4);
+            const tier4Fee = trader5TradingFee.sub(
+                trader5IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip4 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip4);
-            const vip4Fee = trader5TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier5 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier5);
+            const tier5Fee = trader6TradingFee.sub(
+                trader6IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip5 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip5);
-            const vip5Fee = trader6TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier6 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier6);
+            const tier6Fee = traderTradingFee.sub(
+                traderIndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            const traderVipFee = await feeCollector.userTradingFee(trader.address);
-            const trader2VipFee = await feeCollector.userTradingFee(trader2.address);
-            const trader3VipFee = await feeCollector.userTradingFee(trader3.address);
-            const trader4VipFee = await feeCollector.userTradingFee(trader4.address);
-            const trader5VipFee = await feeCollector.userTradingFee(trader5.address);
-            const trader6VipFee = await feeCollector.userTradingFee(trader6.address);
+            const traderTierFee = await feeCollector.userTradingFee(trader.address);
+            const trader2TierFee = await feeCollector.userTradingFee(trader2.address);
+            const trader3TierFee = await feeCollector.userTradingFee(trader3.address);
+            const trader4TierFee = await feeCollector.userTradingFee(trader4.address);
+            const trader5TierFee = await feeCollector.userTradingFee(trader5.address);
+            const trader6TierFee = await feeCollector.userTradingFee(trader6.address);
 
-            expect(normalVipFee).to.be.eq(traderVipFee);
-            expect(vip1Fee).to.be.eq(trader2VipFee);
-            expect(vip2Fee).to.be.eq(trader3VipFee);
-            expect(vip3Fee).to.be.eq(trader4VipFee);
-            expect(vip4Fee).to.be.eq(trader5VipFee);
-            expect(vip5Fee).to.be.eq(trader6VipFee);
+            expect(tier1Fee).to.be.eq(trader2TierFee);
+            expect(tier2Fee).to.be.eq(trader3TierFee);
+            expect(tier3Fee).to.be.eq(trader4TierFee);
+            expect(tier4Fee).to.be.eq(trader5TierFee);
+            expect(tier5Fee).to.be.eq(trader6TierFee);
+            expect(tier6Fee).to.be.eq(traderTierFee);
         });
 
         it('claim trading fee', async () => {
@@ -1005,12 +1020,12 @@ describe('Trade: trading fee', () => {
                 oraclePriceFeed,
             } = testEnv;
 
-            const normal = 0;
-            const vip1 = 1;
-            const vip2 = 2;
-            const vip3 = 3;
-            const vip4 = 4;
-            const vip5 = 5;
+            const tier6 = 0;
+            const tier1 = 1;
+            const tier2 = 2;
+            const tier3 = 3;
+            const tier4 = 4;
+            const tier5 = 5;
 
             const pair = await pool.getPair(pairIndex);
             const price = await oraclePriceFeed.getPrice(pair.indexToken);
@@ -1034,13 +1049,13 @@ describe('Trade: trading fee', () => {
             const poolAdminBalanceBefore = await usdt.balanceOf(poolAdmin.address);
 
             // trader trading fee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const regularTradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const traderIndexToStableDelta = await convertIndexAmountToStable(
                 btc,
                 usdt,
                 traderPosition.positionAmount.mul(price).div(PRICE_PRECISION),
             );
-            const traderTradingFee = traderIndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const traderTradingFee = traderIndexToStableDelta.mul(regularTradingFeeConfig.takerFee).div(PERCENTAGE);
 
             // trader2 trading fee
             const trader2IndexToStableDelta = await convertIndexAmountToStable(
@@ -1048,7 +1063,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader2Position.positionAmount.mul(price).div(PRICE_PRECISION),
             );
-            const trader2TradingFee = trader2IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader2TradingFee = trader2IndexToStableDelta.mul(regularTradingFeeConfig.takerFee).div(PERCENTAGE);
 
             // trader3 trading fee
             const trader3IndexToStableDelta = await convertIndexAmountToStable(
@@ -1056,7 +1071,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader3Position.positionAmount.mul(price).div(PRICE_PRECISION),
             );
-            const trader3TradingFee = trader3IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader3TradingFee = trader3IndexToStableDelta.mul(regularTradingFeeConfig.takerFee).div(PERCENTAGE);
 
             // trader4 trading fee
             const trader4IndexToStableDelta = await convertIndexAmountToStable(
@@ -1064,7 +1079,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader4Position.positionAmount.mul(price).div(PRICE_PRECISION),
             );
-            const trader4TradingFee = trader4IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader4TradingFee = trader4IndexToStableDelta.mul(regularTradingFeeConfig.takerFee).div(PERCENTAGE);
 
             // trader5 trading fee
             const trader5IndexToStableDelta = await convertIndexAmountToStable(
@@ -1072,7 +1087,7 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader5Position.positionAmount.mul(price).div(PRICE_PRECISION),
             );
-            const trader5TradingFee = trader5IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader5TradingFee = trader5IndexToStableDelta.mul(regularTradingFeeConfig.takerFee).div(PERCENTAGE);
 
             // trader6 trading fee
             const trader6IndexToStableDelta = await convertIndexAmountToStable(
@@ -1080,39 +1095,52 @@ describe('Trade: trading fee', () => {
                 usdt,
                 trader6Position.positionAmount.mul(price).div(PRICE_PRECISION),
             );
-            const trader6TradingFee = trader6IndexToStableDelta.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            const trader6TradingFee = trader6IndexToStableDelta.mul(regularTradingFeeConfig.takerFee).div(PERCENTAGE);
 
-            // normal fee
-            let levelDiscountRatios = await feeCollector.levelDiscounts(normal);
-            const normalVipFee = traderTradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier1 fee
+            let tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier1);
+            const tier1Fee = trader2TradingFee.sub(
+                trader2IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip1 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip1);
-            const vip1Fee = trader2TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier2 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier2);
+            const tier2Fee = trader3TradingFee.sub(
+                trader3IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip2 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip2);
-            const vip2Fee = trader3TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier3 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier3);
+            const tier3Fee = trader4TradingFee.sub(
+                trader4IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip3 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip3);
-            const vip3Fee = trader4TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier4 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier4);
+            const tier4Fee = trader5TradingFee.sub(
+                trader5IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip4 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip4);
-            const vip4Fee = trader5TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier5 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier5);
+            const tier5Fee = trader6TradingFee.sub(
+                trader6IndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
-            // vip5 fee
-            levelDiscountRatios = await feeCollector.levelDiscounts(vip5);
-            const vip5Fee = trader6TradingFee.mul(levelDiscountRatios.takerDiscountRatio).div(PERCENTAGE);
+            // tier6 fee
+            tradingFeeTier = await feeCollector.getTradingFeeTier(pairIndex, tier6);
+            const tier6Fee = traderTradingFee.sub(
+                traderIndexToStableDelta.mul(tradingFeeTier.takerFee).div(PERCENTAGE),
+            );
 
             // keeper fee
-            const traderSurplusFee = traderTradingFee.sub(normalVipFee);
-            const trader2SurplusFee = trader2TradingFee.sub(vip1Fee);
-            const trader3SurplusFee = trader3TradingFee.sub(vip2Fee);
-            const trader4SurplusFee = trader4TradingFee.sub(vip3Fee);
-            const trader5SurplusFee = trader5TradingFee.sub(vip4Fee);
-            const trader6SurplusFee = trader6TradingFee.sub(vip5Fee);
+            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const trader2SurplusFee = trader2TradingFee.sub(tier1Fee);
+            const trader3SurplusFee = trader3TradingFee.sub(tier2Fee);
+            const trader4SurplusFee = trader4TradingFee.sub(tier3Fee);
+            const trader5SurplusFee = trader5TradingFee.sub(tier4Fee);
+            const trader6SurplusFee = trader6TradingFee.sub(tier5Fee);
+            const traderSurplusFee = traderTradingFee.sub(tier6Fee);
             const traderKeeperFee = traderSurplusFee.mul(tradingFeeConfig.keeperFeeDistributeP).div(PERCENTAGE);
             const trader2KeeperFee = trader2SurplusFee.mul(tradingFeeConfig.keeperFeeDistributeP).div(PERCENTAGE);
             const trader3KeeperFee = trader3SurplusFee.mul(tradingFeeConfig.keeperFeeDistributeP).div(PERCENTAGE);
@@ -1183,7 +1211,7 @@ describe('Trade: trading fee', () => {
             const trader5TreasuryFee = trader5DistributorAmount.add(trader5ReferralsFee);
             const trader6TreasuryFee = trader6DistributorAmount.add(trader6ReferralsFee);
 
-            // user claim vip fee
+            // user claim tier fee
             await feeCollector.connect(trader.signer).claimUserTradingFee();
             await feeCollector.connect(trader2.signer).claimUserTradingFee();
             await feeCollector.connect(trader3.signer).claimUserTradingFee();
@@ -1199,12 +1227,12 @@ describe('Trade: trading fee', () => {
             const trader5BalanceAfter = await usdt.balanceOf(trader5.address);
             const trader6BalanceAfter = await usdt.balanceOf(trader6.address);
 
-            expect(traderBalanceBefore.add(normalVipFee)).to.be.eq(traderBalanceAfter);
-            expect(trader2BalanceBefore.add(vip1Fee)).to.be.eq(trader2BalanceAfter);
-            expect(trader3BalanceBefore.add(vip2Fee)).to.be.eq(trader3BalanceAfter);
-            expect(trader4BalanceBefore.add(vip3Fee)).to.be.eq(trader4BalanceAfter);
-            expect(trader5BalanceBefore.add(vip4Fee)).to.be.eq(trader5BalanceAfter);
-            expect(trader6BalanceBefore.add(vip5Fee)).to.be.eq(trader6BalanceAfter);
+            expect(traderBalanceBefore.add(tier6Fee)).to.be.eq(traderBalanceAfter);
+            expect(trader2BalanceBefore.add(tier1Fee)).to.be.eq(trader2BalanceAfter);
+            expect(trader3BalanceBefore.add(tier2Fee)).to.be.eq(trader3BalanceAfter);
+            expect(trader4BalanceBefore.add(tier3Fee)).to.be.eq(trader4BalanceAfter);
+            expect(trader5BalanceBefore.add(tier4Fee)).to.be.eq(trader5BalanceAfter);
+            expect(trader6BalanceBefore.add(tier5Fee)).to.be.eq(trader6BalanceAfter);
 
             // keeper claim trading fee
             await feeCollector.connect(keeper.signer).claimKeeperTradingFee();
