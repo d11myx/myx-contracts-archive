@@ -95,10 +95,6 @@ interface IPool {
     }
 
     struct TradingFeeConfig {
-        // fee
-        uint256 takerFeeP;
-        uint256 makerFeeP;
-        // distribute
         uint256 lpFeeDistributeP;
         uint256 stakingFeeDistributeP;
         uint256 keeperFeeDistributeP;

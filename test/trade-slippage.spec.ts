@@ -93,7 +93,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             let position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -125,7 +125,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
@@ -157,7 +157,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             position = await positionManager.getPosition(trader2.address, pairIndex, true);
@@ -189,7 +189,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');
@@ -242,7 +242,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const traderPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -274,7 +274,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
@@ -307,7 +307,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader2PositionAfter = await positionManager.getPosition(trader2.address, pairIndex, true);
@@ -339,7 +339,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');

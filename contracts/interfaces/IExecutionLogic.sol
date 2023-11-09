@@ -10,14 +10,14 @@ interface IExecutionLogic is IExecution {
 
     struct ExecuteOrder {
         uint256 orderId;
-        uint8 level;
+        uint8 tier;
         uint256 commissionRatio;
     }
 
     struct ExecutePositionInfo {
         Position.Info position;
         uint256 executionSize;
-        uint8 level;
+        uint8 tier;
         uint256 commissionRatio;
     }
 
@@ -35,7 +35,7 @@ interface IExecutionLogic is IExecution {
         address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
-        uint8 level,
+        uint8 tier,
         uint256 commissionRatio
     ) external;
 
@@ -47,7 +47,7 @@ interface IExecutionLogic is IExecution {
         address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
-        uint8 level,
+        uint8 tier,
         uint256 commissionRatio,
         bool isSystem,
         uint256 executionSize,
@@ -59,7 +59,7 @@ interface IExecutionLogic is IExecution {
         ExecutePosition[] memory executePositions,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
-        uint8 _level,
+        uint8 _tier,
         uint256 _commissionRatio
     ) external;
 
