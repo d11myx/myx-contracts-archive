@@ -117,7 +117,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await deploy(`${ROUTER_ID}`, {
         from: deployer,
         contract: 'Router',
-        args: [addressProvider.address, orderManager.address, pool.address],
+        args: [addressProvider.address, orderManager.address, positionManager.address, pool.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const router = await getRouter();
@@ -189,6 +189,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await riskReserve.connect(poolAdminSigner).updatePoolAddress(pool.address));
 
     await waitForTx(await orderManager.connect(poolAdminSigner).setRouter(router.address));
+    await waitForTx(await positionManager.connect(poolAdminSigner).setRouter(router.address));
     await waitForTx(await executionLogic.connect(poolAdminSigner).updateExecutor(executor.address));
     await waitForTx(await liquidationLogic.connect(poolAdminSigner).updateExecutor(executor.address));
 };

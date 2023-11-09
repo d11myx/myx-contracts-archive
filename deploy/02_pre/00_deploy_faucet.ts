@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { COMMON_DEPLOY_PARAMS, getTokens, isTestNetwork, waitForTx } from '../../helpers';
+import { COMMON_DEPLOY_PARAMS, getTokens, isProdNetwork, waitForTx } from '../../helpers';
 import { Faucet } from '../../types';
 import { ethers } from 'hardhat';
 
@@ -8,24 +8,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
 
-    if (isTestNetwork(hre)) {
+    if (isProdNetwork(hre)) {
+        console.log('[warring] Skipping faucet deployed');
+        return;
     }
-    const { usdt, btc, eth } = await getTokens();
-
+    const { usdt, btc } = await getTokens();
     const faucetArtifact = await deploy(`Faucet`, {
         from: deployer,
         contract: 'Faucet',
         args: [
-            [btc.address, eth.address, usdt.address],
-            [10000, 1000000, 100000000],
+            [btc.address, usdt.address],
+            [20, 1000000],
         ],
         ...COMMON_DEPLOY_PARAMS,
     });
     const faucet = (await hre.ethers.getContractAt(faucetArtifact.abi, faucetArtifact.address)) as Faucet;
 
-    await waitForTx(await btc.mint(faucet.address, ethers.utils.parseEther('1000000000')));
-    await waitForTx(await eth.mint(faucet.address, ethers.utils.parseEther('100000000000')));
-    await waitForTx(await usdt.mint(faucet.address, ethers.utils.parseEther('10000000000000')));
+    await waitForTx(await btc.mint(faucet.address, ethers.utils.parseUnits('200000000', await btc.decimals())));
+    // await waitForTx(await eth.mint(faucet.address, ethers.utils.parseUnits('2000000000', await eth.decimals())));
+    await waitForTx(await usdt.mint(faucet.address, ethers.utils.parseUnits('10000000000000', await usdt.decimals())));
 };
 
 func.id = `Oracles`;

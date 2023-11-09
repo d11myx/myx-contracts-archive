@@ -6,6 +6,9 @@ export const MAX_UINT_AMOUNT = ethers.constants.MaxUint256;
 export const ZERO_ADDRESS = ethers.constants.AddressZero;
 export const PRICE_PRECISION = '1000000000000000000000000000000';
 export const PERCENTAGE = '100000000';
+export const ZERO_HASH = ethers.constants.HashZero;
+
+export const abiCoder = new ethers.utils.AbiCoder();
 
 export enum DevNetwork {
     local = 'dev_local',
@@ -37,13 +40,13 @@ export type eNetwork = DevNetwork | EthereumNetwork | LineaNetwork | ScrollNetwo
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {
     USDT: parseUnits('1', 8),
-    BTC: parseUnits('30000', 8),
-    ETH: parseUnits('2000', 8),
+    WBTC: parseUnits('30000', 8),
+    WETH: parseUnits('2000', 8),
 };
 export const MOCK_INDEX_PRICES: { [key: string]: BigNumber } = {
     USDT: parseUnits('1', 30),
-    BTC: parseUnits('30000', 30),
-    ETH: parseUnits('2000', 30),
+    WBTC: parseUnits('30000', 30),
+    WETH: parseUnits('2000', 30),
 };
 
 export const DEFAULT_NAMED_ACCOUNTS = {

@@ -1,10 +1,11 @@
-import { ERC20DecimalsMock, IExecutionLogic } from '../../types';
+import { MockERC20Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import hre, { ethers } from 'hardhat';
-import { TradeType, waitForTx } from '../../helpers';
+import { abiCoder, TradeType, waitForTx } from '../../helpers';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { TradingTypes } from '../../types/contracts/core/Router';
+import { IExecution } from '../../types/contracts/core/Executor';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
@@ -12,10 +13,13 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const updateData = await oraclePriceFeed.getUpdateData([btc.address], [ethers.utils.parseUnits(btcPrice, 8)]);
     const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
     const fee = mockPyth.getUpdateFee(updateData);
+
     await waitForTx(
         await oraclePriceFeed
             .connect(keeper.signer)
-            .updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 8)], { value: fee }),
+            .updatePrice([btc.address], [abiCoder.encode(['uint256'], [ethers.utils.parseUnits(btcPrice, 8)])], {
+                value: fee,
+            }),
     );
 
     await waitForTx(
@@ -25,7 +29,7 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
 
 export async function mintAndApprove(
     testEnv: TestEnv,
-    token: ERC20DecimalsMock,
+    token: MockERC20Token,
     amount: BigNumber,
     account: SignerWithAddress,
     spender: string,
@@ -45,7 +49,7 @@ export async function increasePosition(
     tradeType: TradeType,
     isLong: boolean,
 ) {
-    const { keeper, router, executionLogic, orderManager } = testEnv;
+    const { keeper, router, executor, orderManager, indexPriceFeed, oraclePriceFeed, pool } = testEnv;
 
     const request: TradingTypes.IncreasePositionRequestStruct = {
         account: user.address,
@@ -58,6 +62,8 @@ export async function increasePosition(
         maxSlippage: 0,
     };
 
+    const pair = await pool.getPair(pairIndex);
+
     let orderId;
     let receipt: ContractReceipt;
     if (tradeType == TradeType.MARKET) {
@@ -65,16 +71,40 @@ export async function increasePosition(
         orderId = await orderManager.ordersIndex();
         await router.connect(user.signer).createIncreaseOrder(request);
         // execute order
-        const tx = await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, tradeType, 0, 0);
+        const tx = await executor
+            .connect(keeper.signer)
+            .setPricesAndExecuteIncreaseMarketOrders(
+                [pair.indexToken],
+                [indexPriceFeed.getPrice(pair.indexToken)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
         receipt = await tx.wait();
     } else {
         // create increase order
         orderId = await orderManager.ordersIndex();
         await router.connect(user.signer).createIncreaseOrder(request);
         // execute order
-        const tx = await executionLogic
+        const tx = await executor
             .connect(keeper.signer)
-            .executeIncreaseLimitOrders([{ orderId: orderId.toNumber(), level: 0, commissionRatio: 0 }]);
+            .setPricesAndExecuteIncreaseLimitOrders(
+                [pair.indexToken],
+                [indexPriceFeed.getPrice(pair.indexToken)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ orderId: orderId.toNumber(), level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
         receipt = await tx.wait();
     }
     return { orderId: orderId, executeReceipt: receipt };
@@ -90,7 +120,7 @@ export async function decreasePosition(
     isLong: boolean,
     openPrice?: BigNumber,
 ) {
-    const { keeper, router, executionLogic, orderManager } = testEnv;
+    const { keeper, router, executor, orderManager, indexPriceFeed, oraclePriceFeed, pool } = testEnv;
 
     if (!openPrice) {
         openPrice = ethers.utils.parseUnits('30000', 30);
@@ -106,14 +136,46 @@ export async function decreasePosition(
         maxSlippage: 0,
     };
 
+    const pair = await pool.getPair(pairIndex);
+
     // create increase order
     const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
     // execute order
-    const tx = await executionLogic
-        .connect(keeper.signer)
-        .executeDecreaseOrder(orderId, tradeType, 0, 0, false, 0, tradeType == TradeType.MARKET);
-    const receipt = await tx.wait();
+    let receipt: ContractReceipt;
+    if (tradeType == TradeType.MARKET) {
+        const tx = await executor
+            .connect(keeper.signer)
+            .setPricesAndExecuteDecreaseMarketOrders(
+                [pair.indexToken],
+                [indexPriceFeed.getPrice(pair.indexToken)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
+        receipt = await tx.wait();
+    } else {
+        const tx = await executor
+            .connect(keeper.signer)
+            .setPricesAndExecuteDecreaseLimitOrders(
+                [pair.indexToken],
+                [indexPriceFeed.getPrice(pair.indexToken)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
+        receipt = await tx.wait();
+    }
 
     return { orderId: orderId, executeReceipt: receipt };
 }
@@ -127,9 +189,9 @@ export async function adlPosition(
     triggerPrice: BigNumber,
     tradeType: TradeType,
     isLong: boolean,
-    adlPositions: IExecutionLogic.ExecutePositionStruct[],
+    adlPositions: IExecution.ExecutePositionStruct[],
 ) {
-    const { keeper, router, executionLogic, orderManager } = testEnv;
+    const { keeper, router, executor, btc, indexPriceFeed, oraclePriceFeed, orderManager } = testEnv;
 
     const request: TradingTypes.DecreasePositionRequestStruct = {
         account: user.address,
@@ -145,17 +207,32 @@ export async function adlPosition(
     // create increase order
     const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
-    const tx = await executionLogic
+    const tx = await executor
         .connect(keeper.signer)
-        .executeADLAndDecreaseOrder(adlPositions, orderId, tradeType, 0, 0);
+        .setPricesAndExecuteADL(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            adlPositions,
+            orderId,
+            tradeType,
+            0,
+            0,
+            { value: 1 },
+        );
     const receipt = await tx.wait();
 
     return { orderId: orderId, executeReceipt: receipt };
 }
 
 export async function extraHash(hash: string, eventName: string, key: string): Promise<any> {
-    const events = (await hre.run('decode-event', { hash: hash })) as any;
+    const logs = (await hre.run('decode-event', { hash: hash })) as any;
 
-    const DistributeTradingFeeEvent = events.find((val: any) => val.name === eventName);
-    return DistributeTradingFeeEvent?.events.find((val: any) => val.name === key)?.value as any;
+    const event = logs.find((val: any) => val.name === eventName);
+    return event?.events.find((val: any) => val.name === key)?.value as any;
 }

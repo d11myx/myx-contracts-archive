@@ -11,6 +11,7 @@ import '../../interfaces/IPool.sol';
 import '../../helpers/TradingHelper.sol';
 import '../../interfaces/IFeeCollector.sol';
 
+
 contract LiquidationLogic is ILiquidationLogic {
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -40,12 +41,17 @@ contract LiquidationLogic is ILiquidationLogic {
     }
 
     modifier onlyPoolAdmin() {
-        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), 'opa');
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "opa");
         _;
     }
 
     modifier onlyExecutorOrKeeper() {
-        require(msg.sender == executor || msg.sender == address(this) || IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), 'oe');
+        require(
+            msg.sender == executor ||
+                msg.sender == address(this) ||
+                IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender),
+            "oe"
+        );
         _;
     }
 
@@ -53,14 +59,27 @@ contract LiquidationLogic is ILiquidationLogic {
         executor = _executor;
     }
 
-    function liquidatePositions(ExecutePosition[] memory executePositions) external override onlyExecutorOrKeeper {
+    function liquidatePositions(
+        address keeper,
+        ExecutePosition[] memory executePositions
+    ) external override onlyExecutorOrKeeper {
         for (uint256 i = 0; i < executePositions.length; i++) {
             ExecutePosition memory execute = executePositions[i];
-            this.liquidationPosition(execute.positionKey, execute.level, execute.commissionRatio);
+            this.liquidationPosition(
+                keeper,
+                execute.positionKey,
+                execute.level,
+                execute.commissionRatio
+            );
         }
     }
 
-    function liquidationPosition(bytes32 positionKey, uint8 level, uint256 commissionRatio) external override onlyExecutorOrKeeper {
+    function liquidationPosition(
+        address keeper,
+        bytes32 positionKey,
+        uint8 level,
+        uint256 commissionRatio
+    ) external override onlyExecutorOrKeeper {
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
             return;
@@ -68,7 +87,11 @@ contract LiquidationLogic is ILiquidationLogic {
         IPool.Pair memory pair = pool.getPair(position.pairIndex);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
 
-        uint256 price = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 price = TradingHelper.getValidPrice(
+            ADDRESS_PROVIDER,
+            pair.indexToken,
+            tradingConfig
+        );
 
         bool needLiquidate = _needLiquidation(positionKey, price);
         if (!needLiquidate) {
@@ -92,7 +115,7 @@ contract LiquidationLogic is ILiquidationLogic {
             })
         );
 
-        _executeLiquidationOrder(orderId, level, commissionRatio);
+        _executeLiquidationOrder(keeper, orderId, level, commissionRatio);
 
         emit ExecuteLiquidation(
             positionKey,
@@ -107,11 +130,15 @@ contract LiquidationLogic is ILiquidationLogic {
     }
 
     function _executeLiquidationOrder(
+        address keeper,
         uint256 orderId,
         uint8 level,
         uint256 commissionRatio
     ) private {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
+        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            orderId,
+            TradingTypes.TradeType.MARKET
+        );
         if (order.account == address(0)) {
             return;
         }
@@ -119,7 +146,11 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
 
-        Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+        Position.Info memory position = positionManager.getPosition(
+            order.account,
+            order.pairIndex,
+            order.isLong
+        );
         if (position.positionAmount == 0) {
             return;
         }
@@ -129,9 +160,18 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 executionSize = order.sizeAmount - order.executedSize;
         executionSize = Math.min(executionSize, position.positionAmount);
 
-        uint256 executionPrice = TradingHelper.getValidPrice(ADDRESS_PROVIDER, pair.indexToken, tradingConfig);
+        uint256 executionPrice = TradingHelper.getValidPrice(
+            ADDRESS_PROVIDER,
+            pair.indexToken,
+            tradingConfig
+        );
 
-        (bool needADL,) = positionManager.needADL(order.pairIndex, order.isLong, executionSize, executionPrice);
+        (bool needADL, ) = positionManager.needADL(
+            order.pairIndex,
+            order.isLong,
+            executionSize,
+            executionPrice
+        );
         if (needADL) {
             orderManager.setOrderNeedADL(orderId, order.tradeType, needADL);
 
@@ -159,7 +199,7 @@ contract LiquidationLogic is ILiquidationLogic {
             pairIndex,
             order.orderId,
             order.account,
-            tx.origin,
+            keeper,
             executionSize,
             order.isLong,
             0,
@@ -196,7 +236,7 @@ contract LiquidationLogic is ILiquidationLogic {
     }
 
     function _needLiquidation(bytes32 positionKey, uint256 price) private view returns (bool) {
-        Position.Info memory position =  positionManager.getPositionByKey(positionKey);
+        Position.Info memory position = positionManager.getPositionByKey(positionKey);
 
         IPool.Pair memory pair = pool.getPair(position.pairIndex);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
@@ -205,20 +245,36 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 tradingFee = positionManager.getTradingFee(
             position.pairIndex,
             position.isLong,
-            position.positionAmount
+            position.positionAmount,
+            price
         );
-        int256 fundingFee = positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
-        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + fundingFee;
+        int256 fundingFee = positionManager.getFundingFee(
+            position.account,
+            position.pairIndex,
+            position.isLong
+        );
+        int256 exposureAsset = int256(position.collateral) +
+            unrealizedPnl -
+            int256(tradingFee) +
+            fundingFee;
 
         bool need;
         if (exposureAsset <= 0) {
             need = true;
         } else {
-            uint256 riskRate = position
-                .positionAmount
-                .mulPrice(position.averagePrice)
-                .mulPercentage(tradingConfig.maintainMarginRate)
-                .calculatePercentage(uint256(exposureAsset));
+            uint256 maintainMarginWad = uint256(
+                TokenHelper.convertTokenAmountWithPrice(
+                    pair.indexToken,
+                    int256(position.positionAmount),
+                    18,
+                    position.averagePrice
+                )
+            ) * tradingConfig.maintainMarginRate;
+            uint256 netAssetWad = uint256(
+                TokenHelper.convertTokenAmountTo(pair.stableToken, exposureAsset, 18)
+            );
+
+            uint256 riskRate = maintainMarginWad / netAssetWad;
             need = riskRate >= PrecisionUtils.percentage();
         }
         return need;

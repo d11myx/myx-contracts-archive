@@ -19,6 +19,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -30,7 +31,20 @@ describe('Trade: trading fee', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('user increase position, should pay trading fee', async () => {
@@ -114,6 +128,7 @@ describe('Trade: trading fee', () => {
                 router,
                 positionManager,
                 pool,
+                oraclePriceFeed,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
@@ -160,7 +175,7 @@ describe('Trade: trading fee', () => {
 
             // pnl
             const pair = await pool.getPair(pairIndex);
-            const oraclePrice = await pool.getPrice(pair.indexToken);
+            const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmountAfter = await convertIndexAmountToStable(btc, usdt, decreaseAmount);
             const pnl = indexToStableAmountAfter
                 .mul(oraclePrice.sub(positionAfter.averagePrice))
@@ -248,6 +263,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -259,7 +275,20 @@ describe('Trade: trading fee', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('long > short, user open long position pay taker trading fee', async () => {
@@ -456,6 +485,7 @@ describe('Trade: trading fee', () => {
                 btc,
                 pool,
                 router,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -467,7 +497,20 @@ describe('Trade: trading fee', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
         });
 
         it('should distribute trading fee', async () => {
@@ -546,6 +589,7 @@ describe('Trade: trading fee', () => {
                 pool,
                 router,
                 feeCollector,
+                oraclePriceFeed,
             } = testEnv;
 
             // add liquidity
@@ -557,7 +601,21 @@ describe('Trade: trading fee', () => {
 
             await router
                 .connect(depositor.signer)
-                .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                // .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
 
             // config levels
             await feeCollector.updateLevelDiscountRatio(1, { takerDiscountRatio: 1e6, makerDiscountRatio: 1e6 });
@@ -575,11 +633,13 @@ describe('Trade: trading fee', () => {
                 btc,
                 router,
                 positionManager,
-                executionLogic,
                 orderManager,
                 pool,
                 keeper,
                 feeCollector,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             const normal = 0;
@@ -611,7 +671,20 @@ describe('Trade: trading fee', () => {
 
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, normal, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: normal, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
             const traderBalanceAfter = await usdt.balanceOf(trader.address);
 
@@ -637,7 +710,20 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increasePositionRequest2);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip1, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: vip1, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const trader2Position = await positionManager.getPosition(trader2.address, pairIndex, true);
             const trader2BalanceAfter = await usdt.balanceOf(trader.address);
 
@@ -663,7 +749,20 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader3.signer).createIncreaseOrder(increasePositionRequest3);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip2, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: vip2, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const trader3Position = await positionManager.getPosition(trader3.address, pairIndex, true);
             const trader3BalanceAfter = await usdt.balanceOf(trader3.address);
 
@@ -689,7 +788,20 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader4.signer).createIncreaseOrder(increasePositionRequest4);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip3, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: vip3, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const trader4Position = await positionManager.getPosition(trader4.address, pairIndex, true);
             const trader4BalanceAfter = await usdt.balanceOf(trader4.address);
 
@@ -715,7 +827,20 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader5.signer).createIncreaseOrder(increasePositionRequest5);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip4, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: vip4, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const trader5Position = await positionManager.getPosition(trader5.address, pairIndex, true);
             const trader5BalanceAfter = await usdt.balanceOf(trader5.address);
 
@@ -741,7 +866,20 @@ describe('Trade: trading fee', () => {
 
             orderId = await orderManager.ordersIndex();
             await router.connect(trader6.signer).createIncreaseOrder(increasePositionRequest6);
-            await executionLogic.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET, vip5, 0);
+            await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: vip5, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             const trader6Position = await positionManager.getPosition(trader6.address, pairIndex, true);
             const trader6BalanceAfter = await usdt.balanceOf(trader6.address);
 

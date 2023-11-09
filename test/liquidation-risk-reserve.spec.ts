@@ -32,7 +32,15 @@ describe('Liquidation: Risk Reserve', () => {
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                { value: 1 },
+            );
     });
 
     it('user loss < position collateral, risk reserve should be increased', async () => {
@@ -46,8 +54,10 @@ describe('Liquidation: Risk Reserve', () => {
             users: [trader],
             liquidationLogic,
             executionLogic,
-            orderManager,
-            addressesProvider
+            executor,
+            addressesProvider,
+            indexPriceFeed,
+            oraclePriceFeed,
         } = testEnv;
         expect(await addressesProvider.executionLogic()).to.be.eq(executionLogic.address);
         expect(await addressesProvider.liquidationLogic()).to.be.eq(liquidationLogic.address);
@@ -75,7 +85,20 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey, 0, 0);
+        await executor
+            .connect(keeper.signer)
+            .setPricesAndLiquidatePositions(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -95,7 +118,9 @@ describe('Liquidation: Risk Reserve', () => {
             usdt,
             btc,
             users: [trader],
-            liquidationLogic,
+            executor,
+            indexPriceFeed,
+            oraclePriceFeed,
         } = testEnv;
 
         await updateBTCPrice(testEnv, '30000');
@@ -123,7 +148,20 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey, 0, 0);
+        await executor
+            .connect(keeper.signer)
+            .setPricesAndLiquidatePositions(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -143,7 +181,9 @@ describe('Liquidation: Risk Reserve', () => {
             usdt,
             btc,
             users: [trader],
-            liquidationLogic,
+            executor,
+            indexPriceFeed,
+            oraclePriceFeed,
         } = testEnv;
 
         await updateBTCPrice(testEnv, '30000');
@@ -173,7 +213,20 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await liquidationLogic.connect(keeper.signer).liquidationPosition(positionKey, 0, 0);
+        await executor
+            .connect(keeper.signer)
+            .setPricesAndLiquidatePositions(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                { value: 1 },
+            );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -232,6 +285,7 @@ describe('Liquidation: Risk Reserve', () => {
             position.pairIndex,
             position.isLong,
             position.positionAmount,
+            await oraclePriceFeed.getPrice(btc.address),
         );
         let _pnl = new Decimal(position.averagePrice.sub(price).toString())
             .mul(position.positionAmount.toString())

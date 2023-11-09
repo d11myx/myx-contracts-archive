@@ -17,6 +17,7 @@ import 'keccak256';
 import 'merkletreejs';
 import { DEFAULT_NAMED_ACCOUNTS, loadTasks } from './helpers';
 import 'hardhat-dependency-compiler';
+// import '@nomicfoundation/hardhat-verify';
 
 dotenv.config();
 
@@ -113,7 +114,28 @@ const config: HardhatUserConfig = {
         ...DEFAULT_NAMED_ACCOUNTS,
     },
     etherscan: {
-        apiKey: 'M5SDQD75WPPKN8XTUZM86BE46VAGUEBCE8',
+        apiKey: {
+            linea_goerli: '6WZUFU45J91UMAHDV2C52TV8RAJAQASIZR',
+            linea_mainnet: 'I7TMBCCPR75UPE2H14EIWDYS469TFAHHUW',
+        },
+        customChains: [
+            {
+                network: 'linea_goerli',
+                chainId: 59140,
+                urls: {
+                    apiURL: 'https://api-testnet.lineascan.build/api',
+                    browserURL: 'https://goerli.lineascan.build',
+                },
+            },
+            {
+                network: 'linea_mainnet',
+                chainId: 59144,
+                urls: {
+                    apiURL: 'https://api.lineascan.build/api',
+                    browserURL: 'https://lineascan.build',
+                },
+            },
+        ],
     },
     abiExporter: {
         runOnCompile: true,

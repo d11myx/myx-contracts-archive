@@ -1,19 +1,23 @@
-import { testEnv } from './helpers/make-suite';
+import { newTestEnv, TestEnv, testEnv } from './helpers/make-suite';
 import { waitForTx } from '../helpers';
 import { getToken, MAX_UINT_AMOUNT } from '../helpers';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
+import { mintAndApprove } from './helpers/misc';
 import { parseUnits } from 'ethers/lib/utils';
 
 describe('Pool: Liquidity cases', () => {
     const pairIndex = 1;
+    // let testEnv: TestEnv;
 
     it('user added liquidity, should be received lp', async () => {
+        // testEnv = await newTestEnv();
         const {
             pool,
             btc,
             usdt,
             router,
+            oraclePriceFeed,
             users: [, depositor],
         } = testEnv;
 
@@ -22,8 +26,10 @@ describe('Pool: Liquidity cases', () => {
         const pairTokenAddress = pair.pairToken;
         const pairToken = await getToken(pairTokenAddress);
 
-        await waitForTx(await usdt.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
-        await waitForTx(await btc.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
+        // await waitForTx(await usdt.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
+        // await waitForTx(await btc.connect(depositor.signer).approve(router.address, MAX_UINT_AMOUNT));
+        await mintAndApprove(testEnv, btc, ethers.utils.parseEther('1000'), depositor, router.address);
+        await mintAndApprove(testEnv, usdt, ethers.utils.parseEther('30000000'), depositor, router.address);
 
         const usdtBalanceBef = await usdt.balanceOf(depositor.address);
         const btcBalanceBef = await btc.balanceOf(depositor.address);
@@ -34,6 +40,7 @@ describe('Pool: Liquidity cases', () => {
             pairIndex,
             ethers.utils.parseUnits('1000', await btc.decimals()),
             ethers.utils.parseUnits('30000000', await usdt.decimals()),
+            await oraclePriceFeed.getPrice(btc.address),
         );
 
         await waitForTx(
@@ -44,6 +51,9 @@ describe('Pool: Liquidity cases', () => {
                     pair.stableToken,
                     ethers.utils.parseUnits('1000', await btc.decimals()),
                     ethers.utils.parseUnits('30000000', await usdt.decimals()),
+                    [btc.address],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    { value: 1 },
                 ),
         );
 
