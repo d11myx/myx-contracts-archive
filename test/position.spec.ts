@@ -1182,7 +1182,11 @@ describe('Position', () => {
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
                 const entrustOrderAfter = await orderManager.getIncreaseOrder(entrustOrderId, TradeType.MARKET);
+                const totalSettlementAmount = pnl.sub(tradingFee);
 
+                expect(shortPositionAfter.collateral.sub(totalSettlementAmount.abs())).to.be.eq(
+                    shortPositionBefore.collateral.sub(totalSettlementAmount.abs()),
+                );
                 expect(balance).to.be.eq('0');
                 expect(reserveBalance).to.be.eq('0');
                 expect(shortPositionAfter.positionAmount).to.be.eq(size);
