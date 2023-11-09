@@ -38,10 +38,12 @@ interface IPositionManager {
     event TakeFundingFeeAddTraderFee(
         address account,
         uint256 pairIndex,
+        uint256 orderId,
         uint256 sizeDelta,
         uint256 tradingFee,
         int256 fundingFee,
-        uint256 lpTradingFee
+        uint256 lpTradingFee,
+        uint256 vipDiscountAmount
     );
 
     event AdjustCollateral(
@@ -94,8 +96,6 @@ interface IPositionManager {
 
     function getPositionKey(address _account, uint256 _pairIndex, bool _isLong) external pure returns (bytes32);
 
-    // function updateFundingInterval(uint256 newInterval) external;
-
     function increasePosition(
         uint256 _pairIndex,
         uint256 orderId,
@@ -104,7 +104,7 @@ interface IPositionManager {
         uint256 _sizeAmount,
         bool _isLong,
         int256 _collateral,
-        IFeeCollector.LevelDiscount memory discount,
+        IFeeCollector.TradingFeeTier memory tradingFeeTier,
         uint256 referralRate,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
@@ -117,7 +117,7 @@ interface IPositionManager {
         uint256 _sizeAmount,
         bool _isLong,
         int256 _collateral,
-        IFeeCollector.LevelDiscount memory discount,
+        IFeeCollector.TradingFeeTier memory tradingFeeTier,
         uint256 referralRate,
         uint256 _price,
         bool useRiskReserve

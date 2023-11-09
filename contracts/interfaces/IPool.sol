@@ -95,10 +95,6 @@ interface IPool {
     }
 
     struct TradingFeeConfig {
-        // fee
-        uint256 takerFeeP;
-        uint256 makerFeeP;
-        // distribute
         uint256 lpFeeDistributeP;
         uint256 stakingFeeDistributeP;
         uint256 keeperFeeDistributeP;
@@ -111,8 +107,6 @@ interface IPool {
     function getTradingConfig(uint256 _pairIndex) external view returns (TradingConfig memory);
 
     function getTradingFeeConfig(uint256) external view returns (TradingFeeConfig memory);
-
-    // function getFundingFeeConfig(uint256) external view returns (FundingFeeConfig memory);
 
     function getVault(uint256 _pairIndex) external view returns (Vault memory vault);
 

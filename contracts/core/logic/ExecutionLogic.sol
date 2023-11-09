@@ -83,7 +83,7 @@ contract ExecutionLogic is IExecutionLogic {
                     keeper,
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
-                    order.level,
+                    order.tier,
                     order.commissionRatio
                 )
             {} catch Error(string memory reason) {
@@ -108,7 +108,7 @@ contract ExecutionLogic is IExecutionLogic {
                     keeper,
                     order.orderId,
                     TradingTypes.TradeType.LIMIT,
-                    order.level,
+                    order.tier,
                     order.commissionRatio
                 )
             {} catch Error(string memory reason) {
@@ -121,7 +121,7 @@ contract ExecutionLogic is IExecutionLogic {
         address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
-        uint8 level,
+        uint8 tier,
         uint256 commissionRatio
     ) external override onlyExecutorOrKeeper {
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
@@ -232,7 +232,7 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             order.isLong,
             collateral,
-            feeCollector.getLevelDiscounts(level),
+            feeCollector.getTradingFeeTier(pairIndex, tier),
             commissionRatio,
             executionPrice
         );
@@ -297,7 +297,7 @@ contract ExecutionLogic is IExecutionLogic {
                     keeper,
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
-                    order.level,
+                    order.tier,
                     order.commissionRatio,
                     false,
                     0,
@@ -325,7 +325,7 @@ contract ExecutionLogic is IExecutionLogic {
                     keeper,
                     order.orderId,
                     TradingTypes.TradeType.LIMIT,
-                    order.level,
+                    order.tier,
                     order.commissionRatio,
                     false,
                     0,
@@ -341,7 +341,7 @@ contract ExecutionLogic is IExecutionLogic {
         address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
-        uint8 level,
+        uint8 tier,
         uint256 commissionRatio,
         bool isSystem,
         uint256 executionSize,
@@ -351,7 +351,7 @@ contract ExecutionLogic is IExecutionLogic {
             keeper,
             _orderId,
             _tradeType,
-            level,
+            tier,
             commissionRatio,
             isSystem,
             executionSize,
@@ -363,7 +363,7 @@ contract ExecutionLogic is IExecutionLogic {
         address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
-        uint8 level,
+        uint8 tier,
         uint256 commissionRatio,
         bool isSystem,
         uint256 executionSize,
@@ -495,7 +495,7 @@ contract ExecutionLogic is IExecutionLogic {
             executionSize,
             order.isLong,
             collateral,
-            feeCollector.getLevelDiscounts(level),
+            feeCollector.getTradingFeeTier(pairIndex, tier),
             commissionRatio,
             executionPrice,
             false
@@ -626,7 +626,7 @@ contract ExecutionLogic is IExecutionLogic {
         ExecutePosition[] memory executePositions,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
-        uint8 _level,
+        uint8 _tier,
         uint256 _commissionRatio
     ) external override onlyExecutorOrKeeper {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
@@ -664,7 +664,7 @@ contract ExecutionLogic is IExecutionLogic {
                 keeper,
                 order.orderId,
                 order.tradeType,
-                _level,
+                _tier,
                 _commissionRatio,
                 false,
                 0,
@@ -677,7 +677,7 @@ contract ExecutionLogic is IExecutionLogic {
             keeper,
             order.orderId,
             order.tradeType,
-            _level,
+            _tier,
             _commissionRatio,
             true,
             executionSize - needADLAmount,
@@ -707,7 +707,7 @@ contract ExecutionLogic is IExecutionLogic {
                 ExecutePositionInfo memory adlPosition = adlPositions[i];
                 adlPosition.position = position;
                 adlPosition.executionSize = adlExecutionSize;
-                adlPosition.level = executePosition.level;
+                adlPosition.tier = executePosition.tier;
                 adlPosition.commissionRatio = executePosition.commissionRatio;
             }
         }
@@ -738,7 +738,7 @@ contract ExecutionLogic is IExecutionLogic {
                     keeper,
                     orderId,
                     TradingTypes.TradeType.MARKET,
-                    adlPosition.level,
+                    adlPosition.tier,
                     adlPosition.commissionRatio,
                     true,
                     0,
@@ -751,7 +751,7 @@ contract ExecutionLogic is IExecutionLogic {
             keeper,
             order.orderId,
             order.tradeType,
-            _level,
+            _tier,
             _commissionRatio,
             true,
             0,

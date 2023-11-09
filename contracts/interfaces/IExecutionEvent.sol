@@ -53,7 +53,7 @@ interface IExecution {
     struct ExecutePosition {
         bytes32 positionKey;
         uint256 sizeAmount;
-        uint8 level;
+        uint8 tier;
         uint256 commissionRatio;
     }
 }

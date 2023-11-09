@@ -96,7 +96,7 @@ describe('Liquidation: Risk Reserve', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
@@ -159,7 +159,7 @@ describe('Liquidation: Risk Reserve', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
@@ -224,7 +224,7 @@ describe('Liquidation: Risk Reserve', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPositionByKey(positionKey);

@@ -240,7 +240,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         );
     await pool.setPositionManager(positionManager.address);
     await pool.setOrderManager(orderManager.address);
-    await initPairs(deployer, tokens, usdt, pool, fundingRate);
+    await initPairs(deployer, tokens, usdt, pool, fundingRate, feeCollector);
 
     await roleManager.addKeeper(executor.address);
     return {
