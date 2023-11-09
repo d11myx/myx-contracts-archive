@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { deployMockCallback, TradeType } from '../helpers';
+import { TradeType } from '../helpers';
 
 describe('Trade: Limit order cases', () => {
     const pairIndex = 1;
@@ -14,20 +14,34 @@ describe('Trade: Limit order cases', () => {
             usdt,
             btc,
             pool,
+            router,
+            oraclePriceFeed,
         } = testEnv;
 
         // add liquidity
         const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
         const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
-        let testCallBack = await deployMockCallback();
         const pair = await pool.getPair(pairIndex);
 
-        await mintAndApprove(testEnv, btc, indexAmount, depositor, testCallBack.address);
-        await mintAndApprove(testEnv, usdt, stableAmount, depositor, testCallBack.address);
+        await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+        await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
-        await testCallBack
+        await router
             .connect(depositor.signer)
-            .addLiquidity(pool.address, pair.indexToken, pair.stableToken, indexAmount, stableAmount);
+            .addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                indexAmount,
+                stableAmount,
+                [btc.address],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            );
     });
 
     describe('long > short', () => {
@@ -40,7 +54,9 @@ describe('Trade: Limit order cases', () => {
                 positionManager,
                 orderManager,
                 router,
-                executionLogic,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
             } = testEnv;
 
             // update BTC price
@@ -65,9 +81,20 @@ describe('Trade: Limit order cases', () => {
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             // console.log(`---positionAft: `, positionAft);
 
-            await executionLogic
+            await executor
                 .connect(keeper.signer)
-                .executeIncreaseLimitOrders([{ orderId: orderId, level: 0, commissionRatio: 0 }]);
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    { value: 1 },
+                );
             // expect(positionAft.positionAmount).to.be.eq(size);
         });
 

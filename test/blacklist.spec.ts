@@ -63,16 +63,35 @@ describe('Blacklist cases', () => {
         await roleManager.connect(operatorSigner).addAccountBlackList(blackUser.address);
         expect(await roleManager.isBlackList(blackUser.address)).to.be.eq(true);
 
-        let pair = await pool.getPair(0);
+        let pair = await pool.getPair(1);
 
         await expect(
-            router.connect(blackUser.signer).addLiquidity(pair.indexToken, pair.stableToken, 0, 0),
+            router
+                .connect(blackUser.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    0,
+                    0,
+                    [pair.indexToken],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('blacklist account');
 
         await expect(
             router
                 .connect(user.signer)
-                .addLiquidityForAccount(pair.indexToken, pair.stableToken, blackUser.address, 0, 0),
+                .addLiquidityForAccount(
+                    pair.indexToken,
+                    pair.stableToken,
+                    blackUser.address,
+                    0,
+                    0,
+                    [pair.indexToken],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('blacklist account');
     });
 
@@ -82,6 +101,8 @@ describe('Blacklist cases', () => {
             users: [blackUser, user],
             router,
             pool,
+            btc,
+            oraclePriceFeed,
         } = testEnv;
         const { operator } = await getNamedAccounts();
         const operatorSigner = await ethers.getSigner(operator);
@@ -89,16 +110,45 @@ describe('Blacklist cases', () => {
         await roleManager.connect(operatorSigner).addAccountBlackList(blackUser.address);
         expect(await roleManager.isBlackList(blackUser.address)).to.be.eq(true);
 
-        let pair = await pool.getPair(0);
+        let pair = await pool.getPair(1);
 
         await expect(
-            router.connect(blackUser.signer).removeLiquidity(pair.indexToken, pair.stableToken, 0, false),
+            router
+                .connect(blackUser.signer)
+                .removeLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    0,
+                    false,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('blacklist account');
 
         await expect(
             router
                 .connect(user.signer)
-                .removeLiquidityForAccount(pair.indexToken, pair.stableToken, blackUser.address, 0, false),
+                .removeLiquidityForAccount(
+                    pair.indexToken,
+                    pair.stableToken,
+                    blackUser.address,
+                    0,
+                    false,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                ),
         ).to.be.revertedWith('blacklist account');
     });
 

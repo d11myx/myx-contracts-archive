@@ -9,35 +9,35 @@ interface IExecutor {
     function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable;
 
     function setPricesAndExecuteDecreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable;
 
     function setPricesAndExecuteIncreaseLimitOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable;
 
     function setPricesAndExecuteDecreaseLimitOrders(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable;
 
     function setPricesAndExecuteADL(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecution.ExecutePosition[] memory executePositions,
         uint256 orderId,
         TradingTypes.TradeType tradeType,
@@ -48,7 +48,7 @@ interface IExecutor {
     function setPricesAndLiquidatePositions(
         address[] memory tokens,
         uint256[] memory prices,
-        uint256 timestamp,
+        bytes[] memory updateData,
         IExecution.ExecutePosition[] memory executePositions
     ) external payable;
 

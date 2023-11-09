@@ -2,40 +2,56 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
     COMMON_DEPLOY_PARAMS,
+    eNetwork,
     FUNDING_RATE,
     getAddressesProvider,
-    getFundingRate,
-    getIndexPriceFeed,
-    getOraclePriceFeed,
     INDEX_PRICE_FEED_ID,
+    isLocalNetwork,
+    loadReserveConfig,
+    MARKET_NAME,
     MOCK_PRICE_FEED_ID,
     ORACLE_PRICE_FEED_ID,
-    waitForTx,
+    ZERO_ADDRESS,
 } from '../../helpers';
 import { MockPyth } from '../../types';
+import { deployments, getNamedAccounts } from 'hardhat';
 
-const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
-    const { deploy } = deployments;
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+    const { deploy, save } = deployments;
     const { deployer } = await getNamedAccounts();
-    const deployerSigner = await hre.ethers.getSigner(deployer);
 
     const addressesProvider = await getAddressesProvider();
 
-    const mockPythArtifact = await deploy(`${MOCK_PRICE_FEED_ID}`, {
-        from: deployer,
-        contract: 'MockPyth',
-        args: [60, 1],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const mockPyth = (await hre.ethers.getContractAt(mockPythArtifact.abi, mockPythArtifact.address)) as MockPyth;
+    const network = hre.network.name as eNetwork;
+    const reserveConfig = loadReserveConfig(MARKET_NAME);
 
-    await deploy(`${ORACLE_PRICE_FEED_ID}`, {
-        from: deployer,
-        contract: 'PythOraclePriceFeed',
-        args: [addressesProvider.address, mockPyth.address, [], []],
-        ...COMMON_DEPLOY_PARAMS,
-    });
-    const oraclePriceFeed = await getOraclePriceFeed();
+    if (isLocalNetwork(hre)) {
+        const mockPythArtifact = await deploy(`${MOCK_PRICE_FEED_ID}`, {
+            from: deployer,
+            contract: 'MockPyth',
+            args: [60, 1],
+            ...COMMON_DEPLOY_PARAMS,
+        });
+        const mockPyth = (await hre.ethers.getContractAt(mockPythArtifact.abi, mockPythArtifact.address)) as MockPyth;
+        await deploy(`${ORACLE_PRICE_FEED_ID}`, {
+            from: deployer,
+            contract: 'MockPythOraclePriceFeed',
+            args: [addressesProvider.address, mockPyth.address, [], []],
+            ...COMMON_DEPLOY_PARAMS,
+        });
+    } else {
+        const oraclePriceFeedAddress = reserveConfig.OraclePriceFeedAddress[network];
+        if (!oraclePriceFeedAddress || oraclePriceFeedAddress == ZERO_ADDRESS) {
+            console.log('[ERROR] Unknown oracle price feed');
+            return;
+        }
+
+        const artifact = await hre.deployments.getArtifact('PythOraclePriceFeed');
+        await save(`${ORACLE_PRICE_FEED_ID}`, {
+            ...artifact,
+            address: oraclePriceFeedAddress as string,
+        });
+    }
 
     await deploy(`${INDEX_PRICE_FEED_ID}`, {
         from: deployer,
@@ -43,7 +59,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         args: [addressesProvider.address, [], []],
         ...COMMON_DEPLOY_PARAMS,
     });
-    const indexPriceFeed = await getIndexPriceFeed();
 
     await deploy(`${FUNDING_RATE}`, {
         from: deployer,
@@ -60,9 +75,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         },
         ...COMMON_DEPLOY_PARAMS,
     });
-    const fundingRate = await getFundingRate();
-
-    
 };
 
 func.id = `Oracles`;

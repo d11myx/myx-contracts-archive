@@ -12,7 +12,7 @@ import "../interfaces/IPool.sol";
 import "../interfaces/IPoolToken.sol";
 import "../interfaces/IPoolTokenFactory.sol";
 import "../interfaces/ISwapCallback.sol";
-import "../interfaces/IPriceFeed.sol";
+import "../interfaces/IPythOraclePriceFeed.sol";
 import "../interfaces/ISpotSwap.sol";
 import "../interfaces/ILiquidityCallback.sol";
 import "../interfaces/IWETH.sol";
@@ -433,7 +433,7 @@ contract Pool is IPool, Upgradeable {
 
     function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 expectAmountOut) private {
         Pair memory pair = pairs[_pairIndex];
-        uint256 price = getPrice(pair.indexToken);
+        uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         uint256 amountInMaximum;
         address tokenOut;
         if (tokenIn == pair.indexToken) {
@@ -453,7 +453,8 @@ contract Pool is IPool, Upgradeable {
     function getMintLpAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
-        uint256 _stableAmount
+        uint256 _stableAmount,
+        uint256 price
     )
         external
         view
@@ -469,6 +470,7 @@ contract Pool is IPool, Upgradeable {
         )
     {
         if (_indexAmount == 0 && _stableAmount == 0) return (0, address(0), 0, 0, 0, 0, 0);
+        require(price > 0, "ip");
 
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "ip");
@@ -482,17 +484,13 @@ contract Pool is IPool, Upgradeable {
         afterFeeIndexAmount = _indexAmount - indexFeeAmount;
         afterFeeStableAmount = _stableAmount - stableFeeAmount;
 
-        // usdt value of reserve
-        uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "ip");
-
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
         uint256 indexTotalDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
-            pair.indexToken, int256(_getIndexTotalAmount(pair, vault)), 18, price));
+            pair.indexToken, int256(_getIndexTotalAmount(pair, vault, price)), 18, price));
         uint256 stableTotalDeltaWad = uint256(TokenHelper.convertTokenAmountTo(
-            pair.stableToken, int256(_getStableTotalAmount(pair, vault)), 18));
+            pair.stableToken, int256(_getStableTotalAmount(pair, vault, price)), 18));
 
         uint256 indexDepositDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
             pair.indexToken, int256(afterFeeIndexAmount), 18, price));
@@ -563,7 +561,7 @@ contract Pool is IPool, Upgradeable {
             if (mintDeltaWad > discountAmount) {
                 mintAmount += AmountMath.getIndexAmount(
                     discountAmount,
-                    lpFairPrice(_pairIndex).mulPercentage(
+                    lpFairPrice(_pairIndex, price).mulPercentage(
                         PrecisionUtils.percentage() - discountRate
                     )
                 );
@@ -571,7 +569,7 @@ contract Pool is IPool, Upgradeable {
             } else {
                 mintAmount += AmountMath.getIndexAmount(
                     mintDeltaWad,
-                    lpFairPrice(_pairIndex).mulPercentage(
+                    lpFairPrice(_pairIndex, price).mulPercentage(
                         PrecisionUtils.percentage() - discountRate
                     )
                 );
@@ -581,7 +579,7 @@ contract Pool is IPool, Upgradeable {
 
         if (mintDeltaWad > 0) {
             uint8 pairTokenDec = IERC20Metadata(pair.pairToken).decimals();
-            mintAmount += AmountMath.getIndexAmount(mintDeltaWad, lpFairPrice(_pairIndex)) / (10 ** (18 - pairTokenDec));
+            mintAmount += AmountMath.getIndexAmount(mintDeltaWad, lpFairPrice(_pairIndex, price)) / (10 ** (18 - pairTokenDec));
         }
 
         return (
@@ -615,9 +613,10 @@ contract Pool is IPool, Upgradeable {
 
     function _getStableTotalAmount(
         IPool.Pair memory pair,
-        IPool.Vault memory vault
+        IPool.Vault memory vault,
+        uint256 price
     ) internal view returns (uint256) {
-        int256 profit = getProfit(pair.pairIndex, pair.stableToken);
+        int256 profit = getProfit(pair.pairIndex, pair.stableToken, price);
         if (profit < 0) {
             return vault.stableTotalAmount.sub(profit.abs());
         } else {
@@ -627,9 +626,10 @@ contract Pool is IPool, Upgradeable {
 
     function _getIndexTotalAmount(
         IPool.Pair memory pair,
-        IPool.Vault memory vault
+        IPool.Vault memory vault,
+        uint256 price
     ) internal view returns (uint256) {
-        int256 profit = getProfit(pair.pairIndex, pair.indexToken);
+        int256 profit = getProfit(pair.pairIndex, pair.indexToken, price);
         if (profit < 0) {
             return vault.indexTotalAmount.sub(profit.abs());
         } else {
@@ -655,6 +655,8 @@ contract Pool is IPool, Upgradeable {
         uint256 afterFeeStableAmount;
         _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
 
+        uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
+
         (
             mintAmount,
             slipToken,
@@ -663,7 +665,7 @@ contract Pool is IPool, Upgradeable {
             stableFeeAmount,
             afterFeeIndexAmount,
             afterFeeStableAmount
-        ) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount);
+        ) = this.getMintLpAmount(_pairIndex, _indexAmount, _stableAmount, price);
 
         feeTokenAmounts[pair.indexToken] += indexFeeAmount;
         feeTokenAmounts[pair.stableToken] += stableFeeAmount;
@@ -706,6 +708,8 @@ contract Pool is IPool, Upgradeable {
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "ip");
 
+        uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
+
         uint256 feeIndexTokenAmount;
         uint256 feeStableTokenAmount;
         (
@@ -714,10 +718,9 @@ contract Pool is IPool, Upgradeable {
             feeAmount,
             feeIndexTokenAmount,
             feeStableTokenAmount
-        ) = getReceivedAmount(_pairIndex, _amount);
+        ) = getReceivedAmount(_pairIndex, _amount, price);
 
         IPool.Vault memory vault = getVault(_pairIndex);
-        uint256 price = getPrice(pair.indexToken);
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
@@ -772,16 +775,14 @@ contract Pool is IPool, Upgradeable {
         emit ClaimedFee(msg.sender, token, amount);
     }
 
-    function lpFairPrice(uint256 _pairIndex) public view returns (uint256) {
+    function lpFairPrice(uint256 _pairIndex, uint256 price) public view returns (uint256) {
         IPool.Pair memory pair = getPair(_pairIndex);
         IPool.Vault memory vault = getVault(_pairIndex);
-        uint256 price = getPrice(pair.indexToken);
-
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
-        uint256 indexTotalAmountWad = _getIndexTotalAmount(pair, vault) * (10 ** (18 - indexTokenDec));
-        uint256 stableTotalAmountWad = _getStableTotalAmount(pair, vault) * (10 ** (18 - stableTokenDec));
+        uint256 indexTotalAmountWad = _getIndexTotalAmount(pair, vault, price) * (10 ** (18 - indexTokenDec));
+        uint256 stableTotalAmountWad = _getStableTotalAmount(pair, vault, price) * (10 ** (18 - stableTokenDec));
 
         uint256 lpFairDelta = AmountMath.getStableDelta(indexTotalAmountWad, price) + stableTotalAmountWad;
 
@@ -798,17 +799,16 @@ contract Pool is IPool, Upgradeable {
     // calculate deposit amount for add liquidity
     function getDepositAmount(
         uint256 _pairIndex,
-        uint256 _lpAmount
+        uint256 _lpAmount,
+        uint256 price
     ) external view returns (uint256 depositIndexAmount, uint256 depositStableAmount) {
         if (_lpAmount == 0) return (0, 0);
+        require(price > 0, "ipr");
 
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
-
-        uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "ipr");
 
         uint256 indexReserveDeltaWad = uint256(TokenHelper.convertTokenAmountWithPrice(
             pair.indexToken,
@@ -825,7 +825,7 @@ contract Pool is IPool, Upgradeable {
             pair.pairToken,
             int256(_lpAmount),
             18,
-            lpFairPrice(_pairIndex)
+            lpFairPrice(_pairIndex, price)
         ));
 
         // expect delta
@@ -872,7 +872,8 @@ contract Pool is IPool, Upgradeable {
     // calculate amount for remove liquidity
     function getReceivedAmount(
         uint256 _pairIndex,
-        uint256 _lpAmount
+        uint256 _lpAmount,
+        uint256 price
     )
         public
         view
@@ -885,15 +886,12 @@ contract Pool is IPool, Upgradeable {
         )
     {
         if (_lpAmount == 0) return (0, 0, 0, 0, 0);
+        require(price > 0, "ipr");
 
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "ip");
 
         IPool.Vault memory vault = getVault(_pairIndex);
-
-        // usdt value of reserve
-        uint256 price = getPrice(pair.indexToken);
-        require(price > 0, "ipr");
 
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
@@ -911,7 +909,7 @@ contract Pool is IPool, Upgradeable {
             pair.pairToken,
             int256(_lpAmount),
             18,
-            lpFairPrice(_pairIndex)));
+            lpFairPrice(_pairIndex, price)));
 
         require(indexReserveDeltaWad + stableReserveDeltaWad >= receiveDeltaWad, "iab");
 
@@ -1003,16 +1001,12 @@ contract Pool is IPool, Upgradeable {
         IERC20(token).safeTransfer(to, amount);
     }
 
-    function getProfit(uint pairIndex, address token) public view returns (int256 profit) {
-        return IPositionManager(positionManager).lpProfit(pairIndex, token);
+    function getProfit(uint pairIndex, address token, uint256 price) public view returns (int256 profit) {
+        return IPositionManager(positionManager).lpProfit(pairIndex, token, price);
     }
 
     function getVault(uint256 _pairIndex) public view returns (Vault memory vault) {
         return vaults[_pairIndex];
-    }
-
-    function getPrice(address _token) public view returns (uint256) {
-        return IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(_token);
     }
 
     function getPair(uint256 _pairIndex) public view override returns (Pair memory) {

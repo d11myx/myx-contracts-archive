@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import '../libraries/TradingTypes.sol';
-import '../libraries/Position.sol';
+import "../libraries/TradingTypes.sol";
+import "../libraries/Position.sol";
 import "./IExecutionEvent.sol";
 
 interface IExecutionLogic is IExecution {
@@ -27,22 +27,24 @@ interface IExecutionLogic is IExecution {
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
-    function executeIncreaseMarketOrders(ExecuteOrder[] memory orders) external;
+    function executeIncreaseMarketOrders(address keeper,ExecuteOrder[] memory orders) external;
 
-    function executeIncreaseLimitOrders(ExecuteOrder[] memory orders) external;
+    function executeIncreaseLimitOrders(address keeper,ExecuteOrder[] memory orders) external;
 
     function executeIncreaseOrder(
+        address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
         uint256 commissionRatio
     ) external;
 
-    function executeDecreaseMarketOrders(ExecuteOrder[] memory orders) external;
+    function executeDecreaseMarketOrders(address keeper, ExecuteOrder[] memory orders) external;
 
-    function executeDecreaseLimitOrders(ExecuteOrder[] memory orders) external;
+    function executeDecreaseLimitOrders(address keeper, ExecuteOrder[] memory orders) external;
 
     function executeDecreaseOrder(
+        address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 level,
@@ -53,6 +55,7 @@ interface IExecutionLogic is IExecution {
     ) external;
 
     function executeADLAndDecreaseOrder(
+        address keeper,
         ExecutePosition[] memory executePositions,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
