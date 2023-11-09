@@ -360,7 +360,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint amount,
         uint256 _price
     ) internal view returns (int256) {
-        IPool.Pair memory pair = pool.getPair(_pairIndex);
+       // IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
         //        uint256 _price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         if (lpIsLong) {

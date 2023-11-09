@@ -75,7 +75,6 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         } catch {
             revert("get price failed");
         }
-        //        PythStructs.Price memory pythPrice = pyth.getPrice(priceId);
         return _returnPriceWithDecimals(pythPrice);
     }
 
