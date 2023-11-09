@@ -1231,6 +1231,23 @@ describe('Trade: ioc', () => {
             expect(riskRate).to.be.gte('100000000');
 
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
+
+            await expect(
+                executor
+                    .connect(keeper.signer)
+                    .setPrices(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        { value: 1 },
+                    ),
+            ).to.be.revertedWith('internal');
+
             await executor
                 .connect(keeper.signer)
                 .setPricesAndLiquidatePositions(
