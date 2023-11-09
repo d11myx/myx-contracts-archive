@@ -122,7 +122,7 @@ describe('Router: Edge cases 1', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
 
@@ -187,7 +187,7 @@ describe('Router: Edge cases 1', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
 
@@ -369,7 +369,7 @@ describe('Router: Edge cases 1', () => {
         //             {
         //                 positionKey: traderPositionKey,
         //                 sizeAmount: ethers.utils.parseUnits('5', 18),
-        //                 level: 0,
+        //                 tier: 0,
         //                 commissionRatio: 0,
         //             },
         //         ],
@@ -490,7 +490,7 @@ describe('Router: Edge cases 1', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -518,7 +518,7 @@ describe('Router: Edge cases 1', () => {
             // const traderPositionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
             // await executor
             //     .connect(keeper.signer)
-            //     .liquidatePositions([{ positionKey: traderPositionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }]);
+            //     .liquidatePositions([{ positionKey: traderPositionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }]);
 
             //todo
             // const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
@@ -564,7 +564,7 @@ export async function increaseUserPosition(
                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                 ),
             ],
-            [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+            [{ orderId: increaseOrderId, tier: 0, commissionRatio: 0 }],
             { value: 1 },
         );
 }

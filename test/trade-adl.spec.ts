@@ -94,7 +94,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -126,7 +126,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -191,7 +191,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
@@ -215,7 +215,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrder.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -319,7 +319,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -351,7 +351,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -416,7 +416,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
@@ -440,7 +440,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrder.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -544,7 +544,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -576,7 +576,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -638,7 +638,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
@@ -662,7 +662,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrder.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -766,7 +766,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -798,7 +798,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -860,7 +860,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
@@ -884,7 +884,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrder.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -955,6 +955,7 @@ describe('Trade: adl', () => {
                 btc,
                 executor,
                 indexPriceFeed,
+                feeCollector,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const sizeAmount = ethers.utils.parseUnits('800', await btc.decimals());
@@ -989,7 +990,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -1020,7 +1021,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -1070,7 +1071,7 @@ describe('Trade: adl', () => {
             await updateBTCPrice(testEnv, '28000');
 
             // calculate pnl、tradingFee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, longPosition.positionAmount);
@@ -1079,7 +1080,7 @@ describe('Trade: adl', () => {
                 .mul(oraclePrice.sub(longPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
             // calculate riskRate
             const exposureAsset = longPosition.collateral.add(pnl).sub(tradingFee);
@@ -1106,7 +1107,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                    [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const orders = await orderManager.getPositionOrders(positionKey);
@@ -1128,7 +1129,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrderAdlBefore.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -1203,6 +1204,7 @@ describe('Trade: adl', () => {
                 btc,
                 executor,
                 indexPriceFeed,
+                feeCollector,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const sizeAmount = ethers.utils.parseUnits('800', await btc.decimals());
@@ -1237,7 +1239,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -1269,7 +1271,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -1319,7 +1321,7 @@ describe('Trade: adl', () => {
             await updateBTCPrice(testEnv, '28000');
 
             // calculate pnl、tradingFee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, longPosition.positionAmount);
@@ -1328,7 +1330,7 @@ describe('Trade: adl', () => {
                 .mul(oraclePrice.sub(longPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
             // calculate riskRate
             const exposureAsset = longPosition.collateral.add(pnl).sub(tradingFee);
@@ -1355,7 +1357,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                    [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const orders = await orderManager.getPositionOrders(positionKey);
@@ -1377,7 +1379,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrderAdlBefore.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -1450,6 +1452,7 @@ describe('Trade: adl', () => {
                 btc,
                 indexPriceFeed,
                 oraclePriceFeed,
+                feeCollector,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const sizeAmount = ethers.utils.parseUnits('200', await btc.decimals());
@@ -1484,7 +1487,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -1516,7 +1519,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -1563,7 +1566,7 @@ describe('Trade: adl', () => {
             await updateBTCPrice(testEnv, '32000');
 
             // calculate pnl、tradingFee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPosition.positionAmount);
@@ -1572,7 +1575,7 @@ describe('Trade: adl', () => {
                 .mul(oraclePrice.sub(shortPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
             // calculate riskRate
             const exposureAsset = shortPosition.collateral.add(pnl).sub(tradingFee);
@@ -1599,7 +1602,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                    [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const orders = await orderManager.getPositionOrders(positionKey);
@@ -1621,7 +1624,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrderAdlBefore.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -1694,6 +1697,7 @@ describe('Trade: adl', () => {
                 btc,
                 indexPriceFeed,
                 oraclePriceFeed,
+                feeCollector,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const sizeAmount = ethers.utils.parseUnits('200', await btc.decimals());
@@ -1728,7 +1732,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -1760,7 +1764,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -1807,7 +1811,7 @@ describe('Trade: adl', () => {
             await updateBTCPrice(testEnv, '32000');
 
             // calculate pnl、tradingFee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPosition.positionAmount);
@@ -1816,7 +1820,7 @@ describe('Trade: adl', () => {
                 .mul(oraclePrice.sub(shortPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
             // calculate riskRate
             const exposureAsset = shortPosition.collateral.add(pnl).sub(tradingFee);
@@ -1843,7 +1847,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                    [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const orders = await orderManager.getPositionOrders(positionKey);
@@ -1865,7 +1869,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrderAdlBefore.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -1938,6 +1942,7 @@ describe('Trade: adl', () => {
                 btc,
                 oraclePriceFeed,
                 indexPriceFeed,
+                feeCollector,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const sizeAmount = ethers.utils.parseUnits('200', await btc.decimals());
@@ -1972,7 +1977,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -2004,7 +2009,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -2051,7 +2056,7 @@ describe('Trade: adl', () => {
             await updateBTCPrice(testEnv, '32000');
 
             // calculate pnl、tradingFee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const poolPrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPosition.positionAmount);
@@ -2060,7 +2065,7 @@ describe('Trade: adl', () => {
                 .mul(poolPrice.sub(shortPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(poolPrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
             // calculate riskRate
             const exposureAsset = shortPosition.collateral.add(pnl).sub(tradingFee);
@@ -2087,7 +2092,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                    [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const orders = await orderManager.getPositionOrders(positionKey);
@@ -2127,7 +2132,7 @@ describe('Trade: adl', () => {
                         {
                             positionKey,
                             sizeAmount: decreaseOrderAdlBefore.sizeAmount,
-                            level: 0,
+                            tier: 0,
                             commissionRatio: 0,
                         },
                     ],
@@ -2192,6 +2197,7 @@ describe('Trade: adl', () => {
                 btc,
                 oraclePriceFeed,
                 indexPriceFeed,
+                feeCollector,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('3000000', await usdt.decimals());
             const sizeAmount = ethers.utils.parseUnits('200', await btc.decimals());
@@ -2226,7 +2232,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -2258,7 +2264,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -2305,7 +2311,7 @@ describe('Trade: adl', () => {
             await updateBTCPrice(testEnv, '32000');
 
             // calculate pnl、tradingFee
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const poolPrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPosition.positionAmount);
@@ -2314,7 +2320,7 @@ describe('Trade: adl', () => {
                 .mul(poolPrice.sub(shortPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(poolPrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
             // calculate riskRate
             const exposureAsset = shortPosition.collateral.add(pnl).sub(tradingFee);
@@ -2341,7 +2347,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                    [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const orders = await orderManager.getPositionOrders(positionKey);
@@ -2381,7 +2387,7 @@ describe('Trade: adl', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrderAdlBefore.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
