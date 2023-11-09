@@ -5,12 +5,13 @@ import "./IPool.sol";
 
 interface IFeeCollector {
 
-    event UpdateLevelDiscountRatio(
-        uint8 level,
-        uint256 oldMakerDiscountRatio,
-        uint256 oldTakerDiscountRatio,
-        uint256 newMakerDiscountRatio,
-        uint256 newtakerDiscountRatio
+    event updatedTradingFeeTier(
+        address sender,
+        uint8 tier,
+        uint256 oldTakerFee,
+        uint256 oldMakerFee,
+        uint256 newTakerFee,
+        uint256 newMakerFee
     );
 
     event UpdateMaxReferralsRatio(uint256 oldRatio, uint256 newRatio);
@@ -24,8 +25,8 @@ interface IFeeCollector {
         uint256 pairIndex,
         uint256 sizeDelta,
         uint256 tradingFee,
-        uint256 vipAmount,
-        uint256 vipRate,
+        uint256 vipDiscountAmount,
+        uint256 vipFeeRate,
         uint256 referralAmount,
         uint256 lpAmount,
         uint256 keeperAmount,
@@ -41,9 +42,9 @@ interface IFeeCollector {
 
     event ClaimedUserTradingFee(address account, address claimToken, uint256 amount);
 
-    struct LevelDiscount {
-        uint256 makerDiscountRatio;
-        uint256 takerDiscountRatio;
+    struct TradingFeeTier {
+        uint256 makerFee;
+        uint256 takerFee;
     }
 
     function maxReferralsRatio() external view returns (uint256 maxReferenceRatio);
@@ -54,11 +55,9 @@ interface IFeeCollector {
 
     function userTradingFee(address _account) external view returns (uint256);
 
-    function getLevelDiscounts(uint8 level) external view returns (LevelDiscount memory);
+    function getTradingFeeTier(uint256 pairIndex, uint8 tier) external view returns (TradingFeeTier memory);
 
-    function updateLevelDiscountRatios(uint8[] memory levels, LevelDiscount[] memory discounts) external;
-
-    function updateLevelDiscountRatio(uint8 level, LevelDiscount memory newRatio) external;
+    function getRegularTradingFeeTier(uint256 pairIndex) external view returns (TradingFeeTier memory);
 
     function updateMaxReferralsRatio(uint256 newRatio) external;
 
@@ -76,7 +75,7 @@ interface IFeeCollector {
         address keeper,
         uint256 sizeDelta,
         uint256 tradingFee,
-        uint256 vipRate,
+        uint256 vipFeeRate,
         uint256 referralRate
-    ) external returns (uint256 lpAmount);
+    ) external returns (uint256 lpAmount, uint256 vipDiscountAmount);
 }

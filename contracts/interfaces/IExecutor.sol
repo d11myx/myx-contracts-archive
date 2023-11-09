@@ -41,7 +41,7 @@ interface IExecutor {
         IExecution.ExecutePosition[] memory executePositions,
         uint256 orderId,
         TradingTypes.TradeType tradeType,
-        uint8 level,
+        uint8 tier,
         uint256 commissionRatio
     ) external payable;
 

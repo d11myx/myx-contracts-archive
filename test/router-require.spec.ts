@@ -101,7 +101,7 @@ describe('Router: check require condition, trigger errors', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             // await expect(router.connect(user2.signer).createIncreaseOrderWithTpSl(increasePositionRequest)).to.be.revertedWith('not order sender or handler');

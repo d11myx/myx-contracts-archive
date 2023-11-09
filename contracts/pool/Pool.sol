@@ -32,8 +32,6 @@ contract Pool is IPool, Upgradeable {
     using Math for uint256;
     using SafeMath for uint256;
 
-    uint256 private constant MAX_FEE = 1e6;
-
     IPoolTokenFactory public poolTokenFactory;
 
     address public riskReserve;
@@ -203,10 +201,6 @@ contract Pool is IPool, Upgradeable {
         require(
             pair.indexToken != address(0) && pair.stableToken != address(0),
             "pne"
-        );
-        require(
-            _tradingFeeConfig.takerFeeP <= MAX_FEE && _tradingFeeConfig.makerFeeP <= MAX_FEE,
-            "ex"
         );
         require(
             _tradingFeeConfig.lpFeeDistributeP +

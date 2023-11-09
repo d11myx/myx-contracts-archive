@@ -99,7 +99,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         IExecution.ExecutePosition[] memory executePositions,
         uint256 orderId,
         TradingTypes.TradeType tradeType,
-        uint8 level,
+        uint8 tier,
         uint256 commissionRatio
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
@@ -111,7 +111,7 @@ contract Executor is IExecutor, Roleable, Pausable {
             executePositions,
             orderId,
             tradeType,
-            level,
+            tier,
             commissionRatio
         );
     }
