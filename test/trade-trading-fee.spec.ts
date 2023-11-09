@@ -48,12 +48,12 @@ describe('Trade: trading fee', () => {
                 );
 
             // config levels
-            await feeCollector.updateLevelDiscountRatio(1, { takerDiscountRatio: 1e6, makerDiscountRatio: 1e6 });
-            await feeCollector.updateLevelDiscountRatio(2, { takerDiscountRatio: 2e6, makerDiscountRatio: 2e6 });
-            await feeCollector.updateLevelDiscountRatio(3, { takerDiscountRatio: 3e6, makerDiscountRatio: 3e6 });
-            await feeCollector.updateLevelDiscountRatio(4, { takerDiscountRatio: 4e6, makerDiscountRatio: 4e6 });
-            await feeCollector.updateLevelDiscountRatio(5, { takerDiscountRatio: 5e6, makerDiscountRatio: 5e6 });
-            await feeCollector.updateLevelDiscountRatio(6, { takerDiscountRatio: 6e6, makerDiscountRatio: 6e6 });
+            await feeCollector.updateTradingFeeTier(pairIndex, 1, { takerFee: 50000, makerFee: 50000 });
+            await feeCollector.updateTradingFeeTier(pairIndex, 2, { takerFee: 46000, makerFee: 46000 });
+            await feeCollector.updateTradingFeeTier(pairIndex, 3, { takerFee: 43000, makerFee: 43000 });
+            await feeCollector.updateTradingFeeTier(pairIndex, 4, { takerFee: 40000, makerFee: 40000 });
+            await feeCollector.updateTradingFeeTier(pairIndex, 5, { takerFee: 35000, makerFee: 35000 });
+            await feeCollector.updateTradingFeeTier(pairIndex, 6, { takerFee: 30000, makerFee: 30000 });
         });
 
         it('should distribute trading fee', async () => {
@@ -177,7 +177,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: normal, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: normal, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -208,7 +208,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: vip1, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: vip1, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader2Position = await positionManager.getPosition(trader2.address, pairIndex, true);
@@ -239,7 +239,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: vip2, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: vip2, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader3Position = await positionManager.getPosition(trader3.address, pairIndex, true);
@@ -270,7 +270,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: vip3, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: vip3, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader4Position = await positionManager.getPosition(trader4.address, pairIndex, true);
@@ -301,7 +301,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: vip4, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: vip4, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader5Position = await positionManager.getPosition(trader5.address, pairIndex, true);
@@ -332,7 +332,7 @@ describe('Trade: trading fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: vip5, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: vip5, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const trader6Position = await positionManager.getPosition(trader6.address, pairIndex, true);

@@ -181,12 +181,12 @@ export async function getPositionTradingFee(
     positionAmount: BigNumber,
     isLong: boolean,
 ) {
-    const { positionManager, pool, oraclePriceFeed } = testEnv;
+    const { positionManager, pool, oraclePriceFeed, feeCollector } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const currentExposureAmountChecker = await positionManager.getExposedPositions(pairIndex);
-    const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+    const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
     const positionStableAmount = await convertIndexAmountToStable(
         indexToken,
         stableToken,
@@ -196,12 +196,12 @@ export async function getPositionTradingFee(
 
     if (currentExposureAmountChecker.gte(0)) {
         tradingFee = isLong
-            ? positionStableAmount.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE)
-            : positionStableAmount.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE);
+            ? positionStableAmount.mul(tradingFeeConfig.takerFee).div(PERCENTAGE)
+            : positionStableAmount.mul(tradingFeeConfig.makerFee).div(PERCENTAGE);
     } else {
         tradingFee = isLong
-            ? positionStableAmount.mul(tradingFeeConfig.makerFeeP).div(PERCENTAGE)
-            : positionStableAmount.mul(tradingFeeConfig.takerFeeP).div(PERCENTAGE);
+            ? positionStableAmount.mul(tradingFeeConfig.makerFee).div(PERCENTAGE)
+            : positionStableAmount.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
     }
 
     return tradingFee;
@@ -224,15 +224,13 @@ export async function getDistributeTradingFee(
     vipLevel = 0,
     referenceRate = 0,
 ) {
-    const { pool } = testEnv;
-    const levelDiscountRatios = [0, 1e6, 2e6, 3e6, 4e6, 5e6];
+    const { pool, feeCollector } = testEnv;
 
-    let vipRate = 0;
+    const tierFee = await feeCollector.getTradingFeeTier(pairIndex, vipLevel);
+    const regularFee = await feeCollector.getRegularTradingFeeTier(pairIndex);
     const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
-    if (vipLevel > 0 && vipLevel <= levelDiscountRatios.length) {
-        vipRate = levelDiscountRatios[vipLevel];
-    }
-    const vipAmount = tradingFee.mul(vipRate).div(PERCENTAGE);
+    const delta = tradingFee.mul(PERCENTAGE).div(regularFee.takerFee);
+    const vipAmount = tradingFee.sub(delta.mul(tierFee.takerFee).div(PERCENTAGE));
     const userTradingFee = vipAmount;
     const surplusFee = tradingFee.sub(vipAmount);
     if (referenceRate > Number(PERCENTAGE)) {

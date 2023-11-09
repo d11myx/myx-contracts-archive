@@ -131,7 +131,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -187,7 +187,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -245,7 +245,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -305,7 +305,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -399,7 +399,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -486,7 +486,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -567,7 +567,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -620,7 +620,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -679,7 +679,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
@@ -727,7 +727,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -783,7 +783,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
         });
@@ -829,7 +829,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -881,7 +881,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -927,7 +927,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
@@ -985,7 +985,7 @@ describe('Router: increase position ar', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
 
