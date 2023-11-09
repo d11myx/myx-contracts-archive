@@ -93,6 +93,7 @@ contract ExecutionLogic is IExecutionLogic {
                     true,
                     reason
                 );
+                emit ExecuteOrderError(order.orderId, reason);
             }
         }
     }
@@ -112,6 +113,12 @@ contract ExecutionLogic is IExecutionLogic {
                     order.commissionRatio
                 )
             {} catch Error(string memory reason) {
+                orderManager.cancelOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.LIMIT,
+                    true,
+                    reason
+                );
                 emit ExecuteOrderError(order.orderId, reason);
             }
         }
@@ -310,6 +317,7 @@ contract ExecutionLogic is IExecutionLogic {
                     false,
                     reason
                 );
+                emit ExecuteOrderError(order.orderId, reason);
             }
         }
     }
@@ -511,7 +519,6 @@ contract ExecutionLogic is IExecutionLogic {
         );
 
         position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
-
         // remove order
         if (onlyOnce || order.executedSize >= order.sizeAmount || position.positionAmount == 0) {
             // remove decrease order
@@ -545,14 +552,12 @@ contract ExecutionLogic is IExecutionLogic {
 
             for (uint256 i = 0; i < orders.length; i++) {
                 IOrderManager.PositionOrder memory positionOrder = orders[i];
-                if (!positionOrder.isIncrease) {
-                    orderManager.cancelOrder(
-                        positionOrder.orderId,
-                        positionOrder.tradeType,
-                        false,
-                        "!increase"
-                    );
-                }
+                orderManager.cancelOrder(
+                    positionOrder.orderId,
+                    positionOrder.tradeType,
+                    positionOrder.isIncrease,
+                    "closed position"
+                );
             }
         }
 
