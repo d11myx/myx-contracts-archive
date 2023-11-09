@@ -82,7 +82,7 @@ export async function increasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -102,7 +102,7 @@ export async function increasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId.toNumber(), level: 0, commissionRatio: 0 }],
+                [{ orderId: orderId.toNumber(), tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -155,7 +155,7 @@ export async function decreasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -171,7 +171,7 @@ export async function decreasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                 { value: 1 },
             );
         receipt = await tx.wait();

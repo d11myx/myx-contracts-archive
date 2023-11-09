@@ -104,7 +104,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -142,7 +142,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.MARKET);
@@ -252,7 +252,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -290,7 +290,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
@@ -352,7 +352,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             await executor
@@ -366,7 +366,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longOrderAfter = await orderManager.getIncreaseOrder(longOrderId, TradeType.LIMIT);
@@ -458,7 +458,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: increaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -489,7 +489,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: increaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -520,7 +520,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
@@ -615,7 +615,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: increaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -646,7 +646,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: increaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: increaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -677,7 +677,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
@@ -703,7 +703,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             decreasePositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -793,7 +793,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -827,7 +827,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -858,7 +858,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
@@ -883,7 +883,7 @@ describe('Trade: ioc', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrder.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -985,7 +985,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -1019,7 +1019,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPosition = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1050,7 +1050,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: decreaseOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: decreaseOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
@@ -1074,7 +1074,7 @@ describe('Trade: ioc', () => {
                     {
                         positionKey,
                         sizeAmount: decreaseOrder.sizeAmount,
-                        level: 0,
+                        tier: 0,
                         commissionRatio: 0,
                     },
                 ],
@@ -1145,6 +1145,7 @@ describe('Trade: ioc', () => {
                 riskReserve,
                 oraclePriceFeed,
                 indexPriceFeed,
+                feeCollector,
                 btc,
             } = testEnv;
             const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
@@ -1182,7 +1183,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1206,7 +1207,7 @@ describe('Trade: ioc', () => {
 
             // calculate pnl、tradingFee
             const pair = await pool.getPair(pairIndex);
-            const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+            const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, shortPositionBefore.positionAmount);
@@ -1215,7 +1216,7 @@ describe('Trade: ioc', () => {
                 .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
             // calculate riskRate
             const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -1241,7 +1242,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ positionKey: positionKey, level: 0, commissionRatio: 0, sizeAmount: 0 }],
+                    [{ positionKey: positionKey, tier: 0, commissionRatio: 0, sizeAmount: 0 }],
                     { value: 1 },
                 );
 
@@ -1352,7 +1353,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -1390,7 +1391,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
@@ -1471,7 +1472,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const tx_long = await executor
@@ -1485,7 +1486,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             let reason = await extraHash(tx_long.hash, 'ExecuteOrderError', 'errorMessage');
@@ -1502,7 +1503,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             reason = await extraHash(tx_short.hash, 'ExecuteOrderError', 'errorMessage');
@@ -1602,7 +1603,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const longPosition = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -1640,7 +1641,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                    [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                     { value: 1 },
                 );
             const shortOrder = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
@@ -1722,7 +1723,7 @@ describe('Trade: ioc', () => {
             //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
             //                 ),
             //             ],
-            //             [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+            //             [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
             //             { value: 1 },
             //         ),
             // ).to.be.revertedWith('not reach trigger price');

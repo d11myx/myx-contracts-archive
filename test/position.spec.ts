@@ -70,6 +70,7 @@ describe('Position', () => {
                     keeper,
                     pool,
                     riskReserve,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -137,7 +138,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -160,7 +161,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
 
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
@@ -174,7 +175,7 @@ describe('Position', () => {
                     .mul(longPositionBefore.averagePrice.sub(oraclePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
                 // calculate riskRate
                 const exposureAsset = longPositionBefore.collateral.add(pnl).sub(tradingFee);
                 const margin = longPositionBefore.positionAmount
@@ -201,7 +202,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 balance = await usdt.balanceOf(trader.address);
@@ -270,6 +271,7 @@ describe('Position', () => {
                     keeper,
                     pool,
                     riskReserve,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -337,7 +339,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -360,7 +362,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -373,7 +375,7 @@ describe('Position', () => {
                     .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -400,7 +402,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -470,6 +472,7 @@ describe('Position', () => {
                     indexPriceFeed,
                     oraclePriceFeed,
                     riskReserve,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -506,7 +509,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -529,7 +532,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -542,7 +545,7 @@ describe('Position', () => {
                     .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -569,7 +572,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -637,6 +640,7 @@ describe('Position', () => {
                     keeper,
                     pool,
                     riskReserve,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -673,7 +677,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -713,7 +717,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 const longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -736,7 +740,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -749,7 +753,7 @@ describe('Position', () => {
                     .mul(longPositionBefore.averagePrice.sub(oraclePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = longPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -776,7 +780,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -846,6 +850,7 @@ describe('Position', () => {
                     keeper,
                     pool,
                     riskReserve,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -882,7 +887,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -922,7 +927,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 const longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -945,7 +950,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -958,7 +963,7 @@ describe('Position', () => {
                     .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.makerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.makerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -985,7 +990,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -1055,6 +1060,7 @@ describe('Position', () => {
                     riskReserve,
                     indexPriceFeed,
                     oraclePriceFeed,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -1122,7 +1128,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1145,7 +1151,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -1158,7 +1164,7 @@ describe('Position', () => {
                     .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -1194,6 +1200,7 @@ describe('Position', () => {
                     pool,
                     router,
                     oraclePriceFeed,
+                    feeCollector,
                 } = testEnv;
 
                 // add liquidity
@@ -1236,6 +1243,7 @@ describe('Position', () => {
                     riskReserve,
                     indexPriceFeed,
                     oraclePriceFeed,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -1303,7 +1311,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1326,7 +1334,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -1339,7 +1347,7 @@ describe('Position', () => {
                     .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -1366,7 +1374,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -1437,6 +1445,7 @@ describe('Position', () => {
                     riskReserve,
                     indexPriceFeed,
                     oraclePriceFeed,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -1504,7 +1513,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1527,7 +1536,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -1540,7 +1549,7 @@ describe('Position', () => {
                     .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -1567,7 +1576,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -1638,6 +1647,7 @@ describe('Position', () => {
                     riskReserve,
                     indexPriceFeed,
                     oraclePriceFeed,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -1705,7 +1715,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1728,7 +1738,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -1741,7 +1751,7 @@ describe('Position', () => {
                     .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -1768,7 +1778,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -1839,6 +1849,7 @@ describe('Position', () => {
                     riskReserve,
                     indexPriceFeed,
                     oraclePriceFeed,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -1875,7 +1886,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: longOrderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 let longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
@@ -1915,7 +1926,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: shortOrderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 let shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
@@ -1929,7 +1940,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, longPosition.positionAmount);
@@ -1938,7 +1949,7 @@ describe('Position', () => {
                     .mul(longPosition.averagePrice.sub(oraclePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = longPosition.collateral.add(pnl).sub(tradingFee);
@@ -1994,7 +2005,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -2025,7 +2036,7 @@ describe('Position', () => {
                         {
                             positionKey,
                             sizeAmount: longPositionAfter.positionAmount,
-                            level: 0,
+                            tier: 0,
                             commissionRatio: 0,
                         },
                     ],
@@ -2101,6 +2112,7 @@ describe('Position', () => {
                     pool,
                     oraclePriceFeed,
                     indexPriceFeed,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -2168,7 +2180,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -2191,7 +2203,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const poolPrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -2204,7 +2216,7 @@ describe('Position', () => {
                     .mul(poolPrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(poolPrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -2253,7 +2265,7 @@ describe('Position', () => {
                                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                                 ),
                             ],
-                            [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                            [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                             { value: 1 },
                         ),
                 ).to.be.revertedWith('exceed max price deviation');
@@ -2312,6 +2324,7 @@ describe('Position', () => {
                     oraclePriceFeed,
                     indexPriceFeed,
                     riskReserve,
+                    feeCollector,
                 } = testEnv;
                 const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
                 const size = ethers.utils.parseUnits('30', await btc.decimals());
@@ -2379,7 +2392,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, level: 0, commissionRatio: 0 }],
+                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -2402,7 +2415,7 @@ describe('Position', () => {
 
                 // calculate pnl、tradingFee
                 const pair = await pool.getPair(pairIndex);
-                const tradingFeeConfig = await pool.getTradingFeeConfig(pairIndex);
+                const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
                 const tradingConfig = await pool.getTradingConfig(pairIndex);
                 const poolPrice = await oraclePriceFeed.getPrice(pair.indexToken);
                 const indexToStableAmount = await convertIndexAmountToStable(
@@ -2415,7 +2428,7 @@ describe('Position', () => {
                     .mul(poolPrice.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDelta = indexToStableAmount.mul(poolPrice).div('1000000000000000000000000000000');
-                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
 
                 // calculate riskRate
                 const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
@@ -2462,7 +2475,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ positionKey: positionKey, sizeAmount: 0, level: 0, commissionRatio: 0 }],
+                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
                         { value: 1 },
                     );
 
@@ -2478,7 +2491,7 @@ describe('Position', () => {
                     .mul(poolPriceAfter.sub(shortPositionBefore.averagePrice))
                     .div('1000000000000000000000000000000');
                 const sizeDeltaAfter = indexToStableAmount.mul(poolPriceAfter).div('1000000000000000000000000000000');
-                const tradingFeeAfter = sizeDeltaAfter.mul(tradingFeeConfig.takerFeeP).div('100000000');
+                const tradingFeeAfter = sizeDeltaAfter.mul(tradingFeeConfig.takerFee).div('100000000');
                 const totalSettlementAmount = pnlAfter.sub(tradingFeeAfter);
 
                 expect(balance).to.be.eq(entrustOrderBefore.collateral);

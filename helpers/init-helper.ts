@@ -1,4 +1,4 @@
-import { MockERC20Token, FundingRate, Pool } from '../types';
+import { MockERC20Token, FundingRate, Pool, FeeCollector, IFeeCollector } from '../types';
 import { loadReserveConfig } from './market-config-helper';
 import { MARKET_NAME } from './env';
 import { SignerWithAddress } from '../test/helpers/make-suite';
@@ -12,6 +12,7 @@ export async function initPairs(
     usdt: MockERC20Token,
     pool: Pool,
     fundingRate: FundingRate,
+    feeCollector: FeeCollector,
 ) {
     log(`Initializing pairs`);
     const pairConfigs = loadReserveConfig(MARKET_NAME)?.PairsConfig;
@@ -32,6 +33,14 @@ export async function initPairs(
         await waitForTx(await pool.updateTradingConfig(pairIndex, tradingConfig));
         await waitForTx(await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
         await waitForTx(await fundingRate.updateFundingFeeConfig(pairIndex, fundingFeeConfig));
+
+        await waitForTx(
+            await feeCollector.updateTradingFeeTiers(
+                pairIndex,
+                [0],
+                [{ takerFee: pairConfig.tradingFeeConfig.takerFee, makerFee: pairConfig.tradingFeeConfig.makerFee }],
+            ),
+        );
 
         log(`added pair [${symbol}, ${MARKET_NAME}] at index`, (await pool.pairsIndex()).sub(1).toString());
     }
