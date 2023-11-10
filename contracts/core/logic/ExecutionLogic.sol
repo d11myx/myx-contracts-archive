@@ -84,7 +84,9 @@ contract ExecutionLogic is IExecutionLogic {
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
                     order.tier,
-                    order.commissionRatio
+                    order.referralsRatio,
+                    order.referralUserRatio,
+                    order.referralOwner
                 )
             {} catch Error(string memory reason) {
                 orderManager.cancelOrder(
@@ -110,7 +112,9 @@ contract ExecutionLogic is IExecutionLogic {
                     order.orderId,
                     TradingTypes.TradeType.LIMIT,
                     order.tier,
-                    order.commissionRatio
+                    order.referralsRatio,
+                    order.referralUserRatio,
+                    order.referralOwner
                 )
             {} catch Error(string memory reason) {
                 orderManager.cancelOrder(
@@ -129,7 +133,9 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 tier,
-        uint256 commissionRatio
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) external override onlyExecutorOrKeeper {
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
             _orderId,
@@ -240,7 +246,9 @@ contract ExecutionLogic is IExecutionLogic {
             order.isLong,
             collateral,
             feeCollector.getTradingFeeTier(pairIndex, tier),
-            commissionRatio,
+            referralsRatio,
+            referralUserRatio,
+            referralOwner,
             executionPrice
         );
 
@@ -305,7 +313,9 @@ contract ExecutionLogic is IExecutionLogic {
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
                     order.tier,
-                    order.commissionRatio,
+                    order.referralsRatio,
+                    order.referralUserRatio,
+                    order.referralOwner,
                     false,
                     0,
                     true
@@ -334,7 +344,9 @@ contract ExecutionLogic is IExecutionLogic {
                     order.orderId,
                     TradingTypes.TradeType.LIMIT,
                     order.tier,
-                    order.commissionRatio,
+                    order.referralsRatio,
+                    order.referralUserRatio,
+                    order.referralOwner,
                     false,
                     0,
                     false
@@ -350,7 +362,9 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 tier,
-        uint256 commissionRatio,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         bool isSystem,
         uint256 executionSize,
         bool onlyOnce
@@ -360,7 +374,9 @@ contract ExecutionLogic is IExecutionLogic {
             _orderId,
             _tradeType,
             tier,
-            commissionRatio,
+            referralsRatio,
+            referralUserRatio,
+            referralOwner,
             isSystem,
             executionSize,
             onlyOnce
@@ -372,7 +388,9 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 tier,
-        uint256 commissionRatio,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         bool isSystem,
         uint256 executionSize,
         bool onlyOnce
@@ -504,7 +522,9 @@ contract ExecutionLogic is IExecutionLogic {
             order.isLong,
             collateral,
             feeCollector.getTradingFeeTier(pairIndex, tier),
-            commissionRatio,
+            referralsRatio,
+            referralUserRatio,
+            referralOwner,
             executionPrice,
             false
         );
@@ -632,7 +652,9 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 _tier,
-        uint256 _commissionRatio
+        uint256 _referralsRatio,
+        uint256 _referralUserRatio,
+        address _referralOwner
     ) external override onlyExecutorOrKeeper {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
             _orderId,
@@ -670,7 +692,9 @@ contract ExecutionLogic is IExecutionLogic {
                 order.orderId,
                 order.tradeType,
                 _tier,
-                _commissionRatio,
+                _referralsRatio,
+                _referralUserRatio,
+                _referralOwner,
                 false,
                 0,
                 _tradeType == TradingTypes.TradeType.MARKET
@@ -683,7 +707,9 @@ contract ExecutionLogic is IExecutionLogic {
             order.orderId,
             order.tradeType,
             _tier,
-            _commissionRatio,
+            _referralsRatio,
+            _referralUserRatio,
+            _referralOwner,
             true,
             executionSize - needADLAmount,
             false
@@ -713,7 +739,9 @@ contract ExecutionLogic is IExecutionLogic {
                 adlPosition.position = position;
                 adlPosition.executionSize = adlExecutionSize;
                 adlPosition.tier = executePosition.tier;
-                adlPosition.commissionRatio = executePosition.commissionRatio;
+                adlPosition.referralsRatio = executePosition.referralsRatio;
+                adlPosition.referralUserRatio = executePosition.referralUserRatio;
+                adlPosition.referralOwner = executePosition.referralOwner;
             }
         }
         uint256 price = TradingHelper.getValidPrice(
@@ -744,7 +772,9 @@ contract ExecutionLogic is IExecutionLogic {
                     orderId,
                     TradingTypes.TradeType.MARKET,
                     adlPosition.tier,
-                    adlPosition.commissionRatio,
+                    adlPosition.referralsRatio,
+                    adlPosition.referralUserRatio,
+                    adlPosition.referralOwner,
                     true,
                     0,
                     true
@@ -757,7 +787,9 @@ contract ExecutionLogic is IExecutionLogic {
             order.orderId,
             order.tradeType,
             _tier,
-            _commissionRatio,
+            _referralsRatio,
+            _referralUserRatio,
+            _referralOwner,
             true,
             0,
             false

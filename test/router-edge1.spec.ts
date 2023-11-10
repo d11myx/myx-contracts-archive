@@ -1,7 +1,7 @@
 import { newTestEnv, SignerWithAddress, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
-import { MAX_UINT_AMOUNT, TradeType, waitForTx } from '../helpers';
+import { MAX_UINT_AMOUNT, TradeType, waitForTx, ZERO_ADDRESS } from '../helpers';
 import { expect } from './shared/expect';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { IRouter, Router, TradingTypes } from '../types/contracts/core/Router';
@@ -122,7 +122,7 @@ describe('Router: Edge cases 1', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
                 { value: 1 },
             );
 
@@ -187,7 +187,7 @@ describe('Router: Edge cases 1', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
                 { value: 1 },
             );
 
@@ -370,7 +370,7 @@ describe('Router: Edge cases 1', () => {
         //                 positionKey: traderPositionKey,
         //                 sizeAmount: ethers.utils.parseUnits('5', 18),
         //                 tier: 0,
-        //                 commissionRatio: 0,
+        //                 referralsRatio:0,referralUserRatio:0,referralOwner: ZERO_ADDRESS,
         //             },
         //         ],
         //         decreaseOrderId,
@@ -479,20 +479,26 @@ describe('Router: Edge cases 1', () => {
             };
             expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
 
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -518,7 +524,7 @@ describe('Router: Edge cases 1', () => {
             // const traderPositionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
             // await executor
             //     .connect(keeper.signer)
-            //     .liquidatePositions([{ positionKey: traderPositionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }]);
+            //     .liquidatePositions([{ positionKey: traderPositionKey, sizeAmount: 0, tier: 0, referralsRatio:0,referralUserRatio:0,referralOwner: ZERO_ADDRESS }]);
 
             //todo
             // const positionAft = await tradingVault.getPosition(trader.address, pairIndex, true);
@@ -553,18 +559,24 @@ export async function increaseUserPosition(
     const increaseOrderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createIncreaseOrder(increasePositionRequest);
 
-    await executor
-        .connect(keeper.signer)
-        .setPricesAndExecuteIncreaseMarketOrders(
-            [btc.address],
-            [await indexPriceFeed.getPrice(btc.address)],
-            [
-                new ethers.utils.AbiCoder().encode(
-                    ['uint256'],
-                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                ),
-            ],
-            [{ orderId: increaseOrderId, tier: 0, commissionRatio: 0 }],
-            { value: 1 },
-        );
+    await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+        [btc.address],
+        [await indexPriceFeed.getPrice(btc.address)],
+        [
+            new ethers.utils.AbiCoder().encode(
+                ['uint256'],
+                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+            ),
+        ],
+        [
+            {
+                orderId: increaseOrderId,
+                tier: 0,
+                referralsRatio: 0,
+                referralUserRatio: 0,
+                referralOwner: ZERO_ADDRESS,
+            },
+        ],
+        { value: 1 },
+    );
 }

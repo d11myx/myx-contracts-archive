@@ -11,14 +11,18 @@ interface IExecutionLogic is IExecution {
     struct ExecuteOrder {
         uint256 orderId;
         uint8 tier;
-        uint256 commissionRatio;
+        uint256 referralsRatio;
+        uint256 referralUserRatio;
+        address referralOwner;
     }
 
     struct ExecutePositionInfo {
         Position.Info position;
         uint256 executionSize;
         uint8 tier;
-        uint256 commissionRatio;
+        uint256 referralsRatio;
+        uint256 referralUserRatio;
+        address referralOwner;
     }
 
     function maxTimeDelay() external view returns (uint256);
@@ -27,16 +31,18 @@ interface IExecutionLogic is IExecution {
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
-    function executeIncreaseMarketOrders(address keeper,ExecuteOrder[] memory orders) external;
+    function executeIncreaseMarketOrders(address keeper, ExecuteOrder[] memory orders) external;
 
-    function executeIncreaseLimitOrders(address keeper,ExecuteOrder[] memory orders) external;
+    function executeIncreaseLimitOrders(address keeper, ExecuteOrder[] memory orders) external;
 
     function executeIncreaseOrder(
         address keeper,
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 tier,
-        uint256 commissionRatio
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) external;
 
     function executeDecreaseMarketOrders(address keeper, ExecuteOrder[] memory orders) external;
@@ -48,7 +54,9 @@ interface IExecutionLogic is IExecution {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 tier,
-        uint256 commissionRatio,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         bool isSystem,
         uint256 executionSize,
         bool onlyOnce
@@ -60,7 +68,9 @@ interface IExecutionLogic is IExecution {
         uint256 _orderId,
         TradingTypes.TradeType _tradeType,
         uint8 _tier,
-        uint256 _commissionRatio
+        uint256 _referralsRatio,
+        uint256 _referralUserRatio,
+        address _referralOwner
     ) external;
 
     function needADL(
