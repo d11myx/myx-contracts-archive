@@ -11,7 +11,6 @@ import '../../interfaces/IPool.sol';
 import '../../helpers/TradingHelper.sol';
 import '../../interfaces/IFeeCollector.sol';
 
-
 contract LiquidationLogic is ILiquidationLogic {
     using PrecisionUtils for uint256;
     using Math for uint256;
@@ -69,7 +68,9 @@ contract LiquidationLogic is ILiquidationLogic {
                 keeper,
                 execute.positionKey,
                 execute.tier,
-                execute.commissionRatio
+                execute.referralsRatio,
+                execute.referralUserRatio,
+                execute.referralOwner
             );
         }
     }
@@ -78,7 +79,9 @@ contract LiquidationLogic is ILiquidationLogic {
         address keeper,
         bytes32 positionKey,
         uint8 tier,
-        uint256 commissionRatio
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) external override onlyExecutorOrKeeper {
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
@@ -115,7 +118,7 @@ contract LiquidationLogic is ILiquidationLogic {
             })
         );
 
-        _executeLiquidationOrder(keeper, orderId, tier, commissionRatio);
+        _executeLiquidationOrder(keeper, orderId, tier, referralsRatio, referralUserRatio, referralOwner);
 
         emit ExecuteLiquidation(
             positionKey,
@@ -133,7 +136,9 @@ contract LiquidationLogic is ILiquidationLogic {
         address keeper,
         uint256 orderId,
         uint8 tier,
-        uint256 commissionRatio
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) private {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
             orderId,
@@ -204,7 +209,9 @@ contract LiquidationLogic is ILiquidationLogic {
             order.isLong,
             0,
             feeCollector.getTradingFeeTier(pairIndex, tier),
-            commissionRatio,
+            referralsRatio,
+            referralUserRatio,
+            referralOwner,
             executionPrice,
             true
         );

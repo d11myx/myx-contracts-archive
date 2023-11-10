@@ -2,7 +2,7 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import hre, { ethers } from 'hardhat';
 import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
-import { TradeType, getMockToken, convertStableAmountToIndex } from '../helpers';
+import { TradeType, getMockToken, convertStableAmountToIndex, ZERO_ADDRESS } from '../helpers';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 
@@ -93,7 +93,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             let position = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -125,7 +133,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
@@ -157,7 +173,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             position = await positionManager.getPosition(trader2.address, pairIndex, true);
@@ -189,7 +213,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');
@@ -242,7 +274,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             const traderPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -274,7 +314,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
@@ -307,7 +355,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             const trader2PositionAfter = await positionManager.getPosition(trader2.address, pairIndex, true);
@@ -339,7 +395,15 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
             reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');
