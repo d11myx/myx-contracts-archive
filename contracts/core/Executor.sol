@@ -100,7 +100,9 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         uint8 tier,
-        uint256 commissionRatio
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) external payable override whenNotPaused onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
@@ -112,7 +114,9 @@ contract Executor is IExecutor, Roleable, Pausable {
             orderId,
             tradeType,
             tier,
-            commissionRatio
+            referralsRatio,
+            referralUserRatio,
+            referralOwner
         );
     }
 

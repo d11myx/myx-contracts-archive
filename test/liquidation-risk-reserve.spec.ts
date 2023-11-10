@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { TradeType } from '../helpers';
+import { TradeType, ZERO_ADDRESS } from '../helpers';
 import { Position } from '../types/contracts/core/PositionManager';
 import Decimal from 'decimal.js';
 import { expect } from './shared/expect';
@@ -96,7 +96,16 @@ describe('Liquidation: Risk Reserve', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
+                [
+                    {
+                        positionKey: positionKey,
+                        sizeAmount: 0,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
@@ -159,7 +168,16 @@ describe('Liquidation: Risk Reserve', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
+                [
+                    {
+                        positionKey: positionKey,
+                        sizeAmount: 0,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
@@ -224,7 +242,16 @@ describe('Liquidation: Risk Reserve', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
+                [
+                    {
+                        positionKey: positionKey,
+                        sizeAmount: 0,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
