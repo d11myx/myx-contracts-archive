@@ -19,6 +19,7 @@ import {
     MockERC20Token,
     SpotSwap,
     MockPythOraclePriceFeed,
+    PoolToken,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -95,6 +96,10 @@ export const getPoolTokenFactory = async (address?: string): Promise<PoolTokenFa
         'PoolTokenFactory',
         address || (await hre.deployments.get(POOL_TOKEN_FACTORY)).address,
     );
+};
+
+export const getPoolToken = async (address: string): Promise<PoolToken> => {
+    return getContract<PoolToken>('PoolToken', address);
 };
 
 export const getPool = async (address?: string): Promise<Pool> => {
