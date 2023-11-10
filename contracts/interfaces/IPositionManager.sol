@@ -105,7 +105,9 @@ interface IPositionManager {
         bool _isLong,
         int256 _collateral,
         IFeeCollector.TradingFeeTier memory tradingFeeTier,
-        uint256 referralRate,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         uint256 _price
     ) external returns (uint256 tradingFee, int256 fundingFee);
 
@@ -118,7 +120,9 @@ interface IPositionManager {
         bool _isLong,
         int256 _collateral,
         IFeeCollector.TradingFeeTier memory tradingFeeTier,
-        uint256 referralRate,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         uint256 _price,
         bool useRiskReserve
     ) external returns (uint256 tradingFee, int256 fundingFee, int256 pnl);

@@ -85,7 +85,9 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool isLong,
         int256 collateral,
         IFeeCollector.TradingFeeTier memory tradingFeeTier,
-        uint256 referralRate,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         uint256 oraclePrice
     ) external onlyExecutor returns (uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(pairIndex);
@@ -123,7 +125,9 @@ contract PositionManager is IPositionManager, Upgradeable {
             sizeAmount,
             isLong,
             tradingFeeTier,
-            referralRate,
+            referralsRatio,
+            referralUserRatio,
+            referralOwner,
             oraclePrice
         );
 
@@ -172,7 +176,9 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool isLong,
         int256 collateral,
         IFeeCollector.TradingFeeTier memory tradingFeeTier,
-        uint256 referralRate,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         uint256 oraclePrice,
         bool useRiskReserve
     ) external onlyExecutor returns (uint256 tradingFee, int256 fundingFee, int256 pnl) {
@@ -196,7 +202,9 @@ contract PositionManager is IPositionManager, Upgradeable {
             sizeAmount,
             isLong,
             tradingFeeTier,
-            referralRate,
+            referralsRatio,
+            referralUserRatio,
+            referralOwner,
             oraclePrice
         );
 
@@ -323,7 +331,9 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint256 _sizeAmount,
         bool _isLong,
         IFeeCollector.TradingFeeTier memory tradingFeeTier,
-        uint256 referralRate,
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner,
         uint256 _price
     ) internal returns (int256 charge, uint256 tradingFee, int256 fundingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
@@ -342,7 +352,9 @@ contract PositionManager is IPositionManager, Upgradeable {
             sizeDeltaStable,
             tradingFee,
             isTaker ? tradingFeeTier.takerFee : tradingFeeTier.makerFee,
-            referralRate
+            referralsRatio,
+            referralUserRatio,
+            referralOwner
         );
 
         fundingFee = getFundingFee(_account, _pairIndex, _isLong);
@@ -560,9 +572,9 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool _isLong,
         uint256 sizeDeltaStable
     ) internal view returns (uint256 tradingFee, bool isTaker) {
-        IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(_pairIndex);
-        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
         IFeeCollector.TradingFeeTier memory regularTradingFeeTier = feeCollector.getRegularTradingFeeTier(_pairIndex);
+        int256 currentExposureAmountChecker = getExposedPositions(_pairIndex);
+
         if (currentExposureAmountChecker >= 0) {
             tradingFee = _isLong
                 ? sizeDeltaStable.mulPercentage(regularTradingFeeTier.takerFee)
