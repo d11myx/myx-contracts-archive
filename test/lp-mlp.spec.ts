@@ -204,7 +204,11 @@ describe('LP: fair price', () => {
             new Decimal(ethers.utils.formatEther(vaultTotal)).toFixed(0),
         );
 
-        expect(vaultAfter.indexTotalAmount).to.be.eq(vaultBefore.indexTotalAmount.sub(receiveIndexTokenAmount));
-        expect(vaultAfter.stableTotalAmount).to.be.eq(vaultBefore.stableTotalAmount.sub(receiveStableTokenAmount));
+        expect(vaultAfter.indexTotalAmount).to.be.eq(
+            vaultBefore.indexTotalAmount.sub(receiveIndexTokenAmount).sub(feeIndexTokenAmount),
+        );
+        expect(vaultAfter.stableTotalAmount).to.be.eq(
+            vaultBefore.stableTotalAmount.sub(receiveStableTokenAmount).sub(feeStableTokenAmount),
+        );
     });
 });
