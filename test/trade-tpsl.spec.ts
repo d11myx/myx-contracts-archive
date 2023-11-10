@@ -2,7 +2,7 @@ import { newTestEnv, testEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
 import { ethers } from 'hardhat';
 import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';
-import { TradeType } from '../helpers';
+import { TradeType, ZERO_ADDRESS } from '../helpers';
 import { IRouter, TradingTypes } from '../types/contracts/core/Router';
 
 describe('Trade: TP & SL', () => {
@@ -104,7 +104,7 @@ describe('Trade: TP & SL', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
                 { value: 1 },
             );
 
@@ -142,7 +142,7 @@ describe('Trade: TP & SL', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
                 { value: 1 },
             );
 
@@ -182,6 +182,7 @@ describe('Trade: TP & SL', () => {
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(request);
 
+            // @ts-ignore
             const orderTpSlRequest: IRouter.CreateOrderTpSlRequestStruct = {
                 orderId: orderId,
                 tradeType: TradeType.LIMIT,

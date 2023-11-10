@@ -27,7 +27,9 @@ interface IFeeCollector {
         uint256 tradingFee,
         uint256 vipDiscountAmount,
         uint256 vipFeeRate,
-        uint256 referralAmount,
+        uint256 referralsAmount,
+        uint256 referralUserAmount,
+        address referralOwner,
         uint256 lpAmount,
         uint256 keeperAmount,
         uint256 stakingAmount,
@@ -55,6 +57,8 @@ interface IFeeCollector {
 
     function userTradingFee(address _account) external view returns (uint256);
 
+    function referralFee(address _referralOwner) external view returns (uint256);
+
     function getTradingFeeTier(uint256 pairIndex, uint8 tier) external view returns (TradingFeeTier memory);
 
     function getRegularTradingFeeTier(uint256 pairIndex) external view returns (TradingFeeTier memory);
@@ -64,6 +68,8 @@ interface IFeeCollector {
     function claimStakingTradingFee() external returns (uint256);
 
     function claimTreasuryFee() external returns (uint256);
+
+    function claimReferralFee() external returns (uint256);
 
     function claimKeeperTradingFee() external returns (uint256);
 
@@ -76,6 +82,8 @@ interface IFeeCollector {
         uint256 sizeDelta,
         uint256 tradingFee,
         uint256 vipFeeRate,
-        uint256 referralRate
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) external returns (uint256 lpAmount, uint256 vipDiscountAmount);
 }

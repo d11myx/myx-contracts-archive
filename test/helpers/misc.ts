@@ -2,7 +2,7 @@ import { MockERC20Token } from '../../types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress, TestEnv } from './make-suite';
 import hre, { ethers } from 'hardhat';
-import { abiCoder, TradeType, waitForTx } from '../../helpers';
+import { abiCoder, TradeType, waitForTx, ZERO_ADDRESS } from '../../helpers';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { TradingTypes } from '../../types/contracts/core/Router';
 import { IExecution } from '../../types/contracts/core/Executor';
@@ -82,7 +82,7 @@ export async function increasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -102,7 +102,15 @@ export async function increasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId.toNumber(), tier: 0, commissionRatio: 0 }],
+                [
+                    {
+                        orderId: orderId.toNumber(),
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -155,7 +163,7 @@ export async function decreasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -171,7 +179,7 @@ export async function decreasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -223,6 +231,8 @@ export async function adlPosition(
             tradeType,
             0,
             0,
+            0,
+            ZERO_ADDRESS,
             { value: 1 },
         );
     const receipt = await tx.wait();

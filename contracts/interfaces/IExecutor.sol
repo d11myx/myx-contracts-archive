@@ -42,7 +42,9 @@ interface IExecutor {
         uint256 orderId,
         TradingTypes.TradeType tradeType,
         uint8 tier,
-        uint256 commissionRatio
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) external payable;
 
     function setPricesAndLiquidatePositions(
