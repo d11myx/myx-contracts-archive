@@ -195,8 +195,7 @@ describe('LP: Pool cases', () => {
             ).to.be.eq(
                 (await convertIndexAmount(btc, vaultBefore.indexTotalAmount.mul(pairPrice), 18))
                     .add(await convertIndexAmount(usdt, vaultBefore.stableTotalAmount, 18))
-                    .sub(lpAmount)
-                    .add(await convertIndexAmount(usdt, expectRemoveLiquidity.feeAmount, 18)),
+                    .sub(lpAmount),
             );
         });
     });
