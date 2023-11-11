@@ -729,19 +729,22 @@ contract Pool is IPool, Upgradeable {
 
         uint256 totalAvailable = availableIndexTokenWad.mulPrice(price) + availableStableTokenWad;
         uint256 totalReceive = receiveIndexTokenAmountWad.mulPrice(price) + receiveStableTokenAmountWad;
-        require(totalReceive <= totalAvailable, "iab");
-
-        _decreaseTotalAmount(_pairIndex, receiveIndexTokenAmount, receiveStableTokenAmount);
+        require(totalReceive <= totalAvailable, "insufficient liquidity");
 
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
+
+        _decreaseTotalAmount(
+            _pairIndex,
+            receiveIndexTokenAmount + feeIndexTokenAmount,
+            receiveStableTokenAmount + feeStableTokenAmount
+        );
 
         if (useETH && pair.indexToken == ADDRESS_PROVIDER.WETH()) {
             _unwrapWETH(receiveIndexTokenAmount, _receiver);
         } else {
             IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
         }
-
         IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
 
         feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
@@ -905,7 +908,7 @@ contract Pool is IPool, Upgradeable {
             18,
             lpFairPrice(_pairIndex, price)));
 
-        require(indexReserveDeltaWad + stableReserveDeltaWad >= receiveDeltaWad, "iab");
+        require(indexReserveDeltaWad + stableReserveDeltaWad >= receiveDeltaWad, "insufficient liquidity");
 
         // expect delta
         uint256 totalDeltaWad = indexReserveDeltaWad + stableReserveDeltaWad - receiveDeltaWad;
