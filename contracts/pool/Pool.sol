@@ -751,7 +751,7 @@ contract Pool is IPool, Upgradeable {
         feeTokenAmounts[pair.stableToken] += feeStableTokenAmount;
 
         emit RemoveLiquidity(
-            msg.sender,
+            tx.origin,
             _receiver,
             _pairIndex,
             receiveIndexTokenAmount,
