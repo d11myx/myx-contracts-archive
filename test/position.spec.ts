@@ -9,6 +9,7 @@ import {
     MARKET_NAME,
     convertIndexAmount,
     convertStableAmount,
+    ZERO_ADDRESS,
 } from '../helpers';
 import { constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
@@ -127,20 +128,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -191,20 +198,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const longPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -328,20 +342,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -391,20 +411,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -498,20 +525,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -561,20 +594,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -666,20 +706,26 @@ describe('Position', () => {
 
                 const shortOrderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(increseShortPositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: shortOrderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -706,20 +752,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(increseLongPositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 const longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -769,20 +821,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -876,20 +935,26 @@ describe('Position', () => {
 
                 const shortOrderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(increseShortPositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: shortOrderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 const shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -916,20 +981,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(increseLongPositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 const longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -979,20 +1050,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -1117,20 +1195,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -1304,20 +1388,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -1367,20 +1457,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -1506,20 +1603,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -1569,20 +1672,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -1708,20 +1818,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -1771,20 +1887,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -1879,20 +2002,26 @@ describe('Position', () => {
 
                 const longOrderId = await orderManager.ordersIndex();
                 await router.connect(longTrader.signer).createIncreaseOrder(increseLongPositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: longOrderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: longOrderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 let longPosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
                 longTraderBalance = await usdt.balanceOf(longTrader.address);
 
@@ -1919,20 +2048,26 @@ describe('Position', () => {
 
                 const shortOrderId = await orderManager.ordersIndex();
                 await router.connect(shortTrader.signer).createIncreaseOrder(increseShortPositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: shortOrderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: shortOrderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 let shortPosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
                 shortTraderBalance = await usdt.balanceOf(shortTrader.address);
 
@@ -1998,20 +2133,27 @@ describe('Position', () => {
 
                 // execute liquidate positions
                 const positionKey = await positionManager.getPositionKey(longTrader.address, pairIndex, true);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 longTraderBalance = await usdt.balanceOf(longTrader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
@@ -2041,13 +2183,17 @@ describe('Position', () => {
                             positionKey,
                             sizeAmount: longPositionAfter.positionAmount,
                             tier: 0,
-                            commissionRatio: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
                         },
                     ],
                     adlOrder.orderId,
                     TradeType.MARKET,
                     0,
                     0,
+                    0,
+                    ZERO_ADDRESS,
                     { value: 1 },
                 );
                 adlOrder = await orderManager.getDecreaseOrder(longOrders[0].orderId, TradeType.MARKET);
@@ -2173,20 +2319,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -2258,20 +2410,27 @@ describe('Position', () => {
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
                 await expect(
-                    executor
-                        .connect(keeper.signer)
-                        .setPricesAndLiquidatePositions(
-                            [btc.address],
-                            [await indexPriceFeed.getPrice(btc.address)],
-                            [
-                                new ethers.utils.AbiCoder().encode(
-                                    ['uint256'],
-                                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                                ),
-                            ],
-                            [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                            { value: 1 },
-                        ),
+                    executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        [
+                            {
+                                positionKey: positionKey,
+                                sizeAmount: 0,
+                                tier: 0,
+                                referralsRatio: 0,
+                                referralUserRatio: 0,
+                                referralOwner: ZERO_ADDRESS,
+                            },
+                        ],
+                        { value: 1 },
+                    ),
                 ).to.be.revertedWith('exceed max price deviation');
             });
         });
@@ -2385,20 +2544,26 @@ describe('Position', () => {
 
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteIncreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
@@ -2468,20 +2633,27 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [{ positionKey: positionKey, sizeAmount: 0, tier: 0, commissionRatio: 0 }],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
 
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
