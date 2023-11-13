@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { TradeType } from '../helpers';
+import { TradeType, ZERO_ADDRESS } from '../helpers';
 
 describe('Trade: Limit order cases', () => {
     const pairIndex = 1;
@@ -81,20 +81,26 @@ describe('Trade: Limit order cases', () => {
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             // console.log(`---positionAft: `, positionAft);
 
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseLimitOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             // expect(positionAft.positionAmount).to.be.eq(size);
         });
 

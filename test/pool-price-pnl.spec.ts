@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { before } from 'mocha';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import { getBlockTimestamp, TradeType, waitForTx } from '../helpers';
+import { getBlockTimestamp, TradeType, waitForTx, ZERO_ADDRESS } from '../helpers';
 import { PoolToken } from '../types';
 import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
@@ -134,7 +134,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
@@ -199,7 +207,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
@@ -265,7 +281,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
@@ -334,7 +358,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
@@ -434,7 +466,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
@@ -496,7 +536,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
@@ -558,7 +606,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
@@ -625,7 +681,15 @@ describe('Modify LP Average Price', async () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
-                    [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                    [
+                        {
+                            orderId: orderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
 
