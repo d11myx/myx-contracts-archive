@@ -54,6 +54,8 @@ interface IExecution {
         bytes32 positionKey;
         uint256 sizeAmount;
         uint8 tier;
-        uint256 commissionRatio;
+        uint256 referralsRatio;
+        uint256 referralUserRatio;
+        address referralOwner;
     }
 }

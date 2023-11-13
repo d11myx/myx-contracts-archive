@@ -28,6 +28,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
 
     uint256 public override treasuryFee;
 
+    mapping(address => uint256) public override referralFee;
+
     address public pledgeAddress;
 
     address public addressStakingPool;
@@ -126,6 +128,16 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return claimableTreasuryFee;
     }
 
+    function claimReferralFee() external override nonReentrant returns (uint256) {
+        uint256 claimableReferralFee = referralFee[msg.sender];
+        if (claimableReferralFee > 0) {
+            referralFee[msg.sender] = 0;
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableReferralFee);
+        }
+        emit ClaimedReferralsTradingFee(msg.sender, pledgeAddress, claimableReferralFee);
+        return claimableReferralFee;
+    }
+
     function claimKeeperTradingFee() external override nonReentrant returns (uint256) {
         return _claimUserTradingFee();
     }
@@ -141,19 +153,34 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         uint256 sizeDelta,
         uint256 tradingFee,
         uint256 vipFeeRate,
-        uint256 referralRate
+        uint256 referralsRatio,
+        uint256 referralUserRatio,
+        address referralOwner
     ) external override onlyPositionManager returns (uint256 lpAmount, uint256 vipDiscountAmount) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
+        // vip discount
         uint256 vipTradingFee = sizeDelta.mulPercentage(vipFeeRate);
         vipDiscountAmount = tradingFee - vipTradingFee;
         userTradingFee[account] += vipDiscountAmount;
 
         uint256 surplusFee = tradingFee - vipDiscountAmount;
 
-        uint256 referralsAmount = surplusFee.mulPercentage(
-            Math.min(referralRate, maxReferralsRatio)
-        );
+        // referrals amount
+        uint256 referralsAmount;
+        uint256 referralUserAmount;
+        if (referralOwner != address(0)) {
+            referralsAmount = surplusFee.mulPercentage(
+                Math.min(referralsRatio, maxReferralsRatio)
+            );
+            referralUserAmount = surplusFee.mulPercentage(
+                Math.min(referralUserRatio, referralsRatio)
+            );
+            userTradingFee[account] += referralUserAmount;
+            referralFee[referralOwner] += referralsAmount - referralUserAmount;
+
+            surplusFee = surplusFee - referralsAmount;
+        }
 
         lpAmount = surplusFee.mulPercentage(tradingFeeConfig.lpFeeDistributeP);
         pool.setLPStableProfit(pair.pairIndex, int256(lpAmount));
@@ -165,11 +192,10 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         stakingTradingFee += stakingAmount;
 
         uint256 distributorAmount = surplusFee -
-            referralsAmount -
             lpAmount -
             keeperAmount -
             stakingAmount;
-        treasuryFee += distributorAmount.add(referralsAmount);
+        treasuryFee += distributorAmount;
 
         emit DistributeTradingFee(
             account,
@@ -179,6 +205,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
             vipDiscountAmount,
             vipFeeRate,
             referralsAmount,
+            referralUserAmount,
+            referralOwner,
             lpAmount,
             keeperAmount,
             stakingAmount,

@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { EXECUTION_LOGIC_ID, TradeType } from '../helpers';
+import { EXECUTION_LOGIC_ID, TradeType, ZERO_ADDRESS } from '../helpers';
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from 'chai';
@@ -105,20 +105,26 @@ describe('Executor: require check', () => {
                 const orderId = await orderManager.ordersIndex();
                 await router.connect(trader.signer).createDecreaseOrder(request);
                 await expect(
-                    executor
-                        .connect(keeper.signer)
-                        .setPricesAndExecuteDecreaseMarketOrders(
-                            [btc.address],
-                            [await indexPriceFeed.getPrice(btc.address)],
-                            [
-                                new ethers.utils.AbiCoder().encode(
-                                    ['uint256'],
-                                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                                ),
-                            ],
-                            [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
-                            { value: 1 },
-                        ),
+                    executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+                        [btc.address],
+                        [await indexPriceFeed.getPrice(btc.address)],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                            ),
+                        ],
+                        [
+                            {
+                                orderId: orderId,
+                                tier: 0,
+                                referralsRatio: 0,
+                                referralUserRatio: 0,
+                                referralOwner: ZERO_ADDRESS,
+                            },
+                        ],
+                        { value: 1 },
+                    ),
                 ).to.be.revertedWith('opk');
                 await executor
                     .connect(keeper.signer)
@@ -131,7 +137,15 @@ describe('Executor: require check', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
-                        [{ orderId: orderId, tier: 0, commissionRatio: 0 }],
+                        [
+                            {
+                                orderId: orderId,
+                                tier: 0,
+                                referralsRatio: 0,
+                                referralUserRatio: 0,
+                                referralOwner: ZERO_ADDRESS,
+                            },
+                        ],
                         { value: 1 },
                     );
             });

@@ -3,7 +3,7 @@ import { expect } from './shared/expect';
 import hre, { ethers } from 'hardhat';
 import { adlPosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
-import { TradeType } from '../helpers';
+import { TradeType, ZERO_ADDRESS } from '../helpers';
 import Decimal from 'decimal.js';
 import { IExecutionLogic } from '../types';
 import { IExecution } from '../types/contracts/core/Executor';
@@ -135,7 +135,14 @@ describe('Replay: ADL', () => {
             await updateBTCPrice(testEnv, '26981.38');
             const adlPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
             const adlPositions: IExecution.ExecutePositionStruct[] = [
-                { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, tier: 0, commissionRatio: 0 },
+                {
+                    positionKey: adlPositionKey,
+                    sizeAmount: needADL.needADLAmount,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
             ];
             await adlPosition(
                 testEnv,
@@ -270,7 +277,14 @@ describe('Replay: ADL', () => {
             await updateBTCPrice(testEnv, '26981.38');
             const adlPositionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
             const adlPositions: IExecution.ExecutePositionStruct[] = [
-                { positionKey: adlPositionKey, sizeAmount: needADL.needADLAmount, tier: 0, commissionRatio: 0 },
+                {
+                    positionKey: adlPositionKey,
+                    sizeAmount: needADL.needADLAmount,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
             ];
             await adlPosition(
                 testEnv,
