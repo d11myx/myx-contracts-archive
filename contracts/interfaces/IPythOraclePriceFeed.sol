@@ -13,6 +13,8 @@ interface IPythOraclePriceFeed is IPriceFeed {
 
     event PythAddressUpdated(address oldAddress, address newAddress);
 
+    event PriceAgeUpdated(uint256 oldAge, uint256 newAge);
+
     function updatePythAddress(IPyth _pyth) external;
 
     function setTokenPriceIds(address[] memory tokens, bytes32[] memory priceIds) external;
