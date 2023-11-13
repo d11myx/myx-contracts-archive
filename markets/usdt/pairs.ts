@@ -14,7 +14,7 @@ export const btcPairInfo: PairInfoConfig = {
         kOfSwap: ethers.utils.parseUnits('1', 50),
         expectIndexTokenP: 50000000, //50%
         maxUnbalancedP: 10000000, //10%
-        unbalancedDiscountRate: 10000000, //10%
+        unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 100000, //0.1%
         lpFeeDistributeP: 100000000,
@@ -56,7 +56,7 @@ export const ethPairInfo: PairInfoConfig = {
         kOfSwap: ethers.utils.parseUnits('1', 50),
         expectIndexTokenP: 50000000, //50%
         maxUnbalancedP: 10000000, //10%
-        unbalancedDiscountRate: 10000000, //10%
+        unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 100000, //0.1%
         lpFeeDistributeP: 100000000,
