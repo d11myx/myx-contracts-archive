@@ -46,10 +46,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             return;
         }
 
-        const artifact = await hre.deployments.getArtifact('PythOraclePriceFeed');
-        await save(`${ORACLE_PRICE_FEED_ID}`, {
-            ...artifact,
-            address: oraclePriceFeedAddress as string,
+        await deploy(`${ORACLE_PRICE_FEED_ID}`, {
+            from: deployer,
+            contract: 'PythOraclePriceFeed',
+            args: [addressesProvider.address, oraclePriceFeedAddress, [], []],
+            ...COMMON_DEPLOY_PARAMS,
         });
     }
 
