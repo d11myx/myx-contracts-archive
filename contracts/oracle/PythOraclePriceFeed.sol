@@ -11,6 +11,9 @@ import "../interfaces/IRoleManager.sol";
 contract PythOraclePriceFeed is IPythOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     uint256 public immutable PRICE_DECIMALS = 30;
+
+    uint256 public priceAge;
+
     IPyth public pyth;
     mapping(address => bytes32) public tokenPriceIds;
 
@@ -20,17 +23,24 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         address[] memory tokens,
         bytes32[] memory priceIds
     ) {
+        priceAge = 10;
         ADDRESS_PROVIDER = addressProvider;
         pyth = IPyth(_pyth);
         _setTokenPriceIds(tokens, priceIds);
     }
 
-    modifier onlyTimelock() {
-        require(msg.sender == ADDRESS_PROVIDER.timelock(), "only timelock");
+    modifier onlyPoolAdmin() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "opa");
         _;
     }
 
-    function updatePythAddress(IPyth _pyth) external override onlyTimelock {
+    function updatePriceAge(uint256 age) external onlyPoolAdmin {
+        uint256 oldAge = priceAge;
+        priceAge = age;
+        emit PriceAgeUpdated(oldAge, priceAge);
+    }
+
+    function updatePythAddress(IPyth _pyth) external override onlyPoolAdmin {
         address oldAddress = address(pyth);
         pyth = _pyth;
         emit PythAddressUpdated(oldAddress, address(pyth));
@@ -39,7 +49,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     function setTokenPriceIds(
         address[] memory tokens,
         bytes32[] memory priceIds
-    ) external override onlyTimelock {
+    ) external override onlyPoolAdmin {
         _setTokenPriceIds(tokens, priceIds);
     }
 
@@ -70,7 +80,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     function getPriceSafely(address token) external view override returns (uint256) {
         bytes32 priceId = _getPriceId(token);
         PythStructs.Price memory pythPrice;
-        try pyth.getPriceNoOlderThan(priceId, 0) returns (PythStructs.Price memory _pythPrice) {
+        try pyth.getPriceNoOlderThan(priceId, priceAge) returns (PythStructs.Price memory _pythPrice) {
             pythPrice = _pythPrice;
         } catch {
             revert("get price failed");
