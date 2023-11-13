@@ -13,6 +13,7 @@ import {
     SymbolMap,
     waitForTx,
     ZERO_ADDRESS,
+    ZERO_HASH,
 } from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
@@ -63,7 +64,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     console.log(`Configured all pairs 【(${Object.keys(pairConfigs)})/${MARKET_NAME}】`);
 
     const spotSwap = await getSpotSwap();
-    await pool.connect(poolAdminSigner).setSpotSwap(spotSwap.address);
+    await waitForTx(await pool.connect(poolAdminSigner).setSpotSwap(spotSwap.address));
 
     // uniswap config
     const uniswapRouterAddress = reserveConfig.UniswapRouterAddress[network] as string;
@@ -86,7 +87,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         const basicToken = await getToken();
 
         const tokenPathConfigs = reserveConfig?.UniswapTokenPathConfig[network] as SymbolMap<string>;
-        if (!tokenPathConfigs || !tokenPathConfigs[symbol]) {
+        if (!tokenPathConfigs || !tokenPathConfigs[symbol] || tokenPathConfigs[symbol] == ZERO_HASH) {
             console.log(`[warring] Uniswap TokenPath for【${symbol}/${MARKET_NAME}】not provided`);
         } else {
             const pairIndex = await pool.getPairIndex(indexToken.address, basicToken.address);
