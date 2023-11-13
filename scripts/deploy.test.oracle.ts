@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
+// @ts-ignore
 import { ethers } from 'hardhat';
 
 declare var hre: HardhatRuntimeEnvironment;
