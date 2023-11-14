@@ -49,7 +49,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // setup priceIds
     const priceIds = reserveConfig?.OraclePriceId[network] as SymbolMap<string>;
     const pairTokenPriceIds = [];
-    for (let pair of priceFeedPairs) {
+    const pairTokenPrices: string[] = [];
+    for (let pair of Object.keys(reserveConfig.PairsConfig)) {
+        let address = '';
+        if (pairConfigs[pair]?.useWrappedNativeToken) {
+            address = (await getWETH()).address;
+        }
+        const pairToken = pair == MARKET_NAME ? await getToken() : await getMockToken(pair, address);
+        pairTokenPrices.push(pairToken.address);
+
         if (isLocalNetwork(hre)) {
             pairTokenPriceIds.push(ethers.utils.formatBytes32String(pair));
         } else {
@@ -62,7 +70,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         target: oraclePriceFeed.address,
         value: '0',
         signature: 'setTokenPriceIds(address[],bytes32[])',
-        data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+        data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenPrices, pairTokenPriceIds]),
         eta: Duration.seconds(30)
             .add(await latest())
             .toString(),

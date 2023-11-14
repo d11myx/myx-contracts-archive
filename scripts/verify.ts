@@ -26,7 +26,7 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    // await verifyContract(lineaGoerli, '0xf1cF76a6ADdf9bf98868D80ce06e6A3C7caE40C7', [60, 1]);
+    await verifyContract(lineaGoerli, 'w', []);
 
     // await verifyProxyContract(lineaGoerli, '0x934B2325c32419c64433eff92CD37933916c1a79', [
     //     '0x68d46485dd36824E1910aEA4BAB5Ba686BF9cAe7',
