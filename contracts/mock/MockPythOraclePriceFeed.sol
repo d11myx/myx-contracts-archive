@@ -24,12 +24,12 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
         _setAssetPriceIds(assets, priceIds);
     }
 
-    modifier onlyTimelock() {
-        require(msg.sender == ADDRESS_PROVIDER.timelock(), "only timelock");
+    modifier onlyPoolAdmin() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "opa");
         _;
     }
 
-    function updatePythAddress(IPyth _pyth) external onlyTimelock {
+    function updatePythAddress(IPyth _pyth) external onlyPoolAdmin {
         address oldAddress = address(pyth);
         pyth = _pyth;
         emit PythAddressUpdated(oldAddress, address(_pyth));
@@ -38,7 +38,7 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
     function setTokenPriceIds(
         address[] memory assets,
         bytes32[] memory priceIds
-    ) external onlyTimelock {
+    ) external onlyPoolAdmin {
         _setAssetPriceIds(assets, priceIds);
     }
 
