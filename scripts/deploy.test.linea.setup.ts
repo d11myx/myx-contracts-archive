@@ -12,7 +12,7 @@ async function main() {
     console.log(ethers.utils.formatEther(await deployer.getBalance()));
 
     const roleManager = await getRoleManager();
-    const oraclePriceFeed = (await getOraclePriceFeed()) as any as PythOraclePriceFeed;
+    const oraclePriceFeed = await getOraclePriceFeed();
 
     const keepers: string[] = [
         '0xA85583325A974bE1B47a492589Ce4370a6C20628',
@@ -56,7 +56,20 @@ async function main() {
         // await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
 
-    await oraclePriceFeed.connect(deployer).updatePriceAge(60);
+    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
+    await waitForTx(await pythOraclePriceFeed.connect(deployer).updatePriceAge(60));
+
+    // const wallet = new ethers.Wallet('', deployer.provider);
+    // await wallet.sendTransaction({
+    //     to: '',
+    //     value: ethers.utils.parseEther('1'),
+    // });
+
+    // for (const keeper of keepers) {
+    //     console.log(
+    //         `keeper: ${keeper} balance: ${ethers.utils.formatEther(await deployer.provider.getBalance(keeper))}`,
+    //     );
+    // }
 }
 
 main().catch((error) => {

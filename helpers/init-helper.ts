@@ -5,6 +5,7 @@ import { SignerWithAddress } from '../test/helpers/make-suite';
 import { SymbolMap } from './types';
 import { waitForTx } from './utilities/tx';
 import { log } from './contract-deployments';
+import { ethers } from 'ethers';
 
 export async function initPairs(
     deployer: SignerWithAddress,
@@ -29,6 +30,26 @@ export async function initPairs(
         await waitForTx(await pool.addPair(pair.indexToken, pair.stableToken));
 
         let pairIndex = await pool.getPairIndex(pair.indexToken, pair.stableToken);
+
+        // override
+        if (pairIndex.toNumber() == 1) {
+            pair.kOfSwap = ethers.utils.parseUnits('1', 50);
+            pair.addLpFeeP = 100000;
+            pair.removeLpFeeP = 100000;
+
+            tradingConfig.minTradeAmount = '1000000';
+            tradingConfig.maxTradeAmount = '1000000000000';
+            tradingConfig.maxPositionAmount = '100000000000000';
+            tradingConfig.priceSlipP = 100000;
+            tradingConfig.maxPriceDeviationP = 500000;
+
+            tradingFeeConfig.takerFee = 80000;
+            tradingFeeConfig.makerFee = 55000;
+            tradingFeeConfig.lpFeeDistributeP = 30000000;
+            tradingFeeConfig.keeperFeeDistributeP = 20000000;
+            tradingFeeConfig.stakingFeeDistributeP = 10000000;
+        }
+
         await waitForTx(await pool.updatePair(pairIndex, pair));
         await waitForTx(await pool.updateTradingConfig(pairIndex, tradingConfig));
         await waitForTx(await pool.updateTradingFeeConfig(pairIndex, tradingFeeConfig));
