@@ -2,23 +2,17 @@
 import { ethers } from 'hardhat';
 import { getIndexPriceFeed, getOraclePriceFeed, getRoleManager, getTokens, waitForTx } from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { PythOraclePriceFeed } from '../types';
 
 declare var hre: HardhatRuntimeEnvironment;
 
 async function main() {
     const [deployer] = await ethers.getSigners();
     console.log(deployer.address);
-    console.log(await deployer.getBalance());
+    console.log(ethers.utils.formatEther(await deployer.getBalance()));
 
     const roleManager = await getRoleManager();
-    const priceOracle = await getOraclePriceFeed();
-    const indexPriceFeed = await getIndexPriceFeed();
-
-    const { usdt, btc, eth } = await getTokens();
-    console.log(`btc oracle price:`, ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30));
-    console.log(`eth oracle price:`, ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30));
-    console.log(`btc index price:`, ethers.utils.formatUnits(await indexPriceFeed.getPrice(btc.address), 30));
-    console.log(`eth index price:`, ethers.utils.formatUnits(await indexPriceFeed.getPrice(eth.address), 30));
+    const oraclePriceFeed = (await getOraclePriceFeed()) as any as PythOraclePriceFeed;
 
     const keepers: string[] = [
         '0xA85583325A974bE1B47a492589Ce4370a6C20628',
@@ -61,6 +55,8 @@ async function main() {
         await waitForTx(await roleManager.addKeeper(keeper));
         // await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
+
+    await oraclePriceFeed.connect(deployer).updatePriceAge(60);
 }
 
 main().catch((error) => {
