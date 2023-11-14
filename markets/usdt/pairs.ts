@@ -11,30 +11,30 @@ export const btcPairInfo: PairInfoConfig = {
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
         enable: true,
-        kOfSwap: ethers.utils.parseUnits('1', 50),
+        kOfSwap: ethers.utils.parseUnits('2', 11),
         expectIndexTokenP: 50000000, //50%
         maxUnbalancedP: 10000000, //10%
         unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
-        removeLpFeeP: 100000, //0.1%
-        lpFeeDistributeP: 100000000,
+        removeLpFeeP: 300000, //0.3%
+        lpFeeDistributeP: 0, //deprecated
     },
     tradingConfig: {
-        minLeverage: 3,
+        minLeverage: 1,
         maxLeverage: 50,
-        minTradeAmount: '1000000', //0.01
-        maxTradeAmount: '1000000000000', //10000
-        maxPositionAmount: '100000000000000', //1000000
+        minTradeAmount: '3000000', //0.03
+        maxTradeAmount: '3500000000', //35
+        maxPositionAmount: '5250000000', //52.5
         maintainMarginRate: 1000000, //1%
-        priceSlipP: 100000, //0.1%
-        maxPriceDeviationP: 500000, //0.5%
+        priceSlipP: 0, //0%
+        maxPriceDeviationP: 200000, //0.2%
     },
     tradingFeeConfig: {
-        takerFee: 80000, //0.08%
-        makerFee: 55000, //0.055%
-        lpFeeDistributeP: 30000000, //30%
-        keeperFeeDistributeP: 20000000, //20%
-        stakingFeeDistributeP: 10000000, //10%
+        takerFee: 70000, //0.07%
+        makerFee: 45000, //0.045%
+        lpFeeDistributeP: 40000000, //40%
+        keeperFeeDistributeP: 1000000, //1%
+        stakingFeeDistributeP: 0, //0%
     },
     fundingFeeConfig: {
         growthRate: 2000000, //0.02
@@ -53,30 +53,30 @@ export const ethPairInfo: PairInfoConfig = {
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
         enable: true,
-        kOfSwap: ethers.utils.parseUnits('1', 50),
+        kOfSwap: ethers.utils.parseUnits('1.71', 14),
         expectIndexTokenP: 50000000, //50%
         maxUnbalancedP: 10000000, //10%
         unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
-        removeLpFeeP: 100000, //0.1%
-        lpFeeDistributeP: 100000000,
+        removeLpFeeP: 300000, //0.3%
+        lpFeeDistributeP: 0, //deprecated
     },
     tradingConfig: {
-        minLeverage: 3,
+        minLeverage: 1,
         maxLeverage: 50,
-        minTradeAmount: '100000000000000000', //0.1
-        maxTradeAmount: '10000000000000000000000', //10000
-        maxPositionAmount: '1000000000000000000000000', //1000000
+        minTradeAmount: '500000000000000000', //0.5
+        maxTradeAmount: '625000000000000000000', //625
+        maxPositionAmount: '937500000000000000000', //937.5
         maintainMarginRate: 1000000, //1%
-        priceSlipP: 100000, //0.1%
-        maxPriceDeviationP: 500000, //0.5%
+        priceSlipP: 0, //0%
+        maxPriceDeviationP: 200000, //0.2%
     },
     tradingFeeConfig: {
-        takerFee: 80000, //0.08%
-        makerFee: 55000, //0.055%
-        lpFeeDistributeP: 30000000, //30%
-        keeperFeeDistributeP: 20000000, //20%
-        stakingFeeDistributeP: 10000000, //10%
+        takerFee: 70000, //0.07%
+        makerFee: 45000, //0.045%
+        lpFeeDistributeP: 40000000, //40%
+        keeperFeeDistributeP: 1000000, //1%
+        stakingFeeDistributeP: 0, //0%
     },
     fundingFeeConfig: {
         growthRate: 2000000, //0.02
