@@ -669,7 +669,6 @@ contract Pool is IPool, Upgradeable {
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
         emit AddLiquidity(
-            tx.origin,
             recipient,
             _pairIndex,
             _indexAmount,
@@ -751,7 +750,6 @@ contract Pool is IPool, Upgradeable {
         feeTokenAmounts[pair.stableToken] += feeStableTokenAmount;
 
         emit RemoveLiquidity(
-            msg.sender,
             _receiver,
             _pairIndex,
             receiveIndexTokenAmount,

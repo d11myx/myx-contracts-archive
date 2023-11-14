@@ -36,7 +36,6 @@ interface IPool {
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
     event AddLiquidity(
-        address indexed funder,
         address indexed recipient,
         uint256 indexed pairIndex,
         uint256 indexAmount,
@@ -49,8 +48,7 @@ interface IPool {
     );
 
     event RemoveLiquidity(
-        address indexed account,
-        address indexed receiver,
+        address indexed recipient,
         uint256 indexed pairIndex,
         uint256 indexAmount,
         uint256 stableAmount,

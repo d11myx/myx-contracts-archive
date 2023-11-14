@@ -1,13 +1,17 @@
 // @ts-ignore
 import hre, { ethers } from 'hardhat';
 import {
+    COMMON_DEPLOY_PARAMS,
+    getAddressesProvider,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getOrderManager,
     getPool,
     getPositionManager,
     getTokens,
+    ORACLE_PRICE_FEED_ID,
 } from '../helpers';
+import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -37,10 +41,12 @@ async function main() {
     // const key = await positionManager.getPositionKey('0x180D310656bc630295Ef5Fd30bB94EE59f3e2905', 1, true);
     // console.log(await orderManager.getPositionOrders(key));
 
-    console.log(await pool.getVault(2));
-    const poolToken = await ethers.getContractAt('PoolToken', '0xb76d66C2fe6b4ed0694AD71B99c5466db2dA4C79');
-    console.log(await poolToken.totalSupply());
-    console.log(await pool.lpFairPrice(2, await oraclePriceFeed.getPrice(eth.address)));
+    // console.log(await pool.getVault(2));
+    // const poolToken = await ethers.getContractAt('PoolToken', '0xb76d66C2fe6b4ed0694AD71B99c5466db2dA4C79');
+    // console.log(await poolToken.totalSupply());
+    // console.log(await pool.lpFairPrice(2, await oraclePriceFeed.getPrice(eth.address)));
+
+    console.log(await positionManager.getNextFundingRateUpdateTime(1));
 
     // console.log(await pool.getMintLpAmount(1, ethers.utils.parseUnits('10000', 8), ethers.utils.parseUnits('1'), 1));
 

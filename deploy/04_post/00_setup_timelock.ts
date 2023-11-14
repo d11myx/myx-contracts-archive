@@ -3,20 +3,20 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Duration, encodeParameters, getTimelock, latest } from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
-    const timelock = await getTimelock();
-
-    const before = await timelock.delay();
-
-    await hre.run('time-execution', {
-        target: timelock.address,
-        value: '0',
-        signature: 'setDelay(uint256)',
-        data: encodeParameters(['uint256'], ['43200']),
-        eta: Duration.seconds(20)
-            .add(await latest())
-            .toString(),
-    });
-    console.log(`[deployment] update timelock delay ${before} to ${await timelock.delay()}`);
+    // const timelock = await getTimelock();
+    //
+    // const before = await timelock.delay();
+    //
+    // await hre.run('time-execution', {
+    //     target: timelock.address,
+    //     value: '0',
+    //     signature: 'setDelay(uint256)',
+    //     data: encodeParameters(['uint256'], ['43200']),
+    //     eta: Duration.seconds(20)
+    //         .add(await latest())
+    //         .toString(),
+    // });
+    // console.log(`[deployment] update timelock delay ${before} to ${await timelock.delay()}`);
 };
 func.id = `SetupTimelock`;
 func.tags = ['post', 'setup-timelock'];
