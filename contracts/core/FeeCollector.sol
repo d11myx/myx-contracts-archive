@@ -238,7 +238,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         TradingFeeTier memory oldTierFee = tradingFeeTiers[pairIndex][tier];
         tradingFeeTiers[pairIndex][tier] = tierFee;
 
-        emit updatedTradingFeeTier(
+        emit UpdatedTradingFeeTier(
             msg.sender,
             tier,
             oldTierFee.takerFee,
