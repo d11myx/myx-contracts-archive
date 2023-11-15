@@ -66,15 +66,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         }
     }
     console.log(`[deployment] await for setTokenPriceIds...`);
-    await hre.run('time-execution', {
-        target: oraclePriceFeed.address,
-        value: '0',
-        signature: 'setTokenPriceIds(address[],bytes32[])',
-        data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenPrices, pairTokenPriceIds]),
-        eta: Duration.seconds(30)
-            .add(await latest())
-            .toString(),
-    });
+
+    await waitForTx(await oraclePriceFeed.setTokenPriceIds(pairTokenPrices, pairTokenPriceIds));
+    // await hre.run('time-execution', {
+    //     target: oraclePriceFeed.address,
+    //     value: '0',
+    //     signature: 'setTokenPriceIds(address[],bytes32[])',
+    //     data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenPrices, pairTokenPriceIds]),
+    //     eta: Duration.seconds(30)
+    //         .add(await latest())
+    //         .toString(),
+    // });
 
     // init index price
     const pairTokenIndexPrices = [];
