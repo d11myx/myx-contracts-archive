@@ -99,7 +99,7 @@ const config: HardhatUserConfig = {
             live: true,
         },
         scroll_sepolia: {
-            url: 'https://scroll-sepolia.blockpi.network/v1/rpc/public',
+            url: 'https://sepolia-rpc.scroll.io/',
             chainId: 534351,
             accounts: {
                 mnemonic: process.env.MNEMONIC_SCROLL_SEPOLIA || '',
