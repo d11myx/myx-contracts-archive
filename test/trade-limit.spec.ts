@@ -53,7 +53,6 @@ describe('Trade: Limit order', () => {
                 usdt,
                 btc,
                 router,
-                positionManager,
             } = testEnv;
 
             const collateral = ethers.utils.parseUnits('3000000000', await usdt.decimals());
@@ -90,9 +89,6 @@ describe('Trade: Limit order', () => {
                 );
             }
             Promise.all(increaseArrays);
-
-            const position = await positionManager.getPosition(trader.address, pairIndex, true);
-            console.log('position: ', position);
 
             const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader.address,
@@ -475,5 +471,427 @@ describe('Trade: Limit order', () => {
         });
     });
 
+    describe('user open long position, order price > open price', () => {
+        before('add liquidity', async () => {
+            testEnv = await newTestEnv();
+            const {
+                users: [depositor],
+                usdt,
+                btc,
+                pool,
+                router,
+                oraclePriceFeed,
+            } = testEnv;
 
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const pair = await pool.getPair(pairIndex);
+            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+            await router
+                .connect(depositor.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
+        });
+
+        it('user should loss opening positions', async () => {
+            const {
+                users: [trader],
+                keeper,
+                usdt,
+                btc,
+                router,
+                positionManager,
+                orderManager,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
+            } = testEnv;
+
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
+            const openPrice = ethers.utils.parseUnits('31000', 30);
+
+            // update price
+            await updateBTCPrice(testEnv, '30000');
+
+            // increase long position
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: trader.address,
+                pairIndex,
+                tradeType: TradeType.LIMIT,
+                collateral,
+                openPrice,
+                isLong: true,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+            const orderId = await orderManager.ordersIndex();
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
+            const order = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
+
+            expect(order.sizeAmount).to.be.eq(sizeAmount);
+
+            // execution order
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
+            const position = await positionManager.getPosition(trader.address, pairIndex, true);
+
+            expect(position.positionAmount).to.be.eq(sizeAmount);
+        });
+    });
+
+    describe('user open long position, order price < open price', () => {
+        before('add liquidity', async () => {
+            testEnv = await newTestEnv();
+            const {
+                users: [depositor],
+                usdt,
+                btc,
+                pool,
+                router,
+                oraclePriceFeed,
+            } = testEnv;
+
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const pair = await pool.getPair(pairIndex);
+            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+            await router
+                .connect(depositor.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
+        });
+
+        it('should cancel order', async () => {
+            const {
+                users: [trader],
+                keeper,
+                usdt,
+                btc,
+                router,
+                positionManager,
+                orderManager,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
+            } = testEnv;
+
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
+            const openPrice = ethers.utils.parseUnits('29000', 30);
+
+            // update price
+            await updateBTCPrice(testEnv, '30000');
+
+            // increase long position
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: trader.address,
+                pairIndex,
+                tradeType: TradeType.LIMIT,
+                collateral,
+                openPrice,
+                isLong: true,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+            const orderId = await orderManager.ordersIndex();
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
+            const orderBefore = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
+
+            expect(orderBefore.sizeAmount).to.be.eq(sizeAmount);
+
+            // execution order
+            const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
+            const reason = await extraHash(tx.hash, 'ExecuteOrderError', 'errorMessage');
+
+            expect(reason).to.be.eq('not reach trigger price');
+
+            const position = await positionManager.getPosition(trader.address, pairIndex, true);
+            const orderAfter = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
+
+            expect(position.positionAmount).to.be.eq('0');
+            expect(orderAfter.sizeAmount).to.be.eq('0');
+        });
+    });
+
+    describe('user open short position, order price < open price', () => {
+        before('add liquidity', async () => {
+            testEnv = await newTestEnv();
+            const {
+                users: [depositor],
+                usdt,
+                btc,
+                pool,
+                router,
+                oraclePriceFeed,
+            } = testEnv;
+
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const pair = await pool.getPair(pairIndex);
+            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+            await router
+                .connect(depositor.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
+        });
+
+        it('user should loss opening positions', async () => {
+            const {
+                users: [trader],
+                keeper,
+                usdt,
+                btc,
+                router,
+                orderManager,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
+                positionManager,
+            } = testEnv;
+
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
+            const openPrice = ethers.utils.parseUnits('29000', 30);
+
+            // update price
+            await updateBTCPrice(testEnv, '30000');
+
+            // increase short position
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: trader.address,
+                pairIndex,
+                tradeType: TradeType.LIMIT,
+                collateral,
+                openPrice,
+                isLong: false,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+            const orderId = await orderManager.ordersIndex();
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
+            const order = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
+
+            expect(order.sizeAmount).to.be.eq(sizeAmount);
+
+            // execution order
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
+            const position = await positionManager.getPosition(trader.address, pairIndex, false);
+
+            expect(position.positionAmount).to.be.eq(sizeAmount);
+        });
+    });
+
+    describe('user open short position, order price < open price', () => {
+        before('add liquidity', async () => {
+            testEnv = await newTestEnv();
+            const {
+                users: [depositor],
+                usdt,
+                btc,
+                pool,
+                router,
+                oraclePriceFeed,
+            } = testEnv;
+
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
+            const pair = await pool.getPair(pairIndex);
+            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+            await router
+                .connect(depositor.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    { value: 1 },
+                );
+        });
+
+        it('should cancel order', async () => {
+            const {
+                users: [trader],
+                keeper,
+                usdt,
+                btc,
+                router,
+                positionManager,
+                orderManager,
+                executor,
+                indexPriceFeed,
+                oraclePriceFeed,
+            } = testEnv;
+
+            const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
+            const openPrice = ethers.utils.parseUnits('31000', 30);
+
+            // update price
+            await updateBTCPrice(testEnv, '30000');
+
+            // increase short position
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: trader.address,
+                pairIndex,
+                tradeType: TradeType.LIMIT,
+                collateral,
+                openPrice,
+                isLong: false,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+            const orderId = await orderManager.ordersIndex();
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
+            const orderBefore = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
+
+            expect(orderBefore.sizeAmount).to.be.eq(sizeAmount);
+
+            // execution order
+            const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
+            const reason = await extraHash(tx.hash, 'ExecuteOrderError', 'errorMessage');
+
+            expect(reason).to.be.eq('not reach trigger price');
+
+            const position = await positionManager.getPosition(trader.address, pairIndex, false);
+            const orderAfter = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
+
+            expect(position.positionAmount).to.be.eq('0');
+            expect(orderAfter.sizeAmount).to.be.eq('0');
+        });
+    });
 });
