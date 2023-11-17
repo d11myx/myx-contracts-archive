@@ -94,7 +94,7 @@ describe('Trade: Limit order', () => {
                 account: trader.address,
                 pairIndex,
                 tradeType: TradeType.LIMIT,
-                collateral: BigNumber.from(0),
+                collateral: 0,
                 openPrice,
                 isLong: true,
                 sizeAmount,
@@ -471,7 +471,7 @@ describe('Trade: Limit order', () => {
         });
     });
 
-    describe('user open long position, order price > open price', () => {
+    describe('loss opening positions', () => {
         before('add liquidity', async () => {
             testEnv = await newTestEnv();
             const {
@@ -508,7 +508,7 @@ describe('Trade: Limit order', () => {
                 );
         });
 
-        it('user should loss opening positions', async () => {
+        it('user open long position, order price > current price', async () => {
             const {
                 users: [trader],
                 keeper,
@@ -572,48 +572,10 @@ describe('Trade: Limit order', () => {
 
             expect(position.positionAmount).to.be.eq(sizeAmount);
         });
-    });
 
-    describe('user open long position, order price < open price', () => {
-        before('add liquidity', async () => {
-            testEnv = await newTestEnv();
+        it('user open long position, order price < current price', async () => {
             const {
-                users: [depositor],
-                usdt,
-                btc,
-                pool,
-                router,
-                oraclePriceFeed,
-            } = testEnv;
-
-            // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const pair = await pool.getPair(pairIndex);
-            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
-            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-
-            await router
-                .connect(depositor.signer)
-                .addLiquidity(
-                    pair.indexToken,
-                    pair.stableToken,
-                    indexAmount,
-                    stableAmount,
-                    [btc.address],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    { value: 1 },
-                );
-        });
-
-        it('should cancel order', async () => {
-            const {
-                users: [trader],
+                users: [, trader],
                 keeper,
                 usdt,
                 btc,
@@ -681,48 +643,10 @@ describe('Trade: Limit order', () => {
             expect(position.positionAmount).to.be.eq('0');
             expect(orderAfter.sizeAmount).to.be.eq('0');
         });
-    });
 
-    describe('user open short position, order price < open price', () => {
-        before('add liquidity', async () => {
-            testEnv = await newTestEnv();
+        it('user open short position, order price < current price', async () => {
             const {
-                users: [depositor],
-                usdt,
-                btc,
-                pool,
-                router,
-                oraclePriceFeed,
-            } = testEnv;
-
-            // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const pair = await pool.getPair(pairIndex);
-            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
-            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-
-            await router
-                .connect(depositor.signer)
-                .addLiquidity(
-                    pair.indexToken,
-                    pair.stableToken,
-                    indexAmount,
-                    stableAmount,
-                    [btc.address],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    { value: 1 },
-                );
-        });
-
-        it('user should loss opening positions', async () => {
-            const {
-                users: [trader],
+                users: [, , trader],
                 keeper,
                 usdt,
                 btc,
@@ -784,48 +708,10 @@ describe('Trade: Limit order', () => {
 
             expect(position.positionAmount).to.be.eq(sizeAmount);
         });
-    });
 
-    describe('user open short position, order price < open price', () => {
-        before('add liquidity', async () => {
-            testEnv = await newTestEnv();
+        it('user open short position, order price > current price', async () => {
             const {
-                users: [depositor],
-                usdt,
-                btc,
-                pool,
-                router,
-                oraclePriceFeed,
-            } = testEnv;
-
-            // add liquidity
-            const indexAmount = ethers.utils.parseUnits('1000', await btc.decimals());
-            const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const pair = await pool.getPair(pairIndex);
-            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
-            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
-
-            await router
-                .connect(depositor.signer)
-                .addLiquidity(
-                    pair.indexToken,
-                    pair.stableToken,
-                    indexAmount,
-                    stableAmount,
-                    [btc.address],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    { value: 1 },
-                );
-        });
-
-        it('should cancel order', async () => {
-            const {
-                users: [trader],
+                users: [, , , trader],
                 keeper,
                 usdt,
                 btc,
