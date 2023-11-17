@@ -48,9 +48,11 @@ async function main() {
 
     console.log(await positionManager.getNextFundingRateUpdateTime(1));
 
-    // console.log(await pool.getMintLpAmount(1, ethers.utils.parseUnits('10000', 8), ethers.utils.parseUnits('1'), 1));
+    console.log(await pool.getMintLpAmount(1, ethers.utils.parseUnits('10000', 8), ethers.utils.parseUnits('1'), 1));
 
-    // console.log(await pool.getDepositAmount(1, ethers.utils.parseEther('1000')));
+    console.log(
+        await pool.getDepositAmount(1, ethers.utils.parseEther('1000'), await oraclePriceFeed.getPrice(btc.address)),
+    );
     //
     // const poolToken = await ethers.getContractAt('PoolToken', '0xB220A53E4E1b5B99BCFc8a6CF300a3276976f4a8');
     // await hre.run('time-execution', {
