@@ -162,7 +162,7 @@ export async function deployPrice(
 
 export async function deployPair(
     addressProvider: AddressesProvider,
-    vaultPriceFeed: PythOraclePriceFeed,
+    vaultPriceFeed: MockPythOraclePriceFeed,
     deployer: SignerWithAddress,
     weth: WETH9,
 ) {

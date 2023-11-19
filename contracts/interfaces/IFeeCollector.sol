@@ -5,7 +5,7 @@ import "./IPool.sol";
 
 interface IFeeCollector {
 
-    event updatedTradingFeeTier(
+    event UpdatedTradingFeeTier(
         address sender,
         uint8 tier,
         uint256 oldTakerFee,
