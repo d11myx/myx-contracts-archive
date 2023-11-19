@@ -61,8 +61,12 @@ library TradingHelper {
                 }
             } else {
                 uint256 availableStable = lpVault.stableTotalAmount - lpVault.stableReservedAmount;
-                if (executionSize > availableStable.divPrice(executionPrice)) {
-                    executionSize = availableStable.divPrice(executionPrice);
+                uint256 stableToIndexAmount = uint256(TokenHelper.convertStableAmountToIndex(
+                    pair,
+                    int256(availableStable)
+                ));
+                if (executionSize > stableToIndexAmount.divPrice(executionPrice)) {
+                    executionSize = stableToIndexAmount.divPrice(executionPrice);
                 }
             }
         }

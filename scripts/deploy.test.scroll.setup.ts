@@ -53,7 +53,8 @@ async function main() {
         // await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
 
-    await oraclePriceFeed.connect(deployer).updatePriceAge(60);
+    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
+    await waitForTx(await pythOraclePriceFeed.connect(deployer).updatePriceAge(60));
 }
 
 main().catch((error) => {

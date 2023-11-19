@@ -11,7 +11,7 @@ export const btcPairInfo: PairInfoConfig = {
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
         enable: true,
-        kOfSwap: ethers.utils.parseUnits('2', 11),
+        kOfSwap: ethers.utils.parseUnits('4.4', 46),
         expectIndexTokenP: 50000000, //50%
         maxUnbalancedP: 10000000, //10%
         unbalancedDiscountRate: 100000, //0.1%
@@ -53,7 +53,7 @@ export const ethPairInfo: PairInfoConfig = {
         stableToken: ZERO_ADDRESS,
         pairToken: ZERO_ADDRESS,
         enable: true,
-        kOfSwap: ethers.utils.parseUnits('1.71', 14),
+        kOfSwap: ethers.utils.parseUnits('4', 49),
         expectIndexTokenP: 50000000, //50%
         maxUnbalancedP: 10000000, //10%
         unbalancedDiscountRate: 100000, //0.1%
