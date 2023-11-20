@@ -56,7 +56,7 @@ describe('Oracle: oracle cases', () => {
             weth.address,
             timelock.address,
         )) as AddressesProvider;
-        const PythOraclePriceFeedFactory = await ethers.getContractFactory('MockPythOraclePriceFeed');
+        const PythOraclePriceFeedFactory = await ethers.getContractFactory('MockPythOraclePriceFeed', owner);
 
         const rolemanagerFactory = await ethers.getContractFactory('RoleManager');
         let roleManager = (await rolemanagerFactory.deploy()) as RoleManager;
@@ -72,29 +72,33 @@ describe('Oracle: oracle cases', () => {
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
         indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
         await roleManager.addKeeper(user1.address);
+        await roleManager.addPoolAdmin(owner.address);
     });
     it('test updatePythAddress', async () => {
-        await expect(pythOraclePriceFeed.updatePythAddress(mockPyth.address)).to.be.revertedWith('only timelock');
+        await expect(pythOraclePriceFeed.connect(dev).updatePythAddress(mockPyth.address)).to.be.revertedWith('opa');
 
-        let timestamp = await latest();
-        let eta = Duration.days(1);
-        await timelock.queueTransaction(
-            pythOraclePriceFeed.address,
-            0,
-            'updatePythAddress(address)',
-            encodeParameters(['address'], [eth.address]),
-            eta.add(timestamp),
-        );
-        await increase(Duration.days(1));
         expect(await pythOraclePriceFeed.pyth()).to.be.eq(mockPyth.address);
 
-        await timelock.executeTransaction(
-            pythOraclePriceFeed.address,
-            0,
-            'updatePythAddress(address)',
-            encodeParameters(['address'], [eth.address]),
-            eta.add(timestamp),
-        );
+        await pythOraclePriceFeed.connect(owner).updatePythAddress(eth.address);
+        // let timestamp = await latest();
+        // let eta = Duration.days(1);
+        // await timelock.queueTransaction(
+        //     pythOraclePriceFeed.address,
+        //     0,
+        //     'updatePythAddress(address)',
+        //     encodeParameters(['address'], [eth.address]),
+        //     eta.add(timestamp),
+        // );
+        // await increase(Duration.days(1));
+        // expect(await pythOraclePriceFeed.pyth()).to.be.eq(mockPyth.address);
+        //
+        // await timelock.executeTransaction(
+        //     pythOraclePriceFeed.address,
+        //     0,
+        //     'updatePythAddress(address)',
+        //     encodeParameters(['address'], [eth.address]),
+        //     eta.add(timestamp),
+        // );
         expect(await pythOraclePriceFeed.pyth()).to.be.eq(eth.address);
     });
 
@@ -115,28 +119,30 @@ describe('Oracle: oracle cases', () => {
             emaConf,
             publishTime,
         );
-        await expect(pythOraclePriceFeed.setTokenPriceIds([btc.address], [id])).to.be.revertedWith('only timelock');
+        await expect(pythOraclePriceFeed.connect(dev).setTokenPriceIds([btc.address], [id])).to.be.revertedWith('opa');
         expect(await pythOraclePriceFeed.tokenPriceIds(btc.address)).to.be.eq(ethers.utils.formatBytes32String(''));
-        let timestamp = await latest();
-        let eta = Duration.days(1);
-        await timelock.queueTransaction(
-            pythOraclePriceFeed.address,
-            0,
-            'setTokenPriceIds(address[],bytes32[])',
-            encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
-            eta.add(timestamp),
-        );
-        await increase(Duration.days(1));
 
-        await waitForTx(
-            await timelock.executeTransaction(
-                pythOraclePriceFeed.address,
-                0,
-                'setTokenPriceIds(address[],bytes32[])',
-                encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
-                eta.add(timestamp),
-            ),
-        );
+        await pythOraclePriceFeed.connect(owner).setTokenPriceIds([btc.address], [id]);
+        // let timestamp = await latest();
+        // let eta = Duration.days(1);
+        // await timelock.queueTransaction(
+        //     pythOraclePriceFeed.address,
+        //     0,
+        //     'setTokenPriceIds(address[],bytes32[])',
+        //     encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
+        //     eta.add(timestamp),
+        // );
+        // await increase(Duration.days(1));
+        //
+        // await waitForTx(
+        //     await timelock.executeTransaction(
+        //         pythOraclePriceFeed.address,
+        //         0,
+        //         'setTokenPriceIds(address[],bytes32[])',
+        //         encodeParameterArray(['address[]', 'bytes32[]'], [[btc.address], [id]]),
+        //         eta.add(timestamp),
+        //     ),
+        // );
         expect(await pythOraclePriceFeed.tokenPriceIds(btc.address)).to.be.eq(id);
         //todo test
 

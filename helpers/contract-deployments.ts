@@ -131,16 +131,17 @@ export async function deployPrice(
 
     await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenIndexPrices);
 
-    await hre.run('time-execution', {
-        target: oraclePriceFeed.address,
-        value: '0',
-        signature: 'setTokenPriceIds(address[],bytes32[])',
-        data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
-        eta: Duration.days(1)
-            .add(await latest())
-            .toString(),
-        timelockAddress: timelock.address,
-    });
+    await oraclePriceFeed.connect(deployer.signer).setTokenPriceIds(pairTokenAddresses, pairTokenPriceIds);
+    // await hre.run('time-execution', {
+    //     target: oraclePriceFeed.address,
+    //     value: '0',
+    //     signature: 'setTokenPriceIds(address[],bytes32[])',
+    //     data: encodeParameterArray(['address[]', 'bytes32[]'], [pairTokenAddresses, pairTokenPriceIds]),
+    //     eta: Duration.days(1)
+    //         .add(await latest())
+    //         .toString(),
+    //     timelockAddress: timelock.address,
+    // });
 
     const updateData = await oraclePriceFeed.getUpdateData(pairTokenAddresses, pairTokenPrices);
     const fee = mockPyth.getUpdateFee(updateData);
@@ -161,7 +162,7 @@ export async function deployPrice(
 
 export async function deployPair(
     addressProvider: AddressesProvider,
-    vaultPriceFeed: PythOraclePriceFeed,
+    vaultPriceFeed: MockPythOraclePriceFeed,
     deployer: SignerWithAddress,
     weth: WETH9,
 ) {
