@@ -2,8 +2,9 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import hre, { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { TradeType, ZERO_ADDRESS, loadReserveConfig, MARKET_NAME } from '../helpers';
-import { extraHash, mintAndApprove } from './helpers/misc';
+import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: increase position', () => {
     const pairIndex = 1;
@@ -350,7 +351,7 @@ describe('Trade: increase position', () => {
             const tradingConfig = pairConfig.tradingConfig;
             tradingConfig.minTradeAmount = ethers.utils.parseUnits('0.03', 8);
             tradingConfig.maxTradeAmount = ethers.utils.parseUnits('35', 8);
-            tradingConfig.maxPositionAmount = ethers.utils.parseUnits('52.5', 8);
+            tradingConfig.maxPositionAmount = ethers.utils.parseUnits('35', 8);
 
             await pool.updateTradingConfig(pairIndex, tradingConfig);
         });
@@ -576,20 +577,11 @@ describe('Trade: increase position', () => {
                     ],
                     { value: 1 },
                 );
-
-            // update trading config
-            const pairConfig = loadReserveConfig(MARKET_NAME).PairsConfig['WBTC'];
-            const tradingConfig = pairConfig.tradingConfig;
-            tradingConfig.minTradeAmount = ethers.utils.parseUnits('0.03', 8);
-            tradingConfig.maxTradeAmount = ethers.utils.parseUnits('35', 8);
-            tradingConfig.maxPositionAmount = ethers.utils.parseUnits('52.5', 8);
-
-            await pool.updateTradingConfig(pairIndex, tradingConfig);
         });
 
-        it('trade type = limit, not reach trigger price', async () => {
+        it('trade type = limit and open price = 0, not reach trigger price', async () => {
             const {
-                users: [, trader],
+                users: [trader],
                 btc,
                 usdt,
                 router,
@@ -648,9 +640,9 @@ describe('Trade: increase position', () => {
             expect(order.sizeAmount).to.be.eq('0');
         });
 
-        it('trade type = market, open price = current price', async () => {
+        it('trade type = market and open price = 0, average price = current price', async () => {
             const {
-                users: [, trader],
+                users: [trader],
                 btc,
                 usdt,
                 router,
@@ -707,6 +699,76 @@ describe('Trade: increase position', () => {
 
             expect(position.positionAmount).to.be.eq(sizeAmount);
             expect(position.averagePrice).to.be.eq(oraclePrice);
+        });
+
+        it('trade type = market, update position average price', async () => {
+            const {
+                users: [trader],
+                btc,
+                usdt,
+                router,
+                orderManager,
+                executor,
+                keeper,
+                indexPriceFeed,
+                oraclePriceFeed,
+                positionManager,
+            } = testEnv;
+
+            const collateral = ethers.utils.parseUnits('60000', await usdt.decimals());
+            const sizeAmount = ethers.utils.parseUnits('10', await btc.decimals());
+            const openPrice = ethers.utils.parseUnits('40000', 30);
+
+            // update btc price
+            await updateBTCPrice(testEnv, '40000');
+
+            const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
+            // increase long position
+            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
+            const positionRequest: TradingTypes.IncreasePositionRequestStruct = {
+                account: trader.address,
+                pairIndex,
+                tradeType: TradeType.MARKET,
+                collateral,
+                openPrice,
+                isLong: true,
+                sizeAmount,
+                maxSlippage: 0,
+            };
+            const orderId = await orderManager.ordersIndex();
+            await router.connect(trader.signer).createIncreaseOrder(positionRequest);
+
+            // execution order
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
+            const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
+            const averagePrice = positionBefore.positionAmount
+                .mul(positionBefore.averagePrice)
+                .div(PRICE_PRECISION)
+                .add(sizeAmount.mul(openPrice).div(PRICE_PRECISION))
+                .mul(PRICE_PRECISION)
+                .div(positionBefore.positionAmount.add(sizeAmount));
+
+            expect(positionAfter.positionAmount).to.be.eq(positionBefore.positionAmount.add(sizeAmount));
+            expect(positionAfter.averagePrice).to.be.eq(averagePrice);
         });
     });
 });
