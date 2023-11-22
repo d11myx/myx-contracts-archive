@@ -1,17 +1,10 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
-import {
-    Duration,
-    increase,
-    TradeType,
-    getFundingRateInTs,
-    convertIndexAmountToStable,
-    PRICE_PRECISION,
-    PERCENTAGE,
-} from '../helpers';
+import { Duration, increase, TradeType, getFundingRateInTs, convertIndexAmountToStable } from '../helpers';
 import { expect } from './shared/expect';
 import { BigNumber } from 'ethers';
+import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: funding fee', () => {
     const pairIndex = 1;
