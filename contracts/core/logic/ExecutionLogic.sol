@@ -472,7 +472,7 @@ contract ExecutionLogic is IExecutionLogic {
             false,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount,
-            false
+            isSystem
         );
 
         (bool _needADL, ) = positionManager.needADL(
