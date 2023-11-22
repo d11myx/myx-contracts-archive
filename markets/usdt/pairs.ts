@@ -24,7 +24,7 @@ export const btcPairInfo: PairInfoConfig = {
         maxLeverage: 50,
         minTradeAmount: ethers.utils.parseUnits('0.03', 8), //0.03
         maxTradeAmount: ethers.utils.parseUnits('35', 8), //35
-        maxPositionAmount: ethers.utils.parseUnits('52.5', 8), //52.5
+        maxPositionAmount: ethers.utils.parseUnits('35', 8), //35
         maintainMarginRate: 1000000, //1%
         priceSlipP: 0, //0%
         maxPriceDeviationP: 200000, //0.2%
@@ -66,7 +66,7 @@ export const ethPairInfo: PairInfoConfig = {
         maxLeverage: 50,
         minTradeAmount: ethers.utils.parseUnits('0.5', 18), //0.5
         maxTradeAmount: ethers.utils.parseUnits('625', 18), //625
-        maxPositionAmount: ethers.utils.parseUnits('937.5', 18), //937.5
+        maxPositionAmount: ethers.utils.parseUnits('625', 18), //625
         maintainMarginRate: 1000000, //1%
         priceSlipP: 0, //0%
         maxPriceDeviationP: 200000, //0.2%
