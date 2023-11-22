@@ -2,9 +2,10 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { increasePosition, decreasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
-import { TradeType, convertIndexAmountToStable, PERCENTAGE, PRICE_PRECISION, ZERO_ADDRESS } from '../helpers';
+import { TradeType, convertIndexAmountToStable, ZERO_ADDRESS } from '../helpers';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: trading fee', () => {
     const pairIndex = 1;
