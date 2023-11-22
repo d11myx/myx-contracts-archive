@@ -27,6 +27,31 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     );
 }
 
+export async function updateETHPrice(testEnv: TestEnv, price: string) {
+    const { eth } = testEnv;
+    await updatePrice(testEnv, eth.address, price);
+}
+
+export async function updatePrice(testEnv: TestEnv, token: string, price: string) {
+    const { keeper, indexPriceFeed, oraclePriceFeed } = testEnv;
+
+    const updateData = await oraclePriceFeed.getUpdateData([token], [ethers.utils.parseUnits(price, 8)]);
+    const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
+    const fee = mockPyth.getUpdateFee(updateData);
+
+    await waitForTx(
+        await oraclePriceFeed
+            .connect(keeper.signer)
+            .updatePrice([token], [abiCoder.encode(['uint256'], [ethers.utils.parseUnits(price, 8)])], {
+                value: fee,
+            }),
+    );
+
+    await waitForTx(
+        await indexPriceFeed.connect(keeper.signer).updatePrice([token], [ethers.utils.parseUnits(price, 30)]),
+    );
+}
+
 export async function mintAndApprove(
     testEnv: TestEnv,
     token: MockERC20Token,
