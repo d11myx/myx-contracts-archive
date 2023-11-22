@@ -759,10 +759,16 @@ contract PositionManager is IPositionManager, Upgradeable {
                 pair,
                 int256(vault.stableTotalAmount)
             );
-            available =
+            if (exposedPositions >= 0) {
+                available =
                 ((stableToIndexAmount * int256(PrecisionUtils.pricePrecision())) /
                     int256(executionPrice)) +
                 exposedPositions;
+            } else {
+                available = (stableToIndexAmount +
+                    (exposedPositions * int256(vault.averagePrice) / int256(PrecisionUtils.pricePrecision())))
+                    * int256(PrecisionUtils.pricePrecision()) / int256(executionPrice);
+            }
         } else {
             available = int256(vault.indexTotalAmount) - exposedPositions;
         }
