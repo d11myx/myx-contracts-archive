@@ -1,5 +1,5 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
 import { TradeType, getMockToken, convertIndexAmountToStable, ZERO_ADDRESS } from '../helpers';
@@ -1168,7 +1168,7 @@ describe('Trade: adl', () => {
             expect(longPosition.positionAmount).to.be.gt(available);
 
             // update price
-            await updateBTCPrice(testEnv, '28000');
+            await updateBTCPrice(testEnv, '26400');
 
             // calculate pnl、tradingFee
             const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
@@ -1176,7 +1176,6 @@ describe('Trade: adl', () => {
             const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, longPosition.positionAmount);
             const pnl = indexToStableAmount
-                .mul(-1)
                 .mul(oraclePrice.sub(longPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
@@ -1189,7 +1188,7 @@ describe('Trade: adl', () => {
                 .div('1000000000000000000000000000000')
                 .mul(tradingConfig.maintainMarginRate)
                 .div('100000000');
-            const riskRate = margin.mul('100000000').div(exposureAsset);
+            const riskRate = (await convertIndexAmountToStable(btc, usdt, margin)).mul('100000000').div(exposureAsset);
 
             // riskRate >= 100%
             expect(riskRate).to.be.gte('100000000');
@@ -1208,7 +1207,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey: positionKey,
-                        sizeAmount: 0,
+                        sizeAmount: sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1441,7 +1440,7 @@ describe('Trade: adl', () => {
             expect(longPosition.positionAmount).to.be.gt(available);
 
             // update price
-            await updateBTCPrice(testEnv, '28000');
+            await updateBTCPrice(testEnv, '26400');
 
             // calculate pnl、tradingFee
             const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
@@ -1449,7 +1448,6 @@ describe('Trade: adl', () => {
             const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
             const indexToStableAmount = await convertIndexAmountToStable(btc, usdt, longPosition.positionAmount);
             const pnl = indexToStableAmount
-                .mul(-1)
                 .mul(oraclePrice.sub(longPosition.averagePrice))
                 .div('1000000000000000000000000000000');
             const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
@@ -1462,7 +1460,7 @@ describe('Trade: adl', () => {
                 .div('1000000000000000000000000000000')
                 .mul(tradingConfig.maintainMarginRate)
                 .div('100000000');
-            const riskRate = margin.mul('100000000').div(exposureAsset);
+            const riskRate = (await convertIndexAmountToStable(btc, usdt, margin)).mul('100000000').div(exposureAsset);
 
             // riskRate >= 100%
             expect(riskRate).to.be.gte('100000000');
@@ -1709,7 +1707,7 @@ describe('Trade: adl', () => {
             expect(shortPosition.positionAmount).to.be.gt(available);
 
             // update price
-            await updateBTCPrice(testEnv, '32000');
+            await updateBTCPrice(testEnv, '33600');
 
             // calculate pnl、tradingFee
             const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
@@ -1730,7 +1728,7 @@ describe('Trade: adl', () => {
                 .div('1000000000000000000000000000000')
                 .mul(tradingConfig.maintainMarginRate)
                 .div('100000000');
-            const riskRate = margin.mul('100000000').div(exposureAsset);
+            const riskRate = (await convertIndexAmountToStable(btc, usdt, margin)).mul('100000000').div(exposureAsset);
 
             // riskRate >= 100%
             expect(riskRate).to.be.gte('100000000');
@@ -1977,7 +1975,7 @@ describe('Trade: adl', () => {
             expect(shortPosition.positionAmount).to.be.gt(available);
 
             // update price
-            await updateBTCPrice(testEnv, '32000');
+            await updateBTCPrice(testEnv, '33600');
 
             // calculate pnl、tradingFee
             const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
@@ -1998,7 +1996,7 @@ describe('Trade: adl', () => {
                 .div('1000000000000000000000000000000')
                 .mul(tradingConfig.maintainMarginRate)
                 .div('100000000');
-            const riskRate = margin.mul('100000000').div(exposureAsset);
+            const riskRate = (await convertIndexAmountToStable(btc, usdt, margin)).mul('100000000').div(exposureAsset);
 
             // riskRate >= 100%
             expect(riskRate).to.be.gte('100000000');
@@ -2245,7 +2243,7 @@ describe('Trade: adl', () => {
             expect(shortPosition.positionAmount).to.be.gt(available);
 
             // update price
-            await updateBTCPrice(testEnv, '32000');
+            await updateBTCPrice(testEnv, '33600');
 
             // calculate pnl、tradingFee
             const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
@@ -2266,7 +2264,7 @@ describe('Trade: adl', () => {
                 .div('1000000000000000000000000000000')
                 .mul(tradingConfig.maintainMarginRate)
                 .div('100000000');
-            const riskRate = margin.mul('100000000').div(exposureAsset);
+            const riskRate = (await convertIndexAmountToStable(btc, usdt, margin)).mul('100000000').div(exposureAsset);
 
             // riskRate >= 100%
             expect(riskRate).to.be.gte('100000000');
@@ -2313,7 +2311,7 @@ describe('Trade: adl', () => {
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
 
             // oraclePrice > indexPrice 0.5%
-            expect(oraclePrice.sub(indexPrice).mul('100000000').div(oraclePrice)).to.be.gte(
+            expect(oraclePrice.sub(indexPrice).abs().mul('100000000').div(oraclePrice)).to.be.gte(
                 tradingConfig.maxPriceDeviationP,
             );
 
@@ -2523,7 +2521,7 @@ describe('Trade: adl', () => {
             expect(shortPosition.positionAmount).to.be.gt(available);
 
             // update price
-            await updateBTCPrice(testEnv, '32000');
+            await updateBTCPrice(testEnv, '33600');
 
             // calculate pnl、tradingFee
             const tradingFeeConfig = await feeCollector.getRegularTradingFeeTier(pairIndex);
@@ -2544,7 +2542,7 @@ describe('Trade: adl', () => {
                 .div('1000000000000000000000000000000')
                 .mul(tradingConfig.maintainMarginRate)
                 .div('100000000');
-            const riskRate = margin.mul('100000000').div(exposureAsset);
+            const riskRate = (await convertIndexAmountToStable(btc, usdt, margin)).mul('100000000').div(exposureAsset);
 
             // riskRate >= 100%
             expect(riskRate).to.be.gte('100000000');
@@ -2578,7 +2576,7 @@ describe('Trade: adl', () => {
             expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
 
             // update oracle price
-            const latestOraclePrice = ethers.utils.parseUnits('32080', 8);
+            const latestOraclePrice = ethers.utils.parseUnits('33680', 8);
             const updateData = await oraclePriceFeed.getUpdateData([btc.address], [latestOraclePrice]);
             const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
             const fee = mockPyth.getUpdateFee(updateData);
@@ -2591,7 +2589,7 @@ describe('Trade: adl', () => {
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
 
             // oraclePrice < indexPrice 0.5%
-            expect(indexPrice.sub(oraclePrice).mul('100000000').div(oraclePrice)).to.be.lt(
+            expect(indexPrice.sub(oraclePrice).abs().mul('100000000').div(oraclePrice)).to.be.lt(
                 tradingConfig.maxPriceDeviationP,
             );
 
