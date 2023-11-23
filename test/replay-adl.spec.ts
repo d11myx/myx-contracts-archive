@@ -1,10 +1,10 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
-import hre, { ethers } from 'hardhat';
+import { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove, updateETHPrice } from './helpers/misc';
 import { TradeType, ZERO_ADDRESS, abiCoder } from '../helpers';
 import { TradingTypes } from '../types/contracts/core/Router';
 
-describe('Trade: adl', () => {
+describe('Replay: adl', () => {
     const pairIndex = 2;
     let testEnv: TestEnv;
 
@@ -13,29 +13,31 @@ describe('Trade: adl', () => {
 
         const {
             users: [depositor],
-            eth,
+            weth,
             usdt,
             pool,
             router,
         } = testEnv;
 
         // add liquidity
-        const indexAmount = ethers.utils.parseUnits('4.5', await eth.decimals());
+        const indexAmount = ethers.utils.parseUnits('4.5', await weth.decimals());
         const stableAmount = ethers.utils.parseUnits('2000', await usdt.decimals());
         const pair = await pool.getPair(pairIndex);
-        await mintAndApprove(testEnv, eth, indexAmount, depositor, router.address);
+
+        await weth.connect(depositor.signer).approve(router.address, indexAmount);
         await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
         await router
             .connect(depositor.signer)
-            .addLiquidity(
+            .addLiquidityETH(
                 pair.indexToken,
                 pair.stableToken,
                 indexAmount,
                 stableAmount,
-                [eth.address],
+                [weth.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
-                { value: 1 },
+                1,
+                { value: indexAmount.add(1) },
             );
     });
 
