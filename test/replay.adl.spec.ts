@@ -1,11 +1,10 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { expect } from './shared/expect';
-import hre, { ethers } from 'hardhat';
+import { ethers } from 'hardhat';
 import { adlPosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import { TradeType, ZERO_ADDRESS } from '../helpers';
 import Decimal from 'decimal.js';
-import { IExecutionLogic } from '../types';
 import { IExecution } from '../types/contracts/core/Executor';
 
 describe('Replay: ADL', () => {
