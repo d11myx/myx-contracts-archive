@@ -79,9 +79,9 @@ contract Router is
         _unpause();
     }
 
-    function wrapWETH() external payable {
+    function wrapWETH(address recipient) external payable {
         IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
-        IWETH(ADDRESS_PROVIDER.WETH()).transfer(msg.sender, msg.value);
+        IWETH(ADDRESS_PROVIDER.WETH()).transfer(recipient, msg.value);
     }
 
     function setPriceAndAdjustCollateral(
@@ -361,6 +361,38 @@ contract Router is
             );
         }
         return (tpOrderId, slOrderId);
+    }
+
+    function addLiquidityETH(
+        address indexToken,
+        address stableToken,
+        uint256 indexAmount,
+        uint256 stableAmount,
+        address[] calldata tokens,
+        bytes[] calldata updateData,
+        uint256 updateFee
+    )
+    external
+    payable
+    whenNotPaused
+    nonReentrant
+    returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
+    {
+        require(msg.value >= indexAmount + updateFee, "ne");
+
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: updateFee}(tokens, updateData);
+
+        uint256 wrapAmount = msg.value - updateFee;
+        this.wrapWETH{value: wrapAmount}(msg.sender);
+
+        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        (mintAmount, slipToken, slipAmount) = IPool(pool).addLiquidity(
+            msg.sender,
+            pairIndex,
+            indexAmount,
+            stableAmount,
+            abi.encode(msg.sender)
+        );
     }
 
     function addLiquidity(
