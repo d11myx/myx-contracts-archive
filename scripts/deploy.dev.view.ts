@@ -1,25 +1,21 @@
 // @ts-ignore
-import hre, { ethers } from 'hardhat';
+import { ethers } from 'hardhat';
 import {
-    COMMON_DEPLOY_PARAMS,
-    getAddressesProvider,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getOrderManager,
     getPool,
     getPositionManager,
+    getRouter,
     getTokens,
-    ORACLE_PRICE_FEED_ID,
-    TradeType,
 } from '../helpers';
-import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
     console.log(deployer.address);
     console.log(await deployer.getBalance());
 
-    // const router = await getRouter();
+    const router = await getRouter();
     const orderManager = await getOrderManager();
     const positionManager = await getPositionManager();
     // const executor = await getExecutor();
