@@ -9,6 +9,11 @@ library TradingTypes {
         SL
     }
 
+    enum FeePaymentType {
+        ETH,
+        COLLATERAL
+    }
+
     struct CreateOrderRequest {
         address account;
         uint256 pairIndex; // pair index
@@ -52,6 +57,7 @@ library TradingTypes {
         uint256 slPrice; // 1e30, sl price
         uint256 sl; // sl size
         uint256 maxSlippage;
+        FeePaymentType feePaymentType; // 0: eth 1: collateral
     }
 
     struct DecreasePositionRequest {
