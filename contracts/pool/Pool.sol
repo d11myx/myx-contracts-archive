@@ -612,7 +612,7 @@ contract Pool is IPool, Upgradeable {
     ) internal view returns (uint256) {
         int256 profit = getProfit(pair.pairIndex, pair.stableToken, price);
         if (profit < 0) {
-            return vault.stableTotalAmount.sub(profit.abs());
+            return vault.stableTotalAmount > profit.abs() ? vault.stableTotalAmount.sub(profit.abs()) : 0;
         } else {
             return vault.stableTotalAmount.add(profit.abs());
         }
@@ -625,7 +625,7 @@ contract Pool is IPool, Upgradeable {
     ) internal view returns (uint256) {
         int256 profit = getProfit(pair.pairIndex, pair.indexToken, price);
         if (profit < 0) {
-            return vault.indexTotalAmount.sub(profit.abs());
+            return vault.indexTotalAmount > profit.abs() ? vault.indexTotalAmount.sub(profit.abs()) : 0;
         } else {
             return vault.indexTotalAmount.add(profit.abs());
         }
