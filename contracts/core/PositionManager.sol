@@ -17,6 +17,7 @@ import "../interfaces/IRiskReserve.sol";
 import "../interfaces/IFeeCollector.sol";
 import "../libraries/Upgradeable.sol";
 import "../helpers/TokenHelper.sol";
+import "../helpers/TradingHelper.sol";
 
 contract PositionManager is IPositionManager, Upgradeable {
     using SafeERC20 for IERC20;
@@ -753,18 +754,31 @@ contract PositionManager is IPositionManager, Upgradeable {
         IPool.Pair memory pair = pool.getPair(pairIndex);
         int256 exposedPositions = this.getExposedPositions(pairIndex);
 
-        int256 available;
+        int256 afterExposedPositions = exposedPositions;
         if (isLong) {
+            afterExposedPositions -= int256(executionSize);
+        } else {
+            afterExposedPositions += int256(executionSize);
+        }
+
+        uint256 maxAvailableLiquidity = TradingHelper.maxAvailableLiquidity(vault, pair, exposedPositions, !isLong, executionPrice);
+
+        if (executionSize <= maxAvailableLiquidity || afterExposedPositions == 0) {
+            return (false, 0);
+        }
+
+        int256 available;
+        if (afterExposedPositions > 0) {
+            available = int256(vault.indexTotalAmount) - exposedPositions;
+        } else {
             int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(
                 pair,
                 int256(vault.stableTotalAmount)
             );
-            available =
-                ((stableToIndexAmount * int256(PrecisionUtils.pricePrecision())) /
-                    int256(executionPrice)) +
-                exposedPositions;
-        } else {
-            available = int256(vault.indexTotalAmount) - exposedPositions;
+
+            int256 exposedPositionDelta = exposedPositions * int256(vault.averagePrice) / int256(PrecisionUtils.pricePrecision());
+            available = _max(0, exposedPositions) +
+                (stableToIndexAmount + _min(0, exposedPositionDelta)) * int256(PrecisionUtils.pricePrecision()) / int256(executionPrice);
         }
 
         if (available <= 0) {
@@ -806,5 +820,13 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool _isLong
     ) public pure returns (bytes32) {
         return PositionKey.getPositionKey(_account, _pairIndex, _isLong);
+    }
+
+    function _max(int256 a, int256 b) internal pure returns (int256) {
+        return a > b ? a : b;
+    }
+
+    function _min(int256 a, int256 b) internal pure returns (int256) {
+        return a < b ? a : b;
     }
 }

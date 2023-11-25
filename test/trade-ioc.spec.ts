@@ -13,6 +13,7 @@ import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { MARKET_NAME } from '../helpers/env';
 import { loadReserveConfig } from '../helpers/market-config-helper';
+import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: ioc', () => {
     const pairIndex = 1;
@@ -171,7 +172,7 @@ describe('Trade: ioc', () => {
             // partial transaction
             expect(shortPosition.positionAmount).to.be.eq(
                 vaultAfter.indexReservedAmount.add(
-                    stableToIndexAmount.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
+                    stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
             expect(shortOrder.sizeAmount).to.be.eq('0');
@@ -331,7 +332,7 @@ describe('Trade: ioc', () => {
             // partial transaction
             expect(shortPosition.positionAmount).to.be.eq(
                 vaultAfter.indexReservedAmount.add(
-                    stableToIndexAmount.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
+                    stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
             expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
@@ -1348,21 +1349,21 @@ describe('Trade: ioc', () => {
             const pnl = indexToStableAmount
                 .mul(-1)
                 .mul(oraclePrice.sub(shortPositionBefore.averagePrice))
-                .div('1000000000000000000000000000000');
-            const sizeDelta = indexToStableAmount.mul(oraclePrice).div('1000000000000000000000000000000');
-            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div('100000000');
+                .div(PRICE_PRECISION);
+            const sizeDelta = indexToStableAmount.mul(oraclePrice).div(PRICE_PRECISION);
+            const tradingFee = sizeDelta.mul(tradingFeeConfig.takerFee).div(PERCENTAGE);
 
             // calculate riskRate
             const exposureAsset = shortPositionBefore.collateral.add(pnl).sub(tradingFee);
             const margin = shortPositionBefore.positionAmount
                 .mul(shortPositionBefore.averagePrice)
-                .div('1000000000000000000000000000000')
+                .div(PRICE_PRECISION)
                 .mul(tradingConfig.maintainMarginRate)
-                .div('100000000');
-            const riskRate = margin.mul('100000000').div(exposureAsset);
+                .div(PERCENTAGE);
+            const riskRate = margin.mul(PERCENTAGE).div(exposureAsset);
 
             // riskRate >= 100%
-            expect(riskRate).to.be.gte('100000000');
+            expect(riskRate).to.be.gte(PERCENTAGE);
 
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
 
@@ -1572,7 +1573,7 @@ describe('Trade: ioc', () => {
             // partial transaction
             expect(shortPosition.positionAmount).to.be.eq(
                 vaultAfter.indexReservedAmount.add(
-                    stableToIndexAmount.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
+                    stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
             expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
@@ -1626,7 +1627,7 @@ describe('Trade: ioc', () => {
             const tradingConfig = await pool.getTradingConfig(pairIndex);
 
             // oraclePrice > indexPrice 0.5%
-            expect(oraclePrice.sub(indexPrice).mul('100000000').div(oraclePrice)).to.be.gte(
+            expect(oraclePrice.sub(indexPrice).mul(PERCENTAGE).div(oraclePrice)).to.be.gte(
                 tradingConfig.maxPriceDeviationP,
             );
 
@@ -1832,7 +1833,7 @@ describe('Trade: ioc', () => {
             // partial transaction
             expect(shortPosition.positionAmount).to.be.eq(
                 vaultAfter.indexReservedAmount.add(
-                    stableToIndexAmount.mul('1000000000000000000000000000000').div(shortPosition.averagePrice),
+                    stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
             expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
@@ -1886,27 +1887,36 @@ describe('Trade: ioc', () => {
             const tradingConfig = await pool.getTradingConfig(pairIndex);
 
             // oraclePrice < indexPrice 0.5%
-            // expect(indexPrice.sub(oraclePrice).mul('100000000').div(oraclePrice)).to.be.lt(
-            //     tradingConfig.maxPriceDeviationP,
-            // );
-            //
-            // // keeper execute order
-            // await expect(
-            //     executor
-            //         .connect(keeper.signer)
-            //         .setPricesAndExecuteIncreaseLimitOrders(
-            //             [btc.address],
-            //             [await indexPriceFeed.getPrice(btc.address)],
-            //             [
-            //                 new ethers.utils.AbiCoder().encode(
-            //                     ['uint256'],
-            //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-            //                 ),
-            //             ],
-            //             [{ orderId: longOrderId, tier: 0, referralsRatio:0,referralUserRatio:0,referralOwner: ZERO_ADDRESS }],
-            //             { value: 1 },
-            //         ),
-            // ).to.be.revertedWith('not reach trigger price');
+            expect(indexPrice.sub(oraclePrice).mul(PERCENTAGE).div(oraclePrice)).to.be.lt(
+                tradingConfig.maxPriceDeviationP,
+            );
+
+            // keeper execute order
+            const tx = await executor
+                .connect(keeper.signer)
+                .setPricesAndExecuteIncreaseLimitOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: longOrderId,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
+            const reason = await extraHash(tx.hash, 'ExecuteOrderError', 'errorMessage');
+
+            expect(reason).to.be.eq('not reach trigger price');
         });
     });
 });
