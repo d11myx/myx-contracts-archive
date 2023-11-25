@@ -50,7 +50,7 @@ async function main() {
 
     for (let keeper of keepers) {
         await waitForTx(await roleManager.addKeeper(keeper));
-        // await waitForTx(await roleManager.addPoolAdmin(keeper));
+        await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
 
     const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);

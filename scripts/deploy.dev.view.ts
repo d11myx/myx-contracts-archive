@@ -1,6 +1,7 @@
 // @ts-ignore
 import { ethers } from 'hardhat';
 import {
+    getFeeCollector,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getOrderManager,
@@ -22,6 +23,7 @@ async function main() {
     // const executionLogic = await getExecutionLogic();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
+    const feeCollector = await getFeeCollector();
     const pool = await getPool();
 
     const { btc, eth, usdt } = await getTokens();
@@ -50,8 +52,10 @@ async function main() {
     // }, 2000);
 
     // console.log(await pool.lpFairPrice(2, '2060738556470000000000000000000000'));
-    console.log(await pool.getVault(2));
+    console.log(await pool.getVault(1));
     console.log(await pool.getProfit(2, usdt.address, '2060738556470000000000000000000000'));
+
+    console.log(await feeCollector.getTradingFeeTier(1, 2));
 
     //
     // const poolToken = await ethers.getContractAt('PoolToken', '0xB220A53E4E1b5B99BCFc8a6CF300a3276976f4a8');
