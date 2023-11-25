@@ -4,8 +4,7 @@ import { BigNumber, ethers } from 'ethers';
 export const ONE_ETHER = ethers.utils.parseEther('1');
 export const MAX_UINT_AMOUNT = ethers.constants.MaxUint256;
 export const ZERO_ADDRESS = ethers.constants.AddressZero;
-export const PRICE_PRECISION = '1000000000000000000000000000000';
-export const PERCENTAGE = '100000000';
+
 export const ZERO_HASH = ethers.constants.HashZero;
 
 export const abiCoder = new ethers.utils.AbiCoder();

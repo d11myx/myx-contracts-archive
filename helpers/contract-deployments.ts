@@ -29,9 +29,7 @@ import { MOCK_INDEX_PRICES, MOCK_PRICES } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
-import { getWETH } from './contract-getters';
-import { Duration, latest } from './utilities/block';
-import { encodeParameterArray } from './utilities';
+import { getToken, getWETH } from './contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -79,7 +77,12 @@ export async function deployToken() {
 
     const tokens: SymbolMap<MockERC20Token> = {};
     for (let [pair, pairConfig] of Object.entries(pairConfigs)) {
-        const token = await deployMockToken(pair, pair, pairConfig.pairTokenDecimals);
+        let token;
+        if (pairConfig.useWrappedNativeToken) {
+            token = await getToken(weth.address);
+        } else {
+            token = await deployMockToken(pair, pair, pairConfig.pairTokenDecimals);
+        }
         log(`deployed ${pair} at ${token.address}`);
 
         tokens[pair] = token;
