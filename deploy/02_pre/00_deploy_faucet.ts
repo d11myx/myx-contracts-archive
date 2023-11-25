@@ -18,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         contract: 'Faucet',
         args: [
             [btc.address, usdt.address],
-            [10, 100000],
+            [1, 100000],
         ],
         ...COMMON_DEPLOY_PARAMS,
     });
