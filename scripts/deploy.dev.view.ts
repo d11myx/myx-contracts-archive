@@ -1,6 +1,7 @@
 // @ts-ignore
 import { ethers } from 'hardhat';
 import {
+    getFeeCollector,
     getIndexPriceFeed,
     getOraclePriceFeed,
     getOrderManager,
@@ -22,6 +23,7 @@ async function main() {
     // const executionLogic = await getExecutionLogic();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
+    const feeCollector = await getFeeCollector();
     const pool = await getPool();
 
     const { btc, eth, usdt } = await getTokens();
@@ -42,8 +44,18 @@ async function main() {
     // const poolToken = await ethers.getContractAt('PoolToken', '0xb76d66C2fe6b4ed0694AD71B99c5466db2dA4C79');
     // console.log(await poolToken.totalSupply());
     // console.log(await pool.lpFairPrice(2, await oraclePriceFeed.getPrice(eth.address)));
-    const poolToken = await ethers.getContractAt('PoolToken', '0x3BeDA8883841D83a5fbB152e9048efb4FfD0643E');
-    console.log(await poolToken.balanceOf('0x41f5703786aD0344A0a8B50b87CebD65eE2cACca'));
+
+    // let index = 1;
+    // setInterval(async () => {
+    //     console.log(`index: ${index}  ${await pool.getVault(1)}`);
+    //     index++;
+    // }, 2000);
+
+    // console.log(await pool.lpFairPrice(2, '2060738556470000000000000000000000'));
+    console.log(await pool.getVault(1));
+    console.log(await pool.getProfit(2, usdt.address, '2060738556470000000000000000000000'));
+
+    console.log(await feeCollector.getTradingFeeTier(1, 2));
 
     //
     // const poolToken = await ethers.getContractAt('PoolToken', '0xB220A53E4E1b5B99BCFc8a6CF300a3276976f4a8');

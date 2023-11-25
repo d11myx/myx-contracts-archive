@@ -68,7 +68,11 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
             priceIds[i] = tokenPriceIds[tokens[i]];
             publishTimes[i] = uint64(block.timestamp);
         }
-        pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes);
+
+        try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
+        } catch {
+            revert("update price failed");
+        }
     }
 
     function getPrice(address token) external view override returns (uint256) {
