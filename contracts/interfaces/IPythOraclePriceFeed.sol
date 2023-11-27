@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./IPriceFeed.sol";
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "./IPythOracle.sol";
 
 interface IPythOraclePriceFeed is IPriceFeed {
 
@@ -14,10 +14,6 @@ interface IPythOraclePriceFeed is IPriceFeed {
     event PythAddressUpdated(address oldAddress, address newAddress);
 
     event PriceAgeUpdated(uint256 oldAge, uint256 newAge);
-
-    function updatePythAddress(IPyth _pyth) external;
-
-    function setTokenPriceIds(address[] memory tokens, bytes32[] memory priceIds) external;
 
     function updatePrice(address[] calldata tokens, bytes[] calldata updateData) external payable;
 
