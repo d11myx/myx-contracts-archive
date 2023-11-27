@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPythOraclePriceFeed.sol";
 import "../interfaces/IRoleManager.sol";
+import "../interfaces/IPythOracle.sol";
 
 contract PythOraclePriceFeed is IPythOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -14,7 +14,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
 
     uint256 public priceAge;
 
-    IPyth public pyth;
+    IPythOracle public pyth;
     mapping(address => bytes32) public tokenPriceIds;
 
     constructor(
@@ -25,7 +25,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     ) {
         priceAge = 10;
         ADDRESS_PROVIDER = addressProvider;
-        pyth = IPyth(_pyth);
+        pyth = IPythOracle(_pyth);
         _setTokenPriceIds(tokens, priceIds);
     }
 
@@ -40,7 +40,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         emit PriceAgeUpdated(oldAge, priceAge);
     }
 
-    function updatePythAddress(IPyth _pyth) external override onlyPoolAdmin {
+    function updatePythAddress(IPythOracle _pyth) external onlyPoolAdmin {
         address oldAddress = address(pyth);
         pyth = _pyth;
         emit PythAddressUpdated(oldAddress, address(pyth));
@@ -49,7 +49,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     function setTokenPriceIds(
         address[] memory tokens,
         bytes32[] memory priceIds
-    ) external override onlyPoolAdmin {
+    ) external onlyPoolAdmin {
         _setTokenPriceIds(tokens, priceIds);
     }
 
@@ -65,13 +65,18 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         uint64[] memory publishTimes = new uint64[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
             require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
-            priceIds[i] = tokenPriceIds[tokens[i]];
-            publishTimes[i] = uint64(block.timestamp);
+
+            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) < uint64(block.timestamp)) {
+                priceIds[i] = tokenPriceIds[tokens[i]];
+                publishTimes[i] = uint64(block.timestamp);
+            }
         }
 
-        try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
-        } catch {
-            revert("update price failed");
+        if (priceIds.length > 0) {
+            try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
+            } catch {
+                revert("update price failed");
+            }
         }
     }
 
