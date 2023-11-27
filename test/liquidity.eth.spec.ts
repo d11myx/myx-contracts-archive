@@ -32,7 +32,7 @@ describe('liquidity: ETH', () => {
             oraclePriceFeed.getPrice(weth.address),
         );
 
-        await weth.connect(trader.signer).approve(router.address, depositIndexAmount);
+        // await weth.connect(trader.signer).approve(router.address, depositIndexAmount);
         await mintAndApprove(testEnv, usdt, depositStableAmount, trader, router.address);
 
         const ethBalanceBefore = ethers.utils.formatEther(await trader.signer.getBalance());
