@@ -31,6 +31,7 @@ contract Router is
     Pausable
 {
     using SafeERC20 for IERC20;
+    using SafeERC20 for IWETH;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
@@ -383,7 +384,7 @@ contract Router is
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: updateFee}(tokens, updateData);
 
         uint256 wrapAmount = msg.value - updateFee;
-        this.wrapWETH{value: wrapAmount}(msg.sender);
+        this.wrapWETH{value: wrapAmount}(address(this));
 
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         (mintAmount, slipToken, slipAmount) = IPool(pool).addLiquidity(
@@ -393,6 +394,10 @@ contract Router is
             stableAmount,
             abi.encode(msg.sender)
         );
+
+        if (wrapAmount - indexAmount > 0) {
+            IWETH(ADDRESS_PROVIDER.WETH()).safeTransfer(msg.sender, wrapAmount - indexAmount);
+        }
     }
 
     function addLiquidity(
@@ -412,6 +417,12 @@ contract Router is
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
 
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        require(pairIndex > 0, "!exists");
+
+        if (indexToken == ADDRESS_PROVIDER.WETH()) {
+            IWETH(ADDRESS_PROVIDER.WETH()).safeTransferFrom(msg.sender, address(this), indexAmount);
+        }
+
         return
             IPool(pool).addLiquidity(
                 msg.sender,
@@ -439,6 +450,11 @@ contract Router is
     {
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        require(pairIndex > 0, "!exists");
+
+        if (indexToken == ADDRESS_PROVIDER.WETH()) {
+            IWETH(ADDRESS_PROVIDER.WETH()).safeTransferFrom(msg.sender, address(this), indexAmount);
+        }
         return
             IPool(pool).addLiquidity(
                 receiver,
@@ -534,7 +550,11 @@ contract Router is
         address sender = abi.decode(data, (address));
 
         if (amountIndex > 0) {
-            IERC20(indexToken).safeTransferFrom(sender, msg.sender, uint256(amountIndex));
+            if (indexToken == ADDRESS_PROVIDER.WETH()) {
+                IERC20(indexToken).safeTransferFrom(address(this), msg.sender, uint256(amountIndex));
+            } else {
+                IERC20(indexToken).safeTransferFrom(sender, msg.sender, uint256(amountIndex));
+            }
         }
         if (amountStable > 0) {
             IERC20(stableToken).safeTransferFrom(sender, msg.sender, uint256(amountStable));
