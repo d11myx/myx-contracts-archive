@@ -1,4 +1,5 @@
 import {
+    ArbitrumNetwork,
     DevNetwork,
     EthereumNetwork,
     LineaNetwork,
@@ -21,6 +22,8 @@ export const USDTMarketConfig: ReserveConfiguration = {
         [LineaNetwork.main]: '0xa219439258ca9da29e9cc4ce5596924745e12b93',
         [ScrollNetwork.sepolia]: ZERO_ADDRESS,
         [ScrollNetwork.main]: ZERO_ADDRESS,
+        [ArbitrumNetwork.sepolia]: ZERO_ADDRESS,
+        [ArbitrumNetwork.main]: ZERO_ADDRESS,
     },
     WrapperTokenAddress: {
         [DevNetwork.local]: ZERO_ADDRESS,
@@ -30,6 +33,8 @@ export const USDTMarketConfig: ReserveConfiguration = {
         [LineaNetwork.main]: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
         [ScrollNetwork.sepolia]: ZERO_ADDRESS,
         [ScrollNetwork.main]: ZERO_ADDRESS,
+        [ArbitrumNetwork.sepolia]: ZERO_ADDRESS,
+        [ArbitrumNetwork.main]: ZERO_ADDRESS,
     },
 
     PairsConfig: {
@@ -57,6 +62,14 @@ export const USDTMarketConfig: ReserveConfiguration = {
             WBTC: ZERO_ADDRESS,
             WETH: ZERO_ADDRESS,
         },
+        [ArbitrumNetwork.sepolia]: {
+            WBTC: ZERO_ADDRESS,
+            WETH: ZERO_ADDRESS,
+        },
+        [ArbitrumNetwork.main]: {
+            WBTC: ZERO_ADDRESS,
+            WETH: ZERO_ADDRESS,
+        },
     },
     ExecuteOrderTimeDelay: 60 * 5,
     OraclePriceFeedAddress: {
@@ -67,6 +80,8 @@ export const USDTMarketConfig: ReserveConfiguration = {
         [LineaNetwork.main]: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
         [ScrollNetwork.sepolia]: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
         [ScrollNetwork.main]: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
+        [ArbitrumNetwork.sepolia]: '0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF',
+        [ArbitrumNetwork.main]: '0xff1a0f4744e8582DF1aE09D5611b887B6a12925C',
     },
     OraclePriceId: {
         [DevNetwork.local]: {
@@ -89,6 +104,14 @@ export const USDTMarketConfig: ReserveConfiguration = {
             WBTC: '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43',
             WETH: '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
         },
+        [ArbitrumNetwork.sepolia]: {
+            WBTC: '0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b',
+            WETH: '0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6',
+        },
+        [ArbitrumNetwork.main]: {
+            WBTC: '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43',
+            WETH: '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
+        },
     },
     UniswapRouterAddress: {
         [DevNetwork.local]: ZERO_ADDRESS,
@@ -98,6 +121,8 @@ export const USDTMarketConfig: ReserveConfiguration = {
         [LineaNetwork.main]: ZERO_ADDRESS,
         [ScrollNetwork.sepolia]: ZERO_ADDRESS,
         [ScrollNetwork.main]: ZERO_ADDRESS,
+        [ArbitrumNetwork.sepolia]: ZERO_ADDRESS,
+        [ArbitrumNetwork.main]: ZERO_ADDRESS,
     },
     UniswapTokenPathConfig: {
         [DevNetwork.local]: {
@@ -117,6 +142,14 @@ export const USDTMarketConfig: ReserveConfiguration = {
             WETH: ZERO_HASH,
         },
         [ScrollNetwork.main]: {
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
+        },
+        [ArbitrumNetwork.sepolia]: {
+            WBTC: ZERO_HASH,
+            WETH: ZERO_HASH,
+        },
+        [ArbitrumNetwork.main]: {
             WBTC: ZERO_HASH,
             WETH: ZERO_HASH,
         },
