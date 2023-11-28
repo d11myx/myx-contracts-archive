@@ -539,7 +539,8 @@ contract Pool is IPool, Upgradeable {
                 uint256 needSwapStableDeltaWad = totalStableTotalDeltaWad - expectStableDeltaWad;
                 uint256 swapStableDeltaWad = Math.min(stableDepositDeltaWad, needSwapStableDeltaWad);
 
-                slipDeltaWad = swapStableDeltaWad - AMMUtils.getAmountOut(swapStableDeltaWad, reserveB, reserveA);
+                slipDeltaWad = swapStableDeltaWad
+                    - AMMUtils.getAmountOut(swapStableDeltaWad, reserveB, reserveA).mulPrice(price);
                 slipAmount = slipDeltaWad / (10 ** (18 - stableTokenDec));
                 if (slipAmount > 0) {
                     slipToken = pair.stableToken;
