@@ -28,6 +28,11 @@ export enum ScrollNetwork {
     sepolia = 'scroll_sepolia',
 }
 
+export enum ArbitrumNetwork {
+    main = 'arbitrum_mainnet',
+    sepolia = 'arbitrum_sepolia',
+}
+
 export enum TradeType {
     MARKET = 0,
     LIMIT = 1,
@@ -35,7 +40,7 @@ export enum TradeType {
     SL = 3,
 }
 
-export type eNetwork = DevNetwork | EthereumNetwork | LineaNetwork | ScrollNetwork;
+export type eNetwork = DevNetwork | EthereumNetwork | LineaNetwork | ScrollNetwork | ArbitrumNetwork;
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {
     USDT: parseUnits('1', 8),

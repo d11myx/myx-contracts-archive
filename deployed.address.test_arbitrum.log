@@ -1,0 +1,77 @@
+Accounts after deployment
+┌─────────┬──────────────────────┬──────────────────────────────────────────────┬────────────────┐
+│ (index) │         name         │                   account                    │    balance     │
+├─────────┼──────────────────────┼──────────────────────────────────────────────┼────────────────┤
+│    0    │      'deployer'      │ '0xCDa8066d43F437cbca6fb974753deb48779d4cC2' │ '0.4850201975' │
+│    1    │     'poolAdmin'      │ '0xCDa8066d43F437cbca6fb974753deb48779d4cC2' │ '0.4850201975' │
+│    2    │      'operator'      │ '0x53E5d6CfA91c57Df5C23Bc1A6464dBd6F2892944' │     '0.0'      │
+│    3    │     'treasurer'      │ '0x53E5d6CfA91c57Df5C23Bc1A6464dBd6F2892944' │     '0.0'      │
+│    4    │       'keeper'       │ '0xCDa8066d43F437cbca6fb974753deb48779d4cC2' │ '0.4850201975' │
+│    5    │        'dao'         │ '0xCDa8066d43F437cbca6fb974753deb48779d4cC2' │ '0.4850201975' │
+│    6    │    'feeReceiver'     │ '0xCDa8066d43F437cbca6fb974753deb48779d4cC2' │ '0.4850201975' │
+│    7    │    'slipReceiver'    │ '0xCDa8066d43F437cbca6fb974753deb48779d4cC2' │ '0.4850201975' │
+│    8    │   'teamAndAdvisor'   │ '0x4e3a89b0662f77249825Be00d00611b0Ed561a1a' │     '0.0'      │
+│    9    │  'privatePlacement'  │ '0x4e3a89b0662f77249825Be00d00611b0Ed561a1a' │     '0.0'      │
+│   10    │     'community'      │ '0x4e3a89b0662f77249825Be00d00611b0Ed561a1a' │     '0.0'      │
+│   11    │   'initLiquidity'    │ '0x4e3a89b0662f77249825Be00d00611b0Ed561a1a' │     '0.0'      │
+│   12    │  'marketOperation'   │ '0x4e3a89b0662f77249825Be00d00611b0Ed561a1a' │     '0.0'      │
+│   13    │     'ecoKeeper'      │ '0x4e3a89b0662f77249825Be00d00611b0Ed561a1a' │     '0.0'      │
+│   14    │ 'developmentReserve' │ '0x4e3a89b0662f77249825Be00d00611b0Ed561a1a' │     '0.0'      │
+└─────────┴──────────────────────┴──────────────────────────────────────────────┴────────────────┘
+
+Deployments
+┌────────────────────────────────┬──────────────────────────────────────────────┐
+│            (index)             │                   address                    │
+├────────────────────────────────┼──────────────────────────────────────────────┤
+│              USDT              │ '0xD848e4d523Bd990244bFBb7fd3Ab75748A88376c' │
+│              WETH              │ '0x120A6377C13E31E5666Fe64907a66486eD7FBEB5' │
+│            Timelock            │ '0xEc62c9a5BBCc629BD03c500f03F861421644B834' │
+│       AddressesProvider        │ '0xeD46aA2E5fF615497C224e0d2A8423465AD954F9' │
+│          RoleManager           │ '0x252A4A60704C0CD9a870Ffd242Bd11ea929C556F' │
+│      PythOraclePriceFeed       │ '0x3dA4bdddfF6B07b5B71BD101390d6fE30f9B9aC3' │
+│         IndexPriceFeed         │ '0x9C2F8C4E29b9AdafB82fbf6290A7fdE35F44a3d7' │
+│   FundingRate_Implementation   │ '0x151101EE98ed992ae4f61a716d1702021459EBcf' │
+│       FundingRate_Proxy        │ '0xf76B93D40850BEe5329CC2149b12647382cF8325' │
+│          FundingRate           │ '0xf76B93D40850BEe5329CC2149b12647382cF8325' │
+│        PoolTokenFactory        │ '0x24E8701E20403b68aBeF0c09452268B78fE0DfF5' │
+│    SpotSwap_Implementation     │ '0x7D98f67B9e1063ED04f7cA482B5802b9E1b4D5C1' │
+│         SpotSwap_Proxy         │ '0x4303Ccea83646Db4FebE728c4C1388344d0FE567' │
+│            SpotSwap            │ '0x4303Ccea83646Db4FebE728c4C1388344d0FE567' │
+│      Pool_Implementation       │ '0x7F77DA882025d16015EB69eb16B7F9e96BBa2fB5' │
+│           Pool_Proxy           │ '0xD578eC695e0b624f1dd683906b2B93C8530c9d8A' │
+│              Pool              │ '0xD578eC695e0b624f1dd683906b2B93C8530c9d8A' │
+│  FeeCollector_Implementation   │ '0x38d79068191447531054AB9A9351335C518B9963' │
+│       FeeCollector_Proxy       │ '0xb86bde059B5b5c60389896F9D46c4e1E505c9149' │
+│          FeeCollector          │ '0xb86bde059B5b5c60389896F9D46c4e1E505c9149' │
+│   RiskReserve_Implementation   │ '0x6315Ba4cDF127Af45C412B75d3ffa0869fe81B28' │
+│       RiskReserve_Proxy        │ '0x39E1a8D692e62811EB693Ab6ACb00fE99A4A59EF' │
+│          RiskReserve           │ '0x39E1a8D692e62811EB693Ab6ACb00fE99A4A59EF' │
+│ PositionManager_Implementation │ '0x5A72f2B58FA06fA3b332BB0315af0094635c3fEd' │
+│     PositionManager_Proxy      │ '0xe0aE041Da1403907E8E68Dd293329b705ca93eF3' │
+│        PositionManager         │ '0xe0aE041Da1403907E8E68Dd293329b705ca93eF3' │
+│  OrderManager_Implementation   │ '0xc4276621cA54F2e6F3E1126287334C697f511076' │
+│       OrderManager_Proxy       │ '0x7c55A191B533055088A2B9F6239E670B45794F5B' │
+│          OrderManager          │ '0x7c55A191B533055088A2B9F6239E670B45794F5B' │
+│             Router             │ '0x9E3608648A3Be3312B7c55852e01Ded2eF60d564' │
+│         ExecutionLogic         │ '0xd2f99ad07CA8faB7ccD30f102F142fA559E285F0' │
+│        LiquidationLogic        │ '0x6C869fda9d7F1daaf29D8aE4adD2442A33a78464' │
+│            Executor            │ '0x8A812617e828ff56Bb7fE8889136Db965577e2e3' │
+│             Faucet             │ '0x76200A945bedd6bb203C4B56d93DDefCCF8Ad493' │
+└────────────────────────────────┴──────────────────────────────────────────────┘
+
+MockedTokens
+┌────────────────┬──────────────────────────────────────────────┐
+│    (index)     │                   address                    │
+├────────────────┼──────────────────────────────────────────────┤
+│      USDT      │ '0xD848e4d523Bd990244bFBb7fd3Ab75748A88376c' │
+│      WETH      │ '0x120A6377C13E31E5666Fe64907a66486eD7FBEB5' │
+│ MockToken-WBTC │ '0xcBa9Ac34B3475FA0f80072210D17EFC4f737aa58' │
+└────────────────┴──────────────────────────────────────────────┘
+
+LPs
+┌──────────────┬──────────────────────────────────────────────┐
+│   (index)    │                   address                    │
+├──────────────┼──────────────────────────────────────────────┤
+│ WBTC-USDT-LP │ '0xd2fdffDd6801c7Ae67aaddE6C722C15E9EC6516c' │
+│ WETH-USDT-LP │ '0x03730a9d4B391E71da2454Df61501865cDFbB423' │
+└──────────────┴──────────────────────────────────────────────┘
