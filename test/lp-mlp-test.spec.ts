@@ -9,6 +9,7 @@ import {
     convertStableAmountToIndex,
 } from '../helpers/token-decimals';
 
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 
 describe('lp-mlp: Test cases', () => {
@@ -19,14 +20,10 @@ describe('lp-mlp: Test cases', () => {
         testEnv = await newTestEnv();
     }
 
-    before(async () => {
-        testEnv = await newTestEnv();
-    });
-
     describe('Liquidity operation of pool', () => {
         describe('Liquidity of Common Token', () => {
             it('should add common liquidity success', async () => {
-                await refreshEnv();
+                await loadFixture(refreshEnv);
                 const {
                     router,
                     users:[depositor], 
@@ -178,7 +175,7 @@ describe('lp-mlp: Test cases', () => {
         describe('Liquidity of ETH', () => {
 
             it('should add eth liquidity success', async() => {
-                await refreshEnv();
+                await loadFixture(refreshEnv);
                 const pairIndex2 = 2;
                 const {
                     router,
@@ -304,7 +301,7 @@ describe('lp-mlp: Test cases', () => {
         describe('Liquidity for another account', () => {
 
             it('should add liquidity for account success', async() => {
-                await refreshEnv();
+                await loadFixture(refreshEnv);
 
                 const {
                     router,
