@@ -746,12 +746,17 @@ contract Pool is IPool, Upgradeable {
             receiveStableTokenAmount + feeStableTokenAmount
         );
 
-        if (useETH && pair.indexToken == ADDRESS_PROVIDER.WETH()) {
-            _unwrapWETH(receiveIndexTokenAmount, _receiver);
-        } else {
-            IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+        if (receiveIndexTokenAmount > 0) {
+            if (useETH && pair.indexToken == ADDRESS_PROVIDER.WETH()) {
+                _unwrapWETH(receiveIndexTokenAmount, _receiver);
+            } else {
+                IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+            }
         }
-        IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
+
+        if (receiveStableTokenAmount > 0) {
+            IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
+        }
 
         feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
         feeTokenAmounts[pair.stableToken] += feeStableTokenAmount;
