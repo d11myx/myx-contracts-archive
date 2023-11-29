@@ -108,8 +108,8 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     function _returnPriceWithDecimals(
         PythStructs.Price memory pythPrice
     ) internal pure returns (uint256) {
-        if (pythPrice.price < 0) {
-            return 0;
+        if (pythPrice.price <= 0) {
+            revert("invalid price");
         }
         return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - 8));
     }
