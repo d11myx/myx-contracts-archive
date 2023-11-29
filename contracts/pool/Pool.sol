@@ -718,11 +718,17 @@ contract Pool is IPool, Upgradeable {
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
-        uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
-        uint256 availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
+        uint256 availableIndexTokenWad;
+        if (vault.indexTotalAmount > vault.indexReservedAmount) {
+            uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
+            availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
+        }
 
-        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
-        uint256 availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
+        uint256 availableStableTokenWad;
+        if (vault.stableTotalAmount > vault.stableReservedAmount) {
+            uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+            availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
+        }
 
         uint256 receiveIndexTokenAmountWad = receiveIndexTokenAmount * (10 ** (18 - indexTokenDec));
         uint256 receiveStableTokenAmountWad = receiveStableTokenAmount * (10 ** (18 - stableTokenDec));

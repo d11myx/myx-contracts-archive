@@ -36,7 +36,7 @@ contract Faucet {
         for (uint256 i = 0; i < assets.length; i++) {
             IERC20Metadata token = IERC20Metadata(assets[i]);
 
-            uint256 amount = amounts[i] * (10 ** uint256(token.decimals()));
+            uint256 amount = amounts[i];
 
             if (token.balanceOf(address(this)) >= amount) {
                 token.transfer(msg.sender, amount);
