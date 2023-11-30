@@ -1,0 +1,79 @@
+Accounts after deployment
+┌─────────┬──────────────────────┬──────────────────────────────────────────────┬────────────────────────┐
+│ (index) │         name         │                   account                    │        balance         │
+├─────────┼──────────────────────┼──────────────────────────────────────────────┼────────────────────────┤
+│    0    │      'deployer'      │ '0x3139c7e1919EFCf79ab69F20A40843520ff754b3' │ '1.970914622224647812' │
+│    1    │     'poolAdmin'      │ '0x3139c7e1919EFCf79ab69F20A40843520ff754b3' │ '1.970914622224647812' │
+│    2    │      'operator'      │ '0x720830A42EFf6c09847A9F2E8913c2C405322556' │         '0.0'          │
+│    3    │     'treasurer'      │ '0x720830A42EFf6c09847A9F2E8913c2C405322556' │         '0.0'          │
+│    4    │       'keeper'       │ '0x3139c7e1919EFCf79ab69F20A40843520ff754b3' │ '1.970914622224647812' │
+│    5    │        'dao'         │ '0x3139c7e1919EFCf79ab69F20A40843520ff754b3' │ '1.970914622224647812' │
+│    6    │    'feeReceiver'     │ '0x3139c7e1919EFCf79ab69F20A40843520ff754b3' │ '1.970914622224647812' │
+│    7    │    'slipReceiver'    │ '0x3139c7e1919EFCf79ab69F20A40843520ff754b3' │ '1.970914622224647812' │
+│    8    │   'teamAndAdvisor'   │ '0xEc098747dA22C7cd94BeBE648c1fD894aF813626' │         '0.0'          │
+│    9    │  'privatePlacement'  │ '0xEc098747dA22C7cd94BeBE648c1fD894aF813626' │         '0.0'          │
+│   10    │     'community'      │ '0xEc098747dA22C7cd94BeBE648c1fD894aF813626' │         '0.0'          │
+│   11    │   'initLiquidity'    │ '0xEc098747dA22C7cd94BeBE648c1fD894aF813626' │         '0.0'          │
+│   12    │  'marketOperation'   │ '0xEc098747dA22C7cd94BeBE648c1fD894aF813626' │         '0.0'          │
+│   13    │     'ecoKeeper'      │ '0xEc098747dA22C7cd94BeBE648c1fD894aF813626' │         '0.0'          │
+│   14    │ 'developmentReserve' │ '0xEc098747dA22C7cd94BeBE648c1fD894aF813626' │         '0.0'          │
+└─────────┴──────────────────────┴──────────────────────────────────────────────┴────────────────────────┘
+
+Deployments
+┌────────────────────────────────┬──────────────────────────────────────────────┐
+│            (index)             │                   address                    │
+├────────────────────────────────┼──────────────────────────────────────────────┤
+│              USDT              │ '0x43D9A80A86CcB7abB5BDEed5d85CA5D2Cc120859' │
+│              WETH              │ '0xBB4aC22b7114D144D6c36E244D7eBfE488DdE657' │
+│            Timelock            │ '0x90200CdD91F38F66c88e68C0456b07eA5dF55da3' │
+│       AddressesProvider        │ '0x411566B14F7CF12f9440A1034F8D4aE82BBf016B' │
+│          RoleManager           │ '0x3186E798c481A34e1bB4eD82fd88bc0496abFC91' │
+│      PythOraclePriceFeed       │ '0x8AeEef94c6A2de6666A05BD52e39e6e72FBf20AE' │
+│         IndexPriceFeed         │ '0xdfD745B5Ad38Ea03c509063F2207aaC52D940662' │
+│   FundingRate_Implementation   │ '0xAA6FA2E5B723ED13D603c3a6364b1cbEF2058019' │
+│       FundingRate_Proxy        │ '0x66b3ed1DfF4F5A11fbBBaff0F8aa20cf9D40194B' │
+│          FundingRate           │ '0x66b3ed1DfF4F5A11fbBBaff0F8aa20cf9D40194B' │
+│        PoolTokenFactory        │ '0xa323570C34BCa68244CA31656a11DA1a7a6f7c99' │
+│    SpotSwap_Implementation     │ '0xf535a654bceB2264cf1A5b9E128647F502e02612' │
+│         SpotSwap_Proxy         │ '0xeb668CA8fBF91f2b219bc1502D00288a751d2131' │
+│            SpotSwap            │ '0xeb668CA8fBF91f2b219bc1502D00288a751d2131' │
+│      Pool_Implementation       │ '0xb153294181e9DA25450c55af2196c5bF10705D6b' │
+│           Pool_Proxy           │ '0x9afD7dE35509c1a8D513cDb3C5AEc1C9bE87989F' │
+│              Pool              │ '0x9afD7dE35509c1a8D513cDb3C5AEc1C9bE87989F' │
+│  FeeCollector_Implementation   │ '0x8312840D314a4E1788082f48F5282DE3Fa851752' │
+│       FeeCollector_Proxy       │ '0x179a99602208B42cccf1254C8F29D5c7BFAd9cD1' │
+│          FeeCollector          │ '0x179a99602208B42cccf1254C8F29D5c7BFAd9cD1' │
+│   RiskReserve_Implementation   │ '0x7bd611Db624a923769247e6922C2aEDB45906031' │
+│       RiskReserve_Proxy        │ '0x4Bd119CF37121892Fcae1cb84495B1A8A04Cdd05' │
+│          RiskReserve           │ '0x4Bd119CF37121892Fcae1cb84495B1A8A04Cdd05' │
+│ PositionManager_Implementation │ '0xaF1423A3afeC29cf87d845e5160870b7c1EAF1A3' │
+│     PositionManager_Proxy      │ '0x2b60AD8285d3AD187C0474bE792870098eD6B09d' │
+│        PositionManager         │ '0x2b60AD8285d3AD187C0474bE792870098eD6B09d' │
+│  OrderManager_Implementation   │ '0x330C14316a91C5b8C6547A7DA01e6891cD01915A' │
+│       OrderManager_Proxy       │ '0x8dAa2D402CC15Dd88E46f90B70BffC788A651133' │
+│          OrderManager          │ '0x8dAa2D402CC15Dd88E46f90B70BffC788A651133' │
+│             Router             │ '0x96c8D2C44237e178636f6E43cd7B3DBcB11F4Da9' │
+│         ExecutionLogic         │ '0xB73FE6c7457E64784D7f4fEd710477241F8c6EcA' │
+│        LiquidationLogic        │ '0x9A814C8042Db8F99AB732009e8F7b26C11730007' │
+│            Executor            │ '0xfC88C2Fc0Ed21052EfC19EE4fe76dDf51ED5B21F' │
+│             Faucet             │ '0x65E2217297d0ce63DDf3339d9113CF9f63ca9050' │
+└────────────────────────────────┴──────────────────────────────────────────────┘
+
+MockedTokens
+┌────────────────┬──────────────────────────────────────────────┐
+│    (index)     │                   address                    │
+├────────────────┼──────────────────────────────────────────────┤
+│      USDT      │ '0x43D9A80A86CcB7abB5BDEed5d85CA5D2Cc120859' │
+│      WETH      │ '0xBB4aC22b7114D144D6c36E244D7eBfE488DdE657' │
+│ MockToken-WBTC │ '0xCF7230366c3b0d8AEc41e2320B7C9dD7AE46bfc6' │
+└────────────────┴──────────────────────────────────────────────┘
+
+LPs
+┌──────────────┬──────────────────────────────────────────────┐
+│   (index)    │                   address                    │
+├──────────────┼──────────────────────────────────────────────┤
+│ WBTC-USDT-LP │ '0xD5A48DfA8b409b8a16D931dbF4B514832D133244' │
+│ WETH-USDT-LP │ '0x97Fd6Ecb2ff3a755b072A53FD938Ba36b5fb77cF' │
+└──────────────┴──────────────────────────────────────────────┘
+
+faucet: 0xEB8536751a26C1Eb138a51aA3a32A8088879bB2d

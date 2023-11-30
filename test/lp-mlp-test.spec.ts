@@ -4,7 +4,10 @@ import hre, { ethers } from 'hardhat';
 import { mintAndApprove } from './helpers/misc';
 import { BigNumber } from 'ethers';
 import { getMockToken } from '../helpers';
+// import { TestAmmUtils, AmountMath } from '../types';
+import Decimal from 'decimal.js';
 import {
+    convertIndexAmount,
     convertIndexAmountToStable,
     convertStableAmountToIndex,
 } from '../helpers/token-decimals';
@@ -13,6 +16,7 @@ import {
 
 describe('lp-mlp: Test cases', () => {
     const pairIndex = 1;
+    const _1e30 = '1000000000000000000000000000000';
     let testEnv: TestEnv; 
 
     async function refreshEnv() {
@@ -916,5 +920,247 @@ describe('lp-mlp: Test cases', () => {
                 // console.log(await lpToken.balanceOf(depositor3.address))
             });
         })
+    })
+
+    describe('Liquidity Fee And Slippage', async() => {
+        // pre-operation: add liquidity with balance
+        before(async () => {
+            await refreshEnv();
+            const {
+                users: [depositor],
+                btc,
+                usdt,
+                pool,
+                router,
+            } = testEnv;
+            // add liquidity
+            const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+            const stableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals());
+            const pair = await pool.getPair(pairIndex);
+            await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
+            await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
+
+            // const lpToken = await getMockToken('', (await pool.getPair(pairIndex)).pairToken);
+            // console.log(await btc.balanceOf(pool.address))
+
+            await router
+                .connect(depositor.signer)
+                .addLiquidity(
+                    pair.indexToken,
+                    pair.stableToken,
+                    indexAmount,
+                    stableAmount,
+                    [btc.address],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    { value: 1 },
+                );
+            console.log(new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)]))
+        });
+
+        describe('Check Fee And Slippage in balanced', () =>{
+            it('Only use btc add liquidity', async() => {
+                const {
+                    router,
+                    users:[, depositor2], 
+                    usdt,
+                    btc,
+                    pool,
+                    oraclePriceFeed,
+                    positionManager,
+                } = testEnv;
+
+                const pairPrice = BigNumber.from(
+                    ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', '')
+                );
+
+                const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
+                const pair = await pool.getPair(pairIndex);
+                const lpToken = await getMockToken('', pair.pairToken);
+                await mintAndApprove(testEnv, btc, indexAmount, depositor2, router.address);
+                
+                // uint256 k,
+                // uint256 price,
+                // uint256 pricePrecision
+
+                // require(price > 0, "Invalid price");
+                // require(k > 0, "Invalid k");
+
+                // reserveA = Math.sqrt(Math.mulDiv(k, pricePrecision, price));
+                // reserveB = k / reserveA;
+                // return (reserveA, reserveB);
+
+                const mathMethod: any = pair.kOfSwap.mul(_1e30).div(await oraclePriceFeed.getPrice(btc.address));
+                const reserveADec = new Decimal(Math.sqrt(mathMethod));
+                const reserveBDec = (new Decimal(pair.kOfSwap.toString())).div(reserveADec);
+
+                const reserveA = BigNumber.from(reserveADec.toFixed(0));
+                const reserveB = BigNumber.from(reserveBDec.toFixed(0));
+
+
+                // const reserveAmount = await amm.getReserve(pair.kOfSwap, await oraclePriceFeed.getPrice(btc.address), _1e30);
+                // console.log(reserveAmount.reserveA, reserveAmount.reserveB)
+
+                const lpAmounts = await pool.getMintLpAmount(pairIndex, indexAmount, 0, await oraclePriceFeed.getPrice(btc.address));
+
+                const afterFeeIndexAmount = indexAmount.sub(lpAmounts.indexFeeAmount);
+
+                const poolVault = await pool.getVault(pairIndex);
+                const indexProfit = await positionManager.lpProfit(pairIndex, pair.indexToken, await oraclePriceFeed.getPrice(btc.address))
+                let indexTotalAmount: any;
+                if (indexProfit.lt(0)) {
+                    indexTotalAmount = poolVault.indexTotalAmount > indexProfit.abs() ? poolVault.indexTotalAmount.sub(indexProfit.abs()) : 0;
+                } else {
+                    indexTotalAmount = poolVault.indexTotalAmount.add(indexProfit.abs())
+                }
+
+                const stableProfit = await positionManager.lpProfit(pairIndex, pair.stableToken, await oraclePriceFeed.getPrice(btc.address))
+                let stableTotalAmount: any;
+                if (stableProfit.lt(0)) {
+                    stableTotalAmount = poolVault.stableTotalAmount > stableProfit.abs() ? poolVault.indexTotalAmount.sub(stableProfit.abs()) : 0;
+                } else {
+                    stableTotalAmount = poolVault.stableTotalAmount.add(stableProfit.abs())
+                }
+
+                // address token
+                // int256 tokenAmount
+                // uint8 targetDecimals
+                // uint256 price
+
+                // indexTotalAmount * 1e10 * price / 1e0 / 1e30
+                // (tokenAmount * int256(tokenWad)) * int256(price) / int256(targetTokenWad) / int256(PrecisionUtils.PRICE_PRECISION);
+
+                // indexToken: MockERC20Token,
+                // indexAmount: BigNumber,
+                // decimals: number,
+
+                // indexTotalAmount * 1e10 / 1e0 * price
+
+                // BigNumber.from(
+                //     new Decimal(indexAmount.toString())
+                //         .mul((10 ** (18 - stableDec)).toString())
+                //         .div((10 ** (18 - decimals)).toString())
+                //         .toFixed(0),
+
+                const indexTotalDeltaWad = (await convertIndexAmount(btc, indexTotalAmount, 18)).mul(pairPrice);
+                const stableTotalDeltaWad = await convertIndexAmount(btc, stableTotalAmount, 18);
+                
+            
+                const indexDepositDeltaWad = (await convertIndexAmount(btc, afterFeeIndexAmount, 18)).mul(pairPrice);
+                const stableDepositDeltaWad = (await convertIndexAmount(usdt, BigNumber.from('0'), 18));
+
+                const totalIndexTotalDeltaWad = indexTotalDeltaWad.add(indexDepositDeltaWad);
+                const totalStableTotalDeltaWad = stableTotalDeltaWad.add(stableDepositDeltaWad);
+
+                const totalDelta = totalIndexTotalDeltaWad.add(totalStableTotalDeltaWad);
+                const expectIndexDeltaWad = totalDelta.mul(pair.expectIndexTokenP).div(1e8);
+
+                // console.log(totalDelta)
+                // console.log(expectIndexDeltaWad)
+                // console.log(totalDelta, totalIndexTotalDeltaWad, totalStableTotalDeltaWad);
+                
+                // get discount
+                // const ratio = indexTotalDelta.div(totalDelta);
+                // const expectP = pair.expectIndexTokenP;
+                // const unbalanceP = ratio.div(expectP).sub(1e8)
+                // let rate;
+                // let amount;
+                // if (unbalanceP.lt(0) && unbalanceP.abs().gt(pair.maxUnbalancedP)) {
+                //     rate = pair.unbalancedDiscountRate;
+                //     amount = expectIndexDelta.sub(indexTotalDelta);
+                // }
+
+                const needSawpInIndexDelta = totalIndexTotalDeltaWad.sub(expectIndexDeltaWad);
+                const swapIndexDeltaWad = indexDepositDeltaWad.lt(needSawpInIndexDelta)? indexDepositDeltaWad : needSawpInIndexDelta;
+
+                // console.log(needSawpInIndexDelta, totalIndexTotalDeltaWad, expectIndexDeltaWad)
+                // console.log(swapIndexDeltaWad, indexDepositDeltaWad, needSawpInIndexDelta)
+
+                // uint256 amountIn,
+                // uint256 reserveIn,
+                // uint256 reserveOut
+                
+                // if (amountIn == 0) {
+                //     return 0;
+                // }
+        
+                // require(reserveIn > 0 && reserveOut > 0, "Invalid reserve");
+                // amountOut = Math.mulDiv(amountIn, reserveOut, reserveIn + amountIn);
+
+                const amountIn =  BigNumber.from(new Decimal(swapIndexDeltaWad.toString())
+                                    .mul(1e30)
+                                    .div(new Decimal((await oraclePriceFeed.getPrice(btc.address)).toString()))
+                                    .toFixed(0));
+                
+                const totalAmountIn = amountIn.add(reserveA);
+                const swapAmountOut = amountIn.mul(reserveB).div(totalAmountIn);
+                
+                const slipDeltaWad: BigNumber = swapIndexDeltaWad.sub(swapAmountOut);
+
+                console.log(slipDeltaWad)
+
+                const slipAmount = new Decimal(slipDeltaWad.toString())
+                    .mul(1e30)
+                    .div(new Decimal((await oraclePriceFeed.getPrice(btc.address)).toString()))
+                    .div(10 ** (18 - await btc.decimals()))
+                    .toFixed(0);
+
+                console.log('slipAmount: ' + slipAmount)
+                console.log('act slipAmount: ' + lpAmounts.slipAmount)
+                
+                await router
+                    .connect(depositor2.signer)
+                    .addLiquidity(
+                        pair.indexToken,
+                        pair.stableToken,
+                        indexAmount,
+                        0,
+                        [btc.address],
+                        [
+                            new ethers.utils.AbiCoder().encode(
+                                ['uint256'],
+                                [ethers.utils.parseUnits(pairPrice.toString(), 8)]
+                            )
+                        ],
+                        {value: 1}
+                    );
+                
+                // check Fee Amount
+                expect(lpAmounts.indexFeeAmount).to.be.eq(
+                    indexAmount.mul(pair.addLpFeeP).div(10 ** await btc.decimals())
+                )
+
+                expect(lpAmounts.slipAmount.add(lpAmounts.indexFeeAmount)).to.be.eq(
+                    indexAmount.sub(lpAmounts.afterFeeIndexAmount)
+                )
+
+                // check slippage
+                145998495311
+                39773655815
+                
+                // console.log(indexDepositDelta, expectIndexDelta, indexTotalDelta)
+
+                // const index = await convertIndexAmount(btc, reserveAmount.reserveA, 18)
+                expect(lpAmounts.slipToken).to.be.eq(btc.address);
+                // expect(lpAmounts.slipAmount)
+
+                // check Lp Amount
+                expect(lpAmounts.mintAmount).to.be.eq(
+                    await lpToken.balanceOf(depositor2.address)
+                )
+
+                
+
+
+
+
+
+            });
+
+
+        })
+
+
+
+
     })
 })
