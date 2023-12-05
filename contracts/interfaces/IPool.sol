@@ -117,18 +117,6 @@ interface IPool {
         uint256 amount
     ) external;
 
-    function increaseTotalAmount(
-        uint256 _pairToken,
-        uint256 _indexAmount,
-        uint256 _stableAmount
-    ) external;
-
-    function decreaseTotalAmount(
-        uint256 _pairToken,
-        uint256 _indexAmount,
-        uint256 _stableAmount
-    ) external;
-
     function increaseReserveAmount(
         uint256 _pairToken,
         uint256 _indexAmount,
