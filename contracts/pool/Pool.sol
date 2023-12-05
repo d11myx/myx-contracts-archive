@@ -212,14 +212,6 @@ contract Pool is IPool, Upgradeable {
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function increaseTotalAmount(
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount
-    ) public onlyPositionManager {
-        _increaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
-    }
-
     function _increaseTotalAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
@@ -235,14 +227,6 @@ contract Pool is IPool, Upgradeable {
             vault.indexTotalAmount,
             vault.stableTotalAmount
         );
-    }
-
-    function decreaseTotalAmount(
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount
-    ) public onlyPositionManager {
-        _decreaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
     function _decreaseTotalAmount(
@@ -270,11 +254,6 @@ contract Pool is IPool, Upgradeable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
-        require(vault.indexTotalAmount >= vault.indexReservedAmount, "iia");
-        require(
-            vault.stableTotalAmount >= vault.stableReservedAmount,
-            "ist"
-        );
         emit UpdateReserveAmount(
             _pairIndex,
             int256(_indexAmount),
@@ -735,7 +714,7 @@ contract Pool is IPool, Upgradeable {
 
         uint256 totalAvailable = availableIndexTokenWad.mulPrice(price) + availableStableTokenWad;
         uint256 totalReceive = receiveIndexTokenAmountWad.mulPrice(price) + receiveStableTokenAmountWad;
-        require(totalReceive <= totalAvailable, "insufficient liquidity");
+        require(totalReceive <= totalAvailable, "il");
 
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
@@ -1008,7 +987,7 @@ contract Pool is IPool, Upgradeable {
         IERC20(token).safeTransfer(to, amount);
     }
 
-    function getProfit(uint pairIndex, address token, uint256 price) public view returns (int256 profit) {
+    function getProfit(uint pairIndex, address token, uint256 price) private view returns (int256 profit) {
         return IPositionManager(positionManager).lpProfit(pairIndex, token, price);
     }
 
