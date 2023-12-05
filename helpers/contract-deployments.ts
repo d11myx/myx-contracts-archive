@@ -198,7 +198,7 @@ export async function deployTrading(
 ) {
     log(` - setup trading`);
 
-    const weth = await getWETH();
+    // const weth = await getWETH();
     // const usdt = await getToken();
 
     let feeCollector = (await deployUpgradeableContract('FeeCollector', [
