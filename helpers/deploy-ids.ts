@@ -31,3 +31,4 @@ export const LP_STAKING_POOL_ID = `LPStakingPool`;
 export const CONVERTOR_ID = `Convertor`;
 export const REWARD_DISTRIBUTOR_ID = `RewardDistributor`;
 export const FEE_DISTRIBUTOR_ID = `FeeDistributor`;
+export const POSITION_CALLER = `PositionCaller`;
