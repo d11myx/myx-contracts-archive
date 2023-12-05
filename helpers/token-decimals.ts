@@ -7,8 +7,8 @@ export async function convertIndexAmountToStable(
     stableToken: MockERC20Token,
     indexAmount: BigNumber,
 ): Promise<BigNumber> {
-    const indexDec = await indexToken.decimals();
-    const stableDec = await stableToken.decimals();
+    const indexDec = await indexToken.decimals(); 
+    const stableDec = await stableToken.decimals(); 
     return BigNumber.from(
         new Decimal(indexAmount.toString())
             .mul(10 ** (18 - indexDec))
@@ -22,8 +22,8 @@ export async function convertStableAmountToIndex(
     stableToken: MockERC20Token,
     stableAmount: BigNumber,
 ): Promise<BigNumber> {
-    const indexDec = await indexToken.decimals();
-    const stableDec = await stableToken.decimals();
+    const indexDec = await indexToken.decimals(); 
+    const stableDec = await stableToken.decimals(); 
     return BigNumber.from(
         new Decimal(stableAmount.toString())
             .mul((10 ** (18 - stableDec)).toString())
