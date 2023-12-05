@@ -13,8 +13,7 @@ import {
     waitForTx,
 } from '../helpers';
 import { EvmPriceServiceConnection, Price, PriceFeed } from '@pythnetwork/pyth-evm-js';
-// import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
-// import { token } from '../types/contracts';
+import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -41,51 +40,20 @@ async function main() {
     // console.log(`btc price:`, btcIndexPrice);
     // console.log(`eth price:`, ethIndexPrice);
     //
-    // const priceId = '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43';
-    const priceId = '0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b';
-    const conn = new EvmPriceServiceConnection('https://hermes-beta.pyth.network');
-    //
-    // // const priceFeedUpdate = await conn.getPriceFeedsUpdateData([priceId]);
-    //
-    // // console.log(await conn.getLatestPriceFeeds([priceId]));
+    const priceId = '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43';
+    const conn = new EvmPriceServiceConnection('https://hermes.pyth.network');
     const vaas = await conn.getLatestVaas([priceId]);
     const priceFeedUpdate = '0x' + Buffer.from(vaas[0], 'base64').toString('hex');
-    console.log(priceFeedUpdate)
 
-    // const testFactory = await ethers.getContractFactory('OracleTest')
+    const pythContract = await ethers.getContractAt('IPyth', '0xdF21D137Aadc95588205586636710ca2890538d5');
 
-    const testPyth = await ethers.getContractAt('IPythOracle', '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729');
-    console.log(testPyth.address)
-    // await waitForTx(await testPyth.updatePriceFeedsIfNecessary([priceFeedUpdate], [priceId], [getBlockTimestamp()] ,{
-    //     value: 1,
-    // }));
+    const updateFee = pythContract.getUpdateFee(priceFeedUpdate);
+    const tx = await pythContract.updatePriceFeeds([priceFeedUpdate], {
+        value: 1,
+    });
+    await waitForTx(tx);
+    console.log(await pythContract.getPriceNoOlderThan(priceId, 20));
 
-    for (let i = 0; i < 1; i++) {
-        const tx = await testPyth.updatePriceFeedsIfNecessary([priceFeedUpdate], [priceId], [getBlockTimestamp()] ,{
-            value: 1,
-        });
-        const receipt = await waitForTx(tx)
-        console.log(`block: ${receipt.blockNumber}  hash: ${receipt.blockHash}`);
-    }
-
-    //
-    // const testFactory = await ethers.getContractFactory('Test');
-    // const testContract = await testFactory.deploy();
-    
-    // const pythContract = await ethers.getContractAt('IPyth', '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729');
-    // const test = await ethers.getContractAt('Test', '0x71C630c897cA4DFdB31f3e0FAEa8EC08b628eEe4');
-    // console.log(`test: ${testContract.address}`);
-    
-    // await waitForTx(await testContract.setPrice([priceFeedUpdate], [priceId], { value: 1 }));
-    // //
-    // const tx = await pythContract.updatePriceFeedsIfNecessary([priceFeedUpdate], [priceId], [getBlockTimestamp()], {
-    //     value: 1,
-    // });
-    // const tx = await pythContract.updatePriceFeeds([priceFeedUpdate], {
-    //     value: 1,
-    // // });
-    // // await waitForTx(tx);
-    // // console.log(`tx hash: ${tx.hash}`);
     //
     // try {
     //     console.log('getPriceUnsafe:');

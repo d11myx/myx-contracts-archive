@@ -284,10 +284,14 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) external override {
         require(account == msg.sender || msg.sender == router, "forbidden");
 
-        IPool.Pair memory pair = pool.getPair(pairIndex);
         Position.Info storage position = positions[
             PositionKey.getPositionKey(account, pairIndex, isLong)
         ];
+        if (position.positionAmount == 0) {
+            revert("position not exists");
+        }
+
+        IPool.Pair memory pair = pool.getPair(pairIndex);
 
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);

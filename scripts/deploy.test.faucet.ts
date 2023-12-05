@@ -14,7 +14,10 @@ async function main() {
     const { usdt, btc } = await getTokens();
 
     const factory = await ethers.getContractFactory('Faucet');
-    const faucet = await factory.deploy([btc.address, usdt.address], [1, 100000]);
+    const faucet = await factory.deploy(
+        [btc.address, usdt.address],
+        [ethers.utils.parseUnits('0.05', await btc.decimals()), ethers.utils.parseUnits('5000', await usdt.decimals())],
+    );
     console.log(`faucet:`, faucet.address);
     await waitForTx(await btc.mint(faucet.address, ethers.utils.parseEther('100000')));
     await waitForTx(await usdt.mint(faucet.address, ethers.utils.parseEther('10000000000')));
