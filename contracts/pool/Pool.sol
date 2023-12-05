@@ -212,14 +212,6 @@ contract Pool is IPool, Upgradeable {
         tradingFeeConfigs[_pairIndex] = _tradingFeeConfig;
     }
 
-    function increaseTotalAmount(
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount
-    ) public onlyPositionManager {
-        _increaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
-    }
-
     function _increaseTotalAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
@@ -235,14 +227,6 @@ contract Pool is IPool, Upgradeable {
             vault.indexTotalAmount,
             vault.stableTotalAmount
         );
-    }
-
-    function decreaseTotalAmount(
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount
-    ) public onlyPositionManager {
-        _decreaseTotalAmount(_pairIndex, _indexAmount, _stableAmount);
     }
 
     function _decreaseTotalAmount(
@@ -270,11 +254,6 @@ contract Pool is IPool, Upgradeable {
         Vault storage vault = vaults[_pairIndex];
         vault.indexReservedAmount = vault.indexReservedAmount + _indexAmount;
         vault.stableReservedAmount = vault.stableReservedAmount + _stableAmount;
-        require(vault.indexTotalAmount >= vault.indexReservedAmount, "iia");
-        require(
-            vault.stableTotalAmount >= vault.stableReservedAmount,
-            "ist"
-        );
         emit UpdateReserveAmount(
             _pairIndex,
             int256(_indexAmount),
@@ -718,18 +697,24 @@ contract Pool is IPool, Upgradeable {
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         uint256 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
 
-        uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
-        uint256 availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
+        uint256 availableIndexTokenWad;
+        if (vault.indexTotalAmount > vault.indexReservedAmount) {
+            uint256 availableIndexToken = vault.indexTotalAmount - vault.indexReservedAmount;
+            availableIndexTokenWad = availableIndexToken * (10 ** (18 - indexTokenDec));
+        }
 
-        uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
-        uint256 availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
+        uint256 availableStableTokenWad;
+        if (vault.stableTotalAmount > vault.stableReservedAmount) {
+            uint256 availableStableToken = vault.stableTotalAmount - vault.stableReservedAmount;
+            availableStableTokenWad = availableStableToken * (10 ** (18 - stableTokenDec));
+        }
 
         uint256 receiveIndexTokenAmountWad = receiveIndexTokenAmount * (10 ** (18 - indexTokenDec));
         uint256 receiveStableTokenAmountWad = receiveStableTokenAmount * (10 ** (18 - stableTokenDec));
 
         uint256 totalAvailable = availableIndexTokenWad.mulPrice(price) + availableStableTokenWad;
         uint256 totalReceive = receiveIndexTokenAmountWad.mulPrice(price) + receiveStableTokenAmountWad;
-        require(totalReceive <= totalAvailable, "insufficient liquidity");
+        require(totalReceive <= totalAvailable, "il");
 
         ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
         IPoolToken(pair.pairToken).burn(_amount);
@@ -740,12 +725,17 @@ contract Pool is IPool, Upgradeable {
             receiveStableTokenAmount + feeStableTokenAmount
         );
 
-        if (useETH && pair.indexToken == ADDRESS_PROVIDER.WETH()) {
-            _unwrapWETH(receiveIndexTokenAmount, _receiver);
-        } else {
-            IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+        if (receiveIndexTokenAmount > 0) {
+            if (useETH && pair.indexToken == ADDRESS_PROVIDER.WETH()) {
+                _unwrapWETH(receiveIndexTokenAmount, _receiver);
+            } else {
+                IERC20(pair.indexToken).safeTransfer(_receiver, receiveIndexTokenAmount);
+            }
         }
-        IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
+
+        if (receiveStableTokenAmount > 0) {
+            IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
+        }
 
         feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
         feeTokenAmounts[pair.stableToken] += feeStableTokenAmount;
@@ -997,7 +987,7 @@ contract Pool is IPool, Upgradeable {
         IERC20(token).safeTransfer(to, amount);
     }
 
-    function getProfit(uint pairIndex, address token, uint256 price) public view returns (int256 profit) {
+    function getProfit(uint pairIndex, address token, uint256 price) private view returns (int256 profit) {
         return IPositionManager(positionManager).lpProfit(pairIndex, token, price);
     }
 

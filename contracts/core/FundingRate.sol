@@ -87,7 +87,7 @@ contract FundingRate is IFundingRate, Upgradeable {
         fundingRate =
             int256(g1) +
             (int256(g1) * int256(a.abs())) /
-            10 /
+            3 /
             int256(PrecisionUtils.fundingRatePrecision());
         if (u < v) {
             fundingRate *= -1;
