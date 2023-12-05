@@ -6,9 +6,11 @@ import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPriceFeed.sol";
 import "../interfaces/IPool.sol";
 import "../helpers/TokenHelper.sol";
+import "../libraries/Int256Utils.sol";
 
 library TradingHelper {
     using PrecisionUtils for uint256;
+    using Int256Utils for int256;
 
     function getValidPrice(
         IAddressesProvider addressesProvider,
@@ -56,11 +58,19 @@ library TradingHelper {
                 amount = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
             } else {
                 int256 availableStable = int256(lpVault.stableTotalAmount) - int256(lpVault.stableReservedAmount);
-                uint256 stableToIndexAmount = uint256(TokenHelper.convertStableAmountToIndex(
+                int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(
                     pair,
-                    availableStable > int256(0) ? availableStable : int256(0)
-                ));
-                amount = uint256(exposedPositions) + stableToIndexAmount.divPrice(executionPrice);
+                    availableStable
+                );
+                if (stableToIndexAmount < 0) {
+                    if (uint256(exposedPositions) <= uint256(stableToIndexAmount.abs()).divPrice(executionPrice)) {
+                        amount = 0;
+                    } else {
+                        amount = uint256(exposedPositions) - uint256(stableToIndexAmount.abs()).divPrice(executionPrice);
+                    }
+                } else {
+                    amount = uint256(exposedPositions) + stableToIndexAmount.abs().divPrice(executionPrice);
+                }
             }
         } else {
             if (isLong) {
@@ -68,11 +78,15 @@ library TradingHelper {
                 amount = uint256(-exposedPositions) + availableIndex;
             } else {
                 int256 availableStable = int256(lpVault.stableTotalAmount) - int256(lpVault.stableReservedAmount);
-                uint256 stableToIndexAmount = uint256(TokenHelper.convertStableAmountToIndex(
+                int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(
                     pair,
-                    availableStable > int256(0) ? availableStable : int256(0)
-                ));
-                amount = stableToIndexAmount.divPrice(executionPrice);
+                    availableStable
+                );
+                if (stableToIndexAmount < 0) {
+                    amount = 0;
+                } else {
+                    amount = stableToIndexAmount.abs().divPrice(executionPrice);
+                }
             }
         }
         return amount;
