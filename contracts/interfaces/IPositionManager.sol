@@ -50,6 +50,7 @@ interface IPositionManager {
         address account,
         uint256 pairIndex,
         bool isLong,
+        bytes32 positionKey,
         uint256 collateralBefore,
         uint256 collateralAfter
     );

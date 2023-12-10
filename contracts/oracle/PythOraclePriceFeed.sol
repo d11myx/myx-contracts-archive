@@ -80,6 +80,21 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         }
     }
 
+    function getPythPriceUnsafe(address token) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPriceUnsafe(priceId);
+    }
+
+    function getPythPriceNoOlderThan(address token, uint256 _priceAge) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPriceNoOlderThan(priceId, _priceAge);
+    }
+
+    function getPythPrice(address token) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPrice(priceId);
+    }
+
     function getPrice(address token) external view override returns (uint256) {
         bytes32 priceId = _getPriceId(token);
         PythStructs.Price memory pythPrice = pyth.getPriceUnsafe(priceId);
@@ -99,9 +114,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
 
     function _getPriceId(address token) internal view returns (bytes32) {
         bytes32 priceId = tokenPriceIds[token];
-        if (priceId == 0) {
-            revert("price feed not found");
-        }
+        require(priceId != 0, "unknown price id");
         return priceId;
     }
 
