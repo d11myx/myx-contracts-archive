@@ -284,9 +284,8 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) external override {
         require(account == msg.sender || msg.sender == router, "forbidden");
 
-        Position.Info storage position = positions[
-            PositionKey.getPositionKey(account, pairIndex, isLong)
-        ];
+        bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
+        Position.Info storage position = positions[positionKey];
         if (position.positionAmount == 0) {
             revert("position not exists");
         }
@@ -317,6 +316,7 @@ contract PositionManager is IPositionManager, Upgradeable {
             position.account,
             position.pairIndex,
             position.isLong,
+            positionKey,
             collateralBefore,
             position.collateral
         );
