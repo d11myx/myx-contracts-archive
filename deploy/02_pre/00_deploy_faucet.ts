@@ -19,8 +19,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         args: [
             [btc.address, usdt.address],
             [
-                ethers.utils.parseUnits('0.05', await btc.decimals()),
-                ethers.utils.parseUnits('5000', await usdt.decimals()),
+                ethers.utils.parseUnits('5', await btc.decimals()),
+                ethers.utils.parseUnits('50000000', await usdt.decimals()),
             ],
         ],
         ...COMMON_DEPLOY_PARAMS,
