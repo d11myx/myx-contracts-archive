@@ -89,13 +89,13 @@ contract ExecutionLogic is IExecutionLogic {
                     order.referralOwner
                 )
             {} catch Error(string memory reason) {
+                emit ExecuteOrderError(order.orderId, reason);
                 orderManager.cancelOrder(
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
                     true,
                     reason
                 );
-                emit ExecuteOrderError(order.orderId, reason);
             }
         }
     }
@@ -117,13 +117,13 @@ contract ExecutionLogic is IExecutionLogic {
                     order.referralOwner
                 )
             {} catch Error(string memory reason) {
+                emit ExecuteOrderError(order.orderId, reason);
                 orderManager.cancelOrder(
                     order.orderId,
                     TradingTypes.TradeType.LIMIT,
                     true,
                     reason
                 );
-                emit ExecuteOrderError(order.orderId, reason);
             }
         }
     }
@@ -142,12 +142,17 @@ contract ExecutionLogic is IExecutionLogic {
             _tradeType
         );
         if (order.account == address(0)) {
+            emit InvalidOrder(keeper, _orderId, 'account is zero');
             return;
         }
 
         // is expired
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
+            bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
+            if (expired) {
+                orderManager.cancelOrder(order.orderId, order.tradeType, true, "order expired");
+                return;
+            }
         }
 
         // check pair enable
@@ -202,6 +207,7 @@ contract ExecutionLogic is IExecutionLogic {
                 executionPrice
             );
             if (executionSize == 0) {
+                orderManager.cancelOrder(order.orderId, order.tradeType, true, "no available liquidity");
                 return;
             }
         }
@@ -321,13 +327,13 @@ contract ExecutionLogic is IExecutionLogic {
                     true
                 )
             {} catch Error(string memory reason) {
+                emit ExecuteOrderError(order.orderId, reason);
                 orderManager.cancelOrder(
                     order.orderId,
                     TradingTypes.TradeType.MARKET,
                     false,
                     reason
                 );
-                emit ExecuteOrderError(order.orderId, reason);
             }
         }
     }
@@ -400,12 +406,17 @@ contract ExecutionLogic is IExecutionLogic {
             _tradeType
         );
         if (order.account == address(0)) {
+            emit InvalidOrder(keeper, _orderId, 'account is zero');
             return;
         }
 
         // is expired
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
+            bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
+            if (expired) {
+                orderManager.cancelOrder(order.orderId, order.tradeType, false, "order expired");
+                return;
+            }
         }
 
         // check pair enable

@@ -18,6 +18,11 @@ async function main() {
         'https://api.lineascan.build/api',
         'https://lineascan.build',
     );
+    // const arbitrumSepolia = new Etherscan(
+    //     '6WZUFU45J91UMAHDV2C52TV8RAJAQASIZR',
+    //     'https://api-sepolia.arbiscan.io/api',
+    //     'https://sepolia.arbiscan.io/',
+    // );
 
     // const artifact = await deployments.deploy(`verify-demo`, {
     //     from: deployer.address,

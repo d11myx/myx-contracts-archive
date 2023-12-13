@@ -50,6 +50,8 @@ interface IExecution {
 
     event ExecuteOrderError(uint256 orderId, string errorMessage);
 
+    event InvalidOrder(address sender, uint256 orderId, string message);
+
     struct ExecutePosition {
         bytes32 positionKey;
         uint256 sizeAmount;

@@ -137,6 +137,7 @@ contract Pool is IPool, Upgradeable {
         require(_indexToken != address(0) && _stableToken != address(0), "!0");
         require(isStableToken[_stableToken], "!st");
         require(getPairIndex[_indexToken][_stableToken] == 0, "ex");
+        require(IERC20Metadata(_indexToken).decimals() <= 18 && IERC20Metadata(_stableToken).decimals() <= 18, "!de");
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
@@ -235,6 +236,9 @@ contract Pool is IPool, Upgradeable {
         uint256 _stableAmount
     ) internal {
         Vault storage vault = vaults[_pairIndex];
+        require(vault.indexTotalAmount >= _indexAmount, "ix");
+        require(vault.stableTotalAmount >= _stableAmount, "ix");
+
         vault.indexTotalAmount = vault.indexTotalAmount - _indexAmount;
         vault.stableTotalAmount = vault.stableTotalAmount - _stableAmount;
         emit UpdateTotalAmount(
@@ -307,21 +311,6 @@ contract Pool is IPool, Upgradeable {
         }
 
         emit UpdateLPProfit(_pairIndex, pair.stableToken, _profit, vault.stableTotalAmount);
-    }
-
-    function setLPIndexProfit(uint256 _pairIndex, int256 _profit) external onlyPositionManager {
-        Vault storage vault = vaults[_pairIndex];
-        Pair memory pair = pairs[_pairIndex];
-        if (_profit > 0) {
-            vault.indexTotalAmount += _profit.abs();
-        } else {
-            if (vault.indexTotalAmount < _profit.abs()) {
-                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
-            }
-            vault.indexTotalAmount -= _profit.abs();
-        }
-
-        emit UpdateLPProfit(_pairIndex, pair.indexToken, _profit, vault.indexTotalAmount);
     }
 
     function addLiquidity(
@@ -416,7 +405,7 @@ contract Pool is IPool, Upgradeable {
             tokenOut = pair.indexToken;
             amountInMaximum = (expectAmountOut * price * 12) / 10;
         }
-        if (IERC20(tokenIn).allowance(address(this), spotSwap) == 0) {
+        if (IERC20(tokenIn).allowance(address(this), spotSwap) < amountInMaximum) {
             IERC20(tokenIn).safeApprove(spotSwap, type(uint256).max);
         }
         ISpotSwap(spotSwap).swap(tokenIn, tokenOut, amountInMaximum, expectAmountOut);
