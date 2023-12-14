@@ -55,7 +55,8 @@ library TradingHelper {
     ) internal view returns (uint256 amount) {
         if (exposedPositions >= 0) {
             if (isLong) {
-                amount = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                amount = lpVault.indexTotalAmount >= lpVault.indexReservedAmount ?
+                    lpVault.indexTotalAmount - lpVault.indexReservedAmount : 0;
             } else {
                 int256 availableStable = int256(lpVault.stableTotalAmount) - int256(lpVault.stableReservedAmount);
                 int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(
@@ -74,8 +75,13 @@ library TradingHelper {
             }
         } else {
             if (isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                amount = uint256(-exposedPositions) + availableIndex;
+                int256 availableIndex = int256(lpVault.indexTotalAmount) - int256(lpVault.indexReservedAmount);
+                if (availableIndex > 0) {
+                    amount = uint256(-exposedPositions) + availableIndex.abs();
+                } else {
+                    amount = uint256(-exposedPositions) >= availableIndex.abs() ?
+                        uint256(-exposedPositions) - availableIndex.abs() : 0;
+                }
             } else {
                 int256 availableStable = int256(lpVault.stableTotalAmount) - int256(lpVault.stableReservedAmount);
                 int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(

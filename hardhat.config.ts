@@ -127,6 +127,7 @@ const config: HardhatUserConfig = {
         apiKey: {
             linea_goerli: '6WZUFU45J91UMAHDV2C52TV8RAJAQASIZR',
             linea_mainnet: 'I7TMBCCPR75UPE2H14EIWDYS469TFAHHUW',
+            arbitrum_sepolia: 'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
         },
         customChains: [
             {
@@ -143,6 +144,14 @@ const config: HardhatUserConfig = {
                 urls: {
                     apiURL: 'https://api.lineascan.build/api',
                     browserURL: 'https://lineascan.build',
+                },
+            },
+            {
+                network: 'arbitrum_sepolia',
+                chainId: 421614,
+                urls: {
+                    apiURL: 'https://api-sepolia.arbiscan.io/api',
+                    browserURL: 'https://sepolia.arbiscan.io',
                 },
             },
         ],

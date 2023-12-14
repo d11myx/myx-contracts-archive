@@ -64,14 +64,18 @@ contract LiquidationLogic is ILiquidationLogic {
     ) external override onlyExecutorOrKeeper {
         for (uint256 i = 0; i < executePositions.length; i++) {
             ExecutePosition memory execute = executePositions[i];
-            this.liquidationPosition(
-                keeper,
-                execute.positionKey,
-                execute.tier,
-                execute.referralsRatio,
-                execute.referralUserRatio,
-                execute.referralOwner
-            );
+            try
+                this.liquidationPosition(
+                    keeper,
+                    execute.positionKey,
+                    execute.tier,
+                    execute.referralsRatio,
+                    execute.referralUserRatio,
+                    execute.referralOwner
+                )
+            {} catch Error(string memory reason) {
+                emit ExecutePositionError(execute.positionKey, reason);
+            }
         }
     }
 
@@ -85,6 +89,7 @@ contract LiquidationLogic is ILiquidationLogic {
     ) external override onlyExecutorOrKeeper {
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
+            emit ZeroPosition(keeper, position.account, position.pairIndex, position.isLong, 'liquidation');
             return;
         }
         IPool.Pair memory pair = pool.getPair(position.pairIndex);
@@ -145,6 +150,7 @@ contract LiquidationLogic is ILiquidationLogic {
             TradingTypes.TradeType.MARKET
         );
         if (order.account == address(0)) {
+            emit InvalidOrder(keeper, orderId, 'zero account');
             return;
         }
 
@@ -157,6 +163,7 @@ contract LiquidationLogic is ILiquidationLogic {
             order.isLong
         );
         if (position.positionAmount == 0) {
+            emit ZeroPosition(keeper, position.account, position.pairIndex, position.isLong, 'liquidation');
             return;
         }
 
