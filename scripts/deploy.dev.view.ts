@@ -74,10 +74,16 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
+    console.log(await pool.getVault(2));
+
+    console.log(await positionManager.needADL(2, false, '3000000000000000000', '2254000000000000000000000000000000'));
+
     // console.log(
-    //     await usdt.mint('0x0138DF453DC8FEf8c03945D2Ff83067d12015E33', ethers.utils.parseUnits('100000000000', 6)),
+    //     await usdt.mint('0xc35F3b830F8a14FF792FF29F513a8E2A4e48f3e8', ethers.utils.parseUnits('100000000000000', 6)),
     // );
-    console.log(await executionLogic.maxTimeDelay());
+    // console.log(await btc.mint('0xc35F3b830F8a14FF792FF29F513a8E2A4e48f3e8', ethers.utils.parseUnits('1000000', 8)));
+
+    // console.log(await executionLogic.maxTimeDelay());
     // console.log(await executionLogic.updateMaxTimeDelay(20 * 60));
 
     // console.log(await pool.lpFairPrice(2, '2060738556470000000000000000000000'));
