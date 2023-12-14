@@ -19,7 +19,7 @@ async function main() {
         'https://lineascan.build',
     );
     // const arbitrumSepolia = new Etherscan(
-    //     '6WZUFU45J91UMAHDV2C52TV8RAJAQASIZR',
+    //     'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
     //     'https://api-sepolia.arbiscan.io/api',
     //     'https://sepolia.arbiscan.io/',
     // );
