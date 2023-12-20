@@ -8,6 +8,8 @@ import "./IExecutionEvent.sol";
 interface IExecutionLogic is IExecution {
     event UpdateMaxTimeDelay(uint256 oldDelay, uint256 newDelay);
 
+    event UpdateExecutorAddress(address sender, address oldAddress, address newAddress);
+
     struct ExecuteOrder {
         uint256 orderId;
         uint8 tier;

@@ -74,7 +74,9 @@ contract PositionManager is IPositionManager, Upgradeable {
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
+        address oldAddress = router;
         router = _router;
+        emit UpdateRouterAddress(msg.sender, oldAddress, _router);
     }
 
     function increasePosition(
