@@ -9,6 +9,16 @@ contract TestGas {
         uint256 positionAmount;
         uint256 averagePrice;
     }
+
+    struct Params {
+        bytes32 positionKey;
+        uint256 sizeAmount;
+        uint8 tier;
+        uint256 referralsRatio;
+        uint256 referralUserRatio;
+        address referralOwner;
+    }
+
     uint256 public key;
     mapping(address => uint256) keys;
     mapping(address => TradingTypes.IncreasePositionRequest) keyPositionRequests;
@@ -59,5 +69,23 @@ contract TestGas {
 
     function saveUint32Tests() external {
         uint32Tests[1] = 1;
+    }
+
+    function calldataParams(
+        address[] calldata tokens,
+        uint256[] calldata prices,
+        bytes[] calldata updateData,
+        Params[] calldata params
+    ) external returns (bool) {
+        return true;
+    }
+
+    function memoryParams(
+        address[] memory tokens,
+        uint256[] memory prices,
+        bytes[] memory updateData,
+        Params[] memory params
+    ) external returns (bool) {
+        return true;
     }
 }
