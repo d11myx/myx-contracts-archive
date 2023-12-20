@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
-import { mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import {
     TradeType,
     getMockToken,

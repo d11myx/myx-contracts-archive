@@ -18,11 +18,11 @@ async function main() {
         'https://api.lineascan.build/api',
         'https://lineascan.build',
     );
-    // const arbitrumSepolia = new Etherscan(
-    //     'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
-    //     'https://api-sepolia.arbiscan.io/api',
-    //     'https://sepolia.arbiscan.io/',
-    // );
+    const arbitrumSepolia = new Etherscan(
+        'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
+        'https://api-sepolia.arbiscan.io/api',
+        'https://sepolia.arbiscan.io/',
+    );
 
     // const artifact = await deployments.deploy(`verify-demo`, {
     //     from: deployer.address,
@@ -31,7 +31,7 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    await verifyContract(lineaGoerli, 'w', []);
+    await verifyContract(lineaGoerli, '', []);
 
     // await verifyProxyContract(lineaGoerli, '0x934B2325c32419c64433eff92CD37933916c1a79', [
     //     '0x68d46485dd36824E1910aEA4BAB5Ba686BF9cAe7',

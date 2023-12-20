@@ -39,9 +39,9 @@ library TradingHelper {
     ) internal view returns (uint256 executionSize) {
         executionSize = orderSize;
 
-        uint256 maxAvailableLiquidity = maxAvailableLiquidity(lpVault, pair, exposedPositions, isLong, executionPrice);
-        if (executionSize > maxAvailableLiquidity) {
-            executionSize = maxAvailableLiquidity;
+        uint256 available = maxAvailableLiquidity(lpVault, pair, exposedPositions, isLong, executionPrice);
+        if (executionSize > available) {
+            executionSize = available;
         }
         return executionSize;
     }
