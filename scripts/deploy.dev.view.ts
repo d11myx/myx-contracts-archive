@@ -1,7 +1,9 @@
 // @ts-ignore
-import { deployments, ethers } from 'hardhat';
+import hre, { deployments, ethers } from 'hardhat';
 import {
     COMMON_DEPLOY_PARAMS,
+    Duration,
+    encodeParameters,
     getAddressesProvider,
     getExecutionLogic,
     getExecutor,
@@ -13,12 +15,10 @@ import {
     getPositionManager,
     getRouter,
     getTokens,
-    POSITION_CALLER,
-    TradeType,
-    waitForTx,
+    latest,
+    ZERO_ADDRESS,
+    ZERO_HASH,
 } from '../helpers';
-import { address } from 'hardhat/internal/core/config/config-validation';
-import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -73,10 +73,6 @@ async function main() {
     //     args: [positionManager.address, pool.address],
     //     ...COMMON_DEPLOY_PARAMS,
     // });
-
-    console.log(await pool.getVault(2));
-
-    console.log(await positionManager.needADL(2, false, '3000000000000000000', '2254000000000000000000000000000000'));
 
     // console.log(
     //     await usdt.mint('0xc35F3b830F8a14FF792FF29F513a8E2A4e48f3e8', ethers.utils.parseUnits('100000000000000', 6)),
