@@ -2409,29 +2409,30 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await expect(
-                    executor.connect(keeper.signer).setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [
-                            {
-                                positionKey: positionKey,
-                                sizeAmount: 0,
-                                tier: 0,
-                                referralsRatio: 0,
-                                referralUserRatio: 0,
-                                referralOwner: ZERO_ADDRESS,
-                            },
-                        ],
-                        { value: 1 },
-                    ),
-                ).to.be.revertedWith('exceed max price deviation');
+
+                const tx = await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
+                const reason = await extraHash(tx.hash, 'ExecutePositionError', 'errorMessage');
+                expect(reason).to.be.eq('exceed max price deviation');
             });
         });
 
