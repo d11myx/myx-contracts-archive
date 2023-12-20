@@ -45,8 +45,6 @@ contract OrderManager is IOrderManager, Upgradeable {
 
     IPool public pool;
     IPositionManager public positionManager;
-    // address public executionLogic;
-    // address public liquidationLogic;
     address public router;
 
     function initialize(
@@ -84,7 +82,9 @@ contract OrderManager is IOrderManager, Upgradeable {
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
+        address oldAddress = router;
         router = _router;
+        emit UpdateRouterAddress(msg.sender, oldAddress, _router);
     }
 
     function createOrder(

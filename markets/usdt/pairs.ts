@@ -17,7 +17,6 @@ export const btcPairInfo: PairInfoConfig = {
         unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 300000, //0.3%
-        lpFeeDistributeP: 0, //deprecated
     },
     tradingConfig: {
         minLeverage: 1,
@@ -59,7 +58,6 @@ export const ethPairInfo: PairInfoConfig = {
         unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 300000, //0.3%
-        lpFeeDistributeP: 0, //deprecated
     },
     tradingConfig: {
         minLeverage: 1,

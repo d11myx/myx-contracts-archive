@@ -35,6 +35,20 @@ interface IPool {
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
+    event UpdateSpotSwap(address sender, address oldAddress, address newAddress);
+
+    event UpdateRiskReserve(address sender, address oldAddress, address newAddress);
+
+    event UpdateFeeCollector(address sender, address oldAddress, address newAddress);
+
+    event UpdatePositionManager(address sender, address oldAddress, address newAddress);
+
+    event UpdateOrderManager(address sender, address oldAddress, address newAddress);
+
+    event AddStableToken(address sender, address token);
+
+    event RemoveStableToken(address sender, address token);
+
     event AddLiquidity(
         address indexed recipient,
         uint256 indexed pairIndex,
@@ -78,7 +92,6 @@ interface IPool {
         uint256 unbalancedDiscountRate;
         uint256 addLpFeeP; // Add liquidity fee
         uint256 removeLpFeeP; // remove liquidity fee
-        uint256 lpFeeDistributeP;
     }
 
     struct TradingConfig {
@@ -134,14 +147,6 @@ interface IPool {
     function setLPStableProfit(uint256 _pairIndex, int256 _profit) external;
 
     function addLiquidity(
-        address recipient,
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount,
-        bytes calldata data
-    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
-
-    function addLiquidityForAccount(
         address recipient,
         uint256 _pairIndex,
         uint256 _indexAmount,

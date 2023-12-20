@@ -55,7 +55,9 @@ contract LiquidationLogic is ILiquidationLogic {
     }
 
     function updateExecutor(address _executor) external override onlyPoolAdmin {
+        address oldAddress = executor;
         executor = _executor;
+        emit UpdateExecutorAddress(msg.sender, oldAddress, _executor);
     }
 
     function liquidatePositions(

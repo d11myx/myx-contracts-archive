@@ -41,7 +41,6 @@ contract Pool is IPool, Upgradeable {
     mapping(uint256 => TradingFeeConfig) public tradingFeeConfigs;
 
     mapping(address => mapping(address => uint256)) public override getPairIndex;
-    // mapping(address => mapping(address => address)) public getPairToken;
 
     uint256 public pairsIndex;
     mapping(uint256 => Pair) public pairs;
@@ -105,34 +104,45 @@ contract Pool is IPool, Upgradeable {
     }
 
     function setSpotSwap(address _spotSwap) external onlyPoolAdmin {
+        address oldAddress = spotSwap;
         spotSwap = _spotSwap;
+        emit UpdateSpotSwap(msg.sender, oldAddress, _spotSwap);
     }
 
     function setRiskReserve(address _riskReserve) external onlyPoolAdmin {
+        address oldAddress = riskReserve;
         riskReserve = _riskReserve;
+        emit UpdateRiskReserve(msg.sender, oldAddress, _riskReserve);
     }
 
     function setFeeCollector(address _feeCollector) external onlyPoolAdmin {
+        address oldAddress = feeCollector;
         feeCollector = _feeCollector;
+        emit UpdateFeeCollector(msg.sender, oldAddress, _feeCollector);
     }
 
     function setPositionManager(address _positionManager) external onlyPoolAdmin {
+        address oldAddress = positionManager;
         positionManager = _positionManager;
+        emit UpdatePositionManager(msg.sender, oldAddress, _positionManager);
     }
 
     function setOrderManager(address _orderManager) external onlyPoolAdmin {
+        address oldAddress = orderManager;
         orderManager = _orderManager;
+        emit UpdateOrderManager(msg.sender, oldAddress, _orderManager);
     }
 
     function addStableToken(address _token) external onlyPoolAdmin {
         isStableToken[_token] = true;
+        emit AddStableToken(msg.sender, _token);
     }
 
     function removeStableToken(address _token) external onlyPoolAdmin {
         delete isStableToken[_token];
+        emit RemoveStableToken(msg.sender, _token);
     }
 
-    // Manage pairs
     function addPair(address _indexToken, address _stableToken) external onlyPoolAdmin {
         require(_indexToken != address(0) && _stableToken != address(0), "!0");
         require(isStableToken[_stableToken], "!st");
@@ -141,7 +151,6 @@ contract Pool is IPool, Upgradeable {
 
         address pairToken = poolTokenFactory.createPoolToken(_indexToken, _stableToken);
 
-        // getPairToken[_indexToken][_stableToken] = pairToken;
         getPairIndex[_indexToken][_stableToken] = pairsIndex;
         getPairIndex[_stableToken][_indexToken] = pairsIndex;
 
@@ -325,28 +334,13 @@ contract Pool is IPool, Upgradeable {
         return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
-    function addLiquidityForAccount(
-        address recipient,
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount,
-        bytes calldata data
-    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
-        ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
-
-        return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
-    }
-
     function removeLiquidity(
         address payable _receiver,
         uint256 _pairIndex,
         uint256 _amount,
         bool useETH,
         bytes calldata data
-    )
-        external
-        returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
-    {
+    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, _receiver);
 
         (receivedIndexAmount, receivedStableAmount, feeAmount) = _removeLiquidity(
@@ -411,7 +405,6 @@ contract Pool is IPool, Upgradeable {
         ISpotSwap(spotSwap).swap(tokenIn, tokenOut, amountInMaximum, expectAmountOut);
     }
 
-    // calculate lp amount for add liquidity
     function getMintLpAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
@@ -771,7 +764,6 @@ contract Pool is IPool, Upgradeable {
                 : 1 * AmountMath.PRICE_PRECISION;
     }
 
-    // calculate deposit amount for add liquidity
     function getDepositAmount(
         uint256 _pairIndex,
         uint256 _lpAmount,
@@ -844,7 +836,6 @@ contract Pool is IPool, Upgradeable {
         return (depositIndexAmount, depositStableAmount);
     }
 
-    // calculate amount for remove liquidity
     function getReceivedAmount(
         uint256 _pairIndex,
         uint256 _lpAmount,

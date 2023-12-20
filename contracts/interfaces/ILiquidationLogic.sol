@@ -16,6 +16,8 @@ interface ILiquidationLogic is IExecution {
         uint256 orderId
     );
 
+    event UpdateExecutorAddress(address sender, address oldAddress, address newAddress);
+
     function updateExecutor(address _executor) external;
 
     function liquidatePositions(address keeper, ExecutePosition[] memory executePositions) external;
