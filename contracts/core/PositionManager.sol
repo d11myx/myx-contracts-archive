@@ -231,11 +231,9 @@ contract PositionManager is IPositionManager, Upgradeable {
                 position.collateral = position.collateral.sub(totalSettlementAmount.abs());
             } else {
                 if (position.positionAmount == 0) {
+                    position.collateral = 0;
                     uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
                     riskReserve.decrease(pair.stableToken, subsidy);
-                    position.collateral = position.collateral.sub(
-                        int256(totalSettlementAmount + int256(subsidy)).abs()
-                    );
                 } else {
                     // adjust position averagePrice
                     uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);

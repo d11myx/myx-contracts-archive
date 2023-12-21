@@ -91,7 +91,7 @@ contract Router is
         int256 collateral,
         address[] calldata tokens,
         bytes[] calldata updateData
-    ) external payable {
+    ) external payable whenNotPaused nonReentrant {
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
 
         positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
@@ -101,7 +101,7 @@ contract Router is
         uint256 pairIndex,
         address[] calldata tokens,
         bytes[] calldata updateData
-    ) external payable {
+    ) external payable whenNotPaused nonReentrant {
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
 
         positionManager.updateFundingRate(pairIndex);
@@ -126,7 +126,7 @@ contract Router is
                 collateral: request.collateral,
                 openPrice: request.openPrice,
                 isLong: request.isLong,
-                sizeAmount: int256(request.sizeAmount),
+                sizeAmount: int256(int128(request.sizeAmount)),
                 maxSlippage: request.maxSlippage,
                 data: abi.encode(request.account)
             })

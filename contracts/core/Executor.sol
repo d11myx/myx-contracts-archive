@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "../interfaces/IExecutor.sol";
 import "../interfaces/IAddressesProvider.sol";
@@ -12,7 +13,7 @@ import "../interfaces/IExecutionLogic.sol";
 import "../libraries/Roleable.sol";
 import "../interfaces/ILiquidationLogic.sol";
 
-contract Executor is IExecutor, Roleable, Pausable {
+contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
 
     modifier onlyPositionKeeper() {
@@ -33,7 +34,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256[] memory prices,
         bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
-    ) external payable override whenNotPaused onlyPositionKeeper {
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
@@ -49,7 +50,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256[] memory prices,
         bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
-    ) external payable override whenNotPaused onlyPositionKeeper {
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
@@ -65,7 +66,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256[] memory prices,
         bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
-    ) external payable override whenNotPaused onlyPositionKeeper {
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
@@ -81,7 +82,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256[] memory prices,
         bytes[] memory updateData,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
-    ) external payable override whenNotPaused onlyPositionKeeper {
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
@@ -103,7 +104,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256 referralsRatio,
         uint256 referralUserRatio,
         address referralOwner
-    ) external payable override whenNotPaused onlyPositionKeeper {
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
@@ -125,7 +126,7 @@ contract Executor is IExecutor, Roleable, Pausable {
         uint256[] memory prices,
         bytes[] memory updateData,
         IExecution.ExecutePosition[] memory executePositions
-    ) external payable override whenNotPaused onlyPositionKeeper {
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);

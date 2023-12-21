@@ -64,10 +64,10 @@ library TradingHelper {
                     availableStable
                 );
                 if (stableToIndexAmount < 0) {
-                    if (uint256(exposedPositions) <= uint256(stableToIndexAmount.abs()).divPrice(executionPrice)) {
+                    if (uint256(exposedPositions) <= stableToIndexAmount.abs().divPrice(executionPrice)) {
                         amount = 0;
                     } else {
-                        amount = uint256(exposedPositions) - uint256(stableToIndexAmount.abs()).divPrice(executionPrice);
+                        amount = uint256(exposedPositions) - stableToIndexAmount.abs().divPrice(executionPrice);
                     }
                 } else {
                     amount = uint256(exposedPositions) + stableToIndexAmount.abs().divPrice(executionPrice);

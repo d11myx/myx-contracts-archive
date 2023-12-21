@@ -44,13 +44,8 @@ contract LiquidationLogic is ILiquidationLogic {
         _;
     }
 
-    modifier onlyExecutorOrKeeper() {
-        require(
-            msg.sender == executor ||
-                msg.sender == address(this) ||
-                IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender),
-            "oe"
-        );
+    modifier onlyExecutor() {
+        require(msg.sender == executor, "oe");
         _;
     }
 
@@ -63,7 +58,7 @@ contract LiquidationLogic is ILiquidationLogic {
     function liquidatePositions(
         address keeper,
         ExecutePosition[] memory executePositions
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutor {
         for (uint256 i = 0; i < executePositions.length; i++) {
             ExecutePosition memory execute = executePositions[i];
             try
@@ -88,7 +83,7 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 referralsRatio,
         uint256 referralUserRatio,
         address referralOwner
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutor {
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
             emit ZeroPosition(keeper, position.account, position.pairIndex, position.isLong, 'liquidation');
