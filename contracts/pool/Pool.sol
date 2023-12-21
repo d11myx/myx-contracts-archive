@@ -45,8 +45,9 @@ contract Pool is IPool, Upgradeable {
     uint256 public pairsIndex;
     mapping(uint256 => Pair) public pairs;
     mapping(uint256 => Vault) public vaults;
-    address private positionManager;
-    address private orderManager;
+    address public positionManager;
+    address public orderManager;
+    address public router;
 
     mapping(address => uint256) public feeTokenAmounts;
     mapping(address => bool) public isStableToken;
@@ -78,6 +79,11 @@ contract Pool is IPool, Upgradeable {
 
     modifier onlyPositionManager() {
         require(positionManager == msg.sender, "opm");
+        _;
+    }
+
+    modifier onlyRouter() {
+        require(router == msg.sender, "or");
         _;
     }
 
@@ -131,6 +137,12 @@ contract Pool is IPool, Upgradeable {
         address oldAddress = orderManager;
         orderManager = _orderManager;
         emit UpdateOrderManager(msg.sender, oldAddress, _orderManager);
+    }
+
+    function setRouter(address _router) external onlyPoolAdmin {
+        address oldAddress = router;
+        router = _router;
+        emit UpdateRouter(msg.sender, oldAddress, _router);
     }
 
     function addStableToken(address _token) external onlyPoolAdmin {
@@ -314,7 +326,7 @@ contract Pool is IPool, Upgradeable {
             vault.stableTotalAmount += _profit.abs();
         } else {
             if (vault.stableTotalAmount < _profit.abs()) {
-                _swapInUni(_pairIndex, pair.indexToken, _profit.abs());
+                _swapInUni(_pairIndex, pair.stableToken, _profit.abs());
             }
             vault.stableTotalAmount -= _profit.abs();
         }
@@ -328,7 +340,7 @@ contract Pool is IPool, Upgradeable {
         uint256 _indexAmount,
         uint256 _stableAmount,
         bytes calldata data
-    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
+    ) external onlyRouter returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
         return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
@@ -340,7 +352,7 @@ contract Pool is IPool, Upgradeable {
         uint256 _amount,
         bool useETH,
         bytes calldata data
-    ) external returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
+    ) external onlyRouter returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, _receiver);
 
         (receivedIndexAmount, receivedStableAmount, feeAmount) = _removeLiquidity(
@@ -387,17 +399,19 @@ contract Pool is IPool, Upgradeable {
         }
     }
 
-    function _swapInUni(uint256 _pairIndex, address tokenIn, uint256 expectAmountOut) private {
+    function _swapInUni(uint256 _pairIndex, address tokenOut, uint256 expectAmountOut) private {
         Pair memory pair = pairs[_pairIndex];
         uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
         uint256 amountInMaximum;
-        address tokenOut;
-        if (tokenIn == pair.indexToken) {
-            tokenOut = pair.stableToken;
-            amountInMaximum = (expectAmountOut * 12) / (price * 10);
-        } else if (tokenIn == pair.stableToken) {
-            tokenOut = pair.indexToken;
-            amountInMaximum = (expectAmountOut * price * 12) / 10;
+        address tokenIn;
+        if (tokenOut == pair.indexToken) {
+            tokenIn = pair.stableToken;
+            uint256 amountOutWithIndex = (expectAmountOut * 12).mulPrice(price) / 10;
+            amountInMaximum = uint256(TokenHelper.convertIndexAmountToStable(pair, int256(amountOutWithIndex)));
+        } else if (tokenOut == pair.stableToken) {
+            tokenIn = pair.indexToken;
+            uint256 amountInWithStable = (expectAmountOut * 12).divPrice(price * 10);
+            amountInMaximum = uint256(TokenHelper.convertStableAmountToIndex(pair, int256(amountInWithStable)));
         }
         if (IERC20(tokenIn).allowance(address(this), spotSwap) < amountInMaximum) {
             IERC20(tokenIn).safeApprove(spotSwap, type(uint256).max);
@@ -534,8 +548,7 @@ contract Pool is IPool, Upgradeable {
         }
 
         if (mintDeltaWad > 0) {
-            uint8 pairTokenDec = IERC20Metadata(pair.pairToken).decimals();
-            mintAmount += AmountMath.getIndexAmount(mintDeltaWad, lpFairPrice(_pairIndex, price)) / (10 ** (18 - pairTokenDec));
+            mintAmount += AmountMath.getIndexAmount(mintDeltaWad, lpFairPrice(_pairIndex, price));
         }
 
         return (
@@ -605,14 +618,14 @@ contract Pool is IPool, Upgradeable {
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "ip");
 
-        uint256 indexFeeAmount;
-        uint256 stableFeeAmount;
-        uint256 afterFeeIndexAmount;
-        uint256 afterFeeStableAmount;
         _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
 
         uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
 
+        uint256 indexFeeAmount;
+        uint256 stableFeeAmount;
+        uint256 afterFeeIndexAmount;
+        uint256 afterFeeStableAmount;
         (
             mintAmount,
             slipToken,
@@ -626,9 +639,14 @@ contract Pool is IPool, Upgradeable {
         feeTokenAmounts[pair.indexToken] += indexFeeAmount;
         feeTokenAmounts[pair.stableToken] += stableFeeAmount;
 
-        IBaseToken(pair.pairToken).mint(recipient, mintAmount);
-
+        if (slipToken == pair.indexToken) {
+            afterFeeIndexAmount += slipAmount;
+        } else if (slipToken == pair.stableToken) {
+            afterFeeStableAmount += slipAmount;
+        }
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
+
+        IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
         emit AddLiquidity(
             recipient,
@@ -662,6 +680,9 @@ contract Pool is IPool, Upgradeable {
         require(_amount > 0, "ia");
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "ip");
+
+        ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
+        IPoolToken(pair.pairToken).burn(_amount);
 
         uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
 
@@ -698,8 +719,8 @@ contract Pool is IPool, Upgradeable {
         uint256 totalReceive = receiveIndexTokenAmountWad.mulPrice(price) + receiveStableTokenAmountWad;
         require(totalReceive <= totalAvailable, "il");
 
-        ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
-        IPoolToken(pair.pairToken).burn(_amount);
+        feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
+        feeTokenAmounts[pair.stableToken] += feeStableTokenAmount;
 
         _decreaseTotalAmount(
             _pairIndex,
@@ -718,9 +739,6 @@ contract Pool is IPool, Upgradeable {
         if (receiveStableTokenAmount > 0) {
             IERC20(pair.stableToken).safeTransfer(_receiver, receiveStableTokenAmount);
         }
-
-        feeTokenAmounts[pair.indexToken] += feeIndexTokenAmount;
-        feeTokenAmounts[pair.stableToken] += feeStableTokenAmount;
 
         emit RemoveLiquidity(
             _receiver,
@@ -960,6 +978,9 @@ contract Pool is IPool, Upgradeable {
         if (amount == 0) {
             return;
         }
+        Pair memory pair = pairs[pairIndex];
+        require(token == pair.indexToken || token == pair.stableToken, "bt");
+
         uint256 bal = IERC20(token).balanceOf(address(this));
         if (bal < amount) {
             _swapInUni(pairIndex, token, amount);
