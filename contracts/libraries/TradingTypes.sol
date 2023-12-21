@@ -23,9 +23,9 @@ library TradingTypes {
 
     struct OrderWithTpSl {
         uint256 tpPrice; // 1e30, tp price
-        uint256 tp; // tp size
+        uint128 tp; // tp size
         uint256 slPrice; // 1e30, sl price
-        uint256 sl; // sl size
+        uint128 sl; // sl size
     }
 
     struct IncreasePositionRequest {
@@ -46,11 +46,11 @@ library TradingTypes {
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
-        uint256 sizeAmount; // size
+        uint128 sizeAmount; // size
         uint256 tpPrice; // 1e30, tp price
-        uint256 tp; // tp size
+        uint128 tp; // tp size
         uint256 slPrice; // 1e30, sl price
-        uint256 sl; // sl size
+        uint128 sl; // sl size
         uint256 maxSlippage;
     }
 

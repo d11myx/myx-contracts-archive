@@ -71,8 +71,6 @@ interface IFeeCollector {
 
     function claimReferralFee() external returns (uint256);
 
-    function claimKeeperTradingFee() external returns (uint256);
-
     function claimUserTradingFee() external returns (uint256);
 
     function distributeTradingFee(
