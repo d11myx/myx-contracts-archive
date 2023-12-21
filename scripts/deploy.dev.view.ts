@@ -17,9 +17,12 @@ import {
     getTokens,
     latest,
     POSITION_CALLER,
+    waitForTx,
     ZERO_ADDRESS,
     ZERO_HASH,
 } from '../helpers';
+import { mintAndApprove } from '../test/helpers/misc';
+import { testEnv } from '../test/helpers/make-suite';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -75,17 +78,17 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-    await deployer.sendTransaction({
-        to: '0xbe4193213E9d90fF05beb9cd18fcCA3383b92fD1',
-        value: ethers.utils.parseEther('10000'),
-    });
-    console.log(
-        await usdt.mint(
-            '0xbe4193213E9d90fF05beb9cd18fcCA3383b92fD1',
-            ethers.utils.parseUnits('1000000000000000000', 6),
-        ),
-    );
-    console.log(await btc.mint('0xbe4193213E9d90fF05beb9cd18fcCA3383b92fD1', ethers.utils.parseUnits('1000000000', 8)));
+    // await deployer.sendTransaction({
+    //     to: '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583',
+    //     value: ethers.utils.parseEther('10000'),
+    // });
+    // console.log(
+    //     await usdt.mint(
+    //         '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583',
+    //         ethers.utils.parseUnits('1000000000000000000', 6),
+    //     ),
+    // );
+    // console.log(await btc.mint('0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583', ethers.utils.parseUnits('1000000000', 8)));
 
     // console.log(await executionLogic.maxTimeDelay());
     // console.log(await executionLogic.updateMaxTimeDelay(20 * 60));

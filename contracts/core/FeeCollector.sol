@@ -111,8 +111,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
     function claimStakingTradingFee() external override onlyStakingPool returns (uint256) {
         uint256 claimableStakingTradingFee = stakingTradingFee;
         if (claimableStakingTradingFee > 0) {
-            pool.transferTokenTo(pledgeAddress, msg.sender, claimableStakingTradingFee);
             stakingTradingFee = 0;
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableStakingTradingFee);
         }
         emit ClaimedStakingTradingFee(msg.sender, pledgeAddress, claimableStakingTradingFee);
         return claimableStakingTradingFee;
@@ -121,8 +121,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
     function claimTreasuryFee() external override onlyPoolAdmin returns (uint256) {
         uint256 claimableTreasuryFee = treasuryFee;
         if (claimableTreasuryFee > 0) {
-            pool.transferTokenTo(pledgeAddress, msg.sender, claimableTreasuryFee);
             treasuryFee = 0;
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableTreasuryFee);
         }
         emit ClaimedDistributorTradingFee(msg.sender, pledgeAddress, claimableTreasuryFee);
         return claimableTreasuryFee;
@@ -138,12 +138,14 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return claimableReferralFee;
     }
 
-    function claimKeeperTradingFee() external override nonReentrant returns (uint256) {
-        return _claimUserTradingFee();
-    }
-
     function claimUserTradingFee() external override nonReentrant returns (uint256) {
-        return _claimUserTradingFee();
+        uint256 claimableUserTradingFee = userTradingFee[msg.sender];
+        if (claimableUserTradingFee > 0) {
+            userTradingFee[msg.sender] = 0;
+            pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
+        }
+        emit ClaimedUserTradingFee(msg.sender, pledgeAddress, claimableUserTradingFee);
+        return claimableUserTradingFee;
     }
 
     function distributeTradingFee(
@@ -212,16 +214,6 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
             stakingAmount,
             distributorAmount
         );
-    }
-
-    function _claimUserTradingFee() internal returns (uint256) {
-        uint256 claimableUserTradingFee = userTradingFee[msg.sender];
-        if (claimableUserTradingFee > 0) {
-            userTradingFee[msg.sender] = 0;
-            pool.transferTokenTo(pledgeAddress, msg.sender, claimableUserTradingFee);
-        }
-        emit ClaimedUserTradingFee(msg.sender, pledgeAddress, claimableUserTradingFee);
-        return claimableUserTradingFee;
     }
 
     function _updateTradingFeeTier(

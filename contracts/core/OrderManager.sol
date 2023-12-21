@@ -74,9 +74,9 @@ contract OrderManager is IOrderManager, Upgradeable {
     modifier onlyExecutorAndRouter() {
         require(
             msg.sender == router ||
-                msg.sender == ADDRESS_PROVIDER.executionLogic() ||
-                msg.sender == ADDRESS_PROVIDER.liquidationLogic(),
-            "no access"
+            msg.sender == ADDRESS_PROVIDER.executionLogic() ||
+            msg.sender == ADDRESS_PROVIDER.liquidationLogic(),
+            "onlyExecutor&Router"
         );
         _;
     }
@@ -89,13 +89,7 @@ contract OrderManager is IOrderManager, Upgradeable {
 
     function createOrder(
         TradingTypes.CreateOrderRequest calldata request
-    ) public returns (uint256 orderId) {
-        require(
-            msg.sender == ADDRESS_PROVIDER.executionLogic() ||
-                msg.sender == ADDRESS_PROVIDER.liquidationLogic() ||
-                msg.sender == router,
-            "onlyExecutor&Router"
-        );
+    ) public onlyExecutorAndRouter returns (uint256 orderId) {
         address account = request.account;
 
         // account is frozen
@@ -103,7 +97,7 @@ contract OrderManager is IOrderManager, Upgradeable {
 
         // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
-        require(pair.enable, "trade pair not supported");
+        require(pair.enable, "disabled");
 
         Position.Info memory position = positionManager.getPosition(
             account,
@@ -143,7 +137,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                     pair,
                     0,
                     request.collateral,
-                    uint256(request.sizeAmount.abs()),
+                    request.sizeAmount.abs(),
                     false,
                     // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
@@ -159,7 +153,7 @@ contract OrderManager is IOrderManager, Upgradeable {
         ) {
             // Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
             require(
-                uint256(request.sizeAmount.abs()) <= position.positionAmount,
+                request.sizeAmount.abs() <= position.positionAmount,
                 "tp/sl exceeds max size"
             );
             require(request.collateral == 0, "no collateral required");
@@ -198,7 +192,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                         tradeType: request.tradeType,
                         collateral: request.collateral,
                         triggerPrice: request.openPrice,
-                        sizeAmount: uint256(request.sizeAmount.abs()),
+                        sizeAmount: request.sizeAmount.abs(),
                         isLong: request.isLong,
                         maxSlippage: request.maxSlippage
                     })

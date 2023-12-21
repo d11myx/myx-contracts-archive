@@ -9,9 +9,9 @@ interface IRouter {
         TradingTypes.TradeType tradeType;
         bool isIncrease;
         uint256 tpPrice; // Stop profit price 1e30
-        uint256 tp; // The number of profit stops
+        uint128 tp; // The number of profit stops
         uint256 slPrice; // Stop price 1e30
-        uint256 sl; // Stop loss quantity
+        uint128 sl; // Stop loss quantity
     }
 
     struct CancelOrderRequest {

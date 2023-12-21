@@ -343,6 +343,9 @@ contract Pool is IPool, Upgradeable {
     ) external onlyRouter returns (uint256 mintAmount, address slipToken, uint256 slipAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, recipient);
 
+        Pair memory pair = pairs[_pairIndex];
+        require(pair.enable, "disabled");
+
         return _addLiquidity(recipient, _pairIndex, _indexAmount, _stableAmount, data);
     }
 
@@ -354,6 +357,9 @@ contract Pool is IPool, Upgradeable {
         bytes calldata data
     ) external onlyRouter returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount) {
         ValidationHelper.validateAccountBlacklist(ADDRESS_PROVIDER, _receiver);
+
+        Pair memory pair = pairs[_pairIndex];
+        require(pair.enable, "disabled");
 
         (receivedIndexAmount, receivedStableAmount, feeAmount) = _removeLiquidity(
             _receiver,
