@@ -37,6 +37,8 @@ interface IPool {
 
     event UpdateSpotSwap(address sender, address oldAddress, address newAddress);
 
+    event UpdateRouter(address sender, address oldAddress, address newAddress);
+
     event UpdateRiskReserve(address sender, address oldAddress, address newAddress);
 
     event UpdateFeeCollector(address sender, address oldAddress, address newAddress);

@@ -41,15 +41,12 @@ contract PositionManager is IPositionManager, Upgradeable {
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
-    // uint256 public fundingInterval = 28800;
-
     IRiskReserve public riskReserve;
     IPool public pool;
     IFeeCollector public feeCollector;
     address public pledgeAddress;
     address public router;
 
-    // constructor() FeeManager() Pausable() {}
     function initialize(
         IAddressesProvider addressProvider,
         IPool _pool,
@@ -62,6 +59,11 @@ contract PositionManager is IPositionManager, Upgradeable {
         pool = _pool;
         feeCollector = _feeCollector;
         riskReserve = _riskReserve;
+    }
+
+    modifier onlyRouter() {
+        require(msg.sender == router, "onlyRouter");
+        _;
     }
 
     modifier onlyExecutor() {
@@ -283,9 +285,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         address account,
         bool isLong,
         int256 collateral
-    ) external override {
-        require(account == msg.sender || msg.sender == router, "forbidden");
-
+    ) external override onlyRouter {
         bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
         Position.Info storage position = positions[positionKey];
         if (position.positionAmount == 0) {
@@ -324,7 +324,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         );
     }
 
-    function updateFundingRate(uint256 _pairIndex) external {
+    function updateFundingRate(uint256 _pairIndex) external onlyRouter {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         _updateFundingRate(_pairIndex, price);

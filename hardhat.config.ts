@@ -60,7 +60,7 @@ const config: HardhatUserConfig = {
             allowUnlimitedContractSize: true,
         },
         dev_local: {
-            url: 'https://pre-rpc.myx.cash',
+            url: 'https://dev-rpc.myx.cash',
             chainId: 131338,
             accounts: getEnvAccounts(process.env.ACCOUNTS_DEV as string),
             live: false,

@@ -64,6 +64,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         bytes32[] memory priceIds = new bytes32[](tokens.length);
         uint64[] memory publishTimes = new uint64[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
+            require(tokens[i] != address(0), "zero token address");
             require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
 
             if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) < uint64(block.timestamp)) {
@@ -113,6 +114,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     }
 
     function _getPriceId(address token) internal view returns (bytes32) {
+        require(token != address(0), "zero token address");
         bytes32 priceId = tokenPriceIds[token];
         require(priceId != 0, "unknown price id");
         return priceId;
@@ -124,7 +126,8 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         if (pythPrice.price <= 0) {
             revert("invalid price");
         }
-        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - 8));
+        uint256 decimals = pythPrice.expo < 0 ? uint256(uint32(-pythPrice.expo)) : uint256(uint32(pythPrice.expo));
+        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - decimals));
     }
 
     function _setTokenPriceIds(address[] memory tokens, bytes32[] memory priceIds) internal {

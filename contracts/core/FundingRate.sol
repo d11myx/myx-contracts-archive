@@ -29,8 +29,9 @@ contract FundingRate is IFundingRate, Upgradeable {
         require(
             _fundingFeeConfig.growthRate <= PrecisionUtils.percentage() &&
                 _fundingFeeConfig.baseRate <= PrecisionUtils.percentage() &&
-                _fundingFeeConfig.maxRate <= PrecisionUtils.percentage(),
-            "exceed 100%"
+                _fundingFeeConfig.maxRate <= PrecisionUtils.percentage() &&
+                _fundingFeeConfig.fundingInterval < 86400,
+            "exceed max"
         );
 
         fundingFeeConfigs[_pairIndex] = _fundingFeeConfig;
