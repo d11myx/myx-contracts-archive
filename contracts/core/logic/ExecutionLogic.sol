@@ -625,7 +625,7 @@ contract ExecutionLogic is IExecutionLogic {
                     collateral: 0,
                     openPrice: orderTpSl.tpPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(int128(orderTpSl.tp)),
+                    sizeAmount: -int128(orderTpSl.tp),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -640,7 +640,7 @@ contract ExecutionLogic is IExecutionLogic {
                     collateral: 0,
                     openPrice: orderTpSl.slPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(int128(orderTpSl.sl)),
+                    sizeAmount: -int128(orderTpSl.sl),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -779,7 +779,7 @@ contract ExecutionLogic is IExecutionLogic {
                         collateral: 0,
                         openPrice: price,
                         isLong: adlPosition.position.isLong,
-                        sizeAmount: -int256(adlPosition.executionSize),
+                        sizeAmount: -int128(uint128(adlPosition.executionSize)),
                         maxSlippage: 0,
                         data: abi.encode(adlPosition.position.account)
                     })

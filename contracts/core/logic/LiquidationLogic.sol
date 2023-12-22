@@ -114,7 +114,7 @@ contract LiquidationLogic is ILiquidationLogic {
                 collateral: 0,
                 openPrice: price,
                 isLong: position.isLong,
-                sizeAmount: -int256(position.positionAmount),
+                sizeAmount: -int128(uint128(position.positionAmount)),
                 maxSlippage: 0,
                 data: abi.encode(position.account)
             })

@@ -126,7 +126,7 @@ contract Router is
                 collateral: request.collateral,
                 openPrice: request.openPrice,
                 isLong: request.isLong,
-                sizeAmount: int256(int128(request.sizeAmount)),
+                sizeAmount: int128(request.sizeAmount),
                 maxSlippage: request.maxSlippage,
                 data: abi.encode(request.account)
             })
@@ -167,7 +167,7 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.openPrice,
                     isLong: request.isLong,
-                    sizeAmount: int256(request.sizeAmount),
+                    sizeAmount: int128(request.sizeAmount),
                     maxSlippage: request.maxSlippage,
                     data: abi.encode(request.account)
                 })
@@ -188,7 +188,7 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.triggerPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.sizeAmount),
+                    sizeAmount: -int128(request.sizeAmount),
                     maxSlippage: request.maxSlippage,
                     data: abi.encode(request.account)
                 })
@@ -210,7 +210,7 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.triggerPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.sizeAmount),
+                    sizeAmount: -int128(request.sizeAmount),
                     maxSlippage: request.maxSlippage,
                     data: abi.encode(msg.sender)
                 })
@@ -340,7 +340,7 @@ contract Router is
                     collateral: 0,
                     openPrice: request.tpPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.tp),
+                    sizeAmount: -int128(request.tp),
                     maxSlippage: 0,
                     data: abi.encode(msg.sender)
                 })
@@ -355,7 +355,7 @@ contract Router is
                     collateral: 0,
                     openPrice: request.slPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int256(request.sl),
+                    sizeAmount: -int128(request.sl),
                     maxSlippage: 0,
                     data: abi.encode(msg.sender)
                 })

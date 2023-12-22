@@ -109,12 +109,11 @@ contract OrderManager is IOrderManager, Upgradeable {
             request.tradeType == TradingTypes.TradeType.LIMIT
         ) {
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(request.pairIndex);
-//            uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPrice(pair.indexToken);
             if (request.sizeAmount >= 0) {
                 require(
                     request.sizeAmount == 0 ||
-                        (uint256(request.sizeAmount) >= tradingConfig.minTradeAmount &&
-                            uint256(request.sizeAmount) <= tradingConfig.maxTradeAmount),
+                        (uint256(uint128(request.sizeAmount)) >= tradingConfig.minTradeAmount &&
+                            uint256(uint128(request.sizeAmount)) <= tradingConfig.maxTradeAmount),
                     "invalid trade size"
                 );
                 // check leverage
@@ -122,9 +121,8 @@ contract OrderManager is IOrderManager, Upgradeable {
                     pair,
                     0,
                     request.collateral,
-                    uint256(request.sizeAmount),
+                    uint256(uint128(request.sizeAmount)),
                     true,
-                    // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount,
                     true
@@ -137,9 +135,8 @@ contract OrderManager is IOrderManager, Upgradeable {
                     pair,
                     0,
                     request.collateral,
-                    request.sizeAmount.abs(),
+                    uint256(uint128(-request.sizeAmount)),
                     false,
-                    // tradingConfig.minLeverage,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount,
                     true
@@ -151,11 +148,9 @@ contract OrderManager is IOrderManager, Upgradeable {
             request.tradeType == TradingTypes.TradeType.TP ||
             request.tradeType == TradingTypes.TradeType.SL
         ) {
-            // Position.Info memory position = positionManager.getPosition(account, request.pairIndex, request.isLong);
-            require(
-                request.sizeAmount.abs() <= position.positionAmount,
-                "tp/sl exceeds max size"
-            );
+            uint256 orderSizeAmount = request.sizeAmount > 0 ?
+                uint256(uint128(request.sizeAmount)) : uint256(uint128(-request.sizeAmount));
+            require(orderSizeAmount <= position.positionAmount, "tp/sl exceeds max size");
             require(request.collateral == 0, "no collateral required");
         }
 
@@ -179,7 +174,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                         collateral: request.collateral,
                         openPrice: request.openPrice,
                         isLong: request.isLong,
-                        sizeAmount: uint256(request.sizeAmount),
+                        sizeAmount: uint128(request.sizeAmount),
                         maxSlippage: request.maxSlippage
                     })
                 );
@@ -192,7 +187,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                         tradeType: request.tradeType,
                         collateral: request.collateral,
                         triggerPrice: request.openPrice,
-                        sizeAmount: request.sizeAmount.abs(),
+                        sizeAmount: uint128(-request.sizeAmount),
                         isLong: request.isLong,
                         maxSlippage: request.maxSlippage
                     })
