@@ -78,17 +78,17 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-    // await deployer.sendTransaction({
-    //     to: '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583',
-    //     value: ethers.utils.parseEther('10000'),
-    // });
+    await deployer.sendTransaction({
+        to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
+        value: ethers.utils.parseEther('100000'),
+    });
     // console.log(
     //     await usdt.mint(
-    //         '0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583',
+    //         '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
     //         ethers.utils.parseUnits('1000000000000000000', 6),
     //     ),
     // );
-    // console.log(await btc.mint('0xd5F363D85Db1F0bb8bB16e95C15A5A8259D54583', ethers.utils.parseUnits('1000000000', 8)));
+    // console.log(await btc.mint('0x44C140E06D710Df2727AD7c13618869ec34364Ea', ethers.utils.parseUnits('1000000000', 8)));
 
     // console.log(await executionLogic.maxTimeDelay());
     // console.log(await executionLogic.updateMaxTimeDelay(20 * 60));
