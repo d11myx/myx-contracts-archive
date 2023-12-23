@@ -51,25 +51,28 @@ async function main() {
         '0x5B0BBDA220ab28CA96eBd73bcCB32D5498acF115',
     ];
 
-    for (let keeper of keepers) {
-        await waitForTx(await roleManager.addKeeper(keeper));
-        await waitForTx(await roleManager.addPoolAdmin(keeper));
-    }
-
-    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
-    await waitForTx(await pythOraclePriceFeed.connect(deployer).updatePriceAge(60));
-
-    // const wallet = new ethers.Wallet('', deployer.provider);
-    // await wallet.sendTransaction({
-    //     to: '',
-    //     value: ethers.utils.parseEther('1'),
-    // });
-
-    // for (const keeper of keepers) {
-    //     console.log(
-    //         `keeper: ${keeper} balance: ${ethers.utils.formatEther(await deployer.provider.getBalance(keeper))}`,
-    //     );
+    // for (let keeper of keepers) {
+    //     await waitForTx(await roleManager.addKeeper(keeper));
+    //     await waitForTx(await roleManager.addPoolAdmin(keeper));
     // }
+    //
+    // const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
+    // await waitForTx(await pythOraclePriceFeed.connect(deployer).updatePriceAge(60));
+
+    // const wallet = new ethers.Wallet(
+    //     'a5f6cbc5851da39699e5779e9d2c61966ea50ea08988c5430785e8d2c8c71eeb',
+    //     deployer.provider,
+    // );
+
+    for (const keeper of keepers) {
+        // await wallet.sendTransaction({
+        //     to: keeper,
+        //     value: ethers.utils.parseEther('10'),
+        // });
+        console.log(
+            `keeper: ${keeper} balance: ${ethers.utils.formatEther(await deployer.provider.getBalance(keeper))}`,
+        );
+    }
 }
 
 main().catch((error) => {
