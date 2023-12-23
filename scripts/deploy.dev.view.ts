@@ -16,6 +16,7 @@ import {
     getRouter,
     getTokens,
     latest,
+    POSITION_CALLER,
     ZERO_ADDRESS,
     ZERO_HASH,
 } from '../helpers';
@@ -67,17 +68,21 @@ async function main() {
     //     ),
     // );
 
-    // await deployments.deploy(`${POSITION_CALLER}`, {
+    // await deployments.deploy(`MultipleTransfer`, {
     //     from: deployer.address,
-    //     contract: 'PositionCaller',
-    //     args: [positionManager.address, pool.address],
+    //     contract: 'MultipleTransfer',
+    //     args: [],
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-    // console.log(
-    //     await usdt.mint('0xc35F3b830F8a14FF792FF29F513a8E2A4e48f3e8', ethers.utils.parseUnits('100000000000000', 6)),
-    // );
-    // console.log(await btc.mint('0xc35F3b830F8a14FF792FF29F513a8E2A4e48f3e8', ethers.utils.parseUnits('1000000', 8)));
+    await deployer.sendTransaction({
+        to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
+        value: ethers.utils.parseEther('100000'),
+    });
+    console.log(
+        await usdt.mint('0x44C140E06D710Df2727AD7c13618869ec34364Ea', ethers.utils.parseUnits('100000000000000', 6)),
+    );
+    console.log(await btc.mint('0x44C140E06D710Df2727AD7c13618869ec34364Ea', ethers.utils.parseUnits('1000000', 8)));
 
     // console.log(await executionLogic.maxTimeDelay());
     // console.log(await executionLogic.updateMaxTimeDelay(20 * 60));
