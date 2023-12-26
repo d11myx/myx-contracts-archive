@@ -109,7 +109,7 @@ const config: HardhatUserConfig = {
             live: false,
         },
         arbitrum_sepolia: {
-            url: 'https://sepolia-rollup.arbitrum.io/rpc',
+            url: 'https://arbitrum-sepolia.infura.io/v3/771c3b4e289f4a509063b09e0934d830',
             chainId: 421614,
             accounts: {
                 mnemonic: process.env.MNEMONIC_ARBITRUM_SEPOLIA || '',
