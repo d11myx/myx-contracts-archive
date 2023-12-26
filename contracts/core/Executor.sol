@@ -166,4 +166,10 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
                 executionPrice
             );
     }
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
+    ) external override whenNotPaused nonReentrant onlyPositionKeeper {
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).cleanInvalidPositionOrders(positionKeys);
+    }
 }

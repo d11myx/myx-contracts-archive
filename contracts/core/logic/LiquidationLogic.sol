@@ -103,9 +103,6 @@ contract LiquidationLogic is ILiquidationLogic {
             return;
         }
 
-        // cancel all positionOrders
-        orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
-
         uint256 orderId = orderManager.createOrder(
             TradingTypes.CreateOrderRequest({
                 account: position.account,
@@ -224,7 +221,6 @@ contract LiquidationLogic is ILiquidationLogic {
         order.executedSize += executionSize;
 
         // remove order
-        orderManager.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
         orderManager.removeDecreaseMarketOrders(orderId);
 
         emit ExecuteDecreaseOrder(
