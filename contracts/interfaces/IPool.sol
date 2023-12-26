@@ -37,6 +37,8 @@ interface IPool {
 
     event UpdateSpotSwap(address sender, address oldAddress, address newAddress);
 
+    event UpdatePoolView(address sender, address oldAddress, address newAddress);
+
     event UpdateRouter(address sender, address oldAddress, address newAddress);
 
     event UpdateRiskReserve(address sender, address oldAddress, address newAddress);
@@ -166,25 +168,5 @@ interface IPool {
         external
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
-    function getMintLpAmount(
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount,
-        uint256 price
-    )
-        external
-        view
-        returns (
-            uint256 mintAmount,
-            address slipToken,
-            uint256 slipAmount,
-            uint256 indexFeeAmount,
-            uint256 stableFeeAmount,
-            uint256 afterFeeIndexAmount,
-            uint256 afterFeeStableAmount
-        );
-
     function claimFee(address token, uint256 amount) external;
-
-    function lpFairPrice(uint256 _pairIndex, uint256 price) external view returns (uint256);
 }
