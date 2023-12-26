@@ -62,4 +62,10 @@ interface IExecution {
         uint256 referralUserRatio;
         address referralOwner;
     }
+
+    struct PositionOrder {
+        address account;
+        uint256 pairIndex;
+        bool isLong;
+    }
 }
