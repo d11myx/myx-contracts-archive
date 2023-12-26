@@ -72,7 +72,7 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
         if (block.timestamp > updatedAt + priceAge) {
             revert("invalid price");
         }
-        return getPrice(token);
+        return price;
     }
 
     function latestRoundData(address token) public view returns (uint80 roundId, uint256 price, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
@@ -83,11 +83,11 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
             checkSequencerStatus(token);
         }
         AggregatorV3Interface dataFeed = AggregatorV3Interface(dataFeedAddress);
-        uint256 decimals = uint256(dataFeed.decimals());
+        uint256 _decimals = uint256(dataFeed.decimals());
         int256 answer;
         (roundId, answer, startedAt, updatedAt, answeredInRound) = dataFeed.latestRoundData();
         require(answer > 0, "invalid price");
-        price = uint256(answer) * (10 ** (PRICE_DECIMALS - decimals));
+        price = uint256(answer) * (10 ** (PRICE_DECIMALS - _decimals));
     }
 
     function checkSequencerStatus(address token) public view {
