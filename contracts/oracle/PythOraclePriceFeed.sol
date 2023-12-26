@@ -126,8 +126,8 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         if (pythPrice.price <= 0) {
             revert("invalid price");
         }
-        uint256 decimals = pythPrice.expo < 0 ? uint256(uint32(-pythPrice.expo)) : uint256(uint32(pythPrice.expo));
-        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - decimals));
+        uint256 _decimals = pythPrice.expo < 0 ? uint256(uint32(-pythPrice.expo)) : uint256(uint32(pythPrice.expo));
+        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - _decimals));
     }
 
     function _setTokenPriceIds(address[] memory tokens, bytes32[] memory priceIds) internal {
