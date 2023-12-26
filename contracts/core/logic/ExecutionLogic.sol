@@ -814,4 +814,15 @@ contract ExecutionLogic is IExecutionLogic {
 
         emit ExecuteAdl(order.account, order.pairIndex, order.isLong, order.orderId, adlOrderIds);
     }
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
+    ) external override onlyExecutor {
+        for (uint256 i = 0; i < positionKeys.length; i++) {
+            Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
+            if (position.positionAmount == 0) {
+                orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+            }
+        }
+    }
 }

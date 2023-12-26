@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../libraries/TradingTypes.sol";
 import "../libraries/Position.sol";
-import "./IExecutionEvent.sol";
+import "./IExecution.sol";
 
 interface IExecutionLogic is IExecution {
     event UpdateMaxTimeDelay(uint256 oldDelay, uint256 newDelay);
@@ -81,4 +81,8 @@ interface IExecutionLogic is IExecution {
         uint256 executionSize,
         uint256 executionPrice
     ) external view returns (bool needADL);
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
+    ) external;
 }
