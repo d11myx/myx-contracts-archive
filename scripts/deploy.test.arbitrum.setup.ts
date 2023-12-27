@@ -90,13 +90,13 @@ async function main() {
         '0x3717B947D5E24Bf78B393133c9EFAa00E5C3C798',
     ];
 
-    // for (let keeper of keepers) {
-    //     await roleManager.addKeeper(keeper);
-    //     await roleManager.addPoolAdmin(keeper);
-    // }
+    for (let keeper of keepers) {
+        await roleManager.addKeeper(keeper);
+        await roleManager.addPoolAdmin(keeper);
+    }
 
-    // const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
-    // await pythOraclePriceFeed.connect(deployer).updatePriceAge(60);
+    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
+    await pythOraclePriceFeed.connect(deployer).updatePriceAge(60);
 
     // const wallet = new ethers.Wallet(
     //     '',

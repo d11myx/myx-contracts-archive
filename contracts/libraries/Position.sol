@@ -114,11 +114,15 @@ library Position {
             afterPosition = self.positionAmount >= _sizeAmount ? self.positionAmount - _sizeAmount : 0;
         }
 
-        // close position
+//        // close position
 //        if (afterPosition == 0) {
 //            return (0, 0);
 //        }
-        require(afterPosition <= maxPositionAmount, 'exceeds max position');
+
+        if (_increase && afterPosition > maxPositionAmount) {
+            revert("exceeds max position");
+//            require(_increase && afterPosition <= maxPositionAmount, 'exceeds max position');
+        }
 
         int256 availableCollateral = int256(self.collateral);
 
