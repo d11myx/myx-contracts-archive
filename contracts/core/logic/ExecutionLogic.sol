@@ -442,9 +442,9 @@ contract ExecutionLogic is IExecutionLogic {
 
         if (executionSize == 0) {
             executionSize = order.sizeAmount - order.executedSize;
-            if (executionSize > tradingConfig.maxTradeAmount && !isSystem) {
-                executionSize = tradingConfig.maxTradeAmount;
-            }
+//            if (executionSize > tradingConfig.maxTradeAmount && !isSystem) {
+//                executionSize = tradingConfig.maxTradeAmount;
+//            }
         }
 
         // valid order size
