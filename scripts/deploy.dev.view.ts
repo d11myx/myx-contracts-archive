@@ -4,6 +4,7 @@ import {
     COMMON_DEPLOY_PARAMS,
     Duration,
     encodeParameters,
+    EXECUTION_LOGIC_ID,
     getAddressesProvider,
     getExecutionLogic,
     getExecutor,
@@ -17,12 +18,12 @@ import {
     getTokens,
     latest,
     POSITION_CALLER,
-    waitForTx,
+    POSITION_MANAGER_ID,
     ZERO_ADDRESS,
     ZERO_HASH,
 } from '../helpers';
-import { mintAndApprove } from '../test/helpers/misc';
-import { testEnv } from '../test/helpers/make-suite';
+import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
+import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -78,17 +79,41 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-    await deployer.sendTransaction({
-        to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
-        value: ethers.utils.parseEther('100000'),
-    });
+    // await deployer.sendTransaction({
+    //     to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
+    //     value: ethers.utils.parseEther('100000'),
+    // });
     // console.log(
-    //     await usdt.mint(
-    //         '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
-    //         ethers.utils.parseUnits('1000000000000000000', 6),
-    //     ),
+    //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
     // );
-    // console.log(await btc.mint('0x44C140E06D710Df2727AD7c13618869ec34364Ea', ethers.utils.parseUnits('1000000000', 8)));
+    // console.log(await btc.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('1000000', 8)));
+
+    // await deployments.deploy(`${EXECUTION_LOGIC_ID}-V2`, {
+    //     from: deployer.address,
+    //     contract: 'ExecutionLogic',
+    //     args: [
+    //         addressesProvider.address,
+    //         pool.address,
+    //         orderManager.address,
+    //         positionManager.address,
+    //         feeCollector.address,
+    //         60 * 5,
+    //     ],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
+    var executionLogic1 = await getExecutionLogic('0xc85D5e8Dfa43fC31Bf12bF517E02e0d2381C0058');
+    await executionLogic1.updateExecutor(executor.address);
+    //
+    // await hre.run('time-execution', {
+    //     target: addressesProvider.address,
+    //     value: '0',
+    //     signature: 'setExecutionLogic(address)',
+    //     data: encodeParameters(['address'], ['0xc85D5e8Dfa43fC31Bf12bF517E02e0d2381C0058']),
+    //     eta: Duration.seconds(10)
+    //         .add(await latest())
+    //         .toString(),
+    // });
 
     // console.log(await executionLogic.maxTimeDelay());
     // console.log(await executionLogic.updateMaxTimeDelay(20 * 60));
