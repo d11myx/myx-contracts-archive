@@ -14,31 +14,65 @@ describe('Funding: funding rate calculator', () => {
     it('calculate funding rate', async () => {
         const { fundingRate, btc, usdt, pool } = testEnv;
 
-        const openPrice = ethers.utils.parseUnits('30000', 30);
+        const openPrice = ethers.utils.parseUnits('1', 30);
 
         const vault: IPool.VaultStruct = {
-            indexTotalAmount: ethers.utils.parseUnits('20', await btc.decimals()),
+            indexTotalAmount: ethers.utils.parseUnits('500', await btc.decimals()),
             indexReservedAmount: ethers.utils.parseUnits('0', await btc.decimals()),
-            stableTotalAmount: BigNumber.from('30000').mul(ethers.utils.parseUnits('20', await usdt.decimals())),
+            stableTotalAmount: BigNumber.from('1').mul(ethers.utils.parseUnits('500', await usdt.decimals())),
             stableReservedAmount: ethers.utils.parseUnits('0', await usdt.decimals()),
             averagePrice: openPrice,
         };
 
         const pair = await pool.getPair(pairIndex);
 
-        let longTracker = ethers.utils.parseUnits('1000', await btc.decimals());
-        let shortTracker = ethers.utils.parseUnits('450', await btc.decimals());
-        let rate = await fundingRate.getFundingRate(pair, longTracker, shortTracker, vault, openPrice);
-        expect(rate).to.be.eq('6113309');
+        // long = short
+        let rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('833');
 
-        longTracker = ethers.utils.parseUnits('500', await btc.decimals());
-        shortTracker = ethers.utils.parseUnits('500', await btc.decimals());
-        rate = await fundingRate.getFundingRate(pair, longTracker, shortTracker, vault, openPrice);
-        expect(rate).to.be.eq('20000');
+        vault.indexReservedAmount = ethers.utils.parseUnits('1000', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('450', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('142916');
 
-        longTracker = ethers.utils.parseUnits('0', await btc.decimals());
-        shortTracker = ethers.utils.parseUnits('550', await btc.decimals());
-        rate = await fundingRate.getFundingRate(pair, longTracker, shortTracker, vault, openPrice);
-        expect(rate).to.be.eq('-28962638');
+        vault.indexReservedAmount = ethers.utils.parseUnits('850', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('465', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('89704');
+
+        vault.indexReservedAmount = ethers.utils.parseUnits('690', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('481', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('42946');
+
+        vault.indexReservedAmount = ethers.utils.parseUnits('680', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('482', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('40367');
+
+        vault.indexReservedAmount = ethers.utils.parseUnits('600', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('490', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('21183');
+
+        vault.indexReservedAmount = ethers.utils.parseUnits('500', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('500', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('833');
+
+        vault.indexReservedAmount = ethers.utils.parseUnits('490', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('501', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('-979');
+
+        vault.indexReservedAmount = ethers.utils.parseUnits('340', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('516', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('-23337');
+
+        vault.indexReservedAmount = ethers.utils.parseUnits('0', await btc.decimals());
+        vault.stableReservedAmount = ethers.utils.parseUnits('550', await usdt.decimals());
+        rate = await fundingRate.getFundingRate(pair, vault, openPrice);
+        expect(rate).to.be.eq('-40416');
     });
 });

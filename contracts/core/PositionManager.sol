@@ -660,8 +660,6 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         fundingRate = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingRate(
             pair,
-            longTracker[_pairIndex],
-            shortTracker[_pairIndex],
             vault,
             _price
         );
