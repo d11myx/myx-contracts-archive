@@ -118,9 +118,9 @@ describe('ChainlinkpriceOracle Spec', () => {
                 eta.add(timestamp),
             );
 
-            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.dataFeeds(eth.address)).eq(chainlinkMockETH.address);
             expect(await chainlinkPriceFeed.decimals()).eq(30);
-            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
+            expect(await chainlinkPriceFeed.dataFeeds(btc.address)).eq(EMPTY_ADDRESS);
             expect(await chainlinkPriceFeed.decimals()).eq(30);
         });
 
@@ -158,9 +158,9 @@ describe('ChainlinkpriceOracle Spec', () => {
                 eta.add(timestamp),
             );
 
-            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
-            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(chainlinkMockBTC.address);
-            expect(await chainlinkPriceFeed.priceFeeds(token3.address)).eq(chainlinkMock3.address);
+            expect(await chainlinkPriceFeed.dataFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.dataFeeds(btc.address)).eq(chainlinkMockBTC.address);
+            expect(await chainlinkPriceFeed.dataFeeds(token3.address)).eq(chainlinkMock3.address);
         });
     });
 
@@ -223,9 +223,9 @@ describe('ChainlinkpriceOracle Spec', () => {
                 eta.add(timestamp),
             );
 
-            expect(await chainlinkPriceFeed.priceFeeds(eth.address)).eq(chainlinkMockETH.address);
-            expect(await chainlinkPriceFeed.priceFeeds(btc.address)).eq(EMPTY_ADDRESS);
-            expect(await chainlinkPriceFeed.priceFeeds(token3.address)).eq(chainlinkMock3.address);
+            expect(await chainlinkPriceFeed.dataFeeds(eth.address)).eq(chainlinkMockETH.address);
+            expect(await chainlinkPriceFeed.dataFeeds(btc.address)).eq(EMPTY_ADDRESS);
+            expect(await chainlinkPriceFeed.dataFeeds(token3.address)).eq(chainlinkMock3.address);
         });
     });
 

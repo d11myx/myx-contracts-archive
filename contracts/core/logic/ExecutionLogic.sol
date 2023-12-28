@@ -51,8 +51,8 @@ contract ExecutionLogic is IExecutionLogic {
         _;
     }
 
-    modifier onlyExecutor() {
-        require(msg.sender == executor, "oe");
+    modifier onlyExecutorOrSelf() {
+        require(msg.sender == executor || msg.sender == address(this), "oe");
         _;
     }
 
@@ -71,7 +71,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeIncreaseMarketOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
 
@@ -100,7 +100,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeIncreaseLimitOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
@@ -133,7 +133,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 referralsRatio,
         uint256 referralUserRatio,
         address referralOwner
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
             _orderId,
             _tradeType
@@ -307,7 +307,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeDecreaseMarketOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
@@ -338,7 +338,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeDecreaseLimitOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
@@ -377,7 +377,7 @@ contract ExecutionLogic is IExecutionLogic {
         bool isSystem,
         uint256 executionSize,
         bool onlyOnce
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         _executeDecreaseOrder(
             keeper,
             _orderId,
@@ -669,7 +669,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _referralsRatio,
         uint256 _referralUserRatio,
         address _referralOwner
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
             _orderId,
             _tradeType
@@ -817,7 +817,7 @@ contract ExecutionLogic is IExecutionLogic {
 
     function cleanInvalidPositionOrders(
         bytes32[] calldata positionKeys
-    ) external override onlyExecutor {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < positionKeys.length; i++) {
             Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
             if (position.positionAmount == 0) {

@@ -20,6 +20,7 @@ import {
     Timelock,
     SpotSwap,
     MockPythOraclePriceFeed,
+    PoolView,
 } from '../../types';
 import {
     SymbolMap,
@@ -49,6 +50,7 @@ import {
     getFeeCollector,
     getSpotSwap,
     getMockToken,
+    getPoolView,
 } from '../../helpers';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -71,6 +73,7 @@ export interface TestEnv {
     roleManager: RoleManager;
     pairTokens: SymbolMap<MockERC20Token>;
     pool: Pool;
+    poolView: PoolView;
     spotSwap: SpotSwap;
     fundingRate: FundingRate;
     oraclePriceFeed: MockPythOraclePriceFeed;
@@ -98,6 +101,7 @@ export const testEnv: TestEnv = {
     roleManager: {} as RoleManager,
     pairTokens: {} as SymbolMap<MockERC20Token>,
     pool: {} as Pool,
+    poolView: {} as PoolView,
     spotSwap: {} as SpotSwap,
     fundingRate: {} as FundingRate,
     oraclePriceFeed: {} as MockPythOraclePriceFeed,
@@ -158,6 +162,7 @@ export async function setupTestEnv() {
 
     // pair
     testEnv.pool = await getPool();
+    testEnv.poolView = await getPoolView();
     testEnv.spotSwap = await getSpotSwap();
 
     testEnv.fundingRate = await getFundingRate();
@@ -216,7 +221,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         tokens,
     );
 
-    const { pool, spotSwap } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
+    const { pool, poolView, spotSwap } = await deployPair(addressesProvider, oraclePriceFeed, deployer, weth);
 
     const {
         positionManager,
@@ -229,6 +234,8 @@ export async function newTestEnv(): Promise<TestEnv> {
         feeCollector,
     } = await deployTrading(deployer, deployer, addressesProvider, roleManager, pool, usdt, validationHelper);
 
+    await indexPriceFeed.updateExecutorAddress(executor.address);
+
     await addressesProvider
         .connect(deployer.signer)
         .initialize(
@@ -238,8 +245,12 @@ export async function newTestEnv(): Promise<TestEnv> {
             executionLogic.address,
             liquidationLogic.address,
         );
+    await pool.setRouter(router.address);
+    await pool.setPoolView(poolView.address);
     await pool.setPositionManager(positionManager.address);
     await pool.setOrderManager(orderManager.address);
+    await poolView.setPool(pool.address);
+    await poolView.setPositionManager(positionManager.address);
     await initPairs(deployer, tokens, usdt, pool, fundingRate, feeCollector);
 
     await roleManager.addKeeper(executor.address);
@@ -256,6 +267,7 @@ export async function newTestEnv(): Promise<TestEnv> {
         roleManager: roleManager,
         pairTokens: tokens,
         pool: pool,
+        poolView: poolView,
         spotSwap: spotSwap,
         fundingRate: fundingRate,
         oraclePriceFeed: oraclePriceFeed,

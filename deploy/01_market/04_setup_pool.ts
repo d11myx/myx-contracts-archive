@@ -5,6 +5,7 @@ import {
     getFundingRate,
     getMockToken,
     getPool,
+    getPoolView,
     getSpotSwap,
     getToken,
     getWETH,
@@ -62,6 +63,11 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         console.log(`   pair token for【${symbol}/${MARKET_NAME}】: ${(await pool.pairs(pairIndex)).pairToken}`);
     }
     console.log(`Configured all pairs 【(${Object.keys(pairConfigs)})/${MARKET_NAME}】`);
+
+    const poolView = await getPoolView();
+    await waitForTx(await poolView.connect(poolAdminSigner).setPool(pool.address));
+
+    await waitForTx(await pool.connect(poolAdminSigner).setPoolView(poolView.address));
 
     const spotSwap = await getSpotSwap();
     await waitForTx(await pool.connect(poolAdminSigner).setSpotSwap(spotSwap.address));

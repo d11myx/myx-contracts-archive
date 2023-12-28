@@ -3,6 +3,10 @@ pragma solidity 0.8.19;
 
 interface IPoolView {
 
+    event UpdatePool(address sender, address oldAddress, address newAddress);
+
+    event UpdatePositionManager(address sender, address oldAddress, address newAddress);
+
     function getMintLpAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
