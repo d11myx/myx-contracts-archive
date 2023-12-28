@@ -1,7 +1,10 @@
 // @ts-ignore
-import { ethers } from 'hardhat';
+import { deployments, ethers } from 'hardhat';
 import {
+    COMMON_DEPLOY_PARAMS,
     getAddressesProvider,
+    getExecutionLogic,
+    getExecutor,
     getFeeCollector,
     getIndexPriceFeed,
     getOraclePriceFeed,
@@ -10,10 +13,12 @@ import {
     getPositionManager,
     getRouter,
     getTokens,
+    POSITION_CALLER,
     TradeType,
     waitForTx,
 } from '../helpers';
 import { address } from 'hardhat/internal/core/config/config-validation';
+import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -23,8 +28,8 @@ async function main() {
     const router = await getRouter();
     const orderManager = await getOrderManager();
     const positionManager = await getPositionManager();
-    // const executor = await getExecutor();
-    // const executionLogic = await getExecutionLogic();
+    const executor = await getExecutor();
+    const executionLogic = await getExecutionLogic();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
     const feeCollector = await getFeeCollector();
@@ -55,7 +60,6 @@ async function main() {
     //     console.log(`index: ${index}  ${await pool.getVault(1)}`);
     //     index++;
     // }, 2000);
-    console.log('111');
 
     // console.log(
     //     await positionManager.getPositionByKey(
@@ -63,10 +67,18 @@ async function main() {
     //     ),
     // );
 
-    const priceOracle = await addressesProvider.priceOracle();
-    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', priceOracle);
-    console.log(await pythOraclePriceFeed.pyth());
-    // console.log(await usdt.mint('0x6B41e7fcb9350B27298436983d2765c16472483F', ethers.utils.parseUnits('100000000', 6)));
+    // await deployments.deploy(`${POSITION_CALLER}`, {
+    //     from: deployer.address,
+    //     contract: 'PositionCaller',
+    //     args: [positionManager.address, pool.address],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
+    // console.log(
+    //     await usdt.mint('0x0138DF453DC8FEf8c03945D2Ff83067d12015E33', ethers.utils.parseUnits('100000000000', 6)),
+    // );
+    console.log(await executionLogic.maxTimeDelay());
+    // console.log(await executionLogic.updateMaxTimeDelay(20 * 60));
 
     // console.log(await pool.lpFairPrice(2, '2060738556470000000000000000000000'));
 
