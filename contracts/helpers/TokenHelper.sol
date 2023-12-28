@@ -14,6 +14,8 @@ library TokenHelper {
         IPool.Pair memory pair,
         int256 indexTokenAmount
     ) internal view returns (int256 amount) {
+        if (indexTokenAmount == 0) return 0;
+
         uint8 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
         return convertTokenAmountTo(pair.indexToken, indexTokenAmount, stableTokenDec);
     }
@@ -23,6 +25,8 @@ library TokenHelper {
         int256 indexTokenAmount,
         uint256 price
     ) internal view returns (int256 amount) {
+        if (indexTokenAmount == 0) return 0;
+
         uint8 stableTokenDec = IERC20Metadata(pair.stableToken).decimals();
         return convertTokenAmountWithPrice(pair.indexToken, indexTokenAmount, stableTokenDec, price);
     }
@@ -33,6 +37,8 @@ library TokenHelper {
         uint8 targetDecimals,
         uint256 price
     ) internal view returns (int256 amount) {
+        if (tokenAmount == 0) return 0;
+
         uint256 tokenDec = uint256(IERC20Metadata(token).decimals());
 
         uint256 tokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - tokenDec);
@@ -45,6 +51,8 @@ library TokenHelper {
         IPool.Pair memory pair,
         int256 stableTokenAmount
     ) internal view returns (int256 amount) {
+        if (stableTokenAmount == 0) return 0;
+
         uint8 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();
         return convertTokenAmountTo(pair.stableToken, stableTokenAmount, indexTokenDec);
     }
@@ -54,6 +62,8 @@ library TokenHelper {
         int256 tokenAmount,
         uint8 targetDecimals
     ) internal view returns (int256 amount) {
+        if (tokenAmount == 0) return 0;
+
         uint256 tokenDec = uint256(IERC20Metadata(token).decimals());
 
         uint256 tokenWad = 10 ** (PrecisionUtils.maxTokenDecimals() - tokenDec);

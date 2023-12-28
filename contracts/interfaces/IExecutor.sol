@@ -60,4 +60,8 @@ interface IExecutor {
         uint256 executionSize,
         uint256 executionPrice
     ) external view returns (bool);
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
+    ) external;
 }

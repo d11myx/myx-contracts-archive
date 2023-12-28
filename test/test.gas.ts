@@ -2,7 +2,8 @@ import { ethers, waffle } from 'hardhat';
 import { expect } from './shared/expect';
 
 import snapshotGasCost from './shared/snapshotGasCost';
-import { TestGas, TestMulticall } from '../types';
+import { TestGas } from '../types';
+import { ZERO_ADDRESS, ZERO_HASH } from '../helpers';
 
 describe('TestGas', async () => {
     const wallets = waffle.provider.getWallets();
@@ -40,5 +41,45 @@ describe('TestGas', async () => {
     });
     it('gas cost of saveUint32Tests', async () => {
         await snapshotGasCost(testGas.saveUint32Tests());
+    });
+
+    it('gas cost of calldata params', async () => {
+        await snapshotGasCost(
+            testGas.calldataParams(
+                [ZERO_ADDRESS],
+                [ethers.utils.parseEther('1')],
+                [ZERO_HASH],
+                [
+                    {
+                        positionKey: ZERO_HASH,
+                        sizeAmount: ethers.utils.parseEther('1'),
+                        tier: 1,
+                        referralsRatio: '1000',
+                        referralUserRatio: '1000',
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+            ),
+        );
+    });
+
+    it('gas cost of memory params', async () => {
+        await snapshotGasCost(
+            testGas.memoryParams(
+                [ZERO_ADDRESS],
+                [ethers.utils.parseEther('1')],
+                [ZERO_HASH],
+                [
+                    {
+                        positionKey: ZERO_HASH,
+                        sizeAmount: ethers.utils.parseEther('1'),
+                        tier: 1,
+                        referralsRatio: '1000',
+                        referralUserRatio: '1000',
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+            ),
+        );
     });
 });

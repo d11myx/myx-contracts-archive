@@ -14,6 +14,7 @@ describe('Pool: Liquidity cases', () => {
         // testEnv = await newTestEnv();
         const {
             pool,
+            poolView,
             btc,
             usdt,
             router,
@@ -36,7 +37,7 @@ describe('Pool: Liquidity cases', () => {
         const depositorLpBef = await pairToken.balanceOf(depositor.address);
         const callbackLpBef = await pairToken.balanceOf(router.address);
 
-        const receivedLP = await pool.getMintLpAmount(
+        const receivedLP = await poolView.getMintLpAmount(
             pairIndex,
             ethers.utils.parseUnits('1000', await btc.decimals()),
             ethers.utils.parseUnits('30000000', await usdt.decimals()),

@@ -11,18 +11,36 @@ contract IndexPriceFeed is IIndexPriceFeed {
     uint256 public immutable PRICE_DECIMALS = 30;
     mapping(address => uint256) public assetPrices;
 
+    address public executor;
+
     constructor(
         IAddressesProvider addressProvider,
         address[] memory assets,
-        uint256[] memory prices
+        uint256[] memory prices,
+        address _executor
     ) {
         ADDRESS_PROVIDER = addressProvider;
         _setAssetPrices(assets, prices);
+        executor = _executor;
     }
 
-    modifier onlyKeeper() {
-        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(tx.origin), "opk");
+    modifier onlyExecutorOrPoolAdmin() {
+        require(executor == msg.sender || IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "oep");
         _;
+    }
+
+    modifier onlyPoolAdmin() {
+        require(
+            IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender),
+            "onlyPoolAdmin"
+        );
+        _;
+    }
+
+    function updateExecutorAddress(address _executor) external onlyPoolAdmin {
+        address oldAddress = executor;
+        executor = _executor;
+        emit UpdateExecutorAddress(msg.sender, oldAddress, _executor);
     }
 
     function decimals() public pure override returns (uint256) {
@@ -32,7 +50,7 @@ contract IndexPriceFeed is IIndexPriceFeed {
     function updatePrice(
         address[] calldata tokens,
         uint256[] memory prices
-    ) external override onlyKeeper {
+    ) external override onlyExecutorOrPoolAdmin {
         _setAssetPrices(tokens, prices);
     }
 
