@@ -16,16 +16,16 @@ library TradingTypes {
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
-        int256 sizeAmount; // size
+        int128 sizeAmount; // size
         uint256 maxSlippage;
         bytes data;
     }
 
     struct OrderWithTpSl {
         uint256 tpPrice; // 1e30, tp price
-        uint256 tp; // tp size
+        uint128 tp; // tp size
         uint256 slPrice; // 1e30, sl price
-        uint256 sl; // sl size
+        uint128 sl; // sl size
     }
 
     struct IncreasePositionRequest {
@@ -35,7 +35,7 @@ library TradingTypes {
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
-        uint256 sizeAmount; // size
+        uint128 sizeAmount; // size
         uint256 maxSlippage;
     }
 
@@ -46,11 +46,11 @@ library TradingTypes {
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
-        uint256 sizeAmount; // size
+        uint128 sizeAmount; // size
         uint256 tpPrice; // 1e30, tp price
-        uint256 tp; // tp size
+        uint128 tp; // tp size
         uint256 slPrice; // 1e30, sl price
-        uint256 sl; // sl size
+        uint128 sl; // sl size
         uint256 maxSlippage;
     }
 
@@ -60,7 +60,7 @@ library TradingTypes {
         TradeType tradeType;
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 triggerPrice; // 1e30, price
-        uint256 sizeAmount; // size
+        uint128 sizeAmount; // size
         bool isLong;
         uint256 maxSlippage;
     }
@@ -70,9 +70,9 @@ library TradingTypes {
         uint256 pairIndex; // pair index
         bool isLong;
         uint256 tpPrice; // Stop profit price 1e30
-        uint256 tp; // The number of profit stops
+        uint128 tp; // The number of profit stops
         uint256 slPrice; // Stop price 1e30
-        uint256 sl; // Stop loss quantity
+        uint128 sl; // Stop loss quantity
     }
 
     struct IncreasePositionOrder {

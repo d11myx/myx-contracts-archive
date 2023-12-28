@@ -11,11 +11,9 @@ import {
     convertStableAmountToIndex,
 } from '../helpers/token-decimals';
 
-
-
 describe('Sing-lp: Test cases', () => {
     const pairIndex = 1;
-    let testEnv: TestEnv; 
+    let testEnv: TestEnv;
     const MAX_DECIMALS = 18;
     const PRICE_DECIMALS = 30; // 预言机价格精度
 
@@ -27,21 +25,22 @@ describe('Sing-lp: Test cases', () => {
         it('should add liquidity success', async () => {
             const {
                 router,
-                users:[depositor], 
+                users: [depositor],
                 usdt,
                 btc,
                 pairTokens,
                 pool,
+                poolView,
                 oraclePriceFeed,
             } = testEnv;
-    
-            const indexPrice = BigNumber.from(
-                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', '')
-            )
 
-            const lpPrice = await pool.lpFairPrice(1, await oraclePriceFeed.getPrice(btc.address));
+            const indexPrice = BigNumber.from(
+                ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
+            );
+
+            const lpPrice = await poolView.lpFairPrice(1, await oraclePriceFeed.getPrice(btc.address));
             // console.log(pairPrice);
-            
+
             // value 1:100
             const addIndexAmount = ethers.utils.parseUnits('10000', await btc.decimals()); // per 30000U
             const addStableAmount = ethers.utils.parseUnits('300000000', await usdt.decimals()); // per 1U
@@ -50,30 +49,23 @@ describe('Sing-lp: Test cases', () => {
             await mintAndApprove(testEnv, btc, addIndexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, addStableAmount, depositor, router.address);
 
-            const lpAmountStrut = await pool.getMintLpAmount(
-                pairIndex, 
-                addIndexAmount, 
-                addStableAmount, 
-                await oraclePriceFeed.getPrice(btc.address)
+            const lpAmountStrut = await poolView.getMintLpAmount(
+                pairIndex,
+                addIndexAmount,
+                addStableAmount,
+                await oraclePriceFeed.getPrice(btc.address),
             );
 
             // console.log(lpAmountStrut.mintAmount);
 
-            await router
-                .connect(depositor.signer)
-                .addLiquidity(
-                    pair.indexToken,
-                    pair.stableToken,
-                    addIndexAmount,
-                    addStableAmount,
-                    [btc.address], // the token need update price
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [ethers.utils.parseUnits(indexPrice.toString(), 8)]
-                        )
-                    ],  // update data(price)
-                    {value: 1},
+            await router.connect(depositor.signer).addLiquidity(
+                pair.indexToken,
+                pair.stableToken,
+                addIndexAmount,
+                addStableAmount,
+                [btc.address], // the token need update price
+                [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits(indexPrice.toString(), 8)])], // update data(price)
+                { value: 1 },
             );
 
             // common token transfer check
@@ -86,11 +78,11 @@ describe('Sing-lp: Test cases', () => {
             const lpToken = await getMockToken('', pair.pairToken);
             // console.log(ethers.utils.formatUnits(await lpToken.balanceOf(depositor.address)));
             expect(await lpToken.balanceOf(depositor.address)).to.be.eq(lpAmountStrut.mintAmount);
-            
+
             // pool states check value = 1:100
             const poolVault = await pool.getVault(pairIndex);
             expect(poolVault.indexTotalAmount.mul(indexPrice)).to.be.eq(
-                await convertStableAmountToIndex(btc, usdt, poolVault.stableTotalAmount)
+                await convertStableAmountToIndex(btc, usdt, poolVault.stableTotalAmount),
             );
 
             // fee check
@@ -102,15 +94,12 @@ describe('Sing-lp: Test cases', () => {
             expect(stableFee).to.be.eq(addStableAmount.mul(feeRate).div(1e8));
 
             // total amount check
-            expect(addIndexAmount).to.be.eq(poolVault.indexTotalAmount.add(btcFee))
-            expect(addStableAmount).to.be.eq(poolVault.stableTotalAmount.add(stableFee))
-
-        }); 
+            expect(addIndexAmount).to.be.eq(poolVault.indexTotalAmount.add(btcFee));
+            expect(addStableAmount).to.be.eq(poolVault.stableTotalAmount.add(stableFee));
+        });
 
         // it('should remove liquidity success', async () => {
-            
+
         // });
-    })
-
-
-})
+    });
+});

@@ -39,9 +39,9 @@ library TradingHelper {
     ) internal view returns (uint256 executionSize) {
         executionSize = orderSize;
 
-        uint256 maxAvailableLiquidity = maxAvailableLiquidity(lpVault, pair, exposedPositions, isLong, executionPrice);
-        if (executionSize > maxAvailableLiquidity) {
-            executionSize = maxAvailableLiquidity;
+        uint256 available = maxAvailableLiquidity(lpVault, pair, exposedPositions, isLong, executionPrice);
+        if (executionSize > available) {
+            executionSize = available;
         }
         return executionSize;
     }
@@ -55,7 +55,8 @@ library TradingHelper {
     ) internal view returns (uint256 amount) {
         if (exposedPositions >= 0) {
             if (isLong) {
-                amount = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
+                amount = lpVault.indexTotalAmount >= lpVault.indexReservedAmount ?
+                    lpVault.indexTotalAmount - lpVault.indexReservedAmount : 0;
             } else {
                 int256 availableStable = int256(lpVault.stableTotalAmount) - int256(lpVault.stableReservedAmount);
                 int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(
@@ -63,10 +64,10 @@ library TradingHelper {
                     availableStable
                 );
                 if (stableToIndexAmount < 0) {
-                    if (uint256(exposedPositions) <= uint256(stableToIndexAmount.abs()).divPrice(executionPrice)) {
+                    if (uint256(exposedPositions) <= stableToIndexAmount.abs().divPrice(executionPrice)) {
                         amount = 0;
                     } else {
-                        amount = uint256(exposedPositions) - uint256(stableToIndexAmount.abs()).divPrice(executionPrice);
+                        amount = uint256(exposedPositions) - stableToIndexAmount.abs().divPrice(executionPrice);
                     }
                 } else {
                     amount = uint256(exposedPositions) + stableToIndexAmount.abs().divPrice(executionPrice);
@@ -74,8 +75,13 @@ library TradingHelper {
             }
         } else {
             if (isLong) {
-                uint256 availableIndex = lpVault.indexTotalAmount - lpVault.indexReservedAmount;
-                amount = uint256(-exposedPositions) + availableIndex;
+                int256 availableIndex = int256(lpVault.indexTotalAmount) - int256(lpVault.indexReservedAmount);
+                if (availableIndex > 0) {
+                    amount = uint256(-exposedPositions) + availableIndex.abs();
+                } else {
+                    amount = uint256(-exposedPositions) >= availableIndex.abs() ?
+                        uint256(-exposedPositions) - availableIndex.abs() : 0;
+                }
             } else {
                 int256 availableStable = int256(lpVault.stableTotalAmount) - int256(lpVault.stableReservedAmount);
                 int256 stableToIndexAmount = TokenHelper.convertStableAmountToIndex(

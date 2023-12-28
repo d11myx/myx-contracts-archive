@@ -8,7 +8,7 @@ import { TradingTypes } from '../../types/contracts/core/Router';
 import { IExecution } from '../../types/contracts/core/Executor';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
-    const { keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
+    const { deployer, keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
 
     const updateData = await oraclePriceFeed.getUpdateData([btc.address], [ethers.utils.parseUnits(btcPrice, 8)]);
     const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
@@ -23,7 +23,9 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     );
 
     await waitForTx(
-        await indexPriceFeed.connect(keeper.signer).updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 30)]),
+        await indexPriceFeed
+            .connect(deployer.signer)
+            .updatePrice([btc.address], [ethers.utils.parseUnits(btcPrice, 30)]),
     );
 }
 
@@ -138,6 +140,7 @@ export async function increasePosition(
         );
         receipt = await tx.wait();
     }
+    // await hre.run('decode-event', { hash: receipt.transactionHash, log: true });
     return { orderId: orderId, executeReceipt: receipt };
 }
 

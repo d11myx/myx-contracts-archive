@@ -35,6 +35,24 @@ interface IPool {
 
     event UpdateAveragePrice(uint256 indexed pairIndex, uint256 averagePrice);
 
+    event UpdateSpotSwap(address sender, address oldAddress, address newAddress);
+
+    event UpdatePoolView(address sender, address oldAddress, address newAddress);
+
+    event UpdateRouter(address sender, address oldAddress, address newAddress);
+
+    event UpdateRiskReserve(address sender, address oldAddress, address newAddress);
+
+    event UpdateFeeCollector(address sender, address oldAddress, address newAddress);
+
+    event UpdatePositionManager(address sender, address oldAddress, address newAddress);
+
+    event UpdateOrderManager(address sender, address oldAddress, address newAddress);
+
+    event AddStableToken(address sender, address token);
+
+    event RemoveStableToken(address sender, address token);
+
     event AddLiquidity(
         address indexed recipient,
         uint256 indexed pairIndex,
@@ -78,7 +96,6 @@ interface IPool {
         uint256 unbalancedDiscountRate;
         uint256 addLpFeeP; // Add liquidity fee
         uint256 removeLpFeeP; // remove liquidity fee
-        uint256 lpFeeDistributeP;
     }
 
     struct TradingConfig {
@@ -141,14 +158,6 @@ interface IPool {
         bytes calldata data
     ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
 
-    function addLiquidityForAccount(
-        address recipient,
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount,
-        bytes calldata data
-    ) external returns (uint256 mintAmount, address slipToken, uint256 slipAmount);
-
     function removeLiquidity(
         address payable _receiver,
         uint256 _pairIndex,
@@ -159,25 +168,5 @@ interface IPool {
         external
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount);
 
-    function getMintLpAmount(
-        uint256 _pairIndex,
-        uint256 _indexAmount,
-        uint256 _stableAmount,
-        uint256 price
-    )
-        external
-        view
-        returns (
-            uint256 mintAmount,
-            address slipToken,
-            uint256 slipAmount,
-            uint256 indexFeeAmount,
-            uint256 stableFeeAmount,
-            uint256 afterFeeIndexAmount,
-            uint256 afterFeeStableAmount
-        );
-
     function claimFee(address token, uint256 amount) external;
-
-    function lpFairPrice(uint256 _pairIndex, uint256 price) external view returns (uint256);
 }

@@ -51,18 +51,15 @@ contract ExecutionLogic is IExecutionLogic {
         _;
     }
 
-    modifier onlyExecutorOrKeeper() {
-        require(
-            msg.sender == executor ||
-                msg.sender == address(this) ||
-                IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender),
-            "oe"
-        );
+    modifier onlyExecutorOrSelf() {
+        require(msg.sender == executor || msg.sender == address(this), "oe");
         _;
     }
 
     function updateExecutor(address _executor) external override onlyPoolAdmin {
+        address oldAddress = executor;
         executor = _executor;
+        emit UpdateExecutorAddress(msg.sender, oldAddress, _executor);
     }
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external override onlyPoolAdmin {
@@ -74,7 +71,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeIncreaseMarketOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
 
@@ -103,7 +100,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeIncreaseLimitOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
@@ -136,7 +133,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 referralsRatio,
         uint256 referralUserRatio,
         address referralOwner
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
             _orderId,
             _tradeType
@@ -310,7 +307,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeDecreaseMarketOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
@@ -341,7 +338,7 @@ contract ExecutionLogic is IExecutionLogic {
     function executeDecreaseLimitOrders(
         address keeper,
         ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
             try
@@ -359,6 +356,12 @@ contract ExecutionLogic is IExecutionLogic {
                 )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
+                orderManager.cancelOrder(
+                    order.orderId,
+                    TradingTypes.TradeType.LIMIT,
+                    false,
+                    reason
+                );
             }
         }
     }
@@ -374,7 +377,7 @@ contract ExecutionLogic is IExecutionLogic {
         bool isSystem,
         uint256 executionSize,
         bool onlyOnce
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         _executeDecreaseOrder(
             keeper,
             _orderId,
@@ -442,9 +445,9 @@ contract ExecutionLogic is IExecutionLogic {
 
         if (executionSize == 0) {
             executionSize = order.sizeAmount - order.executedSize;
-            if (executionSize > tradingConfig.maxTradeAmount && !isSystem) {
-                executionSize = tradingConfig.maxTradeAmount;
-            }
+//            if (executionSize > tradingConfig.maxTradeAmount && !isSystem) {
+//                executionSize = tradingConfig.maxTradeAmount;
+//            }
         }
 
         // valid order size
@@ -622,7 +625,7 @@ contract ExecutionLogic is IExecutionLogic {
                     collateral: 0,
                     openPrice: orderTpSl.tpPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.tp),
+                    sizeAmount: -int128(orderTpSl.tp),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -637,7 +640,7 @@ contract ExecutionLogic is IExecutionLogic {
                     collateral: 0,
                     openPrice: orderTpSl.slPrice,
                     isLong: order.isLong,
-                    sizeAmount: -int256(orderTpSl.sl),
+                    sizeAmount: -int128(orderTpSl.sl),
                     maxSlippage: 0,
                     data: abi.encode(order.account)
                 })
@@ -666,7 +669,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _referralsRatio,
         uint256 _referralUserRatio,
         address _referralOwner
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
             _orderId,
             _tradeType
@@ -731,6 +734,9 @@ contract ExecutionLogic is IExecutionLogic {
         );
         uint256 executeTotalAmount;
         for (uint256 i = 0; i < adlPositions.length; i++) {
+            if (needADLAmount == executeTotalAmount) {
+                break;
+            }
             ExecutePosition memory executePosition = executePositions[i];
 
             uint256 adlExecutionSize;
@@ -773,7 +779,7 @@ contract ExecutionLogic is IExecutionLogic {
                         collateral: 0,
                         openPrice: price,
                         isLong: adlPosition.position.isLong,
-                        sizeAmount: -int256(adlPosition.executionSize),
+                        sizeAmount: -int128(uint128(adlPosition.executionSize)),
                         maxSlippage: 0,
                         data: abi.encode(adlPosition.position.account)
                     })
@@ -807,5 +813,16 @@ contract ExecutionLogic is IExecutionLogic {
         );
 
         emit ExecuteAdl(order.account, order.pairIndex, order.isLong, order.orderId, adlOrderIds);
+    }
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
+    ) external override onlyExecutorOrSelf {
+        for (uint256 i = 0; i < positionKeys.length; i++) {
+            Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
+            if (position.positionAmount == 0) {
+                orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+            }
+        }
     }
 }

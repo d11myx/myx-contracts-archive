@@ -17,14 +17,13 @@ export const btcPairInfo: PairInfoConfig = {
         unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 300000, //0.3%
-        lpFeeDistributeP: 0, //deprecated
     },
     tradingConfig: {
         minLeverage: 1,
         maxLeverage: 50,
         minTradeAmount: ethers.utils.parseUnits('0.03', 8), //0.03
         maxTradeAmount: ethers.utils.parseUnits('15', 8), //35
-        maxPositionAmount: ethers.utils.parseUnits('15', 8), //35
+        maxPositionAmount: ethers.utils.parseUnits('30', 8), //35
         maintainMarginRate: 1000000, //1%
         priceSlipP: 0, //0%
         maxPriceDeviationP: 200000, //0.2%
@@ -59,14 +58,13 @@ export const ethPairInfo: PairInfoConfig = {
         unbalancedDiscountRate: 100000, //0.1%
         addLpFeeP: 100000, //0.1%
         removeLpFeeP: 300000, //0.3%
-        lpFeeDistributeP: 0, //deprecated
     },
     tradingConfig: {
         minLeverage: 1,
         maxLeverage: 50,
         minTradeAmount: ethers.utils.parseUnits('0.5', 18), //0.5
-        maxTradeAmount: ethers.utils.parseUnits('300', 18), //625
-        maxPositionAmount: ethers.utils.parseUnits('300', 18), //625
+        maxTradeAmount: ethers.utils.parseUnits('30', 18), //625
+        maxPositionAmount: ethers.utils.parseUnits('30', 18), //625
         maintainMarginRate: 1000000, //1%
         priceSlipP: 0, //0%
         maxPriceDeviationP: 200000, //0.2%

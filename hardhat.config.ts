@@ -60,7 +60,7 @@ const config: HardhatUserConfig = {
             allowUnlimitedContractSize: true,
         },
         dev_local: {
-            url: 'https://pre-rpc.myx.cash',
+            url: 'https://dev-rpc.myx.cash',
             chainId: 131338,
             accounts: getEnvAccounts(process.env.ACCOUNTS_DEV as string),
             live: false,
@@ -76,7 +76,7 @@ const config: HardhatUserConfig = {
             live: false,
         },
         linea_goerli: {
-            url: 'https://rpc.goerli.linea.build',
+            url: 'https://linea-goerli.blockpi.network/v1/rpc/98e5ad6dd3e486eefc31f78ea66a29f849591c3a',
             chainId: 59140,
             accounts: {
                 mnemonic: process.env.MNEMONIC_LINEA_GOERLI || '',
@@ -109,7 +109,7 @@ const config: HardhatUserConfig = {
             live: false,
         },
         arbitrum_sepolia: {
-            url: 'https://sepolia-rollup.arbitrum.io/rpc',
+            url: 'https://arbitrum-sepolia.infura.io/v3/bdd125f24b8d49feb9f11dc94c2ab5ae',
             chainId: 421614,
             accounts: {
                 mnemonic: process.env.MNEMONIC_ARBITRUM_SEPOLIA || '',
@@ -127,6 +127,7 @@ const config: HardhatUserConfig = {
         apiKey: {
             linea_goerli: '6WZUFU45J91UMAHDV2C52TV8RAJAQASIZR',
             linea_mainnet: 'I7TMBCCPR75UPE2H14EIWDYS469TFAHHUW',
+            arbitrum_sepolia: 'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
         },
         customChains: [
             {
@@ -143,6 +144,14 @@ const config: HardhatUserConfig = {
                 urls: {
                     apiURL: 'https://api.lineascan.build/api',
                     browserURL: 'https://lineascan.build',
+                },
+            },
+            {
+                network: 'arbitrum_sepolia',
+                chainId: 421614,
+                urls: {
+                    apiURL: 'https://api-sepolia.arbiscan.io/api',
+                    browserURL: 'https://sepolia.arbiscan.io',
                 },
             },
         ],

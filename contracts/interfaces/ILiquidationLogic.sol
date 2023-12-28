@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./IExecutionEvent.sol";
+import "./IExecution.sol";
 
 interface ILiquidationLogic is IExecution {
 
@@ -15,6 +15,8 @@ interface ILiquidationLogic is IExecution {
         uint256 price,
         uint256 orderId
     );
+
+    event UpdateExecutorAddress(address sender, address oldAddress, address newAddress);
 
     function updateExecutor(address _executor) external;
 
