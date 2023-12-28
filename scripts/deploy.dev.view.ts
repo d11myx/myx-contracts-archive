@@ -86,7 +86,9 @@ async function main() {
     // console.log(
     //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
     // );
-    // console.log(await btc.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('1000000', 8)));
+    console.log(btc.address);
+    console.log(await btc.owner());
+    console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));
 
     // await deployments.deploy(`${EXECUTION_LOGIC_ID}-V2`, {
     //     from: deployer.address,
@@ -102,8 +104,8 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-    var executionLogic1 = await getExecutionLogic('0xc85D5e8Dfa43fC31Bf12bF517E02e0d2381C0058');
-    await executionLogic1.updateExecutor(executor.address);
+    // var executionLogic1 = await getExecutionLogic('0xc85D5e8Dfa43fC31Bf12bF517E02e0d2381C0058');
+    // await executionLogic1.updateExecutor(executor.address);
     //
     // await hre.run('time-execution', {
     //     target: addressesProvider.address,
