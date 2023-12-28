@@ -1039,6 +1039,7 @@ describe('Trade: adl', () => {
                 executionLogic,
                 usdt,
                 pool,
+                poolView,
                 oraclePriceFeed,
                 btc,
                 executor,
@@ -1130,7 +1131,7 @@ describe('Trade: adl', () => {
 
             // remove liquidity
             const lpAmount = ethers.utils.parseEther('40000000');
-            const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+            const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                 pairIndex,
                 lpAmount,
                 await oraclePriceFeed.getPrice(btc.address),
@@ -1310,6 +1311,7 @@ describe('Trade: adl', () => {
                 executionLogic,
                 usdt,
                 pool,
+                poolView,
                 oraclePriceFeed,
                 btc,
                 executor,
@@ -1402,7 +1404,7 @@ describe('Trade: adl', () => {
 
             // remove liquidity
             const lpAmount = ethers.utils.parseEther('40000000');
-            const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+            const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                 pairIndex,
                 lpAmount,
                 await oraclePriceFeed.getPrice(btc.address),
@@ -1580,6 +1582,7 @@ describe('Trade: adl', () => {
                 executionLogic,
                 usdt,
                 pool,
+                poolView,
                 executor,
                 btc,
                 indexPriceFeed,
@@ -1672,7 +1675,7 @@ describe('Trade: adl', () => {
 
             // remove liquidity
             const lpAmount = ethers.utils.parseEther('40000000');
-            const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+            const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                 pairIndex,
                 lpAmount,
                 await oraclePriceFeed.getPrice(btc.address),
@@ -1848,6 +1851,7 @@ describe('Trade: adl', () => {
                 executionLogic,
                 usdt,
                 pool,
+                poolView,
                 executor,
                 btc,
                 indexPriceFeed,
@@ -1940,7 +1944,7 @@ describe('Trade: adl', () => {
 
             // remove liquidity
             const lpAmount = ethers.utils.parseEther('40000000');
-            const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+            const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                 pairIndex,
                 lpAmount,
                 await oraclePriceFeed.getPrice(btc.address),
@@ -2116,6 +2120,7 @@ describe('Trade: adl', () => {
                 executionLogic,
                 usdt,
                 pool,
+                poolView,
                 executor,
                 btc,
                 oraclePriceFeed,
@@ -2208,7 +2213,7 @@ describe('Trade: adl', () => {
 
             // remove liquidity
             const lpAmount = ethers.utils.parseEther('40000000');
-            const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+            const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                 pairIndex,
                 lpAmount,
                 await oraclePriceFeed.getPrice(btc.address),
@@ -2394,6 +2399,7 @@ describe('Trade: adl', () => {
                 executionLogic,
                 usdt,
                 pool,
+                poolView,
                 executor,
                 btc,
                 oraclePriceFeed,
@@ -2486,7 +2492,7 @@ describe('Trade: adl', () => {
 
             // remove liquidity
             const lpAmount = ethers.utils.parseEther('40000000');
-            const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+            const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                 pairIndex,
                 lpAmount,
                 await oraclePriceFeed.getPrice(btc.address),

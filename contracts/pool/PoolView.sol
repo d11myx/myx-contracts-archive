@@ -31,6 +31,18 @@ contract PoolView is IPoolView, Upgradeable {
         ADDRESS_PROVIDER = addressProvider;
     }
 
+    function setPool(address _pool) external onlyPoolAdmin {
+        address oldAddress = address(pool);
+        pool = IPool(_pool);
+        emit UpdatePool(msg.sender, oldAddress, _pool);
+    }
+
+    function setPositionManager(address _positionManager) external onlyPoolAdmin {
+        address oldAddress = address(positionManager);
+        positionManager = IPositionManager(_positionManager);
+        emit UpdatePositionManager(msg.sender, oldAddress, _positionManager);
+    }
+
     function getMintLpAmount(
         uint256 _pairIndex,
         uint256 _indexAmount,
