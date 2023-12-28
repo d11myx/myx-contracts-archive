@@ -44,34 +44,35 @@ contract LiquidationLogic is ILiquidationLogic {
         _;
     }
 
-    modifier onlyExecutorOrKeeper() {
-        require(
-            msg.sender == executor ||
-                msg.sender == address(this) ||
-                IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender),
-            "oe"
-        );
+    modifier onlyExecutorOrSelf() {
+        require(msg.sender == executor || msg.sender == address(this), "oe");
         _;
     }
 
     function updateExecutor(address _executor) external override onlyPoolAdmin {
+        address oldAddress = executor;
         executor = _executor;
+        emit UpdateExecutorAddress(msg.sender, oldAddress, _executor);
     }
 
     function liquidatePositions(
         address keeper,
         ExecutePosition[] memory executePositions
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < executePositions.length; i++) {
             ExecutePosition memory execute = executePositions[i];
-            this.liquidationPosition(
-                keeper,
-                execute.positionKey,
-                execute.tier,
-                execute.referralsRatio,
-                execute.referralUserRatio,
-                execute.referralOwner
-            );
+            try
+                this.liquidationPosition(
+                    keeper,
+                    execute.positionKey,
+                    execute.tier,
+                    execute.referralsRatio,
+                    execute.referralUserRatio,
+                    execute.referralOwner
+                )
+            {} catch Error(string memory reason) {
+                emit ExecutePositionError(execute.positionKey, reason);
+            }
         }
     }
 
@@ -82,9 +83,10 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 referralsRatio,
         uint256 referralUserRatio,
         address referralOwner
-    ) external override onlyExecutorOrKeeper {
+    ) external override onlyExecutorOrSelf {
         Position.Info memory position = positionManager.getPositionByKey(positionKey);
         if (position.positionAmount == 0) {
+            emit ZeroPosition(keeper, position.account, position.pairIndex, position.isLong, 'liquidation');
             return;
         }
         IPool.Pair memory pair = pool.getPair(position.pairIndex);
@@ -101,9 +103,6 @@ contract LiquidationLogic is ILiquidationLogic {
             return;
         }
 
-        // cancel all positionOrders
-        orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
-
         uint256 orderId = orderManager.createOrder(
             TradingTypes.CreateOrderRequest({
                 account: position.account,
@@ -112,7 +111,7 @@ contract LiquidationLogic is ILiquidationLogic {
                 collateral: 0,
                 openPrice: price,
                 isLong: position.isLong,
-                sizeAmount: -int256(position.positionAmount),
+                sizeAmount: -int128(uint128(position.positionAmount)),
                 maxSlippage: 0,
                 data: abi.encode(position.account)
             })
@@ -145,6 +144,7 @@ contract LiquidationLogic is ILiquidationLogic {
             TradingTypes.TradeType.MARKET
         );
         if (order.account == address(0)) {
+            emit InvalidOrder(keeper, orderId, 'zero account');
             return;
         }
 
@@ -157,6 +157,7 @@ contract LiquidationLogic is ILiquidationLogic {
             order.isLong
         );
         if (position.positionAmount == 0) {
+            emit ZeroPosition(keeper, position.account, position.pairIndex, position.isLong, 'liquidation');
             return;
         }
 
@@ -220,7 +221,6 @@ contract LiquidationLogic is ILiquidationLogic {
         order.executedSize += executionSize;
 
         // remove order
-        orderManager.cancelAllPositionOrders(order.account, order.pairIndex, order.isLong);
         orderManager.removeDecreaseMarketOrders(orderId);
 
         emit ExecuteDecreaseOrder(

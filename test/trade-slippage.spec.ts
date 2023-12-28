@@ -82,28 +82,26 @@ describe('Trade: slippage', () => {
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             let position = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(position.positionAmount).to.be.eq(sizeAmount);
@@ -122,28 +120,26 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
-            const tx = await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
             expect(reason).to.be.eq('exceeds max slippage');
 
@@ -162,28 +158,26 @@ describe('Trade: slippage', () => {
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             position = await positionManager.getPosition(trader2.address, pairIndex, true);
 
             expect(position.positionAmount).to.be.eq(sizeAmount);
@@ -202,28 +196,26 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
-            const tx1 = await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            const tx1 = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');
             expect(reason).to.be.eq('exceeds max slippage');
         });
@@ -263,28 +255,26 @@ describe('Trade: slippage', () => {
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             const traderPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(traderPositionAfter.positionAmount).to.be.eq(traderPositionBefore.positionAmount.add(sizeAmount));
@@ -303,28 +293,26 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
 
-            const tx = await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             let reason = await extraHash(tx.hash, 'CancelOrder', 'reason');
             expect(reason).to.be.eq('exceeds max slippage');
 
@@ -344,28 +332,26 @@ describe('Trade: slippage', () => {
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             const trader2PositionAfter = await positionManager.getPosition(trader2.address, pairIndex, true);
 
             expect(trader2PositionAfter.positionAmount).to.be.eq(trader2PositionBefore.positionAmount.add(sizeAmount));
@@ -384,28 +370,26 @@ describe('Trade: slippage', () => {
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
 
-            const tx1 = await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            const tx1 = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             reason = await extraHash(tx1.hash, 'CancelOrder', 'reason');
             expect(reason).to.be.eq('exceeds max slippage');
         });
@@ -458,6 +442,7 @@ describe('Trade: slippage', () => {
                 router,
                 oraclePriceFeed,
                 pool,
+                poolView,
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
@@ -470,7 +455,7 @@ describe('Trade: slippage', () => {
 
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 stableAmount,
@@ -545,6 +530,7 @@ describe('Trade: slippage', () => {
                 router,
                 oraclePriceFeed,
                 pool,
+                poolView,
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('20000', await btc.decimals());
@@ -556,7 +542,7 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 stableAmount,
@@ -628,6 +614,7 @@ describe('Trade: slippage', () => {
                 router,
                 oraclePriceFeed,
                 pool,
+                poolView,
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
@@ -638,7 +625,7 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 0,
@@ -704,6 +691,7 @@ describe('Trade: slippage', () => {
                 router,
                 oraclePriceFeed,
                 pool,
+                poolView,
             } = testEnv;
 
             const indexAmount = ethers.utils.parseUnits('10000', await btc.decimals());
@@ -716,7 +704,7 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 stableAmount,
@@ -790,6 +778,7 @@ describe('Trade: slippage', () => {
                 router,
                 oraclePriceFeed,
                 pool,
+                poolView,
             } = testEnv;
 
             const stableAmount = ethers.utils.parseUnits('30000000000', await usdt.decimals());
@@ -800,7 +789,7 @@ describe('Trade: slippage', () => {
             const vaultBefore = await pool.getVault(pairIndex);
             const pair = await pool.getPair(pairIndex);
             const lpToken = await getMockToken('', pair.pairToken);
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 0,
                 stableAmount,

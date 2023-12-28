@@ -30,6 +30,8 @@ interface IOrderManager {
         bool abovePrice
     );
 
+    event UpdateRouterAddress(address sender, address oldAddress, address newAddress);
+
     event CancelIncreaseOrder(address account, uint256 orderId, TradingTypes.TradeType tradeType);
     event CancelDecreaseOrder(address account, uint256 orderId, TradingTypes.TradeType tradeType);
 

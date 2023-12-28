@@ -57,7 +57,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await deploy(`${INDEX_PRICE_FEED_ID}`, {
         from: deployer,
         contract: 'IndexPriceFeed',
-        args: [addressesProvider.address, [], []],
+        args: [addressesProvider.address, [], [], ZERO_ADDRESS],
         ...COMMON_DEPLOY_PARAMS,
     });
 

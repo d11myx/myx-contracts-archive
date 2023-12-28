@@ -28,10 +28,10 @@ async function main() {
 
     // console.log(ethers.Wallet.createRandom().mnemonic);
 
-    // for (let i = 0; i < 5; i++) {
-    //     const wallet = ethers.Wallet.createRandom();
-    //     console.log(wallet.privateKey + '----' + wallet.address);
-    // }
+    for (let i = 0; i < 40; i++) {
+        const wallet = ethers.Wallet.createRandom();
+        console.log(wallet.privateKey + '----' + wallet.address);
+    }
 
     // let mnemonic: string = process.env.MNEMONIC_SCROLL_SEPOLIA as string;
     // let hdpath: string = "m/44'/60'/0'/0";

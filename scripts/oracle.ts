@@ -29,7 +29,7 @@ async function main() {
     // const indexPriceFeed = await getIndexPriceFeed();
     // const pool = await getPool();
     //
-    // const { btc, eth, usdt } = await getTokens();
+    const { btc, eth, usdt } = await getTokens();
     //
     // const btcOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30);
     // const ethOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30);
@@ -39,20 +39,29 @@ async function main() {
     // console.log(`eth price:`, ethOraclePrice);
     // console.log(`btc price:`, btcIndexPrice);
     // console.log(`eth price:`, ethIndexPrice);
+
     //
     const priceId = '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43';
-    const conn = new EvmPriceServiceConnection('https://hermes.pyth.network');
-    const vaas = await conn.getLatestVaas([priceId]);
-    const priceFeedUpdate = '0x' + Buffer.from(vaas[0], 'base64').toString('hex');
+    const conn = new EvmPriceServiceConnection('https://hermes.pyth.network', {
+        priceFeedRequestConfig: { binary: true },
+    });
+    const vaas = await conn.getLatestPriceFeeds([priceId]);
+    // console.log(vaas[0].getVAA());
+    // @ts-ignore
+    const priceFeedUpdate = '0x' + Buffer.from(vaas[0].getVAA() as string, 'base64').toString('hex');
+    // console.log(priceFeedUpdate);
+    const pythContract = await ethers.getContractAt('IPyth', '0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF');
 
-    const pythContract = await ethers.getContractAt('IPyth', '0xdF21D137Aadc95588205586636710ca2890538d5');
-
-    const updateFee = pythContract.getUpdateFee(priceFeedUpdate);
+    // const updateFee = pythContract.getUpdateFee(priceFeedUpdate);
     const tx = await pythContract.updatePriceFeeds([priceFeedUpdate], {
         value: 1,
     });
     await waitForTx(tx);
-    console.log(await pythContract.getPriceNoOlderThan(priceId, 20));
+
+    const oraclePriceFeed = await getOraclePriceFeed();
+    await oraclePriceFeed.updatePrice([btc.address], [priceFeedUpdate], { value: 2 });
+    console.log(await oraclePriceFeed.getPrice(btc.address));
+    // console.log(await pythContract.getPriceNoOlderThan(priceId, 60));
 
     //
     // try {

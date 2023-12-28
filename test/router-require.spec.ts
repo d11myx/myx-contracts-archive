@@ -172,7 +172,6 @@ describe('Router: check require condition, trigger errors', async () => {
                     unbalancedDiscountRate: pair.unbalancedDiscountRate,
                     addLpFeeP: pair.addLpFeeP,
                     removeLpFeeP: pair.addLpFeeP,
-                    lpFeeDistributeP: pair.lpFeeDistributeP,
                 };
                 await pool.updatePair(pairIndex, newPair);
             });
@@ -204,7 +203,6 @@ describe('Router: check require condition, trigger errors', async () => {
                     unbalancedDiscountRate: pairBef.unbalancedDiscountRate,
                     addLpFeeP: pairBef.addLpFeeP,
                     removeLpFeeP: pairBef.addLpFeeP,
-                    lpFeeDistributeP: pairBef.lpFeeDistributeP,
                 };
                 await pool.updatePair(pairIndex, newPair);
 

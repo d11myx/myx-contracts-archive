@@ -1272,7 +1272,7 @@ describe('Trade: trading fee', () => {
             expect(trader6BalanceBefore.add(tier5Fee)).to.be.eq(trader6BalanceAfter);
 
             // keeper claim trading fee
-            await feeCollector.connect(keeper.signer).claimKeeperTradingFee();
+            await feeCollector.connect(keeper.signer).claimUserTradingFee();
             const keeperBalanceAfter = await usdt.balanceOf(keeper.address);
 
             expect(

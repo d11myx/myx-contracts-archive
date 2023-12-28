@@ -5,9 +5,9 @@ import "./IPool.sol";
 
 interface IFundingRate {
     struct FundingFeeConfig {
-        uint256 growthRate; // Growth rate base
-        uint256 baseRate; // Base interest rate
-        uint256 maxRate; // Maximum interest rate
+        int256 growthRate; // Growth rate base
+        int256 baseRate; // Base interest rate
+        int256 maxRate; // Maximum interest rate
         uint256 fundingInterval;
     }
 
@@ -15,8 +15,6 @@ interface IFundingRate {
 
     function getFundingRate(
         IPool.Pair memory pair,
-        uint256 longTracker,
-        uint256 shortTracker,
         IPool.Vault memory vault,
         uint256 price
     ) external view returns (int256 fundingRate);

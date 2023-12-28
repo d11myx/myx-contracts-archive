@@ -27,6 +27,7 @@ describe('LP: Pool cases', () => {
                 usdt,
                 btc,
                 pool,
+                poolView,
                 oraclePriceFeed,
                 positionManager,
             } = testEnv;
@@ -42,7 +43,7 @@ describe('LP: Pool cases', () => {
             await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
             await mintAndApprove(testEnv, usdt, stableAmount, depositor, router.address);
 
-            expect(await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address))).to.be.eq(
+            expect(await poolView.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address))).to.be.eq(
                 ethers.utils.parseUnits('1000000000000'),
             );
             const vaultBefore = await pool.getVault(pairIndex);
@@ -51,7 +52,7 @@ describe('LP: Pool cases', () => {
             expect(vaultBefore.indexTotalAmount).to.be.eq(0);
             expect(vaultBefore.stableTotalAmount).to.be.eq(0);
 
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 stableAmount,
@@ -109,6 +110,7 @@ describe('LP: Pool cases', () => {
                 usdt,
                 btc,
                 pool,
+                poolView,
                 oraclePriceFeed,
             } = testEnv;
             const pair = await pool.getPair(pairIndex);
@@ -122,7 +124,7 @@ describe('LP: Pool cases', () => {
             // );
             const lpPrice = BigNumber.from(
                 ethers.utils
-                    .formatUnits(await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address)), 30)
+                    .formatUnits(await poolView.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address)), 30)
                     .replace('.0', ''),
             );
 
@@ -136,7 +138,7 @@ describe('LP: Pool cases', () => {
             // console.log('lp:' + userLpBalanceBefore);
 
             const lpAmount = ethers.utils.parseEther('30000');
-            const expectRemoveLiquidity = await pool.getReceivedAmount(
+            const expectRemoveLiquidity = await poolView.getReceivedAmount(
                 pairIndex,
                 lpAmount,
                 await oraclePriceFeed.getPrice(btc.address),
