@@ -176,11 +176,11 @@ describe('LP: Price cases', () => {
     }
 
     async function _addLiquidity(expectLPAmount: BigNumberish, user: SignerWithAddress) {
-        const { pool, oraclePriceFeed, btc, usdt, router } = testEnv;
+        const { pool, poolView, oraclePriceFeed, btc, usdt, router } = testEnv;
 
         const oraclePrice = await oraclePriceFeed.getPrice(pair.indexToken);
 
-        const { depositIndexAmount, depositStableAmount } = await pool.getDepositAmount(
+        const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
             pairIndex,
             expectLPAmount,
             oraclePrice,
@@ -204,7 +204,7 @@ describe('LP: Price cases', () => {
     }
 
     async function _lpPrice() {
-        const { pool, oraclePriceFeed, btc } = testEnv;
-        return await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
+        const { pool, poolView, oraclePriceFeed, btc } = testEnv;
+        return await poolView.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
     }
 });

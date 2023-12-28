@@ -19,6 +19,7 @@ describe('Replay: ADL', () => {
                 btc,
                 usdt,
                 pool,
+                poolView,
                 router,
                 users: [depositor],
                 oraclePriceFeed,
@@ -27,7 +28,7 @@ describe('Replay: ADL', () => {
             await updateBTCPrice(testEnv, '27000');
 
             // add liquidity
-            const depositAmount = await pool.getDepositAmount(
+            const depositAmount = await poolView.getDepositAmount(
                 pairIndex,
                 ethers.utils.parseEther('500000'),
                 await oraclePriceFeed.getPrice(btc.address),
@@ -170,6 +171,7 @@ describe('Replay: ADL', () => {
                 btc,
                 usdt,
                 pool,
+                poolView,
                 router,
                 users: [depositor],
                 oraclePriceFeed,
@@ -178,7 +180,7 @@ describe('Replay: ADL', () => {
             await updateBTCPrice(testEnv, '27000');
 
             // add liquidity
-            const depositAmount = await pool.getDepositAmount(
+            const depositAmount = await poolView.getDepositAmount(
                 pairIndex,
                 ethers.utils.parseEther('500000'),
                 await oraclePriceFeed.getPrice(btc.address),

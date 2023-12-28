@@ -19,6 +19,7 @@ import {
     latest,
     toFullBNStr,
     waitForTx,
+    ZERO_ADDRESS,
 } from '../helpers';
 import { expect } from './shared/expect';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -70,7 +71,12 @@ describe('Oracle: oracle cases', () => {
             [],
         )) as MockPythOraclePriceFeed;
         const indexPriceFeedFactory = await ethers.getContractFactory('IndexPriceFeed');
-        indexPriceFeed = (await indexPriceFeedFactory.deploy(addressProvider.address, [], [])) as IndexPriceFeed;
+        indexPriceFeed = (await indexPriceFeedFactory.deploy(
+            addressProvider.address,
+            [],
+            [],
+            ZERO_ADDRESS,
+        )) as IndexPriceFeed;
         await roleManager.addKeeper(user1.address);
         await roleManager.addPoolAdmin(owner.address);
     });

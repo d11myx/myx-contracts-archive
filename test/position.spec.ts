@@ -1972,6 +1972,7 @@ describe('Position', () => {
                     executionLogic,
                     keeper,
                     pool,
+                    poolView,
                     executor,
                     riskReserve,
                     indexPriceFeed,
@@ -2104,7 +2105,7 @@ describe('Position', () => {
 
                 // remove liquidity
                 const lpAmount = ethers.utils.parseEther('300000');
-                const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+                const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                     pairIndex,
                     lpAmount,
                     await oraclePriceFeed.getPrice(btc.address),
