@@ -635,6 +635,11 @@ contract Pool is IPool, Upgradeable {
 
         IBaseToken(pair.pairToken).mint(recipient, mintAmount);
 
+        if (slipToken == pair.indexToken) {
+            afterFeeIndexAmount += slipAmount;
+        } else if (slipToken == pair.stableToken) {
+            afterFeeStableAmount += slipAmount;
+        }
         _increaseTotalAmount(_pairIndex, afterFeeIndexAmount, afterFeeStableAmount);
 
         emit AddLiquidity(

@@ -40,8 +40,8 @@ async function main() {
         target: pool.address,
         value: '0',
         signature: 'upgradeTo(address)',
-        data: encodeParameters(['address'], ['0x94365Aa441310624577616E423db7dF3246EfE62']),
-        eta: Duration.hours(13)
+        data: encodeParameters(['address'], ['0x3d16e9bC8ba264af3CE902a2C3d3AD297ec3D594']),
+        eta: Duration.seconds(13)
             .add(await latest())
             .toString(),
     });
