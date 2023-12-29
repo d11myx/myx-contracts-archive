@@ -84,11 +84,11 @@ async function main() {
     //     value: ethers.utils.parseEther('100000'),
     // });
     // console.log(
-    //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
+    //     await usdt.mint('0xEabAd20E98DAFf36c2D38b49fb76242F5da4F69b', ethers.utils.parseUnits('100000000000000', 6)),
     // );
     // console.log(btc.address);
     // console.log(await btc.owner());
-    // console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));
+    // console.log(await btc.mint('0xEabAd20E98DAFf36c2D38b49fb76242F5da4F69b', ethers.utils.parseUnits('1000000', 8)));
 
     // console.log(ethers.utils.formatUnits(await pool.lpFairPrice(1, oraclePriceFeed.getPrice(btc.address))));
 
@@ -96,7 +96,12 @@ async function main() {
     console.log((await positionManager.getExposedPositions(1)) < 0);
     console.log(await positionManager.lpProfit(1, btc.address, await oraclePriceFeed.getPrice(btc.address)));
     console.log(await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)));
-    42420.338399385624417202303419827879;
+    console.log(ethers.utils.formatUnits(await pool.lpFairPrice(1, await oraclePriceFeed.getPrice(btc.address)), 30));
+
+    // 0.950340300052867833764139489257
+    // 0.950342222471369150261666654195
+    // 0.950347120862636119096269661053
+    // 0.95035223275774473711016448152
     // await deployments.deploy(`${EXECUTION_LOGIC_ID}-V2`, {
     //     from: deployer.address,
     //     contract: 'ExecutionLogic',
