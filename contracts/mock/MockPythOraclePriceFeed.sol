@@ -13,12 +13,15 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
     IPyth public pyth;
     mapping(address => bytes32) public tokenPriceIds;
 
+    uint256 public priceAge;
+
     constructor(
         IAddressesProvider addressProvider,
         address _pyth,
         address[] memory assets,
         bytes32[] memory priceIds
     ) {
+        priceAge = 10;
         ADDRESS_PROVIDER = addressProvider;
         pyth = IPyth(_pyth);
         _setAssetPriceIds(assets, priceIds);
@@ -27,6 +30,12 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
     modifier onlyPoolAdmin() {
         require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "opa");
         _;
+    }
+
+    function updatePriceAge(uint256 age) external onlyPoolAdmin {
+        uint256 oldAge = priceAge;
+        priceAge = age;
+        emit PriceAgeUpdated(oldAge, priceAge);
     }
 
     function updatePythAddress(IPyth _pyth) external onlyPoolAdmin {
@@ -67,6 +76,21 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
         }
     }
 
+    function getPythPriceUnsafe(address token) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPriceUnsafe(priceId);
+    }
+
+    function getPythPriceNoOlderThan(address token, uint256 _priceAge) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPriceNoOlderThan(priceId, _priceAge);
+    }
+
+    function getPythPrice(address token) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPrice(priceId);
+    }
+
     function getPrice(address token) external view override returns (uint256) {
         bytes32 priceId = _getPriceId(token);
         PythStructs.Price memory pythPrice = pyth.getPriceUnsafe(priceId);
@@ -76,7 +100,7 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
     function getPriceSafely(address token) external view override returns (uint256) {
         bytes32 priceId = _getPriceId(token);
         PythStructs.Price memory pythPrice;
-        try pyth.getPriceNoOlderThan(priceId, 0) returns (PythStructs.Price memory _pythPrice) {
+        try pyth.getPriceNoOlderThan(priceId, priceAge) returns (PythStructs.Price memory _pythPrice) {
             pythPrice = _pythPrice;
         } catch {
             revert("get price failed");
@@ -85,10 +109,9 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
     }
 
     function _getPriceId(address token) internal view returns (bytes32) {
+        require(token != address(0), "zero token address");
         bytes32 priceId = tokenPriceIds[token];
-        if (priceId == 0) {
-            revert("price feed not found");
-        }
+        require(priceId != 0, "unknown price id");
         return priceId;
     }
 

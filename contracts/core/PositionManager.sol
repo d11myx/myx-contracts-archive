@@ -674,12 +674,15 @@ contract PositionManager is IPositionManager, Upgradeable {
             return 0;
         }
         int256 currentExposureAmountChecker = getExposedPositions(pairIndex);
-        int256 profit = _currentLpProfit(
-            pairIndex,
-            currentExposureAmountChecker > 0,
-            currentExposureAmountChecker.abs(),
-            price
-        );
+        int256 profit;
+        if (currentExposureAmountChecker != 0) {
+            profit = _currentLpProfit(
+                pairIndex,
+                currentExposureAmountChecker < 0,
+                currentExposureAmountChecker.abs(),
+                price
+            );
+        }
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
         return
