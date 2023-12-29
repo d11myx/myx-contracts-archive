@@ -4,6 +4,7 @@ import {
     COMMON_DEPLOY_PARAMS,
     Duration,
     encodeParameters,
+    EXECUTION_LOGIC_ID,
     getAddressesProvider,
     getExecutionLogic,
     getExecutor,
@@ -17,9 +18,12 @@ import {
     getTokens,
     latest,
     POSITION_CALLER,
+    POSITION_MANAGER_ID,
     ZERO_ADDRESS,
     ZERO_HASH,
 } from '../helpers';
+import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
+import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -79,10 +83,46 @@ async function main() {
     //     to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
     //     value: ethers.utils.parseEther('100000'),
     // });
-    console.log(
-        await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
-    );
-    console.log(await btc.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('1000000', 8)));
+    // console.log(
+    //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
+    // );
+    // console.log(btc.address);
+    // console.log(await btc.owner());
+    // console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));
+
+    // console.log(ethers.utils.formatUnits(await pool.lpFairPrice(1, oraclePriceFeed.getPrice(btc.address))));
+
+    console.log(await pool.getVault(1));
+    console.log((await positionManager.getExposedPositions(1)) < 0);
+    console.log(await positionManager.lpProfit(1, btc.address, await oraclePriceFeed.getPrice(btc.address)));
+    console.log(await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)));
+    42420.338399385624417202303419827879;
+    // await deployments.deploy(`${EXECUTION_LOGIC_ID}-V2`, {
+    //     from: deployer.address,
+    //     contract: 'ExecutionLogic',
+    //     args: [
+    //         addressesProvider.address,
+    //         pool.address,
+    //         orderManager.address,
+    //         positionManager.address,
+    //         feeCollector.address,
+    //         60 * 5,
+    //     ],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
+    // var executionLogic1 = await getExecutionLogic('0xc85D5e8Dfa43fC31Bf12bF517E02e0d2381C0058');
+    // await executionLogic1.updateExecutor(executor.address);
+    //
+    // await hre.run('time-execution', {
+    //     target: addressesProvider.address,
+    //     value: '0',
+    //     signature: 'setExecutionLogic(address)',
+    //     data: encodeParameters(['address'], ['0xc85D5e8Dfa43fC31Bf12bF517E02e0d2381C0058']),
+    //     eta: Duration.seconds(10)
+    //         .add(await latest())
+    //         .toString(),
+    // });
 
     // console.log(await executionLogic.maxTimeDelay());
     // console.log(await executionLogic.updateMaxTimeDelay(20 * 60));
