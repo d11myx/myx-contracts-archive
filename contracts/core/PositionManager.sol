@@ -246,7 +246,7 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         if (position.positionAmount == 0 && position.collateral > 0) {
             if (useRiskReserve) {
-                pool.setLPStableProfit(pairIndex, -int256(position.collateral));
+//                pool.setLPStableProfit(pairIndex, -int256(position.collateral));
                 riskReserve.increase(pair.stableToken, position.collateral);
             } else {
                 pool.transferTokenOrSwap(
