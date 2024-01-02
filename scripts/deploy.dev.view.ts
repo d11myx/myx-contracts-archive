@@ -14,6 +14,7 @@ import {
     getOrderManager,
     getPool,
     getPositionManager,
+    getRiskReserve,
     getRouter,
     getTokens,
     latest,
@@ -24,6 +25,8 @@ import {
 } from '../helpers';
 import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
+import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
+import Decimal from 'decimal.js';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -39,6 +42,7 @@ async function main() {
     const indexPriceFeed = await getIndexPriceFeed();
     const feeCollector = await getFeeCollector();
     const pool = await getPool();
+    const riskReserve = await getRiskReserve();
     const addressesProvider = await getAddressesProvider();
 
     const { btc, eth, usdt } = await getTokens();
@@ -86,9 +90,47 @@ async function main() {
     // console.log(
     //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
     // );
-    console.log(btc.address);
-    console.log(await btc.owner());
-    console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));
+    // console.log(btc.address);
+    // console.log(await btc.owner());
+    // console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));
+
+    // console.log(await pool.getVault(1));
+    // console.log(await pool.getVault(2));
+    // console.log(await riskReserve.getReservedAmount(usdt.address));
+    //
+    // console.log(await pool.feeTokenAmounts(usdt.address));
+
+    // 用户保证金：153343994
+    // btc交易对U：39375073
+    // eth交易对U：10704332
+    // 风险准备金：10704332
+
+    for (let i = 0; i < 10000; i++) {
+        console.log(
+            `当前价格: `,
+            new Decimal(ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30)).toFixed(5),
+        );
+        // @ts-ignore
+        console.log(`LP持仓方向: `, (await positionManager.getExposedPositions(1)) < 0 ? '多' : '空');
+        console.log(
+            `LP持仓价格: `,
+            new Decimal(ethers.utils.formatUnits((await pool.getVault(1)).averagePrice, 30)).toFixed(5),
+        );
+        console.log(
+            `LP盈亏: `,
+            new Decimal(
+                ethers.utils.formatUnits(
+                    await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)),
+                    6,
+                ),
+            ).toFixed(5),
+        );
+        console.log('------------------------------------------');
+        await sleep(1000);
+    }
+
+    // console.log(await oraclePriceFeed.getPrice(btc.address));
+    // console.log(await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)));
 
     // await deployments.deploy(`${EXECUTION_LOGIC_ID}-V2`, {
     //     from: deployer.address,
