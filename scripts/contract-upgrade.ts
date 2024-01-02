@@ -72,7 +72,7 @@ async function main() {
         target: positionManager.address,
         value: '0',
         signature: 'upgradeTo(address)',
-        data: encodeParameters(['address'], ['0x1Ba8aeBe9cda1bF501F82E55dE2474e08854E270']),
+        data: encodeParameters(['address'], ['0xF26F796D855c2AE7395C04226B0fB12251694309']),
         eta: Duration.seconds(13)
             .add(await latest())
             .toString(),
