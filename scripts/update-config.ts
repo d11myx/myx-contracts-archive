@@ -1,6 +1,6 @@
 // @ts-ignore
 import { ethers } from 'hardhat';
-import { getPool, loadReserveConfig, MARKET_NAME } from '../helpers';
+import { getPool, loadReserveConfig, MARKET_NAME, ZERO_ADDRESS } from '../helpers';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -15,8 +15,8 @@ async function main() {
     const tradingConfig = pairConfigs['WETH'].tradingConfig;
     // console.log(tradingConfig);
 
-    console.log(await pool.getTradingConfig(2));
-    // await pool.updateTradingConfig(2, tradingConfig);
+    console.log(await pool.getPair(2));
+    await pool.updateTradingConfig(2, tradingConfig);
 }
 
 main().catch((error) => {
