@@ -6,10 +6,15 @@ import {
     encodeParameterArray,
     encodeParameters,
     getAddressesProvider,
+    getFeeCollector,
     getPool,
     getPoolTokenFactory,
+    getPositionManager,
+    getRiskReserve,
+    getTokens,
     latest,
     PAIR_INFO_ID,
+    POSITION_MANAGER_ID,
 } from '../helpers';
 
 async function main() {
@@ -19,6 +24,11 @@ async function main() {
     const addressesProvider = await getAddressesProvider();
     const poolTokenFactory = await getPoolTokenFactory();
     const pool = await getPool();
+    const positionManager = await getPositionManager();
+    const feeCollector = await getFeeCollector();
+    const riskReserve = await getRiskReserve();
+
+    const { usdt } = await getTokens();
 
     // await deployments.deploy(`${PAIR_INFO_ID}`, {
     //     from: deployer,
@@ -36,11 +46,33 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
+    // await deployments.deploy(`${POSITION_MANAGER_ID}`, {
+    //     from: deployer,
+    //     contract: 'PositionManager',
+    //     args: [],
+    //     proxy: {
+    //         owner: deployer,
+    //         proxyContract: 'UUPS',
+    //         proxyArgs: [],
+    //         execute: {
+    //             methodName: 'initialize',
+    //             args: [
+    //                 addressesProvider.address,
+    //                 pool.address,
+    //                 usdt.address,
+    //                 feeCollector.address,
+    //                 riskReserve.address,
+    //             ],
+    //         },
+    //     },
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
     await hre.run('time-execution', {
-        target: pool.address,
+        target: positionManager.address,
         value: '0',
         signature: 'upgradeTo(address)',
-        data: encodeParameters(['address'], ['0x3d16e9bC8ba264af3CE902a2C3d3AD297ec3D594']),
+        data: encodeParameters(['address'], ['0x1Ba8aeBe9cda1bF501F82E55dE2474e08854E270']),
         eta: Duration.seconds(13)
             .add(await latest())
             .toString(),
