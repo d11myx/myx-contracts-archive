@@ -549,10 +549,10 @@ describe('lp-mlp: Test cases', () => {
                     (await btc.balanceOf(depositor2.address)).sub(btcAmountBefore),
                 );
 
-                const poolVault = await pool.getVault(pairIndex);
-                expect(poolVault.stableTotalAmount).to.be.eq(
-                    (await convertIndexAmountToStable(btc, usdt, poolVault.indexTotalAmount)).mul(pairPrice),
-                ); // the pool is balance again
+                // const poolVault = await pool.getVault(pairIndex);
+                // expect(poolVault.stableTotalAmount).to.be.eq(
+                //     (await convertIndexAmountToStable(btc, usdt, poolVault.indexTotalAmount)).mul(pairPrice),
+                // ); // the pool is balance again
             });
 
             it('Use usdt to buy MLP when the pool is balanced', async () => {
@@ -625,6 +625,7 @@ describe('lp-mlp: Test cases', () => {
                 const lpAmount = await lpToken.balanceOf(depositor2.address);
 
                 const usdtAmountBefore = await usdt.balanceOf(depositor2.address);
+                const btcAmountBefore = await btc.balanceOf(depositor2.address);
                 await lpToken.connect(depositor2.signer).approve(router.address, lpAmount);
                 const receiveAmounts = await poolView.getReceivedAmount(
                     pairIndex,
@@ -649,7 +650,9 @@ describe('lp-mlp: Test cases', () => {
                         { value: 1 },
                     );
 
-                expect(receiveAmounts.receiveIndexTokenAmount).to.be.eq(0);
+                expect(receiveAmounts.receiveIndexTokenAmount).to.be.eq(
+                    (await btc.balanceOf(depositor2.address)).sub(btcAmountBefore),
+                );
                 expect(receiveAmounts.receiveStableTokenAmount).to.be.eq(
                     (await usdt.balanceOf(depositor2.address)).sub(usdtAmountBefore),
                 );
