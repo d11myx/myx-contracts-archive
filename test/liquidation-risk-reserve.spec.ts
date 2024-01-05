@@ -134,7 +134,7 @@ describe('Liquidation: Risk Reserve', () => {
 
         const riskReserveAmountBefore = await riskReserve.getReservedAmount(usdt.address);
 
-        const collateral = await ethers.utils.parseUnits('1000', await usdt.decimals());
+        const collateral = ethers.utils.parseUnits('1000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
         const sizeAmount = ethers.utils.parseUnits('1', await btc.decimals());
 

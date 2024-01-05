@@ -603,7 +603,9 @@ describe('Trade: slippage', () => {
             expect(expectAddLiquidity.afterFeeIndexAmount.add(indexFeeAmount)).to.be.eq(
                 indexAmount.sub(expectAddLiquidity.slipAmount),
             );
-            expect(userPaid.add(vaultTotalBefore)).to.be.eq(vaultTotalAfter.add(totalFee));
+            expect(userPaid.add(vaultTotalBefore)).to.be.eq(
+                vaultTotalAfter.add(totalFee).sub(expectAddLiquidity.slipAmount.mul(pairPrice)),
+            );
         });
 
         it('btc > usdt and usdt == 0, there are slippage fees and handling fees', async () => {
@@ -680,7 +682,9 @@ describe('Trade: slippage', () => {
             expect(expectAddLiquidity.afterFeeIndexAmount.add(indexFeeAmount)).to.be.eq(
                 indexAmount.sub(expectAddLiquidity.slipAmount),
             );
-            expect(userPaid.add(vaultTotalBefore)).to.be.eq(vaultTotalAfter.add(totalFee));
+            expect(userPaid.add(vaultTotalBefore)).to.be.eq(
+                vaultTotalAfter.add(totalFee).sub(expectAddLiquidity.slipAmount.mul(pairPrice)),
+            );
         });
 
         it('usdt > btc and btc != 0, there are slippage fees and handling fees', async () => {
@@ -767,7 +771,9 @@ describe('Trade: slippage', () => {
             expect(
                 expectAddLiquidity.afterFeeIndexAmount.add(expectAddLiquidity.afterFeeStableAmount).add(totalFeeAmount),
             ).to.be.eq(indexAmount.add(stableAmount).sub(expectAddLiquidity.slipAmount));
-            expect(userPaid.add(vaultTotalBefore)).to.be.eq(vaultTotalAfter.add(totalFee));
+            expect(userPaid.add(vaultTotalBefore)).to.be.eq(
+                vaultTotalAfter.add(totalFee).sub(expectAddLiquidity.slipAmount),
+            );
         });
 
         it('usdt > btc and btc == 0, there are slippage fees and handling fees', async () => {
@@ -838,7 +844,7 @@ describe('Trade: slippage', () => {
                 stableAmount.sub(expectAddLiquidity.slipAmount),
             );
             expect(stableAmount.add(vaultBefore.stableTotalAmount)).to.be.eq(
-                vaultAfter.stableTotalAmount.add(totalFee),
+                vaultAfter.stableTotalAmount.add(totalFee).sub(expectAddLiquidity.slipAmount),
             );
         });
     });

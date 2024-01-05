@@ -233,7 +233,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const orderId = await orderManager.ordersIndex();
                 await expect(
                     router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
-                ).to.be.revertedWith('trade pair not supported');
+                ).to.be.revertedWith('disabled');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
         });
