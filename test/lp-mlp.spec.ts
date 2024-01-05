@@ -49,21 +49,22 @@ describe('LP: fair price', () => {
             btc,
             router,
             pool,
+            poolView,
         } = testEnv;
 
         const pair = await pool.getPair(pairIndex);
-        const pairPrice = await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
+        const pairPrice = await poolView.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
 
         expect(pairPrice).to.be.eq(ethers.utils.parseUnits('1', 30));
 
         const buyLpAmount = ethers.utils.parseUnits('1000000', 18);
-        const { depositIndexAmount, depositStableAmount } = await pool.getDepositAmount(
+        const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
             pairIndex,
             buyLpAmount,
             await oraclePriceFeed.getPrice(btc.address),
         );
 
-        const expectAddLiquidity = await pool.getMintLpAmount(
+        const expectAddLiquidity = await poolView.getMintLpAmount(
             pairIndex,
             depositIndexAmount,
             depositStableAmount,
@@ -146,10 +147,11 @@ describe('LP: fair price', () => {
             btc,
             router,
             pool,
+            poolView,
             oraclePriceFeed,
         } = testEnv;
 
-        const lpPrice = await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
+        const lpPrice = await poolView.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
         const pairPrice = BigNumber.from(
             ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
         );
@@ -167,7 +169,7 @@ describe('LP: fair price', () => {
             feeAmount,
             feeIndexTokenAmount,
             feeStableTokenAmount,
-        } = await pool.getReceivedAmount(pairIndex, sellLpAmount, await oraclePriceFeed.getPrice(btc.address));
+        } = await poolView.getReceivedAmount(pairIndex, sellLpAmount, await oraclePriceFeed.getPrice(btc.address));
 
         await lpToken.connect(trader.signer).approve(router.address, constants.MaxUint256);
         await router

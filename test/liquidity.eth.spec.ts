@@ -17,6 +17,7 @@ describe('liquidity: ETH', () => {
     it('addLiquidityETH、removeLiquidityETH', async () => {
         const {
             pool,
+            poolView,
             router,
             weth,
             usdt,
@@ -26,13 +27,13 @@ describe('liquidity: ETH', () => {
 
         pair = await pool.getPair(pairIndex);
 
-        const { depositIndexAmount, depositStableAmount } = await pool.getDepositAmount(
+        const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
             pairIndex,
             ethers.utils.parseUnits('10000', 18),
             oraclePriceFeed.getPrice(weth.address),
         );
 
-        await weth.connect(trader.signer).approve(router.address, depositIndexAmount);
+        // await weth.connect(trader.signer).approve(router.address, depositIndexAmount);
         await mintAndApprove(testEnv, usdt, depositStableAmount, trader, router.address);
 
         const ethBalanceBefore = ethers.utils.formatEther(await trader.signer.getBalance());

@@ -41,15 +41,12 @@ contract PositionManager is IPositionManager, Upgradeable {
     // lastFundingRateUpdateTimes tracks the last time funding was updated for a token
     mapping(uint256 => uint256) public lastFundingRateUpdateTimes;
 
-    // uint256 public fundingInterval = 28800;
-
     IRiskReserve public riskReserve;
     IPool public pool;
     IFeeCollector public feeCollector;
     address public pledgeAddress;
     address public router;
 
-    // constructor() FeeManager() Pausable() {}
     function initialize(
         IAddressesProvider addressProvider,
         IPool _pool,
@@ -64,6 +61,11 @@ contract PositionManager is IPositionManager, Upgradeable {
         riskReserve = _riskReserve;
     }
 
+    modifier onlyRouter() {
+        require(msg.sender == router, "onlyRouter");
+        _;
+    }
+
     modifier onlyExecutor() {
         require(
             msg.sender == ADDRESS_PROVIDER.executionLogic() ||
@@ -74,7 +76,9 @@ contract PositionManager is IPositionManager, Upgradeable {
     }
 
     function setRouter(address _router) external onlyPoolAdmin {
+        address oldAddress = router;
         router = _router;
+        emit UpdateRouterAddress(msg.sender, oldAddress, _router);
     }
 
     function increasePosition(
@@ -229,9 +233,7 @@ contract PositionManager is IPositionManager, Upgradeable {
                 if (position.positionAmount == 0) {
                     uint256 subsidy = totalSettlementAmount.abs() - position.collateral;
                     riskReserve.decrease(pair.stableToken, subsidy);
-                    position.collateral = position.collateral.sub(
-                        int256(totalSettlementAmount + int256(subsidy)).abs()
-                    );
+                    position.collateral = 0;
                 } else {
                     // adjust position averagePrice
                     uint256 lossPer = totalSettlementAmount.abs().divPrice(position.positionAmount);
@@ -246,7 +248,7 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         if (position.positionAmount == 0 && position.collateral > 0) {
             if (useRiskReserve) {
-                pool.setLPStableProfit(pairIndex, -int256(position.collateral));
+//                pool.setLPStableProfit(pairIndex, -int256(position.collateral));
                 riskReserve.increase(pair.stableToken, position.collateral);
             } else {
                 pool.transferTokenOrSwap(
@@ -281,13 +283,14 @@ contract PositionManager is IPositionManager, Upgradeable {
         address account,
         bool isLong,
         int256 collateral
-    ) external override {
-        require(account == msg.sender || msg.sender == router, "forbidden");
+    ) external override onlyRouter {
+        bytes32 positionKey = PositionKey.getPositionKey(account, pairIndex, isLong);
+        Position.Info storage position = positions[positionKey];
+        if (position.positionAmount == 0) {
+            revert("position not exists");
+        }
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        Position.Info storage position = positions[
-            PositionKey.getPositionKey(account, pairIndex, isLong)
-        ];
 
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
@@ -313,12 +316,13 @@ contract PositionManager is IPositionManager, Upgradeable {
             position.account,
             position.pairIndex,
             position.isLong,
+            positionKey,
             collateralBefore,
             position.collateral
         );
     }
 
-    function updateFundingRate(uint256 _pairIndex) external {
+    function updateFundingRate(uint256 _pairIndex) external onlyRouter {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         _updateFundingRate(_pairIndex, price);
@@ -656,8 +660,6 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         fundingRate = IFundingRate(ADDRESS_PROVIDER.fundingRate()).getFundingRate(
             pair,
-            longTracker[_pairIndex],
-            shortTracker[_pairIndex],
             vault,
             _price
         );
@@ -672,12 +674,15 @@ contract PositionManager is IPositionManager, Upgradeable {
             return 0;
         }
         int256 currentExposureAmountChecker = getExposedPositions(pairIndex);
-        int256 profit = _currentLpProfit(
-            pairIndex,
-            currentExposureAmountChecker > 0,
-            currentExposureAmountChecker.abs(),
-            price
-        );
+        int256 profit;
+        if (currentExposureAmountChecker != 0) {
+            profit = _currentLpProfit(
+                pairIndex,
+                currentExposureAmountChecker < 0,
+                currentExposureAmountChecker.abs(),
+                price
+            );
+        }
 
         IPool.Pair memory pair = pool.getPair(pairIndex);
         return

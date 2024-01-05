@@ -33,6 +33,8 @@ interface IPositionManager {
 
     event UpdatedLiquidationLogic(address sender, address oldAddress, address newAddress);
 
+    event UpdateRouterAddress(address sender, address oldAddress, address newAddress);
+
     event UpdateFundingRate(uint256 pairIndex, uint price, int256 fundingRate, uint256 lastFundingTime);
 
     event TakeFundingFeeAddTraderFee(
@@ -50,6 +52,7 @@ interface IPositionManager {
         address account,
         uint256 pairIndex,
         bool isLong,
+        bytes32 positionKey,
         uint256 collateralBefore,
         uint256 collateralAfter
     );

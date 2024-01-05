@@ -4,9 +4,12 @@ import {
     COMMON_DEPLOY_PARAMS,
     getAddressesProvider,
     getPoolTokenFactory,
+    getPoolView,
     PAIR_INFO_ID,
     POOL_TOKEN_FACTORY,
+    POOL_VIEW_ID,
     SPOT_SWAP,
+    waitForTx,
 } from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
@@ -53,6 +56,23 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
             execute: {
                 methodName: 'initialize',
                 args: [addressProvider.address, poolTokenFactory.address],
+            },
+        },
+        ...COMMON_DEPLOY_PARAMS,
+    });
+
+    // PoolView
+    await deploy(`${POOL_VIEW_ID}`, {
+        from: deployer,
+        contract: 'PoolView',
+        args: [],
+        proxy: {
+            owner: deployer,
+            proxyContract: 'UUPS',
+            proxyArgs: [],
+            execute: {
+                methodName: 'initialize',
+                args: [addressProvider.address],
             },
         },
         ...COMMON_DEPLOY_PARAMS,

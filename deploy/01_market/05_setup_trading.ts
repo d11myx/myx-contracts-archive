@@ -15,6 +15,7 @@ import {
     getOraclePriceFeed,
     getOrderManager,
     getPool,
+    getPoolView,
     getPositionManager,
     getRiskReserve,
     getRouter,
@@ -177,11 +178,15 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
         ...COMMON_DEPLOY_PARAMS,
     });
     const executor = await getExecutor();
+    const poolView = await getPoolView();
+
+    await waitForTx(await poolView.connect(poolAdminSigner).setPositionManager(positionManager.address));
 
     await waitForTx(await pool.connect(poolAdminSigner).setRiskReserve(riskReserve.address));
     await waitForTx(await pool.connect(poolAdminSigner).setFeeCollector(feeCollector.address));
     await waitForTx(await pool.connect(poolAdminSigner).setPositionManager(positionManager.address));
     await waitForTx(await pool.connect(poolAdminSigner).setOrderManager(orderManager.address));
+    await waitForTx(await pool.connect(poolAdminSigner).setRouter(router.address));
 
     await waitForTx(await feeCollector.connect(poolAdminSigner).updatePositionManagerAddress(positionManager.address));
 

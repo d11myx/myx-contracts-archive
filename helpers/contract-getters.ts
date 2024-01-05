@@ -20,6 +20,7 @@ import {
     SpotSwap,
     MockPythOraclePriceFeed,
     PoolToken,
+    PoolView,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -41,6 +42,7 @@ import {
     FEE_COLLECTOR_ID,
     TIMELOCK_ID,
     SPOT_SWAP,
+    POOL_VIEW_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -104,6 +106,10 @@ export const getPoolToken = async (address: string): Promise<PoolToken> => {
 
 export const getPool = async (address?: string): Promise<Pool> => {
     return getContract<Pool>('Pool', address || (await hre.deployments.get(PAIR_INFO_ID)).address);
+};
+
+export const getPoolView = async (address?: string): Promise<PoolView> => {
+    return getContract<PoolView>('PoolView', address || (await hre.deployments.get(POOL_VIEW_ID)).address);
 };
 
 export const getSpotSwap = async (address?: string): Promise<SpotSwap> => {

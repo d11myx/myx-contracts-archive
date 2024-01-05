@@ -32,7 +32,7 @@ task(`time-execution`)
             const duration = BigNumber.from(taskArgs.eta).sub(await latest());
             await increase(duration);
         } else {
-            await new Promise((f) => setTimeout(f, 2 * 60 * 1000));
+            await new Promise((f) => setTimeout(f, 30 * 1000));
         }
 
         await waitForTx(

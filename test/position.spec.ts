@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
-import { mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { cleanPositionInvalidOrders, extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import {
     TradeType,
     getMockToken,
@@ -219,6 +219,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const longPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -432,7 +433,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1478,7 +1479,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1693,7 +1694,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1908,7 +1909,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1972,6 +1973,7 @@ describe('Position', () => {
                     executionLogic,
                     keeper,
                     pool,
+                    poolView,
                     executor,
                     riskReserve,
                     indexPriceFeed,
@@ -2104,7 +2106,7 @@ describe('Position', () => {
 
                 // remove liquidity
                 const lpAmount = ethers.utils.parseEther('300000');
-                const { receiveStableTokenAmount } = await pool.getReceivedAmount(
+                const { receiveStableTokenAmount } = await poolView.getReceivedAmount(
                     pairIndex,
                     lpAmount,
                     await oraclePriceFeed.getPrice(btc.address),
@@ -2409,29 +2411,30 @@ describe('Position', () => {
 
                 // execute liquidatePositions
                 const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, false);
-                await expect(
-                    executor.connect(keeper.signer).setPricesAndLiquidatePositions(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [
-                            {
-                                positionKey: positionKey,
-                                sizeAmount: 0,
-                                tier: 0,
-                                referralsRatio: 0,
-                                referralUserRatio: 0,
-                                referralOwner: ZERO_ADDRESS,
-                            },
-                        ],
-                        { value: 1 },
-                    ),
-                ).to.be.revertedWith('exceed max price deviation');
+
+                const tx = await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            positionKey: positionKey,
+                            sizeAmount: 0,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
+                const reason = await extraHash(tx.hash, 'ExecutePositionError', 'errorMessage');
+                expect(reason).to.be.eq('exceed max price deviation');
             });
         });
 
@@ -2654,7 +2657,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);

@@ -21,11 +21,12 @@ import {
     MockERC20Token,
     SpotSwap,
     MockPythOraclePriceFeed,
+    PoolView,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
 import { deployContract, deployUpgradeableContract, waitForTx } from './utilities/tx';
-import { MOCK_INDEX_PRICES, MOCK_PRICES } from './constants';
+import { MOCK_INDEX_PRICES, MOCK_PRICES, ZERO_ADDRESS } from './constants';
 import { SymbolMap } from './types';
 import { SignerWithAddress } from '../test/helpers/make-suite';
 import { loadReserveConfig } from './market-config-helper';
@@ -129,10 +130,11 @@ export async function deployPrice(
         addressesProvider.address,
         [],
         [],
+        ZERO_ADDRESS,
     ])) as any as IndexPriceFeed;
     log(`deployed IndexPriceFeed at ${indexPriceFeed.address}`);
 
-    await indexPriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenIndexPrices);
+    await indexPriceFeed.connect(deployer.signer).updatePrice(pairTokenAddresses, pairTokenIndexPrices);
 
     await oraclePriceFeed.connect(deployer.signer).setTokenPriceIds(pairTokenAddresses, pairTokenPriceIds);
     // await hre.run('time-execution', {
@@ -176,6 +178,10 @@ export async function deployPair(
         poolTokenFactory.address,
     ])) as any as Pool;
     log(`deployed Pool at ${pool.address}`);
+
+    const poolView = (await deployUpgradeableContract('PoolView', [addressProvider.address])) as any as PoolView;
+    log(`deployed PoolView at ${poolView.address}`);
+
     const spotSwap = (await deployUpgradeableContract('SpotSwap', [addressProvider.address])) as any as SpotSwap;
     log(`deployed SpotSwap at ${spotSwap.address}`);
     await pool.setSpotSwap(spotSwap.address);
@@ -184,7 +190,7 @@ export async function deployPair(
     // await pool.setRouter(ZERO_ADDRESS);
     // await pool.updateTokenPath();
 
-    return { poolTokenFactory, pool, spotSwap };
+    return { poolTokenFactory, pool, poolView, spotSwap };
 }
 
 export async function deployTrading(
@@ -198,7 +204,7 @@ export async function deployTrading(
 ) {
     log(` - setup trading`);
 
-    const weth = await getWETH();
+    // const weth = await getWETH();
     // const usdt = await getToken();
 
     let feeCollector = (await deployUpgradeableContract('FeeCollector', [
