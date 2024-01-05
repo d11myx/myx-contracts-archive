@@ -162,12 +162,12 @@ describe('Oracle: oracle cases', () => {
         //     ),
         // ).to.be.revertedWith('opk');
         await expect(
-            indexPriceFeed.updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])]),
-        ).to.be.revertedWith('opk');
+            indexPriceFeed.connect(user1).updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])]),
+        ).to.be.revertedWith('oep');
         await pythOraclePriceFeed
-            .connect(user1)
+            .connect(owner)
             .updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])], { value: fee });
-        await indexPriceFeed.connect(user1).updatePrice([btc.address], [price]);
+        await indexPriceFeed.connect(owner).updatePrice([btc.address], [price]);
 
         // console.log('btc:' + btc.address);
         expect(await pythOraclePriceFeed.getPrice(btc.address)).to.be.eq(toFullBNStr(price, 22));

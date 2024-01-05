@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
-import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { cleanPositionInvalidOrders, extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import {
     TradeType,
     getMockToken,
@@ -219,6 +219,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const longPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -432,7 +433,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1478,7 +1479,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1693,7 +1694,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -1908,7 +1909,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
@@ -2656,7 +2657,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-
+                await cleanPositionInvalidOrders(testEnv, positionKey);
                 balance = await usdt.balanceOf(trader.address);
                 const reserveBalance = await riskReserve.getReservedAmount(usdt.address);
                 const shortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);

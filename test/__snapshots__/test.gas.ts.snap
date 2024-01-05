@@ -6,7 +6,7 @@ exports[`TestGas gas cost of infos 1`] = `50286`;
 
 exports[`TestGas gas cost of memory params 1`] = `26464`;
 
-exports[`TestGas gas cost of saveOrderWithTpSl 1`] = `112015`;
+exports[`TestGas gas cost of saveOrderWithTpSl 1`] = `112103`;
 
 exports[`TestGas gas cost of saveUint32Tests 1`] = `43645`;
 
@@ -16,4 +16,4 @@ exports[`TestGas gas cost of testKey 1`] = `43575`;
 
 exports[`TestGas gas cost of testKeys 1`] = `45871`;
 
-exports[`TestGas gas cost test maping(address=>struct) 1`] = `200792`;
+exports[`TestGas gas cost test maping(address=>struct) 1`] = `178707`;
