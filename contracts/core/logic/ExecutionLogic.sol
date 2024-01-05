@@ -611,42 +611,6 @@ contract ExecutionLogic is IExecutionLogic {
         );
     }
 
-    function _createOrderTpSl(TradingTypes.IncreasePositionOrder memory order) internal {
-        TradingTypes.OrderWithTpSl memory orderTpSl = orderManager.getOrderTpSl(order.orderId);
-        if (orderTpSl.tp > 0) {
-            orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: order.account,
-                    pairIndex: order.pairIndex,
-                    tradeType: TradingTypes.TradeType.TP,
-                    collateral: 0,
-                    openPrice: orderTpSl.tpPrice,
-                    isLong: order.isLong,
-                    sizeAmount: -int128(orderTpSl.tp),
-                    maxSlippage: 0,
-                    data: abi.encode(order.account)
-                })
-            );
-        }
-        if (orderTpSl.sl > 0) {
-            orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: order.account,
-                    pairIndex: order.pairIndex,
-                    tradeType: TradingTypes.TradeType.SL,
-                    collateral: 0,
-                    openPrice: orderTpSl.slPrice,
-                    isLong: order.isLong,
-                    sizeAmount: -int128(orderTpSl.sl),
-                    maxSlippage: 0,
-                    data: abi.encode(order.account)
-                })
-            );
-        }
-
-        orderManager.removeOrderTpSl(order.orderId);
-    }
-
     function needADL(
         uint256 pairIndex,
         bool isLong,
