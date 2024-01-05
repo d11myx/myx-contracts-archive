@@ -1,7 +1,7 @@
 import { TestEnv } from '../../test/helpers/make-suite';
 import { BigNumber, ethers } from 'ethers';
 import { MockERC20Token } from '../../types';
-import { convertIndexAmountToStable, convertStableAmountToIndex } from '../token-decimals';
+import { convertIndexAmountToStable } from '../token-decimals';
 
 const PRICE_PRECISION = '1000000000000000000000000000000';
 const PERCENTAGE = '100000000';
@@ -15,54 +15,38 @@ const PERCENTAGE = '100000000';
  */
 export async function getFundingRateInTs(testEnv: TestEnv, pairIndex: number) {
     const { positionManager, pool, fundingRate, oraclePriceFeed, btc, usdt } = testEnv;
-    const { indexTotalAmount, stableTotalAmount } = await pool.getVault(pairIndex);
+    const { indexTotalAmount, indexReservedAmount, stableTotalAmount, stableReservedAmount } =
+        await pool.getVault(pairIndex);
 
     const pair = await pool.getPair(pairIndex);
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
     const fundingFeeConfig = await fundingRate.fundingFeeConfigs(pairIndex);
-    const longTracker = await positionManager.longTracker(pairIndex);
-    const shortTracker = await positionManager.shortTracker(pairIndex);
 
-    const u = longTracker;
-    const v = shortTracker;
-    const l = indexTotalAmount.add(
-        (await convertStableAmountToIndex(btc, usdt, stableTotalAmount)).mul(PRICE_PRECISION).div(price),
-    );
+    const indexReservedToStable = (await convertIndexAmountToStable(btc, usdt, indexReservedAmount))
+        .mul(price)
+        .div('1000000000000000000000000000000');
+    const u = stableTotalAmount.sub(stableReservedAmount).add(indexReservedToStable);
+    const v = (await convertIndexAmountToStable(btc, usdt, indexTotalAmount.sub(indexReservedAmount)))
+        .mul(price)
+        .div('1000000000000000000000000000000')
+        .add(stableReservedAmount);
+
     const k = fundingFeeConfig.growthRate;
     const r = fundingFeeConfig.baseRate;
     const maxRate = fundingFeeConfig.maxRate;
     const fundingInterval = fundingFeeConfig.fundingInterval;
-
-    // A = (U/U+V - 0.5) * MAX(U,V)/L * 100
-    const max = u.gt(v) ? u : v;
-    let a = u.eq(v)
-        ? 0
-        : u
-              .mul(PERCENTAGE)
-              .div(u.add(v))
-              .sub(BigNumber.from(PERCENTAGE).div(2))
-              .mul(max.mul(PERCENTAGE).div(l))
-              .mul(100)
-              .div(PERCENTAGE);
-    a = BigNumber.from(a);
-
+    if (u.eq(v)) {
+        return r.div(86400 / fundingInterval.toNumber());
+    }
     // S = ABS(2*R-1)=ABS(U-V)/(U+V)
-    let s = u.eq(v) ? 0 : u.sub(v).abs().mul(PERCENTAGE).div(u.add(v));
-    s = BigNumber.from(s);
+    let s = u.sub(v).mul(PERCENTAGE).div(u.add(v));
 
     // G1 = MIN((S+S*S/2) * k + r, r(max))
     const min = s.mul(s).div(2).div(PERCENTAGE).add(s).mul(k).div(PERCENTAGE).add(r);
     const g1 = min.lt(maxRate) ? min : maxRate;
-    if (u.eq(v)) {
-        return g1;
-    }
 
     // G1+ABS(G1*A/10) * (u-v)/abs(u-v)
-    let currentFundingFee = g1.add(g1.mul(a.abs()).div(10).div(PERCENTAGE));
-    if (u.lt(v)) {
-        currentFundingFee = currentFundingFee.mul(-1);
-    }
-    return currentFundingFee.div(86400 / fundingInterval.toNumber());
+    return g1.div(86400 / fundingInterval.toNumber());
 }
 
 /**
@@ -260,13 +244,13 @@ export async function getMintLpAmount(
     stableAmount: BigNumber,
     slipDelta?: BigNumber,
 ) {
-    const { pool, oraclePriceFeed, btc } = testEnv;
+    const { pool, poolView, oraclePriceFeed, btc } = testEnv;
 
     const pair = await pool.getPair(pairIndex);
     const pairPrice = BigNumber.from(
         ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30).replace('.0', ''),
     );
-    const lpFairPrice = await pool.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
+    const lpFairPrice = await poolView.lpFairPrice(pairIndex, await oraclePriceFeed.getPrice(btc.address));
     const indexFeeAmount = indexAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
     const stableFeeAmount = stableAmount.mul(pair.addLpFeeP).div(PERCENTAGE);
     const indexDepositDelta = indexAmount.sub(indexFeeAmount).mul(pairPrice);
@@ -283,11 +267,15 @@ export async function getLpSlippageDelta(
     indexAmount: BigNumber,
     stableAmount: BigNumber,
 ) {
-    const { pool, oraclePriceFeed, btc } = testEnv;
+    const { pool, positionManager, oraclePriceFeed, btc } = testEnv;
 
     let slipDelta;
     const pair = await pool.getPair(pairIndex);
-    const profit = await pool.getProfit(pair.pairIndex, pair.indexToken, await oraclePriceFeed.getPrice(btc.address));
+    const profit = await positionManager.lpProfit(
+        pair.pairIndex,
+        pair.indexToken,
+        await oraclePriceFeed.getPrice(btc.address),
+    );
     const vault = await pool.getVault(pairIndex);
     const price = await oraclePriceFeed.getPrice(pair.indexToken);
 

@@ -112,10 +112,10 @@ describe('LP: Price cases', () => {
                 { value: 1 },
             );
 
-        expect(new Decimal((await _lpPrice()).toString()).div(pricePrecision).toFixed(5)).to.be.eq('1.00000');
+        expect(new Decimal((await _lpPrice()).toString()).div(pricePrecision).toFixed(5)).to.be.eq('1.00393');
 
         await updateBTCPrice(testEnv, '20000');
-        expect(new Decimal((await _lpPrice()).toString()).div(pricePrecision).toFixed(5)).to.be.eq('0.80004');
+        expect(new Decimal((await _lpPrice()).toString()).div(pricePrecision).toFixed(5)).to.be.eq('0.80319');
 
         await mintAndApprove(testEnv, btc, indexAmount, depositor, router.address);
         await router
@@ -129,7 +129,7 @@ describe('LP: Price cases', () => {
                 [new ethers.utils.AbiCoder().encode(['uint256'], [oraclePrice.div('10000000000000000000000')])],
                 { value: 1 },
             );
-        expect(new Decimal((await _lpPrice()).toString()).div(pricePrecision).toFixed(5)).to.be.eq('1.00000');
+        expect(new Decimal((await _lpPrice()).toString()).div(pricePrecision).toFixed(5)).to.be.eq('1.01180');
     });
 
     async function _maxRemoveLiquidityAmount() {

@@ -35,7 +35,7 @@ export async function updateETHPrice(testEnv: TestEnv, price: string) {
 }
 
 export async function updatePrice(testEnv: TestEnv, token: string, price: string) {
-    const { keeper, indexPriceFeed, oraclePriceFeed } = testEnv;
+    const { deployer, indexPriceFeed, oraclePriceFeed } = testEnv;
 
     const updateData = await oraclePriceFeed.getUpdateData([token], [ethers.utils.parseUnits(price, 8)]);
     const mockPyth = await ethers.getContractAt('MockPyth', await oraclePriceFeed.pyth());
@@ -43,14 +43,14 @@ export async function updatePrice(testEnv: TestEnv, token: string, price: string
 
     await waitForTx(
         await oraclePriceFeed
-            .connect(keeper.signer)
+            .connect(deployer.signer)
             .updatePrice([token], [abiCoder.encode(['uint256'], [ethers.utils.parseUnits(price, 8)])], {
                 value: fee,
             }),
     );
 
     await waitForTx(
-        await indexPriceFeed.connect(keeper.signer).updatePrice([token], [ethers.utils.parseUnits(price, 30)]),
+        await indexPriceFeed.connect(deployer.signer).updatePrice([token], [ethers.utils.parseUnits(price, 30)]),
     );
 }
 
@@ -264,6 +264,11 @@ export async function adlPosition(
     const receipt = await tx.wait();
 
     return { orderId: orderId, executeReceipt: receipt };
+}
+
+export async function cleanPositionInvalidOrders(testEnv: TestEnv, positionKey: string) {
+    const { executor, keeper } = testEnv;
+    await executor.connect(keeper.signer).cleanInvalidPositionOrders([positionKey]);
 }
 
 export async function extraHash(hash: string, eventName: string, key: string): Promise<any> {

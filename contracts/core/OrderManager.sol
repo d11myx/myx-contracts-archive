@@ -250,10 +250,11 @@ contract OrderManager is IOrderManager, Upgradeable {
 
         bytes32 key = PositionKey.getPositionKey(account, pairIndex, isLong);
 
-        while (positionOrders[key].length > 0) {
-            uint256 lastIndex = positionOrders[key].length - 1;
-            PositionOrder memory positionOrder = positionOrders[key][lastIndex];
+        uint256 total = positionOrders[key].length;
+        uint256 count = total > 256 ? 256 : total;
 
+        for (uint256 i = 1; i <= count; i++) {
+            PositionOrder memory positionOrder = positionOrders[key][count - i];
             _cancelOrder(
                 positionOrder.orderId,
                 positionOrder.tradeType,
