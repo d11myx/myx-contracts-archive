@@ -259,9 +259,6 @@ contract ExecutionLogic is IExecutionLogic {
         order.executedSize += executionSize;
         orderManager.increaseOrderExecutedSize(order.orderId, order.tradeType, true, executionSize);
 
-        // create order tp sl
-        _createOrderTpSl(order);
-
         // remove order
         if (
             order.tradeType == TradingTypes.TradeType.MARKET ||
@@ -781,6 +778,7 @@ contract ExecutionLogic is IExecutionLogic {
                         isLong: adlPosition.position.isLong,
                         sizeAmount: -int128(uint128(adlPosition.executionSize)),
                         maxSlippage: 0,
+                        paymentType: TradingTypes.InnerPaymentType.NONE,
                         data: abi.encode(adlPosition.position.account)
                     })
                 );

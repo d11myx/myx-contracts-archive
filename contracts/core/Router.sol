@@ -128,23 +128,68 @@ contract Router is
                 isLong: request.isLong,
                 sizeAmount: int128(request.sizeAmount),
                 maxSlippage: request.maxSlippage,
+                paymentType: TradingTypes.convertPaymentType(request.paymentType),
                 data: abi.encode(request.account)
             })
         );
 
-        // order with tp sl
-        if (request.tp > 0 || request.sl > 0) {
-            orderManager.saveOrderTpSl(
-                orderId,
-                TradingTypes.OrderWithTpSl({
-                    tpPrice: request.tpPrice,
-                    tp: request.tp,
-                    slPrice: request.slPrice,
-                    sl: request.sl
+        // tp、sl
+        _createTpSl(
+            request.account,
+            request.pairIndex,
+            request.isLong,
+            request.tpPrice,
+            request.tp,
+            request.slPrice,
+            request.sl,
+            request.paymentType
+        );
+        return orderId;
+    }
+
+    function _createTpSl(
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        uint256 tpPrice,
+        uint256 tp,
+        uint256 slPrice,
+        uint256 sl,
+        TradingTypes.NetworkFeePaymentType paymentType
+    ) internal returns (uint256 tpOrderId, uint256 slOrderId) {
+        if (tp > 0) {
+            tpOrderId = orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: account,
+                    pairIndex: pairIndex,
+                    tradeType: TradingTypes.TradeType.TP,
+                    collateral: 0,
+                    openPrice: tpPrice,
+                    isLong: isLong,
+                    sizeAmount: -int128(tp),
+                    maxSlippage: 0,
+                    paymentType: TradingTypes.convertPaymentType(paymentType),
+                    data: abi.encode(account)
                 })
             );
         }
-        return orderId;
+        if (sl > 0) {
+            slOrderId = orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: account,
+                    pairIndex: pairIndex,
+                    tradeType: TradingTypes.TradeType.SL,
+                    collateral: 0,
+                    openPrice: slPrice,
+                    isLong: isLong,
+                    sizeAmount: -int128(sl),
+                    maxSlippage: 0,
+                    paymentType: TradingTypes.convertPaymentType(paymentType),
+                    data: abi.encode(account)
+                })
+            );
+        }
+        return (tpOrderId, slOrderId);
     }
 
     function createIncreaseOrder(
@@ -169,6 +214,7 @@ contract Router is
                     isLong: request.isLong,
                     sizeAmount: int128(request.sizeAmount),
                     maxSlippage: request.maxSlippage,
+                    paymentType: TradingTypes.convertPaymentType(request.paymentType),
                     data: abi.encode(request.account)
                 })
             );
@@ -190,6 +236,7 @@ contract Router is
                     isLong: request.isLong,
                     sizeAmount: -int128(request.sizeAmount),
                     maxSlippage: request.maxSlippage,
+                    paymentType: TradingTypes.convertPaymentType(request.paymentType),
                     data: abi.encode(request.account)
                 })
             );
@@ -212,6 +259,7 @@ contract Router is
                     isLong: request.isLong,
                     sizeAmount: -int128(request.sizeAmount),
                     maxSlippage: request.maxSlippage,
+                    paymentType: TradingTypes.convertPaymentType(request.paymentType),
                     data: abi.encode(msg.sender)
                 })
             );
@@ -296,33 +344,36 @@ contract Router is
     function addOrderTpSl(
         AddOrderTpSlRequest memory request
     ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
-        uint256 orderAmount;
+        uint256 pairIndex;
+        bool isLong;
         if (request.isIncrease) {
             TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
                 request.orderId,
                 request.tradeType
             );
             require(order.account == msg.sender, "no access");
-            orderAmount = order.sizeAmount;
+            pairIndex = order.pairIndex;
+            isLong = order.isLong;
         } else {
             TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
                 request.orderId,
                 request.tradeType
             );
             require(order.account == msg.sender, "no access");
-            orderAmount = order.sizeAmount;
+            pairIndex = order.pairIndex;
+            isLong = order.isLong;
         }
 
         if (request.tp > 0 || request.sl > 0) {
-            require(request.tp <= orderAmount && request.sl <= orderAmount, "exceeds order size");
-            orderManager.saveOrderTpSl(
-                request.orderId,
-                TradingTypes.OrderWithTpSl({
-                    tpPrice: request.tpPrice,
-                    tp: request.tp,
-                    slPrice: request.slPrice,
-                    sl: request.sl
-                })
+            _createTpSl(
+                msg.sender,
+                pairIndex,
+                isLong,
+                request.tpPrice,
+                request.tp,
+                request.slPrice,
+                request.sl,
+                request.paymentType
             );
         }
         return (tpOrderId, slOrderId);
@@ -331,36 +382,16 @@ contract Router is
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
-        if (request.tp > 0) {
-            tpOrderId = orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: msg.sender,
-                    pairIndex: request.pairIndex,
-                    tradeType: TradingTypes.TradeType.TP,
-                    collateral: 0,
-                    openPrice: request.tpPrice,
-                    isLong: request.isLong,
-                    sizeAmount: -int128(request.tp),
-                    maxSlippage: 0,
-                    data: abi.encode(msg.sender)
-                })
-            );
-        }
-        if (request.sl > 0) {
-            slOrderId = orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: msg.sender,
-                    pairIndex: request.pairIndex,
-                    tradeType: TradingTypes.TradeType.SL,
-                    collateral: 0,
-                    openPrice: request.slPrice,
-                    isLong: request.isLong,
-                    sizeAmount: -int128(request.sl),
-                    maxSlippage: 0,
-                    data: abi.encode(msg.sender)
-                })
-            );
-        }
+        (tpOrderId, slOrderId) = _createTpSl(
+            msg.sender,
+            request.pairIndex,
+            request.isLong,
+            request.tpPrice,
+            request.tp,
+            request.slPrice,
+            request.sl,
+            request.paymentType
+        );
         return (tpOrderId, slOrderId);
     }
 
