@@ -152,9 +152,9 @@ contract Router is
         uint256 pairIndex,
         bool isLong,
         uint256 tpPrice,
-        uint256 tp,
+        uint128 tp,
         uint256 slPrice,
-        uint256 sl,
+        uint128 sl,
         TradingTypes.NetworkFeePaymentType paymentType
     ) internal returns (uint256 tpOrderId, uint256 slOrderId) {
         if (tp > 0) {
