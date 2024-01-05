@@ -113,6 +113,7 @@ contract LiquidationLogic is ILiquidationLogic {
                 isLong: position.isLong,
                 sizeAmount: -int128(uint128(position.positionAmount)),
                 maxSlippage: 0,
+                paymentType: TradingTypes.InnerPaymentType.NONE,
                 data: abi.encode(position.account)
             })
         );

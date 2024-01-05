@@ -12,6 +12,7 @@ interface IRouter {
         uint128 tp; // The number of profit stops
         uint256 slPrice; // Stop price 1e30
         uint128 sl; // Stop loss quantity
+        TradingTypes.NetworkFeePaymentType paymentType;
     }
 
     struct CancelOrderRequest {

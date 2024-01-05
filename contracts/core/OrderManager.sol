@@ -37,11 +37,11 @@ contract OrderManager is IOrderManager, Upgradeable {
     mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseLimitOrders;
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
 
-    mapping(uint256 => TradingTypes.OrderWithTpSl) public orderWithTpSl; // OrderId -> TpSl
-
     // positionKey
     mapping(bytes32 => PositionOrder[]) public positionOrders;
     mapping(bytes32 => mapping(uint256 => uint256)) public positionOrderIndex;
+
+    mapping(TradingTypes.NetworkFeePaymentType => NetworkFee) public networkFees;
 
     IPool public pool;
     IPositionManager public positionManager;
@@ -87,9 +87,21 @@ contract OrderManager is IOrderManager, Upgradeable {
         emit UpdateRouterAddress(msg.sender, oldAddress, _router);
     }
 
+    function updateNetworkFee(
+        TradingTypes.NetworkFeePaymentType paymentType,
+        NetworkFee memory fee
+    ) external onlyPoolAdmin {
+        networkFees[paymentType] = fee;
+        emit UpdatedNetworkFee(msg.sender, paymentType, fee.basicNetworkFee, fee.discountThreshold, fee.discountedNetworkFee);
+    }
+
+    function getNetworkFee(TradingTypes.NetworkFeePaymentType paymentType) external view override returns (NetworkFee memory) {
+        return networkFees[paymentType];
+    }
+
     function createOrder(
         TradingTypes.CreateOrderRequest calldata request
-    ) public onlyExecutorAndRouter returns (uint256 orderId) {
+    ) public payable onlyExecutorAndRouter returns (uint256 orderId) {
         address account = request.account;
 
         // account is frozen
@@ -98,6 +110,23 @@ contract OrderManager is IOrderManager, Upgradeable {
         // pair enabled
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
         require(pair.enable, "disabled");
+
+        //TODO network fees
+        if (request.paymentType == TradingTypes.InnerPaymentType.ETH) {
+//            NetworkFee memory networkFee = networkFees[PaymentType.ETH];
+//            if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
+//                || msg.value < networkFee.discountedNetworkFee) {
+//                revert("insufficient network fee");
+//            }
+
+        } else if (request.paymentType == TradingTypes.InnerPaymentType.COLLATERAL) {
+//            NetworkFee memory networkFee = networkFees[TradingTypes.InnerPaymentType.COLLATERAL];
+//            if (request.collateral < 0
+//                || (request.sizeAmount.abs() >= networkFee.discountThreshold && request.collateral < networkFee.discountedNetworkFee)
+//                || request.collateral < networkFee.discountedNetworkFee) {
+//                revert("insufficient network fee");
+//            }
+        }
 
         Position.Info memory position = positionManager.getPosition(
             account,
@@ -175,7 +204,8 @@ contract OrderManager is IOrderManager, Upgradeable {
                         openPrice: request.openPrice,
                         isLong: request.isLong,
                         sizeAmount: uint128(request.sizeAmount),
-                        maxSlippage: request.maxSlippage
+                        maxSlippage: request.maxSlippage,
+                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL
                     })
                 );
         } else if (request.sizeAmount < 0) {
@@ -189,7 +219,8 @@ contract OrderManager is IOrderManager, Upgradeable {
                         triggerPrice: request.openPrice,
                         sizeAmount: uint128(-request.sizeAmount),
                         isLong: request.isLong,
-                        maxSlippage: request.maxSlippage
+                        maxSlippage: request.maxSlippage,
+                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL
                     })
                 );
         } else {
@@ -204,7 +235,8 @@ contract OrderManager is IOrderManager, Upgradeable {
                         openPrice: request.openPrice,
                         isLong: request.isLong,
                         sizeAmount: 0,
-                        maxSlippage: request.maxSlippage
+                        maxSlippage: request.maxSlippage,
+                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL
                     })
                 );
         }
@@ -318,17 +350,6 @@ contract OrderManager is IOrderManager, Upgradeable {
             require(order.tradeType == tradeType, "trade type not match");
         }
         order.needADL = needADL;
-    }
-
-    function saveOrderTpSl(
-        uint256 orderId,
-        TradingTypes.OrderWithTpSl memory tpSl
-    ) external onlyRouter {
-        orderWithTpSl[orderId] = tpSl;
-    }
-
-    function removeOrderTpSl(uint256 orderId) external onlyExecutor {
-        delete orderWithTpSl[orderId];
     }
 
     function _transferOrderCollateral(
@@ -595,12 +616,6 @@ contract OrderManager is IOrderManager, Upgradeable {
             order = decreaseLimitOrders[orderId];
         }
         return order;
-    }
-
-    function getOrderTpSl(
-        uint256 orderId
-    ) public view override returns (TradingTypes.OrderWithTpSl memory) {
-        return orderWithTpSl[orderId];
     }
 
     function getPositionOrders(bytes32 key) public view override returns (PositionOrder[] memory) {

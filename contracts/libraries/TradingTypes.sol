@@ -9,7 +9,7 @@ library TradingTypes {
         SL
     }
 
-    enum FeePaymentType {
+    enum NetworkFeePaymentType {
         ETH,
         COLLATERAL
     }
@@ -23,6 +23,7 @@ library TradingTypes {
         bool isLong; // long or short
         int128 sizeAmount; // size
         uint256 maxSlippage;
+        InnerPaymentType paymentType;
         bytes data;
     }
 
@@ -42,6 +43,7 @@ library TradingTypes {
         bool isLong; // long or short
         uint128 sizeAmount; // size
         uint256 maxSlippage;
+        NetworkFeePaymentType paymentType;
     }
 
     struct IncreasePositionWithTpSlRequest {
@@ -57,7 +59,7 @@ library TradingTypes {
         uint256 slPrice; // 1e30, sl price
         uint128 sl; // sl size
         uint256 maxSlippage;
-        FeePaymentType feePaymentType; // 0: eth 1: collateral
+        NetworkFeePaymentType paymentType; // 1: eth 2: collateral
     }
 
     struct DecreasePositionRequest {
@@ -69,6 +71,7 @@ library TradingTypes {
         uint128 sizeAmount; // size
         bool isLong;
         uint256 maxSlippage;
+        NetworkFeePaymentType paymentType;
     }
 
     struct CreateTpSlRequest {
@@ -79,6 +82,7 @@ library TradingTypes {
         uint128 tp; // The number of profit stops
         uint256 slPrice; // Stop price 1e30
         uint128 sl; // Stop loss quantity
+        NetworkFeePaymentType paymentType;
     }
 
     struct IncreasePositionOrder {
@@ -113,5 +117,23 @@ library TradingTypes {
         //     sl：long: true,  short: false
         uint256 blockTime;
         bool needADL;
+    }
+
+    enum InnerPaymentType {
+        NONE,
+        ETH,
+        COLLATERAL
+    }
+
+    function convertPaymentType(
+        NetworkFeePaymentType paymentType
+    ) internal pure returns (InnerPaymentType) {
+        if (paymentType == NetworkFeePaymentType.ETH) {
+            return InnerPaymentType.ETH;
+        } else if (paymentType == NetworkFeePaymentType.COLLATERAL) {
+            return InnerPaymentType.COLLATERAL;
+        } else {
+            return InnerPaymentType.NONE;
+        }
     }
 }
