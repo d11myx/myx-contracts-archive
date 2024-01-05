@@ -172,7 +172,6 @@ describe('Router: check require condition, trigger errors', async () => {
                     unbalancedDiscountRate: pair.unbalancedDiscountRate,
                     addLpFeeP: pair.addLpFeeP,
                     removeLpFeeP: pair.addLpFeeP,
-                    lpFeeDistributeP: pair.lpFeeDistributeP,
                 };
                 await pool.updatePair(pairIndex, newPair);
             });
@@ -204,7 +203,6 @@ describe('Router: check require condition, trigger errors', async () => {
                     unbalancedDiscountRate: pairBef.unbalancedDiscountRate,
                     addLpFeeP: pairBef.addLpFeeP,
                     removeLpFeeP: pairBef.addLpFeeP,
-                    lpFeeDistributeP: pairBef.lpFeeDistributeP,
                 };
                 await pool.updatePair(pairIndex, newPair);
 
@@ -235,7 +233,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 const orderId = await orderManager.ordersIndex();
                 await expect(
                     router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest),
-                ).to.be.revertedWith('trade pair not supported');
+                ).to.be.revertedWith('disabled');
                 // await executer.connect(keeper.signer).executeIncreaseOrder(orderId, TradeType.MARKET);
             });
         });

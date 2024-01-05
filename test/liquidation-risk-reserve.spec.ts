@@ -1,5 +1,5 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradeType, ZERO_ADDRESS } from '../helpers';
 import { Position } from '../types/contracts/core/PositionManager';
@@ -85,29 +85,27 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await executor
-            .connect(keeper.signer)
-            .setPricesAndLiquidatePositions(
-                [btc.address],
-                [await indexPriceFeed.getPrice(btc.address)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                [
-                    {
-                        positionKey: positionKey,
-                        sizeAmount: 0,
-                        tier: 0,
-                        referralsRatio: 0,
-                        referralUserRatio: 0,
-                        referralOwner: ZERO_ADDRESS,
-                    },
-                ],
-                { value: 1 },
-            );
+        await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    positionKey: positionKey,
+                    sizeAmount: 0,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -136,7 +134,7 @@ describe('Liquidation: Risk Reserve', () => {
 
         const riskReserveAmountBefore = await riskReserve.getReservedAmount(usdt.address);
 
-        const collateral = await ethers.utils.parseUnits('1000', await usdt.decimals());
+        const collateral = ethers.utils.parseUnits('1000', await usdt.decimals());
         const openPrice = ethers.utils.parseUnits('30000', 30);
         const sizeAmount = ethers.utils.parseUnits('1', await btc.decimals());
 
@@ -157,29 +155,27 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await executor
-            .connect(keeper.signer)
-            .setPricesAndLiquidatePositions(
-                [btc.address],
-                [await indexPriceFeed.getPrice(btc.address)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                [
-                    {
-                        positionKey: positionKey,
-                        sizeAmount: 0,
-                        tier: 0,
-                        referralsRatio: 0,
-                        referralUserRatio: 0,
-                        referralOwner: ZERO_ADDRESS,
-                    },
-                ],
-                { value: 1 },
-            );
+        await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    positionKey: positionKey,
+                    sizeAmount: 0,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -231,29 +227,27 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await executor
-            .connect(keeper.signer)
-            .setPricesAndLiquidatePositions(
-                [btc.address],
-                [await indexPriceFeed.getPrice(btc.address)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                [
-                    {
-                        positionKey: positionKey,
-                        sizeAmount: 0,
-                        tier: 0,
-                        referralsRatio: 0,
-                        referralUserRatio: 0,
-                        referralOwner: ZERO_ADDRESS,
-                    },
-                ],
-                { value: 1 },
-            );
+        await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    positionKey: positionKey,
+                    sizeAmount: 0,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -306,7 +300,7 @@ describe('Liquidation: Risk Reserve', () => {
         const { positionManager, btc, usdt, oraclePriceFeed, pool } = testEnv;
 
         const price = await oraclePriceFeed.getPrice(btc.address);
-
+        console.log(position.pairIndex);
         const fundingFee = await positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
         const tradingFee = await positionManager.getTradingFee(
             position.pairIndex,

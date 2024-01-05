@@ -1,3 +1,4 @@
+// @ts-ignore
 import { ethers } from 'hardhat';
 import { getTokens, waitForTx } from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -10,17 +11,18 @@ async function main() {
     console.log(deployer.address);
     console.log(await deployer.getBalance());
 
-    const { usdt, btc, eth } = await getTokens();
+    const { usdt, btc } = await getTokens();
 
     const factory = await ethers.getContractFactory('Faucet');
-    const faucet = await factory.deploy([btc.address, eth.address, usdt.address], [10000, 1000000, 100000000]);
+    const faucet = await factory.deploy(
+        [btc.address, usdt.address],
+        [ethers.utils.parseUnits('5', await btc.decimals()), ethers.utils.parseUnits('5000000', await usdt.decimals())],
+    );
     console.log(`faucet:`, faucet.address);
-    await waitForTx(await btc.mint(faucet.address, ethers.utils.parseEther('1000000000')));
-    await waitForTx(await eth.mint(faucet.address, ethers.utils.parseEther('100000000000')));
-    await waitForTx(await usdt.mint(faucet.address, ethers.utils.parseEther('10000000000000')));
+    await waitForTx(await btc.mint(faucet.address, ethers.utils.parseEther('100000')));
+    await waitForTx(await usdt.mint(faucet.address, ethers.utils.parseEther('100000000000')));
 
     console.log(await btc.balanceOf(faucet.address));
-    console.log(await eth.balanceOf(faucet.address));
     console.log(await usdt.balanceOf(faucet.address));
 
     // const w = ethers.Wallet.createRandom();

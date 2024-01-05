@@ -12,8 +12,8 @@ library AMMUtils {
         require(price > 0, "Invalid price");
         require(k > 0, "Invalid k");
 
-        reserveB = Math.sqrt(Math.mulDiv(k, price, pricePrecision));
-        reserveA = k / reserveB;
+        reserveA = Math.sqrt(Math.mulDiv(k, pricePrecision, price));
+        reserveB = k / reserveA;
         return (reserveA, reserveB);
     }
 

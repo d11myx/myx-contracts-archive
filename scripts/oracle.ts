@@ -29,7 +29,7 @@ async function main() {
     // const indexPriceFeed = await getIndexPriceFeed();
     // const pool = await getPool();
     //
-    // const { btc, eth, usdt } = await getTokens();
+    const { btc, eth, usdt } = await getTokens();
     //
     // const btcOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30);
     // const ethOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30);
@@ -39,33 +39,30 @@ async function main() {
     // console.log(`eth price:`, ethOraclePrice);
     // console.log(`btc price:`, btcIndexPrice);
     // console.log(`eth price:`, ethIndexPrice);
+
     //
     const priceId = '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43';
-    const conn = new EvmPriceServiceConnection('https://hermes.pyth.network');
-    //
-    // // const priceFeedUpdate = await conn.getPriceFeedsUpdateData([priceId]);
-    //
-    // // console.log(await conn.getLatestPriceFeeds([priceId]));
-    // const vaas = await conn.getLatestVaas([priceId]);
-    // const priceFeedUpdate = '0x' + Buffer.from(vaas[0], 'base64').toString('hex');
-    //
-    // const testFactory = await ethers.getContractFactory('Test');
-    // const testContract = await testFactory.deploy();
-    //
-    // const pythContract = await ethers.getContractAt('IPyth', '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729');
-    // // const test = await ethers.getContractAt('Test', '0x71C630c897cA4DFdB31f3e0FAEa8EC08b628eEe4');
-    // // console.log(`test: ${testContract.address}`);
-    //
-    // await waitForTx(await testContract.setPrice([priceFeedUpdate], [priceId], { value: 1 }));
-    //
-    // // const tx = await pythContract.updatePriceFeedsIfNecessary([priceFeedUpdate], [priceId], [getBlockTimestamp()], {
-    // //     value: 1,
-    // // });
-    // // const tx = await pythContract.updatePriceFeeds([priceFeedUpdate], {
-    // //     value: 1,
-    // // });
-    // // await waitForTx(tx);
-    // // console.log(`tx hash: ${tx.hash}`);
+    const conn = new EvmPriceServiceConnection('https://hermes.pyth.network', {
+        priceFeedRequestConfig: { binary: true },
+    });
+    const vaas = await conn.getLatestPriceFeeds([priceId]);
+    // console.log(vaas[0].getVAA());
+    // @ts-ignore
+    const priceFeedUpdate = '0x' + Buffer.from(vaas[0].getVAA() as string, 'base64').toString('hex');
+    // console.log(priceFeedUpdate);
+    const pythContract = await ethers.getContractAt('IPyth', '0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF');
+
+    // const updateFee = pythContract.getUpdateFee(priceFeedUpdate);
+    const tx = await pythContract.updatePriceFeeds([priceFeedUpdate], {
+        value: 1,
+    });
+    await waitForTx(tx);
+
+    const oraclePriceFeed = await getOraclePriceFeed();
+    await oraclePriceFeed.updatePrice([btc.address], [priceFeedUpdate], { value: 2 });
+    console.log(await oraclePriceFeed.getPrice(btc.address));
+    // console.log(await pythContract.getPriceNoOlderThan(priceId, 60));
+
     //
     // try {
     //     console.log('getPriceUnsafe:');
@@ -86,11 +83,11 @@ async function main() {
     //     console.log();
     // } catch (e) {}
 
-    for (let i = 0; i < 20; i++) {
-        const ret = (await conn.getLatestPriceFeeds([priceId])) as any[];
-        const price: Price = ret[0].price;
-        console.log(`publishTime: ${timeStr(price.publishTime)}  price: ${ethers.utils.formatUnits(price.price, 8)}`);
-    }
+    // for (let i = 0; i < 20; i++) {
+    //     const ret = (await conn.getLatestPriceFeeds([priceId])) as any[];
+    //     const price: Price = ret[0].price;
+    //     console.log(`publishTime: ${timeStr(price.publishTime)}  price: ${ethers.utils.formatUnits(price.price, 8)}`);
+    // }
 }
 
 function timeStr(timestamp: number) {

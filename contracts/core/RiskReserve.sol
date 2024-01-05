@@ -43,9 +43,9 @@ contract RiskReserve is IRiskReserve, Upgradeable {
     }
 
     function updatePositionManagerAddress(address newAddress) external override onlyPoolAdmin {
-        address oldAddress = addressDao;
+        address oldAddress = addressPositionManager;
         addressPositionManager = newAddress;
-        emit UpdatedPositionManagerAddress(msg.sender, oldAddress, addressPositionManager);
+        emit UpdatedPositionManagerAddress(msg.sender, oldAddress, newAddress);
     }
 
     function updatePoolAddress(address newAddress) external override onlyPoolAdmin {

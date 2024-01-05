@@ -21,8 +21,9 @@ library ValidationHelper {
         );
     }
 
-    function validateOrderExpired(uint256 orderTime, uint256 maxTimeDelay) internal view {
-        require(orderTime + maxTimeDelay >= block.timestamp, "order expired");
+    function validateOrderExpired(uint256 orderTime, uint256 maxTimeDelay) internal view returns (bool) {
+        return orderTime + maxTimeDelay < block.timestamp;
+//        require(orderTime + maxTimeDelay >= block.timestamp, "order expired");
     }
 
     function validatePriceTriggered(
