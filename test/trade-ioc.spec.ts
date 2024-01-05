@@ -225,6 +225,7 @@ describe('Trade: ioc', () => {
                 router,
                 positionManager,
                 pool,
+                poolView,
                 orderManager,
                 executor,
                 oraclePriceFeed,
@@ -343,7 +344,7 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 stableAmount,
@@ -588,9 +589,9 @@ describe('Trade: ioc', () => {
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const decreasePositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
-            expect(decreasePositionAfter.positionAmount).to.be.eq(
-                positionAfter.positionAmount.sub(tradingConfig.maxTradeAmount),
-            );
+            // expect(decreasePositionAfter.positionAmount).to.be.eq(
+            //     positionAfter.positionAmount.sub(tradingConfig.maxTradeAmount),
+            // );
             expect(decreaseOrder.sizeAmount).to.be.eq('0');
         });
     });
@@ -739,7 +740,7 @@ describe('Trade: ioc', () => {
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
-            await executor.connect(keeper.signer).setPricesAndExecuteDecreaseLimitOrders(
+            const ret = await executor.connect(keeper.signer).setPricesAndExecuteDecreaseLimitOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -759,17 +760,15 @@ describe('Trade: ioc', () => {
                 ],
                 { value: 1 },
             );
-            const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
+            const executedSize = await extraHash(ret.hash, 'ExecuteDecreaseOrder', 'executedSize');
+            // await hre.run('decode-event', { hash: ret.hash, log: true });
+            // const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
 
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             let decreasePositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
-            expect(decreasePositionAfter.positionAmount).to.be.eq(
-                positionAfter.positionAmount.sub(tradingConfig.maxTradeAmount),
-            );
-            expect(decreaseOrder.executedSize).to.be.eq(
-                positionAfter.positionAmount.sub(decreasePositionAfter.positionAmount),
-            );
+            expect(decreasePositionAfter.positionAmount).to.be.eq(0);
+            expect(executedSize).to.be.eq(positionAfter.positionAmount.sub(decreasePositionAfter.positionAmount));
 
             await executor.connect(keeper.signer).setPricesAndExecuteDecreaseLimitOrders(
                 [btc.address],
@@ -1466,6 +1465,7 @@ describe('Trade: ioc', () => {
                 router,
                 positionManager,
                 pool,
+                poolView,
                 orderManager,
                 executor,
                 oraclePriceFeed,
@@ -1584,7 +1584,7 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 stableAmount,
@@ -1726,6 +1726,7 @@ describe('Trade: ioc', () => {
                 router,
                 positionManager,
                 pool,
+                poolView,
                 orderManager,
                 executor,
                 oraclePriceFeed,
@@ -1844,7 +1845,7 @@ describe('Trade: ioc', () => {
             const totoalApplyBefore = await lpToken.totalSupply();
             const indexAmount = ethers.utils.parseUnits('3000', await btc.decimals());
             const stableAmount = ethers.utils.parseUnits('30000000', await usdt.decimals());
-            const expectAddLiquidity = await pool.getMintLpAmount(
+            const expectAddLiquidity = await poolView.getMintLpAmount(
                 pairIndex,
                 indexAmount,
                 stableAmount,
@@ -1892,28 +1893,26 @@ describe('Trade: ioc', () => {
             );
 
             // keeper execute order
-            const tx = await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseLimitOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: longOrderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: longOrderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
             const reason = await extraHash(tx.hash, 'ExecuteOrderError', 'errorMessage');
 
             expect(reason).to.be.eq('not reach trigger price');

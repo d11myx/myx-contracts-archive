@@ -5,6 +5,7 @@ import {
     Duration,
     encodeParameterArray,
     eNetwork,
+    getExecutor,
     getIndexPriceFeed,
     getMockToken,
     getOraclePriceFeed,
@@ -29,6 +30,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const reserveConfig = loadReserveConfig(MARKET_NAME);
     const pairConfigs = reserveConfig?.PairsConfig;
 
+    const executor = await getExecutor();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
 
@@ -67,7 +69,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
     console.log(`[deployment] await for setTokenPriceIds...`);
 
-    await waitForTx(await oraclePriceFeed.setTokenPriceIds(pairTokenPrices, pairTokenPriceIds));
+    await waitForTx(
+        await oraclePriceFeed.connect(poolAdminSigner).setTokenPriceIds(pairTokenPrices, pairTokenPriceIds),
+    );
+    await waitForTx(await indexPriceFeed.connect(poolAdminSigner).updateExecutorAddress(executor.address));
     // await hre.run('time-execution', {
     //     target: oraclePriceFeed.address,
     //     value: '0',

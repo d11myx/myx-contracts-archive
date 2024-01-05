@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPythOraclePriceFeed.sol";
 import "../interfaces/IRoleManager.sol";
+import "../interfaces/IPythOracle.sol";
 
 contract PythOraclePriceFeed is IPythOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -14,7 +14,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
 
     uint256 public priceAge;
 
-    IPyth public pyth;
+    IPythOracle public pyth;
     mapping(address => bytes32) public tokenPriceIds;
 
     constructor(
@@ -25,7 +25,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     ) {
         priceAge = 10;
         ADDRESS_PROVIDER = addressProvider;
-        pyth = IPyth(_pyth);
+        pyth = IPythOracle(_pyth);
         _setTokenPriceIds(tokens, priceIds);
     }
 
@@ -40,7 +40,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         emit PriceAgeUpdated(oldAge, priceAge);
     }
 
-    function updatePythAddress(IPyth _pyth) external override onlyPoolAdmin {
+    function updatePythAddress(IPythOracle _pyth) external onlyPoolAdmin {
         address oldAddress = address(pyth);
         pyth = _pyth;
         emit PythAddressUpdated(oldAddress, address(pyth));
@@ -49,7 +49,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     function setTokenPriceIds(
         address[] memory tokens,
         bytes32[] memory priceIds
-    ) external override onlyPoolAdmin {
+    ) external onlyPoolAdmin {
         _setTokenPriceIds(tokens, priceIds);
     }
 
@@ -64,15 +64,36 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         bytes32[] memory priceIds = new bytes32[](tokens.length);
         uint64[] memory publishTimes = new uint64[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
+            require(tokens[i] != address(0), "zero token address");
             require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
-            priceIds[i] = tokenPriceIds[tokens[i]];
-            publishTimes[i] = uint64(block.timestamp);
+
+            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) < uint64(block.timestamp)) {
+                priceIds[i] = tokenPriceIds[tokens[i]];
+                publishTimes[i] = uint64(block.timestamp);
+            }
         }
 
-        try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
-        } catch {
-            revert("update price failed");
+        if (priceIds.length > 0) {
+            try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
+            } catch {
+                revert("update price failed");
+            }
         }
+    }
+
+    function getPythPriceUnsafe(address token) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPriceUnsafe(priceId);
+    }
+
+    function getPythPriceNoOlderThan(address token, uint256 _priceAge) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPriceNoOlderThan(priceId, _priceAge);
+    }
+
+    function getPythPrice(address token) external view returns (PythStructs.Price memory) {
+        bytes32 priceId = _getPriceId(token);
+        return pyth.getPrice(priceId);
     }
 
     function getPrice(address token) external view override returns (uint256) {
@@ -93,20 +114,20 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     }
 
     function _getPriceId(address token) internal view returns (bytes32) {
+        require(token != address(0), "zero token address");
         bytes32 priceId = tokenPriceIds[token];
-        if (priceId == 0) {
-            revert("price feed not found");
-        }
+        require(priceId != 0, "unknown price id");
         return priceId;
     }
 
     function _returnPriceWithDecimals(
         PythStructs.Price memory pythPrice
     ) internal pure returns (uint256) {
-        if (pythPrice.price < 0) {
-            return 0;
+        if (pythPrice.price <= 0) {
+            revert("invalid price");
         }
-        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - 8));
+        uint256 _decimals = pythPrice.expo < 0 ? uint256(uint32(-pythPrice.expo)) : uint256(uint32(pythPrice.expo));
+        return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - _decimals));
     }
 
     function _setTokenPriceIds(address[] memory tokens, bytes32[] memory priceIds) internal {

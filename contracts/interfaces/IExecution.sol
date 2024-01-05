@@ -49,6 +49,10 @@ interface IExecution {
     );
 
     event ExecuteOrderError(uint256 orderId, string errorMessage);
+    event ExecutePositionError(bytes32 positionKey, string errorMessage);
+
+    event InvalidOrder(address sender, uint256 orderId, string message);
+    event ZeroPosition(address sender, address account, uint256 pairIndex, bool isLong, string message);
 
     struct ExecutePosition {
         bytes32 positionKey;
@@ -57,5 +61,11 @@ interface IExecution {
         uint256 referralsRatio;
         uint256 referralUserRatio;
         address referralOwner;
+    }
+
+    struct PositionOrder {
+        address account;
+        uint256 pairIndex;
+        bool isLong;
     }
 }
