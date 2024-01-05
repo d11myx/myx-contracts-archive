@@ -529,9 +529,6 @@ contract Pool is IPool, Upgradeable {
         IPool.Pair memory pair = getPair(_pairIndex);
         require(pair.pairToken != address(0), "ip");
 
-        ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
-        IPoolToken(pair.pairToken).burn(_amount);
-
         uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
 
         uint256 feeIndexTokenAmount;
@@ -543,6 +540,9 @@ contract Pool is IPool, Upgradeable {
             feeIndexTokenAmount,
             feeStableTokenAmount
         ) = poolView.getReceivedAmount(_pairIndex, _amount, price);
+
+        ILiquidityCallback(msg.sender).removeLiquidityCallback(pair.pairToken, _amount, data);
+        IPoolToken(pair.pairToken).burn(_amount);
 
         IPool.Vault memory vault = getVault(_pairIndex);
         uint256 indexTokenDec = IERC20Metadata(pair.indexToken).decimals();

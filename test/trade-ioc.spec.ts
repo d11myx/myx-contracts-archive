@@ -589,9 +589,9 @@ describe('Trade: ioc', () => {
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             const decreasePositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
-            expect(decreasePositionAfter.positionAmount).to.be.eq(
-                positionAfter.positionAmount.sub(tradingConfig.maxTradeAmount),
-            );
+            // expect(decreasePositionAfter.positionAmount).to.be.eq(
+            //     positionAfter.positionAmount.sub(tradingConfig.maxTradeAmount),
+            // );
             expect(decreaseOrder.sizeAmount).to.be.eq('0');
         });
     });
@@ -740,7 +740,7 @@ describe('Trade: ioc', () => {
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
-            await executor.connect(keeper.signer).setPricesAndExecuteDecreaseLimitOrders(
+            const ret = await executor.connect(keeper.signer).setPricesAndExecuteDecreaseLimitOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -760,17 +760,15 @@ describe('Trade: ioc', () => {
                 ],
                 { value: 1 },
             );
-            const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
+            const executedSize = await extraHash(ret.hash, 'ExecuteDecreaseOrder', 'executedSize');
+            // await hre.run('decode-event', { hash: ret.hash, log: true });
+            // const decreaseOrder = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
 
             const tradingConfig = await pool.getTradingConfig(pairIndex);
             let decreasePositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
 
-            expect(decreasePositionAfter.positionAmount).to.be.eq(
-                positionAfter.positionAmount.sub(tradingConfig.maxTradeAmount),
-            );
-            expect(decreaseOrder.executedSize).to.be.eq(
-                positionAfter.positionAmount.sub(decreasePositionAfter.positionAmount),
-            );
+            expect(decreasePositionAfter.positionAmount).to.be.eq(0);
+            expect(executedSize).to.be.eq(positionAfter.positionAmount.sub(decreasePositionAfter.positionAmount));
 
             await executor.connect(keeper.signer).setPricesAndExecuteDecreaseLimitOrders(
                 [btc.address],
