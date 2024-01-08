@@ -17,6 +17,7 @@ contract ExecutionLogic is IExecutionLogic {
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
+    using Int256Utils for uint256;
     using Position for Position.Info;
 
     uint256 public override maxTimeDelay;
@@ -740,7 +741,7 @@ contract ExecutionLogic is IExecutionLogic {
                         collateral: 0,
                         openPrice: price,
                         isLong: adlPosition.position.isLong,
-                        sizeAmount: -int128(uint128(adlPosition.executionSize)),
+                        sizeAmount: -(adlPosition.executionSize.safeConvertToInt256()),
                         maxSlippage: 0,
                         paymentType: TradingTypes.InnerPaymentType.NONE,
                         networkFeeAmount: 0,

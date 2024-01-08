@@ -15,6 +15,7 @@ contract LiquidationLogic is ILiquidationLogic {
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
+    using Int256Utils for uint256;
     using Position for Position.Info;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -111,7 +112,7 @@ contract LiquidationLogic is ILiquidationLogic {
                 collateral: 0,
                 openPrice: price,
                 isLong: position.isLong,
-                sizeAmount: -int128(uint128(position.positionAmount)),
+                sizeAmount: -(position.positionAmount.safeConvertToInt256()),
                 maxSlippage: 0,
                 paymentType: TradingTypes.InnerPaymentType.NONE,
                 networkFeeAmount: 0,
