@@ -110,7 +110,7 @@ contract Router is
 
     function createIncreaseOrderWithTpSl(
         TradingTypes.IncreasePositionWithTpSlRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 orderId) {
+    ) external payable whenNotPaused nonReentrant returns (uint256 orderId) {
         request.account = msg.sender;
 
         require(
@@ -160,7 +160,8 @@ contract Router is
         uint128 sl,
         TradingTypes.NetworkFeePaymentType paymentType,
         uint256 networkFeeAmount
-    ) internal returns (uint256 tpOrderId, uint256 slOrderId) {
+    ) public payable returns (uint256 tpOrderId, uint256 slOrderId) {
+        require(msg.sender == address(this), "internal");
         if (tp > 0) {
             tpOrderId = orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -200,7 +201,7 @@ contract Router is
 
     function createIncreaseOrder(
         TradingTypes.IncreasePositionRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 orderId) {
+    ) external payable whenNotPaused nonReentrant returns (uint256 orderId) {
         request.account = msg.sender;
 
         require(
@@ -229,7 +230,7 @@ contract Router is
 
     function createDecreaseOrder(
         TradingTypes.DecreasePositionRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256) {
+    ) external payable whenNotPaused nonReentrant returns (uint256) {
         request.account = msg.sender;
 
         return
@@ -252,7 +253,7 @@ contract Router is
 
     function createDecreaseOrders(
         TradingTypes.DecreasePositionRequest[] memory requests
-    ) external whenNotPaused nonReentrant returns (uint256[] memory orderIds) {
+    ) external payable whenNotPaused nonReentrant returns (uint256[] memory orderIds) {
         orderIds = new uint256[](requests.length);
         for (uint256 i = 0; i < requests.length; i++) {
             TradingTypes.DecreasePositionRequest memory request = requests[i];
@@ -352,7 +353,7 @@ contract Router is
 
     function addOrderTpSl(
         AddOrderTpSlRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
+    ) external payable whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
         uint256 pairIndex;
         bool isLong;
         if (request.isIncrease) {
@@ -391,7 +392,7 @@ contract Router is
 
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
+    ) external payable whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
         (tpOrderId, slOrderId) = _createTpSl(
             msg.sender,
             request.pairIndex,
