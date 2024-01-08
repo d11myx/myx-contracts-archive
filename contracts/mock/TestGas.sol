@@ -52,7 +52,8 @@ contract TestGas {
             isLong: true,
             sizeAmount: 1000,
             maxSlippage: 1000000,
-            paymentType: TradingTypes.NetworkFeePaymentType.ETH
+            paymentType: TradingTypes.NetworkFeePaymentType.ETH,
+            networkFeeAmount: 0
         });
     }
 
