@@ -32,6 +32,7 @@ contract Router is
 {
     using SafeERC20 for IERC20;
     using SafeERC20 for IWETH;
+    using Int256Utils for uint256;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
@@ -129,6 +130,7 @@ contract Router is
                 sizeAmount: int128(request.sizeAmount),
                 maxSlippage: request.maxSlippage,
                 paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                networkFeeAmount: request.networkFeeAmount,
                 data: abi.encode(request.account)
             })
         );
@@ -142,7 +144,8 @@ contract Router is
             request.tp,
             request.slPrice,
             request.sl,
-            request.paymentType
+            request.paymentType,
+            request.networkFeeAmount
         );
         return orderId;
     }
@@ -155,7 +158,8 @@ contract Router is
         uint128 tp,
         uint256 slPrice,
         uint128 sl,
-        TradingTypes.NetworkFeePaymentType paymentType
+        TradingTypes.NetworkFeePaymentType paymentType,
+        uint256 networkFeeAmount
     ) internal returns (uint256 tpOrderId, uint256 slOrderId) {
         if (tp > 0) {
             tpOrderId = orderManager.createOrder(
@@ -169,6 +173,7 @@ contract Router is
                     sizeAmount: -int128(tp),
                     maxSlippage: 0,
                     paymentType: TradingTypes.convertPaymentType(paymentType),
+                    networkFeeAmount: networkFeeAmount,
                     data: abi.encode(account)
                 })
             );
@@ -185,6 +190,7 @@ contract Router is
                     sizeAmount: -int128(sl),
                     maxSlippage: 0,
                     paymentType: TradingTypes.convertPaymentType(paymentType),
+                    networkFeeAmount: networkFeeAmount,
                     data: abi.encode(account)
                 })
             );
@@ -212,9 +218,10 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.openPrice,
                     isLong: request.isLong,
-                    sizeAmount: int128(request.sizeAmount),
+                    sizeAmount: request.sizeAmount.safeConvertToInt256(),
                     maxSlippage: request.maxSlippage,
                     paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                    networkFeeAmount: request.networkFeeAmount,
                     data: abi.encode(request.account)
                 })
             );
@@ -234,9 +241,10 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.triggerPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int128(request.sizeAmount),
+                    sizeAmount: -(request.sizeAmount.safeConvertToInt256()),
                     maxSlippage: request.maxSlippage,
                     paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                    networkFeeAmount: request.networkFeeAmount,
                     data: abi.encode(request.account)
                 })
             );
@@ -257,9 +265,10 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.triggerPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int128(request.sizeAmount),
+                    sizeAmount: -(request.sizeAmount.safeConvertToInt256()),
                     maxSlippage: request.maxSlippage,
                     paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                    networkFeeAmount: request.networkFeeAmount,
                     data: abi.encode(msg.sender)
                 })
             );
@@ -373,7 +382,8 @@ contract Router is
                 request.tp,
                 request.slPrice,
                 request.sl,
-                request.paymentType
+                request.paymentType,
+                request.networkFeeAmount
             );
         }
         return (tpOrderId, slOrderId);
@@ -390,7 +400,8 @@ contract Router is
             request.tp,
             request.slPrice,
             request.sl,
-            request.paymentType
+            request.paymentType,
+            request.networkFeeAmount
         );
         return (tpOrderId, slOrderId);
     }

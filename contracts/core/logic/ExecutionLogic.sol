@@ -743,6 +743,7 @@ contract ExecutionLogic is IExecutionLogic {
                         sizeAmount: -int128(uint128(adlPosition.executionSize)),
                         maxSlippage: 0,
                         paymentType: TradingTypes.InnerPaymentType.NONE,
+                        networkFeeAmount: 0,
                         data: abi.encode(adlPosition.position.account)
                     })
                 );
