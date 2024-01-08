@@ -105,29 +105,31 @@ async function main() {
     // eth交易对U：10704332
     // 风险准备金：10704332
 
-    for (let i = 0; i < 10000; i++) {
-        console.log(
-            `当前价格: `,
-            new Decimal(ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30)).toFixed(5),
-        );
-        // @ts-ignore
-        console.log(`LP持仓方向: `, (await positionManager.getExposedPositions(1)) < 0 ? '多' : '空');
-        console.log(
-            `LP持仓价格: `,
-            new Decimal(ethers.utils.formatUnits((await pool.getVault(1)).averagePrice, 30)).toFixed(5),
-        );
-        console.log(
-            `LP盈亏: `,
-            new Decimal(
-                ethers.utils.formatUnits(
-                    await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)),
-                    6,
-                ),
-            ).toFixed(5),
-        );
-        console.log('------------------------------------------');
-        await sleep(1000);
-    }
+    console.log(await positionManager.longTracker(1));
+
+    // for (let i = 0; i < 10000; i++) {
+    //     console.log(
+    //         `当前价格: `,
+    //         new Decimal(ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30)).toFixed(5),
+    //     );
+    //     // @ts-ignore
+    //     console.log(`LP持仓方向: `, (await positionManager.getExposedPositions(1)) < 0 ? '多' : '空');
+    //     console.log(
+    //         `LP持仓价格: `,
+    //         new Decimal(ethers.utils.formatUnits((await pool.getVault(1)).averagePrice, 30)).toFixed(5),
+    //     );
+    //     console.log(
+    //         `LP盈亏: `,
+    //         new Decimal(
+    //             ethers.utils.formatUnits(
+    //                 await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)),
+    //                 6,
+    //             ),
+    //         ).toFixed(5),
+    //     );
+    //     console.log('------------------------------------------');
+    //     await sleep(1000);
+    // }
 
     // console.log(await oraclePriceFeed.getPrice(btc.address));
     // console.log(await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)));

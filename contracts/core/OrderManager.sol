@@ -113,19 +113,20 @@ contract OrderManager is IOrderManager, Upgradeable {
 
         //TODO network fees
         if (request.paymentType == TradingTypes.InnerPaymentType.ETH) {
-//            NetworkFee memory networkFee = networkFees[PaymentType.ETH];
-//            if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
-//                || msg.value < networkFee.discountedNetworkFee) {
-//                revert("insufficient network fee");
-//            }
-
+            NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.ETH];
+            if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
+                || msg.value < networkFee.basicNetworkFee) {
+                revert("insufficient network fee");
+            }
+            (bool success, ) = address(pool).call{value: msg.value}(new bytes(0));
+            require(success, "transfer eth failed");
         } else if (request.paymentType == TradingTypes.InnerPaymentType.COLLATERAL) {
-//            NetworkFee memory networkFee = networkFees[TradingTypes.InnerPaymentType.COLLATERAL];
-//            if (request.collateral < 0
-//                || (request.sizeAmount.abs() >= networkFee.discountThreshold && request.collateral < networkFee.discountedNetworkFee)
-//                || request.collateral < networkFee.discountedNetworkFee) {
-//                revert("insufficient network fee");
-//            }
+            NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.COLLATERAL];
+            if ((request.sizeAmount.abs() >= networkFee.discountThreshold && request.networkFeeAmount < networkFee.discountedNetworkFee)
+                || request.networkFeeAmount < networkFee.discountedNetworkFee) {
+                revert("insufficient network fee");
+            }
+
         }
 
         Position.Info memory position = positionManager.getPosition(
@@ -141,8 +142,8 @@ contract OrderManager is IOrderManager, Upgradeable {
             if (request.sizeAmount >= 0) {
                 require(
                     request.sizeAmount == 0 ||
-                        (uint256(uint128(request.sizeAmount)) >= tradingConfig.minTradeAmount &&
-                            uint256(uint128(request.sizeAmount)) <= tradingConfig.maxTradeAmount),
+                        (request.sizeAmount.abs() >= tradingConfig.minTradeAmount &&
+                            request.sizeAmount.abs() <= tradingConfig.maxTradeAmount),
                     "invalid trade size"
                 );
                 // check leverage
@@ -150,7 +151,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                     pair,
                     0,
                     request.collateral,
-                    uint256(uint128(request.sizeAmount)),
+                    request.sizeAmount.abs(),
                     true,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount,
@@ -164,7 +165,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                     pair,
                     0,
                     request.collateral,
-                    uint256(uint128(-request.sizeAmount)),
+                    request.sizeAmount.abs(),
                     false,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount,
@@ -177,9 +178,7 @@ contract OrderManager is IOrderManager, Upgradeable {
             request.tradeType == TradingTypes.TradeType.TP ||
             request.tradeType == TradingTypes.TradeType.SL
         ) {
-            uint256 orderSizeAmount = request.sizeAmount > 0 ?
-                uint256(uint128(request.sizeAmount)) : uint256(uint128(-request.sizeAmount));
-            require(orderSizeAmount <= position.positionAmount, "tp/sl exceeds max size");
+            require(request.sizeAmount.abs() <= position.positionAmount, "tp/sl exceeds max size");
             require(request.collateral == 0, "no collateral required");
         }
 
@@ -203,9 +202,10 @@ contract OrderManager is IOrderManager, Upgradeable {
                         collateral: request.collateral,
                         openPrice: request.openPrice,
                         isLong: request.isLong,
-                        sizeAmount: uint128(request.sizeAmount),
+                        sizeAmount: request.sizeAmount.abs(),
                         maxSlippage: request.maxSlippage,
-                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL
+                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL,
+                        networkFeeAmount: request.networkFeeAmount
                     })
                 );
         } else if (request.sizeAmount < 0) {
@@ -217,10 +217,11 @@ contract OrderManager is IOrderManager, Upgradeable {
                         tradeType: request.tradeType,
                         collateral: request.collateral,
                         triggerPrice: request.openPrice,
-                        sizeAmount: uint128(-request.sizeAmount),
+                        sizeAmount: request.sizeAmount.abs(),
                         isLong: request.isLong,
                         maxSlippage: request.maxSlippage,
-                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL
+                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL,
+                        networkFeeAmount: request.networkFeeAmount
                     })
                 );
         } else {
@@ -236,7 +237,8 @@ contract OrderManager is IOrderManager, Upgradeable {
                         isLong: request.isLong,
                         sizeAmount: 0,
                         maxSlippage: request.maxSlippage,
-                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL
+                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL,
+                        networkFeeAmount: request.networkFeeAmount
                     })
                 );
         }
