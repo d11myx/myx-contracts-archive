@@ -13,7 +13,7 @@ import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { MARKET_NAME } from '../helpers/env';
 import { loadReserveConfig } from '../helpers/market-config-helper';
-import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE, PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: ioc', () => {
     const pairIndex = 1;
@@ -97,6 +97,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -141,6 +143,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -258,6 +262,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -302,6 +308,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -488,6 +496,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -525,6 +535,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
@@ -562,6 +574,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: positionAfter.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -663,6 +677,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -700,6 +716,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
@@ -737,6 +755,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: positionAfter.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -863,6 +883,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -903,6 +925,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -940,6 +964,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: longPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -1077,6 +1103,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -1117,6 +1145,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1154,6 +1184,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: longPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -1296,6 +1328,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount: size,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -1498,6 +1532,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -1542,6 +1578,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1759,6 +1797,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -1803,6 +1843,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);

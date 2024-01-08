@@ -3,6 +3,7 @@ import { ethers } from 'hardhat';
 import { increasePosition, mintAndApprove, updateETHPrice } from './helpers/misc';
 import { TradeType, ZERO_ADDRESS, abiCoder } from '../helpers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Replay: adl', () => {
     const pairIndex = 2;
@@ -108,6 +109,8 @@ describe('Replay: adl', () => {
             sizeAmount: ethers.utils.parseUnits('2.4824', 18),
             tradeType: TradeType.MARKET,
             triggerPrice: ethers.utils.parseUnits('1010.23', 30),
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         const orderId = await orderManager.ordersIndex();

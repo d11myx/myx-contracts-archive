@@ -14,6 +14,7 @@ import {
 import { constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { convertIndexAmountToStable } from '../helpers/token-decimals';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Position', () => {
     const pairIndex = 1;
@@ -96,6 +97,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -124,6 +127,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -311,6 +316,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -339,6 +346,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -522,6 +531,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -703,6 +714,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
@@ -749,6 +762,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -932,6 +947,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
@@ -978,6 +995,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1164,6 +1183,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1192,6 +1213,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1357,6 +1380,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1385,6 +1410,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1572,6 +1599,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1600,6 +1629,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1787,6 +1818,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1815,6 +1848,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -2000,6 +2035,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const longOrderId = await orderManager.ordersIndex();
@@ -2046,6 +2083,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
@@ -2289,6 +2328,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -2317,6 +2358,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -2515,6 +2558,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -2543,6 +2588,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();

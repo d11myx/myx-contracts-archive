@@ -4,6 +4,7 @@ import { getPositionTradingFee, MAX_UINT_AMOUNT, TradeType, waitForTx, ZERO_ADDR
 import { expect } from './shared/expect';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 1;
@@ -86,6 +87,8 @@ describe('Router: Edge cases', () => {
             slPrice: ethers.utils.parseUnits('29000', 30),
             sl: ethers.utils.parseUnits('1', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
         const orderId = 0;
@@ -155,6 +158,8 @@ describe('Router: Edge cases', () => {
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('8', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);

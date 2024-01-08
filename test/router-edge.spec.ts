@@ -5,6 +5,7 @@ import { MAX_UINT_AMOUNT, TradeType, waitForTx, ZERO_ADDRESS } from '../helpers'
 import { expect } from 'chai';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Router: Edge cases', () => {
     const pairIndex = 1;
@@ -95,6 +96,8 @@ describe('Router: Edge cases', () => {
             slPrice: ethers.utils.parseUnits('29000', 30),
             sl: ethers.utils.parseUnits('1', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
 
@@ -147,6 +150,8 @@ describe('Router: Edge cases', () => {
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('8', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
@@ -318,34 +323,34 @@ describe('Router: Edge cases', () => {
                 isLong: true,
                 sizeAmount: size,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             // await tradingRouter.setHandler(trader.address, true);
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionBef = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -400,31 +405,31 @@ export async function increaseUserPosition(
         isLong: isLong,
         sizeAmount: size,
         maxSlippage: 0,
+        paymentType: PAYMENT_TYPE,
+        networkFeeAmount: NETWORK_FEE_AMOUNT,
     };
 
     // await router.setHandler(user.address, true);
     const increaseOrderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createIncreaseOrder(increasePositionRequest);
-    return await executor
-        .connect(keeper.signer)
-        .setPricesAndExecuteIncreaseMarketOrders(
-            [btc.address],
-            [await indexPriceFeed.getPrice(btc.address)],
-            [
-                new ethers.utils.AbiCoder().encode(
-                    ['uint256'],
-                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                ),
-            ],
-            [
-                {
-                    orderId: increaseOrderId,
-                    tier: 0,
-                    referralsRatio: 0,
-                    referralUserRatio: 0,
-                    referralOwner: ZERO_ADDRESS,
-                },
-            ],
-            { value: 1 },
-        );
+    return await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+        [btc.address],
+        [await indexPriceFeed.getPrice(btc.address)],
+        [
+            new ethers.utils.AbiCoder().encode(
+                ['uint256'],
+                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+            ),
+        ],
+        [
+            {
+                orderId: increaseOrderId,
+                tier: 0,
+                referralsRatio: 0,
+                referralUserRatio: 0,
+                referralOwner: ZERO_ADDRESS,
+            },
+        ],
+        { value: 1 },
+    );
 }
