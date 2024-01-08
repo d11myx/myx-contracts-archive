@@ -27,6 +27,7 @@ contract OrderManager is IOrderManager, Upgradeable {
     using Math for uint256;
     using SafeMath for uint256;
     using Int256Utils for int256;
+    using Int256Utils for uint256;
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
@@ -111,7 +112,8 @@ contract OrderManager is IOrderManager, Upgradeable {
         IPool.Pair memory pair = pool.getPair(request.pairIndex);
         require(pair.enable, "disabled");
 
-        //TODO network fees
+        // network fees
+        int256 collateral = request.collateral;
         if (request.paymentType == TradingTypes.InnerPaymentType.ETH) {
             NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.ETH];
             if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
@@ -126,7 +128,13 @@ contract OrderManager is IOrderManager, Upgradeable {
                 || request.networkFeeAmount < networkFee.discountedNetworkFee) {
                 revert("insufficient network fee");
             }
-
+            collateral -= request.networkFeeAmount.safeConvertToInt256();
+            _transferOrderCollateral(
+                pair.stableToken,
+                request.networkFeeAmount,
+                address(pool),
+                request.data
+            );
         }
 
         Position.Info memory position = positionManager.getPosition(
@@ -150,7 +158,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                 (uint256 afterPosition, ) = position.validLeverage(
                     pair,
                     0,
-                    request.collateral,
+                    collateral,
                     request.sizeAmount.abs(),
                     true,
                     tradingConfig.maxLeverage,
@@ -164,7 +172,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                 position.validLeverage(
                     pair,
                     0,
-                    request.collateral,
+                    collateral,
                     request.sizeAmount.abs(),
                     false,
                     tradingConfig.maxLeverage,
@@ -179,14 +187,14 @@ contract OrderManager is IOrderManager, Upgradeable {
             request.tradeType == TradingTypes.TradeType.SL
         ) {
             require(request.sizeAmount.abs() <= position.positionAmount, "tp/sl exceeds max size");
-            require(request.collateral == 0, "no collateral required");
+            require(collateral == 0, "no collateral required");
         }
 
         // transfer collateral
-        if (request.collateral > 0) {
+        if (collateral > 0) {
             _transferOrderCollateral(
                 pair.stableToken,
-                request.collateral.abs(),
+                collateral.abs(),
                 address(pool),
                 request.data
             );
@@ -199,7 +207,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                         account: account,
                         pairIndex: request.pairIndex,
                         tradeType: request.tradeType,
-                        collateral: request.collateral,
+                        collateral: collateral,
                         openPrice: request.openPrice,
                         isLong: request.isLong,
                         sizeAmount: request.sizeAmount.abs(),
@@ -215,7 +223,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                         account: account,
                         pairIndex: request.pairIndex,
                         tradeType: request.tradeType,
-                        collateral: request.collateral,
+                        collateral: collateral,
                         triggerPrice: request.openPrice,
                         sizeAmount: request.sizeAmount.abs(),
                         isLong: request.isLong,
@@ -225,14 +233,14 @@ contract OrderManager is IOrderManager, Upgradeable {
                     })
                 );
         } else {
-            require(request.collateral != 0, "not support");
+            require(collateral != 0, "not support");
             return
                 _saveIncreaseOrder(
                     TradingTypes.IncreasePositionRequest({
                         account: account,
                         pairIndex: request.pairIndex,
                         tradeType: request.tradeType,
-                        collateral: request.collateral,
+                        collateral: collateral,
                         openPrice: request.openPrice,
                         isLong: request.isLong,
                         sizeAmount: 0,
