@@ -88,10 +88,21 @@ contract OrderManager is IOrderManager, Upgradeable {
         emit UpdateRouterAddress(msg.sender, oldAddress, _router);
     }
 
-    function updateNetworkFee(
+    function updateNetworkFees(
+        TradingTypes.NetworkFeePaymentType[] memory paymentTypes,
+        NetworkFee[] memory fees
+    ) external onlyPoolAdmin {
+        require(paymentTypes.length == fees.length, "inconsistent params length");
+
+        for (uint256 i = 0; i < fees.length; i++) {
+            _updateNetworkFee(paymentTypes[i], fees[i]);
+        }
+    }
+
+    function _updateNetworkFee(
         TradingTypes.NetworkFeePaymentType paymentType,
         NetworkFee memory fee
-    ) external onlyPoolAdmin {
+    ) internal {
         networkFees[paymentType] = fee;
         emit UpdatedNetworkFee(msg.sender, paymentType, fee.basicNetworkFee, fee.discountThreshold, fee.discountedNetworkFee);
     }
