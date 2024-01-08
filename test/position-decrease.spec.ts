@@ -4,6 +4,7 @@ import { MAX_UINT_AMOUNT, TradeType } from '../helpers';
 import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from 'chai';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('PositionManager: decrease position', () => {
     const pairIndex = 1;
@@ -152,6 +153,8 @@ describe('PositionManager: decrease position', () => {
                 isLong: true,
                 sizeAmount: positionBefore.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             // update BTC price

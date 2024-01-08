@@ -116,25 +116,29 @@ contract OrderManager is IOrderManager, Upgradeable {
         int256 collateral = request.collateral;
         if (request.paymentType == TradingTypes.InnerPaymentType.ETH) {
             NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.ETH];
-            if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
-                || msg.value < networkFee.basicNetworkFee) {
-                revert("insufficient network fee");
+            if (networkFee.basicNetworkFee > 0) {
+                if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
+                    || msg.value < networkFee.basicNetworkFee) {
+                    revert("insufficient network fee");
+                }
+                (bool success, ) = address(pool).call{value: msg.value}(new bytes(0));
+                require(success, "transfer eth failed");
             }
-            (bool success, ) = address(pool).call{value: msg.value}(new bytes(0));
-            require(success, "transfer eth failed");
         } else if (request.paymentType == TradingTypes.InnerPaymentType.COLLATERAL) {
             NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.COLLATERAL];
-            if ((request.sizeAmount.abs() >= networkFee.discountThreshold && request.networkFeeAmount < networkFee.discountedNetworkFee)
-                || request.networkFeeAmount < networkFee.discountedNetworkFee) {
-                revert("insufficient network fee");
+            if (networkFee.basicNetworkFee > 0) {
+                if ((request.sizeAmount.abs() >= networkFee.discountThreshold && request.networkFeeAmount < networkFee.discountedNetworkFee)
+                    || request.networkFeeAmount < networkFee.discountedNetworkFee) {
+                    revert("insufficient network fee");
+                }
+                collateral -= request.networkFeeAmount.safeConvertToInt256();
+                _transferOrderCollateral(
+                    pair.stableToken,
+                    request.networkFeeAmount,
+                    address(pool),
+                    request.data
+                );
             }
-            collateral -= request.networkFeeAmount.safeConvertToInt256();
-            _transferOrderCollateral(
-                pair.stableToken,
-                request.networkFeeAmount,
-                address(pool),
-                request.data
-            );
         }
 
         Position.Info memory position = positionManager.getPosition(
@@ -182,13 +186,13 @@ contract OrderManager is IOrderManager, Upgradeable {
             }
         }
 
-        if (
-            request.tradeType == TradingTypes.TradeType.TP ||
-            request.tradeType == TradingTypes.TradeType.SL
-        ) {
-            require(request.sizeAmount.abs() <= position.positionAmount, "tp/sl exceeds max size");
-            require(collateral == 0, "no collateral required");
-        }
+//        if (
+//            request.tradeType == TradingTypes.TradeType.TP ||
+//            request.tradeType == TradingTypes.TradeType.SL
+//        ) {
+//            require(request.sizeAmount.abs() <= position.positionAmount, "tp/sl exceeds max size");
+//            require(collateral == 0, "no collateral required");
+//        }
 
         // transfer collateral
         if (collateral > 0) {
@@ -233,7 +237,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                     })
                 );
         } else {
-            require(collateral != 0, "not support");
+            require(collateral != 0, "collateral required");
             return
                 _saveIncreaseOrder(
                     TradingTypes.IncreasePositionRequest({

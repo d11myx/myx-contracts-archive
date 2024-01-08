@@ -3,6 +3,7 @@ import { expect } from './shared/expect';
 import { ethers, getNamedAccounts } from 'hardhat';
 import { TradeType } from '../helpers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Blacklist cases', () => {
     after(async () => {
@@ -177,6 +178,8 @@ describe('Blacklist cases', () => {
             sl: 0,
             slPrice: 0,
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         await expect(router.connect(blackUser.signer).createIncreaseOrderWithTpSl(increase)).to.be.revertedWith(
@@ -196,6 +199,8 @@ describe('Blacklist cases', () => {
             isLong: true,
             sizeAmount: 0,
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         await expect(router.connect(blackUser.signer).createDecreaseOrder(decrease)).to.be.revertedWith(
             'blacklist account',

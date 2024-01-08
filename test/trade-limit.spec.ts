@@ -5,6 +5,7 @@ import { TradeType, ZERO_ADDRESS } from '../helpers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { BigNumber } from 'ethers';
 import { expect } from './shared/expect';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Trade: Limit order', () => {
     const pairIndex = 1;
@@ -99,6 +100,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             // create order trigger exceeds max position
@@ -174,6 +177,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -284,6 +289,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -322,6 +329,8 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -359,6 +368,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longEntrustOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longEntrustPositionRequest);
@@ -377,6 +388,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longEntrustOrderId2 = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longEntrustPositionRequest2);
@@ -394,6 +407,8 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortEntrustOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortEntrustPositionRequest);
@@ -411,6 +426,8 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseShortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseShortPositionRequest);
@@ -428,6 +445,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount: sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseLongOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -540,6 +559,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -605,6 +626,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -676,6 +699,8 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -741,6 +766,8 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);

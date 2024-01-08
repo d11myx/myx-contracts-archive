@@ -5,7 +5,7 @@ import { expect } from './shared/expect';
 import { TradeType, convertIndexAmountToStable, ZERO_ADDRESS } from '../helpers';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
-import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE, PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: trading fee', () => {
     const pairIndex = 1;
@@ -671,6 +671,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             let orderId = await orderManager.ordersIndex();
@@ -716,6 +718,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -761,6 +765,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -806,6 +812,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -851,6 +859,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -896,6 +906,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
