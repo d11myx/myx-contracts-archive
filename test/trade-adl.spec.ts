@@ -5,6 +5,7 @@ import { expect } from './shared/expect';
 import { TradeType, getMockToken, convertIndexAmountToStable, ZERO_ADDRESS } from '../helpers';
 import { BigNumber, constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Trade: adl', () => {
     const pairIndex = 1;
@@ -80,6 +81,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -118,6 +121,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -189,6 +194,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount: longPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -327,6 +334,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -365,6 +374,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -436,6 +447,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount: longPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -574,6 +587,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -612,6 +627,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -680,6 +697,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: shortPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -818,6 +837,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -856,6 +877,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -924,6 +947,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: shortPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createDecreaseOrder(decreasePositionRequest);
@@ -1065,6 +1090,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -1102,6 +1129,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1337,6 +1366,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -1375,6 +1406,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1608,6 +1641,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -1646,6 +1681,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1877,6 +1914,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -1915,6 +1954,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -2146,6 +2187,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -2184,6 +2227,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);
@@ -2425,6 +2470,8 @@ describe('Trade: adl', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(longTrader.signer).createIncreaseOrder(longPositionRequest);
@@ -2463,6 +2510,8 @@ describe('Trade: adl', () => {
                 isLong: false,
                 sizeAmount: sizeAmount2,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(shortTrader.signer).createIncreaseOrder(shortPositionRequest);

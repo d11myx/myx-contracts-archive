@@ -136,7 +136,7 @@ contract Router is
         );
 
         // tp、sl
-        _createTpSl(
+        this._createTpSl(
             request.account,
             request.pairIndex,
             request.isLong,
@@ -375,7 +375,7 @@ contract Router is
         }
 
         if (request.tp > 0 || request.sl > 0) {
-            _createTpSl(
+            this._createTpSl(
                 msg.sender,
                 pairIndex,
                 isLong,
@@ -393,7 +393,7 @@ contract Router is
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
     ) external payable whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
-        (tpOrderId, slOrderId) = _createTpSl(
+        (tpOrderId, slOrderId) = this._createTpSl(
             msg.sender,
             request.pairIndex,
             request.isLong,

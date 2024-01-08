@@ -5,6 +5,7 @@ import { expect } from './shared/expect';
 import { mintAndApprove } from './helpers/misc';
 import { IRouter, TradingTypes } from '../types/contracts/core/Router';
 import { before } from 'mocha';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('cancel orders', () => {
     const pairIndex = 1;
@@ -40,6 +41,8 @@ describe('cancel orders', () => {
             slPrice: ethers.utils.parseUnits('29000', 30),
             sl: ethers.utils.parseUnits('1', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         const orderId = await orderManager.ordersIndex();
@@ -78,6 +81,8 @@ describe('cancel orders', () => {
             isLong: true,
             sizeAmount: sizeAmount,
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         const orderId = await orderManager.ordersIndex();
@@ -121,6 +126,8 @@ describe('cancel orders', () => {
             slPrice: ethers.utils.parseUnits('29000', 30),
             sl: ethers.utils.parseUnits('1', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         const orderId = await orderManager.ordersIndex();
@@ -160,6 +167,8 @@ describe('cancel orders', () => {
             isLong: true,
             sizeAmount: sizeAmount,
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         const orderId = await orderManager.ordersIndex();

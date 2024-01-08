@@ -9,6 +9,7 @@ import { getContract } from '../helpers/utilities/tx';
 import { TradingTypes } from '../types/contracts/core/Router';
 import usdt from '../markets/usdt';
 import Decimal from 'decimal.js';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Modify LP Average Price', async () => {
     const pairIndex = 1;
@@ -119,32 +120,32 @@ describe('Modify LP Average Price', async () => {
                 isLong: true,
                 sizeAmount: sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             expect(positionAft.averagePrice).to.be.eq(
@@ -192,32 +193,32 @@ describe('Modify LP Average Price', async () => {
                 isLong: true,
                 sizeAmount: sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
             const uintNum = ethers.utils.parseUnits('1', 30);
@@ -266,32 +267,32 @@ describe('Modify LP Average Price', async () => {
                 triggerPrice: openPrice,
                 sizeAmount: sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteDecreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -343,32 +344,32 @@ describe('Modify LP Average Price', async () => {
                 triggerPrice: openPrice,
                 sizeAmount: descreaseAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequst);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteDecreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, true);
 
@@ -451,32 +452,32 @@ describe('Modify LP Average Price', async () => {
                 isLong: false,
                 sizeAmount: shortAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
             expect(positionAft.averagePrice).to.be.eq(
@@ -521,32 +522,32 @@ describe('Modify LP Average Price', async () => {
                 isLong: false,
                 sizeAmount: shortAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(incresePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
             expect(positionAft.averagePrice).to.be.eq(
@@ -591,32 +592,32 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: decreaseAmount,
                 isLong: false,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteDecreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 
@@ -666,32 +667,32 @@ describe('Modify LP Average Price', async () => {
                 sizeAmount: decreaseAmount,
                 isLong: false,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-            await executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteDecreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                );
+            await executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            );
 
             const positionAft = await positionManager.getPosition(trader.address, pairIndex, false);
 

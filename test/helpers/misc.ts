@@ -6,6 +6,7 @@ import { abiCoder, TradeType, waitForTx, ZERO_ADDRESS } from '../../helpers';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { TradingTypes } from '../../types/contracts/core/Router';
 import { IExecution } from '../../types/contracts/core/Executor';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './constants';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { deployer, keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
@@ -87,6 +88,8 @@ export async function increasePosition(
         isLong: isLong,
         sizeAmount: size,
         maxSlippage: 0,
+        paymentType: PAYMENT_TYPE,
+        networkFeeAmount: NETWORK_FEE_AMOUNT,
     };
 
     const pair = await pool.getPair(pairIndex);
@@ -168,6 +171,8 @@ export async function decreasePosition(
         isLong: isLong,
         sizeAmount: size,
         maxSlippage: 0,
+        paymentType: PAYMENT_TYPE,
+        networkFeeAmount: NETWORK_FEE_AMOUNT,
     };
 
     const pair = await pool.getPair(pairIndex);
@@ -236,6 +241,8 @@ export async function adlPosition(
         isLong: isLong,
         sizeAmount: size,
         maxSlippage: 0,
+        paymentType: PAYMENT_TYPE,
+        networkFeeAmount: NETWORK_FEE_AMOUNT,
     };
 
     // create increase order
