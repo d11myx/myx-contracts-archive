@@ -10,9 +10,9 @@ import {
 } from '../../helpers';
 import { btcPairInfo, ethPairInfo } from './pairs';
 
-export const USDTMarketConfig: ReserveConfiguration = {
-    MarketTokenSymbol: 'USDT',
-    MarketTokenName: 'Tether',
+export const USDCMarketConfig: ReserveConfiguration = {
+    MarketTokenSymbol: 'USDC',
+    MarketTokenName: 'USD Coin',
     MarketTokenDecimals: 6,
     MarketTokenAddress: {
         [DevNetwork.local]: ZERO_ADDRESS,
@@ -156,4 +156,4 @@ export const USDTMarketConfig: ReserveConfiguration = {
     },
 };
 
-export default USDTMarketConfig;
+export default USDCMarketConfig;
