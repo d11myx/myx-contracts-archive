@@ -43,12 +43,12 @@ export enum TradeType {
 export type eNetwork = DevNetwork | EthereumNetwork | LineaNetwork | ScrollNetwork | ArbitrumNetwork;
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {
-    USDT: parseUnits('1', 8),
+    USDC: parseUnits('1', 8),
     WBTC: parseUnits('30000', 8),
     WETH: parseUnits('2000', 8),
 };
 export const MOCK_INDEX_PRICES: { [key: string]: BigNumber } = {
-    USDT: parseUnits('1', 30),
+    USDC: parseUnits('1', 30),
     WBTC: parseUnits('30000', 30),
     WETH: parseUnits('2000', 30),
 };

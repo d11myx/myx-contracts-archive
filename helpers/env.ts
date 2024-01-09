@@ -6,7 +6,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 dotenv.config();
 
 export let { MARKET_NAME }: { MARKET_NAME: ConfigNames } = process.env as any;
-MARKET_NAME = MARKET_NAME ? MARKET_NAME : ConfigNames.USDT;
+MARKET_NAME = MARKET_NAME ? MARKET_NAME : ConfigNames.USDC;
 
 export const COMMON_DEPLOY_PARAMS = {
     log: true,
