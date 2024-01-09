@@ -6,6 +6,7 @@ import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IPoolView.sol";
+import "../interfaces/IRouter.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
 
@@ -19,6 +20,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         IPool pool,
         IPoolView poolView,
         IPositionManager positionManager,
+        IRouter router,
         uint256 price
     ) public view returns (PairData[] memory) {
         uint256 maxPairIndex = pool.pairsIndex();
@@ -32,16 +34,20 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             pairData.indexToken = pair.indexToken;
             pairData.stableToken = pair.stableToken;
             pairData.pairToken = pair.pairToken;
-            pairData.increasePositionIsEnabled = pair.enable;
-            pairData.decreasePositionIsEnabled = pair.enable;
-            pairData.addLiquidityIsEnabled = pair.enable;
-            pairData.removeLiquidityIsEnabled = pair.enable;
+            pairData.enable = pair.enable;
             pairData.kOfSwap = pair.kOfSwap;
             pairData.expectIndexTokenP = pair.expectIndexTokenP;
             pairData.maxUnbalancedP = pair.maxUnbalancedP;
             pairData.unbalancedDiscountRate = pair.unbalancedDiscountRate;
             pairData.addLpFeeP = pair.addLpFeeP;
             pairData.removeLpFeeP = pair.removeLpFeeP;
+
+            IRouter.OperationStatus memory operationStatus = router.getOperationStatus(pairIndex);
+            pairData.increasePositionIsEnabled = !operationStatus.increasePositionDisabled;
+            pairData.decreasePositionIsEnabled = !operationStatus.decreasePositionDisabled;
+            pairData.orderIsEnabled = !operationStatus.orderDisabled;
+            pairData.addLiquidityIsEnabled = !operationStatus.addLiquidityDisabled;
+            pairData.removeLiquidityIsEnabled = !operationStatus.removeLiquidityDisabled;
 
             IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
             pairData.minLeverage = tradingConfig.minLeverage;
