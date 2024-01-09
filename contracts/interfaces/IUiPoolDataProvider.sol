@@ -10,8 +10,10 @@ interface IUiPoolDataProvider {
         address pairToken;
         bool increasePositionIsEnabled;
         bool decreasePositionIsEnabled;
+        bool orderIsEnabled;
         bool addLiquidityIsEnabled;
         bool removeLiquidityIsEnabled;
+        bool enable;
         uint256 kOfSwap;
         uint256 expectIndexTokenP;
         uint256 maxUnbalancedP;

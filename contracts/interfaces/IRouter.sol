@@ -22,5 +22,21 @@ interface IRouter {
         bool isIncrease;
     }
 
+    struct OperationStatus {
+        bool increasePositionDisabled;
+        bool decreasePositionDisabled;
+        bool orderDisabled;
+        bool addLiquidityDisabled;
+        bool removeLiquidityDisabled;
+    }
+
     event UpdateTradingRouter(address oldAddress, address newAddress);
+
+    event UpdateIncreasePositionStatus(address sender, uint256 pairIndex, bool enabled);
+    event UpdateDecreasePositionStatus(address sender, uint256 pairIndex, bool enabled);
+    event UpdateOrderStatus(address sender, uint256 pairIndex, bool enabled);
+    event UpdateAddLiquidityStatus(address sender, uint256 pairIndex, bool enabled);
+    event UpdateRemoveLiquidityStatus(address sender, uint256 pairIndex, bool enabled);
+
+    function getOperationStatus(uint256 pairIndex) external view returns (OperationStatus memory);
 }
