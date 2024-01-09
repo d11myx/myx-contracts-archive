@@ -87,9 +87,9 @@ async function main() {
     //     to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
     //     value: ethers.utils.parseEther('100000'),
     // });
-    // console.log(
-    //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
-    // );
+    console.log(
+        await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
+    );
     // console.log(btc.address);
     // console.log(await btc.owner());
     // console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));
@@ -105,7 +105,7 @@ async function main() {
     // eth交易对U：10704332
     // 风险准备金：10704332
 
-    console.log(await positionManager.longTracker(1));
+    // console.log(await positionManager.longTracker(1));
 
     // for (let i = 0; i < 10000; i++) {
     //     console.log(
