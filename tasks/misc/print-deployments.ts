@@ -38,8 +38,8 @@ task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, .
     console.table(mockedTokens);
 
     const pool = await getPool();
-    LPs['WBTC-USDT-LP'] = { address: (await pool.pairs(1)).pairToken };
-    LPs['WETH-USDT-LP'] = { address: (await pool.pairs(2)).pairToken };
+    LPs['WBTC-USDC-LP'] = { address: (await pool.pairs(1)).pairToken };
+    LPs['WETH-USDC-LP'] = { address: (await pool.pairs(2)).pairToken };
 
     console.log('');
     console.log('LPs');
