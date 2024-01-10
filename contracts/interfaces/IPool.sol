@@ -115,6 +115,8 @@ interface IPool {
         uint256 keeperFeeDistributeP;
     }
 
+    function pairsIndex() external view returns (uint256);
+
     function getPairIndex(address indexToken, address stableToken) external view returns (uint256);
 
     function getPair(uint256) external view returns (Pair memory);
