@@ -44,12 +44,10 @@ interface IExecution {
         uint256 networkFeeAmount
     );
 
-    event ExecuteAdl(
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        uint256 orderId,
-        uint256[] adlOrderIds
+    event ExecuteAdlOrder(
+        uint256[] adlOrderIds,
+        bytes32[] adlPositionKeys,
+        AdlOrder[] orders
     );
 
     event ExecuteOrderError(uint256 orderId, string errorMessage);
@@ -71,5 +69,12 @@ interface IExecution {
         address account;
         uint256 pairIndex;
         bool isLong;
+    }
+
+    struct AdlOrder {
+        address account;
+        uint256 pairIndex;
+        bool isLong;
+        uint256 orderId;
     }
 }

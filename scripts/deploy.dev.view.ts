@@ -17,6 +17,7 @@ import {
     getRiskReserve,
     getRouter,
     getTokens,
+    getUiPoolDataProvider,
     latest,
     POSITION_CALLER,
     POSITION_MANAGER_ID,
@@ -27,6 +28,7 @@ import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
 import Decimal from 'decimal.js';
+import { oracle } from '../types/contracts';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -64,6 +66,26 @@ async function main() {
     // console.log(await poolToken.totalSupply());
     // console.log(await pool.lpFairPrice(2, await oraclePriceFeed.getPrice(eth.address)));
 
+    // await deployments.deploy(`UiPoolDataProvider`, {
+    //     from: deployer.address,
+    //     contract: 'UiPoolDataProvider',
+    //     args: [addressesProvider.address],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
+    const uiPoolDataProvider = await getUiPoolDataProvider('0x1AF54445E598Ddc57A79c71C8F4103B33C22ecb1');
+    console.log(await oraclePriceFeed.getPrice(btc.address));
+    console.log(
+        await uiPoolDataProvider.getPairsData(
+            '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
+            '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
+            '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
+            '0xB697A6fB7Eea6EC63281a3447488fE9233d5d8b4',
+            [1, 2],
+            [await indexPriceFeed.getPrice(btc.address), await indexPriceFeed.getPrice(eth.address)],
+        ),
+    );
+
     // let index = 1;
     // setInterval(async () => {
     //     console.log(`index: ${index}  ${await pool.getVault(1)}`);
@@ -87,9 +109,9 @@ async function main() {
     //     to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
     //     value: ethers.utils.parseEther('100000'),
     // });
-    console.log(
-        await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
-    );
+    // console.log(
+    //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
+    // );
     // console.log(btc.address);
     // console.log(await btc.owner());
     // console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));
@@ -99,42 +121,6 @@ async function main() {
     // console.log(await riskReserve.getReservedAmount(usdt.address));
     //
     // console.log(await pool.feeTokenAmounts(usdt.address));
-
-    // 用户保证金：153343994
-    // btc交易对U：39375073
-    // eth交易对U：10704332
-    // 风险准备金：10704332
-
-    // console.log(await positionManager.longTracker(1));
-
-    // for (let i = 0; i < 10000; i++) {
-    //     console.log(
-    //         `当前价格: `,
-    //         new Decimal(ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30)).toFixed(5),
-    //     );
-    //     // @ts-ignore
-    //     console.log(`LP持仓方向: `, (await positionManager.getExposedPositions(1)) < 0 ? '多' : '空');
-    //     console.log(
-    //         `LP持仓价格: `,
-    //         new Decimal(ethers.utils.formatUnits((await pool.getVault(1)).averagePrice, 30)).toFixed(5),
-    //     );
-    //     console.log(
-    //         `LP盈亏: `,
-    //         new Decimal(
-    //             ethers.utils.formatUnits(
-    //                 await positionManager.lpProfit(1, usdt.address, await oraclePriceFeed.getPrice(btc.address)),
-    //                 6,
-    //             ),
-    //         ).toFixed(5),
-    //     );
-    //     console.log('------------------------------------------');
-    //     await sleep(1000);
-    // }
-    // console.log(await positionManager.longTracker(1));
-    console.log(await usdt.mint('0xF9a83Ab2378aBE71005054816101d62c87Cc878F', ethers.utils.parseUnits('10000000', 6)));
-
-    // console.log(await positionManager.getPosition('0x570fE75D0CF447997525Dd32B6afD6a211B2536E', 1, true));
-    // console.log(await positionManager.getPositionKey('0x570fE75D0CF447997525Dd32B6afD6a211B2536E', 1, true));
 
     // for (let i = 0; i < 10000; i++) {
     //     console.log(

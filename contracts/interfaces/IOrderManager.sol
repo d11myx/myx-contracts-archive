@@ -15,7 +15,9 @@ interface IOrderManager {
         int256 collateral,
         uint256 openPrice,
         bool isLong,
-        uint256 sizeAmount
+        uint256 sizeAmount,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
     event CreateDecreaseOrder(
@@ -27,7 +29,9 @@ interface IOrderManager {
         uint256 openPrice,
         uint256 sizeAmount,
         bool isLong,
-        bool abovePrice
+        bool abovePrice,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
     event UpdateRouterAddress(address sender, address oldAddress, address newAddress);

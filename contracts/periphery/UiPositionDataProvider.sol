@@ -19,13 +19,16 @@ contract UiPositionDataProvider is IUiPositionDataProvider {
         IPool pool,
         IPoolView poolView,
         IPositionManager positionManager,
-        uint256 price
+        uint256[] memory pairIndexes,
+        uint256[] memory prices
     ) public view returns (PositionData[] memory) {
-        uint256 maxPairIndex = pool.pairsIndex();
+        require(pairIndexes.length == prices.length, "nl");
 
-        PositionData[] memory positionsData = new PositionData[](maxPairIndex);
-        for (uint256 pairIndex = 1; pairIndex <= maxPairIndex; pairIndex++) {
-            PositionData memory positionData = positionsData[pairIndex - 1];
+        PositionData[] memory positionsData = new PositionData[](pairIndexes.length);
+        for (uint256 i = 0; i < pairIndexes.length; i++) {
+            uint256 pairIndex = pairIndexes[i];
+            uint256 price = prices[i];
+            PositionData memory positionData = positionsData[i];
 
             IPool.Pair memory pair = pool.getPair(pairIndex);
             positionData.pairIndex = pair.pairIndex;

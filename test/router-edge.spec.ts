@@ -104,20 +104,27 @@ describe('Router: Edge cases', () => {
         const orderId = 0;
         // console.log(`order:`, await orderManager.increaseMarketOrders(orderId));
 
-        await executor
-            .connect(keeper.signer)
-            .setPricesAndExecuteIncreaseMarketOrders(
-                [btc.address],
-                [await indexPriceFeed.getPrice(btc.address)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
-                { value: 1 },
-            );
+        await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
 
         const position = await positionManager.getPosition(trader.address, pairIndex, true);
         // console.log(`position:`, position);
@@ -156,20 +163,27 @@ describe('Router: Edge cases', () => {
         const orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
-        await executor
-            .connect(keeper.signer)
-            .setPricesAndExecuteIncreaseMarketOrders(
-                [btc.address],
-                [await indexPriceFeed.getPrice(btc.address)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
-                { value: 1 },
-            );
+        await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
 
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
         const positionAmountAfter = positionAfter.positionAmount;
@@ -343,6 +357,7 @@ describe('Router: Edge cases', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -424,6 +439,7 @@ export async function increaseUserPosition(
         [
             {
                 orderId: increaseOrderId,
+                tradeType: TradeType.MARKET,
                 tier: 0,
                 referralsRatio: 0,
                 referralUserRatio: 0,

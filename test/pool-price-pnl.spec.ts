@@ -7,7 +7,6 @@ import { PoolToken } from '../types';
 import { expect } from './shared/expect';
 import { getContract } from '../helpers/utilities/tx';
 import { TradingTypes } from '../types/contracts/core/Router';
-import usdt from '../markets/usdt';
 import Decimal from 'decimal.js';
 import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
@@ -138,6 +137,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -211,6 +211,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -285,6 +286,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -362,6 +364,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -470,6 +473,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -540,6 +544,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -610,6 +615,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -685,6 +691,7 @@ describe('Modify LP Average Price', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

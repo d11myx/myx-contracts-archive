@@ -21,13 +21,16 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         IPoolView poolView,
         IPositionManager positionManager,
         IRouter router,
-        uint256 price
+        uint256[] memory pairIndexes,
+        uint256[] memory prices
     ) public view returns (PairData[] memory) {
-        uint256 maxPairIndex = pool.pairsIndex();
+        require(pairIndexes.length == prices.length, "nl");
 
-        PairData[] memory pairsData = new PairData[](maxPairIndex);
-        for (uint256 pairIndex = 1; pairIndex <= maxPairIndex; pairIndex++) {
-            PairData memory pairData = pairsData[pairIndex - 1];
+        PairData[] memory pairsData = new PairData[](pairIndexes.length);
+        for (uint256 i = 0; i < pairIndexes.length; i++) {
+            uint256 pairIndex = pairIndexes[i];
+            uint256 price = prices[i];
+            PairData memory pairData = pairsData[i];
 
             IPool.Pair memory pair = pool.getPair(pairIndex);
             pairData.pairIndex = pair.pairIndex;
