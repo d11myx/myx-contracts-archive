@@ -37,12 +37,13 @@ contract OrderManager is IOrderManager, Upgradeable {
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseMarketOrders;
     mapping(uint256 => TradingTypes.IncreasePositionOrder) public increaseLimitOrders;
     mapping(uint256 => TradingTypes.DecreasePositionOrder) public decreaseLimitOrders;
+    mapping(uint256 => TradingTypes.OrderNetworkFee) public orderNetworkFees;
 
     // positionKey
     mapping(bytes32 => PositionOrder[]) public positionOrders;
     mapping(bytes32 => mapping(uint256 => uint256)) public positionOrderIndex;
 
-    mapping(TradingTypes.NetworkFeePaymentType => NetworkFee) public networkFees;
+    mapping(TradingTypes.NetworkFeePaymentType => mapping(uint256 => NetworkFee)) public networkFees;
 
     IPool public pool;
     IPositionManager public positionManager;
@@ -90,25 +91,27 @@ contract OrderManager is IOrderManager, Upgradeable {
 
     function updateNetworkFees(
         TradingTypes.NetworkFeePaymentType[] memory paymentTypes,
+        uint256[] memory pairIndexes,
         NetworkFee[] memory fees
     ) external onlyPoolAdmin {
-        require(paymentTypes.length == fees.length, "inconsistent params length");
+        require(paymentTypes.length == pairIndexes.length && pairIndexes.length == fees.length, "inconsistent params length");
 
         for (uint256 i = 0; i < fees.length; i++) {
-            _updateNetworkFee(paymentTypes[i], fees[i]);
+            _updateNetworkFee(paymentTypes[i], pairIndexes[i], fees[i]);
         }
     }
 
     function _updateNetworkFee(
         TradingTypes.NetworkFeePaymentType paymentType,
+        uint256 pairIndex,
         NetworkFee memory fee
     ) internal {
-        networkFees[paymentType] = fee;
-        emit UpdatedNetworkFee(msg.sender, paymentType, fee.basicNetworkFee, fee.discountThreshold, fee.discountedNetworkFee);
+        networkFees[paymentType][pairIndex] = fee;
+        emit UpdatedNetworkFee(msg.sender, paymentType, pairIndex, fee.basicNetworkFee, fee.discountThreshold, fee.discountedNetworkFee);
     }
 
-    function getNetworkFee(TradingTypes.NetworkFeePaymentType paymentType) external view override returns (NetworkFee memory) {
-        return networkFees[paymentType];
+    function getNetworkFee(TradingTypes.NetworkFeePaymentType paymentType, uint256 pairIndex) external view override returns (NetworkFee memory) {
+        return networkFees[paymentType][pairIndex];
     }
 
     function createOrder(
@@ -126,7 +129,7 @@ contract OrderManager is IOrderManager, Upgradeable {
         // network fees
         int256 collateral = request.collateral;
         if (request.paymentType == TradingTypes.InnerPaymentType.ETH) {
-            NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.ETH];
+            NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.ETH][request.pairIndex];
             if (networkFee.basicNetworkFee > 0) {
                 if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
                     || msg.value < networkFee.basicNetworkFee) {
@@ -136,7 +139,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                 require(success, "transfer eth failed");
             }
         } else if (request.paymentType == TradingTypes.InnerPaymentType.COLLATERAL) {
-            NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.COLLATERAL];
+            NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.COLLATERAL][request.pairIndex];
             if (networkFee.basicNetworkFee > 0) {
                 if ((request.sizeAmount.abs() >= networkFee.discountThreshold && request.networkFeeAmount < networkFee.discountedNetworkFee)
                     || request.networkFeeAmount < networkFee.discountedNetworkFee) {
@@ -227,9 +230,10 @@ contract OrderManager is IOrderManager, Upgradeable {
                         isLong: request.isLong,
                         sizeAmount: request.sizeAmount.abs(),
                         maxSlippage: request.maxSlippage,
-                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL,
+                        paymentType: TradingTypes.NetworkFeePaymentType.ETH,
                         networkFeeAmount: request.networkFeeAmount
-                    })
+                    }),
+                    request.paymentType
                 );
         } else if (request.sizeAmount < 0) {
             return
@@ -243,9 +247,10 @@ contract OrderManager is IOrderManager, Upgradeable {
                         sizeAmount: request.sizeAmount.abs(),
                         isLong: request.isLong,
                         maxSlippage: request.maxSlippage,
-                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL,
+                        paymentType: TradingTypes.NetworkFeePaymentType.ETH,
                         networkFeeAmount: request.networkFeeAmount
-                    })
+                    }),
+                    request.paymentType
                 );
         } else {
             require(collateral != 0, "collateral required");
@@ -260,9 +265,10 @@ contract OrderManager is IOrderManager, Upgradeable {
                         isLong: request.isLong,
                         sizeAmount: 0,
                         maxSlippage: request.maxSlippage,
-                        paymentType: TradingTypes.NetworkFeePaymentType.COLLATERAL,
+                        paymentType: TradingTypes.NetworkFeePaymentType.ETH,
                         networkFeeAmount: request.networkFeeAmount
-                    })
+                    }),
+                    request.paymentType
                 );
         }
     }
@@ -283,13 +289,13 @@ contract OrderManager is IOrderManager, Upgradeable {
         string memory reason
     ) private {
         if (isIncrease) {
-            TradingTypes.IncreasePositionOrder memory order = getIncreaseOrder(orderId, tradeType);
+            (TradingTypes.IncreasePositionOrder memory order,) = getIncreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
                 return;
             }
             _cancelIncreaseOrder(order);
         } else {
-            TradingTypes.DecreasePositionOrder memory order = getDecreaseOrder(orderId, tradeType);
+            (TradingTypes.DecreasePositionOrder memory order,) = getDecreaseOrder(orderId, tradeType);
             if (order.account == address(0)) {
                 return;
             }
@@ -348,18 +354,22 @@ contract OrderManager is IOrderManager, Upgradeable {
 
     function removeIncreaseMarketOrders(uint256 orderId) external onlyExecutor {
         delete increaseMarketOrders[orderId];
+        delete orderNetworkFees[orderId];
     }
 
     function removeIncreaseLimitOrders(uint256 orderId) external onlyExecutor {
         delete increaseLimitOrders[orderId];
+        delete orderNetworkFees[orderId];
     }
 
     function removeDecreaseMarketOrders(uint256 orderId) external onlyExecutor {
         delete decreaseMarketOrders[orderId];
+        delete orderNetworkFees[orderId];
     }
 
     function removeDecreaseLimitOrders(uint256 orderId) external onlyExecutor {
         delete decreaseLimitOrders[orderId];
+        delete orderNetworkFees[orderId];
     }
 
     function setOrderNeedADL(
@@ -392,7 +402,8 @@ contract OrderManager is IOrderManager, Upgradeable {
     }
 
     function _saveIncreaseOrder(
-        TradingTypes.IncreasePositionRequest memory _request
+        TradingTypes.IncreasePositionRequest memory _request,
+        TradingTypes.InnerPaymentType paymentType
     ) internal returns (uint256) {
         TradingTypes.IncreasePositionOrder memory order = TradingTypes.IncreasePositionOrder({
             orderId: ordersIndex,
@@ -407,6 +418,12 @@ contract OrderManager is IOrderManager, Upgradeable {
             maxSlippage: _request.maxSlippage,
             blockTime: block.timestamp
         });
+
+        TradingTypes.OrderNetworkFee memory orderNetworkFee = TradingTypes.OrderNetworkFee({
+            paymentType: paymentType,
+            networkFeeAmount: _request.networkFeeAmount
+        });
+        orderNetworkFees[ordersIndex] = orderNetworkFee;
 
         if (_request.tradeType == TradingTypes.TradeType.MARKET) {
             increaseMarketOrders[ordersIndex] = order;
@@ -443,7 +460,8 @@ contract OrderManager is IOrderManager, Upgradeable {
     }
 
     function _saveDecreaseOrder(
-        TradingTypes.DecreasePositionRequest memory _request
+        TradingTypes.DecreasePositionRequest memory _request,
+        TradingTypes.InnerPaymentType paymentType
     ) internal returns (uint256) {
         TradingTypes.DecreasePositionOrder memory order = TradingTypes.DecreasePositionOrder({
             orderId: ordersIndex, // orderId
@@ -460,6 +478,12 @@ contract OrderManager is IOrderManager, Upgradeable {
             blockTime: block.timestamp,
             needADL: false
         });
+
+        TradingTypes.OrderNetworkFee memory orderNetworkFee = TradingTypes.OrderNetworkFee({
+            paymentType: paymentType,
+            networkFeeAmount: _request.networkFeeAmount
+        });
+        orderNetworkFees[ordersIndex] = orderNetworkFee;
 
         // abovePrice
         // market：long: true,  short: false
@@ -620,7 +644,10 @@ contract OrderManager is IOrderManager, Upgradeable {
     function getIncreaseOrder(
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) public view returns (TradingTypes.IncreasePositionOrder memory order) {
+    ) public view returns (
+        TradingTypes.IncreasePositionOrder memory order,
+        TradingTypes.OrderNetworkFee memory orderNetworkFee
+    ) {
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = increaseMarketOrders[orderId];
         } else if (tradeType == TradingTypes.TradeType.LIMIT) {
@@ -628,19 +655,22 @@ contract OrderManager is IOrderManager, Upgradeable {
         } else {
             revert("invalid trade type");
         }
-        return order;
+        orderNetworkFee = orderNetworkFees[order.orderId];
     }
 
     function getDecreaseOrder(
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) public view returns (TradingTypes.DecreasePositionOrder memory order) {
+    ) public view returns (
+        TradingTypes.DecreasePositionOrder memory order,
+        TradingTypes.OrderNetworkFee memory orderNetworkFee
+    ) {
         if (tradeType == TradingTypes.TradeType.MARKET) {
             order = decreaseMarketOrders[orderId];
         } else {
             order = decreaseLimitOrders[orderId];
         }
-        return order;
+        orderNetworkFee = orderNetworkFees[order.orderId];
     }
 
     function getPositionOrders(bytes32 key) public view override returns (PositionOrder[] memory) {

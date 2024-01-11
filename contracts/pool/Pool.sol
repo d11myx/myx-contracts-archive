@@ -610,8 +610,14 @@ contract Pool is IPool, Upgradeable {
     }
 
     function transferTokenTo(address token, address to, uint256 amount) external transferAllowed {
-        require(IERC20(token).balanceOf(address(this)) > amount, "bal");
+        require(IERC20(token).balanceOf(address(this)) > amount, "Insufficient balance");
         IERC20(token).safeTransfer(to, amount);
+    }
+
+    function transferEthTo(address to, uint256 amount) external transferAllowed {
+        require(address(this).balance > amount, "Insufficient balance");
+        (bool success, ) = to.call{value: amount}(new bytes(0));
+        require(success, "transfer failed");
     }
 
     function transferTokenOrSwap(

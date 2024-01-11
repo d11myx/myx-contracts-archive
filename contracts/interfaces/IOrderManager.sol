@@ -38,6 +38,7 @@ interface IOrderManager {
     event UpdatedNetworkFee(
         address sender,
         TradingTypes.NetworkFeePaymentType paymentType,
+        uint256 pairIndex,
         uint256 basicNetworkFee,
         uint256 discountThreshold,
         uint256 discountedNetworkFee
@@ -63,7 +64,7 @@ interface IOrderManager {
 
     function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory);
 
-    function getNetworkFee(TradingTypes.NetworkFeePaymentType paymentType) external view returns (NetworkFee memory);
+    function getNetworkFee(TradingTypes.NetworkFeePaymentType paymentType, uint256 pairIndex) external view returns (NetworkFee memory);
 
     function createOrder(TradingTypes.CreateOrderRequest memory request) external payable returns (uint256 orderId);
 
@@ -79,12 +80,18 @@ interface IOrderManager {
     function getIncreaseOrder(
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) external view returns (TradingTypes.IncreasePositionOrder memory order);
+    ) external view returns (
+        TradingTypes.IncreasePositionOrder memory order,
+        TradingTypes.OrderNetworkFee memory orderNetworkFee
+    );
 
     function getDecreaseOrder(
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) external view returns (TradingTypes.DecreasePositionOrder memory order);
+    ) external view returns (
+        TradingTypes.DecreasePositionOrder memory order,
+        TradingTypes.OrderNetworkFee memory orderNetworkFee
+    );
 
     function increaseOrderExecutedSize(
         uint256 orderId,
