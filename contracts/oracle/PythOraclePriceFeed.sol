@@ -66,16 +66,18 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         for (uint256 i = 0; i < tokens.length; i++) {
             require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
 
-            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) < uint64(block.timestamp)) {
-                priceIds[i] = tokenPriceIds[tokens[i]];
-                publishTimes[i] = uint64(block.timestamp);
+            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) >= uint64(block.timestamp)) {
+                emit UnneededPricePublishWarn();
             }
+            priceIds[i] = tokenPriceIds[tokens[i]];
+            publishTimes[i] = uint64(block.timestamp);
         }
 
         if (priceIds.length > 0) {
             try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
-            } catch {
-                revert("update price failed");
+            } catch Error(string memory reason) {
+                emit UpdatePriceFeedsIfNecessaryError(reason);
+//                revert("update price failed");
             }
         }
     }
