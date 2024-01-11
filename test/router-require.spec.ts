@@ -105,6 +105,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

@@ -98,6 +98,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -138,6 +139,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -211,6 +213,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -223,11 +226,11 @@ describe('Trade: adl', () => {
             const decreasePosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
 
             expect(decreasePosition.positionAmount).to.be.eq(longPosition.positionAmount);
-            expect(decreaseOrder.needADL).to.be.eq(true);
+            expect(decreaseOrder.order.needADL).to.be.eq(true);
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(longTrader.address, pairIndex, true);
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -239,19 +242,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrder.sizeAmount,
+                        sizeAmount: decreaseOrder.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -259,7 +266,7 @@ describe('Trade: adl', () => {
             const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
 
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -351,6 +358,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -391,6 +399,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -464,6 +473,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -476,11 +486,11 @@ describe('Trade: adl', () => {
             const decreasePosition = await positionManager.getPosition(longTrader.address, pairIndex, true);
 
             expect(decreasePosition.positionAmount).to.be.eq(longPosition.positionAmount);
-            expect(decreaseOrder.needADL).to.be.eq(true);
+            expect(decreaseOrder.order.needADL).to.be.eq(true);
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(longTrader.address, pairIndex, true);
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -492,19 +502,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrder.sizeAmount,
+                        sizeAmount: decreaseOrder.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -512,7 +526,7 @@ describe('Trade: adl', () => {
             const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
 
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -604,6 +618,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -644,6 +659,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -714,6 +730,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -726,11 +743,11 @@ describe('Trade: adl', () => {
             const decreasePosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
 
             expect(decreasePosition.positionAmount).to.be.eq(shortPosition.positionAmount);
-            expect(decreaseOrder.needADL).to.be.eq(true);
+            expect(decreaseOrder.order.needADL).to.be.eq(true);
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(shortTrader.address, pairIndex, false);
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -742,19 +759,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrder.sizeAmount,
+                        sizeAmount: decreaseOrder.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -762,7 +783,7 @@ describe('Trade: adl', () => {
             const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
 
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -854,6 +875,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -894,6 +916,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -964,6 +987,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -976,11 +1000,11 @@ describe('Trade: adl', () => {
             const decreasePosition = await positionManager.getPosition(shortTrader.address, pairIndex, false);
 
             expect(decreasePosition.positionAmount).to.be.eq(shortPosition.positionAmount);
-            expect(decreaseOrder.needADL).to.be.eq(true);
+            expect(decreaseOrder.order.needADL).to.be.eq(true);
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(shortTrader.address, pairIndex, false);
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -992,19 +1016,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrder.sizeAmount,
+                        sizeAmount: decreaseOrder.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -1012,7 +1040,7 @@ describe('Trade: adl', () => {
             const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
 
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -1107,6 +1135,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1146,6 +1175,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1249,10 +1279,10 @@ describe('Trade: adl', () => {
             const orders = await orderManager.getPositionOrders(positionKey);
             const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
 
-            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+            expect(decreaseOrderAdlBefore.order.needADL).to.be.eq(true);
 
             // execute ADL
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -1264,31 +1294,35 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                        sizeAmount: decreaseOrderAdlBefore.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderAdlBefore.orderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderAdlBefore.order.orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
             const decreasePositionAdlAfter = await positionManager.getPosition(longTrader.address, pairIndex, true);
             const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(
-                decreaseOrderAdlBefore.orderId,
+                decreaseOrderAdlBefore.order.orderId,
                 TradeType.MARKET,
             );
             const longBalanceAfter = await usdt.balanceOf(longTrader.address);
 
             expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -1383,6 +1417,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1423,6 +1458,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1526,10 +1562,10 @@ describe('Trade: adl', () => {
             const orders = await orderManager.getPositionOrders(positionKey);
             const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
 
-            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+            expect(decreaseOrderAdlBefore.order.needADL).to.be.eq(true);
 
             // execute ADL
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -1541,19 +1577,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                        sizeAmount: decreaseOrderAdlBefore.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderAdlBefore.orderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderAdlBefore.order.orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -1563,7 +1603,7 @@ describe('Trade: adl', () => {
 
             expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -1658,6 +1698,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1698,6 +1739,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1799,10 +1841,10 @@ describe('Trade: adl', () => {
             const orders = await orderManager.getPositionOrders(positionKey);
             const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
 
-            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+            expect(decreaseOrderAdlBefore.order.needADL).to.be.eq(true);
 
             // execute ADL
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -1814,19 +1856,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                        sizeAmount: decreaseOrderAdlBefore.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderAdlBefore.orderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderAdlBefore.order.orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -1836,7 +1882,7 @@ describe('Trade: adl', () => {
 
             expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -1931,6 +1977,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1971,6 +2018,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2072,10 +2120,10 @@ describe('Trade: adl', () => {
             const orders = await orderManager.getPositionOrders(positionKey);
             const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
 
-            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+            expect(decreaseOrderAdlBefore.order.needADL).to.be.eq(true);
 
             // execute ADL
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -2087,19 +2135,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                        sizeAmount: decreaseOrderAdlBefore.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderAdlBefore.orderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderAdlBefore.order.orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -2109,7 +2161,7 @@ describe('Trade: adl', () => {
 
             expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -2204,6 +2256,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2244,6 +2297,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2345,7 +2399,7 @@ describe('Trade: adl', () => {
             const orders = await orderManager.getPositionOrders(positionKey);
             const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
 
-            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+            expect(decreaseOrderAdlBefore.order.needADL).to.be.eq(true);
 
             // update oracle price
             const latestOraclePrice = ethers.utils.parseUnits('32180', 8);
@@ -2366,7 +2420,7 @@ describe('Trade: adl', () => {
             );
 
             await expect(
-                executor.connect(keeper.signer).setPricesAndExecuteADL(
+                executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
@@ -2378,19 +2432,24 @@ describe('Trade: adl', () => {
                     [
                         {
                             positionKey,
-                            sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                            sizeAmount: decreaseOrderAdlBefore.order.sizeAmount,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
                             referralOwner: ZERO_ADDRESS,
                         },
                     ],
-                    decreaseOrderAdlBefore.orderId,
-                    TradeType.MARKET,
-                    0,
-                    0,
-                    0,
-                    ZERO_ADDRESS,
+                    [
+                        {
+                            orderId: decreaseOrderAdlBefore.order.orderId,
+                            tradeType: TradeType.MARKET,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+
                     { value: 1 },
                 ),
             ).to.be.revertedWith('exceed max price deviation');
@@ -2487,6 +2546,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2527,6 +2587,7 @@ describe('Trade: adl', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2628,7 +2689,7 @@ describe('Trade: adl', () => {
             const orders = await orderManager.getPositionOrders(positionKey);
             const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
 
-            expect(decreaseOrderAdlBefore.needADL).to.be.eq(true);
+            expect(decreaseOrderAdlBefore.order.needADL).to.be.eq(true);
 
             // update oracle price
             const latestOraclePrice = ethers.utils.parseUnits('33680', 8);
@@ -2649,7 +2710,7 @@ describe('Trade: adl', () => {
             );
 
             // execute ADL
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -2661,19 +2722,23 @@ describe('Trade: adl', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrderAdlBefore.sizeAmount,
+                        sizeAmount: decreaseOrderAdlBefore.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderAdlBefore.orderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderAdlBefore.order.orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -2683,7 +2748,7 @@ describe('Trade: adl', () => {
 
             expect(longBalanceAfter).to.be.eq(receiveStableTokenAmount);
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });

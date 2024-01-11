@@ -14,6 +14,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         args: [addressesProvider.address],
         ...COMMON_DEPLOY_PARAMS,
     });
+
+    await deploy(`UiPositionDataProvider`, {
+        from: deployer,
+        contract: 'UiPositionDataProvider',
+        args: [addressesProvider.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
 };
 
 func.id = `DeployUI`;

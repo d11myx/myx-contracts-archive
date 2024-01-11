@@ -120,6 +120,7 @@ describe('Executor: require check', () => {
                         [
                             {
                                 orderId: orderId,
+                                tradeType: TradeType.MARKET,
                                 tier: 0,
                                 referralsRatio: 0,
                                 referralUserRatio: 0,
@@ -141,6 +142,7 @@ describe('Executor: require check', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,

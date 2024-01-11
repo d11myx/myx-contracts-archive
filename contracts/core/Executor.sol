@@ -93,31 +93,21 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         );
     }
 
-    function setPricesAndExecuteADL(
+    function setPricesAndExecuteADLOrders(
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
         IExecution.ExecutePosition[] memory executePositions,
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        uint8 tier,
-        uint256 referralsRatio,
-        uint256 referralUserRatio,
-        address referralOwner
+        IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
-        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrder(
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrders(
             msg.sender,
             executePositions,
-            orderId,
-            tradeType,
-            tier,
-            referralsRatio,
-            referralUserRatio,
-            referralOwner
+            executeOrders
         );
     }
 

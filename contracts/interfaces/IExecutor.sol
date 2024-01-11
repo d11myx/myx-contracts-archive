@@ -34,17 +34,12 @@ interface IExecutor {
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable;
 
-    function setPricesAndExecuteADL(
+    function setPricesAndExecuteADLOrders(
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
         IExecution.ExecutePosition[] memory executePositions,
-        uint256 orderId,
-        TradingTypes.TradeType tradeType,
-        uint8 tier,
-        uint256 referralsRatio,
-        uint256 referralUserRatio,
-        address referralOwner
+        IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external payable;
 
     function setPricesAndLiquidatePositions(

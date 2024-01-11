@@ -454,7 +454,9 @@ contract OrderManager is IOrderManager, Upgradeable {
             _request.collateral,
             _request.openPrice,
             _request.isLong,
-            _request.sizeAmount
+            _request.sizeAmount,
+            paymentType,
+            _request.networkFeeAmount
         );
         return order.orderId;
     }
@@ -533,7 +535,9 @@ contract OrderManager is IOrderManager, Upgradeable {
             _request.triggerPrice,
             _request.sizeAmount,
             _request.isLong,
-            order.abovePrice
+            order.abovePrice,
+            paymentType,
+            _request.networkFeeAmount
         );
         return order.orderId;
     }
