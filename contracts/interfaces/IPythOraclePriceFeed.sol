@@ -15,6 +15,10 @@ interface IPythOraclePriceFeed is IPriceFeed {
 
     event PriceAgeUpdated(uint256 oldAge, uint256 newAge);
 
+    event UnneededPricePublishWarn();
+
+    event UpdatePriceFeedsIfNecessaryError(string errorMessage);
+
     function updatePrice(address[] calldata tokens, bytes[] calldata updateData) external payable;
 
 }
