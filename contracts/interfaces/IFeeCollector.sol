@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./IPool.sol";
+import "../libraries/TradingTypes.sol";
 
 interface IFeeCollector {
 
@@ -19,6 +20,8 @@ interface IFeeCollector {
     event UpdatedStakingPoolAddress(address sender, address oldAddress, address newAddress);
 
     event UpdatedPositionManagerAddress(address sender, address oldAddress, address newAddress);
+
+    event UpdateExecutionLogicAddress(address sender, address oldAddress, address newAddress);
 
     event DistributeTradingFee(
         address account,
@@ -44,6 +47,8 @@ interface IFeeCollector {
 
     event ClaimedUserTradingFee(address account, address claimToken, uint256 amount);
 
+    event ClaimedKeeperNetworkFee(address account, address claimToken, uint256 amount);
+
     struct TradingFeeTier {
         uint256 makerFee;
         uint256 takerFee;
@@ -63,6 +68,11 @@ interface IFeeCollector {
 
     function getRegularTradingFeeTier(uint256 pairIndex) external view returns (TradingFeeTier memory);
 
+    function getKeeperNetworkFee(
+        address account,
+        TradingTypes.InnerPaymentType paymentType
+    ) external view returns (uint256);
+
     function updateMaxReferralsRatio(uint256 newRatio) external;
 
     function claimStakingTradingFee() external returns (uint256);
@@ -72,6 +82,10 @@ interface IFeeCollector {
     function claimReferralFee() external returns (uint256);
 
     function claimUserTradingFee() external returns (uint256);
+
+    function claimKeeperNetworkFee(
+        TradingTypes.InnerPaymentType paymentType
+    ) external returns (uint256);
 
     function distributeTradingFee(
         IPool.Pair memory pair,
@@ -84,4 +98,10 @@ interface IFeeCollector {
         uint256 referralUserRatio,
         address referralOwner
     ) external returns (uint256 lpAmount, uint256 vipDiscountAmount);
+
+    function distributeNetworkFee(
+        address keeper,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
+    ) external;
 }

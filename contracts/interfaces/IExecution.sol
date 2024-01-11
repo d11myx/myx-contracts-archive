@@ -19,7 +19,9 @@ interface IExecution {
         uint256 executionPrice,
         uint256 executedSize,
         uint256 tradingFee,
-        int256 fundingFee
+        int256 fundingFee,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
     event ExecuteDecreaseOrder(
@@ -37,7 +39,9 @@ interface IExecution {
         bool needADL,
         int256 pnl,
         uint256 tradingFee,
-        int256 fundingFee
+        int256 fundingFee,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
     event ExecuteAdl(

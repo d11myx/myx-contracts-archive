@@ -322,13 +322,13 @@ contract Router is
         bool isIncrease
     ) private view {
         if (isIncrease) {
-            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+            (TradingTypes.IncreasePositionOrder memory order,) = orderManager.getIncreaseOrder(
                 orderId,
                 tradeType
             );
             require(order.account == msg.sender, "onlyAccount");
         } else {
-            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            (TradingTypes.DecreasePositionOrder memory order,) = orderManager.getDecreaseOrder(
                 orderId,
                 tradeType
             );
@@ -396,7 +396,7 @@ contract Router is
         uint256 pairIndex;
         bool isLong;
         if (request.isIncrease) {
-            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+            (TradingTypes.IncreasePositionOrder memory order,) = orderManager.getIncreaseOrder(
                 request.orderId,
                 request.tradeType
             );
@@ -404,7 +404,7 @@ contract Router is
             pairIndex = order.pairIndex;
             isLong = order.isLong;
         } else {
-            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            (TradingTypes.DecreasePositionOrder memory order,) = orderManager.getDecreaseOrder(
                 request.orderId,
                 request.tradeType
             );
