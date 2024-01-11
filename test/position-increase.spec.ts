@@ -4,7 +4,7 @@ import { expect } from './shared/expect';
 import { TradeType, ZERO_ADDRESS, loadReserveConfig, MARKET_NAME } from '../helpers';
 import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradingTypes } from '../types/contracts/core/Router';
-import { PRICE_PRECISION } from './helpers/constants';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: increase position', () => {
     const pairIndex = 1;
@@ -72,6 +72,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -89,6 +91,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -104,7 +107,7 @@ describe('Trade: increase position', () => {
             // cancel order
             const orderAfter = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
-            expect(orderAfter.sizeAmount).to.be.eq('0');
+            expect(orderAfter.order.sizeAmount).to.be.eq('0');
         });
 
         it('use residual collateral, open position success', async () => {
@@ -136,6 +139,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -153,6 +158,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -175,6 +181,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest2);
@@ -192,6 +200,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -234,6 +243,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -251,6 +262,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -273,6 +285,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest2);
@@ -290,6 +304,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -306,7 +321,7 @@ describe('Trade: increase position', () => {
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
             expect(positionAfter.positionAmount).to.be.eq(positionBefore.positionAmount);
-            expect(order.sizeAmount).to.be.eq('0');
+            expect(order.order.sizeAmount).to.be.eq('0');
         });
     });
 
@@ -380,6 +395,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await expect(router.connect(trader.signer).createIncreaseOrder(positionRequest)).to.be.revertedWith(
@@ -388,7 +405,7 @@ describe('Trade: increase position', () => {
 
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
-            expect(order.sizeAmount).to.be.eq('0');
+            expect(order.order.sizeAmount).to.be.eq('0');
         });
 
         it('trade amount < min trade amount', async () => {
@@ -415,6 +432,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await expect(router.connect(trader.signer).createIncreaseOrder(positionRequest)).to.be.revertedWith(
@@ -423,7 +442,7 @@ describe('Trade: increase position', () => {
 
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
-            expect(order.sizeAmount).to.be.eq('0');
+            expect(order.order.sizeAmount).to.be.eq('0');
         });
 
         it('trade amount > max trade amount', async () => {
@@ -450,6 +469,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await expect(router.connect(trader.signer).createIncreaseOrder(positionRequest)).to.be.revertedWith(
@@ -458,7 +479,7 @@ describe('Trade: increase position', () => {
 
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
-            expect(order.sizeAmount).to.be.eq('0');
+            expect(order.order.sizeAmount).to.be.eq('0');
         });
 
         it('user position amount > max position amount', async () => {
@@ -490,6 +511,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -507,6 +530,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -529,6 +553,8 @@ describe('Trade: increase position', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
 
@@ -538,7 +564,7 @@ describe('Trade: increase position', () => {
 
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.MARKET);
 
-            expect(order.sizeAmount).to.be.eq('0');
+            expect(order.order.sizeAmount).to.be.eq('0');
         });
     });
 
@@ -607,6 +633,8 @@ describe('Trade: increase position', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -624,6 +652,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -637,7 +666,7 @@ describe('Trade: increase position', () => {
             expect(reason).to.be.eq('not reach trigger price');
 
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
-            expect(order.sizeAmount).to.be.eq('0');
+            expect(order.order.sizeAmount).to.be.eq('0');
         });
 
         it('trade type = market and open price = 0, average price = current price', async () => {
@@ -669,6 +698,8 @@ describe('Trade: increase position', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -686,6 +717,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -734,6 +766,8 @@ describe('Trade: increase position', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
@@ -751,6 +785,7 @@ describe('Trade: increase position', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

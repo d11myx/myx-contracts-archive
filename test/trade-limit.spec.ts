@@ -5,6 +5,7 @@ import { TradeType, ZERO_ADDRESS } from '../helpers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { BigNumber } from 'ethers';
 import { expect } from './shared/expect';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Trade: Limit order', () => {
     const pairIndex = 1;
@@ -99,6 +100,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             // create order trigger exceeds max position
@@ -174,12 +177,14 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             const orderBefore = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
-            expect(orderBefore.sizeAmount).to.be.eq(sizeAmount);
+            expect(orderBefore.order.sizeAmount).to.be.eq(sizeAmount);
 
             // update price
             await updateBTCPrice(testEnv, '32000');
@@ -197,6 +202,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -214,7 +220,7 @@ describe('Trade: Limit order', () => {
 
             // cancel order
             expect(position.positionAmount).to.be.eq('0');
-            expect(orderAfter.sizeAmount).to.be.eq('0');
+            expect(orderAfter.order.sizeAmount).to.be.eq('0');
         });
     });
 
@@ -284,6 +290,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -299,6 +307,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -322,6 +331,8 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -337,6 +348,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -359,12 +371,14 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longEntrustOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longEntrustPositionRequest);
             const longEntrustOrderBefore = await orderManager.getIncreaseOrder(longEntrustOrderId, TradeType.LIMIT);
 
-            expect(longEntrustOrderBefore.sizeAmount).to.be.eq(sizeAmount);
+            expect(longEntrustOrderBefore.order.sizeAmount).to.be.eq(sizeAmount);
 
             // create long entrust order shared collateral
             await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
@@ -377,12 +391,14 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longEntrustOrderId2 = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longEntrustPositionRequest2);
             const longEntrustOrderBefore2 = await orderManager.getIncreaseOrder(longEntrustOrderId2, TradeType.LIMIT);
 
-            expect(longEntrustOrderBefore2.sizeAmount).to.be.eq(sizeAmount);
+            expect(longEntrustOrderBefore2.order.sizeAmount).to.be.eq(sizeAmount);
 
             // create short entrust order
             const shortEntrustPositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -394,12 +410,14 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortEntrustOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortEntrustPositionRequest);
             const shortEntrustOrderBefore = await orderManager.getIncreaseOrder(shortEntrustOrderId, TradeType.LIMIT);
 
-            expect(shortEntrustOrderBefore.sizeAmount).to.be.eq(sizeAmount);
+            expect(shortEntrustOrderBefore.order.sizeAmount).to.be.eq(sizeAmount);
 
             // create decrease short entrust order
             const decreaseShortPositionRequest: TradingTypes.DecreasePositionRequestStruct = {
@@ -411,12 +429,14 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseShortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseShortPositionRequest);
             const decreaseShoreOrderBefore = await orderManager.getDecreaseOrder(decreaseShortOrderId, TradeType.LIMIT);
 
-            expect(decreaseShoreOrderBefore.sizeAmount).to.be.eq(sizeAmount);
+            expect(decreaseShoreOrderBefore.order.sizeAmount).to.be.eq(sizeAmount);
 
             // create decrease long entrust order
             const decreaseLongPositionRequest: TradingTypes.DecreasePositionRequestStruct = {
@@ -428,6 +448,8 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount: sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseLongOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -445,6 +467,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId: decreaseLongOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -458,16 +481,16 @@ describe('Trade: Limit order', () => {
             const longEntrustOrderAfter2 = await orderManager.getIncreaseOrder(longEntrustOrderId2, TradeType.LIMIT);
 
             // cancel long increase entrust order
-            expect(decreasLongOrderAfter.sizeAmount).to.be.eq('0');
-            expect(longEntrustOrderAfter.sizeAmount).to.be.eq('0');
-            expect(longEntrustOrderAfter2.sizeAmount).to.be.eq('0');
+            expect(decreasLongOrderAfter.order.sizeAmount).to.be.eq('0');
+            expect(longEntrustOrderAfter.order.sizeAmount).to.be.eq('0');
+            expect(longEntrustOrderAfter2.order.sizeAmount).to.be.eq('0');
 
             const decreasShoreOrderAfter = await orderManager.getDecreaseOrder(decreaseShortOrderId, TradeType.LIMIT);
             const shortEntrustOrderAfter = await orderManager.getIncreaseOrder(shortEntrustOrderId, TradeType.LIMIT);
 
             // reserve short entrust and decrease order
-            expect(decreasShoreOrderAfter.sizeAmount).to.be.eq(sizeAmount);
-            expect(shortEntrustOrderAfter.sizeAmount).to.be.eq(sizeAmount);
+            expect(decreasShoreOrderAfter.order.sizeAmount).to.be.eq(sizeAmount);
+            expect(shortEntrustOrderAfter.order.sizeAmount).to.be.eq(sizeAmount);
         });
     });
 
@@ -540,12 +563,14 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
-            expect(order.sizeAmount).to.be.eq(sizeAmount);
+            expect(order.order.sizeAmount).to.be.eq(sizeAmount);
 
             // execution order
             await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
@@ -560,6 +585,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -605,12 +631,14 @@ describe('Trade: Limit order', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             const orderBefore = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
-            expect(orderBefore.sizeAmount).to.be.eq(sizeAmount);
+            expect(orderBefore.order.sizeAmount).to.be.eq(sizeAmount);
 
             // execution order
             const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
@@ -625,6 +653,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -641,7 +670,7 @@ describe('Trade: Limit order', () => {
             const orderAfter = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
             expect(position.positionAmount).to.be.eq('0');
-            expect(orderAfter.sizeAmount).to.be.eq('0');
+            expect(orderAfter.order.sizeAmount).to.be.eq('0');
         });
 
         it('user open short position, order price < current price', async () => {
@@ -676,12 +705,14 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             const order = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
-            expect(order.sizeAmount).to.be.eq(sizeAmount);
+            expect(order.order.sizeAmount).to.be.eq(sizeAmount);
 
             // execution order
             await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
@@ -696,6 +727,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -741,12 +773,14 @@ describe('Trade: Limit order', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(positionRequest);
             const orderBefore = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
-            expect(orderBefore.sizeAmount).to.be.eq(sizeAmount);
+            expect(orderBefore.order.sizeAmount).to.be.eq(sizeAmount);
 
             // execution order
             const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseLimitOrders(
@@ -761,6 +795,7 @@ describe('Trade: Limit order', () => {
                 [
                     {
                         orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -777,7 +812,7 @@ describe('Trade: Limit order', () => {
             const orderAfter = await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT);
 
             expect(position.positionAmount).to.be.eq('0');
-            expect(orderAfter.sizeAmount).to.be.eq('0');
+            expect(orderAfter.order.sizeAmount).to.be.eq('0');
         });
     });
 });

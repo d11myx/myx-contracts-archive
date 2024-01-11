@@ -19,7 +19,9 @@ interface IExecution {
         uint256 executionPrice,
         uint256 executedSize,
         uint256 tradingFee,
-        int256 fundingFee
+        int256 fundingFee,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
     event ExecuteDecreaseOrder(
@@ -37,15 +39,15 @@ interface IExecution {
         bool needADL,
         int256 pnl,
         uint256 tradingFee,
-        int256 fundingFee
+        int256 fundingFee,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
-    event ExecuteAdl(
-        address account,
-        uint256 pairIndex,
-        bool isLong,
-        uint256 orderId,
-        uint256[] adlOrderIds
+    event ExecuteAdlOrder(
+        uint256[] adlOrderIds,
+        bytes32[] adlPositionKeys,
+        AdlOrder[] orders
     );
 
     event ExecuteOrderError(uint256 orderId, string errorMessage);
@@ -67,5 +69,12 @@ interface IExecution {
         address account;
         uint256 pairIndex;
         bool isLong;
+    }
+
+    struct AdlOrder {
+        address account;
+        uint256 pairIndex;
+        bool isLong;
+        uint256 orderId;
     }
 }

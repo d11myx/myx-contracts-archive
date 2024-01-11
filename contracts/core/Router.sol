@@ -32,18 +32,21 @@ contract Router is
 {
     using SafeERC20 for IERC20;
     using SafeERC20 for IWETH;
+    using Int256Utils for uint256;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     IOrderManager public immutable orderManager;
     IPositionManager public immutable positionManager;
     IPool public immutable pool;
 
+    mapping(uint256 => OperationStatus) public operationStatus;
+
     constructor(
         IAddressesProvider addressProvider,
         IOrderManager _orderManager,
         IPositionManager _positionManager,
-        IPool _pool)
-    {
+        IPool _pool
+    ){
         ADDRESS_PROVIDER = addressProvider;
         orderManager = _orderManager;
         positionManager = _positionManager;
@@ -80,9 +83,38 @@ contract Router is
         _unpause();
     }
 
+    function updateIncreasePositionStatus(uint256 pairIndex, bool enabled) external onlyPoolAdmin {
+        operationStatus[pairIndex].increasePositionDisabled = !enabled;
+        emit UpdateIncreasePositionStatus(msg.sender, pairIndex, enabled);
+    }
+
+    function updateDecreasePositionStatus(uint256 pairIndex, bool enabled) external onlyPoolAdmin {
+        operationStatus[pairIndex].decreasePositionDisabled = !enabled;
+        emit UpdateDecreasePositionStatus(msg.sender, pairIndex, enabled);
+    }
+
+    function updateOrderStatus(uint256 pairIndex, bool enabled) external onlyPoolAdmin {
+        operationStatus[pairIndex].orderDisabled = !enabled;
+        emit UpdateOrderStatus(msg.sender, pairIndex, enabled);
+    }
+
+    function updateAddLiquidityStatus(uint256 pairIndex, bool enabled) external onlyPoolAdmin {
+        operationStatus[pairIndex].addLiquidityDisabled = !enabled;
+        emit UpdateAddLiquidityStatus(msg.sender, pairIndex, enabled);
+    }
+
+    function updateRemoveLiquidityStatus(uint256 pairIndex, bool enabled) external onlyPoolAdmin {
+        operationStatus[pairIndex].removeLiquidityDisabled = !enabled;
+        emit UpdateRemoveLiquidityStatus(msg.sender, pairIndex, enabled);
+    }
+
     function wrapWETH(address recipient) external payable {
         IWETH(ADDRESS_PROVIDER.WETH()).deposit{value: msg.value}();
         IWETH(ADDRESS_PROVIDER.WETH()).transfer(recipient, msg.value);
+    }
+
+    function getOperationStatus(uint256 pairIndex) external view returns (OperationStatus memory) {
+        return operationStatus[pairIndex];
     }
 
     function setPriceAndAdjustCollateral(
@@ -92,6 +124,8 @@ contract Router is
         address[] calldata tokens,
         bytes[] calldata updateData
     ) external payable whenNotPaused nonReentrant {
+        require(!operationStatus[pairIndex].orderDisabled, "disabled");
+
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
 
         positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
@@ -109,14 +143,15 @@ contract Router is
 
     function createIncreaseOrderWithTpSl(
         TradingTypes.IncreasePositionWithTpSlRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 orderId) {
-        request.account = msg.sender;
-
+    ) external payable whenNotPaused nonReentrant returns (uint256 orderId) {
+        require(!operationStatus[request.pairIndex].increasePositionDisabled, "disabled");
         require(
             request.tradeType != TradingTypes.TradeType.TP &&
-                request.tradeType != TradingTypes.TradeType.SL,
+            request.tradeType != TradingTypes.TradeType.SL,
             "not support"
         );
+
+        request.account = msg.sender;
 
         orderId = orderManager.createOrder(
             TradingTypes.CreateOrderRequest({
@@ -126,37 +161,89 @@ contract Router is
                 collateral: request.collateral,
                 openPrice: request.openPrice,
                 isLong: request.isLong,
-                sizeAmount: int128(request.sizeAmount),
+                sizeAmount: uint256(request.sizeAmount).safeConvertToInt256(),
                 maxSlippage: request.maxSlippage,
+                paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                networkFeeAmount: request.networkFeeAmount,
                 data: abi.encode(request.account)
             })
         );
 
-        // order with tp sl
-        if (request.tp > 0 || request.sl > 0) {
-            orderManager.saveOrderTpSl(
-                orderId,
-                TradingTypes.OrderWithTpSl({
-                    tpPrice: request.tpPrice,
-                    tp: request.tp,
-                    slPrice: request.slPrice,
-                    sl: request.sl
+        // tp、sl
+        this._createTpSl(
+            request.account,
+            request.pairIndex,
+            request.isLong,
+            request.tpPrice,
+            request.tp,
+            request.slPrice,
+            request.sl,
+            request.paymentType,
+            request.networkFeeAmount
+        );
+        return orderId;
+    }
+
+    function _createTpSl(
+        address account,
+        uint256 pairIndex,
+        bool isLong,
+        uint256 tpPrice,
+        uint128 tp,
+        uint256 slPrice,
+        uint128 sl,
+        TradingTypes.NetworkFeePaymentType paymentType,
+        uint256 networkFeeAmount
+    ) public payable returns (uint256 tpOrderId, uint256 slOrderId) {
+        require(msg.sender == address(this), "internal");
+        if (tp > 0) {
+            tpOrderId = orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: account,
+                    pairIndex: pairIndex,
+                    tradeType: TradingTypes.TradeType.TP,
+                    collateral: 0,
+                    openPrice: tpPrice,
+                    isLong: isLong,
+                    sizeAmount: -(uint256(tp).safeConvertToInt256()),
+                    maxSlippage: 0,
+                    paymentType: TradingTypes.convertPaymentType(paymentType),
+                    networkFeeAmount: networkFeeAmount,
+                    data: abi.encode(account)
                 })
             );
         }
-        return orderId;
+        if (sl > 0) {
+            slOrderId = orderManager.createOrder(
+                TradingTypes.CreateOrderRequest({
+                    account: account,
+                    pairIndex: pairIndex,
+                    tradeType: TradingTypes.TradeType.SL,
+                    collateral: 0,
+                    openPrice: slPrice,
+                    isLong: isLong,
+                    sizeAmount: -(uint256(sl).safeConvertToInt256()),
+                    maxSlippage: 0,
+                    paymentType: TradingTypes.convertPaymentType(paymentType),
+                    networkFeeAmount: networkFeeAmount,
+                    data: abi.encode(account)
+                })
+            );
+        }
+        return (tpOrderId, slOrderId);
     }
 
     function createIncreaseOrder(
         TradingTypes.IncreasePositionRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 orderId) {
-        request.account = msg.sender;
-
+    ) external payable whenNotPaused nonReentrant returns (uint256 orderId) {
+        require(!operationStatus[request.pairIndex].increasePositionDisabled, "disabled");
         require(
             request.tradeType != TradingTypes.TradeType.TP &&
-                request.tradeType != TradingTypes.TradeType.SL,
+            request.tradeType != TradingTypes.TradeType.SL,
             "not support"
         );
+
+        request.account = msg.sender;
 
         return
             orderManager.createOrder(
@@ -167,8 +254,10 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.openPrice,
                     isLong: request.isLong,
-                    sizeAmount: int128(request.sizeAmount),
+                    sizeAmount: request.sizeAmount.safeConvertToInt256(),
                     maxSlippage: request.maxSlippage,
+                    paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                    networkFeeAmount: request.networkFeeAmount,
                     data: abi.encode(request.account)
                 })
             );
@@ -176,7 +265,9 @@ contract Router is
 
     function createDecreaseOrder(
         TradingTypes.DecreasePositionRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256) {
+    ) external payable whenNotPaused nonReentrant returns (uint256) {
+        require(!operationStatus[request.pairIndex].decreasePositionDisabled, "disabled");
+
         request.account = msg.sender;
 
         return
@@ -188,8 +279,10 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.triggerPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int128(request.sizeAmount),
+                    sizeAmount: -(request.sizeAmount.safeConvertToInt256()),
                     maxSlippage: request.maxSlippage,
+                    paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                    networkFeeAmount: request.networkFeeAmount,
                     data: abi.encode(request.account)
                 })
             );
@@ -197,10 +290,12 @@ contract Router is
 
     function createDecreaseOrders(
         TradingTypes.DecreasePositionRequest[] memory requests
-    ) external whenNotPaused nonReentrant returns (uint256[] memory orderIds) {
+    ) external payable whenNotPaused nonReentrant returns (uint256[] memory orderIds) {
         orderIds = new uint256[](requests.length);
         for (uint256 i = 0; i < requests.length; i++) {
             TradingTypes.DecreasePositionRequest memory request = requests[i];
+
+            require(!operationStatus[request.pairIndex].decreasePositionDisabled, "disabled");
 
             orderIds[i] = orderManager.createOrder(
                 TradingTypes.CreateOrderRequest({
@@ -210,8 +305,10 @@ contract Router is
                     collateral: request.collateral,
                     openPrice: request.triggerPrice,
                     isLong: request.isLong,
-                    sizeAmount: -int128(request.sizeAmount),
+                    sizeAmount: -(request.sizeAmount.safeConvertToInt256()),
                     maxSlippage: request.maxSlippage,
+                    paymentType: TradingTypes.convertPaymentType(request.paymentType),
+                    networkFeeAmount: request.networkFeeAmount,
                     data: abi.encode(msg.sender)
                 })
             );
@@ -225,13 +322,13 @@ contract Router is
         bool isIncrease
     ) private view {
         if (isIncrease) {
-            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+            (TradingTypes.IncreasePositionOrder memory order,) = orderManager.getIncreaseOrder(
                 orderId,
                 tradeType
             );
             require(order.account == msg.sender, "onlyAccount");
         } else {
-            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            (TradingTypes.DecreasePositionOrder memory order,) = orderManager.getDecreaseOrder(
                 orderId,
                 tradeType
             );
@@ -295,34 +392,38 @@ contract Router is
 
     function addOrderTpSl(
         AddOrderTpSlRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
-        uint256 orderAmount;
+    ) external payable whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
+        uint256 pairIndex;
+        bool isLong;
         if (request.isIncrease) {
-            TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
+            (TradingTypes.IncreasePositionOrder memory order,) = orderManager.getIncreaseOrder(
                 request.orderId,
                 request.tradeType
             );
             require(order.account == msg.sender, "no access");
-            orderAmount = order.sizeAmount;
+            pairIndex = order.pairIndex;
+            isLong = order.isLong;
         } else {
-            TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+            (TradingTypes.DecreasePositionOrder memory order,) = orderManager.getDecreaseOrder(
                 request.orderId,
                 request.tradeType
             );
             require(order.account == msg.sender, "no access");
-            orderAmount = order.sizeAmount;
+            pairIndex = order.pairIndex;
+            isLong = order.isLong;
         }
-
+        require(!operationStatus[pairIndex].orderDisabled, "disabled");
         if (request.tp > 0 || request.sl > 0) {
-            require(request.tp <= orderAmount && request.sl <= orderAmount, "exceeds order size");
-            orderManager.saveOrderTpSl(
-                request.orderId,
-                TradingTypes.OrderWithTpSl({
-                    tpPrice: request.tpPrice,
-                    tp: request.tp,
-                    slPrice: request.slPrice,
-                    sl: request.sl
-                })
+            this._createTpSl(
+                msg.sender,
+                pairIndex,
+                isLong,
+                request.tpPrice,
+                request.tp,
+                request.slPrice,
+                request.sl,
+                request.paymentType,
+                request.networkFeeAmount
             );
         }
         return (tpOrderId, slOrderId);
@@ -330,37 +431,20 @@ contract Router is
 
     function createTpSl(
         TradingTypes.CreateTpSlRequest memory request
-    ) external whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
-        if (request.tp > 0) {
-            tpOrderId = orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: msg.sender,
-                    pairIndex: request.pairIndex,
-                    tradeType: TradingTypes.TradeType.TP,
-                    collateral: 0,
-                    openPrice: request.tpPrice,
-                    isLong: request.isLong,
-                    sizeAmount: -int128(request.tp),
-                    maxSlippage: 0,
-                    data: abi.encode(msg.sender)
-                })
-            );
-        }
-        if (request.sl > 0) {
-            slOrderId = orderManager.createOrder(
-                TradingTypes.CreateOrderRequest({
-                    account: msg.sender,
-                    pairIndex: request.pairIndex,
-                    tradeType: TradingTypes.TradeType.SL,
-                    collateral: 0,
-                    openPrice: request.slPrice,
-                    isLong: request.isLong,
-                    sizeAmount: -int128(request.sl),
-                    maxSlippage: 0,
-                    data: abi.encode(msg.sender)
-                })
-            );
-        }
+    ) external payable whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
+        require(!operationStatus[request.pairIndex].orderDisabled, "disabled");
+
+        (tpOrderId, slOrderId) = this._createTpSl(
+            msg.sender,
+            request.pairIndex,
+            request.isLong,
+            request.tpPrice,
+            request.tp,
+            request.slPrice,
+            request.sl,
+            request.paymentType,
+            request.networkFeeAmount
+        );
         return (tpOrderId, slOrderId);
     }
 
@@ -372,13 +456,10 @@ contract Router is
         address[] calldata tokens,
         bytes[] calldata updateData,
         uint256 updateFee
-    )
-    external
-    payable
-    whenNotPaused
-    nonReentrant
-    returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
-    {
+    ) external payable whenNotPaused nonReentrant returns (uint256 mintAmount, address slipToken, uint256 slipAmount){
+        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        require(pairIndex > 0, "!exists");
+        require(!operationStatus[pairIndex].addLiquidityDisabled, "disabled");
         require(msg.value >= indexAmount + updateFee, "ne");
 
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: updateFee}(tokens, updateData);
@@ -386,7 +467,6 @@ contract Router is
         uint256 wrapAmount = msg.value - updateFee;
         this.wrapWETH{value: wrapAmount}(address(this));
 
-        uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         (mintAmount, slipToken, slipAmount) = IPool(pool).addLiquidity(
             msg.sender,
             pairIndex,
@@ -414,10 +494,11 @@ contract Router is
         nonReentrant
         returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
     {
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
-
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         require(pairIndex > 0, "!exists");
+        require(!operationStatus[pairIndex].addLiquidityDisabled, "disabled");
+
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
 
         if (indexToken == ADDRESS_PROVIDER.WETH()) {
             IWETH(ADDRESS_PROVIDER.WETH()).safeTransferFrom(msg.sender, address(this), indexAmount);
@@ -448,9 +529,11 @@ contract Router is
         nonReentrant
         returns (uint256 mintAmount, address slipToken, uint256 slipAmount)
     {
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
         require(pairIndex > 0, "!exists");
+        require(!operationStatus[pairIndex].addLiquidityDisabled, "disabled");
+
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
 
         if (indexToken == ADDRESS_PROVIDER.WETH()) {
             IWETH(ADDRESS_PROVIDER.WETH()).safeTransferFrom(msg.sender, address(this), indexAmount);
@@ -479,8 +562,12 @@ contract Router is
         nonReentrant
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        require(pairIndex > 0, "!exists");
+        require(!operationStatus[pairIndex].removeLiquidityDisabled, "disabled");
+
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+
         return
             IPool(pool).removeLiquidity(
                 payable(msg.sender),
@@ -506,8 +593,12 @@ contract Router is
         nonReentrant
         returns (uint256 receivedIndexAmount, uint256 receivedStableAmount, uint256 feeAmount)
     {
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
+        require(pairIndex > 0, "!exists");
+        require(!operationStatus[pairIndex].removeLiquidityDisabled, "disabled");
+
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+
         return
             IPool(pool).removeLiquidity(
                 payable(receiver),

@@ -6,6 +6,7 @@ import { abiCoder, TradeType, waitForTx, ZERO_ADDRESS } from '../../helpers';
 import { ContractReceipt } from '@ethersproject/contracts/src.ts';
 import { TradingTypes } from '../../types/contracts/core/Router';
 import { IExecution } from '../../types/contracts/core/Executor';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './constants';
 
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { deployer, keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
@@ -87,6 +88,8 @@ export async function increasePosition(
         isLong: isLong,
         sizeAmount: size,
         maxSlippage: 0,
+        paymentType: PAYMENT_TYPE,
+        networkFeeAmount: NETWORK_FEE_AMOUNT,
     };
 
     const pair = await pool.getPair(pairIndex);
@@ -98,20 +101,27 @@ export async function increasePosition(
         orderId = await orderManager.ordersIndex();
         await router.connect(user.signer).createIncreaseOrder(request);
         // execute order
-        const tx = await executor
-            .connect(keeper.signer)
-            .setPricesAndExecuteIncreaseMarketOrders(
-                [pair.indexToken],
-                [indexPriceFeed.getPrice(pair.indexToken)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
-                    ),
-                ],
-                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
-                { value: 1 },
-            );
+        const tx = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+            [pair.indexToken],
+            [indexPriceFeed.getPrice(pair.indexToken)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
         receipt = await tx.wait();
     } else {
         // create increase order
@@ -130,6 +140,7 @@ export async function increasePosition(
             [
                 {
                     orderId: orderId.toNumber(),
+                    tradeType: TradeType.MARKET,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -168,6 +179,8 @@ export async function decreasePosition(
         isLong: isLong,
         sizeAmount: size,
         maxSlippage: 0,
+        paymentType: PAYMENT_TYPE,
+        networkFeeAmount: NETWORK_FEE_AMOUNT,
     };
 
     const pair = await pool.getPair(pairIndex);
@@ -189,7 +202,16 @@ export async function decreasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
+                [
+                    {
+                        orderId: orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -205,7 +227,16 @@ export async function decreasePosition(
                         [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
+                [
+                    {
+                        orderId: orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
         receipt = await tx.wait();
@@ -236,31 +267,35 @@ export async function adlPosition(
         isLong: isLong,
         sizeAmount: size,
         maxSlippage: 0,
+        paymentType: PAYMENT_TYPE,
+        networkFeeAmount: NETWORK_FEE_AMOUNT,
     };
 
     // create increase order
     const orderId = await orderManager.ordersIndex();
     await router.connect(user.signer).createDecreaseOrder(request);
-    const tx = await executor
-        .connect(keeper.signer)
-        .setPricesAndExecuteADL(
-            [btc.address],
-            [await indexPriceFeed.getPrice(btc.address)],
-            [
-                new ethers.utils.AbiCoder().encode(
-                    ['uint256'],
-                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                ),
-            ],
-            adlPositions,
-            orderId,
-            tradeType,
-            0,
-            0,
-            0,
-            ZERO_ADDRESS,
-            { value: 1 },
-        );
+    const tx = await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
+        [btc.address],
+        [await indexPriceFeed.getPrice(btc.address)],
+        [
+            new ethers.utils.AbiCoder().encode(
+                ['uint256'],
+                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+            ),
+        ],
+        adlPositions,
+        [
+            {
+                orderId,
+                tradeType,
+                tier: 0,
+                referralsRatio: 0,
+                referralUserRatio: 0,
+                referralOwner: ZERO_ADDRESS,
+            },
+        ],
+        { value: 1 },
+    );
     const receipt = await tx.wait();
 
     return { orderId: orderId, executeReceipt: receipt };

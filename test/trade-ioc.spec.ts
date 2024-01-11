@@ -13,7 +13,7 @@ import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { MARKET_NAME } from '../helpers/env';
 import { loadReserveConfig } from '../helpers/market-config-helper';
-import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE, PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: ioc', () => {
     const pairIndex = 1;
@@ -97,6 +97,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -112,6 +114,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -127,7 +130,7 @@ describe('Trade: ioc', () => {
             expect(longPosition.positionAmount).to.be.eq(
                 vaultBefore.indexTotalAmount.sub(vaultBefore.indexReservedAmount),
             );
-            expect(longOrder.sizeAmount).to.be.eq('0');
+            expect(longOrder.order.sizeAmount).to.be.eq('0');
 
             /* increase short position */
             const vaultAfter = await pool.getVault(pairIndex);
@@ -141,6 +144,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -156,6 +161,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -175,7 +181,7 @@ describe('Trade: ioc', () => {
                     stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
-            expect(shortOrder.sizeAmount).to.be.eq('0');
+            expect(shortOrder.order.sizeAmount).to.be.eq('0');
         });
     });
 
@@ -258,6 +264,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -273,6 +281,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -288,7 +297,7 @@ describe('Trade: ioc', () => {
             expect(longPosition.positionAmount).to.be.eq(
                 vaultBefore.indexTotalAmount.sub(vaultBefore.indexReservedAmount),
             );
-            expect(longOrderBefor.executedSize).to.be.eq(longPosition.positionAmount);
+            expect(longOrderBefor.order.executedSize).to.be.eq(longPosition.positionAmount);
 
             /* increase short position */
             const vaultAfter = await pool.getVault(pairIndex);
@@ -302,6 +311,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -317,6 +328,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -336,7 +348,7 @@ describe('Trade: ioc', () => {
                     stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
-            expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
+            expect(shortOrder.order.executedSize).to.be.eq(shortPosition.positionAmount);
 
             // add liquidity
             const pair = await pool.getPair(pairIndex);
@@ -385,6 +397,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -405,6 +418,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -416,8 +430,8 @@ describe('Trade: ioc', () => {
             const longOrderAfter = await orderManager.getIncreaseOrder(longOrderId, TradeType.LIMIT);
             const shortOrderAfter = await orderManager.getIncreaseOrder(shortOrderId, TradeType.LIMIT);
 
-            expect(longOrderAfter.sizeAmount).to.be.eq('0');
-            expect(shortOrderAfter.sizeAmount).to.be.eq('0');
+            expect(longOrderAfter.order.sizeAmount).to.be.eq('0');
+            expect(shortOrderAfter.order.sizeAmount).to.be.eq('0');
         });
     });
 
@@ -488,6 +502,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -503,6 +519,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: increaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -525,6 +542,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
@@ -540,6 +559,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: increaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -562,6 +582,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: positionAfter.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -577,6 +599,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -592,7 +615,7 @@ describe('Trade: ioc', () => {
             // expect(decreasePositionAfter.positionAmount).to.be.eq(
             //     positionAfter.positionAmount.sub(tradingConfig.maxTradeAmount),
             // );
-            expect(decreaseOrder.sizeAmount).to.be.eq('0');
+            expect(decreaseOrder.order.sizeAmount).to.be.eq('0');
         });
     });
 
@@ -663,6 +686,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -678,6 +703,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: increaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -700,6 +726,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             increaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(long2PositionRequest);
@@ -715,6 +743,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: increaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -737,6 +766,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: positionAfter.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -752,6 +783,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -782,6 +814,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -863,6 +896,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -878,6 +913,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -903,6 +939,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -918,6 +956,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -940,6 +979,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: longPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -955,6 +996,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -967,12 +1009,12 @@ describe('Trade: ioc', () => {
             const decreasePosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(decreasePosition.positionAmount).to.be.eq(longPosition.positionAmount);
-            expect(decreaseOrder.needADL).to.be.eq(true);
+            expect(decreaseOrder.order.needADL).to.be.eq(true);
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
 
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -984,19 +1026,23 @@ describe('Trade: ioc', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrder.sizeAmount,
+                        sizeAmount: decreaseOrder.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderId,
-                TradeType.MARKET,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -1004,7 +1050,7 @@ describe('Trade: ioc', () => {
             const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.MARKET);
 
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -1077,6 +1123,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -1092,6 +1140,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1117,6 +1166,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1132,6 +1183,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1154,6 +1206,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount: longPosition.positionAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const decreaseOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createDecreaseOrder(decreaseLongPositionRequest);
@@ -1169,6 +1223,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: decreaseOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1181,11 +1236,11 @@ describe('Trade: ioc', () => {
             const decreasePosition = await positionManager.getPosition(trader.address, pairIndex, true);
 
             expect(decreasePosition.positionAmount).to.be.eq(longPosition.positionAmount);
-            expect(decreaseOrder.needADL).to.be.eq(true);
+            expect(decreaseOrder.order.needADL).to.be.eq(true);
 
             // execute ADL
             const positionKey = await positionManager.getPositionKey(trader.address, pairIndex, true);
-            await executor.connect(keeper.signer).setPricesAndExecuteADL(
+            await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -1197,19 +1252,23 @@ describe('Trade: ioc', () => {
                 [
                     {
                         positionKey,
-                        sizeAmount: decreaseOrder.sizeAmount,
+                        sizeAmount: decreaseOrder.order.sizeAmount,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
                         referralOwner: ZERO_ADDRESS,
                     },
                 ],
-                decreaseOrderId,
-                TradeType.LIMIT,
-                0,
-                0,
-                0,
-                ZERO_ADDRESS,
+                [
+                    {
+                        orderId: decreaseOrderId,
+                        tradeType: TradeType.LIMIT,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
@@ -1217,7 +1276,7 @@ describe('Trade: ioc', () => {
             const decreaseOrderAdlAfter = await orderManager.getDecreaseOrder(decreaseOrderId, TradeType.LIMIT);
 
             expect(decreasePositionAdlAfter.positionAmount).to.be.eq(
-                decreaseOrderAdlAfter.sizeAmount.sub(decreaseOrderAdlAfter.executedSize),
+                decreaseOrderAdlAfter.order.sizeAmount.sub(decreaseOrderAdlAfter.order.executedSize),
             );
         });
     });
@@ -1296,6 +1355,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount: size,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             const orderId = await orderManager.ordersIndex();
@@ -1312,6 +1373,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1498,6 +1560,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -1513,6 +1577,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1528,7 +1593,7 @@ describe('Trade: ioc', () => {
             expect(longPosition.positionAmount).to.be.eq(
                 vaultBefore.indexTotalAmount.sub(vaultBefore.indexReservedAmount),
             );
-            expect(longOrderBefor.executedSize).to.be.eq(longPosition.positionAmount);
+            expect(longOrderBefor.order.executedSize).to.be.eq(longPosition.positionAmount);
 
             /* increase short position */
             const vaultAfter = await pool.getVault(pairIndex);
@@ -1542,6 +1607,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1557,6 +1624,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1576,7 +1644,7 @@ describe('Trade: ioc', () => {
                     stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
-            expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
+            expect(shortOrder.order.executedSize).to.be.eq(shortPosition.positionAmount);
 
             // add liquidity
             const pair = await pool.getPair(pairIndex);
@@ -1644,6 +1712,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1667,6 +1736,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1759,6 +1829,8 @@ describe('Trade: ioc', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const longOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(longPositionRequest);
@@ -1774,6 +1846,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1789,7 +1862,7 @@ describe('Trade: ioc', () => {
             expect(longPosition.positionAmount).to.be.eq(
                 vaultBefore.indexTotalAmount.sub(vaultBefore.indexReservedAmount),
             );
-            expect(longOrderBefor.executedSize).to.be.eq(longPosition.positionAmount);
+            expect(longOrderBefor.order.executedSize).to.be.eq(longPosition.positionAmount);
 
             /* increase short position */
             const vaultAfter = await pool.getVault(pairIndex);
@@ -1803,6 +1876,8 @@ describe('Trade: ioc', () => {
                 isLong: false,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             const shortOrderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(shortPositionRequest);
@@ -1818,6 +1893,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: shortOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1837,7 +1913,7 @@ describe('Trade: ioc', () => {
                     stableToIndexAmount.mul(PRICE_PRECISION).div(shortPosition.averagePrice),
                 ),
             );
-            expect(shortOrder.executedSize).to.be.eq(shortPosition.positionAmount);
+            expect(shortOrder.order.executedSize).to.be.eq(shortPosition.positionAmount);
 
             // add liquidity
             const pair = await pool.getPair(pairIndex);
@@ -1905,6 +1981,7 @@ describe('Trade: ioc', () => {
                 [
                     {
                         orderId: longOrderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

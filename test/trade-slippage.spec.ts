@@ -5,6 +5,7 @@ import { expect } from './shared/expect';
 import { TradeType, getMockToken, convertStableAmountToIndex, ZERO_ADDRESS } from '../helpers';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Trade: slippage', () => {
     const pairIndex = 1;
@@ -79,6 +80,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
@@ -94,6 +97,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -116,6 +120,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
@@ -132,6 +138,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -155,6 +162,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
@@ -170,6 +179,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -192,6 +202,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
@@ -208,6 +220,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -252,6 +265,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             let orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
@@ -267,6 +282,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -289,6 +305,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader.signer).createIncreaseOrder(increase2PositionRequest);
@@ -305,6 +323,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -329,6 +348,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
@@ -344,6 +365,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -366,6 +388,8 @@ describe('Trade: slippage', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase4PositionRequest);
@@ -382,6 +406,7 @@ describe('Trade: slippage', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

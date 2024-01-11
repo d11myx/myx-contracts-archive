@@ -5,7 +5,6 @@ import { Duration, increase, TradeType, getFundingRateInTs, convertIndexAmountTo
 import { expect } from './shared/expect';
 import { BigNumber } from 'ethers';
 import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
-import usdt from '../markets/usdt';
 
 describe('Trade: funding fee', () => {
     const pairIndex = 1;

@@ -4,6 +4,7 @@ import { newTestEnv, TestEnv } from './helpers/make-suite';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from 'chai';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Executor: require check', () => {
     const pairIndex = 1;
@@ -100,6 +101,8 @@ describe('Executor: require check', () => {
                     isLong: true,
                     sizeAmount: decreaseSize,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -117,6 +120,7 @@ describe('Executor: require check', () => {
                         [
                             {
                                 orderId: orderId,
+                                tradeType: TradeType.MARKET,
                                 tier: 0,
                                 referralsRatio: 0,
                                 referralUserRatio: 0,
@@ -126,28 +130,27 @@ describe('Executor: require check', () => {
                         { value: 1 },
                     ),
                 ).to.be.revertedWith('opk');
-                await executor
-                    .connect(keeper.signer)
-                    .setPricesAndExecuteDecreaseMarketOrders(
-                        [btc.address],
-                        [await indexPriceFeed.getPrice(btc.address)],
-                        [
-                            new ethers.utils.AbiCoder().encode(
-                                ['uint256'],
-                                [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                            ),
-                        ],
-                        [
-                            {
-                                orderId: orderId,
-                                tier: 0,
-                                referralsRatio: 0,
-                                referralUserRatio: 0,
-                                referralOwner: ZERO_ADDRESS,
-                            },
-                        ],
-                        { value: 1 },
-                    );
+                await executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+                    [btc.address],
+                    [await indexPriceFeed.getPrice(btc.address)],
+                    [
+                        new ethers.utils.AbiCoder().encode(
+                            ['uint256'],
+                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                        ),
+                    ],
+                    [
+                        {
+                            orderId: orderId,
+                            tradeType: TradeType.MARKET,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
+                    { value: 1 },
+                );
             });
         });
     });

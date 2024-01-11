@@ -4,6 +4,7 @@ import { ethers } from 'hardhat';
 import { decreasePosition, increasePosition, mintAndApprove } from './helpers/misc';
 import { TradeType, ZERO_ADDRESS } from '../helpers';
 import { IRouter, TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Trade: TP & SL', () => {
     const pairIndex = 1;
@@ -89,24 +90,33 @@ describe('Trade: TP & SL', () => {
             tpPrice: ethers.utils.parseUnits('60000', 30),
             sl: ethers.utils.parseUnits('5', await btc.decimals()),
             slPrice: ethers.utils.parseUnits('10000', 30),
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         let orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(request);
-        await executor
-            .connect(keeper.signer)
-            .setPricesAndExecuteIncreaseMarketOrders(
-                [btc.address],
-                [await indexPriceFeed.getPrice(btc.address)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
-                { value: 1 },
-            );
+        await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
 
         const positionKey = positionManager.getPositionKey(trader.address, pairIndex, true);
         let positionOrders = await orderManager.getPositionOrders(positionKey);
@@ -127,6 +137,8 @@ describe('Trade: TP & SL', () => {
             tpPrice: ethers.utils.parseUnits('60000', 30),
             sl: ethers.utils.parseUnits('5', await btc.decimals()),
             slPrice: ethers.utils.parseUnits('10000', 30),
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         orderId = await orderManager.ordersIndex();
@@ -142,75 +154,21 @@ describe('Trade: TP & SL', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
-                [{ orderId: orderId, tier: 0, referralsRatio: 0, referralUserRatio: 0, referralOwner: ZERO_ADDRESS }],
+                [
+                    {
+                        orderId: orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
                 { value: 1 },
             );
 
         positionOrders = await orderManager.getPositionOrders(positionKey);
 
         expect(positionOrders.length).to.be.eq(4);
-    });
-
-    describe('order tp sl', () => {
-        it('create order with tp without sl', async () => {
-            const {
-                users: [trader],
-                usdt,
-                btc,
-                router,
-                orderManager,
-            } = testEnv;
-
-            const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
-            const size = ethers.utils.parseUnits('9', await btc.decimals());
-            let openPrice = ethers.utils.parseUnits('30000', 30);
-
-            await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
-            await increasePosition(testEnv, trader, pairIndex, collateral, openPrice, size, TradeType.MARKET, true);
-
-            const request: TradingTypes.IncreasePositionRequestStruct = {
-                account: trader.address,
-                pairIndex: pairIndex,
-                tradeType: TradeType.LIMIT,
-                collateral: 0,
-                openPrice: openPrice,
-                isLong: true,
-                sizeAmount: size,
-                maxSlippage: 0,
-            };
-
-            const orderId = await orderManager.ordersIndex();
-            await router.connect(trader.signer).createIncreaseOrder(request);
-
-            // @ts-ignore
-            const orderTpSlRequest: IRouter.CreateOrderTpSlRequestStruct = {
-                orderId: orderId,
-                tradeType: TradeType.LIMIT,
-                isIncrease: true,
-                tp: ethers.utils.parseUnits('1', await btc.decimals()),
-                tpPrice: 11,
-                sl: ethers.utils.parseUnits('2', await btc.decimals()),
-                slPrice: 22,
-            };
-            await router.connect(trader.signer).addOrderTpSl(orderTpSlRequest);
-
-            // const orderKey = await orderManager.getOrderKey(orderId, TradeType.LIMIT, true);
-            let orderTpSl = await orderManager.orderWithTpSl(orderId);
-            // console.log(`orderTpSl:`, orderTpSl);
-
-            expect(orderTpSl.tp).to.be.eq(ethers.utils.parseUnits('1', await btc.decimals()));
-            expect(orderTpSl.sl).to.be.eq(ethers.utils.parseUnits('2', await btc.decimals()));
-            expect(orderTpSl.tpPrice).to.be.eq(11);
-            expect(orderTpSl.slPrice).to.be.eq(22);
-
-            orderTpSlRequest.slPrice = 333;
-            await router.connect(trader.signer).addOrderTpSl(orderTpSlRequest);
-            orderTpSl = await orderManager.orderWithTpSl(orderId);
-
-            expect(orderTpSl.tp).to.be.eq(ethers.utils.parseUnits('1', await btc.decimals()));
-            expect(orderTpSl.sl).to.be.eq(ethers.utils.parseUnits('2', await btc.decimals()));
-            expect(orderTpSl.tpPrice).to.be.eq(11);
-            expect(orderTpSl.slPrice).to.be.eq(333);
-        });
     });
 });

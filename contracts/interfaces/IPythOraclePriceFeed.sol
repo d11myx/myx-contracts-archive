@@ -13,6 +13,10 @@ interface IPythOraclePriceFeed is IPriceFeed {
 
     event PythAddressUpdated(address oldAddress, address newAddress);
 
+    event UnneededPricePublishWarn();
+
+    event UpdatePriceFeedsIfNecessaryError(string errorMessage);
+
     function updatePrice(address[] calldata tokens, bytes[] calldata updateData) external payable;
 
 }

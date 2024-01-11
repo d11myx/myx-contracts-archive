@@ -5,7 +5,7 @@ import { expect } from './shared/expect';
 import { TradeType, convertIndexAmountToStable, ZERO_ADDRESS } from '../helpers';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
-import { PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE, PERCENTAGE, PRICE_PRECISION } from './helpers/constants';
 
 describe('Trade: trading fee', () => {
     const pairIndex = 1;
@@ -671,6 +671,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             let orderId = await orderManager.ordersIndex();
@@ -687,6 +689,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier1,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -716,6 +719,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -732,6 +737,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier2,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -761,6 +767,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -777,6 +785,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier3,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -806,6 +815,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -822,6 +833,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier4,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -851,6 +863,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -867,6 +881,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier5,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -896,6 +911,8 @@ describe('Trade: trading fee', () => {
                 isLong: true,
                 sizeAmount,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             orderId = await orderManager.ordersIndex();
@@ -912,6 +929,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier6,
                         referralsRatio: 0,
                         referralUserRatio: 0,

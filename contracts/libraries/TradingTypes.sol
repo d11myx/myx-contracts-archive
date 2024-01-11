@@ -9,6 +9,11 @@ library TradingTypes {
         SL
     }
 
+    enum NetworkFeePaymentType {
+        ETH,
+        COLLATERAL
+    }
+
     struct CreateOrderRequest {
         address account;
         uint256 pairIndex; // pair index
@@ -16,8 +21,10 @@ library TradingTypes {
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
-        int128 sizeAmount; // size
+        int256 sizeAmount; // size
         uint256 maxSlippage;
+        InnerPaymentType paymentType;
+        uint256 networkFeeAmount;
         bytes data;
     }
 
@@ -35,8 +42,10 @@ library TradingTypes {
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 openPrice; // 1e30, price
         bool isLong; // long or short
-        uint128 sizeAmount; // size
+        uint256 sizeAmount; // size
         uint256 maxSlippage;
+        NetworkFeePaymentType paymentType;
+        uint256 networkFeeAmount;
     }
 
     struct IncreasePositionWithTpSlRequest {
@@ -52,6 +61,8 @@ library TradingTypes {
         uint256 slPrice; // 1e30, sl price
         uint128 sl; // sl size
         uint256 maxSlippage;
+        NetworkFeePaymentType paymentType; // 1: eth 2: collateral
+        uint256 networkFeeAmount;
     }
 
     struct DecreasePositionRequest {
@@ -60,9 +71,11 @@ library TradingTypes {
         TradeType tradeType;
         int256 collateral; // 1e18 collateral amount，negative number is withdrawal
         uint256 triggerPrice; // 1e30, price
-        uint128 sizeAmount; // size
+        uint256 sizeAmount; // size
         bool isLong;
         uint256 maxSlippage;
+        NetworkFeePaymentType paymentType;
+        uint256 networkFeeAmount;
     }
 
     struct CreateTpSlRequest {
@@ -73,6 +86,8 @@ library TradingTypes {
         uint128 tp; // The number of profit stops
         uint256 slPrice; // Stop price 1e30
         uint128 sl; // Stop loss quantity
+        NetworkFeePaymentType paymentType;
+        uint256 networkFeeAmount;
     }
 
     struct IncreasePositionOrder {
@@ -107,5 +122,28 @@ library TradingTypes {
         //     sl：long: true,  short: false
         uint256 blockTime;
         bool needADL;
+    }
+
+    struct OrderNetworkFee {
+        InnerPaymentType paymentType;
+        uint256 networkFeeAmount;
+    }
+
+    enum InnerPaymentType {
+        NONE,
+        ETH,
+        COLLATERAL
+    }
+
+    function convertPaymentType(
+        NetworkFeePaymentType paymentType
+    ) internal pure returns (InnerPaymentType) {
+        if (paymentType == NetworkFeePaymentType.ETH) {
+            return InnerPaymentType.ETH;
+        } else if (paymentType == NetworkFeePaymentType.COLLATERAL) {
+            return InnerPaymentType.COLLATERAL;
+        } else {
+            return InnerPaymentType.NONE;
+        }
     }
 }

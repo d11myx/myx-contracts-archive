@@ -10,6 +10,7 @@ import "../interfaces/IFeeCollector.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPool.sol";
+import "../libraries/TradingTypes.sol";
 
 contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable {
     using SafeERC20 for IERC20;
@@ -30,10 +31,13 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
 
     mapping(address => uint256) public override referralFee;
 
+    mapping(address => mapping(TradingTypes.InnerPaymentType => uint256)) public keeperNetworkFee;
+
     address public pledgeAddress;
 
     address public addressStakingPool;
     address public addressPositionManager;
+    address public addressExecutionLogic;
     IPool public pool;
 
     function initialize(
@@ -47,8 +51,8 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         maxReferralsRatio = 0.5e8;
     }
 
-    modifier onlyPositionManager() {
-        require(msg.sender == addressPositionManager, "onlyPositionManager");
+    modifier onlyPositionManagerOrLogic() {
+        require(msg.sender == addressPositionManager || msg.sender == addressExecutionLogic, "onlyPositionManager");
         _;
     }
 
@@ -65,11 +69,25 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return tradingFeeTiers[pairIndex][0];
     }
 
+    function getKeeperNetworkFee(
+        address account,
+        TradingTypes.InnerPaymentType paymentType
+    ) external view override returns (uint256) {
+        return keeperNetworkFee[account][paymentType];
+    }
+
     function updatePositionManagerAddress(address newAddress) external onlyPoolAdmin {
         address oldAddress = addressPositionManager;
         addressPositionManager = newAddress;
 
         emit UpdatedPositionManagerAddress(msg.sender, oldAddress, newAddress);
+    }
+
+    function updateExecutionLogicAddress(address newAddress) external onlyPoolAdmin {
+        address oldAddress = addressExecutionLogic;
+        addressExecutionLogic = newAddress;
+
+        emit UpdateExecutionLogicAddress(msg.sender, oldAddress, newAddress);
     }
 
     function updateStakingPoolAddress(address newAddress) external onlyPoolAdmin {
@@ -148,6 +166,24 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return claimableUserTradingFee;
     }
 
+    function claimKeeperNetworkFee(
+        TradingTypes.InnerPaymentType paymentType
+    ) external override nonReentrant returns (uint256) {
+        uint256 claimableNetworkFee = keeperNetworkFee[msg.sender][paymentType];
+        address claimableToken = address(0);
+        if (claimableNetworkFee > 0) {
+            keeperNetworkFee[msg.sender][paymentType] = 0;
+            if (paymentType == TradingTypes.InnerPaymentType.ETH) {
+                pool.transferEthTo(msg.sender, claimableNetworkFee);
+            } else if (paymentType == TradingTypes.InnerPaymentType.COLLATERAL) {
+                claimableToken = pledgeAddress;
+                pool.transferTokenTo(pledgeAddress, msg.sender, claimableNetworkFee);
+            }
+        }
+        emit ClaimedKeeperNetworkFee(msg.sender, claimableToken, claimableNetworkFee);
+        return claimableNetworkFee;
+    }
+
     function distributeTradingFee(
         IPool.Pair memory pair,
         address account,
@@ -158,7 +194,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         uint256 referralsRatio,
         uint256 referralUserRatio,
         address referralOwner
-    ) external override onlyPositionManager returns (uint256 lpAmount, uint256 vipDiscountAmount) {
+    ) external override onlyPositionManagerOrLogic returns (uint256 lpAmount, uint256 vipDiscountAmount) {
         IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pair.pairIndex);
 
         // vip discount
@@ -214,6 +250,16 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
             stakingAmount,
             distributorAmount
         );
+    }
+
+    function distributeNetworkFee(
+        address keeper,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
+    ) external override onlyPositionManagerOrLogic {
+        if (paymentType != TradingTypes.InnerPaymentType.NONE) {
+            keeperNetworkFee[keeper][paymentType] += networkFeeAmount;
+        }
     }
 
     function _updateTradingFeeTier(
