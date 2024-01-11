@@ -54,10 +54,10 @@ describe('cancel orders', () => {
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await mintAndApprove(testEnv, usdt, collateral, trader1, router.address);
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
-        expect((await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT)).sizeAmount).to.be.eq(sizeAmount);
+        expect((await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT)).order.sizeAmount).to.be.eq(sizeAmount);
         expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
         await router.connect(trader.signer).cancelOrder(cancelOrder);
-        expect((await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT)).sizeAmount).to.be.eq(0);
+        expect((await orderManager.getIncreaseOrder(orderId, TradeType.LIMIT)).order.sizeAmount).to.be.eq(0);
     });
     it('cancel decreaseLimitOrder', async () => {
         const {
@@ -94,10 +94,10 @@ describe('cancel orders', () => {
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
         await mintAndApprove(testEnv, usdt, collateral, trader1, router.address);
         await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
-        expect((await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT)).sizeAmount).to.be.eq(sizeAmount);
+        expect((await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT)).order.sizeAmount).to.be.eq(sizeAmount);
         expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
         await router.connect(trader.signer).cancelOrder(cancelOrder);
-        expect((await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT)).sizeAmount).to.be.eq(0);
+        expect((await orderManager.getDecreaseOrder(orderId, TradeType.LIMIT)).order.sizeAmount).to.be.eq(0);
     });
 
     it('cancel increaseMarketOrder', async () => {
@@ -140,10 +140,10 @@ describe('cancel orders', () => {
         await mintAndApprove(testEnv, usdt, collateral, trader1, router.address);
         await router.connect(trader.signer).createIncreaseOrder(increasePositionRequest);
 
-        expect((await orderManager.getIncreaseOrder(orderId, TradeType.MARKET)).sizeAmount).to.be.eq(sizeAmount);
+        expect((await orderManager.getIncreaseOrder(orderId, TradeType.MARKET)).order.sizeAmount).to.be.eq(sizeAmount);
         expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
         await router.connect(trader.signer).cancelOrder(cancelOrder);
-        expect((await orderManager.getDecreaseOrder(orderId, TradeType.MARKET)).sizeAmount).to.be.eq(0);
+        expect((await orderManager.getDecreaseOrder(orderId, TradeType.MARKET)).order.sizeAmount).to.be.eq(0);
     });
     it('cancel decreaseMarketOrder', async () => {
         const {
@@ -181,9 +181,9 @@ describe('cancel orders', () => {
         await mintAndApprove(testEnv, usdt, collateral, trader1, router.address);
         await router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest);
 
-        expect((await orderManager.getDecreaseOrder(orderId, TradeType.MARKET)).sizeAmount).to.be.eq(sizeAmount);
+        expect((await orderManager.getDecreaseOrder(orderId, TradeType.MARKET)).order.sizeAmount).to.be.eq(sizeAmount);
         expect(router.connect(trader1.signer).cancelOrder(cancelOrder)).to.be.revertedWith('onlyAccount');
         await router.connect(trader.signer).cancelOrder(cancelOrder);
-        expect((await orderManager.getDecreaseOrder(orderId, TradeType.MARKET)).sizeAmount).to.be.eq(0);
+        expect((await orderManager.getDecreaseOrder(orderId, TradeType.MARKET)).order.sizeAmount).to.be.eq(0);
     });
 });

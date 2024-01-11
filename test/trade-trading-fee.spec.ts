@@ -689,6 +689,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier1,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -736,6 +737,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier2,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -783,6 +785,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier3,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -830,6 +833,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier4,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -877,6 +881,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier5,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -924,6 +929,7 @@ describe('Trade: trading fee', () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: tier6,
                         referralsRatio: 0,
                         referralUserRatio: 0,

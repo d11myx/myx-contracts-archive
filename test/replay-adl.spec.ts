@@ -118,7 +118,7 @@ describe('Replay: adl', () => {
 
         await updateETHPrice(testEnv, '1000.231727');
 
-        const tx = await executor.connect(keeper.signer).setPricesAndExecuteADL(
+        const tx = await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
             [eth.address],
             [await indexPriceFeed.getPrice(eth.address)],
             [
@@ -137,12 +137,16 @@ describe('Replay: adl', () => {
                     referralOwner: ZERO_ADDRESS,
                 },
             ],
-            orderId,
-            TradeType.MARKET,
-            0,
-            0,
-            0,
-            ZERO_ADDRESS,
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
             { value: 1 },
         );
         // await hre.run('decode-event', { hash: tx.hash, log: true });

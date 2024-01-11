@@ -21,6 +21,8 @@ import {
     MockPythOraclePriceFeed,
     PoolToken,
     PoolView,
+    UiPoolDataProvider,
+    UiPositionDataProvider,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -158,6 +160,20 @@ export const getRiskReserve = async (address?: string): Promise<RiskReserve> => 
 
 export const getFeeCollector = async (address?: string): Promise<FeeCollector> => {
     return getContract<FeeCollector>('FeeCollector', address || (await hre.deployments.get(FEE_COLLECTOR_ID)).address);
+};
+
+export const getUiPoolDataProvider = async (address?: string): Promise<UiPoolDataProvider> => {
+    return getContract<UiPoolDataProvider>(
+        'UiPoolDataProvider',
+        address || (await hre.deployments.get('UiPositionDataProvider')).address,
+    );
+};
+
+export const getUiPositionDataProvider = async (address?: string): Promise<UiPositionDataProvider> => {
+    return getContract<UiPositionDataProvider>(
+        'UiPositionDataProvider',
+        address || (await hre.deployments.get('UiPositionDataProvider')).address,
+    );
 };
 
 export async function getTokens() {
