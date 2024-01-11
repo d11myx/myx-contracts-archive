@@ -15,6 +15,7 @@ contract LiquidationLogic is ILiquidationLogic {
     using PrecisionUtils for uint256;
     using Math for uint256;
     using Int256Utils for int256;
+    using Int256Utils for uint256;
     using Position for Position.Info;
 
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -111,8 +112,10 @@ contract LiquidationLogic is ILiquidationLogic {
                 collateral: 0,
                 openPrice: price,
                 isLong: position.isLong,
-                sizeAmount: -int128(uint128(position.positionAmount)),
+                sizeAmount: -(position.positionAmount.safeConvertToInt256()),
                 maxSlippage: 0,
+                paymentType: TradingTypes.InnerPaymentType.NONE,
+                networkFeeAmount: 0,
                 data: abi.encode(position.account)
             })
         );
@@ -139,10 +142,9 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 referralUserRatio,
         address referralOwner
     ) private {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
-            orderId,
-            TradingTypes.TradeType.MARKET
-        );
+        TradingTypes.OrderNetworkFee memory orderNetworkFee;
+        TradingTypes.DecreasePositionOrder memory order;
+        (order, orderNetworkFee) = orderManager.getDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
         if (order.account == address(0)) {
             emit InvalidOrder(keeper, orderId, 'zero account');
             return;
@@ -196,6 +198,8 @@ contract LiquidationLogic is ILiquidationLogic {
                 needADL,
                 0,
                 0,
+                0,
+                TradingTypes.InnerPaymentType.NONE,
                 0
             );
             return;
@@ -238,7 +242,9 @@ contract LiquidationLogic is ILiquidationLogic {
             needADL,
             pnl,
             tradingFee,
-            fundingFee
+            fundingFee,
+            orderNetworkFee.paymentType,
+            orderNetworkFee.networkFeeAmount
         );
     }
 

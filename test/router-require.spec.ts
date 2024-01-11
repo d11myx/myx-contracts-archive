@@ -5,6 +5,7 @@ import { MAX_UINT_AMOUNT, TradeType, waitForTx, ZERO_ADDRESS } from '../helpers'
 import { IPool, IRouter, Router } from '../types';
 import { expect } from './shared/expect';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Router: check require condition, trigger errors', async () => {
     const pairIndex = 1;
@@ -85,6 +86,8 @@ describe('Router: check require condition, trigger errors', async () => {
                 sl: 0,
                 slPrice: 0,
                 maxSlippage: 0,
+                paymentType: PAYMENT_TYPE,
+                networkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             // setting createIncreateOrder: msg.sender = user
@@ -102,6 +105,7 @@ describe('Router: check require condition, trigger errors', async () => {
                 [
                     {
                         orderId: orderId,
+                        tradeType: TradeType.MARKET,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -228,6 +232,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     sl: 0,
                     slPrice: 0,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -277,6 +283,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     sl: 0,
                     slPrice: 0,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -325,6 +333,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     sl: 0,
                     slPrice: 0,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();

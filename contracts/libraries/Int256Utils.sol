@@ -19,6 +19,11 @@ library Int256Utils {
         return a > b ? a : b;
     }
 
+    function safeConvertToInt256(uint256 value) internal pure returns (int256) {
+        require(value <= uint256(type(int256).max), "Value too large to fit in int256.");
+        return int256(value);
+    }
+
     function toString(int256 amount) internal pure returns (string memory) {
         return string.concat(amount >= 0 ? '' : '-', abs(amount).toString());
     }

@@ -15,7 +15,9 @@ interface IOrderManager {
         int256 collateral,
         uint256 openPrice,
         bool isLong,
-        uint256 sizeAmount
+        uint256 sizeAmount,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
     event CreateDecreaseOrder(
@@ -27,13 +29,24 @@ interface IOrderManager {
         uint256 openPrice,
         uint256 sizeAmount,
         bool isLong,
-        bool abovePrice
+        bool abovePrice,
+        TradingTypes.InnerPaymentType paymentType,
+        uint256 networkFeeAmount
     );
 
     event UpdateRouterAddress(address sender, address oldAddress, address newAddress);
 
     event CancelIncreaseOrder(address account, uint256 orderId, TradingTypes.TradeType tradeType);
     event CancelDecreaseOrder(address account, uint256 orderId, TradingTypes.TradeType tradeType);
+
+    event UpdatedNetworkFee(
+        address sender,
+        TradingTypes.NetworkFeePaymentType paymentType,
+        uint256 pairIndex,
+        uint256 basicNetworkFee,
+        uint256 discountThreshold,
+        uint256 discountedNetworkFee
+    );
 
     struct PositionOrder {
         address account;
@@ -45,13 +58,19 @@ interface IOrderManager {
         uint256 sizeAmount;
     }
 
-    function ordersIndex() external view returns (uint256);
+    struct NetworkFee {
+        uint256 basicNetworkFee;
+        uint256 discountThreshold;
+        uint256 discountedNetworkFee;
+    }
 
-    function getOrderTpSl(uint256 orderId) external view returns (TradingTypes.OrderWithTpSl memory);
+    function ordersIndex() external view returns (uint256);
 
     function getPositionOrders(bytes32 key) external view returns (PositionOrder[] memory);
 
-    function createOrder(TradingTypes.CreateOrderRequest memory request) external returns (uint256 orderId);
+    function getNetworkFee(TradingTypes.NetworkFeePaymentType paymentType, uint256 pairIndex) external view returns (NetworkFee memory);
+
+    function createOrder(TradingTypes.CreateOrderRequest memory request) external payable returns (uint256 orderId);
 
     function cancelOrder(
         uint256 orderId,
@@ -65,12 +84,18 @@ interface IOrderManager {
     function getIncreaseOrder(
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) external view returns (TradingTypes.IncreasePositionOrder memory order);
+    ) external view returns (
+        TradingTypes.IncreasePositionOrder memory order,
+        TradingTypes.OrderNetworkFee memory orderNetworkFee
+    );
 
     function getDecreaseOrder(
         uint256 orderId,
         TradingTypes.TradeType tradeType
-    ) external view returns (TradingTypes.DecreasePositionOrder memory order);
+    ) external view returns (
+        TradingTypes.DecreasePositionOrder memory order,
+        TradingTypes.OrderNetworkFee memory orderNetworkFee
+    );
 
     function increaseOrderExecutedSize(
         uint256 orderId,
@@ -91,7 +116,4 @@ interface IOrderManager {
 
     function setOrderNeedADL(uint256 orderId, TradingTypes.TradeType tradeType, bool needADL) external;
 
-    function saveOrderTpSl(uint256 orderId, TradingTypes.OrderWithTpSl memory tpSl) external;
-
-    function removeOrderTpSl(uint256 orderId) external;
 }

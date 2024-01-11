@@ -14,6 +14,7 @@ import {
 import { constants } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
 import { convertIndexAmountToStable } from '../helpers/token-decimals';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Position', () => {
     const pairIndex = 1;
@@ -96,6 +97,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -104,7 +107,7 @@ describe('Position', () => {
                 longPositionBefore = await positionManager.getPosition(trader.address, pairIndex, true);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(longPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -124,6 +127,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -140,6 +145,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -228,10 +234,10 @@ describe('Position', () => {
                 // calculate totalSettlementAmount
                 const totalSettlementAmount = pnl.sub(tradingFee);
 
-                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(balance).to.be.eq(entrustOrderBefore.order.collateral);
                 expect(reserveBalance).to.be.eq(longPositionBefore.collateral.sub(totalSettlementAmount.abs()));
                 expect(longPositionAfter.positionAmount).to.be.eq('0');
-                expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
+                expect(entrustOrderAfter.order.sizeAmount).to.be.eq('0');
             });
         });
 
@@ -311,6 +317,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -319,7 +327,7 @@ describe('Position', () => {
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(shortPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -339,6 +347,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -355,6 +365,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -442,10 +453,10 @@ describe('Position', () => {
                 // calculate totalSettlementAmount
                 const totalSettlementAmount = pnl.sub(tradingFee);
 
-                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(balance).to.be.eq(entrustOrderBefore.order.collateral);
                 expect(reserveBalance).to.be.eq(shortPositionBefore.collateral.sub(totalSettlementAmount.abs()));
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
-                expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
+                expect(entrustOrderAfter.order.sizeAmount).to.be.eq('0');
             });
         });
 
@@ -522,6 +533,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -538,6 +551,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -703,6 +717,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
@@ -719,6 +735,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: shortOrderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -749,6 +766,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -765,6 +784,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -932,6 +952,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
@@ -948,6 +970,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: shortOrderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -978,6 +1001,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -994,6 +1019,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1164,6 +1190,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1172,7 +1200,7 @@ describe('Position', () => {
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(shortPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -1192,6 +1220,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1208,6 +1238,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1275,7 +1306,7 @@ describe('Position', () => {
                 expect(balance).to.be.eq('0');
                 expect(reserveBalance).to.be.eq('0');
                 expect(shortPositionAfter.positionAmount).to.be.eq(size);
-                expect(entrustOrderAfter.sizeAmount).to.be.eq(size);
+                expect(entrustOrderAfter.order.sizeAmount).to.be.eq(size);
             });
         });
 
@@ -1357,6 +1388,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1365,7 +1398,7 @@ describe('Position', () => {
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(shortPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -1385,6 +1418,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1401,6 +1436,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1488,10 +1524,10 @@ describe('Position', () => {
                 // calculate totalSettlementAmount
                 const totalSettlementAmount = pnl.sub(tradingFee);
 
-                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(balance).to.be.eq(entrustOrderBefore.order.collateral);
                 expect(reserveBalance).to.be.eq(shortPositionBefore.collateral.sub(totalSettlementAmount.abs()));
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
-                expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
+                expect(entrustOrderAfter.order.sizeAmount).to.be.eq('0');
             });
         });
 
@@ -1572,6 +1608,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1580,7 +1618,7 @@ describe('Position', () => {
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(shortPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -1600,6 +1638,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1616,6 +1656,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1703,10 +1744,10 @@ describe('Position', () => {
                 // calculate totalSettlementAmount
                 const totalSettlementAmount = pnl.sub(tradingFee);
 
-                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(balance).to.be.eq(entrustOrderBefore.order.collateral);
                 expect(reserveBalance).to.be.eq(shortPositionBefore.collateral.sub(totalSettlementAmount.abs()));
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
-                expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
+                expect(entrustOrderAfter.order.sizeAmount).to.be.eq('0');
             });
         });
 
@@ -1787,6 +1828,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -1795,7 +1838,7 @@ describe('Position', () => {
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(shortPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -1815,6 +1858,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -1831,6 +1876,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1918,10 +1964,10 @@ describe('Position', () => {
                 // calculate totalSettlementAmount
                 const totalSettlementAmount = pnl.sub(tradingFee);
 
-                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(balance).to.be.eq(entrustOrderBefore.order.collateral);
                 expect(reserveBalance).to.be.eq(shortPositionBefore.collateral.sub(totalSettlementAmount.abs()));
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
-                expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
+                expect(entrustOrderAfter.order.sizeAmount).to.be.eq('0');
             });
         });
 
@@ -2000,6 +2046,8 @@ describe('Position', () => {
                     isLong: true,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const longOrderId = await orderManager.ordersIndex();
@@ -2016,6 +2064,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: longOrderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2046,6 +2095,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const shortOrderId = await orderManager.ordersIndex();
@@ -2062,6 +2113,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: shortOrderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2168,10 +2220,10 @@ describe('Position', () => {
                 const longOrders = await orderManager.getPositionOrders(positionKey);
                 let adlOrder = await orderManager.getDecreaseOrder(longOrders[0].orderId, TradeType.MARKET);
 
-                expect(adlOrder.needADL).to.be.eq(true);
+                expect(adlOrder.order.needADL).to.be.eq(true);
 
                 // execute adl
-                await executor.connect(keeper.signer).setPricesAndExecuteADL(
+                await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
@@ -2190,12 +2242,16 @@ describe('Position', () => {
                             referralOwner: ZERO_ADDRESS,
                         },
                     ],
-                    adlOrder.orderId,
-                    TradeType.MARKET,
-                    0,
-                    0,
-                    0,
-                    ZERO_ADDRESS,
+                    [
+                        {
+                            orderId: adlOrder.order.orderId,
+                            tradeType: TradeType.MARKET,
+                            tier: 0,
+                            referralsRatio: 0,
+                            referralUserRatio: 0,
+                            referralOwner: ZERO_ADDRESS,
+                        },
+                    ],
                     { value: 1 },
                 );
                 adlOrder = await orderManager.getDecreaseOrder(longOrders[0].orderId, TradeType.MARKET);
@@ -2208,7 +2264,7 @@ describe('Position', () => {
 
                 expect(longTraderBalance).to.be.eq(receiveStableTokenAmount);
                 expect(longDecreasePositionAfter.positionAmount).to.be.eq(
-                    adlOrder.sizeAmount.sub(adlOrder.executedSize),
+                    adlOrder.order.sizeAmount.sub(adlOrder.order.executedSize),
                 );
             });
         });
@@ -2289,6 +2345,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -2297,7 +2355,7 @@ describe('Position', () => {
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(shortPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -2317,6 +2375,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -2333,6 +2393,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2515,6 +2576,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const entrustOrderId = await orderManager.ordersIndex();
@@ -2523,7 +2586,7 @@ describe('Position', () => {
                 shortPositionBefore = await positionManager.getPosition(trader.address, pairIndex, false);
                 balance = await usdt.balanceOf(trader.address);
 
-                expect(entrustOrderBefore.sizeAmount).to.be.eq(size);
+                expect(entrustOrderBefore.order.sizeAmount).to.be.eq(size);
                 expect(shortPositionBefore.positionAmount).to.be.eq('0');
                 expect(balance).to.be.eq('0');
 
@@ -2543,6 +2606,8 @@ describe('Position', () => {
                     isLong: false,
                     sizeAmount: size,
                     maxSlippage: 0,
+                    paymentType: PAYMENT_TYPE,
+                    networkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -2559,6 +2624,7 @@ describe('Position', () => {
                     [
                         {
                             orderId: orderId,
+                            tradeType: TradeType.MARKET,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2673,10 +2739,10 @@ describe('Position', () => {
                 const tradingFeeAfter = sizeDeltaAfter.mul(tradingFeeConfig.takerFee).div('100000000');
                 const totalSettlementAmount = pnlAfter.sub(tradingFeeAfter);
 
-                expect(balance).to.be.eq(entrustOrderBefore.collateral);
+                expect(balance).to.be.eq(entrustOrderBefore.order.collateral);
                 expect(reserveBalance).to.be.eq(shortPositionBefore.collateral.sub(totalSettlementAmount.abs()));
                 expect(shortPositionAfter.positionAmount).to.be.eq('0');
-                expect(entrustOrderAfter.sizeAmount).to.be.eq('0');
+                expect(entrustOrderAfter.order.sizeAmount).to.be.eq('0');
             });
         });
     });

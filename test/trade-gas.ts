@@ -6,6 +6,7 @@ import { mintAndApprove, updateBTCPrice } from './helpers/misc';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { BigNumber } from 'ethers';
 import { TradingTypes } from '../types/contracts/core/Router';
+import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
 describe('Router: increase position ar', () => {
     const pairIndex = 1;
@@ -100,6 +101,8 @@ describe('Router: increase position ar', () => {
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('5', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         orderId = await orderManager.ordersIndex();
@@ -123,28 +126,27 @@ describe('Router: increase position ar', () => {
             oraclePriceFeed,
         } = localTestEnv;
         await snapshotGasCost(
-            executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteIncreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                ),
+            executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            ),
         );
     });
     it('createDecreaseOrder cast', async () => {
@@ -174,6 +176,8 @@ describe('Router: increase position ar', () => {
             isLong: true,
             sizeAmount: ethers.utils.parseUnits('5', await btc.decimals()),
             maxSlippage: 0,
+            paymentType: PAYMENT_TYPE,
+            networkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         orderId = await orderManager.ordersIndex();
         await snapshotGasCost(router.connect(trader.signer).createDecreaseOrder(decreasePositionRequest));
@@ -193,28 +197,27 @@ describe('Router: increase position ar', () => {
             oraclePriceFeed,
         } = localTestEnv;
         await snapshotGasCost(
-            executor
-                .connect(keeper.signer)
-                .setPricesAndExecuteDecreaseMarketOrders(
-                    [btc.address],
-                    [await indexPriceFeed.getPrice(btc.address)],
-                    [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    [
-                        {
-                            orderId: orderId,
-                            tier: 0,
-                            referralsRatio: 0,
-                            referralUserRatio: 0,
-                            referralOwner: ZERO_ADDRESS,
-                        },
-                    ],
-                    { value: 1 },
-                ),
+            executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+                [btc.address],
+                [await indexPriceFeed.getPrice(btc.address)],
+                [
+                    new ethers.utils.AbiCoder().encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                [
+                    {
+                        orderId: orderId,
+                        tradeType: TradeType.MARKET,
+                        tier: 0,
+                        referralsRatio: 0,
+                        referralUserRatio: 0,
+                        referralOwner: ZERO_ADDRESS,
+                    },
+                ],
+                { value: 1 },
+            ),
         );
 
         let traderPosition = await positionManager.getPosition(trader.address, pairIndex, true);
