@@ -124,6 +124,11 @@ library TradingTypes {
         bool needADL;
     }
 
+    struct OrderNetworkFee {
+        InnerPaymentType paymentType;
+        uint256 networkFeeAmount;
+    }
+
     enum InnerPaymentType {
         NONE,
         ETH,

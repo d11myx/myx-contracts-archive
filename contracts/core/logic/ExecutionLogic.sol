@@ -135,10 +135,9 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 referralUserRatio,
         address referralOwner
     ) external override onlyExecutorOrSelf {
-        TradingTypes.IncreasePositionOrder memory order = orderManager.getIncreaseOrder(
-            _orderId,
-            _tradeType
-        );
+        TradingTypes.OrderNetworkFee memory orderNetworkFee;
+        TradingTypes.IncreasePositionOrder memory order;
+        (order, orderNetworkFee) = orderManager.getIncreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
             emit InvalidOrder(keeper, _orderId, 'account is zero');
             return;
@@ -283,6 +282,8 @@ contract ExecutionLogic is IExecutionLogic {
             } else if (_tradeType == TradingTypes.TradeType.LIMIT) {
                 orderManager.removeIncreaseLimitOrders(_orderId);
             }
+
+            feeCollector.distributeNetworkFee(keeper, orderNetworkFee.paymentType, orderNetworkFee.networkFeeAmount);
         }
 
         emit ExecuteIncreaseOrder(
@@ -298,7 +299,9 @@ contract ExecutionLogic is IExecutionLogic {
             executionPrice,
             order.executedSize,
             tradingFee,
-            fundingFee
+            fundingFee,
+            orderNetworkFee.paymentType,
+            orderNetworkFee.networkFeeAmount
         );
     }
 
@@ -402,10 +405,9 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 executionSize,
         bool onlyOnce
     ) internal {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
-            _orderId,
-            _tradeType
-        );
+        TradingTypes.OrderNetworkFee memory orderNetworkFee;
+        TradingTypes.DecreasePositionOrder memory order;
+        (order, orderNetworkFee) = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
             emit InvalidOrder(keeper, _orderId, 'account is zero');
             return;
@@ -511,6 +513,8 @@ contract ExecutionLogic is IExecutionLogic {
                 _needADL,
                 0,
                 0,
+                0,
+                TradingTypes.InnerPaymentType.NONE,
                 0
             );
             return;
@@ -574,6 +578,8 @@ contract ExecutionLogic is IExecutionLogic {
             } else {
                 orderManager.removeDecreaseLimitOrders(_orderId);
             }
+
+            feeCollector.distributeNetworkFee(keeper, orderNetworkFee.paymentType, orderNetworkFee.networkFeeAmount);
         }
 
         if (position.positionAmount == 0) {
@@ -608,7 +614,9 @@ contract ExecutionLogic is IExecutionLogic {
             _needADL,
             pnl,
             tradingFee,
-            fundingFee
+            fundingFee,
+            orderNetworkFee.paymentType,
+            orderNetworkFee.networkFeeAmount
         );
     }
 
@@ -632,7 +640,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 _referralUserRatio,
         address _referralOwner
     ) external override onlyExecutorOrSelf {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
+        (TradingTypes.DecreasePositionOrder memory order,) = orderManager.getDecreaseOrder(
             _orderId,
             _tradeType
         );

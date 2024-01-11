@@ -266,6 +266,7 @@ export async function deployTrading(
     log(`deployed Executor at ${executor.address}`);
 
     await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
+    await waitForTx(await feeCollector.updateExecutionLogicAddress(executionLogic.address));
 
     await waitForTx(await pool.connect(poolAdmin.signer).setRiskReserve(riskReserve.address));
     await waitForTx(await pool.connect(poolAdmin.signer).setFeeCollector(feeCollector.address));

@@ -142,10 +142,9 @@ contract LiquidationLogic is ILiquidationLogic {
         uint256 referralUserRatio,
         address referralOwner
     ) private {
-        TradingTypes.DecreasePositionOrder memory order = orderManager.getDecreaseOrder(
-            orderId,
-            TradingTypes.TradeType.MARKET
-        );
+        TradingTypes.OrderNetworkFee memory orderNetworkFee;
+        TradingTypes.DecreasePositionOrder memory order;
+        (order, orderNetworkFee) = orderManager.getDecreaseOrder(orderId, TradingTypes.TradeType.MARKET);
         if (order.account == address(0)) {
             emit InvalidOrder(keeper, orderId, 'zero account');
             return;
@@ -199,6 +198,8 @@ contract LiquidationLogic is ILiquidationLogic {
                 needADL,
                 0,
                 0,
+                0,
+                TradingTypes.InnerPaymentType.NONE,
                 0
             );
             return;
@@ -241,7 +242,9 @@ contract LiquidationLogic is ILiquidationLogic {
             needADL,
             pnl,
             tradingFee,
-            fundingFee
+            fundingFee,
+            orderNetworkFee.paymentType,
+            orderNetworkFee.networkFeeAmount
         );
     }
 
