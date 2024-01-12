@@ -179,7 +179,8 @@ contract Router is
             request.slPrice,
             request.sl,
             request.paymentType,
-            request.networkFeeAmount
+            request.tpNetworkFeeAmount,
+            request.slNetworkFeeAmount
         );
         return orderId;
     }
@@ -193,7 +194,8 @@ contract Router is
         uint256 slPrice,
         uint128 sl,
         TradingTypes.NetworkFeePaymentType paymentType,
-        uint256 networkFeeAmount
+        uint256 tpNetworkFeeAmount,
+        uint256 slNetworkFeeAmount
     ) public payable returns (uint256 tpOrderId, uint256 slOrderId) {
         require(msg.sender == address(this), "internal");
         if (tp > 0) {
@@ -208,7 +210,7 @@ contract Router is
                     sizeAmount: -(uint256(tp).safeConvertToInt256()),
                     maxSlippage: 0,
                     paymentType: TradingTypes.convertPaymentType(paymentType),
-                    networkFeeAmount: networkFeeAmount,
+                    networkFeeAmount: tpNetworkFeeAmount,
                     data: abi.encode(account)
                 })
             );
@@ -225,7 +227,7 @@ contract Router is
                     sizeAmount: -(uint256(sl).safeConvertToInt256()),
                     maxSlippage: 0,
                     paymentType: TradingTypes.convertPaymentType(paymentType),
-                    networkFeeAmount: networkFeeAmount,
+                    networkFeeAmount: slNetworkFeeAmount,
                     data: abi.encode(account)
                 })
             );
@@ -423,7 +425,8 @@ contract Router is
                 request.slPrice,
                 request.sl,
                 request.paymentType,
-                request.networkFeeAmount
+                request.tpNetworkFeeAmount,
+                request.slNetworkFeeAmount
             );
         }
         return (tpOrderId, slOrderId);
@@ -443,7 +446,8 @@ contract Router is
             request.slPrice,
             request.sl,
             request.paymentType,
-            request.networkFeeAmount
+            request.tpNetworkFeeAmount,
+            request.slNetworkFeeAmount
         );
         return (tpOrderId, slOrderId);
     }

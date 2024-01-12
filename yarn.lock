@@ -1523,18 +1523,18 @@
   resolved "https://registry.npmjs.org/@pythnetwork/price-service-sdk/-/price-service-sdk-1.4.0.tgz"
   integrity sha512-KZU9byZhm57Lx6eEhXk1pxDxCRbUxCIyKrJsiuqh8ZOVBxzbtVz4/iQTmgXWgWydMKuvOD37v1OwvtHCQf0k8w==
 
-"@pythnetwork/pyth-evm-js@1.29.0":
-  version "1.29.0"
-  resolved "https://registry.npmjs.org/@pythnetwork/pyth-evm-js/-/pyth-evm-js-1.29.0.tgz"
-  integrity sha512-xvPfwMTTLwk35xu4tIe0deyZDMrhotbF0vQlKnZdpFumC+P6kBkui09RfIKQn0jK4x+LTIJ4yXgHsdbgTZfdrQ==
+"@pythnetwork/pyth-evm-js@^1.29.3":
+  version "1.29.3"
+  resolved "https://registry.yarnpkg.com/@pythnetwork/pyth-evm-js/-/pyth-evm-js-1.29.3.tgz#ec91a28cf09f0c24c0a82b9ab95251b47410f04d"
+  integrity sha512-V3NxLDxwYL3Q1QAbTgQF+DxkB6tvTCpvUCRDi1AVB1gXGPczy9GuLndx6tiNYScicEuCD4lp+VkgYXK0Ow7Ofg==
   dependencies:
     "@pythnetwork/price-service-client" "*"
     buffer "^6.0.3"
 
-"@pythnetwork/pyth-sdk-solidity@^2.2.1":
-  version "2.2.1"
-  resolved "https://registry.npmjs.org/@pythnetwork/pyth-sdk-solidity/-/pyth-sdk-solidity-2.2.1.tgz"
-  integrity sha512-Tb/5fWrQBRZ+IHDQVz3GiHh6+ZbgeS/muaNosJrD94cuL6DuAwcr7yEgMq4DrlPSrb+x7Vw8d5NMOvpsC7+Vlw==
+"@pythnetwork/pyth-sdk-solidity@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@pythnetwork/pyth-sdk-solidity/-/pyth-sdk-solidity-2.3.0.tgz#786dc3e7c265744db21df6c1359273bb606c93a5"
+  integrity sha512-P4B03Bclwlyey30kmamgcpGnO9DrN0/bhQmnuTzltB+1YSPAnQxIlUWnyXpCN5rKkLd7Ay2bXW4T0QP0uszORA==
 
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
