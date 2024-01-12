@@ -13,6 +13,7 @@ import {
     getOraclePriceFeed,
     getOrderManager,
     getPool,
+    getPoolView,
     getPositionManager,
     getRiskReserve,
     getRouter,
@@ -73,18 +74,20 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-    const uiPoolDataProvider = await getUiPoolDataProvider('0x1AF54445E598Ddc57A79c71C8F4103B33C22ecb1');
-    console.log(await oraclePriceFeed.getPrice(btc.address));
-    console.log(
-        await uiPoolDataProvider.getPairsData(
-            '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
-            '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
-            '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
-            '0xB697A6fB7Eea6EC63281a3447488fE9233d5d8b4',
-            [1, 2],
-            [await indexPriceFeed.getPrice(btc.address), await indexPriceFeed.getPrice(eth.address)],
-        ),
-    );
+    console.log(await pool.getVault(1));
+
+    // const uiPoolDataProvider = await getUiPoolDataProvider('0x1AF54445E598Ddc57A79c71C8F4103B33C22ecb1');
+    // console.log(await oraclePriceFeed.getPrice(btc.address));
+    // console.log(
+    //     await uiPoolDataProvider.getPairsData(
+    //         '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
+    //         '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
+    //         '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
+    //         '0xB697A6fB7Eea6EC63281a3447488fE9233d5d8b4',
+    //         [1, 2],
+    //         [await indexPriceFeed.getPrice(btc.address), await indexPriceFeed.getPrice(eth.address)],
+    //     ),
+    // );
 
     // let index = 1;
     // setInterval(async () => {
