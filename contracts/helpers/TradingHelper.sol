@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 import "../libraries/PrecisionUtils.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPriceFeed.sol";
+import "../interfaces/IOraclePriceFeed.sol";
 import "../interfaces/IPool.sol";
+import "../interfaces/IBacktracker.sol";
 import "../helpers/TokenHelper.sol";
 import "../libraries/Int256Utils.sol";
 
@@ -17,6 +19,11 @@ library TradingHelper {
         address token,
         IPool.TradingConfig memory tradingConfig
     ) internal view returns (uint256) {
+        bool backtracking = IBacktracker(addressesProvider.backtracker()).backtracking();
+        if (backtracking) {
+            uint64 backtrackRound = IBacktracker(addressesProvider.backtracker()).backtrackRound();
+            return IOraclePriceFeed(addressesProvider.priceOracle()).getHistoricalPrice(backtrackRound, token);
+        }
         uint256 oraclePrice = IPriceFeed(addressesProvider.priceOracle()).getPriceSafely(token);
         uint256 indexPrice = IPriceFeed(addressesProvider.indexPriceOracle()).getPrice(token);
 

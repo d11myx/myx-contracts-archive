@@ -98,6 +98,8 @@ describe('Router: Edge cases', () => {
             maxSlippage: 0,
             paymentType: PAYMENT_TYPE,
             networkFeeAmount: NETWORK_FEE_AMOUNT,
+            tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+            slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
 

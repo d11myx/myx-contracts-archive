@@ -155,11 +155,11 @@ contract LiquidationLogic is ILiquidationLogic {
 
         Position.Info memory position = positionManager.getPosition(
             order.account,
-            order.pairIndex,
+            pairIndex,
             order.isLong
         );
         if (position.positionAmount == 0) {
-            emit ZeroPosition(keeper, position.account, position.pairIndex, position.isLong, 'liquidation');
+            emit ZeroPosition(keeper, position.account, pairIndex, position.isLong, 'liquidation');
             return;
         }
 
@@ -175,7 +175,7 @@ contract LiquidationLogic is ILiquidationLogic {
         );
 
         (bool needADL, ) = positionManager.needADL(
-            order.pairIndex,
+            pairIndex,
             order.isLong,
             executionSize,
             executionPrice

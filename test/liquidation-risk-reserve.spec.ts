@@ -85,7 +85,7 @@ describe('Liquidation: Risk Reserve', () => {
 
         const userBalanceBefore = await usdt.balanceOf(trader.address);
 
-        await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+        const ret = await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
             [btc.address],
             [await indexPriceFeed.getPrice(btc.address)],
             [
@@ -94,6 +94,7 @@ describe('Liquidation: Risk Reserve', () => {
                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                 ),
             ],
+            0,
             [
                 {
                     positionKey: positionKey,
@@ -106,6 +107,7 @@ describe('Liquidation: Risk Reserve', () => {
             ],
             { value: 1 },
         );
+        await hre.run('decode-event', { hash: ret.hash, log: true });
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -164,6 +166,7 @@ describe('Liquidation: Risk Reserve', () => {
                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                 ),
             ],
+            0,
             [
                 {
                     positionKey: positionKey,
@@ -236,6 +239,7 @@ describe('Liquidation: Risk Reserve', () => {
                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                 ),
             ],
+            0,
             [
                 {
                     positionKey: positionKey,

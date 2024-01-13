@@ -71,13 +71,6 @@ interface IExecutionLogic is IExecution {
         IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external;
 
-    function needADL(
-        uint256 pairIndex,
-        bool isLong,
-        uint256 executionSize,
-        uint256 executionPrice
-    ) external view returns (bool needADL);
-
     function cleanInvalidPositionOrders(
         bytes32[] calldata positionKeys
     ) external;
