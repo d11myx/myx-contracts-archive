@@ -2,14 +2,14 @@ Accounts after deployment
 ┌─────────┬──────────────────────┬──────────────────────────────────────────────┬─────────────────────────────┐
 │ (index) │         name         │                   account                    │           balance           │
 ├─────────┼──────────────────────┼──────────────────────────────────────────────┼─────────────────────────────┤
-│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.942564565999999997' │
-│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.942564565999999997' │
+│    0    │      'deployer'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.940783452999999997' │
+│    1    │     'poolAdmin'      │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.940783452999999997' │
 │    2    │      'operator'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
 │    3    │     'treasurer'      │ '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63' │         '1000000.0'         │
-│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.942564565999999997' │
-│    5    │        'dao'         │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.942564565999999997' │
-│    6    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.942564565999999997' │
-│    7    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.942564565999999997' │
+│    4    │       'keeper'       │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.940783452999999997' │
+│    5    │        'dao'         │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.940783452999999997' │
+│    6    │    'feeReceiver'     │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.940783452999999997' │
+│    7    │    'slipReceiver'    │ '0xa6932e7D4262A9E7D9f6982Bf8849199ab631686' │ '999999.940783452999999997' │
 │    8    │   'teamAndAdvisor'   │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
 │    9    │  'privatePlacement'  │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
 │   10    │     'community'      │ '0xdaC9045C49a19d998da465850E162Abbd34B014b' │         '1000000.0'         │
@@ -62,10 +62,11 @@ Deployments
 │         ExecutionLogic         │ '0x27687B3ADC0620Cee690b46586b8FFe99af98e3F' │
 │        LiquidationLogic        │ '0x638e2fF2BC8872E0674587593Bec7E2bf807c829' │
 │            Executor            │ '0x336a75bEa3D67735a16f65Dc17b15EedE6E512FE' │
-│             Faucet             │ '0xCFeC1ae3Fb832647a9A1974602ad9FB771A0430C' │
-│        MultipleTransfer        │ '0x076Ab80752b7A3772117d0A2249Ee0d508FE8B07' │
-│       UiPoolDataProvider       │ '0xcB2D197E0F075FAC3a0DfF197A9D3999434dB4B3' │
-│         PositionCaller         │ '0x295528430103cEBC738CbF3cca765ee9d2b11011' │
+│             Faucet             │ '0x7136bfA27550B9d0C28f87dC2560361e68f0a414' │
+│        MultipleTransfer        │ '0xcB2D197E0F075FAC3a0DfF197A9D3999434dB4B3' │
+│       UiPoolDataProvider       │ '0x2ddA6716343B9BA241D45db668820B47515763c7' │
+│     UiPositionDataProvider     │ '0x6324C4F364E75d8086fA2D092a6D0CF90EcbfD44' │
+│         PositionCaller         │ '0x9470Ca8ad8FC4474B09c58B9C445bc1cA8866804' │
 └────────────────────────────────┴──────────────────────────────────────────────┘
 
 MockedTokens

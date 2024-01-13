@@ -18,6 +18,7 @@ export const FEE_COLLECTOR_ID = `FeeCollector`;
 export const RISK_RESERVE_ID = `RiskReserve`;
 export const ROUTER_ID = `Router`;
 export const EXECUTOR_ID = `Executor`;
+export const BACKTRACKER_ID = `Backtracker`;
 export const EXECUTION_LOGIC_ID = `ExecutionLogic`;
 export const LIQUIDATION_LOGIC_ID = `LiquidationLogic`;
 export const ORDER_MANAGER_ID = `OrderManager`;

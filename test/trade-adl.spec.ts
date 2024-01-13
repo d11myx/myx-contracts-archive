@@ -1264,6 +1264,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                0,
                 [
                     {
                         positionKey: positionKey,
@@ -1547,6 +1548,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                0,
                 [
                     {
                         positionKey: positionKey,
@@ -1817,7 +1819,7 @@ describe('Trade: adl', () => {
 
             // liquidate positions will wait for adl
             const positionKey = await positionManager.getPositionKey(shortTrader.address, pairIndex, false);
-            await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
+            const ret = await executor.connect(keeper.signer).setPricesAndLiquidatePositions(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -1826,6 +1828,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                0,
                 [
                     {
                         positionKey: positionKey,
@@ -1838,7 +1841,10 @@ describe('Trade: adl', () => {
                 ],
                 { value: 1 },
             );
+            await hre.run('decode-event', { hash: ret.hash, log: true });
             const orders = await orderManager.getPositionOrders(positionKey);
+            console.log('======');
+            console.log(orders);
             const decreaseOrderAdlBefore = await orderManager.getDecreaseOrder(orders[0].orderId, TradeType.MARKET);
 
             expect(decreaseOrderAdlBefore.order.needADL).to.be.eq(true);
@@ -2105,6 +2111,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                0,
                 [
                     {
                         positionKey: positionKey,
@@ -2384,6 +2391,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                0,
                 [
                     {
                         positionKey: positionKey,
@@ -2674,6 +2682,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                0,
                 [
                     {
                         positionKey: positionKey,

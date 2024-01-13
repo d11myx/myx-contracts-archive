@@ -30,6 +30,7 @@ import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
 import Decimal from 'decimal.js';
 import { oracle } from '../types/contracts';
+import { MockMultipleTransfer__factory } from '../types';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -45,6 +46,7 @@ async function main() {
     const indexPriceFeed = await getIndexPriceFeed();
     const feeCollector = await getFeeCollector();
     const pool = await getPool();
+    const poolView = await getPoolView();
     const riskReserve = await getRiskReserve();
     const addressesProvider = await getAddressesProvider();
 
@@ -67,26 +69,48 @@ async function main() {
     // console.log(await poolToken.totalSupply());
     // console.log(await pool.lpFairPrice(2, await oraclePriceFeed.getPrice(eth.address)));
 
-    // await deployments.deploy(`UiPoolDataProvider`, {
-    //     from: deployer.address,
-    //     contract: 'UiPoolDataProvider',
-    //     args: [addressesProvider.address],
-    //     ...COMMON_DEPLOY_PARAMS,
-    // });
+    await deployments.deploy(`UiPoolDataProvider`, {
+        from: deployer.address,
+        contract: 'UiPoolDataProvider',
+        args: [addressesProvider.address],
+        ...COMMON_DEPLOY_PARAMS,
+    });
 
-    console.log(await pool.getVault(1));
+    // console.log(await pool.getVault(1));
 
-    // const uiPoolDataProvider = await getUiPoolDataProvider('0x1AF54445E598Ddc57A79c71C8F4103B33C22ecb1');
-    // console.log(await oraclePriceFeed.getPrice(btc.address));
+    // await orderManager.updateNetworkFees(
+    //     [0, 1],
+    //     [1, 1],
+    //     [
+    //         {
+    //             basicNetworkFee: ethers.utils.parseUnits('0.01'),
+    //             discountThreshold: ethers.utils.parseUnits('2', await btc.decimals()),
+    //             discountedNetworkFee: ethers.utils.parseUnits('0.005'),
+    //         },
+    //         {
+    //             basicNetworkFee: ethers.utils.parseUnits('5', await usdt.decimals()),
+    //             discountThreshold: ethers.utils.parseUnits('1000', await btc.decimals()),
+    //             discountedNetworkFee: ethers.utils.parseUnits('2', await usdt.decimals()),
+    //         },
+    //     ],
+    // );
+
+    // console.log(await orderManager.getNetworkFee(1, 1));
+
+    // const uiPoolDataProvider = await getUiPoolDataProvider('0xf5E571e5B44aF230FB100445D83Dbf336162a74A');
+    // // console.log(await oraclePriceFeed.getPrice(btc.address));
     // console.log(
-    //     await uiPoolDataProvider.getPairsData(
-    //         '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
-    //         '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
-    //         '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
-    //         '0xB697A6fB7Eea6EC63281a3447488fE9233d5d8b4',
-    //         [1, 2],
-    //         [await indexPriceFeed.getPrice(btc.address), await indexPriceFeed.getPrice(eth.address)],
-    //     ),
+    //     (
+    //         await uiPoolDataProvider.getPairsData(
+    //             pool.address,
+    //             poolView.address,
+    //             orderManager.address,
+    //             positionManager.address,
+    //             router.address,
+    //             [1, 2],
+    //             [await indexPriceFeed.getPrice(btc.address), await indexPriceFeed.getPrice(eth.address)],
+    //         )
+    //     )[0].networkFees[1],
     // );
 
     // let index = 1;

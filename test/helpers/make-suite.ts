@@ -232,9 +232,11 @@ export async function newTestEnv(): Promise<TestEnv> {
         orderManager,
         riskReserve,
         feeCollector,
+        backtracker,
     } = await deployTrading(deployer, deployer, addressesProvider, roleManager, pool, usdt, validationHelper);
 
     await indexPriceFeed.updateExecutorAddress(executor.address);
+    await oraclePriceFeed.updateExecutorAddress(executor.address);
 
     await addressesProvider
         .connect(deployer.signer)
@@ -244,6 +246,7 @@ export async function newTestEnv(): Promise<TestEnv> {
             fundingRate.address,
             executionLogic.address,
             liquidationLogic.address,
+            backtracker.address,
         );
     await pool.setRouter(router.address);
     await pool.setPoolView(poolView.address);

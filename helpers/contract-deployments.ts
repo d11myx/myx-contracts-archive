@@ -22,6 +22,7 @@ import {
     SpotSwap,
     MockPythOraclePriceFeed,
     PoolView,
+    Backtracker,
 } from '../types';
 import { Contract, ethers } from 'ethers';
 import { MARKET_NAME } from './env';
@@ -265,6 +266,9 @@ export async function deployTrading(
     let executor = (await deployContract('Executor', [addressProvider.address])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
 
+    let backtracker = (await deployContract('Backtracker', [])) as any as Backtracker;
+    log(`deployed Backtracker at ${backtracker.address}`);
+
     await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
     await waitForTx(await feeCollector.updateExecutionLogicAddress(executionLogic.address));
 
@@ -286,5 +290,6 @@ export async function deployTrading(
         orderManager,
         riskReserve,
         feeCollector,
+        backtracker,
     };
 }
