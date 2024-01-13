@@ -620,16 +620,6 @@ contract ExecutionLogic is IExecutionLogic {
         );
     }
 
-    function needADL(
-        uint256 pairIndex,
-        bool isLong,
-        uint256 executionSize,
-        uint256 executionPrice
-    ) public view returns (bool _needADL) {
-        (_needADL, ) = positionManager.needADL(pairIndex, isLong, executionSize, executionPrice);
-        return _needADL;
-    }
-
     function executeADLAndDecreaseOrders(
         address keeper,
         ExecutePosition[] memory executePositions,

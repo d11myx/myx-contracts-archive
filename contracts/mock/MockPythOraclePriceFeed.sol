@@ -6,14 +6,19 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPythOraclePriceFeed.sol";
 import "../interfaces/IRoleManager.sol";
+import "../interfaces/IBacktracker.sol";
 
 contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
     uint256 public immutable PRICE_DECIMALS = 30;
     IPyth public pyth;
+    address public executor;
+
     mapping(address => bytes32) public tokenPriceIds;
 
     uint256 public priceAge;
+
+    mapping(bytes32 => mapping(address => uint256)) public backtrackTokenPrices;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -30,6 +35,22 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
     modifier onlyPoolAdmin() {
         require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "opa");
         _;
+    }
+
+    modifier onlyExecutor() {
+        require(msg.sender == executor, "only executor");
+        _;
+    }
+
+    modifier onlyBacktracking() {
+        require(IBacktracker(ADDRESS_PROVIDER.backtracker()).backtracking(), "only backtracking");
+        _;
+    }
+
+    function updateExecutorAddress(address newAddress) external onlyPoolAdmin {
+        address oldAddress = executor;
+        executor = newAddress;
+        emit UpdatedExecutorAddress(msg.sender, oldAddress, newAddress);
     }
 
     function updatePriceAge(uint256 age) external onlyPoolAdmin {
@@ -67,6 +88,38 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
         }
 
         pyth.updatePriceFeeds{value: fee}(updateData);
+    }
+
+    function updateHistoricalPrice(
+        address[] calldata tokens,
+        bytes[] calldata updateData,
+        uint64 publishTime
+    ) external payable onlyExecutor onlyBacktracking override {
+        uint fee = pyth.getUpdateFee(updateData);
+        if (msg.value < fee) {
+            revert("insufficient fee");
+        }
+        for (uint256 i = 0; i < updateData.length; i++) {
+            address token = tokens[i];
+            bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), publishTime));
+            backtrackTokenPrices[backtrackRound][token] = abi.decode(updateData[i], (uint256));
+        }
+    }
+
+    function removeHistoricalPrice(uint64 _backtrackRound, address[] calldata tokens) external {
+        bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), _backtrackRound));
+        for (uint256 i = 0; i < tokens.length; i++) {
+            delete backtrackTokenPrices[backtrackRound][tokens[i]];
+        }
+    }
+
+    function getHistoricalPrice(
+        uint64 publishTime,
+        address token
+    ) external view onlyBacktracking override returns (uint256) {
+        bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), publishTime));
+        uint256 price = backtrackTokenPrices[backtrackRound][token];
+        return price * (10 ** (PRICE_DECIMALS - 8));
     }
 
     function _setAssetPriceIds(address[] memory assets, bytes32[] memory priceIds) private {

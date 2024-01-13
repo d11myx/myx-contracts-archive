@@ -1,11 +1,13 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
+    BACKTRACKER_ID,
     COMMON_DEPLOY_PARAMS,
     EXECUTION_LOGIC_ID,
     EXECUTOR_ID,
     FEE_COLLECTOR_ID,
     getAddressesProvider,
+    getBacktracker,
     getExecutionLogic,
     getExecutor,
     getFeeCollector,
@@ -29,6 +31,8 @@ import {
     ROUTER_ID,
     waitForTx,
 } from '../../helpers';
+import { Contract } from 'ethers';
+import { Backtracker__factory } from '../../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
@@ -154,6 +158,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     });
     const liquidationLogic = await getLiquidationLogic();
 
+    // Backtracker
+    await deploy(`${BACKTRACKER_ID}`, {
+        from: deployer,
+        contract: 'Backtracker',
+        args: [],
+
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    const backtracker = await getBacktracker();
+
     let oraclePriceFeed = await getOraclePriceFeed();
     let indexPriceFeed = await getIndexPriceFeed();
     let fundingRate = await getFundingRate();
@@ -166,6 +180,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
                 fundingRate.address,
                 executionLogic.address,
                 liquidationLogic.address,
+                backtracker.address,
             ),
     );
 
@@ -177,9 +192,11 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
         ...COMMON_DEPLOY_PARAMS,
     });
+
     const executor = await getExecutor();
     const poolView = await getPoolView();
 
+    await waitForTx(await oraclePriceFeed.connect(poolAdminSigner).updateExecutorAddress(executor.address));
     await waitForTx(await poolView.connect(poolAdminSigner).setPositionManager(positionManager.address));
 
     await waitForTx(await pool.connect(poolAdminSigner).setRiskReserve(riskReserve.address));

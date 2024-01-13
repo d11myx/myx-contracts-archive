@@ -116,6 +116,7 @@ describe('Oracle: oracle cases', () => {
         const emaPrice = '163158326000';
         const emaConf = '63257707';
         const publishTime = getBlockTimestamp();
+        const prevPublishTime = getBlockTimestamp();
         const priceFeedData = await mockPyth.createPriceFeedUpdateData(
             id,
             price,
@@ -124,6 +125,7 @@ describe('Oracle: oracle cases', () => {
             emaPrice,
             emaConf,
             publishTime,
+            prevPublishTime,
         );
         await expect(pythOraclePriceFeed.connect(dev).setTokenPriceIds([btc.address], [id])).to.be.revertedWith('opa');
         expect(await pythOraclePriceFeed.tokenPriceIds(btc.address)).to.be.eq(ethers.utils.formatBytes32String(''));

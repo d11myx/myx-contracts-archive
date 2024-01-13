@@ -19,4 +19,6 @@ interface IAddressesProvider {
     function liquidationLogic() external view returns (address);
 
     function roleManager() external view returns (address);
+
+    function backtracker() external view returns (address);
 }

@@ -57,7 +57,7 @@ contract SpotSwap is ISpotSwap, Upgradeable {
     function swap(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut) external {
         bytes memory path = tokenPath[tokenIn][tokenOut];
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
-        if (IERC20(tokenIn).allowance(address(this), swapRouter) == 0) {
+        if (IERC20(tokenIn).allowance(address(this), swapRouter) < amountIn) {
             IERC20(tokenIn).safeApprove(swapRouter, type(uint256).max);
         }
         uint256 useAmountIn = IUniSwapV3Router(swapRouter).exactOutput(

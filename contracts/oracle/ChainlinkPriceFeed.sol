@@ -1,29 +1,28 @@
 // SPDX-License-Identifier: MIT
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-
 import "../libraries/Roleable.sol";
-
-import "../interfaces/IPriceFeed.sol";
+import "../interfaces/IChainlinkPriceFeed.sol";
 import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IBacktracker.sol";
 
-pragma solidity 0.8.19;
-
-contract ChainlinkPriceFeed is IPriceFeed, Roleable {
+contract ChainlinkPriceFeed is IChainlinkPriceFeed, Roleable {
     using SafeMath for uint256;
-
-    event FeedUpdate(address asset, address feed);
 
     uint256 public immutable PRICE_DECIMALS = 30;
     uint256 private constant GRACE_PERIOD_TIME = 3600;
 
     uint256 public priceAge;
+    address public executor;
 
     // token -> sequencerUptimeFeed
     mapping(address => address) public sequencerUptimeFeeds;
 
     mapping(address => address) public dataFeeds;
+
+    mapping(bytes32 => mapping(address => uint256)) public backtrackTokenPrices;
 
     constructor(
         IAddressesProvider _addressProvider,
@@ -37,6 +36,22 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
     modifier onlyTimelock() {
         require(msg.sender == ADDRESS_PROVIDER.timelock(), "only timelock");
         _;
+    }
+
+    modifier onlyExecutor() {
+        require(msg.sender == executor, "only executor");
+        _;
+    }
+
+    modifier onlyBacktracking() {
+        require(IBacktracker(ADDRESS_PROVIDER.backtracker()).backtracking(), "only backtracking");
+        _;
+    }
+
+    function updateExecutorAddress(address newAddress) external onlyPoolAdmin {
+        address oldAddress = executor;
+        executor = newAddress;
+        emit UpdatedExecutorAddress(msg.sender, oldAddress, newAddress);
     }
 
     function updatePriceAge(uint256 age) external onlyPoolAdmin {
@@ -75,6 +90,37 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
         return price;
     }
 
+    function updateHistoricalPrice(
+        address[] calldata tokens,
+        bytes[] calldata,
+        uint64 roundId
+    ) external payable onlyExecutor onlyBacktracking override {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            (, uint256 price,,,) = getRoundData(tokens[i], uint80(roundId));
+            address token = tokens[i];
+            bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), roundId));
+            backtrackTokenPrices[backtrackRound][token] = price;
+        }
+    }
+
+    function removeHistoricalPrice(
+        uint64 _backtrackRound,
+        address[] calldata tokens
+    ) external onlyExecutor onlyBacktracking {
+        bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), _backtrackRound));
+        for (uint256 i = 0; i < tokens.length; i++) {
+            delete backtrackTokenPrices[backtrackRound][tokens[i]];
+        }
+    }
+
+    function getHistoricalPrice(
+        uint64 publishTime,
+        address token
+    ) external view onlyBacktracking override returns (uint256) {
+        bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), publishTime));
+        return backtrackTokenPrices[backtrackRound][token];
+    }
+
     function latestRoundData(address token) public view returns (uint80 roundId, uint256 price, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
         address dataFeedAddress = dataFeeds[token];
         require(dataFeedAddress != address(0), "invalid data feed");
@@ -86,6 +132,24 @@ contract ChainlinkPriceFeed is IPriceFeed, Roleable {
         uint256 _decimals = uint256(dataFeed.decimals());
         int256 answer;
         (roundId, answer, startedAt, updatedAt, answeredInRound) = dataFeed.latestRoundData();
+        require(answer > 0, "invalid price");
+        price = uint256(answer) * (10 ** (PRICE_DECIMALS - _decimals));
+    }
+
+    function getRoundData(
+        address token,
+        uint80 _roundId
+    ) public view returns (uint80 roundId, uint256 price, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
+        address dataFeedAddress = dataFeeds[token];
+        require(dataFeedAddress != address(0), "invalid data feed");
+
+        if (sequencerUptimeFeeds[token] != address(0)) {
+            checkSequencerStatus(token);
+        }
+        AggregatorV3Interface dataFeed = AggregatorV3Interface(dataFeedAddress);
+        uint256 _decimals = uint256(dataFeed.decimals());
+        int256 answer;
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = dataFeed.getRoundData(_roundId);
         require(answer > 0, "invalid price");
         price = uint256(answer) * (10 ** (PRICE_DECIMALS - _decimals));
     }

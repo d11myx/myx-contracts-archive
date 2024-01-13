@@ -1,7 +1,15 @@
 // @ts-ignore
-import { ethers } from 'hardhat';
-import { waitForTx, getRoleManager, getOraclePriceFeed, getTokens, getFundingRate } from '../helpers';
+import { deployments, ethers } from 'hardhat';
+import {
+    waitForTx,
+    getRoleManager,
+    getOraclePriceFeed,
+    getTokens,
+    getFundingRate,
+    COMMON_DEPLOY_PARAMS,
+} from '../helpers';
 import { IFundingRate } from '../types/contracts/core/FundingRate';
+import usdc from '../markets/usdc';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -12,17 +20,17 @@ async function main() {
     const roleManager = await getRoleManager();
     const fundingRate = await getFundingRate();
 
-    const { btc, eth } = await getTokens();
+    const { btc, eth, usdt } = await getTokens();
     console.log(`btc price:`, ethers.utils.formatUnits(await priceOracle.getPrice(btc.address), 30));
     console.log(`eth price:`, ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30));
 
     const keepers: string[] = [
-        // '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',
-        // '0x8C2B496E5BC13b4170dC818132bEE5413A39834C',
-        // '0x9a5c3C2843eB3d9b764A2F00236D8519989BbDa1',
-        // '0x299227e2bD681A510b00dFfaC9f4FD0Da0715B94',
-        // '0xF1BAB1E9ad036B53Ad653Af455C21796f15EE3bD',
-        // '0x8bc45c15C993A982AFc053ce0fF7B59b40eE0D7B',
+        '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',
+        '0x8C2B496E5BC13b4170dC818132bEE5413A39834C',
+        '0x9a5c3C2843eB3d9b764A2F00236D8519989BbDa1',
+        '0x299227e2bD681A510b00dFfaC9f4FD0Da0715B94',
+        '0xF1BAB1E9ad036B53Ad653Af455C21796f15EE3bD',
+        '0x8bc45c15C993A982AFc053ce0fF7B59b40eE0D7B',
 
         '0x28f5D9dA3699d82dd7Dc91C7a776Dc0F5C66a0dB',
         '0x679A66eB96d24c7e3E260FC15165c76B34325f57',
@@ -73,21 +81,18 @@ async function main() {
         await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
 
-    // const btcFundingFeeConfig: IFundingRate.FundingFeeConfigStruct = {
-    //     growthRate: 2000000, //0.02
-    //     baseRate: 20000, //0.0002
-    //     maxRate: 10000000, //0.1
-    //     fundingInterval: 10 * 60,
-    // };
-    //
-    // const ethFundingFeeConfig: IFundingRate.FundingFeeConfigStruct = {
-    //     growthRate: 2000000, //0.02
-    //     baseRate: 20000, //0.0002
-    //     maxRate: 10000000, //0.1
-    //     fundingInterval: 10 * 60,
-    // };
-    // await fundingRate.updateFundingFeeConfig(1, btcFundingFeeConfig);
-    // await fundingRate.updateFundingFeeConfig(2, ethFundingFeeConfig);
+    const art = await deployments.deploy(`MockMultipleTransfer`, {
+        from: deployer.address,
+        contract: 'MockMultipleTransfer',
+        args: [],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    console.log(`MockMultipleTransfer address: ${art.address}`);
+    await deployer.sendTransaction({
+        to: art.address,
+        value: ethers.utils.parseEther('100000'),
+    });
+    console.log(await usdt.mint(art.address, ethers.utils.parseUnits('100000000000000', 6)));
 }
 // 0xb3c38c0bc1d38f1ef60828ec34e502a7835218882f60bb20b17fe9480e0c8fe8----0x28f5D9dA3699d82dd7Dc91C7a776Dc0F5C66a0dB
 // 0x351293def8a296616c81b84c1689e6792e4fff96a2a9c6e22c22a7ccbb85eb95----0x679A66eB96d24c7e3E260FC15165c76B34325f57

@@ -6,6 +6,8 @@ import "./IExecutionLogic.sol";
 
 interface IExecutor {
 
+    event UpdatePositionManager(address sender, address oldAddress, address newAddress);
+
     function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
@@ -46,6 +48,7 @@ interface IExecutor {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64 backtrackRound,
         IExecution.ExecutePosition[] memory executePositions
     ) external payable;
 
@@ -54,7 +57,7 @@ interface IExecutor {
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) external view returns (bool);
+    ) external view returns (bool need, uint256 needADLAmount);
 
     function cleanInvalidPositionOrders(
         bytes32[] calldata positionKeys

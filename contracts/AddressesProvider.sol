@@ -13,6 +13,7 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
     bytes32 private constant FUNDING_RATE = "FUNDING_RATE";
     bytes32 private constant EXCUTION_LOGIC = "EXCUTION_LOGIC";
     bytes32 private constant LIQUIDATION_LOGIC = "LIQUIDATION_LOGIC";
+    bytes32 private constant BACKTRACKER = "BACKTRACKER";
 
     address public immutable override WETH;
     address public override timelock;
@@ -43,6 +44,10 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
         return getAddress(ROLE_MANAGER);
     }
 
+    function backtracker() external view override returns (address) {
+        return getAddress(BACKTRACKER);
+    }
+
     function setTimelock(address newAddress) public onlyTimelock {
         address oldAddress = newAddress;
         timelock = newAddress;
@@ -60,7 +65,8 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
         address newIndexPriceOracle,
         address newFundingRateAddress,
         address newExecutionLogic,
-        address newLiquidationLogic
+        address newLiquidationLogic,
+        address _backtracker
     ) external onlyOwner initializer {
         require(
             newPriceOracle != address(0) &&
@@ -73,6 +79,7 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
         indexPriceOracle = newIndexPriceOracle;
         executionLogic = newExecutionLogic;
         liquidationLogic = newLiquidationLogic;
+        setAddress(BACKTRACKER, _backtracker);
 
         emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
         emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);
@@ -111,10 +118,15 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
         emit AddressSet(LIQUIDATION_LOGIC, oldLiquidationLogic, newLiquidationLogic);
     }
 
+    function setBacktracker(address newAddress) external onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldBacktracker = _addresses[BACKTRACKER];
+        _addresses[BACKTRACKER] = newAddress;
+        emit AddressSet(BACKTRACKER, oldBacktracker, newAddress);
+    }
+
     function setRolManager(address newAddress) external onlyOwner {
         require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
-        address oldAclManager = _addresses[ROLE_MANAGER];
         setAddress(ROLE_MANAGER, newAddress);
-        emit AddressSet(ROLE_MANAGER, oldAclManager, newAddress);
     }
 }
