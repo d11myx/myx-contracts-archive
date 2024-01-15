@@ -13,6 +13,7 @@ interface IExecutionLogic is IExecution {
     struct ExecuteOrder {
         uint256 orderId;
         TradingTypes.TradeType tradeType;
+        bool isIncrease;
         uint8 tier;
         uint256 referralsRatio;
         uint256 referralUserRatio;

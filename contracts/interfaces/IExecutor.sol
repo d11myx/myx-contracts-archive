@@ -8,6 +8,13 @@ interface IExecutor is IExecution {
 
     event UpdatePositionManager(address sender, address oldAddress, address newAddress);
 
+    function setPricesAndExecuteOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        bytes[] memory updateData,
+        IExecutionLogic.ExecuteOrder[] memory orders
+    ) external payable;
+
     function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
