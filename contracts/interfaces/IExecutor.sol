@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import '../libraries/TradingTypes.sol';
 import "./IExecutionLogic.sol";
 
-interface IExecutor {
+interface IExecutor is IExecution {
 
     event UpdatePositionManager(address sender, address oldAddress, address newAddress);
 
@@ -45,11 +45,9 @@ interface IExecutor {
     ) external payable;
 
     function setPricesAndLiquidatePositions(
-        address[] memory tokens,
-        uint256[] memory prices,
-        bytes[] memory updateData,
-        uint64 backtrackRound,
-        IExecution.ExecutePosition[] memory executePositions
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        LiquidatePosition[] memory liquidatePositions
     ) external payable;
 
     function needADL(
