@@ -138,37 +138,35 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
             LiquidatePosition memory execute = liquidatePositions[i];
 
             IBacktracker(ADDRESS_PROVIDER.backtracker()).enterBacktracking(execute.backtrackRound);
-            _updatePriceAndLiquidatePositions(execute);
+
+            address[] memory tokens = new address[](1);
+            tokens[0] = execute.token;
+            bytes[] memory updatesData = new bytes[](1);
+            updatesData[0] = execute.updateData;
+            IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: execute.updateFee}(
+                tokens,
+                updatesData,
+                execute.backtrackRound
+            );
+
+            try ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidationPosition(
+                msg.sender,
+                execute.positionKey,
+                execute.tier,
+                execute.referralsRatio,
+                execute.referralUserRatio,
+                execute.referralOwner
+            ) {} catch Error(string memory reason) {
+                emit ExecutePositionError(execute.positionKey, reason);
+            }
+
+            IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).removeHistoricalPrice(
+                execute.backtrackRound,
+                tokens
+            );
+
             IBacktracker(ADDRESS_PROVIDER.backtracker()).quitBacktracking();
         }
-    }
-
-    function _updatePriceAndLiquidatePositions(LiquidatePosition memory execute) public payable {
-        require(msg.sender == address(this), "internal");
-
-        address[] memory tokens = new address[](1);
-        tokens[0] = execute.token;
-        bytes[] memory updatesData = new bytes[](1);
-        updatesData[0] = execute.updateData;
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: execute.updateFee}(
-            tokens,
-            updatesData,
-            execute.backtrackRound
-        );
-        try ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidationPosition(
-            msg.sender,
-            execute.positionKey,
-            execute.tier,
-            execute.referralsRatio,
-            execute.referralUserRatio,
-            execute.referralOwner
-        ) {} catch Error(string memory reason) {
-            emit ExecutePositionError(execute.positionKey, reason);
-        }
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).removeHistoricalPrice(
-            execute.backtrackRound,
-            tokens
-        );
     }
 
     function setPrices(

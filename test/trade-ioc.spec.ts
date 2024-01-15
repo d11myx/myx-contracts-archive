@@ -1,6 +1,6 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import hre, { ethers } from 'hardhat';
-import { extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { extraHash, getUpdateData, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { expect } from './shared/expect';
 import {
     TradeType,
@@ -1448,14 +1448,11 @@ describe('Trade: ioc', () => {
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                0,
-                [
                     {
+                        token: btc.address,
+                        updateData: await getUpdateData(testEnv, btc),
+                        updateFee: 1,
+                        backtrackRound: 0,
                         positionKey: positionKey,
                         tier: 0,
                         referralsRatio: 0,
