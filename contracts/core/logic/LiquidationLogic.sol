@@ -56,26 +56,26 @@ contract LiquidationLogic is ILiquidationLogic {
         emit UpdateExecutorAddress(msg.sender, oldAddress, _executor);
     }
 
-    function liquidatePositions(
-        address keeper,
-        ExecutePosition[] memory executePositions
-    ) external override onlyExecutorOrSelf {
-        for (uint256 i = 0; i < executePositions.length; i++) {
-            ExecutePosition memory execute = executePositions[i];
-            try
-                this.liquidationPosition(
-                    keeper,
-                    execute.positionKey,
-                    execute.tier,
-                    execute.referralsRatio,
-                    execute.referralUserRatio,
-                    execute.referralOwner
-                )
-            {} catch Error(string memory reason) {
-                emit ExecutePositionError(execute.positionKey, reason);
-            }
-        }
-    }
+//    function liquidatePositions(
+//        address keeper,
+//        ExecutePosition[] memory executePositions
+//    ) external override onlyExecutorOrSelf {
+//        for (uint256 i = 0; i < executePositions.length; i++) {
+//            ExecutePosition memory execute = executePositions[i];
+//            try
+//                this.liquidationPosition(
+//                    keeper,
+//                    execute.positionKey,
+//                    execute.tier,
+//                    execute.referralsRatio,
+//                    execute.referralUserRatio,
+//                    execute.referralOwner
+//                )
+//            {} catch Error(string memory reason) {
+//                emit ExecutePositionError(execute.positionKey, reason);
+//            }
+//        }
+//    }
 
     function liquidationPosition(
         address keeper,

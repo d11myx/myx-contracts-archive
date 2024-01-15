@@ -65,6 +65,19 @@ interface IExecution {
         address referralOwner;
     }
 
+    struct LiquidatePosition {
+        address token;
+        bytes updateData;
+        uint256 updateFee;
+        uint64 backtrackRound;
+        bytes32 positionKey;
+        uint256 sizeAmount;
+        uint8 tier;
+        uint256 referralsRatio;
+        uint256 referralUserRatio;
+        address referralOwner;
+    }
+
     struct PositionOrder {
         address account;
         uint256 pairIndex;
