@@ -1,6 +1,6 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import hre, { ethers } from 'hardhat';
-import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { getUpdateData, increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { TradeType, ZERO_ADDRESS } from '../helpers';
 import { Position } from '../types/contracts/core/PositionManager';
 import Decimal from 'decimal.js';
@@ -89,14 +89,11 @@ describe('Liquidation: Risk Reserve', () => {
             [btc.address],
             [await indexPriceFeed.getPrice(btc.address)],
             [
-                new ethers.utils.AbiCoder().encode(
-                    ['uint256'],
-                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                ),
-            ],
-            0,
-            [
                 {
+                    token: btc.address,
+                    updateData: await getUpdateData(testEnv, btc),
+                    updateFee: 1,
+                    backtrackRound: 0,
                     positionKey: positionKey,
                     sizeAmount: 0,
                     tier: 0,
@@ -161,14 +158,11 @@ describe('Liquidation: Risk Reserve', () => {
             [btc.address],
             [await indexPriceFeed.getPrice(btc.address)],
             [
-                new ethers.utils.AbiCoder().encode(
-                    ['uint256'],
-                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                ),
-            ],
-            0,
-            [
                 {
+                    token: btc.address,
+                    updateData: await getUpdateData(testEnv, btc),
+                    updateFee: 1,
+                    backtrackRound: 0,
                     positionKey: positionKey,
                     sizeAmount: 0,
                     tier: 0,
@@ -234,14 +228,11 @@ describe('Liquidation: Risk Reserve', () => {
             [btc.address],
             [await indexPriceFeed.getPrice(btc.address)],
             [
-                new ethers.utils.AbiCoder().encode(
-                    ['uint256'],
-                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                ),
-            ],
-            0,
-            [
                 {
+                    token: btc.address,
+                    updateData: await getUpdateData(testEnv, btc),
+                    updateFee: 1,
+                    backtrackRound: 0,
                     positionKey: positionKey,
                     sizeAmount: 0,
                     tier: 0,

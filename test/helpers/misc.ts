@@ -8,6 +8,15 @@ import { TradingTypes } from '../../types/contracts/core/Router';
 import { IExecution } from '../../types/contracts/core/Executor';
 import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './constants';
 
+export async function getUpdateData(testEnv: TestEnv, token: MockERC20Token) {
+    const { oraclePriceFeed } = testEnv;
+
+    return abiCoder.encode(
+        ['uint256'],
+        [(await oraclePriceFeed.getPrice(token.address)).div('10000000000000000000000')],
+    );
+}
+
 export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     const { deployer, keeper, btc, indexPriceFeed, oraclePriceFeed } = testEnv;
 
@@ -191,54 +200,50 @@ export async function decreasePosition(
     // execute order
     let receipt: ContractReceipt;
     if (tradeType == TradeType.MARKET) {
-        const tx = await executor
-            .connect(keeper.signer)
-            .setPricesAndExecuteDecreaseMarketOrders(
-                [pair.indexToken],
-                [indexPriceFeed.getPrice(pair.indexToken)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
-                    ),
-                ],
-                [
-                    {
-                        orderId: orderId,
-                        tradeType: TradeType.MARKET,
-                        tier: 0,
-                        referralsRatio: 0,
-                        referralUserRatio: 0,
-                        referralOwner: ZERO_ADDRESS,
-                    },
-                ],
-                { value: 1 },
-            );
+        const tx = await executor.connect(keeper.signer).setPricesAndExecuteDecreaseMarketOrders(
+            [pair.indexToken],
+            [indexPriceFeed.getPrice(pair.indexToken)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
         receipt = await tx.wait();
     } else {
-        const tx = await executor
-            .connect(keeper.signer)
-            .setPricesAndExecuteDecreaseLimitOrders(
-                [pair.indexToken],
-                [indexPriceFeed.getPrice(pair.indexToken)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
-                    ),
-                ],
-                [
-                    {
-                        orderId: orderId,
-                        tradeType: TradeType.MARKET,
-                        tier: 0,
-                        referralsRatio: 0,
-                        referralUserRatio: 0,
-                        referralOwner: ZERO_ADDRESS,
-                    },
-                ],
-                { value: 1 },
-            );
+        const tx = await executor.connect(keeper.signer).setPricesAndExecuteDecreaseLimitOrders(
+            [pair.indexToken],
+            [indexPriceFeed.getPrice(pair.indexToken)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
         receipt = await tx.wait();
     }
 
