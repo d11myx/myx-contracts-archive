@@ -43,6 +43,46 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         emit UpdatePositionManager(msg.sender, oldAddress, _positionManager);
     }
 
+    function setPricesAndExecuteOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        bytes[] memory updateData,
+        IExecutionLogic.ExecuteOrder[] memory orders
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
+
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
+
+        for (uint256 i = 0; i < orders.length; i++) {
+            IExecutionLogic.ExecuteOrder memory order = orders[i];
+            if (order.isIncrease) {
+                if (order.tradeType == TradingTypes.TradeType.MARKET) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                }
+            } else {
+                if (order.tradeType == TradingTypes.TradeType.MARKET) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                }
+            }
+        }
+    }
+
     function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
         uint256[] memory prices,
@@ -214,5 +254,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         bytes32[] calldata positionKeys
     ) external override whenNotPaused nonReentrant onlyPositionKeeper {
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).cleanInvalidPositionOrders(positionKeys);
+    }
+
+    function _fillOrders(
+        IExecutionLogic.ExecuteOrder memory order
+    ) private pure returns (IExecutionLogic.ExecuteOrder[] memory increaseOrders) {
+        increaseOrders = new IExecutionLogic.ExecuteOrder[](1);
+        increaseOrders[0] = order;
     }
 }
