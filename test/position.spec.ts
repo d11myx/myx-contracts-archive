@@ -1,7 +1,7 @@
 import { newTestEnv, TestEnv } from './helpers/make-suite';
 import hre, { ethers } from 'hardhat';
 import { expect } from './shared/expect';
-import { cleanPositionInvalidOrders, extraHash, mintAndApprove, updateBTCPrice } from './helpers/misc';
+import { cleanPositionInvalidOrders, extraHash, getUpdateData, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import {
     TradeType,
     getMockToken,
@@ -208,14 +208,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -428,14 +425,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -615,14 +609,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -849,14 +840,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -1085,14 +1073,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -1503,14 +1488,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -1724,14 +1706,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -1945,14 +1924,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -2199,14 +2175,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -2486,14 +2459,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
@@ -2716,14 +2686,11 @@ describe('Position', () => {
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
-                        new ethers.utils.AbiCoder().encode(
-                            ['uint256'],
-                            [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                        ),
-                    ],
-                    0,
-                    [
                         {
+                            token: btc.address,
+                            updateData: await getUpdateData(testEnv, btc),
+                            updateFee: 1,
+                            backtrackRound: 0,
                             positionKey: positionKey,
                             sizeAmount: 0,
                             tier: 0,
