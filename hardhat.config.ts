@@ -128,8 +128,17 @@ const config: HardhatUserConfig = {
             linea_goerli: '6WZUFU45J91UMAHDV2C52TV8RAJAQASIZR',
             linea_mainnet: 'I7TMBCCPR75UPE2H14EIWDYS469TFAHHUW',
             arbitrum_sepolia: 'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
+            dev_local: 'myx',
         },
         customChains: [
+            {
+                network: 'dev_local',
+                chainId: 131338,
+                urls: {
+                    apiURL: 'http://export.myx.cash/api',
+                    browserURL: 'http://export.myx.cash',
+                },
+            },
             {
                 network: 'linea_goerli',
                 chainId: 59140,

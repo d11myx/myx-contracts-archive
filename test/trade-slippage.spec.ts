@@ -98,6 +98,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -139,6 +140,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -180,6 +182,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -221,6 +224,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -283,6 +287,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -324,6 +329,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -366,6 +372,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -407,6 +414,7 @@ describe('Trade: slippage', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

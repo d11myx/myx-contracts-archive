@@ -115,6 +115,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -162,6 +163,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -282,6 +284,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -329,6 +332,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -398,6 +402,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -419,6 +424,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -520,6 +526,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: increaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -560,6 +567,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: increaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -600,6 +608,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -704,6 +713,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: increaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -744,6 +754,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: increaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -784,6 +795,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -815,6 +827,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -914,6 +927,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -957,6 +971,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -997,6 +1012,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1037,6 +1053,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1141,6 +1158,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1184,6 +1202,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1224,6 +1243,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1263,6 +1283,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.LIMIT,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1374,6 +1395,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1576,6 +1598,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1623,6 +1646,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1711,6 +1735,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1735,6 +1760,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1845,6 +1871,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1892,6 +1919,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1980,6 +2008,7 @@ describe('Trade: ioc', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

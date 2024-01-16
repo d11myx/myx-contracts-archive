@@ -23,6 +23,7 @@ async function main() {
         'https://api-sepolia.arbiscan.io/api',
         'https://sepolia.arbiscan.io/',
     );
+    const local = new Etherscan('myx', 'http://export.myx.cash/api', 'http://export.myx.cash');
 
     // const artifact = await deployments.deploy(`verify-demo`, {
     //     from: deployer.address,
@@ -31,7 +32,7 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    await verifyContract(lineaGoerli, '', []);
+    await verifyContract(local, '0x063967b144abf07dAb4751d2556E2E8A70B78e80', []);
 
     // await verifyProxyContract(lineaGoerli, '0x934B2325c32419c64433eff92CD37933916c1a79', [
     //     '0x68d46485dd36824E1910aEA4BAB5Ba686BF9cAe7',

@@ -123,6 +123,7 @@ export async function increasePosition(
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: true,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -150,6 +151,7 @@ export async function increasePosition(
                 {
                     orderId: orderId.toNumber(),
                     tradeType: TradeType.MARKET,
+                    isIncrease: true,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -213,6 +215,7 @@ export async function decreasePosition(
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: false,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -236,6 +239,7 @@ export async function decreasePosition(
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: false,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -293,6 +297,7 @@ export async function adlPosition(
             {
                 orderId,
                 tradeType,
+                isIncrease: false,
                 tier: 0,
                 referralsRatio: 0,
                 referralUserRatio: 0,

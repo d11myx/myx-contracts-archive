@@ -141,6 +141,7 @@ describe('Replay: adl', () => {
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: false,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,

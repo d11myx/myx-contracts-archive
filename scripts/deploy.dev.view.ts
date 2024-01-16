@@ -1,6 +1,7 @@
 // @ts-ignore
 import hre, { deployments, ethers } from 'hardhat';
 import {
+    abiCoder,
     COMMON_DEPLOY_PARAMS,
     Duration,
     encodeParameters,
@@ -22,6 +23,7 @@ import {
     latest,
     POSITION_CALLER,
     POSITION_MANAGER_ID,
+    TradeType,
     ZERO_ADDRESS,
     ZERO_HASH,
 } from '../helpers';
@@ -31,6 +33,9 @@ import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
 import Decimal from 'decimal.js';
 import { oracle } from '../types/contracts';
 import { MockMultipleTransfer__factory } from '../types';
+import type { PromiseOrValue } from '../types/common';
+import type { BigNumberish } from 'ethers';
+import { AbiError } from 'web3';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -69,12 +74,75 @@ async function main() {
     // console.log(await poolToken.totalSupply());
     // console.log(await pool.lpFairPrice(2, await oraclePriceFeed.getPrice(eth.address)));
 
-    await deployments.deploy(`UiPoolDataProvider`, {
-        from: deployer.address,
-        contract: 'UiPoolDataProvider',
-        args: [addressesProvider.address],
-        ...COMMON_DEPLOY_PARAMS,
-    });
+    // await deployments.deploy(`UiPoolDataProvider`, {
+    //     from: deployer.address,
+    //     contract: 'UiPoolDataProvider',
+    //     args: [addressesProvider.address],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
+    //[{"value":[{"value":"0x3ff8c9a44733e54a48170ed3839a80c46c912b00","typeAsString":"address"},{"value":"0x7025c220763196f126571b34a708fd700f67d363","typeAsString":"address"}],"typeAsString":"address[]","componentType":"org.web3j.abi.datatypes.Address"},{"value":[{"value":42335000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"},{"value":2516000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"}],"typeAsString":"uint256[]","componentType":"org.web3j.abi.datatypes.generated.Uint256"},{"value":[{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2bM6nvA=","typeAsString":"bytes"},{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOpmcI9A=","typeAsString":"bytes"}],"typeAsString":"bytes[]","componentType":"org.web3j.abi.datatypes.DynamicBytes"},{"value":[{"value":[{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":8,"typeAsString":"uint8"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":"0x0000000000000000000000000000000000000000","typeAsString":"address"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)","componentType":"org.web3j.abi.datatypes.Type"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)[]","componentType":"org.web3j.abi.datatypes.StaticStruct"}]
+
+    const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
+        1,
+        ethers.utils.parseEther('1000000'),
+        await oraclePriceFeed.getPrice(btc.address),
+    );
+    await btc.connect(deployer).approve(router.address, depositIndexAmount);
+    await usdt.connect(deployer).approve(router.address, depositStableAmount);
+    console.log(
+        await router
+            .connect(deployer)
+            .addLiquidity(
+                btc.address,
+                usdt.address,
+                depositIndexAmount,
+                depositStableAmount,
+                [btc.address],
+                [
+                    abiCoder.encode(
+                        ['uint256'],
+                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                    ),
+                ],
+                { value: 1 },
+            ),
+    );
+    // console.log(
+    //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
+    // );
+    // const wallet = new ethers.Wallet(
+    //     '0xb964f175bc281f0e04f3d1bff052abd42b36cadba3ed8b75be9c617387c2b16d',
+    //     deployer.provider,
+    // );
+    // console.log(
+    //     await executor.connect(wallet).setPricesAndExecuteIncreaseMarketOrders(
+    //         ['0x3fF8C9A44733E54a48170ed3839a80C46C912b00', '0x7025c220763196F126571B34A708fD700f67d363'],
+    //         [await oraclePriceFeed.getPrice(btc.address), await oraclePriceFeed.getPrice(eth.address)],
+    //         [
+    //             abiCoder.encode(
+    //                 ['uint256'],
+    //                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+    //             ),
+    //             abiCoder.encode(
+    //                 ['uint256'],
+    //                 [(await oraclePriceFeed.getPrice(eth.address)).div('10000000000000000000000')],
+    //             ),
+    //         ],
+    //         [
+    //             {
+    //                 orderId: 7,
+    //                 tradeType: TradeType.MARKET,
+    //                 isIncrease: true,
+    //                 tier: 0,
+    //                 referralsRatio: 0,
+    //                 referralUserRatio: 0,
+    //                 referralOwner: ZERO_ADDRESS,
+    //             },
+    //         ],
+    //         { value: 2 },
+    //     ),
+    // );
 
     // console.log(await pool.getVault(1));
 

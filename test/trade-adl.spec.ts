@@ -99,6 +99,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -140,6 +141,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -214,6 +216,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -253,6 +256,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -359,6 +363,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -400,6 +405,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -474,6 +480,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -513,6 +520,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -619,6 +627,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -660,6 +669,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -731,6 +741,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -770,6 +781,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -876,6 +888,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -917,6 +930,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -988,6 +1002,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1027,6 +1042,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1136,6 +1152,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1176,6 +1193,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1303,6 +1321,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderAdlBefore.order.orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1416,6 +1435,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1457,6 +1477,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1584,6 +1605,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderAdlBefore.order.orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1695,6 +1717,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1736,6 +1759,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1864,6 +1888,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderAdlBefore.order.orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -1975,6 +2000,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2016,6 +2042,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2141,6 +2168,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderAdlBefore.order.orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2252,6 +2280,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2293,6 +2322,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2436,6 +2466,7 @@ describe('Trade: adl', () => {
                         {
                             orderId: decreaseOrderAdlBefore.order.orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: false,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2540,6 +2571,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2581,6 +2613,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -2724,6 +2757,7 @@ describe('Trade: adl', () => {
                     {
                         orderId: decreaseOrderAdlBefore.order.orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
