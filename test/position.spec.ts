@@ -146,6 +146,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -364,6 +365,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -548,6 +550,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -730,6 +733,7 @@ describe('Position', () => {
                         {
                             orderId: shortOrderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -779,6 +783,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -963,6 +968,7 @@ describe('Position', () => {
                         {
                             orderId: shortOrderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1012,6 +1018,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1229,6 +1236,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1427,6 +1435,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1645,6 +1654,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -1863,6 +1873,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2049,6 +2060,7 @@ describe('Position', () => {
                         {
                             orderId: longOrderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2098,6 +2110,7 @@ describe('Position', () => {
                         {
                             orderId: shortOrderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2228,6 +2241,7 @@ describe('Position', () => {
                         {
                             orderId: adlOrder.order.orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2376,6 +2390,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
@@ -2605,6 +2620,7 @@ describe('Position', () => {
                         {
                             orderId: orderId,
                             tradeType: TradeType.MARKET,
+                            isIncrease: true,
                             tier: 0,
                             referralsRatio: 0,
                             referralUserRatio: 0,
