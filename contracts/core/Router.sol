@@ -153,7 +153,7 @@ contract Router is
 
         request.account = msg.sender;
 
-        orderId = orderManager.createOrder(
+        orderId = orderManager.createOrder{value: msg.value}(
             TradingTypes.CreateOrderRequest({
                 account: request.account,
                 pairIndex: request.pairIndex,
@@ -199,7 +199,7 @@ contract Router is
     ) public payable returns (uint256 tpOrderId, uint256 slOrderId) {
         require(msg.sender == address(this), "internal");
         if (tp > 0) {
-            tpOrderId = orderManager.createOrder(
+            tpOrderId = orderManager.createOrder{value: msg.value}(
                 TradingTypes.CreateOrderRequest({
                     account: account,
                     pairIndex: pairIndex,
@@ -216,7 +216,7 @@ contract Router is
             );
         }
         if (sl > 0) {
-            slOrderId = orderManager.createOrder(
+            slOrderId = orderManager.createOrder{value: msg.value}(
                 TradingTypes.CreateOrderRequest({
                     account: account,
                     pairIndex: pairIndex,
@@ -248,7 +248,7 @@ contract Router is
         request.account = msg.sender;
 
         return
-            orderManager.createOrder(
+            orderManager.createOrder{value: msg.value}(
                 TradingTypes.CreateOrderRequest({
                     account: request.account,
                     pairIndex: request.pairIndex,
@@ -273,7 +273,7 @@ contract Router is
         request.account = msg.sender;
 
         return
-            orderManager.createOrder(
+            orderManager.createOrder{value: msg.value}(
                 TradingTypes.CreateOrderRequest({
                     account: request.account,
                     pairIndex: request.pairIndex,
@@ -299,7 +299,7 @@ contract Router is
 
             require(!operationStatus[request.pairIndex].decreasePositionDisabled, "disabled");
 
-            orderIds[i] = orderManager.createOrder(
+            orderIds[i] = orderManager.createOrder{value: msg.value}(
                 TradingTypes.CreateOrderRequest({
                     account: msg.sender,
                     pairIndex: request.pairIndex,
