@@ -38,6 +38,8 @@ interface IUiPoolDataProvider {
         uint256 stableTotalAmount;
         uint256 stableReservedAmount;
         uint256 poolAvgPrice;
+        uint256 longTracker;
+        uint256 shortTracker;
         int256 currentFundingRate;
         int256 nextFundingRate;
         uint256 nextFundingRateUpdateTime;

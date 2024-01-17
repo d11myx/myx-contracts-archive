@@ -76,7 +76,7 @@ contract Pool is IPool, Upgradeable {
     }
 
     receive() external payable {
-        require(msg.sender == ADDRESS_PROVIDER.WETH(), "nw");
+        require(msg.sender == ADDRESS_PROVIDER.WETH() || msg.sender == orderManager, "nw");
     }
 
     modifier onlyPositionManager() {

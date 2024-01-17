@@ -20,8 +20,6 @@ interface ILiquidationLogic is IExecution {
 
     function updateExecutor(address _executor) external;
 
-//    function liquidatePositions(address keeper, ExecutePosition[] memory executePositions) external;
-
     function liquidationPosition(
         address keeper,
         bytes32 positionKey,
@@ -29,5 +27,9 @@ interface ILiquidationLogic is IExecution {
         uint256 referralsRatio,
         uint256 referralUserRatio,
         address referralOwner
+    ) external;
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
     ) external;
 }
