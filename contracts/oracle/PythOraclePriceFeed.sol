@@ -7,6 +7,7 @@ import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPythOraclePriceFeed.sol";
 import "../interfaces/IRoleManager.sol";
 import "../interfaces/IPythOracle.sol";
+import "../interfaces/IBacktracker.sol";
 
 contract PythOraclePriceFeed is IPythOraclePriceFeed {
     IAddressesProvider public immutable ADDRESS_PROVIDER;
@@ -15,7 +16,13 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     uint256 public priceAge;
 
     IPythOracle public pyth;
+    address public executor;
+
     mapping(address => bytes32) public tokenPriceIds;
+    mapping(bytes32 => address) public priceIdTokens;
+
+    // blockTime + backtrackRound => token => price
+    mapping(bytes32 => mapping(address => uint256)) public backtrackTokenPrices;
 
     constructor(
         IAddressesProvider addressProvider,
@@ -32,6 +39,22 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
     modifier onlyPoolAdmin() {
         require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "opa");
         _;
+    }
+
+    modifier onlyExecutor() {
+        require(msg.sender == executor, "only executor");
+        _;
+    }
+
+    modifier onlyBacktracking() {
+        require(IBacktracker(ADDRESS_PROVIDER.backtracker()).backtracking(), "only backtracking");
+        _;
+    }
+
+    function updateExecutorAddress(address newAddress) external onlyPoolAdmin {
+        address oldAddress = executor;
+        executor = newAddress;
+        emit UpdatedExecutorAddress(msg.sender, oldAddress, newAddress);
     }
 
     function updatePriceAge(uint256 age) external onlyPoolAdmin {
@@ -77,10 +100,53 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         if (priceIds.length > 0) {
             try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
             } catch Error(string memory reason) {
-                emit UpdatePriceFeedsIfNecessaryError(reason);
-//                revert("update price failed");
+                revert(string(abi.encodePacked("update price failed. reason: ", reason)));
             }
         }
+    }
+
+    function updateHistoricalPrice(
+        address[] calldata tokens,
+        bytes[] calldata updateData,
+        uint64 publishTime
+    ) external payable onlyExecutor onlyBacktracking override {
+        uint fee = pyth.getUpdateFee(updateData);
+        if (msg.value < fee) {
+            revert("insufficient fee");
+        }
+        bytes32[] memory priceIds = new bytes32[](tokens.length);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            require(tokens[i] != address(0), "zero token address");
+            require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
+
+            priceIds[i] = tokenPriceIds[tokens[i]];
+        }
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates(updateData, priceIds, publishTime, publishTime);
+        for (uint256 i = 0; i < priceFeeds.length; i++) {
+            PythStructs.PriceFeed memory priceFeed = priceFeeds[i];
+
+            address token = priceIdTokens[priceFeed.id];
+            bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), publishTime));
+            backtrackTokenPrices[backtrackRound][token] = _returnPriceWithDecimals(priceFeed.price);
+        }
+    }
+
+    function removeHistoricalPrice(
+        uint64 _backtrackRound,
+        address[] calldata tokens
+    ) external onlyExecutor onlyBacktracking {
+        bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), _backtrackRound));
+        for (uint256 i = 0; i < tokens.length; i++) {
+            delete backtrackTokenPrices[backtrackRound][tokens[i]];
+        }
+    }
+
+    function getHistoricalPrice(
+        uint64 publishTime,
+        address token
+    ) external view onlyBacktracking override returns (uint256) {
+        bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), publishTime));
+        return backtrackTokenPrices[backtrackRound][token];
     }
 
     function getPythPriceUnsafe(address token) external view returns (PythStructs.Price memory) {
@@ -128,7 +194,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         if (pythPrice.price <= 0) {
             revert("invalid price");
         }
-        uint256 _decimals = pythPrice.expo < 0 ? uint256(uint32(-pythPrice.expo)) : uint256(uint32(pythPrice.expo));
+        uint256 _decimals = pythPrice.expo < 0 ? uint256(uint32(- pythPrice.expo)) : uint256(uint32(pythPrice.expo));
         return uint256(uint64(pythPrice.price)) * (10 ** (PRICE_DECIMALS - _decimals));
     }
 
@@ -136,6 +202,7 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         require(tokens.length == priceIds.length, "inconsistent params length");
         for (uint256 i = 0; i < tokens.length; i++) {
             tokenPriceIds[tokens[i]] = priceIds[i];
+            priceIdTokens[priceIds[i]] = tokens[i];
             emit TokenPriceIdUpdated(tokens[i], priceIds[i]);
         }
     }

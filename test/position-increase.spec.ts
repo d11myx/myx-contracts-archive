@@ -92,6 +92,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -159,6 +160,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -201,6 +203,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -263,6 +266,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -305,6 +309,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -531,6 +536,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -653,6 +659,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -718,6 +725,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -786,6 +794,7 @@ describe('Trade: increase position', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

@@ -92,6 +92,8 @@ describe('Trade: TP & SL', () => {
             slPrice: ethers.utils.parseUnits('10000', 30),
             paymentType: PAYMENT_TYPE,
             networkFeeAmount: NETWORK_FEE_AMOUNT,
+            tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+            slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         let orderId = await orderManager.ordersIndex();
@@ -109,6 +111,7 @@ describe('Trade: TP & SL', () => {
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: true,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -139,33 +142,34 @@ describe('Trade: TP & SL', () => {
             slPrice: ethers.utils.parseUnits('10000', 30),
             paymentType: PAYMENT_TYPE,
             networkFeeAmount: NETWORK_FEE_AMOUNT,
+            tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+            slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         orderId = await orderManager.ordersIndex();
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(request1);
-        await executor
-            .connect(keeper.signer)
-            .setPricesAndExecuteIncreaseMarketOrders(
-                [btc.address],
-                [await indexPriceFeed.getPrice(btc.address)],
-                [
-                    new ethers.utils.AbiCoder().encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                [
-                    {
-                        orderId: orderId,
-                        tradeType: TradeType.MARKET,
-                        tier: 0,
-                        referralsRatio: 0,
-                        referralUserRatio: 0,
-                        referralOwner: ZERO_ADDRESS,
-                    },
-                ],
-                { value: 1 },
-            );
+        await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+            [btc.address],
+            [await indexPriceFeed.getPrice(btc.address)],
+            [
+                new ethers.utils.AbiCoder().encode(
+                    ['uint256'],
+                    [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+                ),
+            ],
+            [
+                {
+                    orderId: orderId,
+                    tradeType: TradeType.MARKET,
+                    isIncrease: true,
+                    tier: 0,
+                    referralsRatio: 0,
+                    referralUserRatio: 0,
+                    referralOwner: ZERO_ADDRESS,
+                },
+            ],
+            { value: 1 },
+        );
 
         positionOrders = await orderManager.getPositionOrders(positionKey);
 

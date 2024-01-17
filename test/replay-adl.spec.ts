@@ -127,6 +127,7 @@ describe('Replay: adl', () => {
                     [(await oraclePriceFeed.getPrice(eth.address)).div('10000000000000000000000')],
                 ),
             ],
+            pairIndex,
             [
                 {
                     positionKey: await positionManager.getPositionKey(trader.address, pairIndex, false),
@@ -141,6 +142,7 @@ describe('Replay: adl', () => {
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: false,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,

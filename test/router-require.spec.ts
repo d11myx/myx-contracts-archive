@@ -88,6 +88,8 @@ describe('Router: check require condition, trigger errors', async () => {
                 maxSlippage: 0,
                 paymentType: PAYMENT_TYPE,
                 networkFeeAmount: NETWORK_FEE_AMOUNT,
+                tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+                slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
             };
 
             // setting createIncreateOrder: msg.sender = user
@@ -106,6 +108,7 @@ describe('Router: check require condition, trigger errors', async () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -234,6 +237,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     maxSlippage: 0,
                     paymentType: PAYMENT_TYPE,
                     networkFeeAmount: NETWORK_FEE_AMOUNT,
+                    tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+                    slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -285,6 +290,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     maxSlippage: 0,
                     paymentType: PAYMENT_TYPE,
                     networkFeeAmount: NETWORK_FEE_AMOUNT,
+                    tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+                    slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();
@@ -335,6 +342,8 @@ describe('Router: check require condition, trigger errors', async () => {
                     maxSlippage: 0,
                     paymentType: PAYMENT_TYPE,
                     networkFeeAmount: NETWORK_FEE_AMOUNT,
+                    tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+                    slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
                 };
 
                 const orderId = await orderManager.ordersIndex();

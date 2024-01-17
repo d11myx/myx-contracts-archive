@@ -56,26 +56,26 @@ contract LiquidationLogic is ILiquidationLogic {
         emit UpdateExecutorAddress(msg.sender, oldAddress, _executor);
     }
 
-    function liquidatePositions(
-        address keeper,
-        ExecutePosition[] memory executePositions
-    ) external override onlyExecutorOrSelf {
-        for (uint256 i = 0; i < executePositions.length; i++) {
-            ExecutePosition memory execute = executePositions[i];
-            try
-                this.liquidationPosition(
-                    keeper,
-                    execute.positionKey,
-                    execute.tier,
-                    execute.referralsRatio,
-                    execute.referralUserRatio,
-                    execute.referralOwner
-                )
-            {} catch Error(string memory reason) {
-                emit ExecutePositionError(execute.positionKey, reason);
-            }
-        }
-    }
+//    function liquidatePositions(
+//        address keeper,
+//        ExecutePosition[] memory executePositions
+//    ) external override onlyExecutorOrSelf {
+//        for (uint256 i = 0; i < executePositions.length; i++) {
+//            ExecutePosition memory execute = executePositions[i];
+//            try
+//                this.liquidationPosition(
+//                    keeper,
+//                    execute.positionKey,
+//                    execute.tier,
+//                    execute.referralsRatio,
+//                    execute.referralUserRatio,
+//                    execute.referralOwner
+//                )
+//            {} catch Error(string memory reason) {
+//                emit ExecutePositionError(execute.positionKey, reason);
+//            }
+//        }
+//    }
 
     function liquidationPosition(
         address keeper,
@@ -155,11 +155,11 @@ contract LiquidationLogic is ILiquidationLogic {
 
         Position.Info memory position = positionManager.getPosition(
             order.account,
-            order.pairIndex,
+            pairIndex,
             order.isLong
         );
         if (position.positionAmount == 0) {
-            emit ZeroPosition(keeper, position.account, position.pairIndex, position.isLong, 'liquidation');
+            emit ZeroPosition(keeper, position.account, pairIndex, position.isLong, 'liquidation');
             return;
         }
 
@@ -175,7 +175,7 @@ contract LiquidationLogic is ILiquidationLogic {
         );
 
         (bool needADL, ) = positionManager.needADL(
-            order.pairIndex,
+            pairIndex,
             order.isLong,
             executionSize,
             executionPrice
@@ -291,5 +291,16 @@ contract LiquidationLogic is ILiquidationLogic {
             need = riskRate >= PrecisionUtils.percentage();
         }
         return need;
+    }
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
+    ) external override onlyExecutorOrSelf {
+        for (uint256 i = 0; i < positionKeys.length; i++) {
+            Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
+            if (position.positionAmount == 0) {
+                orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+            }
+        }
     }
 }

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./IPriceFeed.sol";
-import "./IPythOracle.sol";
+import "./IOraclePriceFeed.sol";
 
-interface IPythOraclePriceFeed is IPriceFeed {
+interface IPythOraclePriceFeed is IOraclePriceFeed {
 
     event TokenPriceIdUpdated(
         address token,
@@ -13,10 +12,9 @@ interface IPythOraclePriceFeed is IPriceFeed {
 
     event PythAddressUpdated(address oldAddress, address newAddress);
 
+    event UpdatedExecutorAddress(address sender, address oldAddress, address newAddress);
+
     event UnneededPricePublishWarn();
 
-    event UpdatePriceFeedsIfNecessaryError(string errorMessage);
-
     function updatePrice(address[] calldata tokens, bytes[] calldata updateData) external payable;
-
 }

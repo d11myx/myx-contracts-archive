@@ -13,6 +13,7 @@ interface IExecutionLogic is IExecution {
     struct ExecuteOrder {
         uint256 orderId;
         TradingTypes.TradeType tradeType;
+        bool isIncrease;
         uint8 tier;
         uint256 referralsRatio;
         uint256 referralUserRatio;
@@ -67,18 +68,8 @@ interface IExecutionLogic is IExecution {
 
     function executeADLAndDecreaseOrders(
         address keeper,
+        uint256 pairIndex,
         ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
-    ) external;
-
-    function needADL(
-        uint256 pairIndex,
-        bool isLong,
-        uint256 executionSize,
-        uint256 executionPrice
-    ) external view returns (bool needADL);
-
-    function cleanInvalidPositionOrders(
-        bytes32[] calldata positionKeys
     ) external;
 }

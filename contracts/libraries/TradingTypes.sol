@@ -63,6 +63,8 @@ library TradingTypes {
         uint256 maxSlippage;
         NetworkFeePaymentType paymentType; // 1: eth 2: collateral
         uint256 networkFeeAmount;
+        uint256 tpNetworkFeeAmount;
+        uint256 slNetworkFeeAmount;
     }
 
     struct DecreasePositionRequest {
@@ -87,7 +89,8 @@ library TradingTypes {
         uint256 slPrice; // Stop price 1e30
         uint128 sl; // Stop loss quantity
         NetworkFeePaymentType paymentType;
-        uint256 networkFeeAmount;
+        uint256 tpNetworkFeeAmount;
+        uint256 slNetworkFeeAmount;
     }
 
     struct IncreasePositionOrder {
