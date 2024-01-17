@@ -20,6 +20,7 @@ import {
     getRouter,
     getTokens,
     getUiPoolDataProvider,
+    getUiPositionDataProvider,
     latest,
     POSITION_CALLER,
     POSITION_MANAGER_ID,
@@ -86,23 +87,23 @@ async function main() {
     // console.log(await positionManager.needADL(1, true, 765000000, 4292587250000));
     // console.log(await executor.updatePositionManager(positionManager.address));
 
-    console.log(
-        await router.estimateGas.createIncreaseOrder(
-            {
-                pairIndex: 1,
-                isLong: true,
-                tradeType: 0,
-                account: '0x9335264956af1e68579cdef0f5c908f1668dde3f',
-                collateral: '890146900',
-                sizeAmount: '100000000',
-                openPrice: '42877860000000000000000000000000000',
-                maxSlippage: '300000',
-                paymentType: 0,
-                networkFeeAmount: '15000000000000000',
-            },
-            { value: '15000000000000000' },
-        ),
-    );
+    // console.log(
+    //     await router.estimateGas.createIncreaseOrder(
+    //         {
+    //             pairIndex: 1,
+    //             isLong: true,
+    //             tradeType: 0,
+    //             account: '0x9335264956af1e68579cdef0f5c908f1668dde3f',
+    //             collateral: '890146900',
+    //             sizeAmount: '100000000',
+    //             openPrice: '42877860000000000000000000000000000',
+    //             maxSlippage: '300000',
+    //             paymentType: 0,
+    //             networkFeeAmount: '15000000000000000',
+    //         },
+    //         { value: '15000000000000000' },
+    //     ),
+    // );
     // const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
     //     1,
     //     ethers.utils.parseEther('1000000'),
@@ -131,6 +132,25 @@ async function main() {
     // console.log(
     //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
     // );
+
+    // await router.updateAddLiquidityStatus(1, true);
+    // await router.updateAddLiquidityStatus(2, true);
+    // await router.updateRemoveLiquidityStatus(1, false);
+    // await router.updateRemoveLiquidityStatus(2, false);
+    // console.log(await router.operationStatus(1));
+
+    const uiPositionDataProvider = await getUiPositionDataProvider();
+    console.log(
+        await uiPositionDataProvider.getPositionsData(
+            '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
+            '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
+            '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
+            [1, 2],
+            ['42681535000000000000000000000000000', '2549502500000000000000000000000000'],
+        ),
+    );
+    // console.log(await positionManager.getPosition('0x0de8de69e832335b2a490ad2f1249a22b407ef9e', 1, true));
+
     // const wallet = new ethers.Wallet(
     //     '0xb964f175bc281f0e04f3d1bff052abd42b36cadba3ed8b75be9c617387c2b16d',
     //     deployer.provider,
