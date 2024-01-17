@@ -83,31 +83,51 @@ async function main() {
 
     //[{"value":[{"value":"0x3ff8c9a44733e54a48170ed3839a80c46c912b00","typeAsString":"address"},{"value":"0x7025c220763196f126571b34a708fd700f67d363","typeAsString":"address"}],"typeAsString":"address[]","componentType":"org.web3j.abi.datatypes.Address"},{"value":[{"value":42335000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"},{"value":2516000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"}],"typeAsString":"uint256[]","componentType":"org.web3j.abi.datatypes.generated.Uint256"},{"value":[{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2bM6nvA=","typeAsString":"bytes"},{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOpmcI9A=","typeAsString":"bytes"}],"typeAsString":"bytes[]","componentType":"org.web3j.abi.datatypes.DynamicBytes"},{"value":[{"value":[{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":8,"typeAsString":"uint8"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":"0x0000000000000000000000000000000000000000","typeAsString":"address"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)","componentType":"org.web3j.abi.datatypes.Type"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)[]","componentType":"org.web3j.abi.datatypes.StaticStruct"}]
 
-    const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
-        1,
-        ethers.utils.parseEther('1000000'),
-        await oraclePriceFeed.getPrice(btc.address),
-    );
-    await btc.connect(deployer).approve(router.address, depositIndexAmount);
-    await usdt.connect(deployer).approve(router.address, depositStableAmount);
+    // console.log(await positionManager.needADL(1, true, 765000000, 4292587250000));
+    // console.log(await executor.updatePositionManager(positionManager.address));
+
     console.log(
-        await router
-            .connect(deployer)
-            .addLiquidity(
-                btc.address,
-                usdt.address,
-                depositIndexAmount,
-                depositStableAmount,
-                [btc.address],
-                [
-                    abiCoder.encode(
-                        ['uint256'],
-                        [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-                    ),
-                ],
-                { value: 1 },
-            ),
+        await router.estimateGas.createIncreaseOrder(
+            {
+                pairIndex: 1,
+                isLong: true,
+                tradeType: 0,
+                account: '0x9335264956af1e68579cdef0f5c908f1668dde3f',
+                collateral: '890146900',
+                sizeAmount: '100000000',
+                openPrice: '42877860000000000000000000000000000',
+                maxSlippage: '300000',
+                paymentType: 0,
+                networkFeeAmount: '15000000000000000',
+            },
+            { value: '15000000000000000' },
+        ),
     );
+    // const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
+    //     1,
+    //     ethers.utils.parseEther('1000000'),
+    //     await oraclePriceFeed.getPrice(btc.address),
+    // );
+    // await btc.connect(deployer).approve(router.address, depositIndexAmount);
+    // await usdt.connect(deployer).approve(router.address, depositStableAmount);
+    // console.log(
+    //     await router
+    //         .connect(deployer)
+    //         .addLiquidity(
+    //             btc.address,
+    //             usdt.address,
+    //             depositIndexAmount,
+    //             depositStableAmount,
+    //             [btc.address],
+    //             [
+    //                 abiCoder.encode(
+    //                     ['uint256'],
+    //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+    //                 ),
+    //             ],
+    //             { value: 1 },
+    //         ),
+    // );
     // console.log(
     //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
     // );
@@ -147,18 +167,28 @@ async function main() {
     // console.log(await pool.getVault(1));
 
     // await orderManager.updateNetworkFees(
-    //     [0, 1],
-    //     [1, 1],
+    //     ['0', '1', '0', '1'],
+    //     ['1', '1', '2', '2'],
     //     [
     //         {
-    //             basicNetworkFee: ethers.utils.parseUnits('0.01'),
-    //             discountThreshold: ethers.utils.parseUnits('2', await btc.decimals()),
-    //             discountedNetworkFee: ethers.utils.parseUnits('0.005'),
+    //             basicNetworkFee: '10000000000000000',
+    //             discountThreshold: '200000000',
+    //             discountedNetworkFee: '5000000000000000',
     //         },
     //         {
-    //             basicNetworkFee: ethers.utils.parseUnits('5', await usdt.decimals()),
-    //             discountThreshold: ethers.utils.parseUnits('1000', await btc.decimals()),
-    //             discountedNetworkFee: ethers.utils.parseUnits('2', await usdt.decimals()),
+    //             basicNetworkFee: '5000000',
+    //             discountThreshold: '200000000',
+    //             discountedNetworkFee: '2000000',
+    //         },
+    //         {
+    //             basicNetworkFee: '100000000000000',
+    //             discountThreshold: '2500000000000000000',
+    //             discountedNetworkFee: '50000000000000',
+    //         },
+    //         {
+    //             basicNetworkFee: '5000000',
+    //             discountThreshold: '2500000000000000000',
+    //             discountedNetworkFee: '2000000',
     //         },
     //     ],
     // );

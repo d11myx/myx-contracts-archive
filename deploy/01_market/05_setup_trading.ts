@@ -215,6 +215,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await waitForTx(await positionManager.connect(poolAdminSigner).setRouter(router.address));
     await waitForTx(await executionLogic.connect(poolAdminSigner).updateExecutor(executor.address));
     await waitForTx(await liquidationLogic.connect(poolAdminSigner).updateExecutor(executor.address));
+    await waitForTx(await executor.connect(poolAdminSigner).updatePositionManager(positionManager.address));
 };
 
 func.id = `Pairs`;

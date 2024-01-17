@@ -2218,7 +2218,7 @@ describe('Position', () => {
                 expect(adlOrder.order.needADL).to.be.eq(true);
 
                 // execute adl
-                await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
+                const ret = await executor.connect(keeper.signer).setPricesAndExecuteADLOrders(
                     [btc.address],
                     [await indexPriceFeed.getPrice(btc.address)],
                     [
@@ -2227,6 +2227,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    pairIndex,
                     [
                         {
                             positionKey,
@@ -2250,6 +2251,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
+                await hre.run('decode-event', { hash: ret.hash, log: true });
                 adlOrder = await orderManager.getDecreaseOrder(longOrders[0].orderId, TradeType.MARKET);
                 longTraderBalance = await usdt.balanceOf(longTrader.address);
                 const longDecreasePositionAfter = await positionManager.getPosition(
@@ -2259,6 +2261,7 @@ describe('Position', () => {
                 );
 
                 expect(longTraderBalance).to.be.eq(receiveStableTokenAmount);
+                console.log();
                 expect(longDecreasePositionAfter.positionAmount).to.be.eq(
                     adlOrder.order.sizeAmount.sub(adlOrder.order.executedSize),
                 );

@@ -292,4 +292,15 @@ contract LiquidationLogic is ILiquidationLogic {
         }
         return need;
     }
+
+    function cleanInvalidPositionOrders(
+        bytes32[] calldata positionKeys
+    ) external override onlyExecutorOrSelf {
+        for (uint256 i = 0; i < positionKeys.length; i++) {
+            Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
+            if (position.positionAmount == 0) {
+                orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
+            }
+        }
+    }
 }

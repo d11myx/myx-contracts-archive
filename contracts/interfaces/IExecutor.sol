@@ -47,6 +47,7 @@ interface IExecutor is IExecution {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint256 pairIndex,
         IExecution.ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external payable;

@@ -1039,6 +1039,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -1269,6 +1270,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
