@@ -127,6 +127,7 @@ describe('Replay: adl', () => {
                     [(await oraclePriceFeed.getPrice(eth.address)).div('10000000000000000000000')],
                 ),
             ],
+            pairIndex,
             [
                 {
                     positionKey: await positionManager.getPositionKey(trader.address, pairIndex, false),

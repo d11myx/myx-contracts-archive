@@ -242,6 +242,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -506,6 +507,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -767,6 +769,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -1028,6 +1031,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -1307,6 +1311,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -1591,6 +1596,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -1874,6 +1880,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -2154,6 +2161,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,
@@ -2452,6 +2460,7 @@ describe('Trade: adl', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    pairIndex,
                     [
                         {
                             positionKey,
@@ -2743,6 +2752,7 @@ describe('Trade: adl', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                pairIndex,
                 [
                     {
                         positionKey,

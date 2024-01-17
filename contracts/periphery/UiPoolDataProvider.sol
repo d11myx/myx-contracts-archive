@@ -76,6 +76,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             pairData.stableReservedAmount = vault.stableReservedAmount;
             pairData.poolAvgPrice = vault.averagePrice;
 
+            pairData.longTracker = positionManager.longTracker(pairIndex);
+            pairData.shortTracker = positionManager.shortTracker(pairIndex);
+
             pairData.currentFundingRate = positionManager.getCurrentFundingRate(pairIndex);
             pairData.nextFundingRate = positionManager.getNextFundingRate(pairIndex, price);
             pairData.nextFundingRateUpdateTime = positionManager.getNextFundingRateUpdateTime(pairIndex);

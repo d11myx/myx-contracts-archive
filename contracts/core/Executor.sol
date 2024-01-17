@@ -151,6 +151,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint256 pairIndex,
         IExecution.ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
@@ -160,6 +161,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrders(
             msg.sender,
+            pairIndex,
             executePositions,
             executeOrders
         );
@@ -253,7 +255,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     function cleanInvalidPositionOrders(
         bytes32[] calldata positionKeys
     ) external override whenNotPaused nonReentrant onlyPositionKeeper {
-        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).cleanInvalidPositionOrders(positionKeys);
+        ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).cleanInvalidPositionOrders(positionKeys);
     }
 
     function _fillOrders(

@@ -68,11 +68,8 @@ interface IExecutionLogic is IExecution {
 
     function executeADLAndDecreaseOrders(
         address keeper,
+        uint256 pairIndex,
         ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
-    ) external;
-
-    function cleanInvalidPositionOrders(
-        bytes32[] calldata positionKeys
     ) external;
 }

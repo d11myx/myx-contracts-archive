@@ -622,74 +622,115 @@ contract ExecutionLogic is IExecutionLogic {
 
     function executeADLAndDecreaseOrders(
         address keeper,
+        uint256 pairIndex,
         ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external override onlyExecutorOrSelf {
-        ExecutePositionInfo[] memory adlPositions = new ExecutePositionInfo[](executePositions.length);
-        for (uint256 i = 0; i < adlPositions.length; i++) {
-            ExecutePosition memory executePosition = executePositions[i];
-
-            Position.Info memory position = positionManager.getPositionByKey(executePosition.positionKey);
-            uint256 adlExecutionSize = executePosition.sizeAmount >= position.positionAmount
-                ? position.positionAmount : executePosition.sizeAmount;
-            if (adlExecutionSize > 0) {
-                ExecutePositionInfo memory adlPosition = adlPositions[i];
-                adlPosition.position = position;
-                adlPosition.executionSize = adlExecutionSize;
-                adlPosition.tier = executePosition.tier;
-                adlPosition.referralsRatio = executePosition.referralsRatio;
-                adlPosition.referralUserRatio = executePosition.referralUserRatio;
-                adlPosition.referralOwner = executePosition.referralOwner;
+        uint256 longOrderSize;
+        uint256 shortOrderSize;
+        for (uint256 i = 0; i < executeOrders.length; i++) {
+            IExecutionLogic.ExecuteOrder memory executeOrder = executeOrders[i];
+            (TradingTypes.DecreasePositionOrder memory order,) = orderManager.getDecreaseOrder(
+                executeOrder.orderId,
+                executeOrder.tradeType
+            );
+            if (order.isLong) {
+                longOrderSize += order.sizeAmount - order.executedSize;
+            } else {
+                shortOrderSize += order.sizeAmount - order.executedSize;
             }
         }
 
-        uint256[] memory adlOrderIds = new uint256[](adlPositions.length);
-        bytes32[] memory adlPositionKeys = new bytes32[](adlPositions.length);
-        for (uint256 i = 0; i < adlPositions.length; i++) {
-            ExecutePositionInfo memory adlPosition = adlPositions[i];
-            if (adlPosition.executionSize > 0) {
-                IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(adlPosition.position.pairIndex);
-                IPool.Pair memory pair = pool.getPair(adlPosition.position.pairIndex);
-                uint256 price = TradingHelper.getValidPrice(
-                    ADDRESS_PROVIDER,
-                    pair.indexToken,
-                    tradingConfig
-                );
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
+        IPool.Pair memory pair = pool.getPair(pairIndex);
+        // execution price
+        uint256 executionPrice = TradingHelper.getValidPrice(
+            ADDRESS_PROVIDER,
+            pair.indexToken,
+            tradingConfig
+        );
 
-                uint256 orderId = orderManager.createOrder(
-                    TradingTypes.CreateOrderRequest({
-                        account: adlPosition.position.account,
-                        pairIndex: adlPosition.position.pairIndex,
-                        tradeType: TradingTypes.TradeType.MARKET,
-                        collateral: 0,
-                        openPrice: price,
-                        isLong: adlPosition.position.isLong,
-                        sizeAmount: -(adlPosition.executionSize.safeConvertToInt256()),
-                        maxSlippage: 0,
-                        paymentType: TradingTypes.InnerPaymentType.NONE,
-                        networkFeeAmount: 0,
-                        data: abi.encode(adlPosition.position.account)
-                    })
-                );
-                this.executeDecreaseOrder(
-                    keeper,
-                    orderId,
-                    TradingTypes.TradeType.MARKET,
-                    adlPosition.tier,
-                    adlPosition.referralsRatio,
-                    adlPosition.referralUserRatio,
-                    adlPosition.referralOwner,
-                    true,
-                    0,
-                    true
-                );
-                adlOrderIds[i] = orderId;
-                adlPositionKeys[i] = PositionKey.getPositionKey(
-                    adlPosition.position.account,
-                    adlPosition.position.pairIndex,
-                    adlPosition.position.isLong
-                );
+        uint256 totalNeedADLAmount;
+        if (longOrderSize > shortOrderSize) {
+            (, totalNeedADLAmount) = positionManager.needADL(pairIndex, true, longOrderSize - shortOrderSize, executionPrice);
+        } else if (longOrderSize < shortOrderSize) {
+            (, totalNeedADLAmount) = positionManager.needADL(pairIndex, false, shortOrderSize - longOrderSize, executionPrice);
+        }
+
+        uint256[] memory adlOrderIds;
+        bytes32[] memory adlPositionKeys;
+        if (totalNeedADLAmount > 0) {
+            uint256 executeTotalAmount;
+            ExecutePositionInfo[] memory adlPositions = new ExecutePositionInfo[](executePositions.length);
+            for (uint256 i = 0; i < executePositions.length; i++) {
+                if (executeTotalAmount == totalNeedADLAmount) {
+                    break;
+                }
+                ExecutePosition memory executePosition = executePositions[i];
+                Position.Info memory position = positionManager.getPositionByKey(executePosition.positionKey);
+
+                uint256 adlExecutionSize;
+                if (position.positionAmount >= totalNeedADLAmount - executeTotalAmount) {
+                    adlExecutionSize = totalNeedADLAmount - executeTotalAmount;
+                } else {
+                    adlExecutionSize = position.positionAmount;
+                }
+                if (adlExecutionSize > 0) {
+                    executeTotalAmount += adlExecutionSize;
+
+                    ExecutePositionInfo memory adlPosition = adlPositions[i];
+                    adlPosition.position = position;
+                    adlPosition.executionSize = adlExecutionSize;
+                    adlPosition.tier = executePosition.tier;
+                    adlPosition.referralsRatio = executePosition.referralsRatio;
+                    adlPosition.referralUserRatio = executePosition.referralUserRatio;
+                    adlPosition.referralOwner = executePosition.referralOwner;
+                }
             }
+
+            adlOrderIds = new uint256[](adlPositions.length);
+            adlPositionKeys = new bytes32[](adlPositions.length);
+            for (uint256 i = 0; i < adlPositions.length; i++) {
+                ExecutePositionInfo memory adlPosition = adlPositions[i];
+                if (adlPosition.executionSize > 0) {
+                    uint256 orderId = orderManager.createOrder(
+                        TradingTypes.CreateOrderRequest({
+                            account: adlPosition.position.account,
+                            pairIndex: adlPosition.position.pairIndex,
+                            tradeType: TradingTypes.TradeType.MARKET,
+                            collateral: 0,
+                            openPrice: executionPrice,
+                            isLong: adlPosition.position.isLong,
+                            sizeAmount: -(adlPosition.executionSize.safeConvertToInt256()),
+                            maxSlippage: 0,
+                            paymentType: TradingTypes.InnerPaymentType.NONE,
+                            networkFeeAmount: 0,
+                            data: abi.encode(adlPosition.position.account)
+                        })
+                    );
+                    this.executeDecreaseOrder(
+                        keeper,
+                        orderId,
+                        TradingTypes.TradeType.MARKET,
+                        adlPosition.tier,
+                        adlPosition.referralsRatio,
+                        adlPosition.referralUserRatio,
+                        adlPosition.referralOwner,
+                        true,
+                        0,
+                        true
+                    );
+                    adlOrderIds[i] = orderId;
+                    adlPositionKeys[i] = PositionKey.getPositionKey(
+                        adlPosition.position.account,
+                        adlPosition.position.pairIndex,
+                        adlPosition.position.isLong
+                    );
+                }
+            }
+        } else {
+            adlOrderIds = new uint256[](0);
+            adlPositionKeys = new bytes32[](0);
         }
 
         IExecution.AdlOrder[] memory orders = new IExecution.AdlOrder[](executeOrders.length);
@@ -700,18 +741,10 @@ contract ExecutionLogic is IExecutionLogic {
                 executeOrder.orderId,
                 executeOrder.tradeType
             );
-            IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(order.pairIndex);
-            IPool.Pair memory pair = pool.getPair(order.pairIndex);
 
             // execution size
             uint256 executionSize = order.sizeAmount - order.executedSize;
 
-            // execution price
-            uint256 executionPrice = TradingHelper.getValidPrice(
-                ADDRESS_PROVIDER,
-                pair.indexToken,
-                tradingConfig
-            );
             if (order.tradeType == TradingTypes.TradeType.LIMIT) {
                 if (!order.isLong) {
                     executionPrice = Math.min(order.triggerPrice, executionPrice);
@@ -763,16 +796,5 @@ contract ExecutionLogic is IExecutionLogic {
         }
 
         emit ExecuteAdlOrder(adlOrderIds, adlPositionKeys, orders);
-    }
-
-    function cleanInvalidPositionOrders(
-        bytes32[] calldata positionKeys
-    ) external override onlyExecutorOrSelf {
-        for (uint256 i = 0; i < positionKeys.length; i++) {
-            Position.Info memory position = positionManager.getPositionByKey(positionKeys[i]);
-            if (position.positionAmount == 0) {
-                orderManager.cancelAllPositionOrders(position.account, position.pairIndex, position.isLong);
-            }
-        }
     }
 }
