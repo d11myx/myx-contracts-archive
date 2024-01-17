@@ -104,7 +104,7 @@ describe('Liquidation: Risk Reserve', () => {
             ],
             { value: 1 },
         );
-        await hre.run('decode-event', { hash: ret.hash, log: true });
+        // await hre.run('decode-event', { hash: ret.hash, log: true });
         const positionAfter = await positionManager.getPositionByKey(positionKey);
         expect(positionAfter.positionAmount).to.be.eq(0);
 
@@ -295,7 +295,7 @@ describe('Liquidation: Risk Reserve', () => {
         const { positionManager, btc, usdt, oraclePriceFeed, pool } = testEnv;
 
         const price = await oraclePriceFeed.getPrice(btc.address);
-        console.log(position.pairIndex);
+        // console.log(position.pairIndex);
         const fundingFee = await positionManager.getFundingFee(position.account, position.pairIndex, position.isLong);
         const tradingFee = await positionManager.getTradingFee(
             position.pairIndex,
