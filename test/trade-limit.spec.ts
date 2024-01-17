@@ -203,6 +203,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -308,6 +309,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId: longOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -349,6 +351,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId: shortOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -468,6 +471,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId: decreaseLongOrderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -586,6 +590,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -654,6 +659,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -728,6 +734,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -796,6 +803,7 @@ describe('Trade: Limit order', () => {
                     {
                         orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

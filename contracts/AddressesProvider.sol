@@ -11,42 +11,74 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
     bytes32 private constant PRICE_ORACLE = "PRICE_ORACLE";
     bytes32 private constant INDEX_PRICE_ORACLE = "INDEX_PRICE_ORACLE";
     bytes32 private constant FUNDING_RATE = "FUNDING_RATE";
-    bytes32 private constant EXCUTION_LOGIC = "EXCUTION_LOGIC";
+    bytes32 private constant EXECUTION_LOGIC = "EXECUTION_LOGIC";
     bytes32 private constant LIQUIDATION_LOGIC = "LIQUIDATION_LOGIC";
+    bytes32 private constant BACKTRACKER = "BACKTRACKER";
 
     address public immutable override WETH;
-    address public override timelock;
-    address public override priceOracle;
-    address public override indexPriceOracle;
-    address public override fundingRate;
-    address public override executionLogic;
-
-    address public override liquidationLogic;
 
     mapping(bytes32 => address) private _addresses;
 
     constructor(address _weth, address _timelock) {
-        timelock = _timelock;
         WETH = _weth;
+        setAddress(TIMELOCK, _timelock);
     }
 
     modifier onlyTimelock() {
-        require(msg.sender == timelock, "only timelock");
+        require(msg.sender == _addresses[TIMELOCK], "only timelock");
         _;
+    }
+
+    function initialize(
+        address _priceOracle,
+        address _indexPriceOracle,
+        address _fundingRate,
+        address _executionLogic,
+        address _liquidationLogic,
+        address _backtracker
+    ) external onlyOwner initializer {
+        setAddress(PRICE_ORACLE, _priceOracle);
+        setAddress(INDEX_PRICE_ORACLE, _indexPriceOracle);
+        setAddress(FUNDING_RATE, _fundingRate);
+        setAddress(EXECUTION_LOGIC, _executionLogic);
+        setAddress(LIQUIDATION_LOGIC, _liquidationLogic);
+        setAddress(BACKTRACKER, _backtracker);
     }
 
     function getAddress(bytes32 id) public view returns (address) {
         return _addresses[id];
     }
 
+    function timelock() external view override returns (address) {
+        return getAddress(TIMELOCK);
+    }
+
     function roleManager() external view override returns (address) {
         return getAddress(ROLE_MANAGER);
     }
 
-    function setTimelock(address newAddress) public onlyTimelock {
-        address oldAddress = newAddress;
-        timelock = newAddress;
-        emit AddressSet(TIMELOCK, oldAddress, newAddress);
+    function priceOracle() external view override returns (address) {
+        return getAddress(PRICE_ORACLE);
+    }
+
+    function indexPriceOracle() external view override returns (address) {
+        return getAddress(INDEX_PRICE_ORACLE);
+    }
+
+    function fundingRate() external view override returns (address) {
+        return getAddress(FUNDING_RATE);
+    }
+
+    function executionLogic() external view override returns (address) {
+        return getAddress(EXECUTION_LOGIC);
+    }
+
+    function liquidationLogic() external view override returns (address) {
+        return getAddress(LIQUIDATION_LOGIC);
+    }
+
+    function backtracker() external view override returns (address) {
+        return getAddress(BACKTRACKER);
     }
 
     function setAddress(bytes32 id, address newAddress) public onlyOwner {
@@ -55,66 +87,57 @@ contract AddressesProvider is Ownable, Initializable, IAddressesProvider {
         emit AddressSet(id, oldAddress, newAddress);
     }
 
-    function initialize(
-        address newPriceOracle,
-        address newIndexPriceOracle,
-        address newFundingRateAddress,
-        address newExecutionLogic,
-        address newLiquidationLogic
-    ) external onlyOwner initializer {
-        require(
-            newPriceOracle != address(0) &&
-                newFundingRateAddress != address(0) &&
-                newIndexPriceOracle != address(0),
-            "!0"
-        );
-        priceOracle = newPriceOracle;
-        fundingRate = newFundingRateAddress;
-        indexPriceOracle = newIndexPriceOracle;
-        executionLogic = newExecutionLogic;
-        liquidationLogic = newLiquidationLogic;
-
-        emit AddressSet(INDEX_PRICE_ORACLE, address(0), newIndexPriceOracle);
-        emit AddressSet(FUNDING_RATE, address(0), newFundingRateAddress);
-        emit AddressSet(PRICE_ORACLE, address(0), newPriceOracle);
-        emit AddressSet(EXCUTION_LOGIC, address(0), newExecutionLogic);
-        emit AddressSet(LIQUIDATION_LOGIC, address(0), newLiquidationLogic);
+    function setTimelock(address newAddress) public onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAddress = _addresses[TIMELOCK];
+        _addresses[TIMELOCK] = newAddress;
+        emit AddressSet(TIMELOCK, oldAddress, newAddress);
     }
 
-    function setPriceOracle(address newPriceOracle) external onlyTimelock {
-        address oldPriceOracle = _addresses[PRICE_ORACLE];
-        priceOracle = newPriceOracle;
-        emit AddressSet(PRICE_ORACLE, oldPriceOracle, newPriceOracle);
+    function setPriceOracle(address newAddress) external onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAddress = _addresses[PRICE_ORACLE];
+        _addresses[PRICE_ORACLE] = newAddress;
+        emit AddressSet(PRICE_ORACLE, oldAddress, newAddress);
     }
 
-    function setIndexPriceOracle(address newIndexPriceOracle) external onlyTimelock {
-        address oldIndexPriceOracle = _addresses[INDEX_PRICE_ORACLE];
-        indexPriceOracle = newIndexPriceOracle;
-        emit AddressSet(INDEX_PRICE_ORACLE, oldIndexPriceOracle, newIndexPriceOracle);
+    function setIndexPriceOracle(address newAddress) external onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAddress = _addresses[INDEX_PRICE_ORACLE];
+        _addresses[INDEX_PRICE_ORACLE] = newAddress;
+        emit AddressSet(INDEX_PRICE_ORACLE, oldAddress, newAddress);
     }
 
-    function setFundingRate(address newFundingRate) external onlyTimelock {
-        address oldFundingRate = _addresses[FUNDING_RATE];
-        fundingRate = newFundingRate;
-        emit AddressSet(FUNDING_RATE, oldFundingRate, fundingRate);
+    function setFundingRate(address newAddress) external onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAddress = _addresses[FUNDING_RATE];
+        _addresses[FUNDING_RATE] = newAddress;
+        emit AddressSet(FUNDING_RATE, oldAddress, newAddress);
     }
 
-    function setExecutionLogic(address newExecutionLogic) external onlyTimelock {
-        address oldExecutionLogic = _addresses[EXCUTION_LOGIC];
-        executionLogic = newExecutionLogic;
-        emit AddressSet(EXCUTION_LOGIC, oldExecutionLogic, newExecutionLogic);
+    function setExecutionLogic(address newAddress) external onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAddress = _addresses[EXECUTION_LOGIC];
+        _addresses[EXECUTION_LOGIC] = newAddress;
+        emit AddressSet(EXECUTION_LOGIC, oldAddress, newAddress);
     }
 
-    function setLiquidationLogic(address newLiquidationLogic) external onlyTimelock {
-        address oldLiquidationLogic = _addresses[LIQUIDATION_LOGIC];
-        liquidationLogic = newLiquidationLogic;
-        emit AddressSet(LIQUIDATION_LOGIC, oldLiquidationLogic, newLiquidationLogic);
+    function setLiquidationLogic(address newAddress) external onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAddress = _addresses[LIQUIDATION_LOGIC];
+        _addresses[LIQUIDATION_LOGIC] = newAddress;
+        emit AddressSet(LIQUIDATION_LOGIC, oldAddress, newAddress);
+    }
+
+    function setBacktracker(address newAddress) external onlyTimelock {
+        require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
+        address oldAddress = _addresses[BACKTRACKER];
+        _addresses[BACKTRACKER] = newAddress;
+        emit AddressSet(BACKTRACKER, oldAddress, newAddress);
     }
 
     function setRolManager(address newAddress) external onlyOwner {
         require(newAddress != address(0), Errors.NOT_ADDRESS_ZERO);
-        address oldAclManager = _addresses[ROLE_MANAGER];
         setAddress(ROLE_MANAGER, newAddress);
-        emit AddressSet(ROLE_MANAGER, oldAclManager, newAddress);
     }
 }

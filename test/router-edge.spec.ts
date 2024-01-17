@@ -98,6 +98,8 @@ describe('Router: Edge cases', () => {
             maxSlippage: 0,
             paymentType: PAYMENT_TYPE,
             networkFeeAmount: NETWORK_FEE_AMOUNT,
+            tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+            slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
         };
         await router.connect(trader.signer).createIncreaseOrderWithTpSl(increasePositionRequest);
 
@@ -117,6 +119,7 @@ describe('Router: Edge cases', () => {
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: true,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -176,6 +179,7 @@ describe('Router: Edge cases', () => {
                 {
                     orderId: orderId,
                     tradeType: TradeType.MARKET,
+                    isIncrease: true,
                     tier: 0,
                     referralsRatio: 0,
                     referralUserRatio: 0,
@@ -358,6 +362,7 @@ describe('Router: Edge cases', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -440,6 +445,7 @@ export async function increaseUserPosition(
             {
                 orderId: increaseOrderId,
                 tradeType: TradeType.MARKET,
+                isIncrease: true,
                 tier: 0,
                 referralsRatio: 0,
                 referralUserRatio: 0,

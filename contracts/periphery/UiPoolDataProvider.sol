@@ -7,6 +7,7 @@ import "../interfaces/IPool.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IPoolView.sol";
 import "../interfaces/IRouter.sol";
+import "../interfaces/IOrderManager.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
 
@@ -19,6 +20,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     function getPairsData(
         IPool pool,
         IPoolView poolView,
+        IOrderManager orderManager,
         IPositionManager positionManager,
         IRouter router,
         uint256[] memory pairIndexes,
@@ -74,14 +76,61 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             pairData.stableReservedAmount = vault.stableReservedAmount;
             pairData.poolAvgPrice = vault.averagePrice;
 
+            pairData.longTracker = positionManager.longTracker(pairIndex);
+            pairData.shortTracker = positionManager.shortTracker(pairIndex);
+
             pairData.currentFundingRate = positionManager.getCurrentFundingRate(pairIndex);
             pairData.nextFundingRate = positionManager.getNextFundingRate(pairIndex, price);
             pairData.nextFundingRateUpdateTime = positionManager.getNextFundingRateUpdateTime(pairIndex);
 
             pairData.lpPrice = poolView.lpFairPrice(pairIndex, price);
             pairData.lpTotalSupply = IERC20(pair.pairToken).totalSupply();
+
+            pairData.networkFees = new NetworkFeeData[](2);
+            NetworkFeeData memory networkFeeDataETH = pairData.networkFees[0];
+            IOrderManager.NetworkFee memory ethFee = orderManager.getNetworkFee(TradingTypes.NetworkFeePaymentType.ETH, pairIndex);
+            networkFeeDataETH.paymentType = TradingTypes.NetworkFeePaymentType.ETH;
+            networkFeeDataETH.basicNetworkFee = ethFee.basicNetworkFee;
+            networkFeeDataETH.discountThreshold = ethFee.discountThreshold;
+            networkFeeDataETH.discountedNetworkFee = ethFee.discountedNetworkFee;
+
+            NetworkFeeData memory networkFeeDataCollateral = pairData.networkFees[1];
+            IOrderManager.NetworkFee memory collateralFee = orderManager.getNetworkFee(TradingTypes.NetworkFeePaymentType.COLLATERAL, pairIndex);
+            networkFeeDataCollateral.paymentType = TradingTypes.NetworkFeePaymentType.COLLATERAL;
+            networkFeeDataCollateral.basicNetworkFee = collateralFee.basicNetworkFee;
+            networkFeeDataCollateral.discountThreshold = collateralFee.discountThreshold;
+            networkFeeDataCollateral.discountedNetworkFee = collateralFee.discountedNetworkFee;
         }
 
         return pairsData;
+    }
+
+    function getUserTokenData(
+        IERC20Metadata[] memory tokens,
+        address user
+    ) external view returns (UserTokenData[] memory) {
+        UserTokenData[] memory userTokensData = new UserTokenData[](tokens.length);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            UserTokenData memory userTokenData = userTokensData[i];
+            userTokenData.token = address(tokens[i]);
+            if (address(tokens[i]) == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+                userTokenData.name = "";
+                userTokenData.symbol = "";
+                userTokenData.decimals = 18;
+                userTokenData.totalSupply = 0;
+                if (user != address(0)) {
+                    userTokenData.balance = user.balance;
+                }
+            } else {
+                userTokenData.name = tokens[i].name();
+                userTokenData.symbol = tokens[i].symbol();
+                userTokenData.decimals = tokens[i].decimals();
+                userTokenData.totalSupply = tokens[i].totalSupply();
+                if (user != address(0)) {
+                    userTokenData.balance = tokens[i].balanceOf(user);
+                }
+            }
+        }
+        return userTokensData;
     }
 }

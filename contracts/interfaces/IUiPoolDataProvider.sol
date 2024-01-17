@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "../libraries/TradingTypes.sol";
+
 interface IUiPoolDataProvider {
 
     struct PairData {
@@ -36,11 +38,30 @@ interface IUiPoolDataProvider {
         uint256 stableTotalAmount;
         uint256 stableReservedAmount;
         uint256 poolAvgPrice;
+        uint256 longTracker;
+        uint256 shortTracker;
         int256 currentFundingRate;
         int256 nextFundingRate;
         uint256 nextFundingRateUpdateTime;
         uint256 lpPrice;
         uint256 lpTotalSupply;
+        NetworkFeeData[] networkFees;
+    }
+
+    struct NetworkFeeData {
+        TradingTypes.NetworkFeePaymentType paymentType;
+        uint256 basicNetworkFee;
+        uint256 discountThreshold;
+        uint256 discountedNetworkFee;
+    }
+
+    struct UserTokenData {
+        address token;
+        string name;
+        string symbol;
+        uint8 decimals;
+        uint256 totalSupply;
+        uint256 balance;
     }
 
 }

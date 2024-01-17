@@ -23,6 +23,7 @@ import {
     PoolView,
     UiPoolDataProvider,
     UiPositionDataProvider,
+    Backtracker,
 } from '../types';
 import { getContract } from './utilities/tx';
 import {
@@ -45,6 +46,7 @@ import {
     TIMELOCK_ID,
     SPOT_SWAP,
     POOL_VIEW_ID,
+    BACKTRACKER_ID,
 } from './deploy-ids';
 import { MARKET_NAME } from './env';
 import { SymbolMap } from './types';
@@ -127,6 +129,10 @@ export const getRouter = async (address?: string): Promise<Router> => {
 
 export const getExecutor = async (address?: string): Promise<Executor> => {
     return getContract<Executor>('Executor', address || (await hre.deployments.get(EXECUTOR_ID)).address);
+};
+
+export const getBacktracker = async (address?: string): Promise<Backtracker> => {
+    return getContract<Backtracker>('Backtracker', address || (await hre.deployments.get(BACKTRACKER_ID)).address);
 };
 
 export const getExecutionLogic = async (address?: string): Promise<ExecutionLogic> => {

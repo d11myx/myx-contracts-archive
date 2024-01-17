@@ -1,6 +1,7 @@
 // @ts-ignore
 import hre, { deployments, ethers } from 'hardhat';
 import {
+    abiCoder,
     COMMON_DEPLOY_PARAMS,
     Duration,
     encodeParameters,
@@ -13,14 +14,17 @@ import {
     getOraclePriceFeed,
     getOrderManager,
     getPool,
+    getPoolView,
     getPositionManager,
     getRiskReserve,
     getRouter,
     getTokens,
     getUiPoolDataProvider,
+    getUiPositionDataProvider,
     latest,
     POSITION_CALLER,
     POSITION_MANAGER_ID,
+    TradeType,
     ZERO_ADDRESS,
     ZERO_HASH,
 } from '../helpers';
@@ -29,6 +33,10 @@ import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
 import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
 import Decimal from 'decimal.js';
 import { oracle } from '../types/contracts';
+import { MockMultipleTransfer__factory } from '../types';
+import type { PromiseOrValue } from '../types/common';
+import type { BigNumberish } from 'ethers';
+import { AbiError } from 'web3';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -44,6 +52,7 @@ async function main() {
     const indexPriceFeed = await getIndexPriceFeed();
     const feeCollector = await getFeeCollector();
     const pool = await getPool();
+    const poolView = await getPoolView();
     const riskReserve = await getRiskReserve();
     const addressesProvider = await getAddressesProvider();
 
@@ -73,18 +82,154 @@ async function main() {
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
-    const uiPoolDataProvider = await getUiPoolDataProvider('0x1AF54445E598Ddc57A79c71C8F4103B33C22ecb1');
-    console.log(await oraclePriceFeed.getPrice(btc.address));
+    //[{"value":[{"value":"0x3ff8c9a44733e54a48170ed3839a80c46c912b00","typeAsString":"address"},{"value":"0x7025c220763196f126571b34a708fd700f67d363","typeAsString":"address"}],"typeAsString":"address[]","componentType":"org.web3j.abi.datatypes.Address"},{"value":[{"value":42335000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"},{"value":2516000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"}],"typeAsString":"uint256[]","componentType":"org.web3j.abi.datatypes.generated.Uint256"},{"value":[{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2bM6nvA=","typeAsString":"bytes"},{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOpmcI9A=","typeAsString":"bytes"}],"typeAsString":"bytes[]","componentType":"org.web3j.abi.datatypes.DynamicBytes"},{"value":[{"value":[{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":8,"typeAsString":"uint8"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":"0x0000000000000000000000000000000000000000","typeAsString":"address"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)","componentType":"org.web3j.abi.datatypes.Type"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)[]","componentType":"org.web3j.abi.datatypes.StaticStruct"}]
+
+    // console.log(await positionManager.needADL(1, true, 765000000, 4292587250000));
+    // console.log(await executor.updatePositionManager(positionManager.address));
+
+    // console.log(
+    //     await router.estimateGas.createIncreaseOrder(
+    //         {
+    //             pairIndex: 1,
+    //             isLong: true,
+    //             tradeType: 0,
+    //             account: '0x9335264956af1e68579cdef0f5c908f1668dde3f',
+    //             collateral: '890146900',
+    //             sizeAmount: '100000000',
+    //             openPrice: '42877860000000000000000000000000000',
+    //             maxSlippage: '300000',
+    //             paymentType: 0,
+    //             networkFeeAmount: '15000000000000000',
+    //         },
+    //         { value: '15000000000000000' },
+    //     ),
+    // );
+    // const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
+    //     1,
+    //     ethers.utils.parseEther('1000000'),
+    //     await oraclePriceFeed.getPrice(btc.address),
+    // );
+    // await btc.connect(deployer).approve(router.address, depositIndexAmount);
+    // await usdt.connect(deployer).approve(router.address, depositStableAmount);
+    // console.log(
+    //     await router
+    //         .connect(deployer)
+    //         .addLiquidity(
+    //             btc.address,
+    //             usdt.address,
+    //             depositIndexAmount,
+    //             depositStableAmount,
+    //             [btc.address],
+    //             [
+    //                 abiCoder.encode(
+    //                     ['uint256'],
+    //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+    //                 ),
+    //             ],
+    //             { value: 1 },
+    //         ),
+    // );
+    // console.log(
+    //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
+    // );
+
+    // await router.updateAddLiquidityStatus(1, true);
+    // await router.updateAddLiquidityStatus(2, true);
+    // await router.updateRemoveLiquidityStatus(1, false);
+    // await router.updateRemoveLiquidityStatus(2, false);
+    // console.log(await router.operationStatus(1));
+
+    const uiPositionDataProvider = await getUiPositionDataProvider();
     console.log(
-        await uiPoolDataProvider.getPairsData(
+        await uiPositionDataProvider.getPositionsData(
             '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
             '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
             '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
-            '0xB697A6fB7Eea6EC63281a3447488fE9233d5d8b4',
             [1, 2],
-            [await indexPriceFeed.getPrice(btc.address), await indexPriceFeed.getPrice(eth.address)],
+            ['42681535000000000000000000000000000', '2549502500000000000000000000000000'],
         ),
     );
+    // console.log(await positionManager.getPosition('0x0de8de69e832335b2a490ad2f1249a22b407ef9e', 1, true));
+
+    // const wallet = new ethers.Wallet(
+    //     '0xb964f175bc281f0e04f3d1bff052abd42b36cadba3ed8b75be9c617387c2b16d',
+    //     deployer.provider,
+    // );
+    // console.log(
+    //     await executor.connect(wallet).setPricesAndExecuteIncreaseMarketOrders(
+    //         ['0x3fF8C9A44733E54a48170ed3839a80C46C912b00', '0x7025c220763196F126571B34A708fD700f67d363'],
+    //         [await oraclePriceFeed.getPrice(btc.address), await oraclePriceFeed.getPrice(eth.address)],
+    //         [
+    //             abiCoder.encode(
+    //                 ['uint256'],
+    //                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+    //             ),
+    //             abiCoder.encode(
+    //                 ['uint256'],
+    //                 [(await oraclePriceFeed.getPrice(eth.address)).div('10000000000000000000000')],
+    //             ),
+    //         ],
+    //         [
+    //             {
+    //                 orderId: 7,
+    //                 tradeType: TradeType.MARKET,
+    //                 isIncrease: true,
+    //                 tier: 0,
+    //                 referralsRatio: 0,
+    //                 referralUserRatio: 0,
+    //                 referralOwner: ZERO_ADDRESS,
+    //             },
+    //         ],
+    //         { value: 2 },
+    //     ),
+    // );
+
+    // console.log(await pool.getVault(1));
+
+    // await orderManager.updateNetworkFees(
+    //     ['0', '1', '0', '1'],
+    //     ['1', '1', '2', '2'],
+    //     [
+    //         {
+    //             basicNetworkFee: '10000000000000000',
+    //             discountThreshold: '200000000',
+    //             discountedNetworkFee: '5000000000000000',
+    //         },
+    //         {
+    //             basicNetworkFee: '5000000',
+    //             discountThreshold: '200000000',
+    //             discountedNetworkFee: '2000000',
+    //         },
+    //         {
+    //             basicNetworkFee: '100000000000000',
+    //             discountThreshold: '2500000000000000000',
+    //             discountedNetworkFee: '50000000000000',
+    //         },
+    //         {
+    //             basicNetworkFee: '5000000',
+    //             discountThreshold: '2500000000000000000',
+    //             discountedNetworkFee: '2000000',
+    //         },
+    //     ],
+    // );
+
+    // console.log(await orderManager.getNetworkFee(1, 1));
+
+    // const uiPoolDataProvider = await getUiPoolDataProvider('0xf5E571e5B44aF230FB100445D83Dbf336162a74A');
+    // // console.log(await oraclePriceFeed.getPrice(btc.address));
+    // console.log(
+    //     (
+    //         await uiPoolDataProvider.getPairsData(
+    //             pool.address,
+    //             poolView.address,
+    //             orderManager.address,
+    //             positionManager.address,
+    //             router.address,
+    //             [1, 2],
+    //             [await indexPriceFeed.getPrice(btc.address), await indexPriceFeed.getPrice(eth.address)],
+    //         )
+    //     )[0].networkFees[1],
+    // );
 
     // let index = 1;
     // setInterval(async () => {

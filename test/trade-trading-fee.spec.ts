@@ -690,6 +690,7 @@ describe('Trade: trading fee', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: tier1,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -738,6 +739,7 @@ describe('Trade: trading fee', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: tier2,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -786,6 +788,7 @@ describe('Trade: trading fee', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: tier3,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -834,6 +837,7 @@ describe('Trade: trading fee', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: tier4,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -882,6 +886,7 @@ describe('Trade: trading fee', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: tier5,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -930,6 +935,7 @@ describe('Trade: trading fee', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: tier6,
                         referralsRatio: 0,
                         referralUserRatio: 0,

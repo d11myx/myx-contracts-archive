@@ -156,7 +156,7 @@ describe('Replay: ADL', () => {
                 true,
                 adlPositions,
             );
-            await hre.run('decode-event', { hash: ret.executeReceipt.transactionHash, log: true });
+            // await hre.run('decode-event', { hash: ret.executeReceipt.transactionHash, log: true });
             const userLongPositionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
             // const userShortPositionAfter = await positionManager.getPosition(trader.address, pairIndex, false);
             // expect(userLongPositionAfter.positionAmount).to.be.eq(0);

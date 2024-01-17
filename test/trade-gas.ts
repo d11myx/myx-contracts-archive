@@ -139,6 +139,7 @@ describe('Router: increase position ar', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: true,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,
@@ -210,6 +211,7 @@ describe('Router: increase position ar', () => {
                     {
                         orderId: orderId,
                         tradeType: TradeType.MARKET,
+                        isIncrease: false,
                         tier: 0,
                         referralsRatio: 0,
                         referralUserRatio: 0,

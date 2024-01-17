@@ -43,6 +43,8 @@ describe('cancel orders', () => {
             maxSlippage: 0,
             paymentType: PAYMENT_TYPE,
             networkFeeAmount: NETWORK_FEE_AMOUNT,
+            tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+            slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         const orderId = await orderManager.ordersIndex();
@@ -128,6 +130,8 @@ describe('cancel orders', () => {
             maxSlippage: 0,
             paymentType: PAYMENT_TYPE,
             networkFeeAmount: NETWORK_FEE_AMOUNT,
+            tpNetworkFeeAmount: NETWORK_FEE_AMOUNT,
+            slNetworkFeeAmount: NETWORK_FEE_AMOUNT,
         };
 
         const orderId = await orderManager.ordersIndex();

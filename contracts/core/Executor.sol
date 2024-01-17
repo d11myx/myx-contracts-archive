@@ -12,9 +12,17 @@ import "../interfaces/IPythOraclePriceFeed.sol";
 import "../interfaces/IExecutionLogic.sol";
 import "../libraries/Roleable.sol";
 import "../interfaces/ILiquidationLogic.sol";
+import "./Backtracker.sol";
+import "../interfaces/IPositionManager.sol";
 
 contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
-    constructor(IAddressesProvider addressProvider) Roleable(addressProvider) {}
+
+    IPositionManager public positionManager;
+
+    constructor(
+        IAddressesProvider addressProvider
+    ) Roleable(addressProvider) {
+    }
 
     modifier onlyPositionKeeper() {
         require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isKeeper(msg.sender), "opk");
@@ -27,6 +35,52 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
     function setUnPaused() external onlyPoolAdmin {
         _unpause();
+    }
+
+    function updatePositionManager(address _positionManager) external onlyPoolAdmin {
+        address oldAddress = address(positionManager);
+        positionManager = IPositionManager(_positionManager);
+        emit UpdatePositionManager(msg.sender, oldAddress, _positionManager);
+    }
+
+    function setPricesAndExecuteOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        bytes[] memory updateData,
+        IExecutionLogic.ExecuteOrder[] memory orders
+    ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
+        require(tokens.length == prices.length && tokens.length >= 0, "ip");
+
+        this.setPrices{value: msg.value}(tokens, prices, updateData);
+
+        for (uint256 i = 0; i < orders.length; i++) {
+            IExecutionLogic.ExecuteOrder memory order = orders[i];
+            if (order.isIncrease) {
+                if (order.tradeType == TradingTypes.TradeType.MARKET) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                }
+            } else {
+                if (order.tradeType == TradingTypes.TradeType.MARKET) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
+                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
+                        msg.sender,
+                        _fillOrders(order)
+                    );
+                }
+            }
+        }
     }
 
     function setPricesAndExecuteIncreaseMarketOrders(
@@ -97,6 +151,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint256 pairIndex,
         IExecution.ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
@@ -106,25 +161,54 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrders(
             msg.sender,
+            pairIndex,
             executePositions,
             executeOrders
         );
     }
 
     function setPricesAndLiquidatePositions(
-        address[] memory tokens,
-        uint256[] memory prices,
-        bytes[] memory updateData,
-        IExecution.ExecutePosition[] memory executePositions
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        LiquidatePosition[] memory liquidatePositions
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
-        require(tokens.length == prices.length && tokens.length >= 0, "ip");
+        require(_tokens.length == _prices.length && _tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData);
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
 
-        ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidatePositions(
-            msg.sender,
-            executePositions
-        );
+        for (uint256 i = 0; i < liquidatePositions.length; i++) {
+            LiquidatePosition memory execute = liquidatePositions[i];
+
+            IBacktracker(ADDRESS_PROVIDER.backtracker()).enterBacktracking(execute.backtrackRound);
+
+            address[] memory tokens = new address[](1);
+            tokens[0] = execute.token;
+            bytes[] memory updatesData = new bytes[](1);
+            updatesData[0] = execute.updateData;
+            IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: execute.updateFee}(
+                tokens,
+                updatesData,
+                execute.backtrackRound
+            );
+
+            try ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).liquidationPosition(
+                msg.sender,
+                execute.positionKey,
+                execute.tier,
+                execute.referralsRatio,
+                execute.referralUserRatio,
+                execute.referralOwner
+            ) {} catch Error(string memory reason) {
+                emit ExecutePositionError(execute.positionKey, reason);
+            }
+
+            IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).removeHistoricalPrice(
+                execute.backtrackRound,
+                tokens
+            );
+
+            IBacktracker(ADDRESS_PROVIDER.backtracker()).quitBacktracking();
+        }
     }
 
     function setPrices(
@@ -142,24 +226,42 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         );
     }
 
+    function setPricesHistorical(
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        bytes[] memory updateData,
+        uint64 backtrackRound
+    ) external payable {
+        require(msg.sender == address(this), "internal");
+
+        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
+
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: msg.value}(
+            _tokens,
+            updateData,
+            backtrackRound
+        );
+    }
+
     function needADL(
         uint256 pairIndex,
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) external view returns (bool) {
-        return
-            IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).needADL(
-                pairIndex,
-                isLong,
-                executionSize,
-                executionPrice
-            );
+    ) external view returns (bool need, uint256 needADLAmount) {
+        return positionManager.needADL(pairIndex, isLong, executionSize, executionPrice);
     }
 
     function cleanInvalidPositionOrders(
         bytes32[] calldata positionKeys
     ) external override whenNotPaused nonReentrant onlyPositionKeeper {
-        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).cleanInvalidPositionOrders(positionKeys);
+        ILiquidationLogic(ADDRESS_PROVIDER.liquidationLogic()).cleanInvalidPositionOrders(positionKeys);
+    }
+
+    function _fillOrders(
+        IExecutionLogic.ExecuteOrder memory order
+    ) private pure returns (IExecutionLogic.ExecuteOrder[] memory increaseOrders) {
+        increaseOrders = new IExecutionLogic.ExecuteOrder[](1);
+        increaseOrders[0] = order;
     }
 }

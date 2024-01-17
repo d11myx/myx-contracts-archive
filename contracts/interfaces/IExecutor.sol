@@ -4,7 +4,16 @@ pragma solidity ^0.8.0;
 import '../libraries/TradingTypes.sol';
 import "./IExecutionLogic.sol";
 
-interface IExecutor {
+interface IExecutor is IExecution {
+
+    event UpdatePositionManager(address sender, address oldAddress, address newAddress);
+
+    function setPricesAndExecuteOrders(
+        address[] memory tokens,
+        uint256[] memory prices,
+        bytes[] memory updateData,
+        IExecutionLogic.ExecuteOrder[] memory orders
+    ) external payable;
 
     function setPricesAndExecuteIncreaseMarketOrders(
         address[] memory tokens,
@@ -38,15 +47,15 @@ interface IExecutor {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint256 pairIndex,
         IExecution.ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external payable;
 
     function setPricesAndLiquidatePositions(
-        address[] memory tokens,
-        uint256[] memory prices,
-        bytes[] memory updateData,
-        IExecution.ExecutePosition[] memory executePositions
+        address[] memory _tokens,
+        uint256[] memory _prices,
+        LiquidatePosition[] memory liquidatePositions
     ) external payable;
 
     function needADL(
@@ -54,7 +63,7 @@ interface IExecutor {
         bool isLong,
         uint256 executionSize,
         uint256 executionPrice
-    ) external view returns (bool);
+    ) external view returns (bool need, uint256 needADLAmount);
 
     function cleanInvalidPositionOrders(
         bytes32[] calldata positionKeys

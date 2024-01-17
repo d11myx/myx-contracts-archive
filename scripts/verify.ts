@@ -1,5 +1,5 @@
 // @ts-ignore
-import hre, { ethers } from 'hardhat';
+import hre, { deployments, ethers } from 'hardhat';
 import { Etherscan } from '@nomicfoundation/hardhat-verify/etherscan';
 import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
 
@@ -23,6 +23,7 @@ async function main() {
         'https://api-sepolia.arbiscan.io/api',
         'https://sepolia.arbiscan.io/',
     );
+    const local = new Etherscan('myx', 'http://export.myx.cash/api', 'http://export.myx.cash');
 
     // const artifact = await deployments.deploy(`verify-demo`, {
     //     from: deployer.address,
@@ -31,11 +32,19 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    await verifyContract(lineaGoerli, '', []);
+    // await verifyContract(local, '0xc4C1f3Cac4b785fE5473dA23255d42bb8aCcEe44', []);
 
-    // await verifyProxyContract(lineaGoerli, '0x934B2325c32419c64433eff92CD37933916c1a79', [
-    //     '0x68d46485dd36824E1910aEA4BAB5Ba686BF9cAe7',
-    //     '0xc0c53b8b000000000000000000000000d299a898f3ff37c131362fb52319a9a9ec7e5a030000000000000000000000004ec5f327c11719af6c3020cda84ffb1e2cfcb942000000000000000000000000cc3720e14650492eef8871c8f579ff23fef7b73c',
+    const arts = ['PoolView_Implementation'];
+    for (let art of arts) {
+        const deployment = await deployments.get(art);
+        // console.log(deployment.address);
+        // console.log(deployment.args);
+        await verifyContract(local, deployment.address, deployment.args);
+    }
+
+    // await verifyProxyContract(lineaGoerli, '0xd304065B7F596034270356644FF0A220574979eD', [
+    //     '0x063967b144abf07dAb4751d2556E2E8A70B78e80',
+    //     '0xc0c53b8b0000000000000000000000004fe0fe4eda23ec8930eccc2083bc5f15ea9a7e5b000000000000000000000000d6074c46938080f16e84125fb8e8f0d87dda229d000000000000000000000000bf3cce2ee68a258d0ba1a19b094e5fc1743033ed',
     // ]);
 }
 
