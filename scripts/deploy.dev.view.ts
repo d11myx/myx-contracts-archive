@@ -25,6 +25,7 @@ import {
     POSITION_CALLER,
     POSITION_MANAGER_ID,
     TradeType,
+    waitForTx,
     ZERO_ADDRESS,
     ZERO_HASH,
 } from '../helpers';
@@ -139,16 +140,19 @@ async function main() {
     // await router.updateRemoveLiquidityStatus(2, false);
     // console.log(await router.operationStatus(1));
 
-    const uiPositionDataProvider = await getUiPositionDataProvider();
-    console.log(
-        await uiPositionDataProvider.getPositionsData(
-            '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
-            '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
-            '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
-            [1, 2],
-            ['42681535000000000000000000000000000', '2549502500000000000000000000000000'],
-        ),
-    );
+    await waitForTx(await router.updateAddLiquidityStatus(1, true));
+    console.log(await router.getOperationStatus(1));
+
+    // const uiPositionDataProvider = await getUiPositionDataProvider();
+    // console.log(
+    //     await uiPositionDataProvider.getPositionsData(
+    //         '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
+    //         '0x8773119561b15f779B31B6aEC1e6ee8f44862785',
+    //         '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
+    //         [1, 2],
+    //         ['42681535000000000000000000000000000', '2549502500000000000000000000000000'],
+    //     ),
+    // );
     // console.log(await positionManager.getPosition('0x0de8de69e832335b2a490ad2f1249a22b407ef9e', 1, true));
 
     // const wallet = new ethers.Wallet(
