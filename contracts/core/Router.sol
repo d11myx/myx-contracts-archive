@@ -150,10 +150,13 @@ contract Router is
             request.tradeType != TradingTypes.TradeType.SL,
             "not support"
         );
-
+        require(
+            msg.value >= request.networkFeeAmount + request.tpNetworkFeeAmount + request.slNetworkFeeAmount,
+            "insufficient network fees"
+        );
         request.account = msg.sender;
 
-        orderId = orderManager.createOrder{value: msg.value}(
+        orderId = orderManager.createOrder{value: request.networkFeeAmount}(
             TradingTypes.CreateOrderRequest({
                 account: request.account,
                 pairIndex: request.pairIndex,
@@ -199,7 +202,7 @@ contract Router is
     ) public payable returns (uint256 tpOrderId, uint256 slOrderId) {
         require(msg.sender == address(this), "internal");
         if (tp > 0) {
-            tpOrderId = orderManager.createOrder{value: msg.value}(
+            tpOrderId = orderManager.createOrder{value: tpNetworkFeeAmount}(
                 TradingTypes.CreateOrderRequest({
                     account: account,
                     pairIndex: pairIndex,
@@ -216,7 +219,7 @@ contract Router is
             );
         }
         if (sl > 0) {
-            slOrderId = orderManager.createOrder{value: msg.value}(
+            slOrderId = orderManager.createOrder{value: slNetworkFeeAmount}(
                 TradingTypes.CreateOrderRequest({
                     account: account,
                     pairIndex: pairIndex,
@@ -299,7 +302,7 @@ contract Router is
 
             require(!operationStatus[request.pairIndex].decreasePositionDisabled, "disabled");
 
-            orderIds[i] = orderManager.createOrder{value: msg.value}(
+            orderIds[i] = orderManager.createOrder{value: request.networkFeeAmount}(
                 TradingTypes.CreateOrderRequest({
                     account: msg.sender,
                     pairIndex: request.pairIndex,
