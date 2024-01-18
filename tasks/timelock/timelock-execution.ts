@@ -28,7 +28,7 @@ task(`time-execution`)
             ),
         );
 
-        if (hre.network.name == 'hardhat' || hre.network.name == DevNetwork.local) {
+        if (hre.network.name == 'hardhat') {
             const duration = BigNumber.from(taskArgs.eta).sub(await latest());
             await increase(duration);
         } else {
