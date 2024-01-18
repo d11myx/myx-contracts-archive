@@ -132,7 +132,7 @@ contract OrderManager is IOrderManager, Upgradeable {
             NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.ETH][request.pairIndex];
             if (networkFee.basicNetworkFee > 0) {
                 if ((request.sizeAmount.abs() >= networkFee.discountThreshold && msg.value < networkFee.discountedNetworkFee)
-                    || msg.value < networkFee.basicNetworkFee) {
+                    || (request.sizeAmount.abs() < networkFee.discountThreshold && msg.value < networkFee.basicNetworkFee)) {
                     revert("insufficient network fee");
                 }
                 (bool success, ) = address(pool).call{value: msg.value}(new bytes(0));
@@ -142,7 +142,7 @@ contract OrderManager is IOrderManager, Upgradeable {
             NetworkFee memory networkFee = networkFees[TradingTypes.NetworkFeePaymentType.COLLATERAL][request.pairIndex];
             if (networkFee.basicNetworkFee > 0) {
                 if ((request.sizeAmount.abs() >= networkFee.discountThreshold && request.networkFeeAmount < networkFee.discountedNetworkFee)
-                    || request.networkFeeAmount < networkFee.discountedNetworkFee) {
+                    || (request.sizeAmount.abs() < networkFee.discountThreshold && request.networkFeeAmount < networkFee.basicNetworkFee)) {
                     revert("insufficient network fee");
                 }
                 collateral -= request.networkFeeAmount.safeConvertToInt256();
