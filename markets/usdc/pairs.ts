@@ -34,12 +34,15 @@ export const btcPairInfo: PairInfoConfig = {
         lpFeeDistributeP: 40000000, //40%
         keeperFeeDistributeP: 1000000, //1%
         stakingFeeDistributeP: 0, //0%
+        treasuryFeeDistributeP: 25000000, //25%
+        reservedFeeDistributeP: 30000000, //30%
+        ecoFundFeeDistributeP: 4000000, //4%
     },
     fundingFeeConfig: {
         growthRate: 2000000, //0.02
         baseRate: 20000, //0.0002
         maxRate: 10000000, //0.1
-        fundingInterval: 1 * 60 * 60,
+        fundingInterval: 60 * 60,
     },
 };
 
@@ -75,11 +78,14 @@ export const ethPairInfo: PairInfoConfig = {
         lpFeeDistributeP: 40000000, //40%
         keeperFeeDistributeP: 1000000, //1%
         stakingFeeDistributeP: 0, //0%
+        treasuryFeeDistributeP: 25000000, //25%
+        reservedFeeDistributeP: 30000000, //30%
+        ecoFundFeeDistributeP: 4000000, //4%
     },
     fundingFeeConfig: {
         growthRate: 2000000, //0.02
         baseRate: 20000, //0.0002
         maxRate: 10000000, //0.1
-        fundingInterval: 1 * 60 * 60,
+        fundingInterval: 60 * 60,
     },
 };

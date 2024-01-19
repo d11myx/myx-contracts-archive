@@ -140,8 +140,11 @@ async function main() {
     // await router.updateRemoveLiquidityStatus(2, false);
     // console.log(await router.operationStatus(1));
 
-    await waitForTx(await router.updateAddLiquidityStatus(1, true));
-    console.log(await router.getOperationStatus(1));
+    // await waitForTx(await router.updateOrderStatus(1, false));
+    // console.log(await router.getOperationStatus(1));
+
+    // console.log(await positionManager.getPosition('0x048B3Ad345f51D250C3e7935FafC73519C571D86', 1, true));
+    // console.log(await positionManager.getPosition('0x048B3Ad345f51D250C3e7935FafC73519C571D86', 1, false));
 
     // const uiPositionDataProvider = await getUiPositionDataProvider();
     // console.log(

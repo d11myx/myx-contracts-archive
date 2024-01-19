@@ -100,7 +100,8 @@ library Position {
         bool _increase,
         uint256 maxLeverage,
         uint256 maxPositionAmount,
-        bool simpleVerify
+        bool simpleVerify,
+        int256 fundingFee
     ) internal view returns (uint256, uint256) {
         // only increase collateral
         if (_sizeAmount == 0 && _collateral >= 0) {
@@ -114,17 +115,11 @@ library Position {
             afterPosition = self.positionAmount >= _sizeAmount ? self.positionAmount - _sizeAmount : 0;
         }
 
-//        // close position
-//        if (afterPosition == 0) {
-//            return (0, 0);
-//        }
-
         if (_increase && afterPosition > maxPositionAmount) {
             revert("exceeds max position");
-//            require(_increase && afterPosition <= maxPositionAmount, 'exceeds max position');
         }
 
-        int256 availableCollateral = int256(self.collateral);
+        int256 availableCollateral = int256(self.collateral) + fundingFee;
 
         // pnl
         if (!simpleVerify) {

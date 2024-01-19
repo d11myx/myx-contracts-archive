@@ -181,7 +181,8 @@ contract OrderManager is IOrderManager, Upgradeable {
                     true,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount,
-                    true
+                    true,
+                    positionManager.getFundingFee(account, request.pairIndex, request.isLong)
                 );
                 require(afterPosition > 0, "zero position amount");
             }
@@ -195,18 +196,11 @@ contract OrderManager is IOrderManager, Upgradeable {
                     false,
                     tradingConfig.maxLeverage,
                     tradingConfig.maxPositionAmount,
-                    true
+                    true,
+                    positionManager.getFundingFee(account, request.pairIndex, request.isLong)
                 );
             }
         }
-
-//        if (
-//            request.tradeType == TradingTypes.TradeType.TP ||
-//            request.tradeType == TradingTypes.TradeType.SL
-//        ) {
-//            require(request.sizeAmount.abs() <= position.positionAmount, "tp/sl exceeds max size");
-//            require(collateral == 0, "no collateral required");
-//        }
 
         // transfer collateral
         if (collateral > 0) {

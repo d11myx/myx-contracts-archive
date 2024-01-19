@@ -56,29 +56,17 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         for (uint256 i = 0; i < orders.length; i++) {
             IExecutionLogic.ExecuteOrder memory order = orders[i];
             if (order.isIncrease) {
-                if (order.tradeType == TradingTypes.TradeType.MARKET) {
-                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
-                        msg.sender,
-                        _fillOrders(order)
-                    );
-                } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
-                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
-                        msg.sender,
-                        _fillOrders(order)
-                    );
-                }
+                IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseOrders(
+                    msg.sender,
+                    _fillOrders(order),
+                    order.tradeType
+                );
             } else {
-                if (order.tradeType == TradingTypes.TradeType.MARKET) {
-                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
-                        msg.sender,
-                        _fillOrders(order)
-                    );
-                } else if (order.tradeType == TradingTypes.TradeType.LIMIT) {
-                    IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
-                        msg.sender,
-                        _fillOrders(order)
-                    );
-                }
+                IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseOrders(
+                    msg.sender,
+                    _fillOrders(order),
+                    order.tradeType
+                );
             }
         }
     }
@@ -93,9 +81,10 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
-        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseMarketOrders(
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseOrders(
             msg.sender,
-            increaseOrders
+            increaseOrders,
+            TradingTypes.TradeType.MARKET
         );
     }
 
@@ -109,9 +98,10 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
-        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseMarketOrders(
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseOrders(
             msg.sender,
-            decreaseOrders
+            decreaseOrders,
+            TradingTypes.TradeType.MARKET
         );
     }
 
@@ -125,9 +115,10 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
-        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseLimitOrders(
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseOrders(
             msg.sender,
-            increaseOrders
+            increaseOrders,
+            TradingTypes.TradeType.LIMIT
         );
     }
 
@@ -141,9 +132,10 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
         this.setPrices{value: msg.value}(tokens, prices, updateData);
 
-        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseLimitOrders(
+        IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseOrders(
             msg.sender,
-            decreaseOrders
+            decreaseOrders,
+            TradingTypes.TradeType.LIMIT
         );
     }
 

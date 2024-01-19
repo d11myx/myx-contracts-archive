@@ -248,7 +248,6 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         if (position.positionAmount == 0 && position.collateral > 0) {
             if (useRiskReserve) {
-//                pool.setLPStableProfit(pairIndex, -int256(position.collateral));
                 riskReserve.increase(pair.stableToken, position.collateral);
             } else {
                 pool.transferTokenOrSwap(
@@ -302,7 +301,8 @@ contract PositionManager is IPositionManager, Upgradeable {
             true,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount,
-            false
+            false,
+            getFundingFee(account, pairIndex, isLong)
         );
 
         if (collateral > 0) {
@@ -382,9 +382,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         uint amount,
         uint256 _price
     ) internal view returns (int256) {
-       // IPool.Pair memory pair = pool.getPair(_pairIndex);
         IPool.Vault memory lpVault = pool.getVault(_pairIndex);
-        //        uint256 _price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
         if (lpIsLong) {
             if (_price > lpVault.averagePrice) {
                 return int256(amount.mulPrice(_price - lpVault.averagePrice));
