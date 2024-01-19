@@ -113,6 +113,9 @@ interface IPool {
         uint256 lpFeeDistributeP;
         uint256 stakingFeeDistributeP;
         uint256 keeperFeeDistributeP;
+        uint256 treasuryFeeDistributeP;
+        uint256 reservedFeeDistributeP;
+        uint256 ecoFundFeeDistributeP;
     }
 
     function pairsIndex() external view returns (uint256);

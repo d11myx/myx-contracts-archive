@@ -48,6 +48,9 @@ export async function initPairs(
             tradingFeeConfig.lpFeeDistributeP = 30000000;
             tradingFeeConfig.keeperFeeDistributeP = 20000000;
             tradingFeeConfig.stakingFeeDistributeP = 10000000;
+            tradingFeeConfig.treasuryFeeDistributeP = 0;
+            tradingFeeConfig.reservedFeeDistributeP = 0;
+            tradingFeeConfig.ecoFundFeeDistributeP = 0;
         }
 
         await waitForTx(await pool.updatePair(pairIndex, pair));

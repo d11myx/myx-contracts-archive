@@ -34,12 +34,12 @@ async function main() {
 
     // await verifyContract(local, '0xc4C1f3Cac4b785fE5473dA23255d42bb8aCcEe44', []);
 
-    const arts = ['PoolView_Implementation'];
+    const arts = ['Router'];
     for (let art of arts) {
         const deployment = await deployments.get(art);
         // console.log(deployment.address);
         // console.log(deployment.args);
-        await verifyContract(local, deployment.address, deployment.args);
+        await verifyContract(arbitrumSepolia, deployment.address, deployment.args);
     }
 
     // await verifyProxyContract(lineaGoerli, '0xd304065B7F596034270356644FF0A220574979eD', [

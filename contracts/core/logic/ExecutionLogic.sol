@@ -139,7 +139,7 @@ contract ExecutionLogic is IExecutionLogic {
         TradingTypes.IncreasePositionOrder memory order;
         (order, orderNetworkFee) = orderManager.getIncreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
-            emit InvalidOrder(keeper, _orderId, 'account is zero');
+            emit InvalidOrder(keeper, _orderId, 'address 0');
             return;
         }
 
@@ -147,7 +147,7 @@ contract ExecutionLogic is IExecutionLogic {
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
             bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
             if (expired) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, true, "order expired");
+                orderManager.cancelOrder(order.orderId, order.tradeType, true, "expired");
                 return;
             }
         }
@@ -156,7 +156,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, true, "pair enable");
+            orderManager.cancelOrder(order.orderId, order.tradeType, true, "!enable");
             return;
         }
 
@@ -204,7 +204,7 @@ contract ExecutionLogic is IExecutionLogic {
                 executionPrice
             );
             if (executionSize == 0) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, true, "no available liquidity");
+                orderManager.cancelOrder(order.orderId, order.tradeType, true, "nal");
                 return;
             }
         }
@@ -235,7 +235,8 @@ contract ExecutionLogic is IExecutionLogic {
             true,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount,
-            false
+            false,
+            positionManager.getFundingFee(order.account, order.pairIndex, order.isLong)
         );
         require(afterPosition > 0, "zpa");
 
@@ -409,7 +410,7 @@ contract ExecutionLogic is IExecutionLogic {
         TradingTypes.DecreasePositionOrder memory order;
         (order, orderNetworkFee) = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
-            emit InvalidOrder(keeper, _orderId, 'account is zero');
+            emit InvalidOrder(keeper, _orderId, 'address 0');
             return;
         }
 
@@ -417,7 +418,7 @@ contract ExecutionLogic is IExecutionLogic {
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
             bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
             if (expired) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, false, "order expired");
+                orderManager.cancelOrder(order.orderId, order.tradeType, false, "expired");
                 return;
             }
         }
@@ -426,7 +427,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, false, "!enabled");
+            orderManager.cancelOrder(order.orderId, order.tradeType, false, "!enable");
             return;
         }
 
@@ -486,7 +487,8 @@ contract ExecutionLogic is IExecutionLogic {
             false,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount,
-            isSystem
+            isSystem,
+            positionManager.getFundingFee(order.account, order.pairIndex, order.isLong)
         );
 
         (bool _needADL, ) = positionManager.needADL(
