@@ -69,9 +69,10 @@ contract ExecutionLogic is IExecutionLogic {
         emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
     }
 
-    function executeIncreaseMarketOrders(
+    function executeIncreaseOrders(
         address keeper,
-        ExecuteOrder[] memory orders
+        ExecuteOrder[] memory orders,
+        TradingTypes.TradeType tradeType
     ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
@@ -80,7 +81,7 @@ contract ExecutionLogic is IExecutionLogic {
                 this.executeIncreaseOrder(
                     keeper,
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
+                    tradeType,
                     order.tier,
                     order.referralsRatio,
                     order.referralUserRatio,
@@ -90,35 +91,7 @@ contract ExecutionLogic is IExecutionLogic {
                 emit ExecuteOrderError(order.orderId, reason);
                 orderManager.cancelOrder(
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
-                    true,
-                    reason
-                );
-            }
-        }
-    }
-
-    function executeIncreaseLimitOrders(
-        address keeper,
-        ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrSelf {
-        for (uint256 i = 0; i < orders.length; i++) {
-            ExecuteOrder memory order = orders[i];
-            try
-                this.executeIncreaseOrder(
-                    keeper,
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
-                    order.tier,
-                    order.referralsRatio,
-                    order.referralUserRatio,
-                    order.referralOwner
-                )
-            {} catch Error(string memory reason) {
-                emit ExecuteOrderError(order.orderId, reason);
-                orderManager.cancelOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
+                    tradeType,
                     true,
                     reason
                 );
@@ -306,9 +279,10 @@ contract ExecutionLogic is IExecutionLogic {
         );
     }
 
-    function executeDecreaseMarketOrders(
+    function executeDecreaseOrders(
         address keeper,
-        ExecuteOrder[] memory orders
+        ExecuteOrder[] memory orders,
+        TradingTypes.TradeType tradeType
     ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
@@ -316,51 +290,20 @@ contract ExecutionLogic is IExecutionLogic {
                 this.executeDecreaseOrder(
                     keeper,
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
+                    tradeType,
                     order.tier,
                     order.referralsRatio,
                     order.referralUserRatio,
                     order.referralOwner,
                     false,
                     0,
-                    true
+                    tradeType == TradingTypes.TradeType.MARKET
                 )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
                 orderManager.cancelOrder(
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
-                    false,
-                    reason
-                );
-            }
-        }
-    }
-
-    function executeDecreaseLimitOrders(
-        address keeper,
-        ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrSelf {
-        for (uint256 i = 0; i < orders.length; i++) {
-            ExecuteOrder memory order = orders[i];
-            try
-                this.executeDecreaseOrder(
-                    keeper,
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
-                    order.tier,
-                    order.referralsRatio,
-                    order.referralUserRatio,
-                    order.referralOwner,
-                    false,
-                    0,
-                    false
-                )
-            {} catch Error(string memory reason) {
-                emit ExecuteOrderError(order.orderId, reason);
-                orderManager.cancelOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
+                    tradeType,
                     false,
                     reason
                 );
@@ -380,32 +323,6 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 executionSize,
         bool onlyOnce
     ) external override onlyExecutorOrSelf {
-        _executeDecreaseOrder(
-            keeper,
-            _orderId,
-            _tradeType,
-            tier,
-            referralsRatio,
-            referralUserRatio,
-            referralOwner,
-            isSystem,
-            executionSize,
-            onlyOnce
-        );
-    }
-
-    function _executeDecreaseOrder(
-        address keeper,
-        uint256 _orderId,
-        TradingTypes.TradeType _tradeType,
-        uint8 tier,
-        uint256 referralsRatio,
-        uint256 referralUserRatio,
-        address referralOwner,
-        bool isSystem,
-        uint256 executionSize,
-        bool onlyOnce
-    ) internal {
         TradingTypes.OrderNetworkFee memory orderNetworkFee;
         TradingTypes.DecreasePositionOrder memory order;
         (order, orderNetworkFee) = orderManager.getDecreaseOrder(_orderId, _tradeType);

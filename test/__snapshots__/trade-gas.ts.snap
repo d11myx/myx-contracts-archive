@@ -4,6 +4,6 @@ exports[`Router: increase position ar createDecreaseOrder cast 1`] = `494185`;
 
 exports[`Router: increase position ar createIncreaseOrder cast 1`] = `512503`;
 
-exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `523055`;
+exports[`Router: increase position ar executeDecreaseOrder cast 1`] = `523290`;
 
-exports[`Router: increase position ar executeIncreaseOrder cast 1`] = `739119`;
+exports[`Router: increase position ar executeIncreaseOrder cast 1`] = `738912`;
