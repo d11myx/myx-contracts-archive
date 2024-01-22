@@ -250,10 +250,10 @@ async function main() {
     //     ),
     // );
 
-    // await deployments.deploy(`MultipleTransfer`, {
+    // await deployments.deploy(`UiPositionDataProvider`, {
     //     from: deployer.address,
-    //     contract: 'MultipleTransfer',
-    //     args: [],
+    //     contract: 'UiPositionDataProvider',
+    //     args: [addressesProvider.address],
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 

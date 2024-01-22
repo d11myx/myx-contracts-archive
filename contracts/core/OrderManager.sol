@@ -145,7 +145,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                     || (request.sizeAmount.abs() < networkFee.discountThreshold && request.networkFeeAmount < networkFee.basicNetworkFee)) {
                     revert("insufficient network fee");
                 }
-                collateral -= request.networkFeeAmount.safeConvertToInt256();
+//                collateral -= request.networkFeeAmount.safeConvertToInt256();
                 _transferOrderCollateral(
                     pair.stableToken,
                     request.networkFeeAmount,
