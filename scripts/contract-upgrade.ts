@@ -92,7 +92,7 @@ async function main() {
         target: orderManager.address,
         value: '0',
         signature: 'upgradeTo(address)',
-        data: encodeParameters(['address'], ['0x7cE1d4C2780898461279b8e93c2bB5dF6407D263']),
+        data: encodeParameters(['address'], ['0xa0693C4a2981dD6e65Fd09ce3138366c077Ae512']),
         eta: Duration.seconds(13)
             .add(await latest())
             .toString(),

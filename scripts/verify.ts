@@ -23,7 +23,11 @@ async function main() {
         'https://api-sepolia.arbiscan.io/api',
         'https://sepolia.arbiscan.io/',
     );
-    const local = new Etherscan('myx', 'http://export.myx.cash/api', 'http://export.myx.cash');
+    const local = new Etherscan(
+        'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
+        'http://export.myx.cash/api',
+        'http://export.myx.cash',
+    );
 
     // const artifact = await deployments.deploy(`verify-demo`, {
     //     from: deployer.address,
@@ -32,14 +36,31 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    // await verifyContract(local, '0xc4C1f3Cac4b785fE5473dA23255d42bb8aCcEe44', []);
+    // await verifyContract(local, '0xB697A6fB7Eea6EC63281a3447488fE9233d5d8b4', [
+    //     '0x4Fe0FE4EdA23ec8930eCcc2083BC5f15Ea9A7e5B',
+    //     '0xd304065B7F596034270356644FF0A220574979eD',
+    //     '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
+    //     '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
+    // ]);
 
-    const arts = ['Router'];
+    const arts = [
+        // 'Router',
+        // 'Executor',
+        // 'Pool_Implementation',
+        // 'PositionManager_Implementation',
+        // 'OrderManager_Implementation',
+        'ExecutionLogic',
+        // 'LiquidationLogic',
+    ];
     for (let art of arts) {
-        const deployment = await deployments.get(art);
-        // console.log(deployment.address);
-        // console.log(deployment.args);
-        await verifyContract(arbitrumSepolia, deployment.address, deployment.args);
+        try {
+            const deployment = await deployments.get(art);
+            // console.log(deployment.address);
+            // console.log(deployment.args);
+            await verifyContract(local, deployment.address, deployment.args);
+        } catch (e) {
+            console.log(e);
+        }
     }
 
     // await verifyProxyContract(lineaGoerli, '0xd304065B7F596034270356644FF0A220574979eD', [
