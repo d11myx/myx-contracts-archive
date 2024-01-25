@@ -1,11 +1,6 @@
 // @ts-ignore
-import hre, { deployments, ethers } from 'hardhat';
+import hre, { artifacts, deployments, ethers } from 'hardhat';
 import {
-    abiCoder,
-    COMMON_DEPLOY_PARAMS,
-    Duration,
-    encodeParameters,
-    EXECUTION_LOGIC_ID,
     getAddressesProvider,
     getBacktracker,
     getExecutionLogic,
@@ -20,46 +15,30 @@ import {
     getRiskReserve,
     getRouter,
     getTokens,
-    getUiPoolDataProvider,
-    getUiPositionDataProvider,
-    latest,
-    POSITION_CALLER,
-    POSITION_MANAGER_ID,
-    TradeType,
-    waitForTx,
-    ZERO_ADDRESS,
-    ZERO_HASH,
 } from '../helpers';
-import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
-import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
-import { sleep } from '@nomicfoundation/hardhat-verify/internal/utilities';
-import Decimal from 'decimal.js';
-import { oracle } from '../types/contracts';
-import { MockMultipleTransfer__factory } from '../types';
-import type { PromiseOrValue } from '../types/common';
-import type { BigNumberish, BytesLike } from 'ethers';
-import { AbiError } from 'web3';
+import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
+import { mock } from '../types/contracts';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
     console.log(deployer.address);
     console.log(await deployer.getBalance());
 
-    const router = await getRouter();
-    const orderManager = await getOrderManager();
-    const positionManager = await getPositionManager();
-    const executor = await getExecutor();
-    const backtracker = await getBacktracker();
-    const executionLogic = await getExecutionLogic();
-    const oraclePriceFeed = await getOraclePriceFeed();
-    const indexPriceFeed = await getIndexPriceFeed();
-    const feeCollector = await getFeeCollector();
-    const pool = await getPool();
-    const poolView = await getPoolView();
-    const riskReserve = await getRiskReserve();
-    const addressesProvider = await getAddressesProvider();
-
-    const { btc, eth, usdt } = await getTokens();
+    // const router = await getRouter();
+    // const orderManager = await getOrderManager();
+    // const positionManager = await getPositionManager();
+    // const executor = await getExecutor();
+    // const backtracker = await getBacktracker();
+    // const executionLogic = await getExecutionLogic();
+    // const oraclePriceFeed = await getOraclePriceFeed();
+    // const indexPriceFeed = await getIndexPriceFeed();
+    // const feeCollector = await getFeeCollector();
+    // const pool = await getPool();
+    // const poolView = await getPoolView();
+    // const riskReserve = await getRiskReserve();
+    // const addressesProvider = await getAddressesProvider();
+    //
+    // const { btc, eth, usdt } = await getTokens();
 
     // const btcOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30);
     // const ethOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30);
@@ -86,45 +65,46 @@ async function main() {
     // });
     // console.log(await executor.positionManager());
 
-    const contractFactory = await ethers.getContractFactory('MockParam');
-    const mock = await contractFactory.deploy();
-    console.log('mock: ', mock.address);
     // console.log(
     //     await positionManager.getPositionByKey('0x0138df453dc8fef8c03945d2ff83067d12015e33000000000000000100000000'),
     // );
     // // console.log(await positionManager.getFundingFee('0xC2d0Bfc4B5D23ddDa21AaDe8FB07CC36896dCe20', 1, true));
     //
-    // console.log(backtracker.address);
-    // console.log(await addressesProvider.backtracker());
-    // console.log(await addressesProvider.indexPriceOracle());
-    // console.log(await addressesProvider.priceOracle());
-    // console.log(
-    //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
-    // );
+
+    // const priceId = '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace';
+    // const conn = new EvmPriceServiceConnection('https://hermes.pyth.network', {
+    //     priceFeedRequestConfig: { binary: true },
+    // });
+    // const vaas = await conn.getLatestPriceFeeds([priceId]);
+    // console.log(vaas);
+    // // @ts-ignore
+    // const priceFeedUpdate = '0x' + Buffer.from(vaas[0].getVAA() as string, 'base64').toString('hex');
+    //
+    // // // console.log(
+    // // //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
+    // // // );
+    //
     // console.log(
     //     await executor.connect(deployer).setPricesAndLiquidatePositions(
-    //         ['0x3fF8C9A44733E54a48170ed3839a80C46C912b00', '0x7025c220763196F126571B34A708fD700f67d363'],
-    //         [await oraclePriceFeed.getPrice(btc.address), await oraclePriceFeed.getPrice(eth.address)],
+    //         ['0x2d7a41e46da01c44a5be328ce4887996d0326071', '0xc79e3a689d1ccf604f4d16ae36614b0e72b10233'],
+    //         // [await oraclePriceFeed.getPrice(btc.address), await oraclePriceFeed.getPrice(eth.address)],
     //         // ['0x3ff8c9a44733e54a48170ed3839a80c46c912b00', '0x7025c220763196f126571b34a708fd700f67d363'],
-    //         // ['40194000000000000000000000000000000', '2242000000000000000000000000000000'],
+    //         ['40089000000000000000000000000000000', '2223000000000000000000000000000000'],
     //         [
     //             {
-    //                 token: '0x3ff8c9a44733e54a48170ed3839a80c46c912b00',
-    //                 updateData: abiCoder.encode(
-    //                     ['uint256'],
-    //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-    //                 ),
+    //                 token: '0xc79e3a689d1ccf604f4d16ae36614b0e72b10233',
+    //                 updateData: priceFeedUpdate,
     //                 updateFee: 1,
-    //                 backtrackRound: '0',
-    //                 positionKey: '0x0138df453dc8fef8c03945d2ff83067d12015e33000000000000000100000000',
-    //                 sizeAmount: 1000,
+    //                 backtrackRound: '1706167922',
+    //                 positionKey: '0x07533963da0494a48a763c82359dc131a79011f0000000000000000200000001',
+    //                 sizeAmount: 0,
     //                 tier: 0,
     //                 referralsRatio: 0,
     //                 referralUserRatio: 0,
     //                 referralOwner: '0x0000000000000000000000000000000000000000',
     //             },
     //         ],
-    //         { value: 1 },
+    //         { value: 2, gasLimit: 5000000 },
     //     ),
     // );
 

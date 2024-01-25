@@ -119,6 +119,17 @@ const config: HardhatUserConfig = {
             },
             live: false,
         },
+        arbitrum_one: {
+            url: 'https://arb1.arbitrum.io/rpc',
+            chainId: 42161,
+            accounts: {
+                mnemonic: process.env.MNEMONIC_ARBITRUM_ONE || '',
+                path: MNEMONIC_PATH,
+                initialIndex: 0,
+                count: 10,
+            },
+            live: true,
+        },
     },
     namedAccounts: {
         ...DEFAULT_NAMED_ACCOUNTS,

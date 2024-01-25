@@ -652,7 +652,7 @@ contract ExecutionLogic is IExecutionLogic {
             adlPositionKeys = new bytes32[](0);
         }
 
-        IExecution.AdlOrder[] memory orders = new IExecution.AdlOrder[](executeOrders.length);
+        uint256[] memory orders = new uint256[](executeOrders.length);
         for (uint256 i = 0; i < executeOrders.length; i++) {
             IExecutionLogic.ExecuteOrder memory executeOrder = executeOrders[i];
 
@@ -706,12 +706,7 @@ contract ExecutionLogic is IExecutionLogic {
                 executionSize - needADLAmount,
                 false
             );
-            orders[i] = IExecution.AdlOrder({
-                account: order.account,
-                pairIndex: order.pairIndex,
-                isLong: order.isLong,
-                orderId: order.orderId
-            });
+            orders[i] = order.orderId;
         }
 
         emit ExecuteAdlOrder(adlOrderIds, adlPositionKeys, orders);

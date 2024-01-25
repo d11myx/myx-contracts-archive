@@ -3,6 +3,7 @@ import { ethers } from 'hardhat';
 import { getIndexPriceFeed, getOraclePriceFeed, getRoleManager, getTokens, waitForTx } from '../helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { PythOraclePriceFeed } from '../types';
+import { BigNumber } from 'ethers';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -127,28 +128,31 @@ async function main() {
         '0x8751c83Fb41E44D7DD7CCF14dcc21E14e5503758',
     ];
 
-    // for (let keeper of keepers) {
-    //     await waitForTx(await roleManager.addKeeper(keeper));
-    //     await waitForTx(await roleManager.addPoolAdmin(keeper));
-    // }
+    for (let keeper of keepers) {
+        await waitForTx(await roleManager.addKeeper(keeper));
+        // await waitForTx(await roleManager.addPoolAdmin(keeper));
+    }
     //
-    // const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
-    // await waitForTx(await pythOraclePriceFeed.connect(deployer).updatePriceAge(60));
+    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
+    await waitForTx(await pythOraclePriceFeed.connect(deployer).updatePriceAge(60));
 
     // const wallet = new ethers.Wallet(
-    //     'a5f6cbc5851da39699e5779e9d2c61966ea50ea08988c5430785e8d2c8c71eeb',
+    //     '',
     //     deployer.provider,
     // );
 
+    let total = BigNumber.from('0');
     for (const keeper of keepers) {
         // await wallet.sendTransaction({
         //     to: keeper,
-        //     value: ethers.utils.parseEther('3'),
+        //     value: ethers.utils.parseEther('10'),
         // });
+        total = total.add(await deployer.provider.getBalance(keeper));
         console.log(
             `keeper: ${keeper} balance: ${ethers.utils.formatEther(await deployer.provider.getBalance(keeper))}`,
         );
     }
+    console.log(`total: ${ethers.utils.formatEther(total)}`);
 }
 
 // 0xbb3B796691eABd0F8e2125b14172cd966DDEd377_0x3ef05f646a633788068ea24f8148a9cd513589ceea0149bc6edbf54b1ce6a07a
@@ -201,6 +205,7 @@ async function main() {
 // 0x4e525544947b356B183B22B9e224A29A78115164_0xb4142d34be486db02d2c445c8d3c683183dda275d2c2746b1d58f294bdaa92bc
 // 0x4499D0ed46004Cb948a38A8697bA765e4BF4C057_0xfaadc642ad74b816b662facdc9c2259f2cbc39f741a9ea7810584feef6ac4bb2
 // 0x9c0e1D0dcE63CB3671B29D721a50EC7744c4c293_0x33edd94306c1cf8c837234a03d8bc642f1a8af2217d505898015b72f23416e54
+
 // 0x7E934Ab9A33CbE6D85f4b2285826369D11171955_0x6a8f27fa6024beef52926ce58cb1395338e760171c27a0bf952572163dbc447a
 // 0xdA19061c24cC6ad5a12c4Cb475B4609e549Ded30_0x310940b7cf6ddc2a88c827b1431985425c5b719001e4f1f1e26ec33b1cfb4d7e
 // 0x550710f3658b0CC7B364f97D4290418973303B48_0x3a7781372621ba06c72b61343479fcf92c04b598cd5c120fb1c1fe3b27a7c51f
@@ -220,6 +225,7 @@ async function main() {
 // 0x2C35B9C5BfAA61D1beDB5f8F38F380Cd4e2E2eac_0x1c2c1d828a2b970498054ae21175730ebb323824acb2277005ac984efade5106
 // 0x67285904B042031543c9D2e83a72e883377b283B_0x921339d842b4eb78d4cd171e831ffa219efb03e6e65a773b7b020edc54b902aa
 // 0x45D82D84e653108105D9a36A8B91fE184141b8EB_0x4c45a50a59fe66b399fee9e5a4348bf2cb9f32a5dd3f154cf75c5f162c772dc3
+
 // 0xce07bd045DF47376266151c19F5c502Aede202FA_0xd36e2de0c44c54c92ce86878067bc8758f75c7beaaf13f9067760b9e3d009118
 // 0x0cde0f35680eC5D62C0683fB12D4CF0245c302E5_0xb8f1ef4e2b570429c1c857609f416e814d360d710ef4cca10cbc66613d757072
 // 0x057e7008b9eF0EFeB53eB255080bE581D930e6A9_0x98fd04fe5e12c9309fa5dbac4d8f5a2dd6667c5db92bc9cede1061221bf401ac
@@ -249,10 +255,15 @@ async function main() {
 // 0xd5E039b4C37c62730217ad000ed8522795f4F2B0_0x7cb938b87d4c0abb8046ce2b60cc544ceb887304ee58fdf9663317c252fa1aa5
 // 0xA275395665A3BDA7867c908791c5C5801930B8a8_0xbe91a4522a19152a0402aab65059f1f80eed2e97fc351ed040c603e03e68b8e8
 // 0x85212f2823A3F94a33F56A48aB5501763EC059c0_0x1e853d085241eebe007eff37425c73abfaecb318df2035635574e90c6e551187
+
 // 0x36b022d8B650c6fA7b2a315822769377687DF206_0xf5f5e084c51a60d2cc3dd0012e30ddb8c96b71b23755d0d57f654bf0f5a6e962
+
 // 0xdE9138223FF50FAbD9F66021e0533125355EfB19_0x336b0bbb8ebf64ccc3266894c37189721f4fbca9e350bc14074a0f804129a1ee
+
 // 0xEBA5AFae554D68ea3B9A2F0D923Fa08e6cFF948e_0xe2f627cff59f4a2ede8b4d4b2cfd2ba5bbb702616bc17fbe3543988dae1b1fe3
+
 // 0xD2ABb1E2f91a0A3C2e3440674Ba20bc50DBda500_0x59a86525f0382a54544b02890ae9ef7462a708fb6bd17b265e41dab4c486f52e
+
 // 0x73bA9639864758fAEB98D7a212a3125ED4AE6C11_0x3132327856e2a870b3aeb1e485f3e9ff080e210095cbf592a296560984d0cb86
 // 0x14AfeDea076B7c4B478074d90112A45277354430_0xcc34c4990b0248aab164740616128b08e992af0b8de1f4d1762829660865cdf3
 // 0xed40b89Bcf51DD8087E06818A124D661a6F6d983_0xdc92d5ed5d1a3703cf3a4cb4e761974764b7188ee6390543ce8e4fb9929b40ac

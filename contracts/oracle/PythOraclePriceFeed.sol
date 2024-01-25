@@ -121,7 +121,12 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
 
             priceIds[i] = tokenPriceIds[tokens[i]];
         }
-        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates(updateData, priceIds, publishTime, publishTime);
+        PythStructs.PriceFeed[] memory priceFeeds;
+        try pyth.parsePriceFeedUpdates{value: msg.value}(updateData, priceIds, publishTime, publishTime) returns (PythStructs.PriceFeed[] memory _priceFeeds) {
+            priceFeeds = _priceFeeds;
+        } catch {
+            revert("parse price failed");
+        }
         for (uint256 i = 0; i < priceFeeds.length; i++) {
             PythStructs.PriceFeed memory priceFeed = priceFeeds[i];
 
