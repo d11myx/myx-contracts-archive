@@ -6,6 +6,7 @@ import "../interfaces/IAddressesProvider.sol";
 import "../interfaces/IPool.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IPoolView.sol";
+import "../helpers/TradingHelper.sol";
 
 contract UiPositionDataProvider is IUiPositionDataProvider {
 
@@ -49,6 +50,10 @@ contract UiPositionDataProvider is IUiPositionDataProvider {
 
             positionData.lpPrice = poolView.lpFairPrice(pairIndex, price);
             positionData.lpTotalSupply = IERC20(pair.pairToken).totalSupply();
+
+            int256 exposedPositions = positionManager.getExposedPositions(pairIndex);
+            positionData.longLiquidity = TradingHelper.maxAvailableLiquidity(vault, pair, exposedPositions, true, price);
+            positionData.shortLiquidity = TradingHelper.maxAvailableLiquidity(vault, pair, exposedPositions, false, price);
         }
 
         return positionsData;

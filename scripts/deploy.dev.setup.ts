@@ -25,55 +25,55 @@ async function main() {
     console.log(`eth price:`, ethers.utils.formatUnits(await priceOracle.getPrice(eth.address), 30));
 
     const keepers: string[] = [
-        // '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',
-        // '0x8C2B496E5BC13b4170dC818132bEE5413A39834C',
-        // '0x9a5c3C2843eB3d9b764A2F00236D8519989BbDa1',
-        // '0x299227e2bD681A510b00dFfaC9f4FD0Da0715B94',
-        // '0xF1BAB1E9ad036B53Ad653Af455C21796f15EE3bD',
-        // '0x8bc45c15C993A982AFc053ce0fF7B59b40eE0D7B',
-        //
-        // '0x28f5D9dA3699d82dd7Dc91C7a776Dc0F5C66a0dB',
-        // '0x679A66eB96d24c7e3E260FC15165c76B34325f57',
-        // '0x2e00086D3A5229c967807728A19c2C1617B0A41A',
-        // '0xe916F89A91ACbF8a37E8af61E94B1fa5A475385F',
-        // '0xdDa8a43Aa6931ab354067604118C02D67bA42ebB',
-        // '0x0Df050716de174a36C7f4837Bb2a5166A15963ee',
-        // '0x787E5C5BAf549969dD21fb7DFf64c71e0a6277e7',
-        // '0xc81b88D4d5323235276ba97B638EE6AccdBcA07b',
-        // '0xebF71DFb9ED7DdAA16bf6Ac719B545a5E5e66161',
-        // '0xE516b69dbc562e7a3DA03BC14469339B667A08FF',
-        // '0x0638740B0F25fCA1D767c0B43969d85AF99a4B97',
-        // '0x35e3492b63d710Ec6FE205864dd93da61C933B9e',
-        // '0x92A46B2edB0b94a644a5478d530C497EE9Bf105F',
-        // '0xA2ED377384f4B365c72D42F7bF1D3350D1bd8307',
-        // '0x854b46Bf92A701B6302e5FA74891A049dEF4fC17',
-        // '0x7c527e9c906FdAf1Cc9a0a0A834f3fB61f5bC5E7',
-        // '0x45F37EA1a742A844014E61a089E41F2E54d9afCB',
-        // '0x0E060A483DD21253CD9b925731410a5A36DeAFCA',
-        // '0x8a8351c5ce455316186b3df34c2C25699015d3A2',
-        // '0x5042EaB499772b0d5A6C21155289E68876c7075d',
-        // '0x707c081BEE64760c909fbE0f46650c53d4065631',
-        // '0x1d0E5cB02f13A701Ce304aE37F71964a698c17de',
-        // '0x6c243672d7B0e5AD15b09363498183fcf27Af326',
-        // '0x9e911374973Ac42cd6634d0Ab3f667193590BBBd',
-        // '0x098DADa780c91F7998ACfc3d15eB42e647bDf336',
-        // '0xd32Fa22171427D4B0D1741D54C3eC6Cd9AcFA289',
-        // '0xCBf4849393e1dcBeb6dE13216AfFDB481D3A05f5',
-        // '0xe7d052c39129DFdb637A5930c1FF14D7DF5E0BD4',
-        // '0xeaC1312b246CbA147Ca85713081e524726484797',
-        // '0x5E54c5ADE88c312bBc9981D946F6a224e0BEC92B',
-        // '0x5b81E08d8eA38384dA53ED27AfD5a9988A958A5a',
-        // '0x15aF45406f3e4Aad0C4EA47e8398dF41F3e3E193',
-        // '0x4EF6D27C3fbA8E266f23481F129aB65570f162fF',
-        // '0x88B29c7feC46D0f4241dc7a9915697F4630EdA37',
-        // '0x5b06188bc9085359E42DaF9529Edce6EfEAd7C8f',
-        // '0xc90fd895f88DEC9D65820aeb4C860Fde036dae04',
-        // '0x4d3CcDd65eaA5a521D7066EE99CEd8779Bb82382',
-        // '0x42Cd4F4c0135053F6DE40C2F96863C85fc5B2B42',
-        // '0x31DD9Cc3dAbd4810141Ed8fDFa1FF0125c605Afa',
-        // '0xfcB38763E30700aCAf661CffDfB0e5ab087138aB',
+        '0x66D1e5F498c21709dCFC916785f09Dcf2D663E63',
+        '0x8C2B496E5BC13b4170dC818132bEE5413A39834C',
+        '0x9a5c3C2843eB3d9b764A2F00236D8519989BbDa1',
+        '0x299227e2bD681A510b00dFfaC9f4FD0Da0715B94',
+        '0xF1BAB1E9ad036B53Ad653Af455C21796f15EE3bD',
+        '0x8bc45c15C993A982AFc053ce0fF7B59b40eE0D7B',
 
-        '0x9335264956AF1E68579CdeF0F5c908f1668DDE3F',
+        '0x28f5D9dA3699d82dd7Dc91C7a776Dc0F5C66a0dB',
+        '0x679A66eB96d24c7e3E260FC15165c76B34325f57',
+        '0x2e00086D3A5229c967807728A19c2C1617B0A41A',
+        '0xe916F89A91ACbF8a37E8af61E94B1fa5A475385F',
+        '0xdDa8a43Aa6931ab354067604118C02D67bA42ebB',
+        '0x0Df050716de174a36C7f4837Bb2a5166A15963ee',
+        '0x787E5C5BAf549969dD21fb7DFf64c71e0a6277e7',
+        '0xc81b88D4d5323235276ba97B638EE6AccdBcA07b',
+        '0xebF71DFb9ED7DdAA16bf6Ac719B545a5E5e66161',
+        '0xE516b69dbc562e7a3DA03BC14469339B667A08FF',
+        '0x0638740B0F25fCA1D767c0B43969d85AF99a4B97',
+        '0x35e3492b63d710Ec6FE205864dd93da61C933B9e',
+        '0x92A46B2edB0b94a644a5478d530C497EE9Bf105F',
+        '0xA2ED377384f4B365c72D42F7bF1D3350D1bd8307',
+        '0x854b46Bf92A701B6302e5FA74891A049dEF4fC17',
+        '0x7c527e9c906FdAf1Cc9a0a0A834f3fB61f5bC5E7',
+        '0x45F37EA1a742A844014E61a089E41F2E54d9afCB',
+        '0x0E060A483DD21253CD9b925731410a5A36DeAFCA',
+        '0x8a8351c5ce455316186b3df34c2C25699015d3A2',
+        '0x5042EaB499772b0d5A6C21155289E68876c7075d',
+        '0x707c081BEE64760c909fbE0f46650c53d4065631',
+        '0x1d0E5cB02f13A701Ce304aE37F71964a698c17de',
+        '0x6c243672d7B0e5AD15b09363498183fcf27Af326',
+        '0x9e911374973Ac42cd6634d0Ab3f667193590BBBd',
+        '0x098DADa780c91F7998ACfc3d15eB42e647bDf336',
+        '0xd32Fa22171427D4B0D1741D54C3eC6Cd9AcFA289',
+        '0xCBf4849393e1dcBeb6dE13216AfFDB481D3A05f5',
+        '0xe7d052c39129DFdb637A5930c1FF14D7DF5E0BD4',
+        '0xeaC1312b246CbA147Ca85713081e524726484797',
+        '0x5E54c5ADE88c312bBc9981D946F6a224e0BEC92B',
+        '0x5b81E08d8eA38384dA53ED27AfD5a9988A958A5a',
+        '0x15aF45406f3e4Aad0C4EA47e8398dF41F3e3E193',
+        '0x4EF6D27C3fbA8E266f23481F129aB65570f162fF',
+        '0x88B29c7feC46D0f4241dc7a9915697F4630EdA37',
+        '0x5b06188bc9085359E42DaF9529Edce6EfEAd7C8f',
+        '0xc90fd895f88DEC9D65820aeb4C860Fde036dae04',
+        '0x4d3CcDd65eaA5a521D7066EE99CEd8779Bb82382',
+        '0x42Cd4F4c0135053F6DE40C2F96863C85fc5B2B42',
+        '0x31DD9Cc3dAbd4810141Ed8fDFa1FF0125c605Afa',
+        '0xfcB38763E30700aCAf661CffDfB0e5ab087138aB',
+
+        // '0x9335264956AF1E68579CdeF0F5c908f1668DDE3F',
     ];
 
     for (let keeper of keepers) {
@@ -83,18 +83,18 @@ async function main() {
         await waitForTx(await roleManager.addPoolAdmin(keeper));
     }
 
-    // const art = await deployments.deploy(`MockMultipleTransfer`, {
-    //     from: deployer.address,
-    //     contract: 'MockMultipleTransfer',
-    //     args: [],
-    //     ...COMMON_DEPLOY_PARAMS,
-    // });
-    // console.log(`MockMultipleTransfer address: ${art.address}`);
-    // await deployer.sendTransaction({
-    //     to: art.address,
-    //     value: ethers.utils.parseEther('100000'),
-    // });
-    // console.log(await usdt.mint(art.address, ethers.utils.parseUnits('100000000000000', 6)));
+    const art = await deployments.deploy(`MockMultipleTransfer`, {
+        from: deployer.address,
+        contract: 'MockMultipleTransfer',
+        args: [],
+        ...COMMON_DEPLOY_PARAMS,
+    });
+    console.log(`MockMultipleTransfer address: ${art.address}`);
+    await deployer.sendTransaction({
+        to: art.address,
+        value: ethers.utils.parseEther('100000'),
+    });
+    console.log(await usdt.mint(art.address, ethers.utils.parseUnits('100000000000000', 6)));
 }
 // 0xb3c38c0bc1d38f1ef60828ec34e502a7835218882f60bb20b17fe9480e0c8fe8----0x28f5D9dA3699d82dd7Dc91C7a776Dc0F5C66a0dB
 // 0x351293def8a296616c81b84c1689e6792e4fff96a2a9c6e22c22a7ccbb85eb95----0x679A66eB96d24c7e3E260FC15165c76B34325f57

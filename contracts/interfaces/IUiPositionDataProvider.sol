@@ -18,6 +18,8 @@ interface IUiPositionDataProvider {
         uint256 nextFundingRateUpdateTime;
         uint256 lpPrice;
         uint256 lpTotalSupply;
+        uint256 longLiquidity;
+        uint256 shortLiquidity;
     }
 
 }

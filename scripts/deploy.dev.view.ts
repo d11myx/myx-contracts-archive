@@ -7,6 +7,7 @@ import {
     encodeParameters,
     EXECUTION_LOGIC_ID,
     getAddressesProvider,
+    getBacktracker,
     getExecutionLogic,
     getExecutor,
     getFeeCollector,
@@ -36,7 +37,7 @@ import Decimal from 'decimal.js';
 import { oracle } from '../types/contracts';
 import { MockMultipleTransfer__factory } from '../types';
 import type { PromiseOrValue } from '../types/common';
-import type { BigNumberish } from 'ethers';
+import type { BigNumberish, BytesLike } from 'ethers';
 import { AbiError } from 'web3';
 
 async function main() {
@@ -48,6 +49,7 @@ async function main() {
     const orderManager = await getOrderManager();
     const positionManager = await getPositionManager();
     const executor = await getExecutor();
+    const backtracker = await getBacktracker();
     const executionLogic = await getExecutionLogic();
     const oraclePriceFeed = await getOraclePriceFeed();
     const indexPriceFeed = await getIndexPriceFeed();
@@ -82,6 +84,58 @@ async function main() {
     //     args: [addressesProvider.address],
     //     ...COMMON_DEPLOY_PARAMS,
     // });
+    // console.log(await executor.positionManager());
+
+    const contractFactory = await ethers.getContractFactory('MockParam');
+    const mock = await contractFactory.deploy();
+    console.log('mock: ', mock.address);
+    // console.log(
+    //     await positionManager.getPositionByKey('0x0138df453dc8fef8c03945d2ff83067d12015e33000000000000000100000000'),
+    // );
+    // // console.log(await positionManager.getFundingFee('0xC2d0Bfc4B5D23ddDa21AaDe8FB07CC36896dCe20', 1, true));
+    //
+    // console.log(backtracker.address);
+    // console.log(await addressesProvider.backtracker());
+    // console.log(await addressesProvider.indexPriceOracle());
+    // console.log(await addressesProvider.priceOracle());
+    // console.log(
+    //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
+    // );
+    // console.log(
+    //     await executor.connect(deployer).setPricesAndLiquidatePositions(
+    //         ['0x3fF8C9A44733E54a48170ed3839a80C46C912b00', '0x7025c220763196F126571B34A708fD700f67d363'],
+    //         [await oraclePriceFeed.getPrice(btc.address), await oraclePriceFeed.getPrice(eth.address)],
+    //         // ['0x3ff8c9a44733e54a48170ed3839a80c46c912b00', '0x7025c220763196f126571b34a708fd700f67d363'],
+    //         // ['40194000000000000000000000000000000', '2242000000000000000000000000000000'],
+    //         [
+    //             {
+    //                 token: '0x3ff8c9a44733e54a48170ed3839a80c46c912b00',
+    //                 updateData: abiCoder.encode(
+    //                     ['uint256'],
+    //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
+    //                 ),
+    //                 updateFee: 1,
+    //                 backtrackRound: '0',
+    //                 positionKey: '0x0138df453dc8fef8c03945d2ff83067d12015e33000000000000000100000000',
+    //                 sizeAmount: 1000,
+    //                 tier: 0,
+    //                 referralsRatio: 0,
+    //                 referralUserRatio: 0,
+    //                 referralOwner: '0x0000000000000000000000000000000000000000',
+    //             },
+    //         ],
+    //         { value: 1 },
+    //     ),
+    // );
+
+    // 787.864139;
+    // 4383976028;
+    // -1019.478317
+    // await executor.setPricesAndLiquidatePositions(
+    //     ['0x3fF8C9A44733E54a48170ed3839a80C46C912b00', '0x7025c220763196F126571B34A708fD700f67d363'],
+    //     [3896940250000, 221977000000],
+    //     [],
+    // );
 
     //[{"value":[{"value":"0x3ff8c9a44733e54a48170ed3839a80c46c912b00","typeAsString":"address"},{"value":"0x7025c220763196f126571b34a708fd700f67d363","typeAsString":"address"}],"typeAsString":"address[]","componentType":"org.web3j.abi.datatypes.Address"},{"value":[{"value":42335000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"},{"value":2516000000000000000000000000000000,"bitSize":256,"typeAsString":"uint256"}],"typeAsString":"uint256[]","componentType":"org.web3j.abi.datatypes.generated.Uint256"},{"value":[{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2bM6nvA=","typeAsString":"bytes"},{"value":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOpmcI9A=","typeAsString":"bytes"}],"typeAsString":"bytes[]","componentType":"org.web3j.abi.datatypes.DynamicBytes"},{"value":[{"value":[{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":8,"typeAsString":"uint8"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":0,"bitSize":256,"typeAsString":"uint256"},{"value":"0x0000000000000000000000000000000000000000","typeAsString":"address"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)","componentType":"org.web3j.abi.datatypes.Type"}],"typeAsString":"(uint256,uint8,uint256,uint256,address)[]","componentType":"org.web3j.abi.datatypes.StaticStruct"}]
 
@@ -250,10 +304,10 @@ async function main() {
     //     ),
     // );
 
-    // await deployments.deploy(`MultipleTransfer`, {
+    // await deployments.deploy(`UiPositionDataProvider`, {
     //     from: deployer.address,
-    //     contract: 'MultipleTransfer',
-    //     args: [],
+    //     contract: 'UiPositionDataProvider',
+    //     args: [addressesProvider.address],
     //     ...COMMON_DEPLOY_PARAMS,
     // });
 
