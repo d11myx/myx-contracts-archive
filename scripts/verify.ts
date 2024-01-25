@@ -36,32 +36,27 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    // await verifyContract(local, '0xB697A6fB7Eea6EC63281a3447488fE9233d5d8b4', [
-    //     '0x4Fe0FE4EdA23ec8930eCcc2083BC5f15Ea9A7e5B',
-    //     '0xd304065B7F596034270356644FF0A220574979eD',
-    //     '0xbf3CCE2Ee68a258D0bA1a19B094E5fc1743033ed',
-    //     '0xD6074c46938080F16E84125fb8e8f0d87dDA229d',
-    // ]);
+    await verifyContract(local, '0xBDC545bD3C5615F16105fE2a357c77D3cB7bdCC6', []);
 
-    const arts = [
-        // 'Router',
-        // 'Executor',
-        // 'Pool_Implementation',
-        // 'PositionManager_Implementation',
-        // 'OrderManager_Implementation',
-        'ExecutionLogic',
-        // 'LiquidationLogic',
-    ];
-    for (let art of arts) {
-        try {
-            const deployment = await deployments.get(art);
-            // console.log(deployment.address);
-            // console.log(deployment.args);
-            await verifyContract(local, deployment.address, deployment.args);
-        } catch (e) {
-            console.log(e);
-        }
-    }
+    // const arts = [
+    //     // 'Router',
+    //     // 'Executor',
+    //     // 'Pool_Implementation',
+    //     // 'PositionManager_Implementation',
+    //     // 'OrderManager_Implementation',
+    //     'ExecutionLogic',
+    //     // 'LiquidationLogic',
+    // ];
+    // for (let art of arts) {
+    //     try {
+    //         const deployment = await deployments.get(art);
+    //         // console.log(deployment.address);
+    //         // console.log(deployment.args);
+    //         await verifyContract(local, deployment.address, deployment.args);
+    //     } catch (e) {
+    //         console.log(e);
+    //     }
+    // }
 
     // await verifyProxyContract(lineaGoerli, '0xd304065B7F596034270356644FF0A220574979eD', [
     //     '0x063967b144abf07dAb4751d2556E2E8A70B78e80',
