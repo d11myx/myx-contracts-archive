@@ -155,11 +155,11 @@ contract OrderManager is IOrderManager, Upgradeable {
             }
         }
 
-        Position.Info memory position = positionManager.getPosition(
-            account,
-            request.pairIndex,
-            request.isLong
-        );
+//        Position.Info memory position = positionManager.getPosition(
+//            account,
+//            request.pairIndex,
+//            request.isLong
+//        );
         if (
             request.tradeType == TradingTypes.TradeType.MARKET ||
             request.tradeType == TradingTypes.TradeType.LIMIT

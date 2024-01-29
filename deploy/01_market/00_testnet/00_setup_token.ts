@@ -56,7 +56,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     } else {
         wrapperToken = (await getWETH(wrapperTokenAddress)) as WETH9;
 
-        const artifact = await hre.deployments.getArtifact('WETH');
+        const artifact = await hre.deployments.getArtifact('WETH9');
         await save(`WETH`, {
             ...artifact,
             address: wrapperToken.address,
