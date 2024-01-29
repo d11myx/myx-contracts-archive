@@ -16,5 +16,9 @@ interface IPythOraclePriceFeed is IOraclePriceFeed {
 
     event UnneededPricePublishWarn();
 
-    function updatePrice(address[] calldata tokens, bytes[] calldata updateData) external payable;
+    function updatePrice(
+        address[] calldata tokens,
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
+    ) external payable;
 }

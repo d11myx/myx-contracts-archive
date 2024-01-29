@@ -78,23 +78,19 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
 
     function updatePrice(
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     ) external payable override {
         uint fee = pyth.getUpdateFee(updateData);
         if (msg.value < fee) {
             revert("insufficient fee");
         }
         bytes32[] memory priceIds = new bytes32[](tokens.length);
-        uint64[] memory publishTimes = new uint64[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
             require(tokens[i] != address(0), "zero token address");
             require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
 
-            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) >= uint64(block.timestamp)) {
-                emit UnneededPricePublishWarn();
-            }
             priceIds[i] = tokenPriceIds[tokens[i]];
-            publishTimes[i] = uint64(block.timestamp);
         }
 
         if (priceIds.length > 0) {

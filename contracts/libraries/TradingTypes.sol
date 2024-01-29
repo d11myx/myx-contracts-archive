@@ -146,7 +146,7 @@ library TradingTypes {
         } else if (paymentType == NetworkFeePaymentType.COLLATERAL) {
             return InnerPaymentType.COLLATERAL;
         } else {
-            return InnerPaymentType.NONE;
+            revert("Invalid payment type");
         }
     }
 }
