@@ -69,9 +69,10 @@ contract ExecutionLogic is IExecutionLogic {
         emit UpdateMaxTimeDelay(oldDelay, newMaxTimeDelay);
     }
 
-    function executeIncreaseMarketOrders(
+    function executeIncreaseOrders(
         address keeper,
-        ExecuteOrder[] memory orders
+        ExecuteOrder[] memory orders,
+        TradingTypes.TradeType tradeType
     ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
@@ -80,7 +81,7 @@ contract ExecutionLogic is IExecutionLogic {
                 this.executeIncreaseOrder(
                     keeper,
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
+                    tradeType,
                     order.tier,
                     order.referralsRatio,
                     order.referralUserRatio,
@@ -90,35 +91,7 @@ contract ExecutionLogic is IExecutionLogic {
                 emit ExecuteOrderError(order.orderId, reason);
                 orderManager.cancelOrder(
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
-                    true,
-                    reason
-                );
-            }
-        }
-    }
-
-    function executeIncreaseLimitOrders(
-        address keeper,
-        ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrSelf {
-        for (uint256 i = 0; i < orders.length; i++) {
-            ExecuteOrder memory order = orders[i];
-            try
-                this.executeIncreaseOrder(
-                    keeper,
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
-                    order.tier,
-                    order.referralsRatio,
-                    order.referralUserRatio,
-                    order.referralOwner
-                )
-            {} catch Error(string memory reason) {
-                emit ExecuteOrderError(order.orderId, reason);
-                orderManager.cancelOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
+                    tradeType,
                     true,
                     reason
                 );
@@ -139,7 +112,7 @@ contract ExecutionLogic is IExecutionLogic {
         TradingTypes.IncreasePositionOrder memory order;
         (order, orderNetworkFee) = orderManager.getIncreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
-            emit InvalidOrder(keeper, _orderId, 'account is zero');
+            emit InvalidOrder(keeper, _orderId, 'address 0');
             return;
         }
 
@@ -147,7 +120,7 @@ contract ExecutionLogic is IExecutionLogic {
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
             bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
             if (expired) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, true, "order expired");
+                orderManager.cancelOrder(order.orderId, order.tradeType, true, "expired");
                 return;
             }
         }
@@ -156,7 +129,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, true, "pair enable");
+            orderManager.cancelOrder(order.orderId, order.tradeType, true, "!enable");
             return;
         }
 
@@ -204,7 +177,7 @@ contract ExecutionLogic is IExecutionLogic {
                 executionPrice
             );
             if (executionSize == 0) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, true, "no available liquidity");
+                orderManager.cancelOrder(order.orderId, order.tradeType, true, "nal");
                 return;
             }
         }
@@ -235,7 +208,8 @@ contract ExecutionLogic is IExecutionLogic {
             true,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount,
-            false
+            false,
+            positionManager.getFundingFee(order.account, order.pairIndex, order.isLong)
         );
         require(afterPosition > 0, "zpa");
 
@@ -305,9 +279,10 @@ contract ExecutionLogic is IExecutionLogic {
         );
     }
 
-    function executeDecreaseMarketOrders(
+    function executeDecreaseOrders(
         address keeper,
-        ExecuteOrder[] memory orders
+        ExecuteOrder[] memory orders,
+        TradingTypes.TradeType tradeType
     ) external override onlyExecutorOrSelf {
         for (uint256 i = 0; i < orders.length; i++) {
             ExecuteOrder memory order = orders[i];
@@ -315,51 +290,20 @@ contract ExecutionLogic is IExecutionLogic {
                 this.executeDecreaseOrder(
                     keeper,
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
+                    tradeType,
                     order.tier,
                     order.referralsRatio,
                     order.referralUserRatio,
                     order.referralOwner,
                     false,
                     0,
-                    true
+                    tradeType == TradingTypes.TradeType.MARKET
                 )
             {} catch Error(string memory reason) {
                 emit ExecuteOrderError(order.orderId, reason);
                 orderManager.cancelOrder(
                     order.orderId,
-                    TradingTypes.TradeType.MARKET,
-                    false,
-                    reason
-                );
-            }
-        }
-    }
-
-    function executeDecreaseLimitOrders(
-        address keeper,
-        ExecuteOrder[] memory orders
-    ) external override onlyExecutorOrSelf {
-        for (uint256 i = 0; i < orders.length; i++) {
-            ExecuteOrder memory order = orders[i];
-            try
-                this.executeDecreaseOrder(
-                    keeper,
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
-                    order.tier,
-                    order.referralsRatio,
-                    order.referralUserRatio,
-                    order.referralOwner,
-                    false,
-                    0,
-                    false
-                )
-            {} catch Error(string memory reason) {
-                emit ExecuteOrderError(order.orderId, reason);
-                orderManager.cancelOrder(
-                    order.orderId,
-                    TradingTypes.TradeType.LIMIT,
+                    tradeType,
                     false,
                     reason
                 );
@@ -379,37 +323,11 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 executionSize,
         bool onlyOnce
     ) external override onlyExecutorOrSelf {
-        _executeDecreaseOrder(
-            keeper,
-            _orderId,
-            _tradeType,
-            tier,
-            referralsRatio,
-            referralUserRatio,
-            referralOwner,
-            isSystem,
-            executionSize,
-            onlyOnce
-        );
-    }
-
-    function _executeDecreaseOrder(
-        address keeper,
-        uint256 _orderId,
-        TradingTypes.TradeType _tradeType,
-        uint8 tier,
-        uint256 referralsRatio,
-        uint256 referralUserRatio,
-        address referralOwner,
-        bool isSystem,
-        uint256 executionSize,
-        bool onlyOnce
-    ) internal {
         TradingTypes.OrderNetworkFee memory orderNetworkFee;
         TradingTypes.DecreasePositionOrder memory order;
         (order, orderNetworkFee) = orderManager.getDecreaseOrder(_orderId, _tradeType);
         if (order.account == address(0)) {
-            emit InvalidOrder(keeper, _orderId, 'account is zero');
+            emit InvalidOrder(keeper, _orderId, 'address 0');
             return;
         }
 
@@ -417,7 +335,7 @@ contract ExecutionLogic is IExecutionLogic {
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
             bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
             if (expired) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, false, "order expired");
+                orderManager.cancelOrder(order.orderId, order.tradeType, false, "expired");
                 return;
             }
         }
@@ -426,7 +344,7 @@ contract ExecutionLogic is IExecutionLogic {
         uint256 pairIndex = order.pairIndex;
         IPool.Pair memory pair = pool.getPair(pairIndex);
         if (!pair.enable) {
-            orderManager.cancelOrder(order.orderId, order.tradeType, false, "!enabled");
+            orderManager.cancelOrder(order.orderId, order.tradeType, false, "!enable");
             return;
         }
 
@@ -486,7 +404,8 @@ contract ExecutionLogic is IExecutionLogic {
             false,
             tradingConfig.maxLeverage,
             tradingConfig.maxPositionAmount,
-            isSystem
+            isSystem,
+            positionManager.getFundingFee(order.account, order.pairIndex, order.isLong)
         );
 
         (bool _needADL, ) = positionManager.needADL(

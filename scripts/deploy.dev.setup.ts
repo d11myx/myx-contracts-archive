@@ -72,6 +72,8 @@ async function main() {
         '0x42Cd4F4c0135053F6DE40C2F96863C85fc5B2B42',
         '0x31DD9Cc3dAbd4810141Ed8fDFa1FF0125c605Afa',
         '0xfcB38763E30700aCAf661CffDfB0e5ab087138aB',
+
+        // '0x9335264956AF1E68579CdeF0F5c908f1668DDE3F',
     ];
 
     for (let keeper of keepers) {

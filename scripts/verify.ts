@@ -23,7 +23,11 @@ async function main() {
         'https://api-sepolia.arbiscan.io/api',
         'https://sepolia.arbiscan.io/',
     );
-    const local = new Etherscan('myx', 'http://export.myx.cash/api', 'http://export.myx.cash');
+    const local = new Etherscan(
+        'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
+        'http://export.myx.cash/api',
+        'http://export.myx.cash',
+    );
 
     // const artifact = await deployments.deploy(`verify-demo`, {
     //     from: deployer.address,
@@ -32,15 +36,27 @@ async function main() {
     // });
     // console.log(artifact.address);
 
-    // await verifyContract(local, '0xc4C1f3Cac4b785fE5473dA23255d42bb8aCcEe44', []);
+    await verifyContract(local, '0xBDC545bD3C5615F16105fE2a357c77D3cB7bdCC6', []);
 
-    const arts = ['PoolView_Implementation'];
-    for (let art of arts) {
-        const deployment = await deployments.get(art);
-        // console.log(deployment.address);
-        // console.log(deployment.args);
-        await verifyContract(local, deployment.address, deployment.args);
-    }
+    // const arts = [
+    //     // 'Router',
+    //     // 'Executor',
+    //     // 'Pool_Implementation',
+    //     // 'PositionManager_Implementation',
+    //     // 'OrderManager_Implementation',
+    //     'ExecutionLogic',
+    //     // 'LiquidationLogic',
+    // ];
+    // for (let art of arts) {
+    //     try {
+    //         const deployment = await deployments.get(art);
+    //         // console.log(deployment.address);
+    //         // console.log(deployment.args);
+    //         await verifyContract(local, deployment.address, deployment.args);
+    //     } catch (e) {
+    //         console.log(e);
+    //     }
+    // }
 
     // await verifyProxyContract(lineaGoerli, '0xd304065B7F596034270356644FF0A220574979eD', [
     //     '0x063967b144abf07dAb4751d2556E2E8A70B78e80',

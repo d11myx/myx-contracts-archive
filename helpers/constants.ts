@@ -40,6 +40,11 @@ export enum TradeType {
     SL = 3,
 }
 
+export enum PaymentType {
+    ETH = 0,
+    COLLATERAL = 1,
+}
+
 export type eNetwork = DevNetwork | EthereumNetwork | LineaNetwork | ScrollNetwork | ArbitrumNetwork;
 
 export const MOCK_PRICES: { [key: string]: BigNumber } = {

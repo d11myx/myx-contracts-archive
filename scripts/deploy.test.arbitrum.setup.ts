@@ -95,8 +95,8 @@ async function main() {
         await roleManager.addPoolAdmin(keeper);
     }
 
-    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
-    await pythOraclePriceFeed.connect(deployer).updatePriceAge(60);
+    // const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
+    // await pythOraclePriceFeed.connect(deployer).updatePriceAge(60);
 
     // const wallet = new ethers.Wallet(
     //     '',
@@ -107,7 +107,7 @@ async function main() {
     for (const keeper of keepers) {
         // await wallet.sendTransaction({
         //     to: keeper,
-        //     value: ethers.utils.parseEther('2'),
+        //     value: ethers.utils.parseEther('10'),
         // });
         total = total.add(await deployer.provider.getBalance(keeper));
         console.log(

@@ -192,7 +192,10 @@ contract Pool is IPool, Upgradeable {
         );
         require(
             _pair.expectIndexTokenP <= PrecisionUtils.percentage() &&
-                _pair.addLpFeeP <= PrecisionUtils.percentage(),
+                _pair.maxUnbalancedP <= PrecisionUtils.percentage() &&
+                _pair.unbalancedDiscountRate <= PrecisionUtils.percentage() &&
+                _pair.addLpFeeP <= PrecisionUtils.percentage() &&
+                _pair.removeLpFeeP <= PrecisionUtils.percentage(),
             "ex"
         );
 
@@ -235,7 +238,10 @@ contract Pool is IPool, Upgradeable {
         require(
             _tradingFeeConfig.lpFeeDistributeP +
                 _tradingFeeConfig.keeperFeeDistributeP +
-                _tradingFeeConfig.stakingFeeDistributeP <=
+                _tradingFeeConfig.stakingFeeDistributeP +
+                _tradingFeeConfig.treasuryFeeDistributeP +
+                _tradingFeeConfig.reservedFeeDistributeP +
+                _tradingFeeConfig.ecoFundFeeDistributeP <=
                 PrecisionUtils.percentage(),
             "ex"
         );

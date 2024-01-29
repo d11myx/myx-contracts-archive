@@ -35,9 +35,11 @@ interface IExecutionLogic is IExecution {
 
     function updateMaxTimeDelay(uint256 newMaxTimeDelay) external;
 
-    function executeIncreaseMarketOrders(address keeper, ExecuteOrder[] memory orders) external;
-
-    function executeIncreaseLimitOrders(address keeper, ExecuteOrder[] memory orders) external;
+    function executeIncreaseOrders(
+        address keeper,
+        ExecuteOrder[] memory orders,
+        TradingTypes.TradeType tradeType
+    ) external;
 
     function executeIncreaseOrder(
         address keeper,
@@ -49,9 +51,11 @@ interface IExecutionLogic is IExecution {
         address referralOwner
     ) external;
 
-    function executeDecreaseMarketOrders(address keeper, ExecuteOrder[] memory orders) external;
-
-    function executeDecreaseLimitOrders(address keeper, ExecuteOrder[] memory orders) external;
+    function executeDecreaseOrders(
+        address keeper,
+        ExecuteOrder[] memory orders,
+        TradingTypes.TradeType tradeType
+    ) external;
 
     function executeDecreaseOrder(
         address keeper,
