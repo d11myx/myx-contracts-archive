@@ -29,7 +29,7 @@ export enum ScrollNetwork {
 }
 
 export enum ArbitrumNetwork {
-    main = 'arbitrum_mainnet',
+    main = 'arbitrum_one',
     sepolia = 'arbitrum_sepolia',
 }
 

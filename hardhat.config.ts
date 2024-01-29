@@ -139,6 +139,7 @@ const config: HardhatUserConfig = {
             linea_goerli: '6WZUFU45J91UMAHDV2C52TV8RAJAQASIZR',
             linea_mainnet: 'I7TMBCCPR75UPE2H14EIWDYS469TFAHHUW',
             arbitrum_sepolia: 'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
+            arbitrum_one: 'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
             dev_local: 'myx',
         },
         customChains: [
@@ -172,6 +173,14 @@ const config: HardhatUserConfig = {
                 urls: {
                     apiURL: 'https://api-sepolia.arbiscan.io/api',
                     browserURL: 'https://sepolia.arbiscan.io',
+                },
+            },
+            {
+                network: 'arbitrum_one',
+                chainId: 42161,
+                urls: {
+                    apiURL: 'https://api.arbiscan.io/api',
+                    browserURL: 'https://arbiscan.io',
                 },
             },
         ],

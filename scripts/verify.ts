@@ -23,6 +23,11 @@ async function main() {
         'https://api-sepolia.arbiscan.io/api',
         'https://sepolia.arbiscan.io/',
     );
+    const arbitrumMain = new Etherscan(
+        'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
+        'https://api.arbiscan.io/api',
+        'https://arbiscan.io/',
+    );
     const local = new Etherscan(
         'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8',
         'http://export.myx.cash/api',
@@ -52,7 +57,7 @@ async function main() {
             const deployment = await deployments.get(art);
             // console.log(deployment.address);
             // console.log(deployment.args);
-            await verifyContract(local, deployment.address, deployment.args);
+            await verifyContract(arbitrumMain, deployment.address, deployment.args);
         } catch (e) {
             console.log(e);
         }

@@ -28,7 +28,7 @@ abi/contracts
 .DS_Store
 .vscode
 .openzeppelin
-deploment-logs
+deploment_logs
 deploments
 abi
 
