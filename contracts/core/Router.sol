@@ -122,11 +122,12 @@ contract Router is
         bool isLong,
         int256 collateral,
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     ) external payable whenNotPaused nonReentrant {
         require(!operationStatus[pairIndex].orderDisabled, "disabled");
 
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData, publishTimes);
 
         positionManager.adjustCollateral(pairIndex, msg.sender, isLong, collateral);
     }
@@ -134,9 +135,10 @@ contract Router is
     function setPriceAndUpdateFundingRate(
         uint256 pairIndex,
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     ) external payable whenNotPaused nonReentrant {
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData, publishTimes);
 
         positionManager.updateFundingRate(pairIndex);
     }
@@ -149,10 +151,6 @@ contract Router is
             request.tradeType != TradingTypes.TradeType.TP &&
             request.tradeType != TradingTypes.TradeType.SL,
             "not support"
-        );
-        require(
-            msg.value >= request.networkFeeAmount + request.tpNetworkFeeAmount + request.slNetworkFeeAmount,
-            "insufficient network fees"
         );
         request.account = msg.sender;
 
@@ -462,6 +460,7 @@ contract Router is
         uint256 stableAmount,
         address[] calldata tokens,
         bytes[] calldata updateData,
+        uint64[] calldata publishTimes,
         uint256 updateFee
     ) external payable whenNotPaused nonReentrant returns (uint256 mintAmount, address slipToken, uint256 slipAmount){
         uint256 pairIndex = IPool(pool).getPairIndex(indexToken, stableToken);
@@ -469,7 +468,7 @@ contract Router is
         require(!operationStatus[pairIndex].addLiquidityDisabled, "disabled");
         require(msg.value >= indexAmount + updateFee, "ne");
 
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: updateFee}(tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: updateFee}(tokens, updateData, publishTimes);
 
         uint256 wrapAmount = msg.value - updateFee;
         this.wrapWETH{value: wrapAmount}(address(this));
@@ -493,7 +492,8 @@ contract Router is
         uint256 indexAmount,
         uint256 stableAmount,
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     )
         external
         payable
@@ -505,7 +505,7 @@ contract Router is
         require(pairIndex > 0, "!exists");
         require(!operationStatus[pairIndex].addLiquidityDisabled, "disabled");
 
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData, publishTimes);
 
         if (indexToken == ADDRESS_PROVIDER.WETH()) {
             IWETH(ADDRESS_PROVIDER.WETH()).safeTransferFrom(msg.sender, address(this), indexAmount);
@@ -528,7 +528,8 @@ contract Router is
         uint256 indexAmount,
         uint256 stableAmount,
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     )
         external
         payable
@@ -540,7 +541,7 @@ contract Router is
         require(pairIndex > 0, "!exists");
         require(!operationStatus[pairIndex].addLiquidityDisabled, "disabled");
 
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData, publishTimes);
 
         if (indexToken == ADDRESS_PROVIDER.WETH()) {
             IWETH(ADDRESS_PROVIDER.WETH()).safeTransferFrom(msg.sender, address(this), indexAmount);
@@ -561,7 +562,8 @@ contract Router is
         uint256 amount,
         bool useETH,
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     )
         external
         payable
@@ -573,7 +575,7 @@ contract Router is
         require(pairIndex > 0, "!exists");
         require(!operationStatus[pairIndex].removeLiquidityDisabled, "disabled");
 
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData, publishTimes);
 
         return
             IPool(pool).removeLiquidity(
@@ -592,7 +594,8 @@ contract Router is
         uint256 amount,
         bool useETH,
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     )
         external
         payable
@@ -604,7 +607,7 @@ contract Router is
         require(pairIndex > 0, "!exists");
         require(!operationStatus[pairIndex].removeLiquidityDisabled, "disabled");
 
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData);
+        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(tokens, updateData, publishTimes);
 
         return
             IPool(pool).removeLiquidity(
