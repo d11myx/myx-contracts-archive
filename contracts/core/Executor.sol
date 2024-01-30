@@ -226,22 +226,22 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         );
     }
 
-    function setPricesHistorical(
-        address[] memory _tokens,
-        uint256[] memory _prices,
-        bytes[] memory updateData,
-        uint64 backtrackRound
-    ) external payable {
-        require(msg.sender == address(this), "internal");
-
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
-
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: msg.value}(
-            _tokens,
-            updateData,
-            backtrackRound
-        );
-    }
+//    function setPricesHistorical(
+//        address[] memory _tokens,
+//        uint256[] memory _prices,
+//        bytes[] memory updateData,
+//        uint64 backtrackRound
+//    ) external payable {
+//        require(msg.sender == address(this), "internal");
+//
+//        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
+//
+//        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: msg.value}(
+//            _tokens,
+//            updateData,
+//            backtrackRound
+//        );
+//    }
 
     function needADL(
         uint256 pairIndex,

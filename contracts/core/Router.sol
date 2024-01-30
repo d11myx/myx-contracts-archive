@@ -245,6 +245,7 @@ contract Router is
             request.tradeType != TradingTypes.TradeType.SL,
             "not support"
         );
+        require(msg.value == request.networkFeeAmount, "insufficient network fee");
 
         request.account = msg.sender;
 
@@ -270,6 +271,7 @@ contract Router is
         TradingTypes.DecreasePositionRequest memory request
     ) external payable whenNotPaused nonReentrant returns (uint256) {
         require(!operationStatus[request.pairIndex].decreasePositionDisabled, "disabled");
+        require(msg.value == request.networkFeeAmount, "insufficient network fee");
 
         request.account = msg.sender;
 

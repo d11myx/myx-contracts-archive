@@ -25,6 +25,7 @@ contract PositionManager is IPositionManager, Upgradeable {
     using Math for uint256;
     using SafeMath for uint256;
     using Int256Utils for int256;
+    using Int256Utils for uint256;
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
 
@@ -759,9 +760,9 @@ contract PositionManager is IPositionManager, Upgradeable {
 
         int256 afterExposedPositions = exposedPositions;
         if (isLong) {
-            afterExposedPositions -= int256(executionSize);
+            afterExposedPositions -= executionSize.safeConvertToInt256();
         } else {
-            afterExposedPositions += int256(executionSize);
+            afterExposedPositions += executionSize.safeConvertToInt256();
         }
 
         uint256 maxAvailableLiquidity = TradingHelper.maxAvailableLiquidity(vault, pair, exposedPositions, !isLong, executionPrice);

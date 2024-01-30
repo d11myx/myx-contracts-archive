@@ -149,7 +149,11 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         address token
     ) external view onlyBacktracking override returns (uint256) {
         bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), publishTime));
-        return backtrackTokenPrices[backtrackRound][token];
+        uint256 price = backtrackTokenPrices[backtrackRound][token];
+        if (price == 0) {
+            revert("invalid price");
+        }
+        return price;
     }
 
     function getPythPriceUnsafe(address token) external view returns (PythStructs.Price memory) {

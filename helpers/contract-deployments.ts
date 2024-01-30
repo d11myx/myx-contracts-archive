@@ -270,8 +270,10 @@ export async function deployTrading(
     let executor = (await deployContract('Executor', [addressProvider.address])) as any as Executor;
     log(`deployed Executor at ${executor.address}`);
 
-    let backtracker = (await deployContract('Backtracker', [])) as any as Backtracker;
+    let backtracker = (await deployContract('Backtracker', [addressProvider.address])) as any as Backtracker;
     log(`deployed Backtracker at ${backtracker.address}`);
+
+    await waitForTx(await backtracker.updateExecutorAddress(executor.address));
 
     await waitForTx(await feeCollector.updatePositionManagerAddress(positionManager.address));
     await waitForTx(await feeCollector.updateExecutionLogicAddress(executionLogic.address));

@@ -2,17 +2,19 @@
 pragma solidity 0.8.19;
 
 import "../interfaces/IBacktracker.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/IRoleManager.sol";
 
 contract Backtracker is IBacktracker {
 
-    event Backtracking(address account, uint64 round);
-
-    event UnBacktracking(address account);
+    IAddressesProvider public immutable ADDRESS_PROVIDER;
 
     bool public override backtracking;
     uint64 public override backtrackRound;
+    address public executor;
 
-    constructor() {
+    constructor(IAddressesProvider addressProvider) {
+        ADDRESS_PROVIDER = addressProvider;
         backtracking = false;
     }
 
@@ -26,13 +28,29 @@ contract Backtracker is IBacktracker {
         _;
     }
 
-    function enterBacktracking(uint64 _backtrackRound) external whenNotBacktracking {
+    modifier onlyPoolAdmin() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isPoolAdmin(msg.sender), "only poolAdmin");
+        _;
+    }
+
+    modifier onlyExecutor() {
+        require(msg.sender == executor, "only executor");
+        _;
+    }
+
+    function updateExecutorAddress(address newAddress) external onlyPoolAdmin {
+        address oldAddress = executor;
+        executor = newAddress;
+        emit UpdatedExecutorAddress(msg.sender, oldAddress, newAddress);
+    }
+
+    function enterBacktracking(uint64 _backtrackRound) external whenNotBacktracking onlyExecutor {
         backtracking = true;
         backtrackRound = _backtrackRound;
         emit Backtracking(msg.sender, _backtrackRound);
     }
 
-    function quitBacktracking() external whenBacktracking {
+    function quitBacktracking() external whenBacktracking onlyExecutor {
         backtracking = false;
         emit UnBacktracking(msg.sender);
     }

@@ -27,7 +27,7 @@ export async function updateBTCPrice(testEnv: TestEnv, btcPrice: string) {
     await waitForTx(
         await oraclePriceFeed
             .connect(keeper.signer)
-            .updatePrice([btc.address], [abiCoder.encode(['uint256'], [ethers.utils.parseUnits(btcPrice, 8)])], {
+            .updatePrice([btc.address], [abiCoder.encode(['uint256'], [ethers.utils.parseUnits(btcPrice, 8)])], [0], {
                 value: fee,
             }),
     );
@@ -54,7 +54,7 @@ export async function updatePrice(testEnv: TestEnv, token: string, price: string
     await waitForTx(
         await oraclePriceFeed
             .connect(deployer.signer)
-            .updatePrice([token], [abiCoder.encode(['uint256'], [ethers.utils.parseUnits(price, 8)])], {
+            .updatePrice([token], [abiCoder.encode(['uint256'], [ethers.utils.parseUnits(price, 8)])], [0], {
                 value: fee,
             }),
     );
@@ -119,6 +119,7 @@ export async function increasePosition(
                     [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                 ),
             ],
+            [0],
             [
                 {
                     orderId: orderId,
@@ -147,6 +148,7 @@ export async function increasePosition(
                     [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                 ),
             ],
+            [0],
             [
                 {
                     orderId: orderId.toNumber(),
@@ -211,6 +213,7 @@ export async function decreasePosition(
                     [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                 ),
             ],
+            [0],
             [
                 {
                     orderId: orderId,
@@ -235,6 +238,7 @@ export async function decreasePosition(
                     [(await oraclePriceFeed.getPrice(pair.indexToken)).div('10000000000000000000000')],
                 ),
             ],
+            [0],
             [
                 {
                     orderId: orderId,
@@ -292,6 +296,7 @@ export async function adlPosition(
                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
             ),
         ],
+        [0],
         pairIndex,
         adlPositions,
         [
