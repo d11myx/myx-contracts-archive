@@ -2,6 +2,7 @@
 import hre, { artifacts, deployments, ethers } from 'hardhat';
 import {
     abiCoder,
+    COMMON_DEPLOY_PARAMS,
     getAddressesProvider,
     getBacktracker,
     getExecutionLogic,
@@ -14,13 +15,16 @@ import {
     getPoolView,
     getPositionManager,
     getRiskReserve,
+    getRoleManager,
     getRouter,
     getTokens,
+    ROUTER_ID,
     waitForTx,
 } from '../helpers';
 import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
 import { mock } from '../types/contracts';
 import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
+import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -74,7 +78,7 @@ async function main() {
     // // console.log(await positionManager.getFundingFee('0xC2d0Bfc4B5D23ddDa21AaDe8FB07CC36896dCe20', 1, true));
     //
 
-    const priceId = '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43';
+    const priceId = '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace';
     const conn = new EvmPriceServiceConnection('https://hermes.pyth.network', {
         priceFeedRequestConfig: { binary: true },
     });
@@ -152,47 +156,55 @@ async function main() {
 
     // console.log(await oraclePriceFeed.getPrice(btc.address));
     // console.log(ethers.utils.parseUnits(ethers.utils.formatUnits(price, 8), 30));
+
+    // const art = await deployments.deploy(`${ROUTER_ID}-v9`, {
+    //     from: deployer.address,
+    //     contract: 'Router',
+    //     args: [addressesProvider.address, orderManager.address, positionManager.address, pool.address],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+    // const routerV2 = await getRouter(art.address);
+    //
     // const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
-    //     1,
-    //     ethers.utils.parseEther('50'),
+    //     2,
+    //     ethers.utils.parseEther('10'),
     //     ethers.utils.parseUnits(ethers.utils.formatUnits(price, 8), 30),
     // );
     // const wallet = new ethers.Wallet(
     //     'd0d53b4c99b1be944f8caa0dee8c0dee572e44df542ac23f42dc66d5d42fc6fd',
     //     deployer.provider,
     // );
-    // await waitForTx(await btc.connect(wallet).approve(router.address, depositIndexAmount));
-    // await waitForTx(await usdt.connect(wallet).approve(router.address, depositStableAmount));
+    // // console.log(usdt.address);
+    // console.log(depositIndexAmount);
+    // // console.log(depositStableAmount);
+    // // console.log(await usdt.balanceOf(wallet.address));
+    // // await waitForTx(await eth.connect(wallet).approve(router.address, depositIndexAmount));
+    //
+    // console.log(await wallet.getBalance());
+    // console.log(await addressesProvider.WETH());
+    // console.log(eth.address);
+    // await waitForTx(await usdt.connect(wallet).approve(routerV2.address, depositStableAmount));
+    await waitForTx(await pool.setRouter('0x69a167BfD711CA771F550Ba8a2d3E432aB232Cb5'));
+    await waitForTx(await orderManager.setRouter('0x69a167BfD711CA771F550Ba8a2d3E432aB232Cb5'));
+    await waitForTx(await positionManager.setRouter('0x69a167BfD711CA771F550Ba8a2d3E432aB232Cb5'));
     // console.log(
-    //     await router
+    //     await routerV2
     //         .connect(wallet)
-    //         .addLiquidity(
-    //             btc.address,
+    //         .addLiquidityETH(
+    //             eth.address,
     //             usdt.address,
     //             depositIndexAmount,
     //             depositStableAmount,
-    //             [btc.address],
+    //             [eth.address],
     //             [priceFeedUpdate],
     //             [publishTime],
-    //             { value: 1 },
+    //             1,
+    //             { value: depositIndexAmount.add(10) },
     //         ),
     // );
-    // console.log(
-    //     await router
-    //         .connect(wallet)
-    //         .addLiquidity(
-    //             '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
-    //             '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-    //             '0',
-    //             '1000000',
-    //             ['0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'],
-    //             [
-    //                 '0x504e41550100000003b801000000030d0210b3aaf0f3b487444927e8853c0ab635bfdce174d965e11b52893aa33bc5298b75e63d52bf9b5ba1418d084e96ef8437e14d6ae58a332f55353640bd0f0e862a01035f1f459783666b9ecf9e49c8322cf102ff50ac277247a00740e354327089896c1ffcf2900c275efa76e71e6535ba25f7efc77295bb86a1d9336a7235fd17b53a01041631186a9874e309d10769d7d16b0111c68aeec339a72b4cc115e8e4c91595ec41e57e80fd7320f2b6f7f6c231781d352c887f8bf0fcfc9d798c6708cdfd120100060a3258c42d2701e5d85acfe69cb0755e51f5054b4022cdd2661b13c3fdcce2824c5d930e885527716896dcff0c096b451937f607b65d8e5379f37ec71a184d50010723d1ffb446feb33b37ed9a344cfee53c50d74cc719cf51ebb6a4b0cbb2b14d094f3843850193339537a06fba98b7dcfe60d5866037ab259691932ce779e14661000842da8b263a4e5d80862ad24cdc0af4e30d36759b457ff5fe38c0976f82af8a4254d9c4266543a26724156ac2b64048a3c5873792fba662a4fb542b41329ef3a4000afbecc43951289178738e6e17619fa518ffe00eaf7386fe069a551aa3481490126adb5d6e08d7b332ec9441a330b223dc708077f0f0eb6e268dcffcbe692347b2010b59f816846d44709641a755cd60900bc40b3600df6636f6d3cd29af768ca02ad406e26f04efd1e9862f82ff33fdd87c21d5c8a96d4c76ac32ac512d9e3bc75da7000d284d4aa8732558a99036ed41854415cbad6e78a1647e19cb353a756b2ac4738a57db27b3a5bc36c83b03264bff381df865df8565dba656cf2956a436c0a7f989000e8e78ee151a3681618a9b7a5ca373213702b779f156884b6e1195bba578e3d2350d9cdce78c7ae952d87b5ee986a21a22e606159b0dd3a1359a6936af1823e4c2010f710a55296d73c136a8499b9f5c22f79932d53d3a74d6b2a68fecfb026e66a086448f0483a7664adb2027cea7f8462b29bb3b13e575d648a710be9c8b03083b9b0010a8ddf78a27a7ce8173e08bad1dce5aafbe0cec39a2903b5950ecc00fe1ca156e5e3d871dbae61b62292f55e24ccf5fa7e13981dccdf46cf188ab1a2980166ef80112671cf8c40b1f2574ff353efdc90a7364f402e672370a788ddc31be971721e17c073614fb79ea690261eabfe5f4c393a991a34aed4c83539c2d1c8396ef0865e40065b89f3d00000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa7100000000024b79be0141555756000000000007535f3f000027102b8fbbcf80d499d8e237f33b15abbfd3445c465801005500e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43000003f1003190d000000000755a5f76fffffff80000000065b89f3d0000000065b89f3d000003f2868f30a0000000008bad5f300acc59cbdfa03fa146bfc99b4263180f1cf8fa8f5108986364030fb0ceb9756885c6cf567d8b59a59554c606df97d62d849fc325776597093629e04fbc686012fd2c53bbc7bd53514d0592875e72380efa9382f391cc60e2e9a698d1f08f0ef88b3741ddea45cebb0f72be4b120369b54923420ab22b027843d551476a4d8d92cdf61e0ecca56b8b50e3a1f9532906d7bb83030daa14702899cfa3467fb01e40aff06e0d68075f0db2c57676f6efdaddc9ed4d06c8640324afffcd82db8b9041d90fac61efb9a8bece',
-    //             ],
-    //             [1706598205],
-    //             { value: 1 },
-    //         ),
-    // );
+
+    // console.log(await router.connect(wallet).wrapWETH(wallet.address, { value: 2 }));
+
     // console.log(await router.ADDRESS_PROVIDER());
     // console.log(await (await getAddressesProvider(await router.ADDRESS_PROVIDER())).priceOracle());
     // const pythOraclePriceFeed = await ethers.getContractAt(
@@ -346,7 +358,7 @@ async function main() {
     //     to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
     //     value: ethers.utils.parseEther('100000'),
     // });
-    console.log(await usdt.mint('0xAb2aaB9D9d85e19891F0500b6d600c2b5d04890A', ethers.utils.parseUnits('100000', 6)));
+    // console.log(await usdt.mint('0xAb2aaB9D9d85e19891F0500b6d600c2b5d04890A', ethers.utils.parseUnits('100000', 6)));
     // console.log(btc.address);
     // console.log(await btc.owner());
     // console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));

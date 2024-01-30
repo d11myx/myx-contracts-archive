@@ -652,7 +652,7 @@ contract Router is
 
         if (amountIndex > 0) {
             if (indexToken == ADDRESS_PROVIDER.WETH()) {
-                IERC20(indexToken).safeTransferFrom(address(this), msg.sender, uint256(amountIndex));
+                IERC20(indexToken).safeTransfer(msg.sender, uint256(amountIndex));
             } else {
                 IERC20(indexToken).safeTransferFrom(sender, msg.sender, uint256(amountIndex));
             }
