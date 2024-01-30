@@ -43,6 +43,7 @@ describe('Trade: increase position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -88,6 +89,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -156,6 +158,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -199,6 +202,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -262,6 +266,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -305,6 +310,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -363,6 +369,7 @@ describe('Trade: increase position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
 
@@ -532,6 +539,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -607,6 +615,7 @@ describe('Trade: increase position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -655,6 +664,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -721,6 +731,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -790,6 +801,7 @@ describe('Trade: increase position', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,

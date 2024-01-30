@@ -19,7 +19,9 @@ import {
     getRouter,
     getTokens,
     ROUTER_ID,
+    TradeType,
     waitForTx,
+    ZERO_ADDRESS,
 } from '../helpers';
 import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
 import { mock } from '../types/contracts';
@@ -78,20 +80,28 @@ async function main() {
     // // console.log(await positionManager.getFundingFee('0xC2d0Bfc4B5D23ddDa21AaDe8FB07CC36896dCe20', 1, true));
     //
 
-    const priceId = '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace';
+    const btcPriceId = '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43';
+    const ethPriceId = '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace';
     const conn = new EvmPriceServiceConnection('https://hermes.pyth.network', {
         priceFeedRequestConfig: { binary: true },
     });
-    const vaas = await conn.getLatestPriceFeeds([priceId]);
-    console.log(vaas);
+    const btcPriceFeeds = await conn.getLatestPriceFeeds([btcPriceId]);
+    const ethPriceFeeds = await conn.getLatestPriceFeeds([ethPriceId]);
+    // console.log(btcPriceFeeds);
     // @ts-ignore
-    const priceFeed = vaas[0];
+    const btcPriceFeed = btcPriceFeeds[0];
+    const btcPrice = btcPriceFeed.getPriceUnchecked().price;
+    const btcPriceFeedUpdate = '0x' + Buffer.from(btcPriceFeed.getVAA() as string, 'base64').toString('hex');
+    const btcPublishTime = btcPriceFeed.getPriceUnchecked().publishTime;
 
-    const price = priceFeed.getPriceUnchecked().price;
-    const priceFeedUpdate = '0x' + Buffer.from(priceFeed.getVAA() as string, 'base64').toString('hex');
-    const publishTime = priceFeed.getPriceUnchecked().publishTime;
-    console.log(price);
-    console.log(publishTime);
+    // @ts-ignore
+    const ethPriceFeed = ethPriceFeeds[0];
+    const ethPrice = ethPriceFeed.getPriceUnchecked().price;
+    const ethPriceFeedUpdate = '0x' + Buffer.from(ethPriceFeed.getVAA() as string, 'base64').toString('hex');
+    const ethPublishTime = ethPriceFeed.getPriceUnchecked().publishTime;
+
+    // console.log(price);
+    // console.log(publishTime);
 
     //
     // // // console.log(
@@ -184,9 +194,6 @@ async function main() {
     // console.log(await addressesProvider.WETH());
     // console.log(eth.address);
     // await waitForTx(await usdt.connect(wallet).approve(routerV2.address, depositStableAmount));
-    await waitForTx(await pool.setRouter('0x69a167BfD711CA771F550Ba8a2d3E432aB232Cb5'));
-    await waitForTx(await orderManager.setRouter('0x69a167BfD711CA771F550Ba8a2d3E432aB232Cb5'));
-    await waitForTx(await positionManager.setRouter('0x69a167BfD711CA771F550Ba8a2d3E432aB232Cb5'));
     // console.log(
     //     await routerV2
     //         .connect(wallet)
@@ -260,22 +267,14 @@ async function main() {
     //     deployer.provider,
     // );
     // console.log(
-    //     await executor.connect(wallet).setPricesAndExecuteIncreaseMarketOrders(
-    //         ['0x3fF8C9A44733E54a48170ed3839a80C46C912b00', '0x7025c220763196F126571B34A708fD700f67d363'],
+    //     await executor.setPricesAndExecuteOrders(
+    //         ['0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f', '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'],
     //         [await oraclePriceFeed.getPrice(btc.address), await oraclePriceFeed.getPrice(eth.address)],
-    //         [
-    //             abiCoder.encode(
-    //                 ['uint256'],
-    //                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-    //             ),
-    //             abiCoder.encode(
-    //                 ['uint256'],
-    //                 [(await oraclePriceFeed.getPrice(eth.address)).div('10000000000000000000000')],
-    //             ),
-    //         ],
+    //         [btcPriceFeedUpdate, ethPriceFeedUpdate],
+    //         [btcPublishTime, ethPublishTime],
     //         [
     //             {
-    //                 orderId: 7,
+    //                 orderId: 56,
     //                 tradeType: TradeType.MARKET,
     //                 isIncrease: true,
     //                 tier: 0,

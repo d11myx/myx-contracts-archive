@@ -109,6 +109,7 @@ describe('LP: Price cases', () => {
                 0,
                 [pair.indexToken],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [oraclePrice.div('10000000000000000000000')])],
+                [0],
                 { value: 1 },
             );
 
@@ -127,6 +128,7 @@ describe('LP: Price cases', () => {
                 0,
                 [pair.indexToken],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [oraclePrice.div('10000000000000000000000')])],
+                [0],
                 { value: 1 },
             );
         expect(new Decimal((await _lpPrice()).toString()).div(pricePrecision).toFixed(5)).to.be.eq('1.01180');
@@ -171,6 +173,7 @@ describe('LP: Price cases', () => {
                 false,
                 [pair.indexToken],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [oraclePrice.div('10000000000000000000000')])],
+                [0],
                 { value: 1 },
             );
     }
@@ -197,6 +200,7 @@ describe('LP: Price cases', () => {
                 depositStableAmount,
                 [pair.indexToken],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [oraclePrice.div('10000000000000000000000')])],
+                [0],
                 { value: 1 },
             );
 

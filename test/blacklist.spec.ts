@@ -76,6 +76,7 @@ describe('Blacklist cases', () => {
                     0,
                     [pair.indexToken],
                     [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    [0],
                     { value: 1 },
                 ),
         ).to.be.revertedWith('blacklist account');
@@ -91,6 +92,7 @@ describe('Blacklist cases', () => {
                     0,
                     [pair.indexToken],
                     [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    [0],
                     { value: 1 },
                 ),
         ).to.be.revertedWith('blacklist account');
@@ -128,6 +130,7 @@ describe('Blacklist cases', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 ),
         ).to.be.revertedWith('blacklist account');
@@ -148,6 +151,7 @@ describe('Blacklist cases', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 ),
         ).to.be.revertedWith('blacklist account');

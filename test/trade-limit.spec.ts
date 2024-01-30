@@ -44,6 +44,7 @@ describe('Trade: Limit order', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -144,6 +145,7 @@ describe('Trade: Limit order', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -199,6 +201,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -258,6 +261,7 @@ describe('Trade: Limit order', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -305,6 +309,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -347,6 +352,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -467,6 +473,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: decreaseLongOrderId,
@@ -531,6 +538,7 @@ describe('Trade: Limit order', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -586,6 +594,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -655,6 +664,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -730,6 +740,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,
@@ -799,6 +810,7 @@ describe('Trade: Limit order', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId,

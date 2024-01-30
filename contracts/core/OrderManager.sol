@@ -145,7 +145,6 @@ contract OrderManager is IOrderManager, Upgradeable {
                     || (request.sizeAmount.abs() < networkFee.discountThreshold && request.networkFeeAmount < networkFee.basicNetworkFee)) {
                     revert("insufficient network fee");
                 }
-//                collateral -= request.networkFeeAmount.safeConvertToInt256();
                 _transferOrderCollateral(
                     pair.stableToken,
                     request.networkFeeAmount,
@@ -155,11 +154,6 @@ contract OrderManager is IOrderManager, Upgradeable {
             }
         }
 
-//        Position.Info memory position = positionManager.getPosition(
-//            account,
-//            request.pairIndex,
-//            request.isLong
-//        );
         if (
             request.tradeType == TradingTypes.TradeType.MARKET ||
             request.tradeType == TradingTypes.TradeType.LIMIT
@@ -172,34 +166,7 @@ contract OrderManager is IOrderManager, Upgradeable {
                             request.sizeAmount.abs() <= tradingConfig.maxTradeAmount),
                     "invalid trade size"
                 );
-//                // check leverage
-//                (uint256 afterPosition, ) = position.validLeverage(
-//                    pair,
-//                    0,
-//                    collateral,
-//                    request.sizeAmount.abs(),
-//                    true,
-//                    tradingConfig.maxLeverage,
-//                    tradingConfig.maxPositionAmount,
-//                    true,
-//                    positionManager.getFundingFee(account, request.pairIndex, request.isLong)
-//                );
-//                require(afterPosition > 0, "zero position amount");
             }
-//            if (request.sizeAmount < 0) {
-//                // check leverage
-//                position.validLeverage(
-//                    pair,
-//                    0,
-//                    collateral,
-//                    request.sizeAmount.abs(),
-//                    false,
-//                    tradingConfig.maxLeverage,
-//                    tradingConfig.maxPositionAmount,
-//                    true,
-//                    positionManager.getFundingFee(account, request.pairIndex, request.isLong)
-//                );
-//            }
         }
 
         // transfer collateral

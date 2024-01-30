@@ -46,6 +46,7 @@ describe('Router: NetworkFee cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
     });

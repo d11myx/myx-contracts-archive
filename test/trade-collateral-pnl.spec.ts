@@ -52,6 +52,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
 
@@ -126,6 +127,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -149,6 +151,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
     });
@@ -193,6 +196,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -216,6 +220,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
     });
@@ -260,6 +265,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -283,6 +289,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
     });
@@ -326,6 +333,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
         const positionAfter = await positionManager.getPosition(trader.address, pairIndex, true);
@@ -349,6 +357,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
     });
@@ -381,6 +390,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
 
@@ -408,6 +418,7 @@ describe('Router: Edge cases', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 ),
         ).to.be.revertedWith('collateral not enough');
@@ -441,6 +452,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
 
@@ -471,6 +483,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
 
@@ -509,6 +522,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
 
@@ -542,6 +556,7 @@ describe('Router: Edge cases', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 ),
         ).to.be.revertedWith('collateral not enough');

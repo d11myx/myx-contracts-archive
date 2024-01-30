@@ -156,7 +156,11 @@ export async function deployPrice(
         return abiCoder.encode(['uint256'], [value]);
     });
 
-    await oraclePriceFeed.connect(keeper.signer).updatePrice(pairTokenAddresses, pairTokenPricesBytes, { value: fee });
+    await oraclePriceFeed
+        .connect(keeper.signer)
+        .updatePrice(pairTokenAddresses, pairTokenPricesBytes, [Array(pairTokenPricesBytes.length).fill(0)], {
+            value: fee,
+        });
 
     const fundingRate = (await deployUpgradeableContract('FundingRate', [
         addressesProvider.address,

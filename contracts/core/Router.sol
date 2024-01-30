@@ -72,7 +72,7 @@ contract Router is
     }
 
     function salvageToken(address token, uint amount) external onlyPoolAdmin {
-        IERC20(token).transfer(msg.sender, amount);
+        IERC20(token).safeTransfer(msg.sender, amount);
     }
 
     function setPaused() external onlyPoolAdmin {
@@ -481,7 +481,7 @@ contract Router is
             abi.encode(msg.sender)
         );
 
-        if (wrapAmount - indexAmount > 0) {
+        if (wrapAmount - indexAmount > 0 && indexToken == ADDRESS_PROVIDER.WETH()) {
             IWETH(ADDRESS_PROVIDER.WETH()).safeTransfer(msg.sender, wrapAmount - indexAmount);
         }
     }

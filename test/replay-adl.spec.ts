@@ -37,6 +37,7 @@ describe('Replay: adl', () => {
                 stableAmount,
                 [weth.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 1,
                 { value: indexAmount.add(1) },
             );
@@ -127,6 +128,7 @@ describe('Replay: adl', () => {
                     [(await oraclePriceFeed.getPrice(eth.address)).div('10000000000000000000000')],
                 ),
             ],
+            [0],
             pairIndex,
             [
                 {

@@ -54,6 +54,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -142,6 +143,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -273,6 +275,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -361,6 +364,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -491,6 +495,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -546,6 +551,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -674,6 +680,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -729,6 +736,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: shortOrderId,
@@ -779,6 +787,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -909,6 +918,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -964,6 +974,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: shortOrderId,
@@ -1014,6 +1025,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -1144,6 +1156,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -1232,6 +1245,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -1342,6 +1356,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -1431,6 +1446,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -1561,6 +1577,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -1650,6 +1667,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -1780,6 +1798,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -1869,6 +1888,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -1999,6 +2019,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -2056,6 +2077,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: longOrderId,
@@ -2106,6 +2128,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: shortOrderId,
@@ -2176,6 +2199,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
                 longTraderBalance = await usdt.balanceOf(longTrader.address);
@@ -2227,6 +2251,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     pairIndex,
                     [
                         {
@@ -2300,6 +2325,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -2388,6 +2414,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -2459,6 +2486,7 @@ describe('Position', () => {
                     .updatePrice(
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])],
+                        [0],
                         { value: fee },
                     );
                 const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
@@ -2529,6 +2557,7 @@ describe('Position', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -2618,6 +2647,7 @@ describe('Position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,
@@ -2688,6 +2718,7 @@ describe('Position', () => {
                     .updatePrice(
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])],
+                        [0],
                         { value: fee },
                     );
                 const oraclePrice = await oraclePriceFeed.getPrice(btc.address);

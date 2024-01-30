@@ -5,9 +5,12 @@ import {
     Duration,
     encodeParameterArray,
     encodeParameters,
+    EXECUTION_LOGIC_ID,
     getAddressesProvider,
+    getExecutionLogic,
     getExecutor,
     getFeeCollector,
+    getFundingRate,
     getOrderManager,
     getPool,
     getPoolTokenFactory,
@@ -115,11 +118,27 @@ async function main() {
     //     ),
     // );
 
+    // await deployments.deploy(`${EXECUTION_LOGIC_ID}-v2`, {
+    //     from: deployer,
+    //     contract: 'ExecutionLogic',
+    //     args: [
+    //         addressesProvider.address,
+    //         pool.address,
+    //         orderManager.address,
+    //         positionManager.address,
+    //         feeCollector.address,
+    //         60 * 5,
+    //     ],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+
+    // await feeCollector.updateExecutionLogicAddress('0x9A2a97a7952dE94Beb4B86B8a2062f5B9a85a55c');
+
     await hre.run('time-execution', {
         target: addressesProvider.address,
         value: '0',
-        signature: 'setPriceOracle(address)',
-        data: encodeParameters(['address'], ['0x973547A1410B461A1D22513E47957ca68bd8bcdA']),
+        signature: 'setExecutionLogic(address)',
+        data: encodeParameters(['address'], ['0x535b954b5388b45E650c535b99dD0cc689e4Ea76']),
         eta: Duration.seconds(13)
             .add(await latest())
             .toString(),

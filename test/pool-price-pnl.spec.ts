@@ -44,6 +44,7 @@ describe('Modify LP Average Price', async () => {
                 stableAmount,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
         bal = await lpToken.balanceOf(depositor.address);
@@ -134,6 +135,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -209,6 +211,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -285,6 +288,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -364,6 +368,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -474,6 +479,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -546,6 +552,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -618,6 +625,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -695,6 +703,7 @@ describe('Modify LP Average Price', async () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
