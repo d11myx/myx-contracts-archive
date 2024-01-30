@@ -86,18 +86,20 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
             revert("insufficient fee");
         }
         bytes32[] memory priceIds = new bytes32[](tokens.length);
+        bool update = false;
         for (uint256 i = 0; i < tokens.length; i++) {
             require(tokens[i] != address(0), "zero token address");
             require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
 
             priceIds[i] = tokenPriceIds[tokens[i]];
+
+            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) < publishTimes[i]) {
+                update = true;
+            }
         }
 
-        if (priceIds.length > 0) {
-            try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
-            } catch Error(string memory reason) {
-                revert(string(abi.encodePacked("update price failed. reason: ", reason)));
-            }
+        if (update && priceIds.length > 0) {
+            pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes);
         }
     }
 

@@ -59,7 +59,7 @@ async function main() {
     await waitForTx(tx);
 
     const oraclePriceFeed = await getOraclePriceFeed();
-    await oraclePriceFeed.updatePrice([btc.address], [priceFeedUpdate], { value: 2 });
+    await oraclePriceFeed.updatePrice([btc.address], [priceFeedUpdate], [], { value: 2 });
     console.log(await oraclePriceFeed.getPrice(btc.address));
     // console.log(await pythContract.getPriceNoOlderThan(priceId, 60));
 
