@@ -56,6 +56,11 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         _;
     }
 
+    modifier onlyTreasury() {
+        require(IRoleManager(ADDRESS_PROVIDER.roleManager()).isTreasurer(msg.sender), "onlyTreasury");
+        _;
+    }
+
     modifier onlyStakingPool() {
         require(msg.sender == addressStakingPool, "onlyStakingPool");
         _;
@@ -136,7 +141,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
         return claimableStakingTradingFee;
     }
 
-    function claimTreasuryFee() external override onlyPoolAdmin returns (uint256) {
+    function claimTreasuryFee() external override onlyTreasury returns (uint256) {
         uint256 claimableTreasuryFee = treasuryFee;
         if (claimableTreasuryFee > 0) {
             treasuryFee = 0;
