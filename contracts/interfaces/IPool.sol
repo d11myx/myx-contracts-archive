@@ -62,7 +62,8 @@ interface IPool {
         uint256 indexFeeAmount,
         uint256 stableFeeAmount,
         address slipToken,
-        uint256 slipFeeAmount
+        uint256 slipFeeAmount,
+        uint256 lpPrice
     );
 
     event RemoveLiquidity(
@@ -71,7 +72,8 @@ interface IPool {
         uint256 indexAmount,
         uint256 stableAmount,
         uint256 lpAmount,
-        uint256 feeAmount
+        uint256 feeAmount,
+        uint256 lpPrice
     );
 
     event ClaimedFee(address sender, address token, uint256 amount);

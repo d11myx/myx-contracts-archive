@@ -78,7 +78,7 @@ contract LiquidationLogic is ILiquidationLogic {
             tradingConfig
         );
 
-        bool needLiquidate = _needLiquidation(positionKey, price);
+        bool needLiquidate = positionManager.needLiquidation(positionKey, price);
         if (!needLiquidate) {
             return;
         }
@@ -225,51 +225,6 @@ contract LiquidationLogic is ILiquidationLogic {
             orderNetworkFee.paymentType,
             orderNetworkFee.networkFeeAmount
         );
-    }
-
-    function _needLiquidation(bytes32 positionKey, uint256 price) private view returns (bool) {
-        Position.Info memory position = positionManager.getPositionByKey(positionKey);
-
-        IPool.Pair memory pair = pool.getPair(position.pairIndex);
-        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
-
-        int256 unrealizedPnl = position.getUnrealizedPnl(pair, position.positionAmount, price);
-        uint256 tradingFee = positionManager.getTradingFee(
-            position.pairIndex,
-            position.isLong,
-            position.positionAmount,
-            price
-        );
-        int256 fundingFee = positionManager.getFundingFee(
-            position.account,
-            position.pairIndex,
-            position.isLong
-        );
-        int256 exposureAsset = int256(position.collateral) +
-            unrealizedPnl -
-            int256(tradingFee) +
-            fundingFee;
-
-        bool need;
-        if (exposureAsset <= 0) {
-            need = true;
-        } else {
-            uint256 maintainMarginWad = uint256(
-                TokenHelper.convertTokenAmountWithPrice(
-                    pair.indexToken,
-                    int256(position.positionAmount),
-                    18,
-                    position.averagePrice
-                )
-            ) * tradingConfig.maintainMarginRate;
-            uint256 netAssetWad = uint256(
-                TokenHelper.convertTokenAmountTo(pair.stableToken, exposureAsset, 18)
-            );
-
-            uint256 riskRate = maintainMarginWad / netAssetWad;
-            need = riskRate >= PrecisionUtils.percentage();
-        }
-        return need;
     }
 
     function cleanInvalidPositionOrders(

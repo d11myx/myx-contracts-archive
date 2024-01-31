@@ -475,6 +475,7 @@ contract Pool is IPool, Upgradeable {
         _transferToken(pair.indexToken, pair.stableToken, _indexAmount, _stableAmount, data);
 
         uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
+        uint256 lpPrice = poolView.lpFairPrice(_pairIndex, price);
 
         uint256 indexFeeAmount;
         uint256 stableFeeAmount;
@@ -511,7 +512,8 @@ contract Pool is IPool, Upgradeable {
             indexFeeAmount,
             stableFeeAmount,
             slipToken,
-            slipAmount
+            slipAmount,
+            lpPrice
         );
 
         return (mintAmount, slipToken, slipAmount);
@@ -536,6 +538,7 @@ contract Pool is IPool, Upgradeable {
         require(pair.pairToken != address(0), "ip");
 
         uint256 price = IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
+        uint256 lpPrice = poolView.lpFairPrice(_pairIndex, price);
 
         uint256 feeIndexTokenAmount;
         uint256 feeStableTokenAmount;
@@ -600,7 +603,8 @@ contract Pool is IPool, Upgradeable {
             receiveIndexTokenAmount,
             receiveStableTokenAmount,
             _amount,
-            feeAmount
+            feeAmount,
+            lpPrice
         );
 
         return (receiveIndexTokenAmount, receiveStableTokenAmount, feeAmount);
