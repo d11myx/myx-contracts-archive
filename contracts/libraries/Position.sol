@@ -128,9 +128,8 @@ library Position {
                 if (pnl >= 0) {
                     availableCollateral += getUnrealizedPnl(self, pair, self.positionAmount - _sizeAmount, price);
                 } else {
-                    availableCollateral += getUnrealizedPnl(self, pair, _sizeAmount, price);
-                    //TODO
-//                    availableCollateral += pnl;
+//                    availableCollateral += getUnrealizedPnl(self, pair, _sizeAmount, price);
+                    availableCollateral += pnl;
                 }
             } else {
                 availableCollateral += pnl;

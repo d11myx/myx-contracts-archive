@@ -29,11 +29,17 @@ describe('Access Control List Manager', () => {
 
     it('Check DEFAULT_ADMIN_ROLE', async () => {
         const { deployer, users } = testEnv;
-
-        await roleManager.addPoolAdmin(deployer.address);
+        expect(await roleManager.isAdmin(deployer.address)).to.be.eq(true);
+        expect(await roleManager.isPoolAdmin(deployer.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).addPoolAdmin(deployer.address);
+        let OPERATOR_ROLE = await roleManager.OPERATOR_ROLE();
         const DEFAULT_ADMIN_ROLE = ethers.constants.HashZero;
         expect(await roleManager.hasRole(DEFAULT_ADMIN_ROLE, deployer.address)).to.be.eq(true);
         expect(await roleManager.hasRole(DEFAULT_ADMIN_ROLE, users[0].address)).to.be.eq(false);
+
+        expect(await roleManager.hasRole(OPERATOR_ROLE, deployer.address)).to.be.eq(false);
+        await roleManager.connect(deployer.signer).addOperator(deployer.address);
+        expect(await roleManager.hasRole(OPERATOR_ROLE, deployer.address)).to.be.eq(true);
     });
 
     it('Grant OPERATOR_ROLE role', async () => {

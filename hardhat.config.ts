@@ -120,7 +120,7 @@ const config: HardhatUserConfig = {
             live: false,
         },
         arbitrum_one: {
-            url: 'https://arb1.arbitrum.io/rpc',
+            url: 'https://arb-rpc.myx.cash',
             chainId: 42161,
             accounts: {
                 mnemonic: process.env.MNEMONIC_ARBITRUM_ONE || '',

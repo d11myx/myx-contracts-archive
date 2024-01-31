@@ -89,6 +89,11 @@ interface IPositionManager {
         uint256 executionPrice
     ) external view returns (bool needADL, uint256 needADLAmount);
 
+    function needLiquidation(
+        bytes32 positionKey,
+        uint256 price
+    ) external view returns (bool);
+
     function getPosition(
         address _account,
         uint256 _pairIndex,

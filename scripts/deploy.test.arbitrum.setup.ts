@@ -95,8 +95,8 @@ async function main() {
         await roleManager.addPoolAdmin(keeper);
     }
 
-    // const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
-    // await pythOraclePriceFeed.connect(deployer).updatePriceAge(60);
+    const pythOraclePriceFeed = await ethers.getContractAt('PythOraclePriceFeed', oraclePriceFeed.address);
+    await pythOraclePriceFeed.connect(deployer).updatePriceAge(60);
 
     // const wallet = new ethers.Wallet(
     //     '',

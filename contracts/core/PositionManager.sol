@@ -293,6 +293,9 @@ contract PositionManager is IPositionManager, Upgradeable {
         IPool.Pair memory pair = pool.getPair(pairIndex);
 
         uint256 price = IPriceFeed(ADDRESS_PROVIDER.priceOracle()).getPriceSafely(pair.indexToken);
+
+        require(!needLiquidation(positionKey, price), "need liquidation");
+
         IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(pairIndex);
         position.validLeverage(
             pair,
@@ -697,7 +700,7 @@ contract PositionManager is IPositionManager, Upgradeable {
         bool _isLong,
         uint256 _sizeAmount,
         uint256 price
-    ) external view override returns (uint256 tradingFee) {
+    ) public view override returns (uint256 tradingFee) {
         IPool.Pair memory pair = pool.getPair(_pairIndex);
         uint256 sizeDeltaStable = uint256(
             TokenHelper.convertIndexAmountToStableWithPrice(pair, int256(_sizeAmount), price)
@@ -794,6 +797,51 @@ contract PositionManager is IPositionManager, Upgradeable {
             needADLAmount = executionSize - available.abs();
         }
         return (need, needADLAmount);
+    }
+
+    function needLiquidation(
+        bytes32 positionKey,
+        uint256 price
+    ) public view returns (bool) {
+        Position.Info memory position = positions[positionKey];
+
+        IPool.Pair memory pair = pool.getPair(position.pairIndex);
+        IPool.TradingConfig memory tradingConfig = pool.getTradingConfig(position.pairIndex);
+
+        int256 unrealizedPnl = position.getUnrealizedPnl(pair, position.positionAmount, price);
+        uint256 tradingFee = getTradingFee(
+            position.pairIndex,
+            position.isLong,
+            position.positionAmount,
+            price
+        );
+        int256 fundingFee = getFundingFee(
+            position.account,
+            position.pairIndex,
+            position.isLong
+        );
+        int256 exposureAsset = int256(position.collateral) + unrealizedPnl - int256(tradingFee) + fundingFee;
+
+        bool need;
+        if (exposureAsset <= 0) {
+            need = true;
+        } else {
+            uint256 maintainMarginWad = uint256(
+                TokenHelper.convertTokenAmountWithPrice(
+                    pair.indexToken,
+                    int256(position.positionAmount),
+                    18,
+                    position.averagePrice
+                )
+            ) * tradingConfig.maintainMarginRate;
+            uint256 netAssetWad = uint256(
+                TokenHelper.convertTokenAmountTo(pair.stableToken, exposureAsset, 18)
+            );
+
+            uint256 riskRate = maintainMarginWad / netAssetWad;
+            need = riskRate >= PrecisionUtils.percentage();
+        }
+        return need;
     }
 
     function getExposedPositions(uint256 _pairIndex) public view override returns (int256) {

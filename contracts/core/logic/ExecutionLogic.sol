@@ -153,6 +153,14 @@ contract ExecutionLogic is IExecutionLogic {
             order.maxSlippage
         );
 
+        bytes32 positionKey = positionManager.getPositionKey(order.account, order.pairIndex, order.isLong);
+        // get position
+        Position.Info memory position = positionManager.getPosition(order.account, order.pairIndex, order.isLong);
+        require(
+            position.positionAmount == 0 || !positionManager.needLiquidation(positionKey, executionPrice),
+            "need liquidation"
+        );
+
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
             if (order.isLong) {
@@ -193,12 +201,6 @@ contract ExecutionLogic is IExecutionLogic {
                 ? order.collateral
                 : int256(0);
         }
-        // get position
-        Position.Info memory position = positionManager.getPosition(
-            order.account,
-            order.pairIndex,
-            order.isLong
-        );
         // check position and leverage
         (uint256 afterPosition, ) = position.validLeverage(
             pair,
@@ -385,6 +387,9 @@ contract ExecutionLogic is IExecutionLogic {
             order.triggerPrice,
             order.maxSlippage
         );
+
+        bytes32 positionKey = positionManager.getPositionKey(order.account, order.pairIndex, order.isLong);
+        require(!positionManager.needLiquidation(positionKey, executionPrice), "need liquidation");
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
