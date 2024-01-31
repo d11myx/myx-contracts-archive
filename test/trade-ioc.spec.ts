@@ -52,6 +52,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -111,6 +112,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -159,6 +161,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -220,6 +223,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -280,6 +284,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -328,6 +333,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -382,6 +388,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();
@@ -398,6 +405,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -420,6 +428,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -474,6 +483,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -522,6 +532,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: increaseOrderId,
@@ -563,6 +574,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: increaseOrderId,
@@ -604,6 +616,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: decreaseOrderId,
@@ -661,6 +674,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -709,6 +723,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: increaseOrderId,
@@ -750,6 +765,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: increaseOrderId,
@@ -791,6 +807,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: decreaseOrderId,
@@ -823,6 +840,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: decreaseOrderId,
@@ -874,6 +892,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -923,6 +942,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -967,6 +987,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -1008,6 +1029,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: decreaseOrderId,
@@ -1039,6 +1061,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 pairIndex,
                 [
                     {
@@ -1106,6 +1129,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -1155,6 +1179,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -1199,6 +1224,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -1240,6 +1266,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: decreaseOrderId,
@@ -1270,6 +1297,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 pairIndex,
                 [
                     {
@@ -1337,6 +1365,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -1393,6 +1422,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -1464,6 +1494,7 @@ describe('Trade: ioc', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     ),
             ).to.be.revertedWith('internal');
@@ -1536,6 +1567,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -1596,6 +1628,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -1644,6 +1677,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -1698,6 +1732,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();
@@ -1711,9 +1746,14 @@ describe('Trade: ioc', () => {
             const fee = mockPyth.getUpdateFee(updateData);
             await oraclePriceFeed
                 .connect(keeper.signer)
-                .updatePrice([btc.address], [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])], {
-                    value: fee,
-                });
+                .updatePrice(
+                    [btc.address],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])],
+                    [0],
+                    {
+                        value: fee,
+                    },
+                );
             const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
@@ -1733,6 +1773,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -1758,6 +1799,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -1809,6 +1851,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -1869,6 +1912,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,
@@ -1917,6 +1961,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: shortOrderId,
@@ -1971,6 +2016,7 @@ describe('Trade: ioc', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();
@@ -1984,9 +2030,14 @@ describe('Trade: ioc', () => {
             const fee = mockPyth.getUpdateFee(updateData);
             await oraclePriceFeed
                 .connect(keeper.signer)
-                .updatePrice([btc.address], [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])], {
-                    value: fee,
-                });
+                .updatePrice(
+                    [btc.address],
+                    [new ethers.utils.AbiCoder().encode(['uint256'], [latestOraclePrice])],
+                    [0],
+                    {
+                        value: fee,
+                    },
+                );
             const oraclePrice = await oraclePriceFeed.getPrice(btc.address);
             const indexPrice = await indexPriceFeed.getPrice(btc.address);
             const tradingConfig = await pool.getTradingConfig(pairIndex);
@@ -2006,6 +2057,7 @@ describe('Trade: ioc', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: longOrderId,

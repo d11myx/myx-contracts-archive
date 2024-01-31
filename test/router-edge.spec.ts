@@ -50,6 +50,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
 
@@ -115,6 +116,7 @@ describe('Router: Edge cases', () => {
                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                 ),
             ],
+            [0],
             [
                 {
                     orderId: orderId,
@@ -175,6 +177,7 @@ describe('Router: Edge cases', () => {
                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                 ),
             ],
+            [0],
             [
                 {
                     orderId: orderId,
@@ -358,6 +361,7 @@ describe('Router: Edge cases', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -441,6 +445,7 @@ export async function increaseUserPosition(
                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
             ),
         ],
+        [0],
         [
             {
                 orderId: increaseOrderId,

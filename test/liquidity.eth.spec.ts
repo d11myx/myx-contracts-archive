@@ -56,6 +56,7 @@ describe('liquidity: ETH', () => {
                         [(await oraclePriceFeed.getPrice(weth.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 ethers.utils.parseEther('10'),
                 { value: depositIndexAmount.add(ethers.utils.parseEther('100')) },
             );
@@ -81,6 +82,7 @@ describe('liquidity: ETH', () => {
                         [(await oraclePriceFeed.getPrice(weth.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 { value: 1 },
             );
 

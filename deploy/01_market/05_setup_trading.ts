@@ -162,8 +162,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     await deploy(`${BACKTRACKER_ID}`, {
         from: deployer,
         contract: 'Backtracker',
-        args: [],
-
+        args: [addressProvider.address],
         ...COMMON_DEPLOY_PARAMS,
     });
     const backtracker = await getBacktracker();
@@ -195,6 +194,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
     const executor = await getExecutor();
     const poolView = await getPoolView();
+
+    await waitForTx(await backtracker.connect(poolAdminSigner).updateExecutorAddress(executor.address));
 
     await waitForTx(await oraclePriceFeed.connect(poolAdminSigner).updateExecutorAddress(executor.address));
     await waitForTx(await poolView.connect(poolAdminSigner).setPositionManager(positionManager.address));

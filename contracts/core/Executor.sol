@@ -47,11 +47,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory orders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData);
+        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
 
         for (uint256 i = 0; i < orders.length; i++) {
             IExecutionLogic.ExecuteOrder memory order = orders[i];
@@ -75,11 +76,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData);
+        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseOrders(
             msg.sender,
@@ -92,11 +94,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData);
+        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseOrders(
             msg.sender,
@@ -109,11 +112,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData);
+        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseOrders(
             msg.sender,
@@ -126,11 +130,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData);
+        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseOrders(
             msg.sender,
@@ -143,13 +148,14 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         uint256 pairIndex,
         IExecution.ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData);
+        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrders(
             msg.sender,
@@ -206,7 +212,8 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     function setPrices(
         address[] memory _tokens,
         uint256[] memory _prices,
-        bytes[] memory updateData
+        bytes[] memory updateData,
+        uint64[] memory publishTimes
     ) external payable {
         require(msg.sender == address(this), "internal");
 
@@ -214,26 +221,27 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
 
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(
             _tokens,
-            updateData
-        );
-    }
-
-    function setPricesHistorical(
-        address[] memory _tokens,
-        uint256[] memory _prices,
-        bytes[] memory updateData,
-        uint64 backtrackRound
-    ) external payable {
-        require(msg.sender == address(this), "internal");
-
-        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
-
-        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: msg.value}(
-            _tokens,
             updateData,
-            backtrackRound
+            publishTimes
         );
     }
+
+//    function setPricesHistorical(
+//        address[] memory _tokens,
+//        uint256[] memory _prices,
+//        bytes[] memory updateData,
+//        uint64 backtrackRound
+//    ) external payable {
+//        require(msg.sender == address(this), "internal");
+//
+//        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
+//
+//        IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updateHistoricalPrice{value: msg.value}(
+//            _tokens,
+//            updateData,
+//            backtrackRound
+//        );
+//    }
 
     function needADL(
         uint256 pairIndex,

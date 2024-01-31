@@ -65,6 +65,7 @@ describe('Sing-lp: Test cases', () => {
                 addStableAmount,
                 [btc.address], // the token need update price
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits(indexPrice.toString(), 8)])], // update data(price)
+                [0],
                 { value: 1 },
             );
 

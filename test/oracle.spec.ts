@@ -168,7 +168,7 @@ describe('Oracle: oracle cases', () => {
         ).to.be.revertedWith('oep');
         await pythOraclePriceFeed
             .connect(owner)
-            .updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])], { value: fee });
+            .updatePrice([btc.address], [abiCoder.encode(['uint256'], [price])], [0], { value: fee });
         await indexPriceFeed.connect(owner).updatePrice([btc.address], [price]);
 
         // console.log('btc:' + btc.address);

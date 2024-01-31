@@ -43,7 +43,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         const oraclePriceFeedAddress = reserveConfig.OraclePriceFeedAddress[network];
         if (!oraclePriceFeedAddress || oraclePriceFeedAddress == ZERO_ADDRESS) {
             console.log('[ERROR] Unknown oracle price feed');
-            return;
+            throw Error('Unknown oracle price feed');
         }
 
         await deploy(`${ORACLE_PRICE_FEED_ID}`, {

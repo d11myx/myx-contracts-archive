@@ -2,12 +2,14 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract MultipleTransfer is Pausable, Ownable, AccessControl {
+    using SafeERC20 for IERC20;
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR");
     bytes32 public constant MERKLE_MANAGER_ROLE = keccak256("MERKLE_MANAGER");
@@ -76,7 +78,7 @@ contract MultipleTransfer is Pausable, Ownable, AccessControl {
         for (uint i = 0; i < recipients.length; i++) {
             bytes32 leaf = keccak256(abi.encodePacked(recipients[i]));
             require(MerkleProof.verify(proofs[i], merkleRoot, leaf), "Invalid Merkle Proof");
-            require(token.transfer(recipients[i], amounts[i]), "Transfer failed");
+            token.safeTransfer(recipients[i], amounts[i]);
         }
     }
 
@@ -86,7 +88,7 @@ contract MultipleTransfer is Pausable, Ownable, AccessControl {
 
     function emergencyWithdrawERC20(IERC20 token, address recipient) public onlyOwner {
         uint256 balance = token.balanceOf(address(this));
-        token.transfer(recipient, balance);
+        token.safeTransfer(recipient, balance);
     }
 
 }

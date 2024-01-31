@@ -1,6 +1,6 @@
 // @ts-ignore
 import { ethers } from 'hardhat';
-import { getPool, loadReserveConfig, MARKET_NAME, ZERO_ADDRESS } from '../helpers';
+import { getFundingRate, getPool, loadReserveConfig, MARKET_NAME, waitForTx, ZERO_ADDRESS } from '../helpers';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -8,15 +8,16 @@ async function main() {
     console.log(await deployer.getBalance());
 
     const pool = await getPool();
+    const fundingRate = await getFundingRate();
 
     const reserveConfig = loadReserveConfig(MARKET_NAME);
     const pairConfigs = reserveConfig?.PairsConfig;
 
-    const tradingConfig = pairConfigs['WETH'].tradingConfig;
+    const tradingConfig = pairConfigs['WBTC'].fundingFeeConfig;
     // console.log(tradingConfig);
 
-    console.log(await pool.getPair(2));
-    await pool.updateTradingConfig(2, tradingConfig);
+    await waitForTx(await fundingRate.updateFundingFeeConfig(1, tradingConfig));
+    console.log(await fundingRate.fundingFeeConfigs(1));
 }
 
 main().catch((error) => {

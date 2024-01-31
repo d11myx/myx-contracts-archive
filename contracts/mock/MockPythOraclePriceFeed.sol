@@ -74,7 +74,8 @@ contract MockPythOraclePriceFeed is IPythOraclePriceFeed {
 
     function updatePrice(
         address[] calldata tokens,
-        bytes[] calldata _updateData
+        bytes[] calldata _updateData,
+        uint64[] calldata
     ) external payable override {
         uint256[] memory prices = new uint256[](_updateData.length);
         for (uint256 i = 0; i < _updateData.length; i++) {

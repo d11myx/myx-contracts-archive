@@ -45,6 +45,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -94,6 +95,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -136,6 +138,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -178,6 +181,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -220,6 +224,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -283,6 +288,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -325,6 +331,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -368,6 +375,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -410,6 +418,7 @@ describe('Trade: slippage', () => {
                         [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                     ),
                 ],
+                [0],
                 [
                     {
                         orderId: orderId,
@@ -463,6 +472,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -527,6 +537,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();
@@ -611,6 +622,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();
@@ -692,6 +704,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();
@@ -776,6 +789,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();
@@ -858,6 +872,7 @@ describe('Trade: slippage', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
             const totoalApplyAfter = await lpToken.totalSupply();

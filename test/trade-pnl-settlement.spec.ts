@@ -35,6 +35,7 @@ describe('Trade: settlement pnl', () => {
                 stableAmount,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
     });

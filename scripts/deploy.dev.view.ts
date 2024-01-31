@@ -1,6 +1,8 @@
 // @ts-ignore
 import hre, { artifacts, deployments, ethers } from 'hardhat';
 import {
+    abiCoder,
+    COMMON_DEPLOY_PARAMS,
     getAddressesProvider,
     getBacktracker,
     getExecutionLogic,
@@ -13,32 +15,39 @@ import {
     getPoolView,
     getPositionManager,
     getRiskReserve,
+    getRoleManager,
     getRouter,
     getTokens,
+    ROUTER_ID,
+    TradeType,
+    waitForTx,
+    ZERO_ADDRESS,
 } from '../helpers';
 import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
 import { mock } from '../types/contracts';
+import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
+import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
     console.log(deployer.address);
     console.log(await deployer.getBalance());
 
-    // const router = await getRouter();
-    // const orderManager = await getOrderManager();
-    // const positionManager = await getPositionManager();
-    // const executor = await getExecutor();
-    // const backtracker = await getBacktracker();
-    // const executionLogic = await getExecutionLogic();
-    // const oraclePriceFeed = await getOraclePriceFeed();
-    // const indexPriceFeed = await getIndexPriceFeed();
-    // const feeCollector = await getFeeCollector();
-    // const pool = await getPool();
-    // const poolView = await getPoolView();
-    // const riskReserve = await getRiskReserve();
-    // const addressesProvider = await getAddressesProvider();
-    //
-    // const { btc, eth, usdt } = await getTokens();
+    const router = await getRouter();
+    const orderManager = await getOrderManager();
+    const positionManager = await getPositionManager();
+    const executor = await getExecutor();
+    const backtracker = await getBacktracker();
+    const executionLogic = await getExecutionLogic();
+    const oraclePriceFeed = await getOraclePriceFeed();
+    const indexPriceFeed = await getIndexPriceFeed();
+    const feeCollector = await getFeeCollector();
+    const pool = await getPool();
+    const poolView = await getPoolView();
+    const riskReserve = await getRiskReserve();
+    const addressesProvider = await getAddressesProvider();
+
+    const { btc, eth, usdt } = await getTokens();
 
     // const btcOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(btc.address), 30);
     // const ethOraclePrice = ethers.utils.formatUnits(await oraclePriceFeed.getPrice(eth.address), 30);
@@ -71,14 +80,29 @@ async function main() {
     // // console.log(await positionManager.getFundingFee('0xC2d0Bfc4B5D23ddDa21AaDe8FB07CC36896dCe20', 1, true));
     //
 
-    // const priceId = '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace';
-    // const conn = new EvmPriceServiceConnection('https://hermes.pyth.network', {
-    //     priceFeedRequestConfig: { binary: true },
-    // });
-    // const vaas = await conn.getLatestPriceFeeds([priceId]);
-    // console.log(vaas);
-    // // @ts-ignore
-    // const priceFeedUpdate = '0x' + Buffer.from(vaas[0].getVAA() as string, 'base64').toString('hex');
+    const btcPriceId = '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43';
+    const ethPriceId = '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace';
+    const conn = new EvmPriceServiceConnection('https://hermes.pyth.network', {
+        priceFeedRequestConfig: { binary: true },
+    });
+    const btcPriceFeeds = await conn.getLatestPriceFeeds([btcPriceId]);
+    const ethPriceFeeds = await conn.getLatestPriceFeeds([ethPriceId]);
+    // console.log(btcPriceFeeds);
+    // @ts-ignore
+    const btcPriceFeed = btcPriceFeeds[0];
+    const btcPrice = btcPriceFeed.getPriceUnchecked().price;
+    const btcPriceFeedUpdate = '0x' + Buffer.from(btcPriceFeed.getVAA() as string, 'base64').toString('hex');
+    const btcPublishTime = btcPriceFeed.getPriceUnchecked().publishTime;
+
+    // @ts-ignore
+    const ethPriceFeed = ethPriceFeeds[0];
+    const ethPrice = ethPriceFeed.getPriceUnchecked().price;
+    const ethPriceFeedUpdate = '0x' + Buffer.from(ethPriceFeed.getVAA() as string, 'base64').toString('hex');
+    const ethPublishTime = ethPriceFeed.getPriceUnchecked().publishTime;
+
+    // console.log(price);
+    // console.log(publishTime);
+
     //
     // // // console.log(
     // // //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
@@ -139,31 +163,77 @@ async function main() {
     //         { value: '15000000000000000' },
     //     ),
     // );
+
+    // console.log(await oraclePriceFeed.getPrice(btc.address));
+    // console.log(ethers.utils.parseUnits(ethers.utils.formatUnits(price, 8), 30));
+
+    // const art = await deployments.deploy(`${ROUTER_ID}-v9`, {
+    //     from: deployer.address,
+    //     contract: 'Router',
+    //     args: [addressesProvider.address, orderManager.address, positionManager.address, pool.address],
+    //     ...COMMON_DEPLOY_PARAMS,
+    // });
+    // const routerV2 = await getRouter(art.address);
+    //
     // const { depositIndexAmount, depositStableAmount } = await poolView.getDepositAmount(
-    //     1,
-    //     ethers.utils.parseEther('1000000'),
-    //     await oraclePriceFeed.getPrice(btc.address),
+    //     2,
+    //     ethers.utils.parseEther('10'),
+    //     ethers.utils.parseUnits(ethers.utils.formatUnits(price, 8), 30),
     // );
-    // await btc.connect(deployer).approve(router.address, depositIndexAmount);
-    // await usdt.connect(deployer).approve(router.address, depositStableAmount);
+    // const wallet = new ethers.Wallet(
+    //     'd0d53b4c99b1be944f8caa0dee8c0dee572e44df542ac23f42dc66d5d42fc6fd',
+    //     deployer.provider,
+    // );
+    // // console.log(usdt.address);
+    // console.log(depositIndexAmount);
+    // // console.log(depositStableAmount);
+    // // console.log(await usdt.balanceOf(wallet.address));
+    // // await waitForTx(await eth.connect(wallet).approve(router.address, depositIndexAmount));
+    //
+    // console.log(await wallet.getBalance());
+    // console.log(await addressesProvider.WETH());
+    // console.log(eth.address);
+    // await waitForTx(await usdt.connect(wallet).approve(routerV2.address, depositStableAmount));
     // console.log(
-    //     await router
-    //         .connect(deployer)
-    //         .addLiquidity(
-    //             btc.address,
+    //     await routerV2
+    //         .connect(wallet)
+    //         .addLiquidityETH(
+    //             eth.address,
     //             usdt.address,
     //             depositIndexAmount,
     //             depositStableAmount,
-    //             [btc.address],
-    //             [
-    //                 abiCoder.encode(
-    //                     ['uint256'],
-    //                     [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-    //                 ),
-    //             ],
-    //             { value: 1 },
+    //             [eth.address],
+    //             [priceFeedUpdate],
+    //             [publishTime],
+    //             1,
+    //             { value: depositIndexAmount.add(10) },
     //         ),
     // );
+
+    // console.log(await router.connect(wallet).wrapWETH(wallet.address, { value: 2 }));
+
+    // console.log(await router.ADDRESS_PROVIDER());
+    // console.log(await (await getAddressesProvider(await router.ADDRESS_PROVIDER())).priceOracle());
+    // const pythOraclePriceFeed = await ethers.getContractAt(
+    //     'PythOraclePriceFeed',
+    //     await (await getAddressesProvider(await router.ADDRESS_PROVIDER())).priceOracle(),
+    // );
+    // console.log(`pyth: `, await pythOraclePriceFeed.pyth());
+    // console.log(`priceFeedUpdate: `, priceFeedUpdate);
+    // console.log(`publishTime: `, publishTime);
+    // console.log(await pythOraclePriceFeed.tokenPriceIds(btc.address));
+    // // console.log(await pythOraclePriceFeed.updatePrice([btc.address], [priceFeedUpdate], [publishTime], { value: 1 }));
+    //
+    // const pyth = await ethers.getContractAt('IPyth', await pythOraclePriceFeed.pyth());
+    // console.log(
+    //     await pyth.updatePriceFeedsIfNecessary(
+    //         [priceFeedUpdate],
+    //         ['0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43'],
+    //         [publishTime + 3000],
+    //         { value: 1 },
+    //     ),
+    // );
+
     // console.log(
     //     abiCoder.encode(['uint256'], [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')]),
     // );
@@ -197,22 +267,14 @@ async function main() {
     //     deployer.provider,
     // );
     // console.log(
-    //     await executor.connect(wallet).setPricesAndExecuteIncreaseMarketOrders(
-    //         ['0x3fF8C9A44733E54a48170ed3839a80C46C912b00', '0x7025c220763196F126571B34A708fD700f67d363'],
+    //     await executor.setPricesAndExecuteOrders(
+    //         ['0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f', '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'],
     //         [await oraclePriceFeed.getPrice(btc.address), await oraclePriceFeed.getPrice(eth.address)],
-    //         [
-    //             abiCoder.encode(
-    //                 ['uint256'],
-    //                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
-    //             ),
-    //             abiCoder.encode(
-    //                 ['uint256'],
-    //                 [(await oraclePriceFeed.getPrice(eth.address)).div('10000000000000000000000')],
-    //             ),
-    //         ],
+    //         [btcPriceFeedUpdate, ethPriceFeedUpdate],
+    //         [btcPublishTime, ethPublishTime],
     //         [
     //             {
-    //                 orderId: 7,
+    //                 orderId: 56,
     //                 tradeType: TradeType.MARKET,
     //                 isIncrease: true,
     //                 tier: 0,
@@ -295,9 +357,7 @@ async function main() {
     //     to: '0x44C140E06D710Df2727AD7c13618869ec34364Ea',
     //     value: ethers.utils.parseEther('100000'),
     // });
-    // console.log(
-    //     await usdt.mint('0x83cea7468B2e9B4c2ec62818eb4d37196b256f88', ethers.utils.parseUnits('100000000000000', 6)),
-    // );
+    // console.log(await usdt.mint('0xAb2aaB9D9d85e19891F0500b6d600c2b5d04890A', ethers.utils.parseUnits('100000', 6)));
     // console.log(btc.address);
     // console.log(await btc.owner());
     // console.log(await btc.mint('0xed2339eec9e42b4CF7518a4ecdc57BA251e63C74', ethers.utils.parseUnits('1000000', 8)));

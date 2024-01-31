@@ -39,6 +39,7 @@ describe('PositionManager: decrease position', () => {
                 stableAmount,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
     });
@@ -134,6 +135,7 @@ describe('PositionManager: decrease position', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
 

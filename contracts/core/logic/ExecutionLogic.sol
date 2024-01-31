@@ -672,6 +672,8 @@ contract ExecutionLogic is IExecutionLogic {
                 }
             }
 
+            orders[i] = order.orderId;
+
             (bool _needADL, uint256 needADLAmount) = positionManager.needADL(
                 order.pairIndex,
                 order.isLong,
@@ -706,7 +708,6 @@ contract ExecutionLogic is IExecutionLogic {
                 executionSize - needADLAmount,
                 false
             );
-            orders[i] = order.orderId;
         }
 
         emit ExecuteAdlOrder(adlOrderIds, adlPositionKeys, orders);

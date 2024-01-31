@@ -36,6 +36,7 @@ describe('Executor: require check', () => {
                 stableAmount,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
     });
@@ -117,6 +118,7 @@ describe('Executor: require check', () => {
                                 [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                             ),
                         ],
+                        [0],
                         [
                             {
                                 orderId: orderId,
@@ -140,6 +142,7 @@ describe('Executor: require check', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     [
                         {
                             orderId: orderId,

@@ -43,6 +43,7 @@ describe('Trade: funding fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -61,6 +62,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -70,6 +72,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -146,6 +149,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -201,6 +205,7 @@ describe('Trade: funding fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -262,6 +267,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -277,6 +283,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -406,6 +413,7 @@ describe('Trade: funding fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -470,6 +478,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -485,6 +494,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -639,6 +649,7 @@ describe('Trade: funding fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -700,6 +711,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -715,6 +727,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -814,6 +827,7 @@ describe('Trade: funding fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -843,6 +857,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -930,6 +945,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1042,6 +1058,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('35000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1163,6 +1180,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1384,6 +1402,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('22000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1544,6 +1563,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1656,6 +1676,7 @@ describe('Trade: funding fee', () => {
                             [(await oraclePriceFeed.getPrice(btc.address)).div('10000000000000000000000')],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
         });
@@ -1685,6 +1706,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1724,6 +1746,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25500', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1819,6 +1842,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('26000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -1980,6 +2004,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('26500', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -2068,6 +2093,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('25000', 8)])],
+                [0],
                 { value: 1 },
             );
 
@@ -2130,6 +2156,7 @@ describe('Trade: funding fee', () => {
                 pairIndex,
                 [btc.address],
                 [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('24000', 8)])],
+                [0],
                 { value: 1 },
             );
 

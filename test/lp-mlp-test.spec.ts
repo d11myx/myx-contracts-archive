@@ -74,6 +74,7 @@ describe('lp-mlp: Test cases', () => {
                             [ethers.utils.parseUnits(indexPrice.toString(), 8)],
                         ),
                     ], // update data(price)
+                    [0],
                     { value: 1 },
                 );
 
@@ -153,6 +154,7 @@ describe('lp-mlp: Test cases', () => {
                             [ethers.utils.parseUnits(indexPrice.toString(), 8)],
                         ),
                     ], // update data(price)
+                    [0],
                     { value: 1 },
                 );
 
@@ -228,6 +230,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         1,
                         { value: sendEth },
                     );
@@ -285,6 +288,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -350,6 +354,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -402,6 +407,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -447,6 +453,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -492,6 +499,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -541,6 +549,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -597,6 +606,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -647,6 +657,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -708,6 +719,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
 
@@ -752,6 +764,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
 
@@ -770,6 +783,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount2,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -815,6 +829,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -840,6 +855,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
                 // console.log(await lpToken.balanceOf(depositor3.address))
@@ -887,6 +903,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -913,6 +930,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
                 // console.log(await lpToken.balanceOf(depositor3.address))
@@ -962,6 +980,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
                 expect(lpAmounts.mintAmount).to.be.eq(
@@ -1003,6 +1022,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
                 // console.log(new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)]))
@@ -1166,6 +1186,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -1339,6 +1360,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -1388,6 +1410,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
 
@@ -1401,6 +1424,7 @@ describe('lp-mlp: Test cases', () => {
                         0,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -1566,6 +1590,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -1766,6 +1791,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -1818,6 +1844,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
 
@@ -1831,6 +1858,7 @@ describe('lp-mlp: Test cases', () => {
                         stableAmount,
                         [btc.address],
                         [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                        [0],
                         { value: 1 },
                     );
             });
@@ -2016,6 +2044,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 
@@ -2192,6 +2221,7 @@ describe('lp-mlp: Test cases', () => {
                                 [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                             ),
                         ],
+                        [0],
                         { value: 1 },
                     );
 

@@ -12,6 +12,7 @@ interface IExecutor is IExecution {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory orders
     ) external payable;
 
@@ -19,6 +20,7 @@ interface IExecutor is IExecution {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable;
 
@@ -26,6 +28,7 @@ interface IExecutor is IExecution {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable;
 
@@ -33,6 +36,7 @@ interface IExecutor is IExecution {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory increaseOrders
     ) external payable;
 
@@ -40,6 +44,7 @@ interface IExecutor is IExecution {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         IExecutionLogic.ExecuteOrder[] memory decreaseOrders
     ) external payable;
 
@@ -47,6 +52,7 @@ interface IExecutor is IExecution {
         address[] memory tokens,
         uint256[] memory prices,
         bytes[] memory updateData,
+        uint64[] memory publishTimes,
         uint256 pairIndex,
         IExecution.ExecutePosition[] memory executePositions,
         IExecutionLogic.ExecuteOrder[] memory executeOrders

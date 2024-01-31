@@ -112,7 +112,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         await waitForTx(
             await oraclePriceFeed
                 .connect(poolAdminSigner)
-                .updatePrice(pairTokenAddresses, pairTokenPricesBytes, { value: fee }),
+                .updatePrice(pairTokenAddresses, pairTokenPricesBytes, [Array(pairTokenPricesBytes.length).fill(0)], {
+                    value: fee,
+                }),
         );
     }
 };

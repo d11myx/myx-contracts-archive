@@ -199,7 +199,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
 
         // vip discount
         uint256 vipTradingFee = sizeDelta.mulPercentage(vipFeeRate);
-        vipDiscountAmount = tradingFee - vipTradingFee;
+        vipDiscountAmount = tradingFee > vipTradingFee ? tradingFee - vipTradingFee : 0;
         userTradingFee[account] += vipDiscountAmount;
 
         uint256 surplusFee = tradingFee - vipDiscountAmount;
@@ -212,7 +212,7 @@ contract FeeCollector is IFeeCollector, ReentrancyGuardUpgradeable, Upgradeable 
                 Math.min(referralsRatio, maxReferralsRatio)
             );
             referralUserAmount = surplusFee.mulPercentage(
-                Math.min(referralUserRatio, referralsRatio)
+                Math.min(Math.min(referralUserRatio, referralsRatio), maxReferralsRatio)
             );
             userTradingFee[account] += referralUserAmount;
             referralFee[referralOwner] += referralsAmount - referralUserAmount;

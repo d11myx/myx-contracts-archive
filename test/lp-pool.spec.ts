@@ -73,6 +73,7 @@ describe('LP: Pool cases', () => {
                             [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
 
@@ -158,6 +159,7 @@ describe('LP: Pool cases', () => {
                             [ethers.utils.parseUnits(pairPrice.toString(), 8)],
                         ),
                     ],
+                    [0],
                     { value: 1 },
                 );
 
@@ -227,6 +229,7 @@ describe('LP: Pool cases', () => {
                     stableAmount,
                     [btc.address],
                     [new ethers.utils.AbiCoder().encode(['uint256'], [ethers.utils.parseUnits('30000', 8)])],
+                    [0],
                     { value: 1 },
                 );
         });

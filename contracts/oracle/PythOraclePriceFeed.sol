@@ -78,30 +78,28 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
 
     function updatePrice(
         address[] calldata tokens,
-        bytes[] calldata updateData
+        bytes[] calldata updateData,
+        uint64[] calldata publishTimes
     ) external payable override {
         uint fee = pyth.getUpdateFee(updateData);
         if (msg.value < fee) {
             revert("insufficient fee");
         }
         bytes32[] memory priceIds = new bytes32[](tokens.length);
-        uint64[] memory publishTimes = new uint64[](tokens.length);
+        bool update = false;
         for (uint256 i = 0; i < tokens.length; i++) {
             require(tokens[i] != address(0), "zero token address");
             require(tokenPriceIds[tokens[i]] != 0, "unknown price id");
 
-            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) >= uint64(block.timestamp)) {
-                emit UnneededPricePublishWarn();
-            }
             priceIds[i] = tokenPriceIds[tokens[i]];
-            publishTimes[i] = uint64(block.timestamp);
+
+            if (pyth.latestPriceInfoPublishTime(tokenPriceIds[tokens[i]]) < publishTimes[i]) {
+                update = true;
+            }
         }
 
-        if (priceIds.length > 0) {
-            try pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes) {
-            } catch Error(string memory reason) {
-                revert(string(abi.encodePacked("update price failed. reason: ", reason)));
-            }
+        if (update && priceIds.length > 0) {
+            pyth.updatePriceFeedsIfNecessary{value: fee}(updateData, priceIds, publishTimes);
         }
     }
 
@@ -151,7 +149,11 @@ contract PythOraclePriceFeed is IPythOraclePriceFeed {
         address token
     ) external view onlyBacktracking override returns (uint256) {
         bytes32 backtrackRound = bytes32(abi.encodePacked(uint64(block.timestamp), publishTime));
-        return backtrackTokenPrices[backtrackRound][token];
+        uint256 price = backtrackTokenPrices[backtrackRound][token];
+        if (price == 0) {
+            revert("invalid price");
+        }
+        return price;
     }
 
     function getPythPriceUnsafe(address token) external view returns (PythStructs.Price memory) {
