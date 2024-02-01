@@ -52,7 +52,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
+        _setPrices(tokens, prices, updateData, publishTimes);
 
         for (uint256 i = 0; i < orders.length; i++) {
             IExecutionLogic.ExecuteOrder memory order = orders[i];
@@ -81,7 +81,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
+        _setPrices(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseOrders(
             msg.sender,
@@ -99,7 +99,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
+        _setPrices(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseOrders(
             msg.sender,
@@ -117,7 +117,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
+        _setPrices(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeIncreaseOrders(
             msg.sender,
@@ -135,7 +135,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
+        _setPrices(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeDecreaseOrders(
             msg.sender,
@@ -155,7 +155,7 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
     ) external payable override whenNotPaused nonReentrant onlyPositionKeeper {
         require(tokens.length == prices.length && tokens.length >= 0, "ip");
 
-        this.setPrices{value: msg.value}(tokens, prices, updateData, publishTimes);
+        _setPrices(tokens, prices, updateData, publishTimes);
 
         IExecutionLogic(ADDRESS_PROVIDER.executionLogic()).executeADLAndDecreaseOrders(
             msg.sender,
@@ -209,14 +209,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         }
     }
 
-    function setPrices(
+    function _setPrices(
         address[] memory _tokens,
         uint256[] memory _prices,
         bytes[] memory updateData,
         uint64[] memory publishTimes
-    ) external payable {
-        require(msg.sender == address(this), "internal");
-
+    ) internal {
         IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
 
         IPythOraclePriceFeed(ADDRESS_PROVIDER.priceOracle()).updatePrice{value: msg.value}(
@@ -226,13 +224,12 @@ contract Executor is IExecutor, Roleable, ReentrancyGuard, Pausable {
         );
     }
 
-//    function setPricesHistorical(
+//    function _setPricesHistorical(
 //        address[] memory _tokens,
 //        uint256[] memory _prices,
 //        bytes[] memory updateData,
 //        uint64 backtrackRound
-//    ) external payable {
-//        require(msg.sender == address(this), "internal");
+//    ) internal {
 //
 //        IIndexPriceFeed(ADDRESS_PROVIDER.indexPriceOracle()).updatePrice(_tokens, _prices);
 //

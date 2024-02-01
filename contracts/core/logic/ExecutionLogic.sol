@@ -698,21 +698,20 @@ contract ExecutionLogic is IExecutionLogic {
                     0,
                     executeOrder.tradeType == TradingTypes.TradeType.MARKET
                 );
-                return;
+            } else {
+                this.executeDecreaseOrder(
+                    keeper,
+                    order.orderId,
+                    order.tradeType,
+                    executeOrder.tier,
+                    executeOrder.referralsRatio,
+                    executeOrder.referralUserRatio,
+                    executeOrder.referralOwner,
+                    true,
+                    executionSize - needADLAmount,
+                    false
+                );
             }
-
-            this.executeDecreaseOrder(
-                keeper,
-                order.orderId,
-                order.tradeType,
-                executeOrder.tier,
-                executeOrder.referralsRatio,
-                executeOrder.referralUserRatio,
-                executeOrder.referralOwner,
-                true,
-                executionSize - needADLAmount,
-                false
-            );
         }
 
         emit ExecuteAdlOrder(adlOrderIds, adlPositionKeys, orders);
