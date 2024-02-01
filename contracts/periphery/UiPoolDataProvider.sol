@@ -23,6 +23,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         IOrderManager orderManager,
         IPositionManager positionManager,
         IRouter router,
+        IFeeCollector feeCollector,
         uint256[] memory pairIndexes,
         uint256[] memory prices
     ) public view returns (PairData[] memory) {
@@ -63,6 +64,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             pairData.maintainMarginRate = tradingConfig.maintainMarginRate;
             pairData.priceSlipP = tradingConfig.priceSlipP;
             pairData.maxPriceDeviationP = tradingConfig.maxPriceDeviationP;
+
+            IFeeCollector.TradingFeeTier memory tradingFeeTier = feeCollector.getRegularTradingFeeTier(pairIndex);
+            pairData.takerFee = tradingFeeTier.takerFee;
+            pairData.makerFee = tradingFeeTier.makerFee;
 
             IPool.TradingFeeConfig memory tradingFeeConfig = pool.getTradingFeeConfig(pairIndex);
             pairData.lpFeeDistributeP = tradingFeeConfig.lpFeeDistributeP;

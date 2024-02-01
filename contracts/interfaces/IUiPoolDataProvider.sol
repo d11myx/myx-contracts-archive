@@ -30,6 +30,8 @@ interface IUiPoolDataProvider {
         uint256 maintainMarginRate;
         uint256 priceSlipP;
         uint256 maxPriceDeviationP;
+        uint256 takerFee;
+        uint256 makerFee;
         uint256 lpFeeDistributeP;
         uint256 stakingFeeDistributeP;
         uint256 keeperFeeDistributeP;
