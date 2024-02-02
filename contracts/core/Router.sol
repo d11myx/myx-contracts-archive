@@ -152,6 +152,12 @@ contract Router is
             request.tradeType != TradingTypes.TradeType.SL,
             "not support"
         );
+        require(
+            request.paymentType == TradingTypes.NetworkFeePaymentType.COLLATERAL ||
+            (request.paymentType == TradingTypes.NetworkFeePaymentType.ETH
+                && msg.value == request.networkFeeAmount + request.tpNetworkFeeAmount + request.slNetworkFeeAmount),
+            "incorrect value"
+        );
         request.account = msg.sender;
 
         orderId = orderManager.createOrder{value: request.networkFeeAmount}(
@@ -171,7 +177,7 @@ contract Router is
         );
 
         // tp、sl
-        this._createTpSl(
+        _createTpSl(
             request.account,
             request.pairIndex,
             request.isLong,
@@ -197,8 +203,7 @@ contract Router is
         TradingTypes.NetworkFeePaymentType paymentType,
         uint256 tpNetworkFeeAmount,
         uint256 slNetworkFeeAmount
-    ) public payable returns (uint256 tpOrderId, uint256 slOrderId) {
-        require(msg.sender == address(this), "internal");
+    ) internal returns (uint256 tpOrderId, uint256 slOrderId) {
         if (tp > 0) {
             tpOrderId = orderManager.createOrder{value: tpNetworkFeeAmount}(
                 TradingTypes.CreateOrderRequest({
@@ -245,7 +250,11 @@ contract Router is
             request.tradeType != TradingTypes.TradeType.SL,
             "not support"
         );
-        require(msg.value == request.networkFeeAmount, "insufficient network fee");
+        require(
+            request.paymentType == TradingTypes.NetworkFeePaymentType.COLLATERAL ||
+            (request.paymentType == TradingTypes.NetworkFeePaymentType.ETH && msg.value == request.networkFeeAmount),
+            "incorrect value"
+        );
 
         request.account = msg.sender;
 
@@ -271,7 +280,11 @@ contract Router is
         TradingTypes.DecreasePositionRequest memory request
     ) external payable whenNotPaused nonReentrant returns (uint256) {
         require(!operationStatus[request.pairIndex].decreasePositionDisabled, "disabled");
-        require(msg.value == request.networkFeeAmount, "insufficient network fee");
+        require(
+            request.paymentType == TradingTypes.NetworkFeePaymentType.COLLATERAL ||
+            (request.paymentType == TradingTypes.NetworkFeePaymentType.ETH && msg.value == request.networkFeeAmount),
+            "incorrect value"
+        );
 
         request.account = msg.sender;
 
@@ -297,10 +310,14 @@ contract Router is
         TradingTypes.DecreasePositionRequest[] memory requests
     ) external payable whenNotPaused nonReentrant returns (uint256[] memory orderIds) {
         orderIds = new uint256[](requests.length);
+
+        uint256 surplus = msg.value;
         for (uint256 i = 0; i < requests.length; i++) {
             TradingTypes.DecreasePositionRequest memory request = requests[i];
 
             require(!operationStatus[request.pairIndex].decreasePositionDisabled, "disabled");
+            require(surplus >= request.networkFeeAmount, "insufficient network fee");
+            surplus -= request.networkFeeAmount;
 
             orderIds[i] = orderManager.createOrder{value: request.networkFeeAmount}(
                 TradingTypes.CreateOrderRequest({
@@ -317,6 +334,9 @@ contract Router is
                     data: abi.encode(msg.sender)
                 })
             );
+        }
+        if (surplus > 0) {
+            payable(msg.sender).transfer(surplus);
         }
         return orderIds;
     }
@@ -418,8 +438,16 @@ contract Router is
             isLong = order.isLong;
         }
         require(!operationStatus[pairIndex].orderDisabled, "disabled");
+
+        require(
+            request.paymentType == TradingTypes.NetworkFeePaymentType.COLLATERAL ||
+            (request.paymentType == TradingTypes.NetworkFeePaymentType.ETH
+                && msg.value == request.tpNetworkFeeAmount + request.slNetworkFeeAmount),
+            "incorrect value"
+        );
+
         if (request.tp > 0 || request.sl > 0) {
-            this._createTpSl(
+            _createTpSl(
                 msg.sender,
                 pairIndex,
                 isLong,
@@ -440,7 +468,14 @@ contract Router is
     ) external payable whenNotPaused nonReentrant returns (uint256 tpOrderId, uint256 slOrderId) {
         require(!operationStatus[request.pairIndex].orderDisabled, "disabled");
 
-        (tpOrderId, slOrderId) = this._createTpSl(
+        require(
+            request.paymentType == TradingTypes.NetworkFeePaymentType.COLLATERAL ||
+            (request.paymentType == TradingTypes.NetworkFeePaymentType.ETH
+                && msg.value == request.tpNetworkFeeAmount + request.slNetworkFeeAmount),
+            "incorrect value"
+        );
+
+        (tpOrderId, slOrderId) = _createTpSl(
             msg.sender,
             request.pairIndex,
             request.isLong,

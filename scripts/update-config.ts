@@ -13,11 +13,11 @@ async function main() {
     const reserveConfig = loadReserveConfig(MARKET_NAME);
     const pairConfigs = reserveConfig?.PairsConfig;
 
-    const tradingConfig = pairConfigs['WETH'].fundingFeeConfig;
+    const tradingConfig = pairConfigs['WBTC'].fundingFeeConfig;
     // console.log(tradingConfig);
 
-    await waitForTx(await fundingRate.updateFundingFeeConfig(2, tradingConfig));
-    console.log(await fundingRate.fundingFeeConfigs(2));
+    await waitForTx(await fundingRate.updateFundingFeeConfig(1, tradingConfig));
+    console.log(await fundingRate.fundingFeeConfigs(1));
 }
 
 main().catch((error) => {

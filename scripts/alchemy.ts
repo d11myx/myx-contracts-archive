@@ -1,19 +1,34 @@
 // @ts-ignore
 import { ethers } from 'hardhat';
-import { waitForTx } from '../helpers';
-import { MultipleTransfer } from '../types';
-import { MerkleTree } from 'merkletreejs';
-import keccak256 = require('keccak256');
+import { Alchemy, Network } from 'alchemy-sdk';
+import { BigNumber } from 'ethers';
 
 async function main() {
     const [deployer] = await ethers.getSigners();
     console.log(deployer.address);
-    console.log(ethers.utils.formatEther(await deployer.getBalance()));
+    console.log(await deployer.getBalance());
 
-    const multipleTransfer = (await ethers.getContractAt(
-        'MultipleTransfer',
-        '0xbe933E49E9Bd362DE22D680a713De83BFC395aB0',
-    )) as MultipleTransfer;
+    const config = {
+        apiKey: 'Ndm5gSTSGXxyoSjp9o71XblvGw1PaFbP',
+        network: Network.ARB_MAINNET,
+    };
+    const alchemy = new Alchemy(config);
+
+    // const data = await alchemy.core.getAssetTransfers({
+    //     fromBlock: '0x0',
+    //     toAddress: '0x8e05C1FFC1d16c735df7843654333FD780a554F0',
+    //     category: [AssetTransfersCategory.ERC20],
+    // });
+
+    const params = new Map();
+    params.set('module', 'account');
+    params.set('action', 'txlistinternal');
+    params.set('startblock', '100000000');
+    params.set('endblock', '200000000');
+    params.set('page', '1');
+    params.set('offset', '100');
+    params.set('sort', 'asc');
+    params.set('apikey', 'I1PKGCI4WRSPKXZKM1CUHTXP28ZX5TXYK8');
 
     const keepers: string[] = [
         '0x57E70053319297E34c0B38A50F8B9E0e4D52b703',
@@ -122,26 +137,49 @@ async function main() {
         '0xC3a4EAd16d70B0a4BB19C6D4212420a7a49009ee',
         '0xA95B0b036A6ae92268569CAE0D7Fc5b61fed7236',
     ];
-    const leaves = keepers.map((value) => keccak256(value));
-    const merkleTree = new MerkleTree(leaves, keccak256, { sort: true });
 
-    // await waitForTx(await multipleTransfer.addOperator(deployer.address));
-    // await waitForTx(await multipleTransfer.addMerkleManager(deployer.address));
+    let total = BigNumber.from(0);
+    for (let keeper of keepers) {
+        params.set('address', keeper);
+        let paramStr = '';
+        for (let [key, value] of params.entries()) {
+            paramStr += '&' + key + '=' + value;
+        }
 
-    // const root = merkleTree.getHexRoot();
-    // await waitForTx(await multipleTransfer.updateMerkleRoot(root));
+        const apiUrl = 'https://api.arbiscan.io/api?' + paramStr;
+        const data = await fetchData(apiUrl);
+        const result = data.result;
+        for (let ret of result) {
+            console.log(`from: ${ret.from} to: ${ret.to} amount: ${ethers.utils.formatEther(ret.value)}`);
+            if (ret.to.toLowerCase() === keeper.toLowerCase()) {
+                total = total.add(ret.value);
+            }
+        }
+    }
+    console.log(ethers.utils.formatEther(total));
+    //1.069700010000000001
+    //0.322209983989634978
 
-    const recipients = ['0x5546767A99877e0bC52Bf32029880d38bCEb98F3'];
-    const multiProofs = recipients.map((leave) => merkleTree.getHexProof(keccak256(leave).toString('hex')));
-    // console.log('Merkle Proofs:', multiProofs);
+    //800刀
+}
 
-    console.log(
-        await multipleTransfer.batchTransferETH(
-            recipients,
-            Array(recipients.length).fill(ethers.utils.parseEther('0.01')),
-            multiProofs,
-        ),
-    );
+async function fetchData(url: string): Promise<any> {
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        throw error;
+    }
 }
 
 main().catch((error) => {

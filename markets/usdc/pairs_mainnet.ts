@@ -41,7 +41,7 @@ export const btcPairInfo: PairInfoConfig = {
     fundingFeeConfig: {
         growthRate: 2000000, //0.02
         baseRate: 30000, //0.0003
-        maxRate: 10000000, //0.1
+        maxRate: 1000000, //0.01
         fundingInterval: 60 * 60,
     },
 };
@@ -85,7 +85,7 @@ export const ethPairInfo: PairInfoConfig = {
     fundingFeeConfig: {
         growthRate: 2000000, //0.02
         baseRate: 30000, //0.0003
-        maxRate: 10000000, //0.1
+        maxRate: 1000000, //0.01
         fundingInterval: 60 * 60,
     },
 };
