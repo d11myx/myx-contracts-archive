@@ -581,8 +581,8 @@ contract ExecutionLogic is IExecutionLogic {
             (, totalNeedADLAmount) = positionManager.needADL(pairIndex, false, shortOrderSize - longOrderSize, executionPrice);
         }
 
-        uint256[] memory adlOrderIds;
-        bytes32[] memory adlPositionKeys;
+        uint256[] memory adlOrderIds = new uint256[](executePositions.length);
+        bytes32[] memory adlPositionKeys = new bytes32[](executePositions.length);
         if (totalNeedADLAmount > 0) {
             uint256 executeTotalAmount;
             ExecutePositionInfo[] memory adlPositions = new ExecutePositionInfo[](executePositions.length);
@@ -612,8 +612,6 @@ contract ExecutionLogic is IExecutionLogic {
                 }
             }
 
-            adlOrderIds = new uint256[](adlPositions.length);
-            adlPositionKeys = new bytes32[](adlPositions.length);
             for (uint256 i = 0; i < adlPositions.length; i++) {
                 ExecutePositionInfo memory adlPosition = adlPositions[i];
                 if (adlPosition.executionSize > 0) {
@@ -652,9 +650,6 @@ contract ExecutionLogic is IExecutionLogic {
                     );
                 }
             }
-        } else {
-            adlOrderIds = new uint256[](0);
-            adlPositionKeys = new bytes32[](0);
         }
 
         uint256[] memory orders = new uint256[](executeOrders.length);
