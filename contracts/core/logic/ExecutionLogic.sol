@@ -118,11 +118,7 @@ contract ExecutionLogic is IExecutionLogic {
 
         // is expired
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
-            if (expired) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, true, "expired");
-                return;
-            }
+            require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
         // check pair enable
@@ -335,11 +331,7 @@ contract ExecutionLogic is IExecutionLogic {
 
         // is expired
         if (order.tradeType == TradingTypes.TradeType.MARKET) {
-            bool expired = ValidationHelper.validateOrderExpired(order.blockTime, maxTimeDelay);
-            if (expired) {
-                orderManager.cancelOrder(order.orderId, order.tradeType, false, "expired");
-                return;
-            }
+            require(order.blockTime + maxTimeDelay >= block.timestamp, "order expired");
         }
 
         // check pair enable
@@ -558,6 +550,7 @@ contract ExecutionLogic is IExecutionLogic {
                 executeOrder.orderId,
                 executeOrder.tradeType
             );
+            require(order.pairIndex == pairIndex, "mismatch pairIndex");
             if (order.isLong) {
                 longOrderSize += order.sizeAmount - order.executedSize;
             } else {
@@ -592,6 +585,7 @@ contract ExecutionLogic is IExecutionLogic {
                 }
                 ExecutePosition memory executePosition = executePositions[i];
                 Position.Info memory position = positionManager.getPositionByKey(executePosition.positionKey);
+                require(position.pairIndex == pairIndex, "mismatch pairIndex");
 
                 uint256 adlExecutionSize;
                 if (position.positionAmount >= totalNeedADLAmount - executeTotalAmount) {

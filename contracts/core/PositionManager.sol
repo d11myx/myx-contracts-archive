@@ -759,7 +759,7 @@ contract PositionManager is IPositionManager, Upgradeable {
     ) external view returns (bool need, uint256 needADLAmount) {
         IPool.Vault memory vault = pool.getVault(pairIndex);
         IPool.Pair memory pair = pool.getPair(pairIndex);
-        int256 exposedPositions = this.getExposedPositions(pairIndex);
+        int256 exposedPositions = getExposedPositions(pairIndex);
 
         int256 afterExposedPositions = exposedPositions;
         if (isLong) {

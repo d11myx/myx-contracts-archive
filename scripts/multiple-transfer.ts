@@ -123,15 +123,15 @@ async function main() {
         '0xA95B0b036A6ae92268569CAE0D7Fc5b61fed7236',
     ];
     const leaves = keepers.map((value) => keccak256(value));
-    const merkleTree = new MerkleTree(leaves, keccak256, { sort: true });
+    const merkleTree = new MerkleTree(leaves, keccak256, { sortPairs: true });
 
     // await waitForTx(await multipleTransfer.addOperator(deployer.address));
     // await waitForTx(await multipleTransfer.addMerkleManager(deployer.address));
 
-    // const root = merkleTree.getHexRoot();
-    // await waitForTx(await multipleTransfer.updateMerkleRoot(root));
-
-    const recipients = ['0x5546767A99877e0bC52Bf32029880d38bCEb98F3'];
+    const root = merkleTree.getHexRoot();
+    await waitForTx(await multipleTransfer.updateMerkleRoot(root));
+    //
+    const recipients = ['0x0621379E67e91a8AD66FDcA2508B853500FA8099'];
     const multiProofs = recipients.map((leave) => merkleTree.getHexProof(keccak256(leave).toString('hex')));
     // console.log('Merkle Proofs:', multiProofs);
 
