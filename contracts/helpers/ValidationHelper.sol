@@ -20,11 +20,6 @@ library ValidationHelper {
         );
     }
 
-    function validateOrderExpired(uint256 orderTime, uint256 maxTimeDelay) internal view returns (bool) {
-        return orderTime + maxTimeDelay < block.timestamp;
-//        require(orderTime + maxTimeDelay >= block.timestamp, "order expired");
-    }
-
     function validatePriceTriggered(
         IPool.TradingConfig memory tradingConfig,
         TradingTypes.TradeType tradeType,

@@ -142,7 +142,7 @@ library Position {
         }
         require(availableCollateral >= 0, 'collateral not enough');
 
-        if (!simpleVerify || (_increase && _sizeAmount > 0) || _collateral < 0) {
+        if (!simpleVerify && ((_increase && _sizeAmount > 0) || _collateral < 0)) {
             uint256 collateralDec = uint256(IERC20Metadata(pair.stableToken).decimals());
             uint256 tokenDec = uint256(IERC20Metadata(pair.indexToken).decimals());
 
