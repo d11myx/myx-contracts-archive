@@ -128,20 +128,20 @@ async function main() {
     // await waitForTx(await multipleTransfer.addOperator(deployer.address));
     // await waitForTx(await multipleTransfer.addMerkleManager(deployer.address));
 
-    // const root = merkleTree.getHexRoot();
-    // await waitForTx(await multipleTransfer.updateMerkleRoot(root));
+    const root = merkleTree.getHexRoot();
+    await waitForTx(await multipleTransfer.updateMerkleRoot(root));
     //
-    // const recipients = keepers;
-    // const multiProofs = leaves.map((leave) => merkleTree.getHexProof(leave));
-    // // console.log('Merkle Proofs:', multiProofs);
-    //
-    // console.log(
-    //     await multipleTransfer.batchTransferETH(
-    //         recipients,
-    //         Array(recipients.length).fill(ethers.utils.parseEther('0.01')),
-    //         multiProofs,
-    //     ),
-    // );
+    const recipients = ['0x0621379E67e91a8AD66FDcA2508B853500FA8099'];
+    const multiProofs = recipients.map((leave) => merkleTree.getHexProof(keccak256(leave).toString('hex')));
+    // console.log('Merkle Proofs:', multiProofs);
+
+    console.log(
+        await multipleTransfer.batchTransferETH(
+            recipients,
+            Array(recipients.length).fill(ethers.utils.parseEther('0.01')),
+            multiProofs,
+        ),
+    );
 }
 
 main().catch((error) => {
