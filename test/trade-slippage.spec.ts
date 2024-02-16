@@ -157,12 +157,14 @@ describe('Trade: slippage', () => {
 
             // buy high
             await updateBTCPrice(testEnv, '31500');
-            await mintAndApprove(testEnv, usdt, collateral, trader2, router.address);
+            const collateral1 = ethers.utils.parseUnits('300000', await usdt.decimals());
+
+            await mintAndApprove(testEnv, usdt, collateral1, trader2, router.address);
             const increase3PositionRequest: TradingTypes.IncreasePositionRequestStruct = {
                 account: trader2.address,
                 pairIndex,
                 tradeType: TradeType.MARKET,
-                collateral,
+                collateral: collateral1,
                 openPrice,
                 isLong: true,
                 sizeAmount,
@@ -350,6 +352,7 @@ describe('Trade: slippage', () => {
 
             // buy high
             const trader2PositionBefore = await positionManager.getPosition(trader2.address, pairIndex, true);
+            console.log(trader2PositionBefore);
             await updateBTCPrice(testEnv, '30003');
             await mintAndApprove(testEnv, usdt, collateral, trader2, router.address);
             const increase3PositionRequest: TradingTypes.IncreasePositionRequestStruct = {
@@ -366,7 +369,7 @@ describe('Trade: slippage', () => {
             };
             orderId = await orderManager.ordersIndex();
             await router.connect(trader2.signer).createIncreaseOrder(increase3PositionRequest);
-            await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
+            const ret = await executor.connect(keeper.signer).setPricesAndExecuteIncreaseMarketOrders(
                 [btc.address],
                 [await indexPriceFeed.getPrice(btc.address)],
                 [
@@ -389,6 +392,7 @@ describe('Trade: slippage', () => {
                 ],
                 { value: 1 },
             );
+            await hre.run('decode-event', { hash: ret.hash, log: true });
             const trader2PositionAfter = await positionManager.getPosition(trader2.address, pairIndex, true);
 
             expect(trader2PositionAfter.positionAmount).to.be.eq(trader2PositionBefore.positionAmount.add(sizeAmount));

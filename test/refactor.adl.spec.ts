@@ -102,7 +102,7 @@ describe('Router: NetworkFee cases', () => {
             ],
             { value: 1 },
         );
-        await hre.run('decode-event', { hash: ret.hash, log: true });
+        // await hre.run('decode-event', { hash: ret.hash, log: true });
     });
 
     async function openPosition(

@@ -145,7 +145,7 @@ describe('Replay: ADL', () => {
                     referralOwner: ZERO_ADDRESS,
                 },
             ];
-            console.log(adlPositions);
+            // console.log(adlPositions);
             const ret = await adlPosition(
                 testEnv,
                 trader,
