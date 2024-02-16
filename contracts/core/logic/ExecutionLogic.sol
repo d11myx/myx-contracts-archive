@@ -380,8 +380,8 @@ contract ExecutionLogic is IExecutionLogic {
             order.maxSlippage
         );
 
-        bytes32 positionKey = positionManager.getPositionKey(order.account, order.pairIndex, order.isLong);
-        require(!positionManager.needLiquidation(positionKey, executionPrice), "need liquidation");
+//        bytes32 positionKey = positionManager.getPositionKey(order.account, order.pairIndex, order.isLong);
+//        require(!positionManager.needLiquidation(positionKey, executionPrice), "need liquidation");
 
         // compare openPrice and oraclePrice
         if (order.tradeType == TradingTypes.TradeType.LIMIT) {
@@ -666,7 +666,7 @@ contract ExecutionLogic is IExecutionLogic {
                 }
             }
 
-            orders[i] = order.orderId;
+            orders[i] = executeOrder.orderId;
 
             (bool _needADL, uint256 needADLAmount) = positionManager.needADL(
                 order.pairIndex,
@@ -674,7 +674,7 @@ contract ExecutionLogic is IExecutionLogic {
                 executionSize,
                 executionPrice
             );
-            if (!_needADL) {
+            if (!_needADL && !order.needADL) {
                 this.executeDecreaseOrder(
                     keeper,
                     order.orderId,
