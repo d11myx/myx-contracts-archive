@@ -124,7 +124,7 @@ library Position {
         // pnl
         if (!simpleVerify) {
             int256 pnl = getUnrealizedPnl(self, pair, self.positionAmount, price);
-            if (!_increase && _sizeAmount > 0) {
+            if (!_increase && _sizeAmount > 0 && _sizeAmount < self.positionAmount) {
                 if (pnl >= 0) {
                     availableCollateral += getUnrealizedPnl(self, pair, self.positionAmount - _sizeAmount, price);
                 } else {
@@ -140,7 +140,7 @@ library Position {
         if (_collateral != 0) {
             availableCollateral += _collateral;
         }
-        require(availableCollateral >= 0, 'collateral not enough');
+        require(simpleVerify || availableCollateral >= 0, 'collateral not enough');
 
         if (!simpleVerify && ((_increase && _sizeAmount > 0) || _collateral < 0)) {
             uint256 collateralDec = uint256(IERC20Metadata(pair.stableToken).decimals());

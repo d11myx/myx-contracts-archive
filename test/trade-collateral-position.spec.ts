@@ -6,7 +6,7 @@ import { decreasePosition, increasePosition, mintAndApprove, updateBTCPrice } fr
 import { TradingTypes } from '../types/contracts/core/Router';
 import { NETWORK_FEE_AMOUNT, PAYMENT_TYPE } from './helpers/constants';
 
-describe('Router: Edge cases', () => {
+describe('Trade: collateral position', () => {
     const pairIndex = 1;
     let testEnv: TestEnv;
 
@@ -69,7 +69,7 @@ describe('Router: Edge cases', () => {
             positionManager,
         } = testEnv;
 
-        const collateral = ethers.utils.parseUnits('30000', await usdt.decimals());
+        const collateral = ethers.utils.parseUnits('300000', await usdt.decimals());
         await mintAndApprove(testEnv, usdt, collateral, trader, router.address);
 
         const positionBefore = await positionManager.getPosition(trader.address, pairIndex, true);

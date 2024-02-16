@@ -1,11 +1,9 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { 
+import {
     COMMON_DEPLOY_PARAMS,
-    POSITION_CALLER, 
-    getAddressesProvider,
-    getPool,
-    getPositionManager,
+    POSITION_CALLER,
+    getPositionManager, getFeeCollector,
 } from '../../helpers';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }: HardhatRuntimeEnvironment) {
@@ -13,13 +11,13 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     const { deployer } = await getNamedAccounts();
 
     const positionManager = await getPositionManager();
-    const pool = await getPool();
+    const feeCollector = await getFeeCollector();
 
     // PositionCaller
     await deploy(`${POSITION_CALLER}`, {
         from: deployer,
         contract: 'PositionCaller',
-        args: [positionManager.address, pool.address],
+        args: [positionManager.address, feeCollector.address],
         ...COMMON_DEPLOY_PARAMS,
     });
 

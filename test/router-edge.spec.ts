@@ -79,7 +79,7 @@ describe('Router: Edge cases', () => {
             oraclePriceFeed,
         } = testEnv;
 
-        const amount = ethers.utils.parseUnits('30000', await usdt.decimals());
+        const amount = ethers.utils.parseUnits('300000', await usdt.decimals());
         await waitForTx(await usdt.connect(deployer.signer).mint(trader.address, amount));
 
         await usdt.connect(trader.signer).approve(router.address, MAX_UINT_AMOUNT);

@@ -6,7 +6,7 @@ import { expect } from './shared/expect';
 import { increasePosition, mintAndApprove, updateBTCPrice } from './helpers/misc';
 import { convertIndexAmountToStable } from '../helpers/token-decimals';
 
-describe('Router: Edge cases', () => {
+describe('Trade: collateral pnl', () => {
     const pairIndex = 1;
     let testEnv: TestEnv;
 
@@ -421,7 +421,7 @@ describe('Router: Edge cases', () => {
                     [0],
                     { value: 1 },
                 ),
-        ).to.be.revertedWith('collateral not enough');
+        ).to.be.revertedWith('need liquidation');
     });
 
     it('userLoss < collateral, withdraw of partial collateral', async () => {
@@ -433,6 +433,7 @@ describe('Router: Edge cases', () => {
             router,
             oraclePriceFeed,
         } = testEnv;
+        await updateBTCPrice(testEnv, '30000');
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
         expect(exposePosition).to.be.gt(0);
@@ -503,6 +504,7 @@ describe('Router: Edge cases', () => {
             router,
             oraclePriceFeed,
         } = testEnv;
+        await updateBTCPrice(testEnv, '30000');
 
         const exposePosition = await positionManager.getExposedPositions(pairIndex);
         expect(exposePosition).to.be.gt(0);

@@ -2276,7 +2276,7 @@ describe('Position', () => {
                     ],
                     { value: 1 },
                 );
-                await hre.run('decode-event', { hash: ret.hash, log: true });
+                // await hre.run('decode-event', { hash: ret.hash, log: true });
                 adlOrder = await orderManager.getDecreaseOrder(longOrders[0].orderId, TradeType.MARKET);
                 longTraderBalance = await usdt.balanceOf(longTrader.address);
                 const longDecreasePositionAfter = await positionManager.getPosition(

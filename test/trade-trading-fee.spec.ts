@@ -1335,7 +1335,7 @@ describe('Trade: trading fee', () => {
             ).to.be.eq(claimStakingBalanceAfter);
 
             // claim treasury fee
-            await roleManager.addPoolAdmin(poolAdmin.address);
+            await roleManager.addTreasurer(poolAdmin.address);
             await feeCollector.connect(poolAdmin.signer).claimTreasuryFee();
             const claimTreasuryBalanceAfter = await usdt.balanceOf(poolAdmin.address);
 
